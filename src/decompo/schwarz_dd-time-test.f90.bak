@@ -1,0 +1,500 @@
+module schwarz_dd_time_test
+    public :: schwarz_picard_tt
+    private :: schwarzloc
+    private :: build_xvect
+    private :: domains_solved
+    private :: results_extractor
+    private :: search_error_cluster_tt, vyreseno
+
+ 
+    contains
+
+      !>solves the problem using Picard method with Schwarz multiplicative domain decomposition reflecting the nonlinear problem
+      subroutine schwarz_picard_tt(ierr, itcount, success)
+	use typy
+	use globals
+	use global_objs
+	use pde_objs
+	use feminittools
+	use fem_tools
+	use linAlg
+	use debug_tools
+	use sparsematrix
+	use decomp_vars
+	use decomp_tools
+	use decomposer
+	use postpro
+        use femmat
+        use core_tools
+        use simplelinalg
+        use printtools
+        use debug_tools
+        use schwarz_dd
+
+	integer, intent(out) :: ierr
+	integer(kind=ikind), intent(out) :: itcount
+	integer(kind=ikind) ::  fin, pcg_it, subfin, itcountloc
+	logical, intent(out) :: success
+	integer(kind=ikind) :: i, proc,j, m, l, k, ii
+	real(kind=rkind) :: error, loc_error, res_error, reps, time_step_tmp, itmp
+	logical :: dt_fine, first_run, picard_done, reset_domains
+	integer :: ierr_loc
+	real(kind=rkind), dimension(:), allocatable, save :: resvct, corrvct
+	character(len=128) :: text
+	real(4), dimension(2,2) :: taaray
+	real(4), dimension(2) :: rslt
+	real(kind=rkind), dimension(:,:,:), allocatable :: tempvect
+	logical :: dt_check
+        integer(kind=ikind), dimension(:), allocatable :: iters 
+
+! 	
+	allocate(iters(coarse_elements%kolik))
+
+	allocate(tempvect(2, ubound(pde_common%xvect,1), 4))
+
+        tempvect(1,:,:) = pde_common%xvect
+                
+        time_step_tmp = time_step
+        
+        time_step = 1.2*dtmax
+        
+                
+        call schwarzloc(ierr, itcount, success)
+        
+        print *, itcount
+        
+        call flush(terminal)
+        
+        itcountloc = itcount
+        
+        subdomain(:)%finish = .false.
+        
+        iters = ddcoarse_mesh(:)%iter_count
+        
+! 	print *, ddcoarse_mesh(:)%iter_count
+        
+          if(ierr==-10) then
+	    reset_domains = .true.
+	  else
+	    reset_domains = .false.
+	  end if
+	  
+	 if (ierr == 1) then
+	  success = .false.
+	  return
+	 end if
+        
+!         print *, reset_domains, itcount, ierr ; stop
+        
+        itmp = iter_criterion
+	 
+	iter_criterion = 5.5
+        
+        tempvect(2,:,:) = pde_common%xvect
+        
+        subdomain(:)%tmpval = time_step
+
+        timecheck: do
+        
+	  pde_common%xvect = tempvect(1,:,:)
+	  
+	  time_step = max(0.8*time_step, 0.95*dtmin)
+	  
+	  
+	  call flush(file_dt)
+	  
+	  
+	   
+	  call schwarzloc(ierr, itcount, success)
+
+	  
+! 	  if (success) then
+	    do i=1, ubound(subdomain,1)
+	      if (pde(1)%dt_check(subdomain(i)%xvect, subdomain(i)%permut) .or. time_step < dtmin) then
+		if (.not. subdomain(i)%finish) then
+		  subdomain(i)%tmpval = time_step
+		  subdomain(i)%finish = .true.
+		  print *, i, time_step
+		end if
+	      end if
+	    end do
+! 	  end ifmake
+
+	  
+	  if (vyreseno() == ubound(subdomain,1)) then
+	  	  write(unit=file_dt, fmt=*) subdomain(:)%time_step
+
+	    time_step = time_step_tmp
+	    pde_common%xvect = tempvect(2,:,:)
+	    inner_criterion = itmp
+	    ierr = 0
+	    itcount = itcountloc
+	    EXIT timecheck
+	  end if
+	end do timecheck
+	
+	print *, reset_domains
+	if (reset_domains) then
+	  ddcoarse_mesh(:)%iter_count = iters
+	  call set_subdomains()
+	end if
+	    
+	   
+
+
+      end subroutine schwarz_picard_tt
+      
+      function vyreseno() result(cislo)
+	use typy
+	use decomp_vars
+        
+        integer(kind=ikind) :: cislo
+	integer(kind=ikind) :: i
+	
+	cislo = 0
+	do i=1, ubound(subdomain,1)
+	  if (subdomain(i)%finish) then
+	    cislo = cislo + 1
+	  end if
+	end do
+	
+      end function vyreseno
+      
+      
+          !>solves the problem using Picard method with Schwarz multiplicative domain decomposition reflecting the nonlinear problem
+      subroutine schwarzloc(ierr, itcount, success)
+	use typy
+	use globals
+	use global_objs
+	use pde_objs
+	use feminittools
+	use fem_tools
+	use linAlg
+	use debug_tools
+	use sparsematrix
+	use decomp_vars
+	use decomp_tools
+	use decomposer
+	use postpro
+        use femmat
+        use core_tools
+        use simplelinalg
+        use printtools
+        use debug_tools
+        use schwarz_dd
+
+	integer, intent(out) :: ierr
+	integer(kind=ikind), intent(out) :: itcount
+	integer(kind=ikind) ::  fin, pcg_it, subfin
+	logical, intent(out) :: success
+	integer(kind=ikind) :: i, proc,j, m, l, k, ii
+	real(kind=rkind) :: error, loc_error, res_error, reps
+	logical :: dt_fine, first_run, picard_done, reset_domains
+	integer :: ierr_loc
+	real(kind=rkind), dimension(:), allocatable, save :: resvct, corrvct
+	character(len=128) :: text
+	real(4), dimension(2,2) :: taaray
+	real(4), dimension(2) :: rslt
+
+	
+        call etime(taaray(1,:), rslt(1))
+	proc = ubound(pde,1)
+	fin = maxval(pde(proc)%permut(:))
+	itcount = 0
+	inner_criterion = 1e-2
+
+	!reset local-local cluster iteration count
+        ddcoarse_mesh(:)%iter_count = 1
+	
+	!the residual vector is not allocated, thus we are at the beginning
+	if (.not. allocated(resvct)) then
+          first_run = .true.
+	  allocate(resvct(fin))
+	  allocate(corrvct(fin))          
+          call set_subdomains()
+          subdomain(:)%time = 0
+          else
+          first_run = .false.
+        end if
+
+        subdomain(:)%time_step = time_step
+
+                
+        !reset local subdomain iteration count
+        subdomain(:)%itcount = 0                
+
+        !reset successes on domains
+        subdomain(:)%solved = .false.
+   	
+	picard_done = .false.
+	
+
+        write(unit=terminal, fmt="(a)") "  "
+        write(unit=terminal, fmt="(a, I4,a)") " Solving", ubound(subdomain,1),  " subdomains .... "
+
+	picard_loop: do
+	
+          itcount = itcount + 1
+
+  ! 	  !compute the local residuum
+  ! 	  !and create the local matrices
+	  do i=1, ubound(subdomain,1)
+	    subdomain(i)%xvect(:,1:3) = pde_common%xvect(subdomain(i)%permut(1:subdomain(i)%ndof),1:3)
+	    if (.not. subdomain(i)%solved) then
+	      call locmat_assembler(subdomain(i), ierr, i)
+	    end if
+	  end do
+	  	  
+	  call get_residual(resvct)
+
+
+	 
+	  
+	  subdoms:  do i=1, ubound(subdomain,1)
+
+	    subfin = subdomain(i)%ndof
+		! check local residuum
+	    res_error = norm2(resvct(subdomain(i)%permut(1:subfin)))
+    !  			res_error = maxval(resvct(subdomain(i)%permut(1:subfin)))
+
+	    if (res_error > inner_criterion) then
+	      subdomain(i)%solved = .false.
+	    else
+	      subdomain(i)%solved = .true.
+	    end if
+	    
+	    if (.not. subdomain(i)%solved) then
+
+	      corrvct(1:subfin) = 0.0
+
+	      if (subdomain(i)%critical) then
+		reps = 1e-20
+	      else
+		reps = 1e-10
+	      end if
+
+
+	      call diag_precond(a=subdomain(i)%matrix, prmt=subdomain(i)%permut,  mode=1)
+	      
+	      call solve_matrix(subdomain(i)%matrix, resvct, corrvct(1:subfin), ilev1=0, itmax1=subfin, reps1=reps)
+
+	      call diag_precond(a=subdomain(i)%matrix, x=corrvct(1:subfin), mode=-1)
+	      
+	      error = maxval(abs(corrvct(1:subfin)))
+	      
+	      print *, itcount, error
+	      
+	      subdomain(i)%xvect(:,3) = subdomain(i)%xvect(:,2) + corrvct(1:subfin)
+
+	      call search_error_cluster_tt(subdomain(i), itcount) 
+	      
+	      subdomain(i)%xvect(:,2) = subdomain(i)%xvect(:,3)
+
+	      subdomain(i)%itcount = itcount
+	      
+	      if (error <= iter_criterion .and. &
+	      norm2(resvct(subdomain(i)%permut(1:subfin))) < inner_criterion) then 
+		subdomain(i)%solved = .true.
+	      end if
+	    end if
+					
+	  end do subdoms
+	    	    
+	  call progressbar( int(100*ndofs_solved()/(1.0*ddinfo%ndofs_tot)))
+
+	  call build_xvect()
+	  
+
+	  if (domains_solved() == ubound(subdomain,1)) then
+
+	    call etime(taaray(2,:), rslt(2))
+	    do i=1, ubound(subdomain,1)
+	      if (.not. subdomain(i)%critical .and. subdomain(i)%itcount>1 ) then
+		reset_domains = .true.
+		EXIT
+	      else
+		reset_domains = .false.
+	      end if
+	    end do
+	    
+	      
+	    call printtime("Time spent on iterations: ", rslt(2)-rslt(1))
+	    if (reset_domains) then
+	      ierr=-10
+	    else
+	      ierr=0
+	    end if
+	    success = .TRUE.
+
+	    write(unit=file_ddinfo, fmt=*) time, itcount, "|", subdomain(:)%ndof
+	    call flush(file_ddinfo)
+
+	    EXIT picard_loop
+	  end if
+
+	  if (itcount > max_itcount) then
+! 	    call set_subdomains()
+	    success = .FALSE.
+	    ierr = 1
+	    RETURN
+	  end if
+
+        end do picard_loop
+
+
+!         do proc=1, ubound(pde,1)
+! 	  do i=1, ubound(subdomain,1)
+! 	    call printmtx(subdomain(i)%xvect)
+! 	    dt_fine = pde(proc)%dt_check(subdomain(i)%xvect, subdomain(i)%permut)
+	    dt_fine = .true.
+! 	  end do
+!         end do
+        
+        if (.not.(dt_fine)) then
+          ierr = 2
+          success = .false.
+          RETURN
+        else
+!           ierr = 0
+          call results_extractor()
+        end if
+
+      end subroutine schwarzloc
+      
+      subroutine build_xvect()
+	use typy
+	use globals
+	use global_objs
+	use pde_objs
+	use decomp_vars
+	use debug_tools
+	
+	integer(kind=ikind) :: i, glob, loc, subcrit
+
+
+        pde_common%xvect(:,2:3) = 0.0_rkind
+        
+        
+        do i = 1, ubound(subdomain,1)
+	  do loc = 1, subdomain(i)%ndof
+	    glob =  subdomain(i)%permut(loc)
+	    pde_common%xvect(glob,2:3) = pde_common%xvect(glob,2:3) + subdomain(i)%xvect(loc,2:3)*prolong_mtx%get(glob,i)
+	  end do
+	end do
+	
+
+      end subroutine build_xvect
+
+      subroutine search_error_cluster_tt(sub, itcount)
+	use typy
+	use globals
+	use global_objs
+	use decomp_vars
+	use debug_tools
+	use pde_objs
+
+	type(subdomain_str), intent(in) :: sub
+	integer(kind=ikind), intent(in) :: itcount
+
+	integer(kind=ikind) :: i, j, ii, jj, el, nd, xpos, xpos_loc
+	real(kind=rkind) :: loc_error
+	
+! 	print *, maxval(abs(sub%xvect(:,3)-sub%xvect(:,2)))
+	
+	do i=1, ubound(sub%coarse_el,1)
+	  j = sub%coarse_el(i)
+	  loc_error = 0
+	  do ii=1, ubound(ddcoarse_mesh(j)%elements,1)
+	    el = ddcoarse_mesh(j)%elements(ii)
+	    do jj = 1, ubound(elements%data,2)
+	      nd = elements%data(el,jj)
+	      xpos = pde(1)%permut(nd)
+	      if (xpos > 0) then
+		xpos_loc = sub%invpermut(xpos)
+		loc_error = max(loc_error, abs(sub%xvect(xpos_loc,3)-sub%xvect(xpos_loc,2)) )
+! 		print *, loc_error
+	      end if
+	    end do
+	  end do
+	  if (loc_error > iter_criterion) then
+! 	  print *, "dfs"
+	    ddcoarse_mesh(j)%iter_count = itcount
+	  end if
+	end do
+  
+
+      end subroutine search_error_cluster_tt
+
+
+      subroutine results_extractor()
+	  use typy
+	  use globals
+	  use global_objs
+	  use debug_tools
+	  use pde_objs
+
+	  integer(kind=ikind) :: i, j, proc
+
+
+	  do proc=1, ubound(pde,1)
+	      do i=1, nodes%kolik
+		  if (pde(proc)%permut(i) > 0) then
+		      pde(proc)%solution(i) = pde_common%xvect(pde(proc)%permut(i),3)
+		  else
+		      j = nodes%edge(i)
+		      pde(proc)%solution(i) = pde(proc)%bc(j)%value
+		  end if
+	      end do
+	  end do
+
+
+	  pde_common%xvect(:,1) = pde_common%xvect(:,3)
+	  pde_common%xvect(:,2) = pde_common%xvect(:,3)
+
+      end subroutine results_extractor
+ 
+
+      !> counts number of solved subdomains
+      function domains_solved() result(no)
+        use typy
+        use globals
+        use global_objs
+        use decomp_vars
+        
+        integer(kind=ikind) :: no
+
+        integer(kind=ikind) :: i
+
+        no = 0
+
+        do i=1, ubound(subdomain,1)
+          if (subdomain(i)%solved) then
+            no = no + 1
+          end if
+        end do
+
+      end function domains_solved
+      
+            !> counts number of solved subdomains
+      function ndofs_solved() result(no)
+        use typy
+        use globals
+        use global_objs
+        use decomp_vars
+        
+        integer(kind=ikind) :: no
+
+        integer(kind=ikind) :: i
+
+        no = 0
+
+        do i=1, ubound(subdomain,1)
+          if (subdomain(i)%solved) then
+            no = no + subdomain(i)%ndof
+          end if
+        end do
+
+      end function ndofs_solved
+      
+  end module schwarz_dd_time_test
+  
