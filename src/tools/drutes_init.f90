@@ -82,6 +82,11 @@ module drutes_init
 	call find_unit(file_wwwglob, 200)
 	write(dirname, fmt=*) trim(dirglob%dir), "drutes_global.conf/global.conf" 
 	open(unit=file_wwwglob,file=trim(adjustl(dirname)), action="read", status="old", iostat = i_err)
+	if (i_err /= 0) then
+	  print *, "incorrect definition of global configuration file"
+	  ERROR stop
+	end if
+
       end if
       
       call read_global()
@@ -233,9 +238,9 @@ module drutes_init
 	    case("--dir-local")
 		  call getarg(i+1, dir)
 		  call chdir(trim(dir))
-		  if (.not. www) then
-		    print *, "actual directory is:", trim(dir)
-		  end if
+! 		  if (.not. www) then
+		  print *, "actual directory is:", trim(dir)
+! 		  end if
 		  dir_name=dir
 		  skip = 1
 	    case("--dir-global")

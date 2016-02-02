@@ -326,7 +326,7 @@ module readtools
       
       
       if (present(message)) then
-	print *, trim(message)
+	write(unit=terminal, fmt=*) trim(message)
       end if
 	
 

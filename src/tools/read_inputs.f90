@@ -32,7 +32,7 @@ module read_inputs
 
       integer(kind=ikind) :: i, j, n, ierr
       real(kind=rkind), dimension(3) :: tmp
-      character(len=4096) :: msg
+      character(len=4096) :: msg, filename
       integer :: local, global
       
       if (.not. www) then
@@ -42,6 +42,13 @@ module read_inputs
 	local = file_global
 	global = file_wwwglob
       end if
+      
+!       inquire(unit=local, name=filename)
+!       print *, trim(filename)
+!             inquire(unit=global, name=filename)
+!       print *, trim(filename)
+!       
+!       print *, local, global; stop
 	
       
       write(msg, *) "Inccorrect option for problem type, the available options are:", new_line('a'), &
