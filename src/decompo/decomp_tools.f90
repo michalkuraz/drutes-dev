@@ -680,10 +680,10 @@ module decomp_tools
       !<
       character(len=*), optional , intent(in)               :: behavior
       integer(kind=ikind)                                   :: mode
-      character(len=256), dimension(-1:6)                    :: filenames
+      character(len=256), dimension(-1:6)                   :: filenames
       integer(kind=ikind)                                   :: i, i_err, j, layer, dec, row, k, l, n, npoints, sub
       character(len=64)                                     :: forma
-      integer, dimension(-1:6), save                         :: ids
+      integer, dimension(-1:6), save                        :: ids
       character(len=4)                                      :: extension
       real(kind=rkind)                                      :: distance, avgval, val1, val2, val3, tmp
       real(kind=rkind), dimension(:), allocatable, save     :: deriv
@@ -691,10 +691,9 @@ module decomp_tools
       real(kind=rkind), dimension(2) 			    :: vct1, vct2
       real(kind=rkind), dimension(8) 			    :: vct_tmp
       type(smartarray_int)                                  :: nodes_domain
+      type(smartarray_int)                                  :: nodes_domain_invprmt
       integer(kind=ikind), save                             :: decomp_print
       integer :: ierr
-      
-      if (drutes_config%it_method /= 1) RETURN
 
 
       if (present(behavior)) then
@@ -730,7 +729,7 @@ module decomp_tools
       
       write(unit=filenames(2), fmt=forma) "out/dd/petr/bside-", decomp_print, ".strana"
 
-      write(unit=filenames(3), fmt=forma) "out/dd/petr/domeny-", decomp_print, ".domeny"
+      write(unit=filenames(3), fmt=forma) "out/dd/domeny-", decomp_print, ".domeny"
 
       write(unit=filenames(4), fmt=forma) "out/dd/petr/matice-", decomp_print, ".matice"
 
@@ -779,27 +778,19 @@ module decomp_tools
             body(j,5) = subdomain(sub)%tmpval
 	  end do
 	  
-! 	  do j=1, ubound(coarse_elements%data,2)
-! 	    if (isnan(body(j,5)) ) then
-! 	      call printmtx( subdomain(:)%tmpval)
-! 	      print *, "------"
-! 	      call printmtx(body(:,5))
-! 	      stop
-! 	    end if
-! 	  end do
 	
 
-    ! 	      
-    ! 	      vct1 = body(3, 1:2) - body(1, 1:2) 
-    ! 	      vct2 = body(3, 1:2) - body(2, 1:2)
-    ! 	      
-    ! 	      if ( (vct1(1)*vct2(2)-vct1(2)*vct2(1)) > 0.0_rkind) then
-    ! 		vct_tmp = body(3,:)
-    ! 		body(3,:) = body(2,:)
-    ! 		body(2,:) = vct_tmp
-    ! 	      else
-    ! 		CONTINUE
-    ! 	      end if
+	  
+	  vct1 = body(3, 1:2) - body(1, 1:2) 
+	  vct2 = body(3, 1:2) - body(2, 1:2)
+	  
+	  if ( (vct1(1)*vct2(2)-vct1(2)*vct2(1)) > 0.0_rkind) then
+	    vct_tmp = body(3,:)
+	    body(3,:) = body(2,:)
+	    body(2,:) = vct_tmp
+	  else
+	    CONTINUE
+	  end if
 
 
 	  write(unit=ids(l), fmt=*) "x(", i, ",1) =", body(1,1), ";"
@@ -879,39 +870,40 @@ module decomp_tools
 	  end do
 
         case(1)
-!               call printmtx(spmatrix, ids(5))
-!               call printmtx(spmatrix2, ids(4))
-              do i=1, ubound(pde_common%bvect,1)
-                write(unit=ids(2), fmt=*) pde_common%bvect(i)
-              end do
 
-              write(unit=ids(3), fmt=*) "#--node id (permutated in stiff. mtx)--------subdomain id----"
-              write(unit=ids(3), fmt=*) "#-----------------------------------------------------------------------------------------"
+	  do i=1, ubound(pde_common%bvect,1)
+	    write(unit=ids(2), fmt=*) pde_common%bvect(i)
+	  end do
 
-              do i=1, coarse_elements%kolik
-                row = 0
-                do j=1,ubound(ddcoarse_mesh(i)%elements,1)
-                  do k=1,3
-		    call nodes_domain%fill(pde(1)%permut(elements%data(ddcoarse_mesh(i)%elements(j),k)))
+	  write(unit=ids(3), fmt=*) "#--node id (permutated in stiff. mtx)----node id (physical)---coordinates--------subdomain id----"
+	  write(unit=ids(3), fmt=*) "#-----------------------------------------------------------------------------------------"
+
+	  do i=1, coarse_elements%kolik
+	    row = 0
+	    do j=1,ubound(ddcoarse_mesh(i)%elements,1)
+	      do k=1,3
+		call nodes_domain%fill(pde(1)%permut(elements%data(ddcoarse_mesh(i)%elements(j),k)))
+		call nodes_domain_invprmt%fill(elements%data(ddcoarse_mesh(i)%elements(j),k))
 !                     nodes_domain(row) = pde(1)%permut(elements%data(ddcoarse_mesh(i)%elements(j),k), 2)
-                  end do
-                end do  
-
-                do j=1, nodes_domain%pos
-                  write(ids(3), fmt=*)  nodes_domain%data(j), ddcoarse_mesh(i)%subdomain
-                end do
-              end do
-
-              call nodes_domain%clear(full = .true.)
-              
-	      
-	      do i=1, nodes%kolik
-		write(unit = ids(6), fmt=*) i, pde(1)%solution(i)
 	      end do
-                  
-              do i=lbound(ids,1), ubound(ids,1)
-                close(ids(i))
-              end do
+	    end do  
+
+	    do j=1, nodes_domain%pos
+	      write(ids(3), fmt=*)  nodes_domain%data(j), nodes_domain_invprmt%data(j), &
+	       nodes%data(nodes_domain_invprmt%data(j),:), ddcoarse_mesh(i)%subdomain
+	    end do
+	  end do
+
+	  call nodes_domain%clear(full = .true.)
+	  call nodes_domain_invprmt%clear(full = .true.)
+	  
+	  do i=1, nodes%kolik
+	    write(unit = ids(6), fmt=*) i, pde(1)%solution(i)
+	  end do
+	      
+	  do i=lbound(ids,1), ubound(ids,1)
+	    close(ids(i))
+	  end do
  
       end select
 
@@ -1005,6 +997,17 @@ module decomp_tools
               body(j,4) = ddcoarse_mesh(i)%subdomain 
               body(j,3) = ddcoarse_mesh(i)%iter_count
             end do
+            
+            vct1 = body(3, 1:2) - body(1, 1:2) 
+    	    vct2 = body(3, 1:2) - body(2, 1:2)
+            
+            if ( (vct1(1)*vct2(2)-vct1(2)*vct2(1)) > 0.0_rkind) then
+	      vct_tmp = body(3,:)
+    	      body(3,:) = body(2,:)
+    	      body(2,:) = vct_tmp
+    	    else
+    	      CONTINUE
+    	    end if
 
 
             write(unit=ids(l), fmt=*) "x(", el, ",1) =", body(1,1), ";"
