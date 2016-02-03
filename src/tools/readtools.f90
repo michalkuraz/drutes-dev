@@ -329,7 +329,6 @@ module readtools
 	write(unit=terminal, fmt=*) trim(message)
       end if
 	
-
       
       ERROR STOP
 

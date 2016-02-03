@@ -31,7 +31,8 @@ module globals
   !> debug file unit (put there whatever you like)
   integer, public :: debugfile
   !> terminal ID, the print_level sets its value
-  integer, public :: terminal
+  integer, public :: terminal = 6
+  logical, public :: terminal_assigned = .false.
   !> array of the gauss quadrature formula roots
   real(kind=rkind), dimension(:,:), allocatable, public :: gauss_integ
 

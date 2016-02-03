@@ -24,30 +24,36 @@ module simegen
       allocate(sumy(0:ubound(deltax_1d,1)))
       
       if (abs(length_1D-(deltax_1d(ubound(deltax_1d,1), 3)-deltax_1d(1,2))) > 10*epsilon(dx1)) then
-        print *, "incorrect definition in either:"
-        print *, "                          - domain length definition"
-        print *, "or"
-        print *, "                          - the mesh description values"
-        print *, " "
-        print *, "in file drutes.conf/mesh/drumesh1d.conf"
-        print *, " "
-        print *, "the mesh description must cover (and cannot overlap) the entire domain length"
-        print *, "-----------------------------------------------------------------------------"
+       write(unit=terminal, fmt=*) " "
+       write(unit=terminal, fmt=*) " " //achar(27)//'[91m', "!!ERROR!!" //achar(27)//'[0m'
+        write(unit=terminal, fmt=*)"incorrect definition in either:"
+        write(unit=terminal, fmt=*)"                          - domain length definition"
+        write(unit=terminal, fmt=*)"or"
+        write(unit=terminal, fmt=*)"                          - the mesh description values"
+        write(unit=terminal, fmt=*)" "
+        write(unit=terminal, fmt=*)"in file drutes.conf/mesh/drumesh1d.conf"
+        write(unit=terminal, fmt=*)" "
+        write(unit=terminal, fmt=*)"the mesh description must cover (and cannot overlap) the entire domain length"
+        write(unit=terminal, fmt=*)"-----------------------------------------------------------------------------"
         ERROR STOP
       end if
 
 
       if (abs(length_1D-(materials_1d(ubound(materials_1d,1), 2)-deltax_1d(1,2))) > 10*epsilon(dx1) .or. &
          abs(materials_1d(1,1) - deltax_1d(1,2)) >  10*epsilon(dx1) ) then
-        print *, "incorrect definition in either:"
-        print *, "                          - domain length definition"
-        print *, "or"
-        print *, "                          - the description of the material distribution"
-        print *, " "
-        print *, "in file drutes.conf/mesh/drumesh1d.conf"
-        print *, " "
-        print *, "the description of the material distribution must cover (and cannot overlap) the entire domain length"
-        print *, "-----------------------------------------------------------------------------"
+         
+        write(unit=terminal, fmt=*) " "
+        write(unit=terminal, fmt=*) " " //achar(27)//'[91m', "!!ERROR!!" //achar(27)//'[0m' 
+        write(unit=terminal, fmt=*)"incorrect definition in either:"
+        write(unit=terminal, fmt=*)"                          - domain length definition"
+        write(unit=terminal, fmt=*)"or"
+        write(unit=terminal, fmt=*)"                          - the description of the material distribution"
+        write(unit=terminal, fmt=*)" "
+        write(unit=terminal, fmt=*)"in file drutes.conf/mesh/drumesh1d.conf"
+        write(unit=terminal, fmt=*)" "
+        write(unit=terminal, fmt=*)"the description of the material distribution must cover (and cannot overlap) &
+	  the entire domain length"
+        write(unit=terminal, fmt=*)"-----------------------------------------------------------------------------"
         ERROR STOP
       end if
 

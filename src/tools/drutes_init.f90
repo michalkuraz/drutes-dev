@@ -84,6 +84,8 @@ module drutes_init
 	open(unit=file_wwwglob,file=trim(adjustl(dirname)), action="read", status="old", iostat = i_err)
 	if (i_err /= 0) then
 	  print *, "incorrect definition of global configuration file"
+	  print *, "your definition was: ", trim(dirglob%dir)
+	  print *, "the constructed path was: ", trim(adjustl(dirname))
 	  ERROR stop
 	end if
 
@@ -202,6 +204,36 @@ module drutes_init
 		      www = .true.
 		    end if
 		    skip = 1
+		    
+	    case("--print-level")
+	            call getarg(i+1,oarg)
+		    if (trim(oarg) == "1") then
+		      call find_unit(terminal, 2000)
+		      open(unit=terminal, file="out/screen.log", action="write", status="replace", iostat=ierr)
+		      if (ierr /=0) then
+			call system("mkdir out")
+			open(unit=terminal, file="out/screen.log", action="write", status="replace", iostat=ierr)
+		      end if
+		      if (ierr /=0) then
+			print *, "ERROR: directory out cannot be created"
+			ERROR STOP
+		      end if
+		    else if (trim(oarg) == "0") then
+		      CONTINUE
+		    else if (trim(oarg) == "2") then
+			call find_unit(terminal, 2000)
+			open(unit=terminal, file="/dev/null", action="write", status="replace", iostat=ierr)
+		        if (ierr /=0) then
+			  print *, "ERROR: file /dev/null does not exist, are you running GNU/Linux based os?"
+			  print *, "       if not do not set --print-level 2 in your command line option"
+			  ERROR STOP
+			end if
+		      else
+			print *, "incorrect argument after --print-level, exiting..."
+			ERROR STOP
+		      end if
+		    skip = 1
+		    terminal_assigned = .true.
 				    
 	    case("-v")
 		print *, " " //achar(27)//'[94m', "DRUtES" //achar(27)//'[0m', &
@@ -270,8 +302,8 @@ module drutes_init
       
       if (www) then
 	call find_unit(fileid,1000)
-	ierr = system("rm -rf 4www")
-	ierr = system("mkdir 4www")
+	call system("rm -rf 4www")
+	call system("mkdir 4www")
 	open(unit=fileid, file="4www/mypid", action="write", status="replace")
 	write(unit=fileid, fmt=*) getpid()
 	close(fileid)
@@ -297,26 +329,28 @@ module drutes_init
       backup_runs = 0
 
       !set the terminal output unit ID
-      select case(print_level)
-	case(0)
-	  terminal = 6
-	case(1,-1)
-	  call find_unit(terminal, 2000)
-	  if (print_level == 1) then
-	    open(unit=terminal, file="out/screen.log", action="write", status="replace", iostat=i_err)
-	    if (i_err /=0) then
-	      print *, "ERROR: check if directory out/ exist!"
-	      ERROR STOP
+      if (.not. (terminal_assigned)) then
+	select case(print_level)
+	  case(0)
+	    terminal = 6
+	  case(1,-1)
+	    call find_unit(terminal, 2000)
+	    if (print_level == 1) then
+	      open(unit=terminal, file="out/screen.log", action="write", status="replace", iostat=i_err)
+	      if (i_err /=0) then
+		print *, "ERROR: check if directory out/ exist!"
+		ERROR STOP
+	      end if
+	    else
+	      open(unit=terminal, file="/dev/null", action="write", status="replace", iostat=i_err)
+	      if (i_err /=0) then
+		print *, "ERROR: file /dev/null does not exist, are you running GNU/Linux based os?"
+		print *, "       if not do not set print level -1 in drutes.conf/global.conf"
+		ERROR STOP
+	      end if
 	    end if
-	  else
-	    open(unit=terminal, file="/dev/null", action="write", status="replace", iostat=i_err)
-	    if (i_err /=0) then
-	      print *, "ERROR: file /dev/null does not exist, are you running GNU/Linux based os?"
-	      print *, "       if not do not set print level -1 in drutes.conf/global.conf"
-	      ERROR STOP
-	    end if
-	  end if
-      end select
+	end select
+      end if
 
       solver_call = 0
 

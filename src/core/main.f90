@@ -52,60 +52,50 @@ program main
 
     call cpu_time(start_time)
 
-    print *, "---------------------------------------------------------------------------"
-    print *, "This program is free software: you can redistribute it and/or modify"
-    print *, "it under the terms of the GNU General Public License as published by"
-    print *, "the Free Software Foundation, either version 3 of the License, or"
-    print *, "(at your option) any later version."
-    print *, "This program is distributed in the hope that it will be useful,"
-    print *, "but WITHOUT ANY WARRANTY; without even the implied warranty of"
-    print *, "MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the"
-    print *, "GNU General Public License for more details."
-    print *, "You should have received a copy of the GNU General Public License"
-    print *, "along with this program. If not, see <http://www.gnu.org/licenses/>."
-    print *, "---------------------------------------------------------------------------"
-    print *, "---------------------------------------------------------------------------"
-    print *, " "
-    print *, " "
+
 
     version_id%number = "1.201601/"
     version_id%reliability = "beta "
     
     call get_cmd_options()
     
+     write(unit=terminal, fmt=*)"---------------------------------------------------------------------------"
+    write(unit=terminal, fmt=*)"This program is free software: you can redistribute it and/or modify"
+    write(unit=terminal, fmt=*)"it under the terms of the GNU General Public License as published by"
+    write(unit=terminal, fmt=*)"the Free Software Foundation, either version 3 of the License, or"
+    write(unit=terminal, fmt=*)"(at your option) any later version."
+    write(unit=terminal, fmt=*)"This program is distributed in the hope that it will be useful,"
+    write(unit=terminal, fmt=*)"but WITHOUT ANY WARRANTY; without even the implied warranty of"
+    write(unit=terminal, fmt=*)"MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the"
+    write(unit=terminal, fmt=*)"GNU General Public License for more details."
+    write(unit=terminal, fmt=*)"You should have received a copy of the GNU General Public License"
+    write(unit=terminal, fmt=*)"along with this program. If not, see <http://www.gnu.org/licenses/>."
+    write(unit=terminal, fmt=*)"---------------------------------------------------------------------------"
+    write(unit=terminal, fmt=*)"---------------------------------------------------------------------------"
+    write(unit=terminal, fmt=*)" "
+    write(unit=terminal, fmt=*)" "
+    
+    write(unit=terminal, fmt=*) " " //achar(27)//'[94m', "DRUtES" //achar(27)//'[0m', &
+	   " version: " //achar(27)//'[92m', version_id, " " //achar(27)//'[0m'
+	   
+    write(unit=terminal, fmt=*)" "
+    write(unit=terminal, fmt=*)" " 
+    
     print *, " " //achar(27)//'[94m', "DRUtES" //achar(27)//'[0m', &
              " version: " //achar(27)//'[92m', version_id, " " //achar(27)//'[0m'
       
-    call parse_globals()
+    call parse_globals() 
     
     call set_readers()
     
     call init_measured()
          
     call read_model()
+   
+    
     
     if (terminal /= 6) then
-      write(unit=terminal, fmt=*)"---------------------------------------------------------------------------"
-      write(unit=terminal, fmt=*)"This program is free software: you can redistribute it and/or modify"
-      write(unit=terminal, fmt=*)"it under the terms of the GNU General Public License as published by"
-      write(unit=terminal, fmt=*)"the Free Software Foundation, either version 3 of the License, or"
-      write(unit=terminal, fmt=*)"(at your option) any later version."
-      write(unit=terminal, fmt=*)"This program is distributed in the hope that it will be useful,"
-      write(unit=terminal, fmt=*)"but WITHOUT ANY WARRANTY; without even the implied warranty of"
-      write(unit=terminal, fmt=*)"MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the"
-      write(unit=terminal, fmt=*)"GNU General Public License for more details."
-      write(unit=terminal, fmt=*)"You should have received a copy of the GNU General Public License"
-      write(unit=terminal, fmt=*)"along with this program. If not, see <http://www.gnu.org/licenses/>."
-      write(unit=terminal, fmt=*)"---------------------------------------------------------------------------"
-      write(unit=terminal, fmt=*)"---------------------------------------------------------------------------"
-      write(unit=terminal, fmt=*)" "
-      write(unit=terminal, fmt=*)" "
-      
-      write(unit=terminal, fmt=*) " " //achar(27)//'[94m', "DRUtES" //achar(27)//'[0m', &
-             " version: " //achar(27)//'[92m', version_id, " " //achar(27)//'[0m'
-             
-      write(unit=terminal, fmt=*)" "
-      write(unit=terminal, fmt=*)" "      
+     
     end if
       
         
