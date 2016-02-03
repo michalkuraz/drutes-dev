@@ -195,7 +195,7 @@ clean:
 	rm -rf *.o *.mod bin/*
 	
 git:
-	git commit -a
+	rm -rf *.o *.mod bin/* && git commit -a
 
 push: 
 	git push
