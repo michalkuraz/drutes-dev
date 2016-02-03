@@ -193,6 +193,12 @@ main.o:  $(ALL_objs) src/core/main.f90
 
 clean:
 	rm -rf *.o *.mod bin/*
+	
+git:
+	git commit -a
+
+push: 
+	git push
 
 syncup:
 	cat /etc/hostname > sync.stamp && date >> sync.stamp && rsync -avztu -e ssh --delete --exclude 'out' --exclude '*.o' --exclude '*.mod' --exclude 'bin'  --exclude '*~' --exclude '*attr' ./ miguel@cml.fsv.cvut.cz:~/drutes-obj/
