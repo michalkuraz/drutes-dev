@@ -57,9 +57,7 @@ module re_reader
       
       call fileread(n, file_waterm)
       
-      backspace(file_waterm)
-      
-      write(msg, fmt=*) "ERROR!! incorrect number of materials in drutes.conf/matrix.conf  &
+      write(msg, fmt=*) "ERROR!! incorrect number of materials in drutes.conf/water.conf/matrix.conf  &
 	the mesh defines", maxval(elements%material)  , "materials, and your input file defines", n, "material(s)."
 	
 
@@ -208,12 +206,12 @@ module re_reader
 
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       !water.conf/fractures.conf
-      call find_unit(file_waterf, 200)
-      open(unit=file_waterf, file="drutes.conf/water.conf/fractures.conf", action="read", status="old", iostat = ierr)
-      if (ierr /= 0) then
-                print *, "missing drutes.conf/water.conf/fractures.conf file"
-                ERROR STOP
-      end if
+!       call find_unit(file_waterf, 200)
+!       open(unit=file_waterf, file="drutes.conf/water.conf/fractures.conf", action="read", status="old", iostat = ierr)
+!       if (ierr /= 0) then
+!                 print *, "missing drutes.conf/water.conf/fractures.conf file"
+!                 ERROR STOP
+!       end if
 
 
 

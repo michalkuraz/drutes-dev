@@ -184,7 +184,7 @@ module read_inputs
       end do
       
       do i=1, n
-	call fileread(measured_pts(i)%xyz(:), global, "HINT: check coordinates of the points with measurement data")
+	call fileread(measured_pts(i)%xyz(:), global, errmsg="HINT: check coordinates of the points with measurement data")
       end do  
 
       call fileread(i=drutes_config%it_method, fileid=local, ranges=(/0_ikind,2_ikind/),&

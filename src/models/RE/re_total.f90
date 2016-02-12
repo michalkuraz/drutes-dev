@@ -155,6 +155,7 @@ module re_total
       
       
     end subroutine retot_dirichlet_bc
+    
 
 
 
@@ -174,6 +175,7 @@ module re_total
       
       integer(kind=ikind) :: edge_id, i, j
       real(kind=rkind) :: tempval, node_height
+      
 
       edge_id = nodes%edge(elements%data(el_id, node_order))
       node_height = nodes%data(elements%data(el_id, node_order), drutes_config%dimen)
@@ -197,7 +199,7 @@ module re_total
 	value = tempval 
       end if
 
-	
+
       
       if (present(code)) then
 	code = 1

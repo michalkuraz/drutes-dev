@@ -97,8 +97,10 @@ module fem
 					    //achar(27)//'[0m'
 	
 	    end do
-	      ! 	    call print_domains("all_in_one")
-	    call print_elements_dd("separately")
+	    if (drutes_config%it_method > 0) then
+	      call print_domains("separately")
+	      call print_elements_dd("separately")
+	    end if
 	    printtime = .false.
 	  end if
 	end if

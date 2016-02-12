@@ -1,102 +1,69 @@
 module ADE_reader
-  public :: ADEs_read, ADEd_read
-
-  subroutine ADEs_read()
-    use typy
-    use globals
-    use global_objs
-    use core_tools
-
-    integer :: ierr
-
-    call find_unit(file_contaminantm, 200)
-    open(unit = file_contaminantm, file="drutes.conf/contaminant.conf/matrix.conf", action="read", status="old", iostat=i_err)
-    if (ierr /= 0) then
-      print *, "missing drutes.conf/contaminant.conf/matrix.conf file"
-      ERROR STOP
-    end if
-
-!       use typy
-!       use globals
-!       use core_tools
-! 
-!       integer :: ierr, n, i
-! 
-!       allocate(ade_par(ubound(vgmatrix,1)))
-! 
-!       call comment(file_contaminantm)
-! 
-!       read(unit=file_contaminantm, fmt=*, iostat=ierr) isotherm ; if (ierr /= 0) call file_error(file_waterf)
-! 
-!       call readADEvals(file_contaminantm, ade_par)
-! 
-!       select case(problem_type)
-!       case(100,200)
-!           call readbcvals(file_contaminantm, ADE_single%bc, dimen= (ubound(RICHARDS_single%bc,1)-101), &
-!                         dirname="drutes.conf/contaminant.conf/")
-!       case(110,210)
-! !         call readbcvals(file_contaminantm, ADE_dual(1,1)%bc, dimen = (ubound(RICHARDS_dual(1,1)%bc,1)-101),  &
-! !                       dirname="drutes.conf/contaminant.conf/")
-!       end select
-
-  end subroutine ADEs_read
-
-
-  subroutine ADEd_read()
-    use typy
-    use globals
-    use global_objs
-    use core_tools
-
-    integer :: ierr
-
-    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    !contaminant.conf/fractures.conf
-    call find_unit(file_contaminantf, 200)
-    open(unit=file_contaminantf, file="drutes.conf/contaminant.conf/fractures.conf", action="read", status="old", iostat = i_err)
-    if (i_err /= 0) then
-      print *, "missing drutes.conf/contaminant.conf/fractures.conf file"
-      ERROR STOP
-    end if
-
-
-!       integer :: ierr, n, i
-! 
-!       allocate(ade_par_f(ubound(vgfractures,1)))
-! 
-!       call readADEvals(file_contaminantf, ade_par_f)
-! 
-!       call readbcvals(file_contaminantm, ADE_dual%bc_sys2, dimen=(ubound(RICHARDS_dual%bc_sys1,1)-101),  &
-!                         dirname="drutes.conf/contaminant.conf/")
-! 
-!       call readbcvals(file_contaminantf, ADE_dual%bc_sys2, dimen=(ubound(RICHARDS_dual%bc_sys1,1)-101),  &
-!                         dirname="drutes.conf/contaminant.conf/")
-
-  end subroutine ADEd_read
+  public :: ADE_read
   
-    subroutine readADEvals(unitC, struct)
+  contains
+
+    subroutine ADE_read()
       use typy
       use globals
+      use global_objs
       use core_tools
-      integer, intent(in) :: unitC
-      type(soluteXsoil), dimension(:), intent(out) :: struct
-      integer(kind=ikind) :: i
+      use ADE_globals
+      use readtools
+
       integer :: i_err
-      character(len=256) :: filename
+      integer(kind=ikind) :: i, n
+      real(kind=rkind) :: tmp
+      real(kind=rkind), dimension(:), allocatable :: tmp_array
+      character(len=4096) :: msg
 
-      do i=1, ubound(struct,1)
-        call comment(unitC)
-        read(unit=unitC, fmt=*, iostat =i_err) struct(i)%Dz, struct(i)%Dx, struct(i)%diff, struct(i)%kd, struct(i)%expo, &
-                struct(i)%rho, struct(i)%bd, struct(i)%coop, struct(i)%T_w, struct(i)%T_s, struct(i)%icond
-        if (i_err /= 0) then
-          inquire(unit=unitC, name=filename)
-          print *, "!!!!!!!!!!!!!!!!!!!!"
-          print *, "HINT: check number of line records and parameters in: ", trim(filename)
-          print *, "!!!!!!!!!!!!!!!!!!!!"
-          call file_error(unitC)
-        end if
+      call find_unit(file_contaminant, 200)
+      open(unit = file_contaminant, file="drutes.conf/ADE/contaminant.conf", action="read", status="old", iostat=i_err)
+      if (i_err /= 0) then
+	print *, "missing drutes.conf/ADE/contaminant.conf file"
+	ERROR STOP
+      end if
+
+      allocate(adepar(maxval(elements%material)))
+      
+      write(msg, fmt=*) "ERROR!! incorrect number of materials in drutes.conf/water.conf/matrix.conf  &
+	the mesh defines", maxval(elements%material)  , "materials, and your input file defines", n, "material(s)."
+	
+     
+      call fileread(n, file_contaminant, ranges=(/1_ikind*maxval(elements%material),1_ikind*maxval(elements%material)/),&
+	errmsg=trim(msg))
+      
+      write(unit=msg, fmt="(a)") "HINT 1: Is the molecular diffusion value positive?", new_line("a"), &
+			      "HINT 2 : Is the number of molecular diffusion values corresponding to the amount of layers?"
+			      
+      do i=1, ubound(adepar,1)
+	call fileread(adepar(i)%difmol, file_contaminant, ranges=(/0.0_rkind, 1.0_rkind*huge(tmp)/), &
+	  errmsg=trim(msg))
       end do
+ 
+      write(unit=msg, fmt="(a)") "HINT 1: Are all values anisotropy defining anisotropical diffusivity positive? ", new_line("a"), &
+	"HINT 2 : Have you defined enough values for anisotropy &
+	(e.g. for 2D define angle and the maximal and minimal value of diffusivity, in total 3 values)?", new_line("a"),&
+	"HINT 3: The number of lines with diffusivity has to correspond to the number of materials & 
+	defined by your mesh"
+      
+      
+      allocate(tmp_array(drutes_config%dimen + 1))
+      do i=1, ubound(adepar,1)
+	allocate(adepar(i)%diff_loc(drutes_config%dimen))
+	call fileread(r=tmp_array, fileid=file_contaminant, ranges=(/0.0_rkind, huge(tmp)/), errmsg=trim(msg))
+	adepar(i)%anisoangle = tmp_array(1)
+	adepar(i)%diff_loc = tmp_array(2:drutes_config%dimen + 1)
+	allocate(adepar(i)%diff(drutes_config%dimen, drutes_config%dimen))
+	call set_tensor(adepar(i)%diff_loc, (/adepar(i)%anisoangle/), adepar(i)%diff)
+      end do
+      
+      
+      
 
-    end subroutine readADEvals
+    end subroutine ADE_read				
+
+
+  
 
 end module ADE_reader

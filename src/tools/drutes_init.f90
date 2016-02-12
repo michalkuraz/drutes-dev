@@ -46,9 +46,21 @@ module drutes_init
 	if (i_err /= 0) then
 	  print *, "unable to open and create directory out (is it UN*X type os?), called  from drutes_init::parse_globals"
 	  ERROR STOP
-	end if     
+	end if
+	  
       end if
       
+      write(unit=logfile, fmt=*)  "  _____  _____  _    _ _   ______  _____ "
+      write(unit=logfile, fmt=*)  " |  __ \|  __ \| |  | | | |  ____|/ ____|"
+      write(unit=logfile, fmt=*)  " | |  | | |__) | |  | | |_| |__  | (___  "
+      write(unit=logfile, fmt=*)  " | |  | |  _  /| |  | | __|  __|  \___ \ "
+      write(unit=logfile, fmt=*)  " | |__| | | \ \| |__| | |_| |____ ____) | "
+      write(unit=logfile, fmt=*)  " |_____/|_|  \_\\____/ \__|______|_____/ "
+      
+      write(unit=logfile, fmt=*)  " "
+      write(unit=logfile, fmt=*)  " "
+      write(unit=logfile, fmt=*)  " "
+    
       write(unit=logfile, fmt=*, iostat = i_err) "DRUtES is initialising, reading input files"
 
       call find_unit(file_itcg, 2000)

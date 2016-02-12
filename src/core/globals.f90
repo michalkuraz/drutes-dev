@@ -24,8 +24,7 @@ module globals
   !> version id variable
   type(version), public :: version_id   
   !> file units ----------------------------------------------------------------------
-  integer, public :: file_global,  file_waterf, file_contaminantm, file_contaminantf, file_mesh, file_itcg, &
-    file_wwwglob
+  integer, public :: file_global,  file_mesh, file_itcg, file_wwwglob
   !> log file unit
   integer, public :: logfile
   !> debug file unit (put there whatever you like)

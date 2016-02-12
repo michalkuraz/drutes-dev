@@ -329,6 +329,7 @@ module decomposer
 	 
 	allocate(subdomain(ddinfo%number))
         allocate(ddinfo%nodesinsub(nodes%kolik))
+       
 
 
 	do i=1, ubound(subdomain,1)
@@ -396,10 +397,6 @@ module decomposer
 	  end do
 	end do
 	
-! 	if (ubound(subdomain,1) > 1) then
-! 	  call printmtx(ddinfo%nodesinsub)
-! 	  stop
-! 	end if
 	
 
       
@@ -440,7 +437,7 @@ module decomposer
 	ddinfo%ndofs_tot = ddinfo%ndofs_tot + subdomain(i)%ndof
       end do
 
-!       subdomain(:)%time = time
+
 
 
     end subroutine set_subdomains

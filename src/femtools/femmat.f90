@@ -55,7 +55,6 @@ module femmat
 	call assemble_mat(ierr)
 	
 	
-! 	print *, pde_common%bvect(1:fin) - spmatrix%mul(pde_common%xvect(1:fin,3)) ; stop
 	
 ! 	call estimeigvalues(spmatrix, lambda_l, lambda_h)
 ! 	
@@ -78,9 +77,6 @@ module femmat
 
          error = norm2(pde_common%xvect(1:fin,2)-pde_common%xvect(1:fin,3))/ubound(pde_common%xvect,1)
 
-
-!          print *, "error:", error !, max_itcount
-!          stop
          
 	if (itcount == 1 .or. error <= iter_criterion) then
 	  do proc=1, ubound(pde,1)

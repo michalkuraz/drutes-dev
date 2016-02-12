@@ -156,15 +156,17 @@ module readtools
     
     
 
-    subroutine read_real_array(r, fileid, errmsg, noexit)
+    subroutine read_real_array(r, fileid, ranges, errmsg, noexit)
       use typy
       real(kind=rkind), dimension(:), intent(out) :: r
       integer, intent(in) :: fileid
+      real(kind=rkind), dimension(:), optional :: ranges
       character(len=*), intent(in), optional :: errmsg
       logical, intent(in), optional :: noexit
       
             !logical vars
       integer :: ierr
+      integer(kind=ikind) :: i
       
       call comment(fileid)
       
@@ -181,6 +183,14 @@ module readtools
 	    call file_error(fileid)
 	  end if
 	end if
+      end if
+      
+      if (present(ranges)) then
+	do i=1, ubound(r,1)
+	  if (r(i) < ranges(1) .or. r(i) > ranges(2)) then
+	    call file_error(fileid, errmsg)
+	  end if
+	end do
       end if
       
       

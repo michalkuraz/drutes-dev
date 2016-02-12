@@ -22,7 +22,7 @@ all : main.o $(ALL_objs)
 	$c -g -o bin/drutes main.o $(ALL_objs)
 dir="obj"
 
-servers="miguel@klobouk.fsv.cvut.cz:~  miguel@matsrv-lin01.fsv.cvut.cz:~ miguel@cml.fsv.cvut.cz:~ miguel@193.84.38.21:~"
+servers="miguel@neptun01.fsv.cvut.cz:~  miguel@matsrv-lin01.fsv.cvut.cz:~ miguel@cml.fsv.cvut.cz:~ miguel@193.84.38.21:~"
 
 
 #----------------objects definitions-------------------------------
@@ -36,9 +36,10 @@ DECOMPO_obj :=  decomp_tools.o schwarz_dd.o  decomp_vars.o decomposer.o schwarz_
 PMAoo_obj := fullmatrix.o mtx.o mtx_int.o mtxiotools.o pmatools.o solvers.o sparsematrix.o sparsematrix_int.o
 modRE_obj := modRE_globals.o modRE_reader.o modRE_constitutive.o modRE_parameter_functions.o modRE_junctions.o
 BOUSSINESQ_obj := boussglob.o boussread.o boussfnc.o
+ADE_obj := ADE_fnc.o ADE_reader.o ADE_globals.o
 
 
-ALL_objs := $(CORE_obj) $(TOOLS_obj) $(POINTERMAN_obj) $(MATHTOOLS_obj) $(FEMTOOLS_obj) $(DECOMPO_obj) $(RE_obj) $(PMAoo_obj) $(modRE_obj) $(BOUSSINESQ_obj)
+ALL_objs := $(CORE_obj) $(TOOLS_obj) $(POINTERMAN_obj) $(MATHTOOLS_obj) $(FEMTOOLS_obj) $(DECOMPO_obj) $(RE_obj) $(PMAoo_obj) $(modRE_obj) $(BOUSSINESQ_obj) $(ADE_obj)
 #-----------------------------------------------------------------
 
 
@@ -135,6 +136,15 @@ modRE_constitutive.o : $(CORE_obj) $(TOOLS_obj) modRE_globals.o modRE_reader.o m
 modRE_junctions.o: $(CORE_obj) $(TOOLS_obj) modRE_globals.o modRE_reader.o modRE_parameter_functions.o modRE_constitutive.o src/models/modRE/modRE_junctions.f90
 	$c -c src/models/modRE/modRE_junctions.f90
 #-------end modRE_obj--------------------------------
+
+#-------begin ADE_obj-------------------------------
+ADE_globals.o: $(CORE_obj) src/models/ADE/ADE_globals.f90
+	$c -c src/models/ADE/ADE_globals.f90
+ADE_fnc.o: $(CORE_obj) src/models/ADE/ADE_fnc.f90
+	$c -c src/models/ADE/ADE_fnc.f90
+ADE_reader.o: $(CORE_obj) $(TOOLS_obj) ADE_globals.o src/models/ADE/ADE_reader.f90
+	$c -c src/models/ADE/ADE_reader.f90
+#------end ADE_obj---------------------------------
 
 
 #-------begin BOUSSINESQ-----------------------------

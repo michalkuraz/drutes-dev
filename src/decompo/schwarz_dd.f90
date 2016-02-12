@@ -95,8 +95,6 @@ module schwarz_dd
 	  end do
 	  	  
 	  call get_residual(resvct)
-	  
-	  	    print *, "resuidual:", resvct ; stop
 
 
 	  if (use_coarselev .and. ubound(subdomain,1) > 3) then
