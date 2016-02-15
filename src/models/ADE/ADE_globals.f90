@@ -25,6 +25,8 @@ module ade_globals
     type(sorption_str) :: sorption
     logical :: with_Richards
     real(kind=rkind) :: convection
+    character(len=2) :: icondtype
+    real(kind=rkind) :: cinit
   end type soluteXsoil
 
 

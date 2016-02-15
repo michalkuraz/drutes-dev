@@ -60,7 +60,7 @@ module re_reader
       write(msg, fmt=*) "ERROR!! incorrect number of materials in drutes.conf/water.conf/matrix.conf  &
 	the mesh defines", maxval(elements%material)  , "materials, and your input file defines", n, "material(s)."
 	
-
+      backspace(file_waterm)
      
       call fileread(n, file_waterm, ranges=(/1_ikind*maxval(elements%material),1_ikind*maxval(elements%material)/),&
 	errmsg=trim(msg))

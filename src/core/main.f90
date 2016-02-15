@@ -41,11 +41,12 @@ program main
   real ::  stop_time
   real(kind=rkind) :: r
   integer :: fileid, i
+
   
   
   call system("rm -rf out/*")
-
-
+  
+  
   if (this_image() == 1) then
   
     call getcwd(dir_name)

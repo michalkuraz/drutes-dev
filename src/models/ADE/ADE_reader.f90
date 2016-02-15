@@ -16,6 +16,7 @@ module ADE_reader
       real(kind=rkind) :: tmp
       real(kind=rkind), dimension(:), allocatable :: tmp_array
       character(len=4096) :: msg
+      character(len=256) :: linetext
 
       call find_unit(file_contaminant, 200)
       open(unit = file_contaminant, file="drutes.conf/ADE/contaminant.conf", action="read", status="old", iostat=i_err)
@@ -57,6 +58,45 @@ module ADE_reader
 	allocate(adepar(i)%diff(drutes_config%dimen, drutes_config%dimen))
 	call set_tensor(adepar(i)%diff_loc, (/adepar(i)%anisoangle/), adepar(i)%diff)
       end do
+      
+      do i=1, ubound(adepar,1)
+       call comment(file_contaminant)
+       read(unit=file_contaminant, fmt=*, iostat=i_err) adepar(i)%cinit, adepar(i)%icondtype
+       if (i_err /= 0) then
+	 write(unit=terminal, fmt=*) "The number of lines for initial concentration has to be equal to the number of materials"
+	 backspace(file_contaminant)
+	 read(unit=file_contaminant, fmt=*, iostat=i_err) linetext
+	 write(unit=terminal, fmt=*) "the following inappropriate line was specified in your config file", trim(linetext)
+	 call file_error(file_contaminant)   
+       end if
+       select case (adepar(i)%icondtype)
+	 case("cr", "ca")
+	   CONTINUE
+	 case default
+	   write(unit=terminal, fmt=*) " Your initial concentration can be only:  "
+	   write(unit=terminal, fmt=*) "  ca - for absolute concentration"
+	   write(unit=terminal, fmt=*) "  cr - for relative concentration"
+	   call file_error(file_contaminant)
+       end select
+	   
+       end do
+       
+       call fileread(n, file_contaminant, ranges=(/0_ikind, 1_ikind*huge(n)/), & 
+	 errmsg="the number of orders of reactions has to be positive  or zero")
+       
+       
+       write(unit=msg, fmt=*) "You have requested ", n," different orders of reactions.", new_line("a"), &
+	   "For each different order specify its reaction rate, the reaction rates are specified in a line."
+       do i=1, ubound(adepar,1)
+	 allocate(adepar(i)%lambda(n))
+	 call fileread(adepar(i)%lambda, file_contaminant, errmsg=trim(msg))
+       end do
+       
+      
+       
+	 
+       
+      
       
       
       

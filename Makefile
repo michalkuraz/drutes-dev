@@ -137,6 +137,7 @@ modRE_junctions.o: $(CORE_obj) $(TOOLS_obj) modRE_globals.o modRE_reader.o modRE
 	$c -c src/models/modRE/modRE_junctions.f90
 #-------end modRE_obj--------------------------------
 
+
 #-------begin ADE_obj-------------------------------
 ADE_globals.o: $(CORE_obj) src/models/ADE/ADE_globals.f90
 	$c -c src/models/ADE/ADE_globals.f90
@@ -214,7 +215,7 @@ syncup:
 	cat /etc/hostname > sync.stamp && date >> sync.stamp && rsync -avztu -e ssh --delete --exclude 'out' --exclude '*.o' --exclude '*.mod' --exclude 'bin'  --exclude '*~' --exclude '*attr' ./ miguel@cml.fsv.cvut.cz:~/drutes-obj/
 
 syncdown:
-	rsync -avztu -e ssh --delete --exclude 'out/*' miguel@cml.fsv.cvut.cz:~/drutes-obj/ ./ && echo "last sync:" && cat sync.stamp
+	tar -czf /tmp/git.tgz .git && rsync -avztu -e ssh --delete --exclude 'out/*' miguel@cml.fsv.cvut.cz:~/drutes-obj/ ./ && echo "last sync:" && cat sync.stamp && tar -xzf /tmp/git.tgz
 		
 	
 alesup: 
