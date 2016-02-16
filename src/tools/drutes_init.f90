@@ -145,17 +145,18 @@ module drutes_init
 	      end if
 	      call read_2dmesh_gmsh()
 	    case default
-	      print *, "INCORRECT mesh type definition"
-	      print *, "you have defined value:", drutes_config%mesh_type
-	      print *, "the available options are: 1 - internal mesh generator (very simple uniform meshes, for debuging only"
-	      print *, "                           2 - t3d mesh generator"
-	      print *, "                           3 - gmsh mesh generator"
-	      print *, "exiting, called from drutes_init::parse_globals"
+	      write(unit=terminal, fmt=*) "INCORRECT mesh type definition"
+	      write(unit=terminal, fmt=*)"you have defined value:", drutes_config%mesh_type
+	      write(unit=terminal, fmt=*) "the available options are: 1 - internal mesh generator" 
+	      write(unit=terminal, fmt=*) "   (very simple uniform meshes, for debuging only"
+	      write(unit=terminal, fmt=*)"                           2 - t3d mesh generator"
+	      write(unit=terminal, fmt=*)"                           3 - gmsh mesh generator"
+	      write(unit=terminal, fmt=*)"exiting, called from drutes_init::parse_globals"
 	      error STOP
 	   end select
         case default
-          print *, "ERROR: unsupported problem dimension, the specified dimension was: ", drutes_config%dimen
-          print *, "currently only 1D and 2D is supported"
+          write(unit=terminal, fmt=*)"ERROR: unsupported problem dimension, the specified dimension was: ", drutes_config%dimen
+          write(unit=terminal, fmt=*)"currently only 1D and 2D is supported"
           ERROR STOP 
       end select
 
@@ -332,8 +333,10 @@ module drutes_init
       
       
       select case (drutes_config%name)
-	case("RE_std", "RE_rot", "REstdH", "RErotH", "boussi")
+	case("RE_std", "RE_rot", "REstdH", "RErotH", "boussi", "ADEstd")
 	  pde_common%processes = 1
+	case("ADE_wR")
+	  pde_common%processes = 2
 	case("RE_mod", "REtest")
 	  pde_common%processes = 3
       end select

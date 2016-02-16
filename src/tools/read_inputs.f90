@@ -51,18 +51,22 @@ module read_inputs
 !       print *, local, global; stop
 	
       
-      write(msg, *) "Inccorrect option for problem type, the available options are:", new_line('a'), &
-	"   RE_std = standard Richards equation, primary solution is capillary pressure head h, matrix is nonsymmetric" , new_line('a'), &
+      write(msg, "(a)") "Inccorrect option for problem type, the available options are:", new_line("a"), &
+	"   RE_std = standard Richards equation, primary solution is capillary pressure head h, matrix is nonsymmetric" , new_line("a"), &
 	"   RE_rot = Richards equation in cylindric coordinates, primary solution is capillary pressure head h, matrix is nonsymmetric",& 
-	new_line('a') , &
+	new_line("a") , &
 	"   REstdH = Richards equation, primary solution is total hydraulic head H, matrix is symmetric",&
-	new_line('a'), &
+	new_line("a"), &
 	"   RErotH =  Richards equation in cylindric coordinates,  primary solution is total hydraulic head H, matrix is symmetric", &
-	new_line('a'), &
+	new_line("a"), &
 	"   RE_mod = modified Richards equation, see Noborio, et al. (1996)", &
-	new_line('a'), &
+	new_line("a"), &
 	"   boussi = Boussinesq equation for sloping land (1877)", &
-	new_line('a')
+	new_line("a"), &
+	"   ADE_wR = advection dispersion reaction equation (transport of solutes), convection is computed from the Richards equation", &
+	new_line("a"), &
+	"   ADEstd = advection dispersion reaction equation (transport of solutes),  convection is specified in config files"
+	
       call fileread(drutes_config%name, local, msg, &
 	      options=(/"RE_std", "RE_mod", "REtest", "RE_rot", "REstdH", "RErotH", "boussi"/))
 

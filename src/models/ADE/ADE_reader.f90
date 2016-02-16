@@ -10,6 +10,7 @@ module ADE_reader
       use core_tools
       use ADE_globals
       use readtools
+      use pde_objs
 
       integer :: i_err
       integer(kind=ikind) :: i, n
@@ -65,6 +66,7 @@ module ADE_reader
        if (i_err /= 0) then
 	 write(unit=terminal, fmt=*) "The number of lines for initial concentration has to be equal to the number of materials"
 	 backspace(file_contaminant)
+	 call comment(file_contaminant)
 	 read(unit=file_contaminant, fmt=*, iostat=i_err) linetext
 	 write(unit=terminal, fmt=*) "the following inappropriate line was specified in your config file", trim(linetext)
 	 call file_error(file_contaminant)   
@@ -81,6 +83,30 @@ module ADE_reader
 	   
        end do
        
+       call fileread(with_richards, file_contaminant, &
+        errmsg="Specify [y/n] to define whether you prefer to compute convection from the Richards equation or &
+         specify the convection directly here")
+       
+       if (.not. with_richards .and. drutes_config%name=="ADE_wr") then
+	 write(unit=terminal, fmt=*) "You have specified ADE_wr =(advection dispersion reaction equation, where &
+	       convection is computed from the Richards equation, but you want to specify convection here."
+	 write(unit=terminal, fmt=*) "Solution: specify model type ADEstd instead of ADE_wr."
+	 ERROR stop
+       else if (with_richards .and. drutes_config%name=="ADEstd") then
+	write(unit=terminal, fmt=*) "You have specified ADEstd =(advection dispersion reaction equation, where &
+	       convection is specified here, but you want the convection to be computed from the solution &
+	       of the Richards equation."
+	 write(unit=terminal, fmt=*) "Solution: specify model type ADE_wr instead of ADEstd."
+	 ERROR stop
+       end if
+         
+       
+       if (.not. with_richards) then
+	 do i=1, maxval(elements%material)
+	   call fileread(adepar(i)%convection, file_contaminant, errmsg="convection has to be defined for each layer")
+	 end do
+      end if
+       
        call fileread(n, file_contaminant, ranges=(/0_ikind, 1_ikind*huge(n)/), & 
 	 errmsg="the number of orders of reactions has to be positive  or zero")
        
@@ -92,11 +118,17 @@ module ADE_reader
 	 call fileread(adepar(i)%lambda, file_contaminant, errmsg=trim(msg))
        end do
        
+      call fileread(n, file_contaminant, ranges=(/1_ikind, huge(n)/), &
+      errmsg="You have selected strange number of boundaries for ADE problem")
       
-       
-	 
-       
+      if (with_richards) then
+	i=2
+      else
+	i=1
+      end if
       
+      call readbcvals(unitW=file_contaminant, struct=pde(i)%bc, dimen=n, &
+	dirname="drutes.conf/ADE/")
       
       
       

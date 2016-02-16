@@ -23,8 +23,8 @@ module ade_globals
     real(kind=rkind), dimension(:), allocatable :: lambda 
     real(kind=rkind) :: bd
     type(sorption_str) :: sorption
-    logical :: with_Richards
     real(kind=rkind) :: convection
+    real(kind=rkind) :: water_cont
     character(len=2) :: icondtype
     real(kind=rkind) :: cinit
   end type soluteXsoil
@@ -43,6 +43,8 @@ module ade_globals
   !! 2 - Langmuir
   !<
   integer(kind=ikind), public :: isotherm
+  
+  logical, public :: with_richards
   
   
   integer, public :: file_contaminant
