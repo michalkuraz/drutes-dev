@@ -6,8 +6,8 @@ module ade_globals
     logical :: kinetic
     !> name="freu" - Freundlich isoterm, "langmu" - Langmuir isoterm
     character(len=4) :: name
-    real(kind=rkind) :: sorb
-    real(kind=rkind) :: adsord
+    real(kind=rkind) :: adsorb
+    real(kind=rkind) :: desorb
     !>the third parameter in sorption model -- either n exponent in Freundlich or csmax in Langmuir
     real(kind=rkind) :: third
   end type sorption_str

@@ -35,7 +35,7 @@ module ADE_reader
       call fileread(n, file_contaminant, ranges=(/1_ikind*maxval(elements%material),1_ikind*maxval(elements%material)/),&
 	errmsg=trim(msg))
       
-      write(unit=msg, fmt="(a)") "HINT 1: Is the molecular diffusion value positive?", new_line("a"), &
+      write(unit=msg, fmt=*) "HINT 1: Is the molecular diffusion value positive?", new_line("a"), &
 			      "HINT 2 : Is the number of molecular diffusion values corresponding to the amount of layers?"
 			      
       do i=1, ubound(adepar,1)
@@ -43,7 +43,7 @@ module ADE_reader
 	  errmsg=trim(msg))
       end do
  
-      write(unit=msg, fmt="(a)") "HINT 1: Are all values anisotropy defining anisotropical diffusivity positive? ", new_line("a"), &
+      write(unit=msg, fmt=*) "HINT 1: Are all values anisotropy defining anisotropical diffusivity positive? ", new_line("a"), &
 	"HINT 2 : Have you defined enough values for anisotropy &
 	(e.g. for 2D define angle and the maximal and minimal value of diffusivity, in total 3 values)?", new_line("a"),&
 	"HINT 3: The number of lines with diffusivity has to correspond to the number of materials & 
@@ -59,6 +59,7 @@ module ADE_reader
 	allocate(adepar(i)%diff(drutes_config%dimen, drutes_config%dimen))
 	call set_tensor(adepar(i)%diff_loc, (/adepar(i)%anisoangle/), adepar(i)%diff)
       end do
+      
       
       do i=1, ubound(adepar,1)
        call comment(file_contaminant)
@@ -102,8 +103,12 @@ module ADE_reader
          
        
        if (.not. with_richards) then
+	 if (allocated(tmp_array)) deallocate(tmp_array)
+	 allocate(tmp_array(2))
 	 do i=1, maxval(elements%material)
-	   call fileread(adepar(i)%convection, file_contaminant, errmsg="convection has to be defined for each layer")
+	   call fileread(tmp_array, file_contaminant, errmsg="convection has to be defined for each layer")
+	   adepar(i)%convection = tmp_array(1)
+	   adepar(i)%water_cont = tmp_array(2)
 	 end do
       end if
        
@@ -117,6 +122,26 @@ module ADE_reader
 	 allocate(adepar(i)%lambda(n))
 	 call fileread(adepar(i)%lambda, file_contaminant, errmsg=trim(msg))
        end do
+       
+       write(msg, *) "The number of lines for kinetic/equilibrium sorption parameters has to be equal to the number of materials"
+       do i=1, ubound(adepar,1)
+	 call fileread(adepar(i)%sorption%kinetic, file_contaminant, errmsg=trim(msg))
+      end do
+      
+      do i=1, ubound(adepar,1)
+	 call fileread(adepar(i)%sorption%name, file_contaminant, errmsg=trim(msg), options=(/"freund", "langmu"/))
+      end do
+      
+      if (allocated(tmp_array)) deallocate(tmp_array)
+      allocate(tmp_array(3))
+      
+      do i=1, ubound(adepar,1)
+	call fileread(tmp_array, file_contaminant, errmsg=trim(msg), ranges=(/0.0_rkind, huge(0.0_rkind)/))
+	adepar(i)%sorption%adsorb=tmp_array(1)
+	adepar(i)%sorption%desorb=tmp_array(2)
+	adepar(i)%sorption%third=tmp_array(3)
+      end do
+      
        
       call fileread(n, file_contaminant, ranges=(/1_ikind, huge(n)/), &
       errmsg="You have selected strange number of boundaries for ADE problem")

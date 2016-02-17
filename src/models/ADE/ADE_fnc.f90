@@ -1,6 +1,5 @@
 module ADE_fnc
   public :: dispersion
-  public :: convection
   public :: reaction
   
   contains
@@ -27,7 +26,7 @@ module ADE_fnc
       real(kind=rkind), dimension(3,3) :: identity
       real(kind=rkind), dimension(3) :: q_w
       real(kind=rkind) :: theta, q_abs, tortuo
-      integer(kind=ikind) :: D
+      integer(kind=ikind) :: D, i
       
       
       D = drutes_config%dimen
@@ -45,7 +44,7 @@ module ADE_fnc
       
       theta = pde(1)%mass(layer, quadpnt)
       
-      call pde(1)%pde_fnc(1)%convection(layer, quadpnt, vector_out = q_w(1:D))
+      call pde(1)%pde_fnc(1)%convection(pde(1), layer, quadpnt, vector_out = q_w(1:D))
       
       q_abs = 0.0
       do i=1, D
@@ -54,7 +53,7 @@ module ADE_fnc
       q_abs = sqrt(q_abs)
       tortuo = theta**(10.0/3.0)/(vgset(layer)%ths*vgset(layer)%ths)
       
-      tensor = theta * (adepar(layer)%diff*q_abs + adepar(layer)%diffmol*identity(1:D, 1:D))
+      tensor = theta * (adepar(layer)%diff*q_abs + adepar(layer)%difmol*identity(1:D, 1:D))
       
       
     

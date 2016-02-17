@@ -12,6 +12,7 @@ module manage_pointers
       use re_reader
       use modRE_reader
       use boussread
+      use ADE_reader
       
       integer :: i
 
@@ -31,6 +32,13 @@ module manage_pointers
 	  
 	case("boussi")
 	  pde(1)%read_parameters => boussreader
+	  
+	case("ADEstd")
+	  pde(1)%read_parameters => ADE_read
+	  
+	case("ADE_wr")
+	  pde(1)%read_parameters => res_read
+	  pde(2)%read_parameters => ADE_read
 	  
         
         case default

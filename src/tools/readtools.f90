@@ -20,6 +20,7 @@ module readtools
 
     subroutine read_int(i, fileid, errmsg, ranges, minimal, maximal, noexit)
       use typy
+      use globals
       integer(kind=ikind), intent(out) :: i
       integer, intent(in) :: fileid
       character(len=*), intent(in), optional :: errmsg
@@ -36,14 +37,14 @@ module readtools
 
       if (ierr /= 0) then
         if (present(errmsg)) then
-          print *, " " //achar(27)//'[91m', trim(errmsg) //achar(27)//'[0m'
+          call file_error(fileid, errmsg)
         end if
         call file_error(fileid)
       end if
 
       if (present(ranges)) then
         if (i<ranges(1) .or. i> ranges(2)) then
-          print *, " " //achar(27)//'[91m', "incorrect ranges of input parameter(s)" //achar(27)//'[0m'
+          write(unit=terminal, fmt=*) " " //achar(27)//'[91m', "incorrect ranges of input parameter(s)" //achar(27)//'[0m'
           if (.not. present(noexit) .or. .not. noexit) then
 	    if (present(errmsg)) then
 	      call file_error(fileid,errmsg)
@@ -57,11 +58,13 @@ module readtools
     end subroutine read_int
 
 
-    subroutine read_int_std(i, fileid, errmsg, noexit)
+    subroutine read_int_std(i, fileid, errmsg, ranges, noexit)
       use typy
+      use globals
       integer(kind=lowikind), intent(out) :: i
       integer, intent(in) :: fileid
       character(len=*), intent(in), optional :: errmsg
+      integer(kind=ikind), dimension(:), intent(in),  optional :: ranges
       logical, intent(in), optional :: noexit
 
 
@@ -74,7 +77,7 @@ module readtools
 
       if (ierr /= 0) then
         if (present(errmsg)) then
-          print *, " " //achar(27)//'[91m', trim(errmsg) //achar(27)//'[0m'
+          call file_error(fileid,errmsg)
         end if
         if (.not. present(noexit) .or. .not. noexit) then
 	  if (present(errmsg)) then
@@ -83,6 +86,20 @@ module readtools
 	    call file_error(fileid)
 	  end if
 	end if
+      end if
+      
+      
+       if (present(ranges)) then
+        if (i<ranges(1) .or. i> ranges(2)) then
+          write(unit=terminal, fmt=*) " " //achar(27)//'[91m', "incorrect ranges of input parameter(s)" //achar(27)//'[0m'
+          if (.not. present(noexit) .or. .not. noexit) then
+	    if (present(errmsg)) then
+	      call file_error(fileid,errmsg)
+	    else
+	      call file_error(fileid)
+	    end if
+	  end if
+        end if
       end if
 
     end subroutine read_int_std
@@ -104,7 +121,7 @@ module readtools
 
       if (ierr /= 0) then
         if (present(errmsg)) then
-          print *, " " //achar(27)//'[91m', trim(errmsg) //achar(27)//'[0m'
+          call file_error(fileid,errmsg)
         end if
         if (.not. present(noexit) .or. .not. noexit) then
 	  if (present(errmsg)) then
@@ -120,6 +137,7 @@ module readtools
     
     subroutine read_real(r, fileid, ranges, errmsg, noexit)
       use typy
+      use globals
       real(kind=rkind), intent(out) :: r
       integer, intent(in) :: fileid
       real(kind=rkind), dimension(:), optional :: ranges
@@ -135,13 +153,14 @@ module readtools
       
       if (present(ranges)) then
 	if (r < ranges(1) .or. r > ranges(2)) then
+	  write(unit=terminal, fmt=*) " " //achar(27)//'[91m', "incorrect ranges of input parameter(s)" //achar(27)//'[0m'
 	  ierr = -1
 	end if
       end if
       
       if (ierr /= 0) then
         if (present(errmsg)) then
-          print *, " " //achar(27)//'[91m', trim(errmsg) //achar(27)//'[0m'
+          call file_error(fileid,errmsg)
         end if
         if (.not. present(noexit) .or. .not. noexit) then
 	  if (present(errmsg)) then
@@ -158,6 +177,7 @@ module readtools
 
     subroutine read_real_array(r, fileid, ranges, errmsg, noexit)
       use typy
+      use globals
       real(kind=rkind), dimension(:), intent(out) :: r
       integer, intent(in) :: fileid
       real(kind=rkind), dimension(:), optional :: ranges
@@ -174,7 +194,7 @@ module readtools
       
       if (ierr /= 0) then
         if (present(errmsg)) then
-          print *, " " //achar(27)//'[91m', trim(errmsg) //achar(27)//'[0m'
+          call file_error(fileid,errmsg)
         end if
         if (.not. present(noexit) .or. .not. noexit) then
 	  if (present(errmsg)) then
@@ -188,6 +208,7 @@ module readtools
       if (present(ranges)) then
 	do i=1, ubound(r,1)
 	  if (r(i) < ranges(1) .or. r(i) > ranges(2)) then
+	    write(unit=terminal, fmt=*) " " //achar(27)//'[91m', "incorrect ranges of input parameter(s)" //achar(27)//'[0m'
 	    call file_error(fileid, errmsg)
 	  end if
 	end do
@@ -226,7 +247,7 @@ module readtools
       
       if (ierr /= 0 .or. .not.(ok) .and. (.not. present(noexit) .or. .not. noexit)) then
         if (present(errmsg)) then
-          print *, " " //achar(27)//'[91m', trim(errmsg) //achar(27)//'[0m'
+          call file_error(fileid,errmsg)
         end if
 	if (present(errmsg)) then
 	  call file_error(fileid,errmsg)
@@ -241,6 +262,7 @@ module readtools
     end subroutine read_char
     
     subroutine read_logical(l, fileid, errmsg, noexit)
+      use globals
       logical, intent(out) :: l
       integer, intent(in) :: fileid
       character(len=*), intent(in), optional :: errmsg
@@ -261,12 +283,14 @@ module readtools
 	    l = .false.
 	  case default
 	    ierr = -1
+	    write(unit=terminal, fmt=*) " " //achar(27)//'[91m', "You have defined incorrect value for logical parameter)" &
+	     //achar(27)//'[0m'
 	 end select
        end if
       
       if (ierr /= 0 .and. (.not. present(noexit) .or. .not. noexit)) then
         if (present(errmsg)) then
-          print *, " " //achar(27)//'[91m', trim(errmsg) //achar(27)//'[0m'
+          call file_error(fileid,errmsg)
         end if
 	if (present(errmsg)) then
 	  call file_error(fileid,errmsg)
@@ -336,7 +360,7 @@ module readtools
       
       
       if (present(message)) then
-	write(unit=terminal, fmt=*) trim(message)
+	write(unit=terminal, fmt=*) " " //achar(27)//'[91m', trim(message) //achar(27)//'[0m'
       end if
 	
       

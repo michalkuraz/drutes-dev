@@ -142,6 +142,15 @@ program main
       write(unit=ch, fmt="(I1,a)") drutes_config%dimen, "D"
       call write_log("DRUtES runs testing mode for coupled problems", text2=ch)
       call solve_pde(success)
+    case ("ADEstd")
+      write(unit=ch, fmt="(I1,a)") drutes_config%dimen, "D"
+      call write_log("DRUtES solves advection-dispersion-reaction equation, advection is defined by user", text2=ch)
+      call solve_pde(success)
+    case ("ADE_wr")
+      write(unit=ch, fmt="(I1,a)") drutes_config%dimen, "D"
+      call write_log("DRUtES solves Richards equation and advection-dispersion-reaction equation, &
+		     advection is computed from the Richards equation", text2=ch)
+      call solve_pde(success)
     case default
       print *, "unsupported problem type definition, your definition was:", drutes_config%name
       print *, "called from main()"

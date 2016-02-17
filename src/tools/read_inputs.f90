@@ -32,7 +32,8 @@ module read_inputs
 
       integer(kind=ikind) :: i, j, n, ierr
       real(kind=rkind), dimension(3) :: tmp
-      character(len=4096) :: msg, filename
+      character(len=4096) :: filename
+      character(len=8192) :: msg
       integer :: local, global
       
       if (.not. www) then
@@ -42,33 +43,28 @@ module read_inputs
 	local = file_global
 	global = file_wwwglob
       end if
+
       
-!       inquire(unit=local, name=filename)
-!       print *, trim(filename)
-!             inquire(unit=global, name=filename)
-!       print *, trim(filename)
-!       
-!       print *, local, global; stop
-	
-      
-      write(msg, "(a)") "Inccorrect option for problem type, the available options are:", new_line("a"), &
-	"   RE_std = standard Richards equation, primary solution is capillary pressure head h, matrix is nonsymmetric" , new_line("a"), &
+      write(msg, *) "Incorrect option for problem type, the available options are:", new_line("a"),  new_line("a"), new_line("a"),&
+	"   RE_std = standard Richards equation, primary solution is capillary pressure head h, matrix is nonsymmetric" , &
+	 new_line("a"), new_line("a"),  &
 	"   RE_rot = Richards equation in cylindric coordinates, primary solution is capillary pressure head h, matrix is nonsymmetric",& 
-	new_line("a") , &
+	new_line("a") ,  new_line("a"), &
 	"   REstdH = Richards equation, primary solution is total hydraulic head H, matrix is symmetric",&
-	new_line("a"), &
+	new_line("a"), new_line("a"),  &
 	"   RErotH =  Richards equation in cylindric coordinates,  primary solution is total hydraulic head H, matrix is symmetric", &
-	new_line("a"), &
+	new_line("a"),  new_line("a"), &
 	"   RE_mod = modified Richards equation, see Noborio, et al. (1996)", &
-	new_line("a"), &
+	new_line("a"),  new_line("a"), &
 	"   boussi = Boussinesq equation for sloping land (1877)", &
-	new_line("a"), &
+	new_line("a"),  new_line("a"), &
 	"   ADE_wR = advection dispersion reaction equation (transport of solutes), convection is computed from the Richards equation", &
-	new_line("a"), &
-	"   ADEstd = advection dispersion reaction equation (transport of solutes),  convection is specified in config files"
+	new_line("a"),  new_line("a"), &
+	"   ADEstd = advection dispersion reaction equation (transport of solutes),  convection is specified in config files", &
+	new_line("a"),  new_line("a"), new_line("a")
 	
-      call fileread(drutes_config%name, local, msg, &
-	      options=(/"RE_std", "RE_mod", "REtest", "RE_rot", "REstdH", "RErotH", "boussi"/))
+      call fileread(drutes_config%name, local, trim(msg), &
+	      options=(/"RE_std", "RE_mod", "REtest", "RE_rot", "REstdH", "RErotH", "boussi", "ADE_wr", "ADEstd"/))
 
       call fileread(drutes_config%dimen, local, ranges=(/1_ikind,2_ikind/))
       

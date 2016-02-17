@@ -141,7 +141,7 @@ modRE_junctions.o: $(CORE_obj) $(TOOLS_obj) modRE_globals.o modRE_reader.o modRE
 #-------begin ADE_obj-------------------------------
 ADE_globals.o: $(CORE_obj) src/models/ADE/ADE_globals.f90
 	$c -c src/models/ADE/ADE_globals.f90
-ADE_fnc.o: $(CORE_obj) src/models/ADE/ADE_fnc.f90
+ADE_fnc.o: $(CORE_obj) ADE_globals.o src/models/ADE/ADE_fnc.f90
 	$c -c src/models/ADE/ADE_fnc.f90
 ADE_reader.o: $(CORE_obj) $(TOOLS_obj) ADE_globals.o src/models/ADE/ADE_reader.f90
 	$c -c src/models/ADE/ADE_reader.f90
@@ -177,7 +177,7 @@ fem.o: $(CORE_obj) $(LINALG_obj) $(DECOMPO_obj)  femmat.o  src/femtools/fem.f90
 
 
 #-------begin POINTERS_obj--------------------------------
-manage_pointers.o: $(CORE_obj) $(TOOLS_obj) $(CORE_obj) $(FEMTOOLS_obj) $(LINALG_obj) $(RE_obj) $(DECOMPO_obj) $(modRE_obj) $(BOUSSINESQ_obj) src/pointerman/manage_pointers.f90
+manage_pointers.o: $(CORE_obj) $(TOOLS_obj) $(CORE_obj) $(FEMTOOLS_obj) $(LINALG_obj) $(RE_obj) $(DECOMPO_obj) $(modRE_obj) $(BOUSSINESQ_obj) $(ADE_obj)  src/pointerman/manage_pointers.f90
 	$c -c src/pointerman/manage_pointers.f90
 #-------end pointers_obj--------------------------------
 
