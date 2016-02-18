@@ -71,6 +71,7 @@ module manage_pointers
       use modRE_junctions
       use debug_tools
       use boussfnc
+      use ADE_fnc
 
       
 
@@ -198,6 +199,27 @@ module manage_pointers
 	  pde(1)%initcond => boussicond    
  
 	  pde(1)%dt_check => time_check_ok
+	  
+	  
+	case("ADEstd")
+	  pde(1)%pde_fnc(1)%dispersion => ADEdispersion
+	  pde(1)%pde_fnc(1)%convection => ADE_std_convection
+	  pde(1)%pde_fnc(1)%elasticity => ADE_tder_coef
+	  pde(1)%mass => ADE_mass
+
+	  pde(1)%pde_fnc(1)%reaction => dummy_scalar
+	  pde(1)%pde_fnc(1)%der_convect => dummy_vector
+          pde(1)%pde_fnc(1)%zerord => boussreact
+	      
+	  do i=lbound(pde(1)%bc,1), ubound(pde(1)%bc,1)
+	    pde(1)%bc(i)%value_fnc => bouss_bc
+	  end do    
+	   
+	  pde(1)%flux => darcy4bouss
+	  pde(1)%initcond => boussicond    
+ 
+	  pde(1)%dt_check => time_check_ok
+	  
 
 	  
 	case("RE_mod")

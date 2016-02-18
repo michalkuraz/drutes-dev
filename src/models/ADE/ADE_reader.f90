@@ -18,6 +18,30 @@ module ADE_reader
       real(kind=rkind), dimension(:), allocatable :: tmp_array
       character(len=4096) :: msg
       character(len=256) :: linetext
+      
+      select case(drutes_config%name)
+	case("ADEstd")
+	  i = 1
+	case("ADE_wr")
+	  i = 2
+	case default
+	  print *, "unssuported problem type, killed from ADE_reader::ADE_read"
+	  ERROR STOP
+      end select
+      
+      pde(i)%problem_name(1) = "ADER"
+      pde(i)%problem_name(2) = "Advection-dispersion-reaction equation"
+
+      pde(i)%solution_name(1) = "solute_concentration" !nazev vystupnich souboru
+      pde(i)%solution_name(2) = "c  [M/L^3]" !popisek grafu
+
+      pde(i)%flux_name(1) = "conc_flux"  
+      pde(i)%flux_name(2) = "concentration flux [M.L^{-2}.T^{-1}]"
+
+      pde(i)%mass_name(1) = "concentration"
+      pde(i)%mass_name(2) = "concetration [M/L^3]"
+      
+      
 
       call find_unit(file_contaminant, 200)
       open(unit = file_contaminant, file="drutes.conf/ADE/contaminant.conf", action="read", status="old", iostat=i_err)
@@ -117,16 +141,55 @@ module ADE_reader
        
        
        write(unit=msg, fmt=*) "You have requested ", n," different orders of reactions.", new_line("a"), &
-	   "For each different order specify its reaction rate, the reaction rates are specified in a line."
+	   "For each different "
+       
+       
+       write(unit=msg, fmt=*) "You have requested ", n," different orders of reactions.", new_line("a"), &
+	   "Specify the list of orders of reactions,", new_line("a"), &
+	   "!!!!EACH material requires its line!!!!",  new_line("a"), &
+	   "    e.g. you want to use zero order and second order reaction for first material and ",  new_line("a"), & 
+	   " first and second order reaction for second material, then specify the following lines", new_line("a"),new_line("a"),&
+ 	   " 0 2 ", new_line("a"), " 1 2 "
+       do i=1, ubound(adepar,1)
+	 allocate(adepar(i)%orders(n))
+	 call fileread(adepar(i)%orders, file_contaminant, errmsg=trim(msg))
+       end do
+       
+       write(unit=msg, fmt=*) "You have requested ", n," different orders of reactions.", new_line("a"), &
+	   "Specify the list of rates of reactions,", new_line("a"), &
+	   "!!!!EACH material requires its line!!!!",  new_line("a"), &
+	   "    e.g. you want to use zero order with rate 0.2 and second order reaction with rate 0.6 for first material and ",&
+	   new_line("a"), & 
+	   "and you have specified the requested orders of reactions above",  new_line("a"), & 
+	   " for the second material you would like to use only  opnly second order kinetics with rate 0.4 ",& 
+	   new_line("a"), "then the following lines has to be specified",&
+	   new_line("a"),new_line("a"),&
+ 	   " 0.2 0.6 ", new_line("a"), " 0.0 0.4 "
+ 	   
        do i=1, ubound(adepar,1)
 	 allocate(adepar(i)%lambda(n))
 	 call fileread(adepar(i)%lambda, file_contaminant, errmsg=trim(msg))
-       end do
+       end do   
+
        
        write(msg, *) "The number of lines for kinetic/equilibrium sorption parameters has to be equal to the number of materials"
        do i=1, ubound(adepar,1)
 	 call fileread(adepar(i)%sorption%kinetic, file_contaminant, errmsg=trim(msg))
       end do
+      
+      write(msg, *) "HINT1: The number of lines for kinetic/equilibrium sorption parameters has to be", &
+      " equal to the number of materials" , &
+      new_line("a"), "   HINT2: The bulk density has to be positive value greater than zero."
+      
+      do i=1, ubound(adepar,1)
+	 call fileread(adepar(i)%bd, file_contaminant, errmsg=trim(msg), &
+	 ranges=(/epsilon(0.0_rkind), huge(0.0_rkind)/))
+      end do
+      
+      
+      write(msg, *) "HINT1: The number of lines for kinetic/equilibrium sorption parameters has to be equal &
+	to the number of materials"&
+       , new_line("a"), "   HINT2: Have you specified the sorption model name correctly?"
       
       do i=1, ubound(adepar,1)
 	 call fileread(adepar(i)%sorption%name, file_contaminant, errmsg=trim(msg), options=(/"freund", "langmu"/))
@@ -140,9 +203,15 @@ module ADE_reader
 	adepar(i)%sorption%adsorb=tmp_array(1)
 	adepar(i)%sorption%desorb=tmp_array(2)
 	adepar(i)%sorption%third=tmp_array(3)
+	if (.not. adepar(i)%sorption%kinetic .and. adepar(i)%sorption%desorb < 100*epsilon(1.0_rkind)) then
+	  write(msg, *) "This is non-sence!! You have defined zero desorption rate but you want to use equilibrium sorption.", &
+	  new_line("a"), &
+	  "Divisions by zero are in general not defined in our society."
+	  call file_error(file_contaminant, message=trim(msg))
+	end if
       end do
       
-       
+      
       call fileread(n, file_contaminant, ranges=(/1_ikind, huge(n)/), &
       errmsg="You have selected strange number of boundaries for ADE problem")
       

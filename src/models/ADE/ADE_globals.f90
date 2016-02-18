@@ -5,7 +5,7 @@ module ade_globals
   type, public :: sorption_str
     logical :: kinetic
     !> name="freu" - Freundlich isoterm, "langmu" - Langmuir isoterm
-    character(len=4) :: name
+    character(len=6) :: name
     real(kind=rkind) :: adsorb
     real(kind=rkind) :: desorb
     !>the third parameter in sorption model -- either n exponent in Freundlich or csmax in Langmuir
@@ -20,7 +20,7 @@ module ade_globals
     real(kind=rkind), dimension(:), allocatable :: diff_loc
     real(kind=rkind) :: anisoangle
     real(kind=rkind), dimension(:,:), allocatable :: diff
-    real(kind=rkind), dimension(:), allocatable :: lambda 
+    real(kind=rkind), dimension(:), allocatable :: orders, lambda 
     real(kind=rkind) :: bd
     type(sorption_str) :: sorption
     real(kind=rkind) :: convection

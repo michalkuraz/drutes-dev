@@ -212,7 +212,7 @@ push:
 	git push
 
 syncup:
-	cat /etc/hostname > sync.stamp && date >> sync.stamp && rsync -avztu -e ssh --delete --exclude 'out' --exclude '*.o' --exclude '*.mod' --exclude 'bin'  --exclude '*~' --exclude '*attr' ./ miguel@cml.fsv.cvut.cz:~/drutes-obj/
+	cat /etc/hostname > sync.stamp && date >> sync.stamp && rsync -avztu -e ssh --delete --exclude 'out' --exclude '*.o' --exclude '*.mod' --exclude 'bin'  --exclude '*~' --exclude '*attr' --exclude '.git' ./ miguel@cml.fsv.cvut.cz:~/drutes-obj/
 
 syncdown:
 	tar -czf /tmp/git.tgz .git && rsync -avztu -e ssh --delete --exclude 'out/*' miguel@cml.fsv.cvut.cz:~/drutes-obj/ ./ && echo "last sync:" && cat sync.stamp && tar -xzf /tmp/git.tgz
