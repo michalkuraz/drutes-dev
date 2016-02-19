@@ -85,7 +85,7 @@ module manage_pointers
 
       select case(drutes_config%name)
        !general setting for Richards equation in all modes
-	case("RE_std", "RE_rot", "RErotH", "REstdH")
+	case("RE_std", "RE_rot", "RErotH", "REstdH", "ADE_wr")
           call domainswitch("m")
 	  pde_common%nonlinear = .true.
 	  if (drutes_config%fnc_method == 0) then
@@ -192,10 +192,16 @@ module manage_pointers
           pde(1)%pde_fnc(1)%zerord => boussreact
 	      
 	  do i=lbound(pde(1)%bc,1), ubound(pde(1)%bc,1)
-	    pde(1)%bc(i)%value_fnc => bouss_bc
-	  end do    
+	    select case(pde(1)%bc(i)%code)
+	      case(1)
+		pde(1)%bc(i)%value_fnc => ADE_dirichlet
+	      case(2)
+		pde(1)%bc(i)%value_fnc => ADE_neumann
+	    end select
+	  end do
+	         
 	   
-	  pde(1)%flux => darcy4bouss
+	  pde(1)%flux => ADE_flux
 	  pde(1)%initcond => boussicond    
  
 	  pde(1)%dt_check => time_check_ok
@@ -207,16 +213,22 @@ module manage_pointers
 	  pde(1)%pde_fnc(1)%elasticity => ADE_tder_coef
 	  pde(1)%mass => ADE_mass
 
-	  pde(1)%pde_fnc(1)%reaction => dummy_scalar
+	  pde(1)%pde_fnc(1)%reaction => ADE_reaction
 	  pde(1)%pde_fnc(1)%der_convect => dummy_vector
-          pde(1)%pde_fnc(1)%zerord => boussreact
+          pde(1)%pde_fnc(1)%zerord => ADE_zerorder
 	      
 	  do i=lbound(pde(1)%bc,1), ubound(pde(1)%bc,1)
-	    pde(1)%bc(i)%value_fnc => bouss_bc
+	    select case(pde(1)%bc(i)%code)
+	      case(1)
+		pde(1)%bc(i)%value_fnc => ADE_dirichlet
+	      case(2)
+		pde(1)%bc(i)%value_fnc => ADE_neumann
+	    end select
 	  end do    
 	   
-	  pde(1)%flux => darcy4bouss
-	  pde(1)%initcond => boussicond    
+	  pde(1)%flux => ADE_flux
+	  
+	  pde(1)%initcond => ADE_icond   
  
 	  pde(1)%dt_check => time_check_ok
 	  

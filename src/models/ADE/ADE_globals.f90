@@ -26,6 +26,7 @@ module ade_globals
     real(kind=rkind) :: convection
     real(kind=rkind) :: water_cont
     character(len=2) :: icondtype
+    real(kind=rkind) :: cmax
     real(kind=rkind) :: cinit
   end type soluteXsoil
 

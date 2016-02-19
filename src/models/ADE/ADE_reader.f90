@@ -18,6 +18,7 @@ module ADE_reader
       real(kind=rkind), dimension(:), allocatable :: tmp_array
       character(len=4096) :: msg
       character(len=256) :: linetext
+      logical :: crelative = .false.
       
       select case(drutes_config%name)
 	case("ADEstd")
@@ -52,7 +53,11 @@ module ADE_reader
 
       allocate(adepar(maxval(elements%material)))
       
-      write(msg, fmt=*) "ERROR!! incorrect number of materials in drutes.conf/water.conf/matrix.conf  &
+      call fileread(n, file_contaminant)
+      
+      backspace(file_contaminant)
+      
+      write(msg, fmt=*) "ERROR!! incorrect number of materials in drutes.conf/ADE/contaminant.conf  &
 	the mesh defines", maxval(elements%material)  , "materials, and your input file defines", n, "material(s)."
 	
      
@@ -98,19 +103,37 @@ module ADE_reader
        end if
        select case (adepar(i)%icondtype)
 	 case("cr", "ca")
+	   if (adepar(i)%icondtype == "cr") crelative=.true.
 	   CONTINUE
 	 case default
 	   write(unit=terminal, fmt=*) " Your initial concentration can be only:  "
 	   write(unit=terminal, fmt=*) "  ca - for absolute concentration"
 	   write(unit=terminal, fmt=*) "  cr - for relative concentration"
 	   call file_error(file_contaminant)
-       end select
+        end select
 	   
        end do
        
-       call fileread(with_richards, file_contaminant, &
-        errmsg="Specify [y/n] to define whether you prefer to compute convection from the Richards equation or &
-         specify the convection directly here")
+       if (crelative) then
+	 call  fileread(adepar(1)%cmax, file_contaminant, errmsg="Have you defined correct value for the maximal concentration?")
+	 do i=2, ubound(adepar,1)
+	  adepar(i)%cmax = adepar(1)%cmax
+	 end do
+       end if
+       
+  
+       
+       if (.not. crelative) then
+	write(msg, *) "HINT 1: Specify [y/n] to define whether you prefer to compute convection from the Richards equation or", &
+        " specify the convection directly here.", new_line("a"), &
+         "   HINT 2: Since you don't use relative concentration for the initial condition, check whether you left the", &
+        " line with cmax blank."
+       else
+	write(msg, *) "HINT 1: Specify [y/n] to define whether you prefer to compute convection from the Richards equation or &
+         specify the convection directly here."
+       end if
+       
+       call fileread(with_richards, file_contaminant, errmsg=trim(msg))
        
        if (.not. with_richards .and. drutes_config%name=="ADE_wr") then
 	 write(unit=terminal, fmt=*) "You have specified ADE_wr =(advection dispersion reaction equation, where &

@@ -1,10 +1,9 @@
 module ADE_fnc
   public :: ADEdispersion
-  public :: reaction
   public :: ADE_std_convection
   public :: ADE_tder_coef
   public :: ADE_mass
-  public :: ADE_reaction, ADE_zerorder
+  public :: ADE_reaction, ADE_zerorder, ADE_flux, ADE_icond
   
   contains
     subroutine ADEdispersion(pde_loc, layer, quadpnt, x, tensor, scalar)
@@ -40,7 +39,7 @@ module ADE_fnc
       end do
       
       if (drutes_config%name=="ADEstd") then
-	tensor = (ADEpar(layer)%diff*abs(ADEpar(layer)%convection) + &
+	tensor(1:D, 1:D) = (ADEpar(layer)%diff*abs(ADEpar(layer)%convection) + &
 	  identity(1:D, 1:D)*adepar(layer)%difmol)* &
 	  adepar(layer)%water_cont
 	  RETURN
@@ -63,23 +62,6 @@ module ADE_fnc
     
     end subroutine ADEdispersion
     
-
-    
-    function reaction(pde_loc, layer, quadpnt, x) result(val)
-      use typy
-      use global_objs
-      use pde_objs
-      class(pde_str), intent(in) :: pde_loc
-      !> value of the nonlinear function
-      real(kind=rkind), dimension(:), intent(in), optional    :: x
-      !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
-      type(integpnt_str), intent(in), optional :: quadpnt
-      !> material ID
-      integer(kind=ikind), intent(in) :: layer
-      !> return value
-      real(kind=rkind)                :: val
-    
-    end function reaction
     
     subroutine ADE_std_convection(pde_loc, layer, quadpnt, x, vector_in, vector_out, scalar)
       use typy
@@ -191,7 +173,11 @@ module ADE_fnc
       !> return value
       real(kind=rkind)                :: val 
       
-      val = pde_loc%getval(quadpnt)
+      if (present(quadpnt)) then
+	val = pde_loc%getval(quadpnt)
+      else
+        val = x(1)
+      end if
       
     end function ADE_mass
     
@@ -268,19 +254,232 @@ module ADE_fnc
 	theta = adepar(layer)%water_cont
       end if
       
+       val = 0.0_rkind
        do i=1, ubound(adepar(layer)%orders,1)
-	n = 10
-	if (abs(adepar(layer)%orders(i)) < 100*epsilon(1.0_rkind)) n = 0
-	select case(n)
-	  case(0)
-	    val =  val + theta*adepar(layer)%lambda(i)
-	  case default
-	    CONTINUE
-	end select
+	if (abs(adepar(layer)%orders(i)) < 100*epsilon(1.0_rkind)) then
+	  val =  val + theta*adepar(layer)%lambda(i)
+	end if
       end do
       
       
     end function ADE_zerorder
+    
+    subroutine ADE_dirichlet(el_id, node_order, value, code) 
+      use typy
+      use globals
+      use global_objs
+      use pde_objs
+      use debug_tools
+      
+      integer(kind=ikind), intent(in)  :: el_id, node_order
+      real(kind=rkind), intent(out), optional    :: value
+      integer(kind=ikind), intent(out), optional :: code
+      
+      integer(kind=ikind) :: edge_id, i, j, proc
+      real(kind=rkind) :: tempval
+
+      select case(drutes_config%name)
+	case("ADEstd")
+	  proc = 1
+	case("ADE_wr")
+	  proc = 2
+      end select
+      
+      edge_id = nodes%edge(elements%data(el_id, node_order))
+      
+      if (present(value)) then
+	if (pde(proc)%bc(edge_id)%file) then
+	  do i=1, ubound(pde(proc)%bc(edge_id)%series,1)
+	    if (pde(proc)%bc(edge_id)%series(i,1) > time) then
+	      if (i > 1) then
+		j = i-1
+	      else
+		j = i
+	      end if
+	      tempval = pde(proc)%bc(edge_id)%series(j,2)
+	      EXIT
+	    end if
+	  end do
+	else
+	  tempval =  pde(proc)%bc(edge_id)%value
+	end if
+	value = tempval 
+      end if
+
+
+      
+      if (present(code)) then
+	code = 1
+      end if
+      
+
+    end subroutine ADE_dirichlet
+    
+    
+    subroutine ADE_neumann(el_id, node_order, value, code) 
+      use typy
+      use globals
+      use global_objs
+      use pde_objs
+      use debug_tools
+      
+      integer(kind=ikind), intent(in)  :: el_id, node_order
+      real(kind=rkind), intent(out), optional    :: value
+      integer(kind=ikind), intent(out), optional :: code
+      
+      integer(kind=ikind) :: edge_id, i, j, proc
+      real(kind=rkind) :: tempval
+
+      select case(drutes_config%name)
+	case("ADEstd")
+	  proc = 1
+	case("ADE_wr")
+	  proc = 2
+      end select
+      
+      edge_id = nodes%edge(elements%data(el_id, node_order))
+      
+      if (present(value)) then
+	if (pde(proc)%bc(edge_id)%file) then
+	  do i=1, ubound(pde(proc)%bc(edge_id)%series,1)
+	    if (pde(proc)%bc(edge_id)%series(i,1) > time) then
+	      if (i > 1) then
+		j = i-1
+	      else
+		j = i
+	      end if
+	      tempval = pde(proc)%bc(edge_id)%series(j,2)
+	      EXIT
+	    end if
+	  end do
+	else
+	  tempval =  pde(proc)%bc(edge_id)%value
+	end if
+	value = tempval 
+      end if
+
+
+      
+      if (present(code)) then
+	code = 1
+      end if
+      
+
+    end subroutine ADE_neumann
+    
+    
+    subroutine ADE_flux(pde_loc, layer, quadpnt, x, grad,  flux, flux_length)
+      use typy
+      use pde_objs
+      use global_objs
+      use debug_tools
+      use ADE_globals
+       
+      class(pde_str), intent(in) :: pde_loc
+      integer(kind=ikind), intent(in)                          :: layer
+      type(integpnt_str), intent(in), optional :: quadpnt    
+      real(kind=rkind), intent(in), dimension(:), optional                   :: x
+      !> this value is optional, because it is required by the vector_fnc procedure pointer global definition
+      real(kind=rkind), dimension(:), intent(in), optional     :: grad
+      real(kind=rkind), dimension(:), intent(out), optional    :: flux
+      real(kind=rkind), intent(out), optional                  :: flux_length
+    
+      real(kind=rkind), dimension(:,:), allocatable, save  :: Dhm
+      real(kind=rkind), dimension(:), allocatable, save :: q_w, gradC
+      real(kind=rkind) :: c, cmax
+      
+      
+      if (present(quadpnt) .and. (present(grad) .or. present(x))) then
+	print *, "ERROR: the function can be called either with integ point or x value definition and gradient, not both of them"
+	print *, "exited from ADE_fnc::ADE_flux"
+	ERROR stop
+      else if ((.not. present(grad) .or. .not. present(x)) .and. .not. present(quadpnt)) then
+	print *, "ERROR: you have not specified either integ point or x value"
+        print *, "exited from ADE_fnc::ADE_flux"
+	ERROR stop
+      end if
+      
+      if (.not. allocated(q_w)) allocate(q_w(drutes_config%dimen))
+
+      if (.not. allocated(gradC)) allocate(gradC(drutes_config%dimen))
+      
+      if (.not. allocated(Dhm)) allocate(Dhm(drutes_config%dimen, drutes_config%dimen))
+      
+      if (present(quadpnt)) then
+	c = pde_loc%getval(quadpnt)
+	call pde_loc%getgrad(quadpnt, gradC)
+      else
+        if (ubound(x,1) /=1) then
+	  print *, "ERROR: van Genuchten function is a function of a single variable h"
+	  print *, "       your input data has:", ubound(x,1), "variables"
+	  print *, "exited from ADE_fnc::ADE_flux"
+	  ERROR STOP
+	end if
+	c = x(1)
+	gradC = grad
+      end if
+      
+      
+      call pde_loc%pde_fnc(1)%dispersion(pde_loc, layer, quadpnt, tensor=Dhm)
+      
+      select case(drutes_config%name)
+	case("ADEstd")
+	  q_w = adepar(layer)%convection
+	case("ADE_wr")
+	  call pde(1)%flux(layer, quadpnt, vector_out=q_w)
+      end select
+      
+      select case(adepar(layer)%icondtype)
+	case("ca")
+	  cmax = 1.0_rkind
+	 case("cr")
+	  cmax = adepar(layer)%cmax
+      end select
+      
+      
+      if (present(flux)) then
+	flux = cmax*matmul(Dhm, gradC) + cmax*q_w*c
+      end if
+    
+    end subroutine ADE_flux
+    
+    subroutine ADE_icond(pde_loc) 
+      use typy
+      use globals
+      use global_objs
+      use pde_objs
+      use ADE_globals
+
+      
+      class(pde_str), intent(in out) :: pde_loc
+      integer(kind=ikind) :: i, j, k,l, m, layer, D
+      real(kind=rkind) :: value
+      
+   
+      D = drutes_config%dimen
+      do i=1, elements%kolik
+	layer = elements%material(i,1)
+	do j=1, ubound(elements%data,2)
+	  k = elements%data(i,j)
+	  l = nodes%edge(k)
+	  m = pde_loc%permut(k)
+	  if (m == 0) then
+	    call pde_loc%bc(l)%value_fnc(i, j, value)
+	    pde_loc%solution(k) =  value 
+	  else
+	    select case (adepar(layer)%icondtype)
+	      case("ca")
+		pde_loc%solution(k) = adepar(layer)%cinit
+	      case("cr")
+		pde_loc%solution(k) = adepar(layer)%cinit * adepar(layer)%cmax
+	    end select
+	  end if
+	end do   
+      end do
+
+    
+    
+    end subroutine ADE_icond
     
 
 end module ADE_fnc

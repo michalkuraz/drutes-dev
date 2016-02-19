@@ -46,7 +46,7 @@ module re_total
       real(kind=rkind), intent(out), optional                  :: flux_length
 
       real(kind=rkind), dimension(3,3)  :: K
-      integer                           :: D
+      integer(kind=ikind)               :: D
       integer(kind=ikind)               :: i
       real(kind=rkind), dimension(:), allocatable, save  :: gradH
       real(kind=rkind), dimension(:), allocatable, save  :: vct
@@ -62,6 +62,7 @@ module re_total
 
       if (present(quadpnt) .and. (present(grad) .or. present(x))) then
 	print *, "ERROR: the function can be called either with integ point or x value definition and gradient, not both of them"
+        print *, "exited from re_constitutive::darcy_law"
 	ERROR stop
       else if ((.not. present(grad) .or. .not. present(x)) .and. .not. present(quadpnt)) then
 	print *, "ERROR: you have not specified either integ point or x value"
@@ -501,9 +502,6 @@ module re_total
 	  STOP
 	END IF
       end do
-      
-
-
 	  
     
     end subroutine iconddebouss
