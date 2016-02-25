@@ -20,6 +20,9 @@ module ADE_reader
       character(len=256) :: linetext
       logical :: crelative = .false.
       
+      
+    
+      
       select case(drutes_config%name)
 	case("ADEstd")
 	  i = 1
@@ -39,7 +42,7 @@ module ADE_reader
       pde(i)%flux_name(1) = "conc_flux"  
       pde(i)%flux_name(2) = "concentration flux [M.L^{-2}.T^{-1}]"
 
-      pde(i)%mass_name(1) = "concentration"
+      pde(i)%mass_name(1) = "conc_in_porous_medium"
       pde(i)%mass_name(2) = "concetration [M/L^3]"
       
       
@@ -50,6 +53,15 @@ module ADE_reader
 	print *, "missing drutes.conf/ADE/contaminant.conf file"
 	ERROR STOP
       end if
+      
+      
+        write(msg, *) "Define method of time integration", new_line("a"), &
+	"   0 - steady state problem", &
+	new_line("a"), &
+	"   1 - unsteady problem with lumped (diagonal) capacity matrix (recommended)", new_line("a"), &
+	"   2 - unsteady problem with consistent capacity matrix"
+
+      call fileread(pde_common%timeint_method, file_contaminant, ranges=(/0_ikind,2_ikind/), errmsg=msg)
 
       allocate(adepar(maxval(elements%material)))
       
@@ -195,10 +207,13 @@ module ADE_reader
        end do   
 
        
-       write(msg, *) "The number of lines for kinetic/equilibrium sorption parameters has to be equal to the number of materials"
-       do i=1, ubound(adepar,1)
-	 call fileread(adepar(i)%sorption%kinetic, file_contaminant, errmsg=trim(msg))
-      end do
+       
+       if (drutes_config%name == "ADEwrk" .or. drutes_config%name=="ADEstk") then
+         adepar(:)%sorption%kinetic = .true.
+       else
+         adepar(:)%sorption%kinetic = .false.
+       end if
+
       
       write(msg, *) "HINT1: The number of lines for kinetic/equilibrium sorption parameters has to be", &
       " equal to the number of materials" , &
@@ -226,17 +241,32 @@ module ADE_reader
 	adepar(i)%sorption%adsorb=tmp_array(1)
 	adepar(i)%sorption%desorb=tmp_array(2)
 	adepar(i)%sorption%third=tmp_array(3)
-	if (.not. adepar(i)%sorption%kinetic .and. adepar(i)%sorption%desorb < 100*epsilon(1.0_rkind)) then
+	if (.not. adepar(i)%sorption%kinetic .and. adepar(i)%sorption%desorb < 100*epsilon(1.0_rkind) .and. &
+	abs(adepar(i)%sorption%adsorb) > 100*epsilon(1.0_rkind)) then
 	  write(msg, *) "This is non-sence!! You have defined zero desorption rate but you want to use equilibrium sorption.", &
 	  new_line("a"), &
-	  "Divisions by zero are in general not defined in our society."
+	  "Divisions by zero are in general not accepted in a good society."
 	  call file_error(file_contaminant, message=trim(msg))
 	end if
       end do
       
+      if (drutes_config%name == "ADEwrk" .or. drutes_config%name=="ADEstk") then
+	do i=1, ubound(adepar,1)
+	  call fileread(adepar(i)%csinit, file_contaminant, errmsg="Have you defined value for c_s_init")
+	end do
+      end if
+      
+      if (drutes_config%name == "ADEwrk" .or. drutes_config%name=="ADEstk") then
+ 	write(msg, *) "HINT 1: You have selected strange number of boundaries for ADE problem.", new_line("a"), &
+		    "  HINT 2: Since you requested nonequilibrium sorption, then you should provide csinit for each material."
+      else
+ 	write(msg, *) "HINT 1: You have selected strange number of boundaries for ADE problem.", new_line("a"), &
+		    "   HINT 2: Since you requested equilibrium sorption, then comment or erase lines with csinit"
+      end if
+		    
       
       call fileread(n, file_contaminant, ranges=(/1_ikind, huge(n)/), &
-      errmsg="You have selected strange number of boundaries for ADE problem")
+      errmsg=trim(msg))
       
       if (with_richards) then
 	i=2
@@ -250,7 +280,11 @@ module ADE_reader
       
       
 
-    end subroutine ADE_read				
+    end subroutine ADE_read		
+    
+    subroutine ADEcs_read()
+    
+    end subroutine ADEcs_read
 
 
   

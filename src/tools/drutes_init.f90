@@ -95,7 +95,7 @@ module drutes_init
 	write(dirname, fmt=*) trim(dirglob%dir), "drutes_global.conf/global.conf" 
 	open(unit=file_wwwglob,file=trim(adjustl(dirname)), action="read", status="old", iostat = i_err)
 	if (i_err /= 0) then
-	  print *, "incorrect definition of global configuration file"
+	  print *, "incorrect definition of global confispozditguration file"
 	  print *, "your definition was: ", trim(dirglob%dir)
 	  print *, "the constructed path was: ", trim(adjustl(dirname))
 	  ERROR stop
@@ -335,9 +335,9 @@ module drutes_init
       select case (drutes_config%name)
 	case("RE_std", "RE_rot", "REstdH", "RErotH", "boussi", "ADEstd")
 	  pde_common%processes = 1
-	case("ADE_wR")
+	case("ADE_wR", "ADEstk")
 	  pde_common%processes = 2
-	case("RE_mod", "REtest")
+	case("RE_mod", "REtest", "ADEwRk")
 	  pde_common%processes = 3
       end select
 

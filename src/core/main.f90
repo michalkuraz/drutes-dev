@@ -144,7 +144,8 @@ program main
       call solve_pde(success)
     case ("ADEstd")
       write(unit=ch, fmt="(I1,a)") drutes_config%dimen, "D"
-      call write_log("DRUtES solves advection-dispersion-reaction equation, advection is defined by user", text2=ch)
+      call write_log("DRUtES solves advection-dispersion-reaction equation, advection is defined by user, domain dimension:",&
+      text2=ch)
       call solve_pde(success)
     case ("ADE_wr")
       write(unit=ch, fmt="(I1,a)") drutes_config%dimen, "D"

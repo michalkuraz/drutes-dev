@@ -33,12 +33,18 @@ module manage_pointers
 	case("boussi")
 	  pde(1)%read_parameters => boussreader
 	  
-	case("ADEstd")
+	case("ADEstd", "ADEstk")
 	  pde(1)%read_parameters => ADE_read
+	  if (drutes_config%name=="ADEstk") then
+	    pde(2)%read_parameters => ADEcs_read
+	  end if
 	  
-	case("ADE_wr")
+	case("ADE_wr", "ADEwRk")
 	  pde(1)%read_parameters => res_read
 	  pde(2)%read_parameters => ADE_read
+	  if (drutes_config%name=="ADEwRk") then
+	    pde(3)%read_parameters => ADEcs_read
+	  end if
 	  
         
         case default
@@ -75,7 +81,7 @@ module manage_pointers
 
       
 
-      integer(kind=ikind) :: i,j
+      integer(kind=ikind) :: i,j, proc_cl, proc_cs
       type(integpnt_str) :: quadpnt
       
       do i=1, ubound(pde,1)
@@ -85,7 +91,7 @@ module manage_pointers
 
       select case(drutes_config%name)
        !general setting for Richards equation in all modes
-	case("RE_std", "RE_rot", "RErotH", "REstdH", "ADE_wr")
+	case("RE_std", "RE_rot", "RErotH", "REstdH")
           call domainswitch("m")
 	  pde_common%nonlinear = .true.
 	  if (drutes_config%fnc_method == 0) then
@@ -207,31 +213,39 @@ module manage_pointers
 	  pde(1)%dt_check => time_check_ok
 	  
 	  
-	case("ADEstd")
-	  pde(1)%pde_fnc(1)%dispersion => ADEdispersion
-	  pde(1)%pde_fnc(1)%convection => ADE_std_convection
-	  pde(1)%pde_fnc(1)%elasticity => ADE_tder_coef
-	  pde(1)%mass => ADE_mass
 
-	  pde(1)%pde_fnc(1)%reaction => ADE_reaction
-	  pde(1)%pde_fnc(1)%der_convect => dummy_vector
-          pde(1)%pde_fnc(1)%zerord => ADE_zerorder
+      case("ADEstd", "ADEstk", "ADE_wr", "ADEwRk")
+	
+	  proc_cl = 1
+	  
+	  pde(proc_cl)%pde_fnc(1)%dispersion => ADEdispersion
+	 
+	  pde(proc_cl)%pde_fnc(1)%convection => ADE_std_convection
+
+	  pde(proc_cl)%pde_fnc(1)%elasticity => ADE_tder_coef
+
+	  pde(proc_cl)%mass => ADE_mass
+
+	  pde(proc_cl)%pde_fnc(1)%reaction => ADE_reaction
+	  
+	  pde(proc_cl)%pde_fnc(1)%der_convect => dummy_vector
+          
+          pde(proc_cl)%pde_fnc(1)%zerord => ADE_zerorder
 	      
-	  do i=lbound(pde(1)%bc,1), ubound(pde(1)%bc,1)
-	    select case(pde(1)%bc(i)%code)
+	  do i=lbound(pde(proc_cl)%bc,1), ubound(pde(proc_cl)%bc,1)
+	    select case(pde(proc_cl)%bc(i)%code)
 	      case(1)
-		pde(1)%bc(i)%value_fnc => ADE_dirichlet
+		pde(proc_cl)%bc(i)%value_fnc => ADE_dirichlet
 	      case(2)
-		pde(1)%bc(i)%value_fnc => ADE_neumann
+		pde(proc_cl)%bc(i)%value_fnc => ADE_neumann
 	    end select
 	  end do    
 	   
-	  pde(1)%flux => ADE_flux
+	  pde(proc_cl)%flux => ADE_flux
 	  
-	  pde(1)%initcond => ADE_icond   
+	  pde(proc_cl)%initcond => ADE_icond   
  
-	  pde(1)%dt_check => time_check_ok
-	  
+	  pde(proc_cl)%dt_check => time_check_ok
 
 	  
 	case("RE_mod")

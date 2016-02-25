@@ -58,13 +58,22 @@ module read_inputs
 	new_line("a"),  new_line("a"), &
 	"   boussi = Boussinesq equation for sloping land (1877)", &
 	new_line("a"),  new_line("a"), &
-	"   ADE_wR = advection dispersion reaction equation (transport of solutes), convection is computed from the Richards equation", &
+	"   ADE_wR = advection dispersion reaction equation (transport of solutes), convection is computed from the Richards equation, ", &
+	"equilibrium sorption", &
 	new_line("a"),  new_line("a"), &
-	"   ADEstd = advection dispersion reaction equation (transport of solutes),  convection is specified in config files", &
+	"   ADEstd = advection dispersion reaction equation (transport of solutes),  convection is specified in config files,", &
+	" equilibrium sorption", &
+	new_line("a"),  new_line("a"), &
+	"   ADEwRk = advection dispersion reaction equation (transport of solutes), convection is computed from the Richards equation, ", &
+	"kinetic sorption", &
+	new_line("a"),  new_line("a"), &
+	"   ADEstk = advection dispersion reaction equation (transport of solutes),  convection is specified in config files,", &
+	" kinetic sorption", &
 	new_line("a"),  new_line("a"), new_line("a")
 	
       call fileread(drutes_config%name, local, trim(msg), &
-	      options=(/"RE_std", "RE_mod", "REtest", "RE_rot", "REstdH", "RErotH", "boussi", "ADE_wr", "ADEstd"/))
+	    options=(/"RE_std", "RE_mod", "REtest", "RE_rot", "REstdH", "RErotH", "boussi", "ADE_wr", "ADEstd", &
+	      "ADEwRk", "ADEstk"/))
 
       call fileread(drutes_config%dimen, local, ranges=(/1_ikind,2_ikind/))
       

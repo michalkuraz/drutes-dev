@@ -43,7 +43,12 @@ module re_reader
         ERROR STOP
       end if
       
-      call fileread(drutes_config%fnc_method, file_waterm, ranges=(/0_ikind,1_ikind/))
+      write(msg, *) "define method of evaluation of constitutive functions for the Richards equation", new_line("a"), &
+	"   0 - direct evaluation (not recommended, extremely resources consuming due to complicated exponential functions)", &
+	new_line("a"), &
+	"   1 - function values are precalculated in program initialization and values between are linearly approximated"
+      
+      call fileread(drutes_config%fnc_method, file_waterm, ranges=(/0_ikind,1_ikind/),errmsg=msg)
       
       call fileread(maxpress, file_waterm, ranges=(/-huge(0.0_rkind), huge(0.0_rkind)/), &
 	errmsg="set some positive nonzero limit for maximal suction pressure (think in absolute values) ")
@@ -52,8 +57,14 @@ module re_reader
       call fileread(drutes_config%fnc_discr_length, file_waterm, ranges=(/tiny(0.0_rkind), maxpress/),  &
 	errmsg="the discretization step for precalculating constitutive functions must be positive and smaller &
 	then the bc")
+	
+      write(msg, *) "Define method of time integration", new_line("a"), &
+	"   0 - steady state problem", &
+	new_line("a"), &
+	"   1 - unsteady problem with lumped (diagonal) capacity matrix (recommended)", new_line("a"), &
+	"   2 - unsteady problem with consistent capacity matrix"
       
-      call fileread(pde_common%timeint_method, file_waterm)
+      call fileread(pde_common%timeint_method, file_waterm, ranges=(/0_ikind,2_ikind/), errmsg=msg)
       
       call fileread(n, file_waterm)
       

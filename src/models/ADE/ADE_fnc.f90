@@ -1,9 +1,9 @@
 module ADE_fnc
   public :: ADEdispersion
   public :: ADE_std_convection
-  public :: ADE_tder_coef
+  public :: ADE_tder_coef, ADE_tder_cscl, ADE_tder_cscs
   public :: ADE_mass
-  public :: ADE_reaction, ADE_zerorder, ADE_flux, ADE_icond
+  public :: ADE_reaction, ADE_zerorder, ADE_flux, ADE_icond, ADE_csbc
   
   contains
     subroutine ADEdispersion(pde_loc, layer, quadpnt, x, tensor, scalar)
@@ -31,7 +31,7 @@ module ADE_fnc
       real(kind=rkind) :: theta, q_abs, tortuo
       integer(kind=ikind) :: D, i
       
-      
+     
       D = drutes_config%dimen
       identity = 0.0
       do i=1, D
@@ -56,7 +56,12 @@ module ADE_fnc
       q_abs = sqrt(q_abs)
       tortuo = theta**(10.0/3.0)/(vgset(layer)%ths*vgset(layer)%ths)
       
-      tensor = theta * (adepar(layer)%diff*q_abs + adepar(layer)%difmol*identity(1:D, 1:D))
+      
+      if (present(tensor)) then
+	tensor = theta * (adepar(layer)%diff*q_abs + adepar(layer)%difmol*identity(1:D, 1:D))	
+      end if
+      
+
       
       
     
@@ -81,6 +86,8 @@ module ADE_fnc
       real(kind=rkind), dimension(:), intent(out), optional :: vector_out
       !> relative scalar value of the nonlinear function 
       real(kind=rkind), intent(out), optional               :: scalar
+      
+      
       
       if (present(vector_out)) then
 	vector_out = adepar(layer)%convection
@@ -113,7 +120,8 @@ module ADE_fnc
       
       real(kind=rkind) :: theta, n, ka, kd, csmax, cl
       
-      if (drutes_config%name=="ADE_wr") then
+      
+      if (drutes_config%name=="ADE_wr" .or. drutes_config%name=="ADEwrk" ) then
 	theta = pde(1)%mass(layer, quadpnt)
       else
 	theta = adepar(layer)%water_cont
@@ -149,12 +157,60 @@ module ADE_fnc
       else
 	val = theta
       end if
-      
-      
-      
+     
       
     
     end function ADE_tder_coef
+    
+    
+    function ADE_tder_cscl(pde_loc, layer, quadpnt, x) result(val)
+      use typy
+      use global_objs
+      use pde_objs
+      use ADE_globals
+      
+      class(pde_str), intent(in) :: pde_loc
+      !> value of the nonlinear function
+      real(kind=rkind), dimension(:), intent(in), optional    :: x
+      !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
+      type(integpnt_str), intent(in), optional :: quadpnt
+      !> material ID
+      integer(kind=ikind), intent(in) :: layer
+      !> return value
+      real(kind=rkind)                :: val
+      
+      real(kind=rkind) :: theta
+      
+      if (drutes_config%name=="ADE_wr" .or. drutes_config%name=="ADEwrk" ) then
+	theta = pde(1)%mass(layer, quadpnt)
+      else
+	theta = adepar(layer)%water_cont
+      end if
+      
+      val = 1.0_rkind-theta
+      
+    end function ADE_tder_cscl
+    
+    
+    function ADE_tder_cscs(pde_loc, layer, quadpnt, x) result(val)
+      use typy
+      use global_objs
+      use pde_objs
+      use ADE_globals
+      
+      class(pde_str), intent(in) :: pde_loc
+      !> value of the nonlinear function
+      real(kind=rkind), dimension(:), intent(in), optional    :: x
+      !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
+      type(integpnt_str), intent(in), optional :: quadpnt
+      !> material ID
+      integer(kind=ikind), intent(in) :: layer
+      !> return value
+      real(kind=rkind)                :: val
+      
+      val = 1.0_rkind
+    
+    end function ADE_tder_cscs
     
     
     function ADE_mass(pde_loc, layer, quadpnt, x) result(val)
@@ -172,11 +228,22 @@ module ADE_fnc
       integer(kind=ikind), intent(in) :: layer
       !> return value
       real(kind=rkind)                :: val 
+      real(kind=rkind)                :: theta
+      
+      if (drutes_config%name == "ADEstd") then
+	theta = adepar(layer)%water_cont
+      else if (drutes_config%name == "ADE_wr") then
+	theta = pde(1)%mass(layer, quadpnt)
+      else
+	print *, "incorrect problem type", drutes_config%name 
+	print *, "exited from ADE_fnc::ADE_mass"
+	ERROR STOP
+      end if
       
       if (present(quadpnt)) then
-	val = pde_loc%getval(quadpnt)
+	val = theta*pde_loc%getval(quadpnt)
       else
-        val = x(1)
+        val = theta * x(1)
       end if
       
     end function ADE_mass
@@ -201,7 +268,7 @@ module ADE_fnc
       real(kind=rkind) :: theta, cl
       
      
-      if (drutes_config%name=="ADE_wr") then
+      if (drutes_config%name=="ADE_wr" .or. drutes_config%name=="ADEwRk" ) then
 	theta = pde(1)%mass(layer, quadpnt)
       else
 	theta = adepar(layer)%water_cont
@@ -331,9 +398,9 @@ module ADE_fnc
       real(kind=rkind) :: tempval
 
       select case(drutes_config%name)
-	case("ADEstd")
+	case("ADEstd", "ADEstk")
 	  proc = 1
-	case("ADE_wr")
+	case("ADE_wr", "ADEwRk")
 	  proc = 2
       end select
       
@@ -423,9 +490,9 @@ module ADE_fnc
       call pde_loc%pde_fnc(1)%dispersion(pde_loc, layer, quadpnt, tensor=Dhm)
       
       select case(drutes_config%name)
-	case("ADEstd")
+	case("ADEstd", "ADEstk")
 	  q_w = adepar(layer)%convection
-	case("ADE_wr")
+	case("ADE_wr", "ADEwRk")
 	  call pde(1)%flux(layer, quadpnt, vector_out=q_w)
       end select
       
@@ -480,6 +547,124 @@ module ADE_fnc
     
     
     end subroutine ADE_icond
+    
+    function ADE_cscs_react(pde_loc, layer, quadpnt, x) result(val)
+      use typy
+      use global_objs
+      use pde_objs
+      use ADE_globals
+      
+      class(pde_str), intent(in) :: pde_loc
+      !> value of the nonlinear function
+      real(kind=rkind), dimension(:), intent(in), optional    :: x
+      !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
+      type(integpnt_str), intent(in), optional :: quadpnt
+      !> material ID
+      integer(kind=ikind), intent(in) :: layer
+      !> return value
+      real(kind=rkind)                :: val 
+      
+      integer(kind=ikind) :: proc_cl
+      real(kind=rkind) :: cs, cl
+      
+      select case(drutes_config%name)
+	case("ADEstk")
+	  proc_cl = 1
+	case("ADEwRk")
+	  proc_cl = 2
+	case default
+	  print *, "this function should not be called, exited from ADE_fnc::ADE_cscs_react"
+	  ERROR STOP
+      end select
+      
+      
+      select case(adepar(layer)%sorption%name)
+	case("langmu")
+	  cs = pde_loc%getval(quadpnt) 
+          cl = pde(proc_cl)%getval(quadpnt)
+          val = adepar(layer)%sorption%adsorb*cl*cs - adepar(layer)%sorption%desorb*cs
+	case("freund")
+	  cs = pde_loc%getval(quadpnt)
+	  val = -adepar(layer)%sorption%desorb*cs
+      end select
+      
+  end function ADE_cscs_react
+  
+   function ADE_cscl_react(pde_loc, layer, quadpnt, x) result(val)
+      use typy
+      use global_objs
+      use pde_objs
+      use ADE_globals
+      
+      class(pde_str), intent(in) :: pde_loc
+      !> value of the nonlinear function
+      real(kind=rkind), dimension(:), intent(in), optional    :: x
+      !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
+      type(integpnt_str), intent(in), optional :: quadpnt
+      !> material ID
+      integer(kind=ikind), intent(in) :: layer
+      !> return value
+      real(kind=rkind)                :: val 
+      
+      integer(kind=ikind) :: proc_cl
+      real(kind=rkind) :: cl 
+      
+
+      
+      select case(adepar(layer)%sorption%name)
+	case("langmu")
+	  val = adepar(layer)%sorption%adsorb*adepar(layer)%sorption%third
+	case("freund")
+	
+	  if (abs(adepar(layer)%sorption%third - 1.0_rkind ) > 10*epsilon(1.0_rkind)) then
+	    select case(drutes_config%name)
+	      case("ADEstk")
+		proc_cl = 1
+	      case("ADEwRk")
+		proc_cl = 2
+	      case default
+		print *, "this function should not be called, exited from ADE_fnc::ADE_cscl_react"
+		ERROR STOP
+	    end select
+	    cl = pde(proc_cl)%getval(quadpnt)
+	    val = adepar(layer)%sorption%adsorb*cl**(1-adepar(layer)%sorption%third)
+	  else
+	    val = adepar(layer)%sorption%adsorb
+	  end if
+      end select
+      
+   end function ADE_cscl_react
+  
+  
+    subroutine ADE_csbc(el_id, node_order, value, code) 
+      use typy
+      use globals
+      use global_objs
+      use pde_objs
+      use debug_tools
+      
+      integer(kind=ikind), intent(in)  :: el_id, node_order
+      real(kind=rkind), intent(out), optional    :: value
+      integer(kind=ikind), intent(out), optional :: code
+      
+      integer(kind=ikind) :: edge_id, i, j, proc
+      real(kind=rkind) :: tempval
+
+     
+      
+      if (present(value)) then
+	value = 0.0
+      end if
+
+
+      
+      if (present(code)) then
+	code = 0
+      end if
+      
+
+    end subroutine ADE_csbc
+    
     
 
 end module ADE_fnc
