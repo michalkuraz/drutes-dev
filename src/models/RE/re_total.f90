@@ -54,7 +54,7 @@ module re_total
       
 
       D = drutes_config%dimen
-	
+
       if (.not.(allocated(gradH))) then
 	allocate(gradH(1:D))
 	allocate(vct(1:D))
@@ -108,13 +108,14 @@ module re_total
 
     end subroutine darcy4totH
     
-    subroutine retot_dirichlet_bc(el_id, node_order, value, code) 
+    subroutine retot_dirichlet_bc(pde_loc, el_id, node_order, value, code) 
       use typy
       use globals
       use global_objs
       use pde_objs
       use geom_tools
 
+      class(pde_str), intent(in) :: pde_loc
       integer(kind=ikind), intent(in)  :: el_id, node_order
       real(kind=rkind), intent(out), optional   :: value
       integer(kind=ikind), intent(out), optional :: code
@@ -132,20 +133,20 @@ module re_total
       
       
       if (present(value)) then
-	if (pde(1)%bc(edge_id)%file) then
-	  do i=1, ubound(pde(1)%bc(edge_id)%series,1)
-	    if (pde(1)%bc(edge_id)%series(i,1) > time) then
+	if (pde_loc%bc(edge_id)%file) then
+	  do i=1, ubound(pde_loc%bc(edge_id)%series,1)
+	    if (pde_loc%bc(edge_id)%series(i,1) > time) then
 	      if (i > 1) then
 		j = i-1
 	      else
 		j = i
 	      end if
-	      value = pde(1)%bc(edge_id)%series(j,2) + xyz(D)
+	      value = pde_loc%bc(edge_id)%series(j,2) + xyz(D)
 	      EXIT
 	    end if
 	  end do
 	else
-	  value = pde(1)%bc(edge_id)%value + xyz(D)
+	  value = pde_loc%bc(edge_id)%value + xyz(D)
 	end if
       end if
       
@@ -160,15 +161,14 @@ module re_total
 
 
 
-
-
-    subroutine retot_dirichlet_height_bc(el_id, node_order, value, code) 
+    subroutine retot_dirichlet_height_bc(pde_loc, el_id, node_order, value, code) 
       use typy
       use globals
       use global_objs
       use pde_objs
       use debug_tools
       
+      class(pde_str), intent(in) :: pde_loc
       integer(kind=ikind), intent(in)  :: el_id, node_order
       real(kind=rkind), intent(out), optional    :: value
       integer(kind=ikind), intent(out), optional :: code
@@ -182,20 +182,20 @@ module re_total
       node_height = nodes%data(elements%data(el_id, node_order), drutes_config%dimen)
 
       if (present(value)) then
-	if (pde(1)%bc(edge_id)%file) then
-	  do i=1, ubound(pde(1)%bc(edge_id)%series,1)
-	    if (pde(1)%bc(edge_id)%series(i,1) > time) then
+	if (pde_loc%bc(edge_id)%file) then
+	  do i=1, ubound(pde_loc%bc(edge_id)%series,1)
+	    if (pde_loc%bc(edge_id)%series(i,1) > time) then
 	      if (i > 1) then
 		j = i-1
 	      else
 		j = i
 	      end if
-	      tempval = pde(1)%bc(edge_id)%series(j,2)
+	      tempval = pde_loc%bc(edge_id)%series(j,2)
 	      EXIT
 	    end if
 	  end do
 	else
-	  tempval =  pde(1)%bc(edge_id)%value
+	  tempval =  pde_loc%bc(edge_id)%value
 	end if
 	value = tempval 
       end if
@@ -212,12 +212,13 @@ module re_total
 
 
 
-    subroutine retot_neumann_bc(el_id, node_order, value, code) 
+    subroutine retot_neumann_bc(pde_loc, el_id, node_order, value, code) 
       use typy
       use globals
       use global_objs
       use pde_objs
 
+      class(pde_str), intent(in) :: pde_loc
       integer(kind=ikind), intent(in)  :: el_id, node_order
       real(kind=rkind), intent(out), optional    :: value
       integer(kind=ikind), intent(out), optional :: code
@@ -231,23 +232,23 @@ module re_total
       if (present(value)) then
 	edge_id = nodes%edge(elements%data(el_id, node_order))
 
-	i = pde(1)%permut(elements%data(el_id, node_order))
+	i = pde_loc%permut(elements%data(el_id, node_order))
 	
 
-	if (pde(1)%bc(edge_id)%file) then
-	  do i=1, ubound(pde(1)%bc(edge_id)%series,1)
-	    if (pde(1)%bc(edge_id)%series(i,1) > time) then
+	if (pde_loc%bc(edge_id)%file) then
+	  do i=1, ubound(pde_loc%bc(edge_id)%series,1)
+	    if (pde_loc%bc(edge_id)%series(i,1) > time) then
 	      if (i > 1) then
 		j = i-1
 	      else
 		j = i
 	      end if
-	      bcval = pde(1)%bc(edge_id)%series(j,2)
+	      bcval = pde_loc%bc(edge_id)%series(j,2)
 	      EXIT
 	    end if
 	  end do
 	else
-	  bcval = pde(1)%bc(edge_id)%value
+	  bcval = pde_loc%bc(edge_id)%value
 	end if
 	
 
@@ -263,12 +264,13 @@ module re_total
 
     end subroutine retot_neumann_bc
     
-    subroutine retot_atmospheric(el_id, node_order, value, code) 
+    subroutine retot_atmospheric(pde_loc, el_id, node_order, value, code) 
       use typy
       use globals
       use global_objs
       use pde_objs
 
+      class(pde_str), intent(in) :: pde_loc
       integer(kind=ikind), intent(in)  :: el_id, node_order
       real(kind=rkind), intent(out), optional    :: value
       integer(kind=ikind), intent(out), optional :: code
@@ -287,30 +289,30 @@ module re_total
       if (present(value)) then
 	edge_id = nodes%edge(elements%data(el_id, node_order))
 
-	i = pde(1)%permut(elements%data(el_id, node_order))
+	i = pde_loc%permut(elements%data(el_id, node_order))
 	
 
-	if (pde(1)%bc(edge_id)%file) then
-	  do i=1, ubound(pde(1)%bc(edge_id)%series,1)
-	    if (pde(1)%bc(edge_id)%series(i,1) > time) then
+	if (pde_loc%bc(edge_id)%file) then
+	  do i=1, ubound(pde_loc%bc(edge_id)%series,1)
+	    if (pde_loc%bc(edge_id)%series(i,1) > time) then
 	      if (i > 1) then
 		j = i-1
 	      else
 		j = i
 	      end if
-	      bcval = pde(1)%bc(edge_id)%series(j,2)
+	      bcval = pde_loc%bc(edge_id)%series(j,2)
 	      EXIT
 	    end if
 	  end do
 	else
-	  bcval = pde(1)%bc(edge_id)%value
+	  bcval = pde_loc%bc(edge_id)%value
 	end if
 	
 	if (bcval < 0) then
 	  quadpnt%type_pnt = "ndpt"
 	  quadpnt%order = elements%data(el_id,node_order)
 	  layer = elements%material(el_id,1)
-	  theta =  pde(1)%mass(layer, quadpnt)
+	  theta =  pde_loc%mass(layer, quadpnt)
 	  value = bcval*(theta*theta)**(1.0_rkind/3.0_rkind)
 	else
 	  value = bcval
@@ -321,12 +323,13 @@ module re_total
       
     end subroutine retot_atmospheric
     
-    subroutine retot_freedrainage(el_id, node_order, value, code) 
+    subroutine retot_freedrainage(pde_loc, el_id, node_order, value, code) 
       use typy
       use globals
       use global_objs
       use pde_objs
 
+      class(pde_str), intent(in) :: pde_loc
       integer(kind=ikind), intent(in)  :: el_id, node_order
       real(kind=rkind), intent(out), optional    :: value
       integer(kind=ikind), intent(out), optional :: code
@@ -343,7 +346,7 @@ module re_total
 	quadpnt%order = elements%data(el_id, node_order)
 	layer = elements%material(el_id,1)
 	D = drutes_config%dimen
-	call pde(1)%pde_fnc(1)%dispersion(pde(1), layer, quadpnt, tensor=K(1:D,1:D))
+	call pde_loc%pde_fnc(1)%dispersion(pde_loc, layer, quadpnt, tensor=K(1:D,1:D))
 	
       	select case(D)
 	  case(1)
@@ -386,7 +389,7 @@ module re_total
 	  l = nodes%edge(k)
 	  m = pde_loc%permut(k)
 	  if (m == 0) then
-	    call pde_loc%bc(l)%value_fnc(i, j, value)
+	    call pde_loc%bc(l)%value_fnc(pde_loc, i, j, value)
 	    pde_loc%solution(k) =  value 
 	  else
 	    select case (vgset(layer)%icondtype)

@@ -120,11 +120,11 @@ re_globals.o: $(CORE_obj) $(TOOLS_obj) src/models/RE/re_globals.f90
 re_constitutive.o: $(CORE_obj) $(TOOLS_obj) re_globals.o src/models/RE/re_constitutive.f90
 	$c -c src/models/RE/re_constitutive.f90
 re_total.o: $(CORE_obj) $(TOOLS_obj) re_globals.o re_constitutive.o src/models/RE/re_total.f90
-	$c -c src/models/RE/re_total.f90	
-re_pointers.o:  $(CORE_obj) re_globals.o re_constitutive.o re_total.o src/models/RE/re_pointers.f90
-	$c -c src/models/RE/re_pointers.f90
+	$c -c src/models/RE/re_total.f90
 re_reader.o:  $(CORE_obj) $(TOOLS_obj) re_globals.o src/models/RE/re_reader.f90
-	$c -c src/models/RE/re_reader.f90
+	$c -c src/models/RE/re_reader.f90	
+re_pointers.o:  $(CORE_obj) re_globals.o re_constitutive.o re_total.o re_reader.o src/models/RE/re_pointers.f90
+	$c -c src/models/RE/re_pointers.f90
 #-------end CONSTITUTIVE_obj--------------------------------
 
 
@@ -149,7 +149,7 @@ ADE_fnc.o: $(CORE_obj) ADE_globals.o src/models/ADE/ADE_fnc.f90
 	$c -c src/models/ADE/ADE_fnc.f90
 ADE_reader.o: $(CORE_obj) $(TOOLS_obj) ADE_globals.o src/models/ADE/ADE_reader.f90
 	$c -c src/models/ADE/ADE_reader.f90
-ADE_pointers.o: $(CORE_obj) $(TOOLS_obj) ADE_globals.o src/models/ADE/ADE_pointers.f90
+ADE_pointers.o: $(CORE_obj) $(TOOLS_obj) ADE_globals.o  ADE_reader.o src/models/ADE/ADE_pointers.f90
 	$c -c src/models/ADE/ADE_pointers.f90
 #------end ADE_obj---------------------------------
 
@@ -161,7 +161,7 @@ boussread.o: $(CORE_obj) $(TOOLS_obj) boussglob.o src/models/boussinesq/boussrea
 	$c -c src/models/boussinesq/boussread.f90
 boussfnc.o:  $(CORE_obj) $(TOOLS_obj) boussglob.o src/models/boussinesq/boussfnc.f90
 	$c -c src/models/boussinesq/boussfnc.f90
-bousspointers.o: $(CORE_obj)  boussfnc.o boussglob.o src/models/boussinesq/bousspointers.f90
+bousspointers.o: $(CORE_obj)  boussfnc.o boussglob.o boussread.o src/models/boussinesq/bousspointers.f90
 	$c -c src/models/boussinesq/bousspointers.f90
 #-------end BOUSSINESQ-------------------------------
 

@@ -3,7 +3,7 @@ module ADE_reader
   
   contains
 
-    subroutine ADE_read()
+    subroutine ADE_read(pde_loc)
       use typy
       use globals
       use global_objs
@@ -12,6 +12,7 @@ module ADE_reader
       use readtools
       use pde_objs
 
+      class(pde_str), intent(in out) :: pde_loc
       integer :: i_err
       integer(kind=ikind) :: i, n
       real(kind=rkind) :: tmp
@@ -21,29 +22,18 @@ module ADE_reader
       logical :: crelative = .false.
       
       
-    
-      
-      select case(drutes_config%name)
-	case("ADEstd")
-	  i = 1
-	case("ADE_wr")
-	  i = 2
-	case default
-	  print *, "unssuported problem type, killed from ADE_reader::ADE_read"
-	  ERROR STOP
-      end select
-      
-      pde(i)%problem_name(1) = "ADER"
-      pde(i)%problem_name(2) = "Advection-dispersion-reaction equation"
 
-      pde(i)%solution_name(1) = "solute_concentration" !nazev vystupnich souboru
-      pde(i)%solution_name(2) = "c  [M/L^3]" !popisek grafu
+      pde_loc%problem_name(1) = "ADER_in_liquid"
+      pde_loc%problem_name(2) = "Advection-dispersion-reaction equation (solute concentration in liquid phase)"
 
-      pde(i)%flux_name(1) = "conc_flux"  
-      pde(i)%flux_name(2) = "concentration flux [M.L^{-2}.T^{-1}]"
+      pde_loc%solution_name(1) = "solute_concentration" !nazev vystupnich souboru
+      pde_loc%solution_name(2) = "c  [M/L^3]" !popisek grafu
 
-      pde(i)%mass_name(1) = "conc_in_porous_medium"
-      pde(i)%mass_name(2) = "concetration [M/L^3]"
+      pde_loc%flux_name(1) = "conc_flux"  
+      pde_loc%flux_name(2) = "concentration flux [M.L^{-2}.T^{-1}]"
+
+      pde_loc%mass_name(1) = "conc_in_porous_medium"
+      pde_loc%mass_name(2) = "concetration [M/L^3]"
       
       
 
@@ -268,13 +258,8 @@ module ADE_reader
       call fileread(n, file_contaminant, ranges=(/1_ikind, huge(n)/), &
       errmsg=trim(msg))
       
-      if (with_richards) then
-	i=2
-      else
-	i=1
-      end if
       
-      call readbcvals(unitW=file_contaminant, struct=pde(i)%bc, dimen=n, &
+      call readbcvals(unitW=file_contaminant, struct=pde_loc%bc, dimen=n, &
 	dirname="drutes.conf/ADE/")
       
       
@@ -282,7 +267,24 @@ module ADE_reader
 
     end subroutine ADE_read		
     
-    subroutine ADEcs_read()
+    subroutine ADEcs_read(pde_loc)
+      use typy
+      use pde_objs
+          
+      class(pde_str), intent(in out) :: pde_loc
+      
+      pde_loc%problem_name(1) = "ADER_in_solid"
+      pde_loc%problem_name(2) = "Advection-dispersion-reaction equation (solute concentration adsorbed in solid phase)"
+
+      pde_loc%solution_name(1) = "solute_concentration" !nazev vystupnich souboru
+      pde_loc%solution_name(2) = "c  [M/M]" !popisek grafu
+
+      pde_loc%flux_name(1) = "zero_flux"  
+      pde_loc%flux_name(2) = "zero flux"
+
+      pde_loc%mass_name(1) = "conc_in_solid_phase"
+      pde_loc%mass_name(2) = "concetration [M/M]"
+      
     
     end subroutine ADEcs_read
 

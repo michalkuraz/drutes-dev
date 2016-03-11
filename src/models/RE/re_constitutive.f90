@@ -317,7 +317,7 @@ module RE_constitutive
 	RETURN
       end if
 
-      E = C + vangen(pde(1), layer, x=(/h/))/vgset(layer)%Ths*vgset(layer)%Ss
+      E = C + vangen(pde_loc, layer, x=(/h/))/vgset(layer)%Ths*vgset(layer)%Ss
       
 
     end function vangen_elast
@@ -974,13 +974,14 @@ module RE_constitutive
 
 
   !> creates a table of values of constitutive functions for the Richards equation to be linearly approximated 
-    subroutine tabvalues(Kfnc, dKdhfnc, Cfnc, thetafnc)
+    subroutine tabvalues(pde_loc, Kfnc, dKdhfnc, Cfnc, thetafnc)
       use typy
       use globals
       use pde_objs
       use printtools
       use core_tools
 
+      class(pde_str), intent(in) :: pde_loc
       interface
 	subroutine Kfnc(pde_loc, layer, quadpnt, x, tensor, scalar)	
 	  use typy
@@ -1076,12 +1077,12 @@ module RE_constitutive
 	      l = 100*(maxcalls - counter)/maxcalls
 	      call progressbar(l)
 	    end if
-	    call Kfnc(pde(1),i, x=(/-(j-1)*dx/), scalar=Ktab(i,j))
+	    call Kfnc(pde_loc,i, x=(/-(j-1)*dx/), scalar=Ktab(i,j))
 ! 	    Ktab(i,j) = Kfnc(i, -(j-1)*dx)
 ! 	    dKdhtab(i,j) = dKdhfnc(i, -(j-1)*dx)
-	    call dKdhfnc(pde(1), i, x=(/-(j-1)*dx/), scalar=dKdhtab(i,j))
-	    warecatab(i,j) = Cfnc(pde(1), i, x=(/-(j-1)*dx/))
-	    watcontab(i,j) = thetafnc(pde(1), i, x=(/-(j-1)*dx/))
+	    call dKdhfnc(pde_loc, i, x=(/-(j-1)*dx/), scalar=dKdhtab(i,j))
+	    warecatab(i,j) = Cfnc(pde_loc, i, x=(/-(j-1)*dx/))
+	    watcontab(i,j) = thetafnc(pde_loc, i, x=(/-(j-1)*dx/))
 	  end do
 	end do
       end do
@@ -1457,7 +1458,7 @@ module RE_constitutive
 
       
       
-      function zone_error_val(h, htest, taylor_max) result(err_val)
+      function zone_error_val( h, htest, taylor_max) result(err_val)
 	use typy
 	use pde_objs
 
@@ -1488,8 +1489,8 @@ module RE_constitutive
 ! 	!> error value of first order taylor approximation starting at point h and evaluating at point htest
 ! 	logical :: valid
 ! 
-! 	valid = abs(vangen(pde(1), this_layer, x=(/h/)) + vangen_elast(pde(1), this_layer, x=(/htest/))*(htest-h)- &
-! 		vangen(pde(1), this_layer, x=(/htest/))) > taylor_max
+! 	valid = abs(vangen(pde_loc, this_layer, x=(/h/)) + vangen_elast(pde_loc, this_layer, x=(/htest/))*(htest-h)- &
+! 		vangen(pde_loc, this_layer, x=(/htest/))) > taylor_max
 
 
 
@@ -1643,12 +1644,13 @@ module RE_constitutive
       end function rcza_check
 
 
-      subroutine re_dirichlet_bc(el_id, node_order, value, code) 
+      subroutine re_dirichlet_bc(pde_loc, el_id, node_order, value, code) 
 	use typy
 	use globals
 	use global_objs
 	use pde_objs
 
+	class(pde_str), intent(in) :: pde_loc
 	integer(kind=ikind), intent(in)  :: el_id, node_order
 	real(kind=rkind), intent(out), optional    :: value
 	integer(kind=ikind), intent(out), optional :: code
@@ -1659,20 +1661,20 @@ module RE_constitutive
 	edge_id = nodes%edge(elements%data(el_id, node_order))
 
 	if (present(value)) then
-	  if (pde(1)%bc(edge_id)%file) then
-	    do i=1, ubound(pde(1)%bc(edge_id)%series,1)
-	      if (pde(1)%bc(edge_id)%series(i,1) > time) then
+	  if (pde_loc%bc(edge_id)%file) then
+	    do i=1, ubound(pde_loc%bc(edge_id)%series,1)
+	      if (pde_loc%bc(edge_id)%series(i,1) > time) then
 		if (i > 1) then
 		  j = i-1
 		else
 		  j = i
 		end if
-		value = pde(1)%bc(edge_id)%series(j,2)
+		value = pde_loc%bc(edge_id)%series(j,2)
 		EXIT
 	      end if
 	    end do
 	  else
-	    value = pde(1)%bc(edge_id)%value
+	    value = pde_loc%bc(edge_id)%value
 	  end if
 	end if
 
@@ -1682,11 +1684,13 @@ module RE_constitutive
       end subroutine re_dirichlet_bc
 
 
-      subroutine re_null_bc(el_id, node_order, value, code) 
+      subroutine re_null_bc(pde_loc, el_id, node_order, value, code) 
 	use typy
 	use globals
 	use global_objs
-
+	use pde_objs
+	
+	class(pde_str), intent(in) :: pde_loc
 	integer(kind=ikind), intent(in)  :: el_id, node_order
 	real(kind=rkind), intent(out), optional    :: value
 	integer(kind=ikind), intent(out), optional :: code
@@ -1703,13 +1707,14 @@ module RE_constitutive
 
 
 
-      subroutine re_dirichlet_height_bc(el_id, node_order, value, code) 
+      subroutine re_dirichlet_height_bc(pde_loc, el_id, node_order, value, code) 
 	use typy
 	use globals
 	use global_objs
 	use pde_objs
 	use debug_tools
 	
+	class(pde_str), intent(in) :: pde_loc
 	integer(kind=ikind), intent(in)  :: el_id, node_order
 	real(kind=rkind), intent(out), optional    :: value
 	integer(kind=ikind), intent(out), optional :: code
@@ -1722,20 +1727,20 @@ module RE_constitutive
 	  edge_id = nodes%edge(elements%data(el_id, node_order))
 	  node_height = nodes%data(elements%data(el_id, node_order), drutes_config%dimen)
 
-	  if (pde(1)%bc(edge_id)%file) then
-	    do i=1, ubound(pde(1)%bc(edge_id)%series,1)
-	      if (pde(1)%bc(edge_id)%series(i,1) > time) then
+	  if (pde_loc%bc(edge_id)%file) then
+	    do i=1, ubound(pde_loc%bc(edge_id)%series,1)
+	      if (pde_loc%bc(edge_id)%series(i,1) > time) then
 		if (i > 1) then
 		  j = i-1
 		else
 		  j = i
 		end if
-		tempval = pde(1)%bc(edge_id)%series(j,2)
+		tempval = pde_loc%bc(edge_id)%series(j,2)
 		EXIT
 	      end if
 	    end do
 	  else
-	    tempval =  pde(1)%bc(edge_id)%value
+	    tempval =  pde_loc%bc(edge_id)%value
 	  end if
 
 	  
@@ -1753,12 +1758,13 @@ module RE_constitutive
 
 
 
-      subroutine re_neumann_bc(el_id, node_order, value, code) 
+      subroutine re_neumann_bc(pde_loc, el_id, node_order, value, code) 
 	use typy
 	use globals
 	use global_objs
 	use pde_objs
 
+	class(pde_str), intent(in) :: pde_loc
 	integer(kind=ikind), intent(in)  :: el_id, node_order
 	real(kind=rkind), intent(out), optional    :: value
 	integer(kind=ikind), intent(out), optional :: code
@@ -1774,28 +1780,28 @@ module RE_constitutive
 	if (present(value)) then
 	  edge_id = nodes%edge(elements%data(el_id, node_order))
 
-	  i = pde(1)%permut(elements%data(el_id, node_order))
+	  i = pde_loc%permut(elements%data(el_id, node_order))
 
-	  call pde(1)%pde_fnc(1)%dispersion(pde(1), elements%material(el_id,1), x=(/pde_common%xvect(i,2)/), &
+	  call pde_loc%pde_fnc(1)%dispersion(pde_loc, elements%material(el_id,1), x=(/pde_common%xvect(i,2)/), &
 			      tensor=K(1:drutes_config%dimen, 1:drutes_config%dimen))
 
 	  gravflux(1:drutes_config%dimen) = K(drutes_config%dimen, 1:drutes_config%dimen)*elements%nvect_z(el_id, node_order)
 	  
 
-	  if (pde(1)%bc(edge_id)%file) then
-	    do i=1, ubound(pde(1)%bc(edge_id)%series,1)
-	      if (pde(1)%bc(edge_id)%series(i,1) > time) then
+	  if (pde_loc%bc(edge_id)%file) then
+	    do i=1, ubound(pde_loc%bc(edge_id)%series,1)
+	      if (pde_loc%bc(edge_id)%series(i,1) > time) then
 		if (i > 1) then
 		  j = i-1
 		else
 		  j = i
 		end if
-		bcval = pde(1)%bc(edge_id)%series(j,2)
+		bcval = pde_loc%bc(edge_id)%series(j,2)
 		EXIT
 	      end if
 	    end do
 	  else
-	    bcval = pde(1)%bc(edge_id)%value
+	    bcval = pde_loc%bc(edge_id)%value
 	  end if
 	  
 
@@ -1821,12 +1827,13 @@ module RE_constitutive
       end subroutine re_neumann_bc
       
       
-    subroutine re_atmospheric(el_id, node_order, value, code) 
+    subroutine re_atmospheric(pde_loc, el_id, node_order, value, code) 
       use typy
       use globals
       use global_objs
       use pde_objs
 
+      class(pde_str), intent(in) :: pde_loc
       integer(kind=ikind), intent(in)  :: el_id, node_order
       real(kind=rkind), intent(out), optional    :: value
       integer(kind=ikind), intent(out), optional :: code
@@ -1847,35 +1854,35 @@ module RE_constitutive
       if (present(value)) then
 	edge_id = nodes%edge(elements%data(el_id, node_order))
 
-	i = pde(1)%permut(elements%data(el_id, node_order))
+	i = pde_loc%permut(elements%data(el_id, node_order))
 
-	call pde(1)%pde_fnc(1)%dispersion(pde(1), elements%material(el_id,1), x=(/pde_common%xvect(i,2)/), &
+	call pde_loc%pde_fnc(1)%dispersion(pde_loc, elements%material(el_id,1), x=(/pde_common%xvect(i,2)/), &
 			      tensor=K(1:drutes_config%dimen, 1:drutes_config%dimen))
 
         gravflux(1:drutes_config%dimen) = K(drutes_config%dimen, 1:drutes_config%dimen)*elements%nvect_z(el_id, node_order)
 	
 
-	if (pde(1)%bc(edge_id)%file) then
-	  do i=1, ubound(pde(1)%bc(edge_id)%series,1)
-	    if (pde(1)%bc(edge_id)%series(i,1) > time) then
+	if (pde_loc%bc(edge_id)%file) then
+	  do i=1, ubound(pde_loc%bc(edge_id)%series,1)
+	    if (pde_loc%bc(edge_id)%series(i,1) > time) then
 	      if (i > 1) then
 		j = i-1
 	      else
 		j = i
 	      end if
-	      bcval = pde(1)%bc(edge_id)%series(j,2)
+	      bcval = pde_loc%bc(edge_id)%series(j,2)
 	      EXIT
 	    end if
 	  end do
 	else
-	  bcval = pde(1)%bc(edge_id)%value
+	  bcval = pde_loc%bc(edge_id)%value
 	end if
 	
 	if (bcval < 0) then
 	  quadpnt%type_pnt = "ndpt"
 	  quadpnt%order = elements%data(el_id,node_order)
 	  layer = elements%material(el_id,1)
-	  theta =  pde(1)%mass(layer, quadpnt)
+	  theta =  pde_loc%mass(layer, quadpnt)
 	  bcval = bcval*(theta*theta)**(1.0_rkind/3.0_rkind)
 	end if
 	  
@@ -1917,9 +1924,9 @@ module RE_constitutive
           do j=1, ubound(elements%data,2)
             k = elements%data(i,j)
             l = nodes%edge(k)
-            m = pde(1)%permut(k)
+            m = pde_loc%permut(k)
             if (m == 0) then
-	      call pde_loc%bc(l)%value_fnc(i, j, value)
+	      call pde_loc%bc(l)%value_fnc(pde_loc, i, j, value)
               pde_loc%solution(k) =  value
             else
               select case (vgset(layer)%icondtype)

@@ -1,59 +1,7 @@
 module manage_pointers
   public :: set_pointers
-  public :: set_readers
 
   contains
-
-    subroutine set_readers()
-      use typy
-      use globals
-      use global_objs
-      use pde_objs
-      use re_reader
-      use modRE_reader
-      use boussread
-      use ADE_reader
-      
-      integer :: i
-
-
-      select case(drutes_config%name)
-        case("RE_std", "RE_rot", "REstdH", "RErotH")
-          pde(1)%read_parameters => res_read
-        case("RE_mod")
-	  pde(1)%read_parameters => modre_read
-	  pde(2)%read_parameters => modheat_read
-	  pde(3)%read_parameters => modsolute_read
-	  
-	case("REtest")
-	  do i=1, ubound(pde,1)
-	    pde(i)%read_parameters => res_read
-	  end do
-	  
-	case("boussi")
-	  pde(1)%read_parameters => boussreader
-	  
-	case("ADEstd", "ADEstk")
-	  pde(1)%read_parameters => ADE_read
-	  if (drutes_config%name=="ADEstk") then
-	    pde(2)%read_parameters => ADEcs_read
-	  end if
-	  
-	case("ADE_wr", "ADEwRk")
-	  pde(1)%read_parameters => res_read
-	  pde(2)%read_parameters => ADE_read
-	  if (drutes_config%name=="ADEwRk") then
-	    pde(3)%read_parameters => ADEcs_read
-	  end if
-	  
-        
-        case default
-          print *, "unsupported problem type, terminated from manage_pointers::set_readers"
-      end select
-        
-
-
-    end subroutine set_readers
 
 
     !> set pointers for the entire problem, except the file read pointers
@@ -76,17 +24,9 @@ module manage_pointers
       use re_pointers
       use ADE_pointers
 
-      
+      integer(kind=ikind) :: i
 
-      integer(kind=ikind) :: i,j, proc_cl, proc_cs
-      type(integpnt_str) :: quadpnt
-      
-      do i=1, ubound(pde,1)
-	pde(i)%getval => getvalp1
-      end do
-
-
-      select case(trim(drutes_config%name))
+      select case(adjustl(trim(drutes_config%name)))
 	case("RE_std")
 	  write(unit=drutes_config%fullname, fmt=*) "Richards' equation, in", drutes_config%dimen, &
 	  "D, in pressure head form."
@@ -106,50 +46,51 @@ module manage_pointers
 	
 	      
 	case("boussi")   
-	   write(unit=drutes_config%fullname, fmt=*) "DRUtES solves Boussinesq equation for hillslope runoff", &
+	   write(unit=drutes_config%fullname, fmt=*) " Boussinesq equation for hillslope runoff", &
            "(1D approximation of groundwater flow)."
            call boussi(pde(1))
            
         
 	case("ADEstd") 
-	  write(unit=drutes_config%fullname, fmt=*) "DRUtES solves advection-dispersion-reaction equation in", &
+	  write(unit=drutes_config%fullname, fmt=*) " advection-dispersion-reaction equation in", &
            drutes_config%dimen, "D, convection is specified in input files, equilibrium sorption"
            call ade(pde(1))
 
       case("ADEstd_kinsorb")
       
-      	  write(unit=drutes_config%fullname, fmt=*) "DRUtES solves advection-dispersion-reaction equation in", &
+      	  write(unit=drutes_config%fullname, fmt=*) " advection-dispersion-reaction equation in", &
            drutes_config%dimen, "D, convection is specified in input files, kinetic sorption"
            call ade(pde(1))
            call adekinsorb(pde(2))
            
       case("ADE_RE_std")
-     	  write(unit=drutes_config%fullname, fmt=*) "DRUtES solves advection-dispersion-reaction equation", &
-     	  "and Richards equation in pressure head form in", &
+     	  write(unit=drutes_config%fullname, fmt=*) " advection-dispersion-reaction equation", &
+     	  "  Richards equation in pressure head form in", &
            drutes_config%dimen, "D, convection is computed, equilibrium sorption"	
            
            call RE_std(pde(1))
            call ade(pde(2))
 	
       case("ADE_REstdH")
-     	  write(unit=drutes_config%fullname, fmt=*) "DRUtES solves advection-dispersion-reaction equation", &
-     	  "and Richards equation in total hydraulic head form in", &
+     	  write(unit=drutes_config%fullname, fmt=*) " advection-dispersion-reaction equation", &
+     	  " and Richards equation in total hydraulic head form in", &
            drutes_config%dimen, "D, convection is computed, equilibrium sorption"	
            
            call REstdH(pde(1))
            call ade(pde(2))
 
+
       case("ADE_RE_rot")
-     	  write(unit=drutes_config%fullname, fmt=*) "DRUtES solves advection-dispersion-reaction equation", &
-     	  "and Richards equation in pressure head form", &
+     	  write(unit=drutes_config%fullname, fmt=*) " advection-dispersion-reaction equation", &
+     	  " and Richards equation in pressure head form", &
            "flow is axisymmetric, convection is computed, equilibrium sorption"	
            
            call RE_rot(pde(1))
            call ade(pde(2))
            
       case("ADE_RErotH")
-     	  write(unit=drutes_config%fullname, fmt=*) "DRUtES solves advection-dispersion-reaction equation", &
-     	  "and Richards equation in total hydraulic head form", &
+     	  write(unit=drutes_config%fullname, fmt=*) " advection-dispersion-reaction equation", &
+     	  " and Richards equation in total hydraulic head form", &
            "flow is axisymmetric, convection is computed, equilibrium sorption"	
            
            call RE_rot(pde(1))
@@ -157,8 +98,8 @@ module manage_pointers
 	  
 
       case("ADE_RE_std_kinsorb")
-     	  write(unit=drutes_config%fullname, fmt=*) "DRUtES solves advection-dispersion-reaction equation", &
-     	  "and Richards equation in pressure head form in", &
+     	  write(unit=drutes_config%fullname, fmt=*) " advection-dispersion-reaction equation", &
+     	  " and Richards equation in pressure head form in", &
            drutes_config%dimen, "D, convection is computed, kinetic sorption"	
            
            call RE_std(pde(1))
@@ -166,8 +107,8 @@ module manage_pointers
            call adekinsorb(pde(3))
 	
       case("ADE_REstdH_kinsorb")
-     	  write(unit=drutes_config%fullname, fmt=*) "DRUtES solves advection-dispersion-reaction equation", &
-     	  "and Richards equation in total hydraulic head form in", &
+     	  write(unit=drutes_config%fullname, fmt=*) " advection-dispersion-reaction equation", &
+     	  " and Richards equation in total hydraulic head form in", &
            drutes_config%dimen, "D, convection is computed, kinetic sorption"	
            
            call REstdH(pde(1))
@@ -175,18 +116,18 @@ module manage_pointers
            call adekinsorb(pde(3))
 
       case("ADE_RE_rot_kinsorb")
-     	  write(unit=drutes_config%fullname, fmt=*) "DRUtES solves advection-dispersion-reaction equation", &
-     	  "and Richards equation in pressure head form", &
-           "flow is axisymmetric, convection is computed, kinetic sorption"	
+     	  write(unit=drutes_config%fullname, fmt=*) " advection-dispersion-reaction equation", &
+     	  " and Richards equation in pressure head form", &
+           " flow is axisymmetric, convection is computed, kinetic sorption"	
            
            call RE_rot(pde(1))
            call ade(pde(2))
            call adekinsorb(pde(3))
            
       case("ADE_RErotH_kinsorb")
-     	  write(unit=drutes_config%fullname, fmt=*) "DRUtES solves advection-dispersion-reaction equation", &
-     	  "and Richards equation in total hydraulic head form", &
-           "flow is axisymmetric, convection is computed, kinetic sorption"	
+     	  write(unit=drutes_config%fullname, fmt=*) " advection-dispersion-reaction equation", &
+     	  " and Richards equation in total hydraulic head form", &
+           " flow is axisymmetric, convection is computed, kinetic sorption"	
            
            call RE_rot(pde(1))
            call ade(pde(2))

@@ -159,8 +159,10 @@ module pde_objs
 
  !> abstract interface for boundary value function
   abstract interface
-    subroutine bc_fnc(element, node, value, code) 
+    subroutine bc_fnc(pde_loc, element, node, value, code) 
       use typy
+      import :: pde_str
+      class(pde_str), intent(in) :: pde_loc
       !> element id
       integer(kind=ikind), intent(in)  :: element
       !> node id
@@ -436,7 +438,7 @@ module pde_objs
 		end if
 	      else
 		edge = nodes%edge(pts(i))
-		call pde_loc%bc(edge)%value_fnc(el, i, ndvals(i))
+		call pde_loc%bc(edge)%value_fnc(pde_loc, el, i, ndvals(i))
 	      end if
 	    end do
 
@@ -493,7 +495,7 @@ module pde_objs
 		  EXIT
 		end if
 	      end do
-	      call pde_loc%bc(edge)%value_fnc(el, order, val)
+	      call pde_loc%bc(edge)%value_fnc(pde_loc, el, order, val)
 	    end if
 	    
 	case default

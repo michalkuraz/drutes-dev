@@ -66,8 +66,6 @@ module drutes_init
       call find_unit(file_itcg, 2000)
 
       open(unit=file_itcg, file="out/cgit.count", action="write", status="replace", iostat=i_err)
-
-
       
       call write_log(text="total number of parallel images is:", int1=1_ikind*NUM_IMAGES())
 
@@ -102,13 +100,13 @@ module drutes_init
 	end if
 
       end if
+     
       
       call read_global()
-      
+     
       call set_global_vars()
       
       call init_obstimes()
-
 
        !read mesh data
       call find_unit(file_mesh, 200)
@@ -347,12 +345,13 @@ module drutes_init
       integer :: i_err
       
       
-      select case (drutes_config%name)
+      select case (adjustl(trim(drutes_config%name)))
 	case("RE_std", "RE_rot", "REstdH", "RErotH", "boussi", "ADEstd")
 	  pde_common%processes = 1
-	case("ADE_wR", "ADEstk")
+	case("ADE_RE_std", "ADE_REstdH", "ADE_RE_rot", "ADE_RErotH", "ADEstd_kinsorb")
 	  pde_common%processes = 2
-	case("RE_mod", "REtest", "ADEwRk")
+	case("RE_mod", "REtest", "ADE_RE_std_kinsorb", "ADE_REstdH_kinsorb", "ADE_RE_rot_kinsorb", &
+	     "ADE_RErotH_kinsorb")
 	  pde_common%processes = 3
       end select
 
@@ -518,9 +517,8 @@ module drutes_init
       xyz(3) = "y"
       
       write(unit=forma, fmt="(a, I16, a)") "(a, a, a, I", decimals, ", a)"
-      write(unit=fileid, fmt=forma) "out/obspt_", trim(pde_loc%problem_name(1)), "-", name, ".out"
+      write(unit=fileid, fmt=forma) "out/obspt_", adjustl(trim(pde_loc%problem_name(1))), "-", name, ".out"
      
-      
       if (.not. drutes_config%run_from_backup) then
 	open(unit=pde_loc%obspt_unit(name), file=fileid, action="write", status="replace")
 	

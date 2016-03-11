@@ -518,7 +518,8 @@ module postpro
     integer(kind=ikind), intent(in) :: proc
     type(integpnt_str), dimension(:), intent(in out) :: quadpnt
     integer(kind=ikind) :: i, layer
-    real(kind=rkind) :: avgval, distance, flux
+    real(kind=rkind) ::  distance, flux, avgval
+
   
     do i=1, nodes%kolik
       quadpnt(1)%order = i
@@ -538,8 +539,8 @@ module postpro
       avgval = (pde(proc)%getval(quadpnt(1)) + pde(proc)%getval(quadpnt(2)))/2.0
       layer = elements%material(i, proc)
       write(unit=ids(2), fmt="(50E24.12E3)") distance, avgval
-
-      write(unit=ids(3), fmt="(50E24.12E3)") distance, pde(proc)%mass(layer, x=(/avgval/))
+      avgval = (pde(proc)%getval(quadpnt(1)) + pde(proc)%getval(quadpnt(2)))/2.0
+      write(unit=ids(3), fmt="(50E24.12E3)") distance, avgval
 
     end do
   

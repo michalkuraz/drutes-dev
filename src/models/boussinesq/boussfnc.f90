@@ -394,7 +394,7 @@ module boussfnc
             l = nodes%edge(k)
             m = pde(1)%permut(k)
             if (m == 0) then
-	      call pde_loc%bc(l)%value_fnc(i, j, value)
+	      call pde_loc%bc(l)%value_fnc(pde_loc, i, j, value)
               pde_loc%solution(k) =  value
             else
 	      pde_loc%solution(k) = bouss_icond
@@ -404,13 +404,14 @@ module boussfnc
       
       end subroutine boussicond
       
-      subroutine bouss_bc(el_id, node_order, value, code) 
+      subroutine bouss_bc(pde_loc, el_id, node_order, value, code) 
 	use typy
 	use globals
 	use global_objs
 	use pde_objs
 	use geom_tools
 
+	class(pde_str), intent(in) :: pde_loc
 	integer(kind=ikind), intent(in)  :: el_id, node_order
 	real(kind=rkind), intent(out), optional   :: value
 	integer(kind=ikind), intent(out), optional :: code
@@ -420,26 +421,26 @@ module boussfnc
 	edge_id = nodes%edge(elements%data(el_id, node_order))
 	
 	if (present(value)) then
-	  if (pde(1)%bc(edge_id)%file) then
-	    do i=1, ubound(pde(1)%bc(edge_id)%series,1)
-	      if (pde(1)%bc(edge_id)%series(i,1) > time) then
+	  if (pde_loc%bc(edge_id)%file) then
+	    do i=1, ubound(pde_loc%bc(edge_id)%series,1)
+	      if (pde_loc%bc(edge_id)%series(i,1) > time) then
 		if (i > 1) then
 		  j = i-1
 		else
 		  j = i
 		end if
-		value = pde(1)%bc(edge_id)%series(j,2)
+		value = pde_loc%bc(edge_id)%series(j,2)
 		EXIT
 	      end if
 	    end do
 	  else
-	    value =  pde(1)%bc(edge_id)%value
+	    value =  pde_loc%bc(edge_id)%value
 	  end if
 	end if
 	
 	
 	if (present(code)) then
-	  code = pde(1)%bc(edge_id)%code
+	  code = pde_loc%bc(edge_id)%code
 	end if
 	
       end subroutine bouss_bc

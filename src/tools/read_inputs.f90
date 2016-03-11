@@ -1,26 +1,11 @@
 module read_inputs
   public :: read_global
   public :: read_1dmesh_int, read_2dmesh_int, read_2dmesh_t3d, read_2dmesh_gmsh
-  public :: read_model
   public :: read_scilab
 
 
 
   contains
-
-    subroutine read_model()
-      use typy
-      use globals
-      use global_objs
-      use pde_objs
-
-      integer :: i
-
-      do i=1, ubound(pde,1)
-        call pde(i)%read_parameters()
-      end do
-      
-    end subroutine read_model
 
     subroutine read_global()
       use globals
@@ -225,7 +210,7 @@ module read_inputs
       !----
       
       ! reads coordinates with measured points
-      call fileread(n, global, errmsg="ldl")
+      call fileread(n, global, errmsg="strange number of observation points")
 
       allocate(measured_pts(n))
       do i=1, n

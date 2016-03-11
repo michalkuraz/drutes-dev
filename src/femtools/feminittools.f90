@@ -466,7 +466,7 @@ module feminittools
 	  do i=1, nodes%kolik
 	    pde(proc)%permut(i) = i
 	    if (nodes%edge(i) /= 0) then
-	      call pde(proc)%bc(nodes%edge(i))%value_fnc(1_ikind,1_ikind, code=bc)
+	      call pde(proc)%bc(nodes%edge(i))%value_fnc(pde(proc), 1_ikind,1_ikind, code=bc)
 	    else
 	      bc = 0
 	    end if

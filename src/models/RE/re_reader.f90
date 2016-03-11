@@ -5,7 +5,7 @@ module re_reader
 
     !> opens and reads water.conf/matrix.conf, input data for the Richards equation in single mode, 
     !! Richards equation with the dual porosity regime - matrix domain
-    subroutine res_read()
+    subroutine res_read(pde_loc)
       use typy
       use global_objs
       use pde_objs
@@ -14,22 +14,23 @@ module re_reader
       use core_tools
       use readtools
       
+      class(pde_str), intent(in out) :: pde_loc
       integer :: ierr, i, j, filewww
       integer(kind=ikind) :: n
       character(len=1) :: yn
       character(len=4096) :: msg
 
-      pde(1)%problem_name(1) = "RE_matrix"
-      pde(1)%problem_name(2) = "Richards' equation"
+      pde_loc%problem_name(1) = "RE_matrix"
+      pde_loc%problem_name(2) = "Richards' equation"
 
-      pde(1)%solution_name(1) = "press_head" !nazev vystupnich souboru
-      pde(1)%solution_name(2) = "h  [L]" !popisek grafu
+      pde_loc%solution_name(1) = "press_head" !nazev vystupnich souboru
+      pde_loc%solution_name(2) = "h  [L]" !popisek grafu
 
-      pde(1)%flux_name(1) = "flux"  
-      pde(1)%flux_name(2) = "Darcian flow [L.T^{-1}]"
+      pde_loc%flux_name(1) = "flux"  
+      pde_loc%flux_name(2) = "Darcian flow [L.T^{-1}]"
 
-      pde(1)%mass_name(1) = "theta"
-      pde(1)%mass_name(2) = "theta [-]"
+      pde_loc%mass_name(1) = "theta"
+      pde_loc%mass_name(2) = "theta [-]"
 
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       !water.conf/matrix.conf
@@ -189,7 +190,7 @@ module re_reader
 	errmsg="at least one boundary must be specified (and no negative values here)")
       
 
-      call readbcvals(unitW=file_waterm, struct=pde(1)%bc, dimen=n, &
+      call readbcvals(unitW=file_waterm, struct=pde_loc%bc, dimen=n, &
 		      dirname="drutes.conf/water.conf/")
 		      
        !!debuging

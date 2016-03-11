@@ -2,7 +2,7 @@ module boussread
   public :: boussreader
   
   contains
-    subroutine boussreader()
+    subroutine boussreader(pde_loc)
       use typy
       use readtools
       use core_tools
@@ -10,23 +10,24 @@ module boussread
       use global_objs
       use pde_objs
       
+      class(pde_str), intent(in out) :: pde_loc
       integer, dimension(5) :: fileid
       integer :: ierr
       integer(kind=ikind) :: i
       real(kind=rkind), dimension(2) :: inputs
       
       
-      pde(1)%problem_name(1) = "bouss"
-      pde(1)%problem_name(2) = "Boussinesq equation"
+      pde_loc%problem_name(1) = "bouss"
+      pde_loc%problem_name(2) = "Boussinesq equation"
 
-      pde(1)%solution_name(1) = "water_table" !nazev vystupnich souboru
-      pde(1)%solution_name(2) = "h  [L]" !popisek grafu
+      pde_loc%solution_name(1) = "water_table" !nazev vystupnich souboru
+      pde_loc%solution_name(2) = "h  [L]" !popisek grafu
 
-      pde(1)%flux_name(1) = "flux"  
-      pde(1)%flux_name(2) = "Darcian specific flux [L^2.T^{-1}]"
+      pde_loc%flux_name(1) = "flux"  
+      pde_loc%flux_name(2) = "Darcian specific flux [L^2.T^{-1}]"
 
-      pde(1)%mass_name(1) = "not_available"
-      pde(1)%mass_name(2) = "n_a"
+      pde_loc%mass_name(1) = "not_available"
+      pde_loc%mass_name(2) = "n_a"
       
       
       call find_unit(fileid(1), 200)
@@ -119,7 +120,7 @@ module boussread
       
       call fileread(bouss_icond, fileid(5))
       
-      call readbcvals(unitW=fileid(5), struct=pde(1)%bc, dimen=2_ikind, &
+      call readbcvals(unitW=fileid(5), struct=pde_loc%bc, dimen=2_ikind, &
 		      dirname="drutes.conf/boussinesq.conf/")
       
       

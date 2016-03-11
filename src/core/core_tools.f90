@@ -41,7 +41,6 @@ module core_tools
 
     character(len=1024) :: ch1, ch2, ch3, ch4, ch5, ch6, ch7, ch8
 
-    
     if (present(real1)) then
       write(unit=ch1, fmt=*) real1
     else

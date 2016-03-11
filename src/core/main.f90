@@ -60,7 +60,9 @@ program main
     
     call get_cmd_options()
     
-     write(unit=terminal, fmt=*)"---------------------------------------------------------------------------"
+    terminal = 6
+    
+    write(unit=terminal, fmt=*)"---------------------------------------------------------------------------"
     write(unit=terminal, fmt=*)"This program is free software: you can redistribute it and/or modify"
     write(unit=terminal, fmt=*)"it under the terms of the GNU General Public License as published by"
     write(unit=terminal, fmt=*)"the Free Software Foundation, either version 3 of the License, or"
@@ -87,24 +89,13 @@ program main
       
     call parse_globals() 
     
-    call set_readers()
-    
     call init_measured()
-         
-    call read_model()
-   
-    
-    
-    if (terminal /= 6) then
-     
-    end if
-      
         
     call write_log("number of nodes:", int1=nodes%kolik, text2="number of elements:", int2=elements%kolik)
-
-    call init_observe()
         
     call set_pointers()
+    
+    call init_observe()
         
     call feminit()
     
@@ -116,7 +107,8 @@ program main
   end if
   
 
-  call write_log("DRUtES solves Richards' equation", text2=drutes_config%fullname)
+  
+  call write_log("DRUtES solves ", text2=adjustl(trim(drutes_config%fullname)))
 
   call solve_pde(success)      
   

@@ -44,7 +44,7 @@ module typy
 
     public :: print_info
     public :: update_info
-contains
+    contains
     !> vytiskne udaje o pocitani
     subroutine print_info(info)
         implicit none

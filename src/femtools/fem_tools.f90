@@ -76,7 +76,7 @@ module fem_tools
         n_row(i+iproc*limits) = pde(iproc+1)%permut(j)
         if (nodes%edge(j) > 100) then
           m = nodes%edge(j)
-          call pde(iproc+1)%bc(m)%value_fnc(el_id,i,bcval(i+iproc*limits),bc(i+iproc*limits))
+          call pde(iproc+1)%bc(m)%value_fnc(pde(iproc+1), el_id,i,bcval(i+iproc*limits),bc(i+iproc*limits))
         else
           bc(i) = 0
         end if
@@ -190,7 +190,7 @@ module fem_tools
                 gofurther = .true.
               end if
               if (gofurther) then
-		call pde(proc)%bc(l)%value_fnc(i,j, tmp, code)
+		call pde(proc)%bc(l)%value_fnc(pde(proc), i, j, tmp, code)
                 select case(drutes_config%dimen)
                     case(1)
                       velocity(1) = elements%nvect_z(i,j)*tmp

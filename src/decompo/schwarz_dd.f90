@@ -442,7 +442,7 @@ module schwarz_dd
 			      elnode_prev(j) = pde_common%xvect(k,1)
 			    else
 			      k = nodes%edge(elements%data(el,ll))
-			      call pde(proc)%bc(k)%value_fnc(el, ll, value)
+			      call pde(proc)%bc(k)%value_fnc(pde(proc), el, ll, value)
 			      elnode_prev(j) = value
 			    end if
 			  end do
