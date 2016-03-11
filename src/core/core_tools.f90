@@ -174,8 +174,7 @@ module core_tools
         end if 
         iunit = iunit + 1  
         if (iunit >= huge(iunit) - 1) then
-          ERROR STOP "this is a SYSTEM PANIC, unable to find any free unit"
-          iunit = 0
+          ERROR STOP "SYSTEM PANIC, unable to find any free unit"
           exit
         end if
       end do

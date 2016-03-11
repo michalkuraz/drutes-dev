@@ -62,8 +62,6 @@ module manage_pointers
       use global_objs
       use pde_objs
       use globals
-      use re_constitutive
-      use re_total
       use core_tools
       use capmat
       use fem_tools
@@ -73,11 +71,10 @@ module manage_pointers
       use schwarz_dd
       use schwarz_dd2subcyc
       use solver_interfaces
-      use modRE_constitutive
-      use modRE_junctions
       use debug_tools
-      use boussfnc
-      use ADE_fnc
+      use bousspointers
+      use re_pointers
+      use ADE_pointers
 
       
 
@@ -89,400 +86,125 @@ module manage_pointers
       end do
 
 
-      select case(drutes_config%name)
-       !general setting for Richards equation in all modes
-	case("RE_std", "RE_rot", "RErotH", "REstdH")
-          call domainswitch("m")
-	  pde_common%nonlinear = .true.
-	  if (drutes_config%fnc_method == 0) then
-	    pde(1)%pde_fnc(1)%dispersion => mualem
-	    pde(1)%pde_fnc(1)%convection => dmualem_dh
-	    pde(1)%pde_fnc(1)%elasticity => vangen_elast
-	    pde(1)%mass => vangen
-	  else
-	    call tabvalues(Kfnc=mualem, dKdhfnc = dmualem_dh, Cfnc=vangen_elast, thetafnc=vangen)
-	    pde(1)%pde_fnc(1)%dispersion  => mualem_tab		
-	    pde(1)%pde_fnc(1)%convection => dmualem_dh_tab
-	    pde(1)%pde_fnc(1)%elasticity => vangen_elast_tab
-	    pde(1)%mass => vangen_tab
-	  end if
-	  pde(1)%pde_fnc(1)%reaction => dummy_scalar
-	  pde(1)%pde_fnc(1)%der_convect => dummy_vector
-          pde(1)%pde_fnc(1)%zerord => dummy_scalar
-          
-
-	  do i=1, ubound(vgmatrix,1)
-	    if (vgmatrix(i)%rcza_set%use) then
-	      call init_zones(vgmatrix)
-              pde(1)%dt_check => rcza_check
-	      EXIT
-	    else
-	      pde(1)%dt_check => time_check_ok
-	    end if
-	  end do
-
-	  ! adjustments for each specific type
-	  select case(drutes_config%name)
-	    case("RE_std", "RE_rot")
-	  
-	      do i=lbound(pde(1)%bc,1), ubound(pde(1)%bc,1)
-		select case(pde(1)%bc(i)%code)
-		  case(-1)
-		      pde(1)%bc(i)%value_fnc => re_dirichlet_height_bc
-		  case(0)
-			pde(1)%bc(i)%value_fnc => re_null_bc
-		  case(1)
-			pde(1)%bc(i)%value_fnc => re_dirichlet_bc
-		  case(2)
-			pde(1)%bc(i)%value_fnc => re_neumann_bc
-		  case(3)
-			pde(1)%bc(i)%value_fnc => re_null_bc
-		  case default
-			print *, "ERROR! You have specified an unsupported boundary type definition for the Richards equation"
-			print *, "the incorrect boundary code specified is:", pde(1)%bc(i)%code
-			ERROR stop
-		end select
-	      end do
-	      
-	      if (drutes_config%name == "RE_rot") then
-		pde(1)%pde_fnc(1)%convection => convection_rerot
-	      end if
-	      pde(1)%flux => darcy_law
-	      pde(1)%initcond => re_initcond
-
-	      
-	    case("RErotH", "REstdH")
-	      do i=lbound(pde(1)%bc,1), ubound(pde(1)%bc,1)
-		select case(pde(1)%bc(i)%code)
-		  case(-1)
-		      pde(1)%bc(i)%value_fnc => retot_dirichlet_height_bc
-		  case(0)
-			pde(1)%bc(i)%value_fnc => re_null_bc
-		  case(1)
-			pde(1)%bc(i)%value_fnc => retot_dirichlet_bc
-		  case(2)
-			pde(1)%bc(i)%value_fnc => retot_neumann_bc
-		  case(3)
-			pde(1)%bc(i)%value_fnc => retot_freedrainage
-		  case default
-			print *, "ERROR! You have specified an unsupported boundary type definition for the Richards equation"
-			print *, "the incorrect boundary code specified is:", pde(1)%bc(i)%code
-			ERROR stop
-		end select
-	      end do
-	      
-	      if (drutes_config%name == "REstdH") then
-		pde(1)%pde_fnc(1)%convection => dummy_vector
-	      else if (drutes_config%name == "RErotH") then
-		pde(1)%pde_fnc(1)%convection => convection_rerot
-	      end if
-	      
-	      pde(1)%flux => darcy4totH
-	      pde(1)%initcond => retot_initcond
-! 	      pde(1)%initcond => iconddebouss
-	      pde(1)%getval => getval_retot
-	      
-	    end select
-	      
+      select case(trim(drutes_config%name))
+	case("RE_std")
+	  write(unit=drutes_config%fullname, fmt=*) "Richards' equation, in", drutes_config%dimen, &
+	  "D, in pressure head form."
+	  call RE_std(pde(1))
+	case("REstdH")
+	  write(unit=drutes_config%fullname, fmt=*) "Richards' equation, in", drutes_config%dimen, &
+	  "D, in total hydraulic head form."
+	  call REstdH(pde(1))
+	case("RE_rot")
+	  write(unit=drutes_config%fullname, fmt=*) "Richards' equation, in", drutes_config%dimen, &
+	  "D, in cylindric coordinates and axysimmetric flow, in pressure head form."
+	  call RE_rot(pde(1))
+	case("RErotH")
+	  write(unit=drutes_config%fullname, fmt=*) "Richards' equation, in", drutes_config%dimen, &
+	  "D, in cylindric coordinates and axysimmetric flow, in total hydraulic head form."
+	  call RErotH(pde(1))
+	
 	      
 	case("boussi")   
+	   write(unit=drutes_config%fullname, fmt=*) "DRUtES solves Boussinesq equation for hillslope runoff", &
+           "(1D approximation of groundwater flow)."
+           call boussi(pde(1))
+           
+        
+	case("ADEstd") 
+	  write(unit=drutes_config%fullname, fmt=*) "DRUtES solves advection-dispersion-reaction equation in", &
+           drutes_config%dimen, "D, convection is specified in input files, equilibrium sorption"
+           call ade(pde(1))
 
-	  pde(1)%pde_fnc(1)%dispersion => bouss_cond
-	  pde(1)%pde_fnc(1)%convection => bouss_adv
-! pde(1)%pde_fnc(1)%convection =>dummy_vector
-	  pde(1)%pde_fnc(1)%elasticity => bouss_elast
-	  pde(1)%mass => dummy_scalar
-
-	  pde(1)%pde_fnc(1)%reaction => dummy_scalar
-	  pde(1)%pde_fnc(1)%der_convect => dummy_vector
-          pde(1)%pde_fnc(1)%zerord => boussreact
-	      
-	  do i=lbound(pde(1)%bc,1), ubound(pde(1)%bc,1)
-	    select case(pde(1)%bc(i)%code)
-	      case(1)
-		pde(1)%bc(i)%value_fnc => ADE_dirichlet
-	      case(2)
-		pde(1)%bc(i)%value_fnc => ADE_neumann
-	    end select
-	  end do
-	         
-	   
-	  pde(1)%flux => ADE_flux
-	  pde(1)%initcond => boussicond    
- 
-	  pde(1)%dt_check => time_check_ok
-	  
-	  
-
-      case("ADEstd", "ADEstk", "ADE_wr", "ADEwRk")
+      case("ADEstd_kinsorb")
+      
+      	  write(unit=drutes_config%fullname, fmt=*) "DRUtES solves advection-dispersion-reaction equation in", &
+           drutes_config%dimen, "D, convection is specified in input files, kinetic sorption"
+           call ade(pde(1))
+           call adekinsorb(pde(2))
+           
+      case("ADE_RE_std")
+     	  write(unit=drutes_config%fullname, fmt=*) "DRUtES solves advection-dispersion-reaction equation", &
+     	  "and Richards equation in pressure head form in", &
+           drutes_config%dimen, "D, convection is computed, equilibrium sorption"	
+           
+           call RE_std(pde(1))
+           call ade(pde(2))
 	
-	  proc_cl = 1
-	  
-	  pde(proc_cl)%pde_fnc(1)%dispersion => ADEdispersion
-	 
-	  pde(proc_cl)%pde_fnc(1)%convection => ADE_std_convection
+      case("ADE_REstdH")
+     	  write(unit=drutes_config%fullname, fmt=*) "DRUtES solves advection-dispersion-reaction equation", &
+     	  "and Richards equation in total hydraulic head form in", &
+           drutes_config%dimen, "D, convection is computed, equilibrium sorption"	
+           
+           call REstdH(pde(1))
+           call ade(pde(2))
 
-	  pde(proc_cl)%pde_fnc(1)%elasticity => ADE_tder_coef
-
-	  pde(proc_cl)%mass => ADE_mass
-
-	  pde(proc_cl)%pde_fnc(1)%reaction => ADE_reaction
-	  
-	  pde(proc_cl)%pde_fnc(1)%der_convect => dummy_vector
-          
-          pde(proc_cl)%pde_fnc(1)%zerord => ADE_zerorder
-	      
-	  do i=lbound(pde(proc_cl)%bc,1), ubound(pde(proc_cl)%bc,1)
-	    select case(pde(proc_cl)%bc(i)%code)
-	      case(1)
-		pde(proc_cl)%bc(i)%value_fnc => ADE_dirichlet
-	      case(2)
-		pde(proc_cl)%bc(i)%value_fnc => ADE_neumann
-	    end select
-	  end do    
-	   
-	  pde(proc_cl)%flux => ADE_flux
-	  
-	  pde(proc_cl)%initcond => ADE_icond   
- 
-	  pde(proc_cl)%dt_check => time_check_ok
-
-	  
-	case("RE_mod")
-	  !pde(1) Richards eq.
-	  !pde(2) Heat flux
-	  !pde(3) Transport of solutes
-	  
-	  pde_common%nonlinear = .true.
-	  pde(1)%mass => mass_R
-	  pde(1)%pde_fnc(1)%elasticity => elas_R_to_potential
-	  pde(1)%pde_fnc(1)%dispersion => disp_R_to_potential
-	  pde(1)%pde_fnc(1)%convection => conv_R_to_gravity
-	  pde(1)%pde_fnc(1)%der_convect => dummy_vector
-	  pde(1)%pde_fnc(1)%reaction => dummy_scalar
-	  
-	  pde(1)%pde_fnc(2)%elasticity => dummy_scalar  
-	  pde(1)%pde_fnc(2)%dispersion => disp_R_to_heat
-! 	  pde(1)%pde_fnc(2)%dispersion => dummy_tensor
-	  pde(1)%pde_fnc(2)%convection => dummy_vector
-	  pde(1)%pde_fnc(2)%der_convect => dummy_vector
-	  pde(1)%pde_fnc(2)%reaction => dummy_scalar
-	  
-	  pde(1)%pde_fnc(3)%elasticity => dummy_scalar  
-	  pde(1)%pde_fnc(3)%dispersion => disp_R_to_solute
-! 	  pde(1)%pde_fnc(3)%dispersion => dummy_tensor
-	  pde(1)%pde_fnc(3)%convection => dummy_vector
-	  pde(1)%pde_fnc(3)%der_convect => dummy_vector
-	  pde(1)%pde_fnc(3)%reaction => dummy_scalar
-	  
-	  
-	  pde(2)%mass => dummy_scalar  
-	  pde(2)%pde_fnc(1)%elasticity => dummy_scalar
-	  pde(2)%pde_fnc(1)%dispersion => disp_H_to_potential
-! 	  pde(2)%pde_fnc(1)%dispersion => dummy_tensor
-	  pde(2)%pde_fnc(1)%convection => dummy_vector
-	  pde(2)%pde_fnc(1)%der_convect => dummy_vector
-	  pde(2)%pde_fnc(1)%reaction => dummy_scalar
-	  
-	  pde(2)%pde_fnc(2)%elasticity => elas_H_to_heat 
-	  pde(2)%pde_fnc(2)%dispersion => disp_H_to_heat
-	  pde(2)%pde_fnc(2)%convection => conv_H_to_heat
-	  pde(2)%pde_fnc(2)%der_convect => dummy_vector
-	  pde(2)%pde_fnc(2)%reaction => dummy_scalar
-	  
-	  pde(2)%pde_fnc(3)%elasticity => dummy_scalar  
-	  pde(2)%pde_fnc(3)%dispersion => disp_H_to_solute
-! 	  pde(2)%pde_fnc(3)%dispersion => dummy_tensor
-	  pde(2)%pde_fnc(3)%convection => dummy_vector
-	  pde(2)%pde_fnc(3)%der_convect => dummy_vector
-	  pde(2)%pde_fnc(3)%reaction => dummy_scalar
-	  
-	  
-	  pde(3)%mass => dummy_scalar  
-	  pde(3)%pde_fnc(1)%elasticity => dummy_scalar
-	  pde(3)%pde_fnc(1)%dispersion => dummy_tensor
-	  pde(3)%pde_fnc(1)%convection => dummy_vector
-	  pde(3)%pde_fnc(1)%der_convect => dummy_vector
-	  pde(3)%pde_fnc(1)%reaction => dummy_scalar
-	  
-	  pde(3)%pde_fnc(2)%elasticity => dummy_scalar  
-	  pde(3)%pde_fnc(2)%dispersion => dummy_tensor
-	  pde(3)%pde_fnc(2)%convection => dummy_vector
-	  pde(3)%pde_fnc(2)%der_convect => dummy_vector
-	  pde(3)%pde_fnc(2)%reaction => dummy_scalar
-	  
-	  pde(3)%pde_fnc(3)%elasticity => elas_S_to_solute
-	  pde(3)%pde_fnc(3)%dispersion => disp_S_to_solute
-	  pde(3)%pde_fnc(3)%convection => conv_S_to_solute
-	  pde(3)%pde_fnc(3)%der_convect => dummy_vector
-	  pde(3)%pde_fnc(3)%reaction => dummy_scalar
-	  
-! 	  ! ! ! ! Pocatecni podminky ! ! ! ! 
-	  pde(1)%initcond => modre_initcond
-	  pde(2)%initcond => modheat_initcond
-	  pde(3)%initcond => modsolute_initcond
-	  ! ! ! ! 
+      case("ADE_RE_rot")
+     	  write(unit=drutes_config%fullname, fmt=*) "DRUtES solves advection-dispersion-reaction equation", &
+     	  "and Richards equation in pressure head form", &
+           "flow is axisymmetric, convection is computed, equilibrium sorption"	
+           
+           call RE_rot(pde(1))
+           call ade(pde(2))
+           
+      case("ADE_RErotH")
+     	  write(unit=drutes_config%fullname, fmt=*) "DRUtES solves advection-dispersion-reaction equation", &
+     	  "and Richards equation in total hydraulic head form", &
+           "flow is axisymmetric, convection is computed, equilibrium sorption"	
+           
+           call RE_rot(pde(1))
+           call ade(pde(2))           
 	  
 
-	  do i=1, ubound(pde,1)  
-	    pde(i)%dt_check => time_check_ok
-	  end do
-	  
-	  ! okrajove podminky transportu vody
-	  do i=lbound(pde(1)%bc,1), ubound(pde(1)%bc,1)
-	    select case(pde(1)%bc(i)%code)
-	      case(-1)
-		  pde(1)%bc(i)%value_fnc => re_dirichlet_height_bc
-	      case(0)
-		    pde(1)%bc(i)%value_fnc => re_null_bc
-	      case(1)
-		    pde(1)%bc(i)%value_fnc => re_dirichlet_bc
-	      case(2)
-		    pde(1)%bc(i)%value_fnc => re_neumann_bc
-	      case(3)
-		    pde(1)%bc(i)%value_fnc => re_null_bc
-	      case default
-		    print *, "ERROR! You have specified an unsupported boundary type definition for the Richards equation"
-		    print *, "the incorrect boundary code specified is:", pde(1)%bc(i)%code
-		    ERROR stop
-	    end select
-	  end do
-
-	  ! okrajove podminky transportu tepla
-	  do i=lbound(pde(2)%bc,1), ubound(pde(2)%bc,1)
-	    select case(pde(2)%bc(i)%code)
-	      case(0)
-		    pde(2)%bc(i)%value_fnc => re_null_bc
-	      case(1)
-		    pde(2)%bc(i)%value_fnc => T_dirichlet_bc
-	      case(2)
-		    pde(2)%bc(i)%value_fnc => T_neumann_bc
-	      case(3)
-		    pde(2)%bc(i)%value_fnc => re_null_bc
-	      case default
-		    print *, "ERROR! You have specified an unsupported boundary type definition for the Richards equation"
-		    print *, "the incorrect boundary code specified is:", pde(1)%bc(i)%code
-		    ERROR stop
-	    end select
-	  end do
+      case("ADE_RE_std_kinsorb")
+     	  write(unit=drutes_config%fullname, fmt=*) "DRUtES solves advection-dispersion-reaction equation", &
+     	  "and Richards equation in pressure head form in", &
+           drutes_config%dimen, "D, convection is computed, kinetic sorption"	
+           
+           call RE_std(pde(1))
+           call ade(pde(2))
+           call adekinsorb(pde(3))
 	
-	  ! okrajove podminky transportu kontaminantu
-	  do i=lbound(pde(3)%bc,1), ubound(pde(3)%bc,1)
-	    select case(pde(1)%bc(i)%code)
-	      case(0)
-		    pde(3)%bc(i)%value_fnc => re_null_bc
-	      case(1)
-		    pde(3)%bc(i)%value_fnc => C_dirichlet_bc
-	      case(2)
-		    pde(3)%bc(i)%value_fnc => C_neumann_bc
-	      case(3)
-		    pde(3)%bc(i)%value_fnc => re_null_bc
-	      case default
-		    print *, "ERROR! You have specified an unsupported boundary type definition for the Richards equation"
-		    print *, "the incorrect boundary code specified is:", pde(1)%bc(i)%code
-		    ERROR stop
-	    end select
-	  end do
-	  	    
+      case("ADE_REstdH_kinsorb")
+     	  write(unit=drutes_config%fullname, fmt=*) "DRUtES solves advection-dispersion-reaction equation", &
+     	  "and Richards equation in total hydraulic head form in", &
+           drutes_config%dimen, "D, convection is computed, kinetic sorption"	
+           
+           call REstdH(pde(1))
+           call ade(pde(2))
+           call adekinsorb(pde(3))
+
+      case("ADE_RE_rot_kinsorb")
+     	  write(unit=drutes_config%fullname, fmt=*) "DRUtES solves advection-dispersion-reaction equation", &
+     	  "and Richards equation in pressure head form", &
+           "flow is axisymmetric, convection is computed, kinetic sorption"	
+           
+           call RE_rot(pde(1))
+           call ade(pde(2))
+           call adekinsorb(pde(3))
+           
+      case("ADE_RErotH_kinsorb")
+     	  write(unit=drutes_config%fullname, fmt=*) "DRUtES solves advection-dispersion-reaction equation", &
+     	  "and Richards equation in total hydraulic head form", &
+           "flow is axisymmetric, convection is computed, kinetic sorption"	
+           
+           call RE_rot(pde(1))
+           call ade(pde(2))
+           call adekinsorb(pde(3))
 		
 	
-	case("REtest")
-          !pde(1) Richards eq.
-	  !pde(2) Richards eq.
-	  !pde(3) Richards eq.
-	  pde_common%nonlinear = .true.
-	  do i=1, ubound(pde,1)
-	    pde(i)%pde_fnc(i)%dispersion => mualem
-	    pde(i)%pde_fnc(i)%convection => dmualem_dh
-	    pde(i)%pde_fnc(i)%elasticity => vangen_elast
-	    pde(i)%mass => vangen
-	    pde(i)%pde_fnc(i)%reaction => dummy_scalar
-	    pde(i)%pde_fnc(i)%der_convect => dummy_vector
-	    pde(i)%flux => darcy_law
-	    pde(i)%initcond => re_initcond
+       case("REtest")
+	  write(unit=drutes_config%fullname, fmt=*) "DRUtES debugs itself"
+	  do i=1, 3
+	    call RE_std(pde(i))
 	  end do
-	  
-	  pde(1)%pde_fnc(2)%elasticity => dummy_scalar  
-	  pde(1)%pde_fnc(2)%dispersion => dummy_tensor
-	  pde(1)%pde_fnc(2)%convection => dummy_vector
-	  pde(1)%pde_fnc(2)%der_convect => dummy_vector
-	  pde(1)%pde_fnc(2)%reaction => dummy_scalar
-	  
-	  pde(1)%pde_fnc(3)%elasticity => dummy_scalar  
-	  pde(1)%pde_fnc(3)%dispersion => dummy_tensor
-	  pde(1)%pde_fnc(3)%convection => dummy_vector
-	  pde(1)%pde_fnc(3)%der_convect => dummy_vector
-	  pde(1)%pde_fnc(3)%reaction => dummy_scalar
- 	  
-	  pde(2)%mass => dummy_scalar  
-	  pde(2)%pde_fnc(1)%elasticity => dummy_scalar
-	  pde(2)%pde_fnc(1)%dispersion => dummy_tensor
-	  pde(2)%pde_fnc(1)%convection => dummy_vector
-	  pde(2)%pde_fnc(1)%der_convect => dummy_vector
-	  pde(2)%pde_fnc(1)%reaction => dummy_scalar
-	  
-	  pde(2)%pde_fnc(3)%elasticity => dummy_scalar  
-	  pde(2)%pde_fnc(3)%dispersion => dummy_tensor 
-	  pde(2)%pde_fnc(3)%convection => dummy_vector
-	  pde(2)%pde_fnc(3)%der_convect => dummy_vector
-	  pde(2)%pde_fnc(3)%reaction => dummy_scalar
-	  
-	  
-	  pde(3)%mass => dummy_scalar  
-	  pde(3)%pde_fnc(1)%elasticity => dummy_scalar
-	  pde(3)%pde_fnc(1)%dispersion => dummy_tensor
-	  pde(3)%pde_fnc(1)%convection => dummy_vector
-	  pde(3)%pde_fnc(1)%der_convect => dummy_vector
-	  pde(3)%pde_fnc(1)%reaction => dummy_scalar
-	  
-	  pde(3)%pde_fnc(2)%elasticity => dummy_scalar  
-	  pde(3)%pde_fnc(2)%dispersion => dummy_tensor
-	  pde(3)%pde_fnc(2)%convection => dummy_vector
-	  pde(3)%pde_fnc(2)%der_convect => dummy_vector
-	  pde(3)%pde_fnc(2)%reaction => dummy_scalar
 
-
-	  do i=1, ubound(pde,1)  
-	    pde(i)%dt_check => time_check_ok
-	  end do
-	    
-	
-
-	
-	  do j=1, ubound(pde,1)
-	  ! okrajove podminky transportu vody
-	    do i=lbound(pde(1)%bc,1), ubound(pde(1)%bc,1)
-	      select case(pde(1)%bc(i)%code)
-		case(-1)
-		    pde(j)%bc(i)%value_fnc => re_dirichlet_height_bc
-		case(0)
-		      pde(j)%bc(i)%value_fnc => re_null_bc
-		case(1)
-		      pde(j)%bc(i)%value_fnc => re_dirichlet_bc
-		case(2)
-		      pde(j)%bc(i)%value_fnc => re_neumann_bc
-		case(3)
-		      pde(j)%bc(i)%value_fnc => re_null_bc
-		case(5)
-		      pde(j)%bc(i)%value_fnc => retot_atmospheric
-		case default
-		      print *, "ERROR! You have specified an unsupported boundary type definition for the Richards equation"
-		      print *, "the incorrect boundary code specified is:", pde(1)%bc(i)%code
-		      ERROR stop
-	      end select
-	    end do	
-	  end do
-	  
-	  vgset =>vgmatrix
-
-      end select
+    end select
 
       
       select case(drutes_config%dimen)
 	case(1)
-! 		    solve_matrix => CG_face
  	    solve_matrix => LDU_face
-! 	    solve_matrix => CG_normal_face
 	case(2)
 !  solve_matrix => pcg
 	    solve_matrix => CG_normal_face
@@ -512,7 +234,141 @@ module manage_pointers
 
   end subroutine set_pointers
 
-
+! 	case("RE_mod")
+! 	  !pde(1) Richards eq.
+! 	  !pde(2) Heat flux
+! 	  !pde(3) Transport of solutes
+! 	  
+! 	  pde_common%nonlinear = .true.
+! 	  pde(1)%mass => mass_R
+! 	  pde(1)%pde_fnc(1)%elasticity => elas_R_to_potential
+! 	  pde(1)%pde_fnc(1)%dispersion => disp_R_to_potential
+! 	  pde(1)%pde_fnc(1)%convection => conv_R_to_gravity
+! 	  pde(1)%pde_fnc(1)%der_convect => dummy_vector
+! 	  pde(1)%pde_fnc(1)%reaction => dummy_scalar
+! 	  
+! 	  pde(1)%pde_fnc(2)%elasticity => dummy_scalar  
+! 	  pde(1)%pde_fnc(2)%dispersion => disp_R_to_heat
+! ! 	  pde(1)%pde_fnc(2)%dispersion => dummy_tensor
+! 	  pde(1)%pde_fnc(2)%convection => dummy_vector
+! 	  pde(1)%pde_fnc(2)%der_convect => dummy_vector
+! 	  pde(1)%pde_fnc(2)%reaction => dummy_scalar
+! 	  
+! 	  pde(1)%pde_fnc(3)%elasticity => dummy_scalar  
+! 	  pde(1)%pde_fnc(3)%dispersion => disp_R_to_solute
+! ! 	  pde(1)%pde_fnc(3)%dispersion => dummy_tensor
+! 	  pde(1)%pde_fnc(3)%convection => dummy_vector
+! 	  pde(1)%pde_fnc(3)%der_convect => dummy_vector
+! 	  pde(1)%pde_fnc(3)%reaction => dummy_scalar
+! 	  
+! 	  
+! 	  pde(2)%mass => dummy_scalar  
+! 	  pde(2)%pde_fnc(1)%elasticity => dummy_scalar
+! 	  pde(2)%pde_fnc(1)%dispersion => disp_H_to_potential
+! ! 	  pde(2)%pde_fnc(1)%dispersion => dummy_tensor
+! 	  pde(2)%pde_fnc(1)%convection => dummy_vector
+! 	  pde(2)%pde_fnc(1)%der_convect => dummy_vector
+! 	  pde(2)%pde_fnc(1)%reaction => dummy_scalar
+! 	  
+! 	  pde(2)%pde_fnc(2)%elasticity => elas_H_to_heat 
+! 	  pde(2)%pde_fnc(2)%dispersion => disp_H_to_heat
+! 	  pde(2)%pde_fnc(2)%convection => conv_H_to_heat
+! 	  pde(2)%pde_fnc(2)%der_convect => dummy_vector
+! 	  pde(2)%pde_fnc(2)%reaction => dummy_scalar
+! 	  
+! 	  pde(2)%pde_fnc(3)%elasticity => dummy_scalar  
+! 	  pde(2)%pde_fnc(3)%dispersion => disp_H_to_solute
+! ! 	  pde(2)%pde_fnc(3)%dispersion => dummy_tensor
+! 	  pde(2)%pde_fnc(3)%convection => dummy_vector
+! 	  pde(2)%pde_fnc(3)%der_convect => dummy_vector
+! 	  pde(2)%pde_fnc(3)%reaction => dummy_scalar
+! 	  
+! 	  
+! 	  pde(3)%mass => dummy_scalar  
+! 	  pde(3)%pde_fnc(1)%elasticity => dummy_scalar
+! 	  pde(3)%pde_fnc(1)%dispersion => dummy_tensor
+! 	  pde(3)%pde_fnc(1)%convection => dummy_vector
+! 	  pde(3)%pde_fnc(1)%der_convect => dummy_vector
+! 	  pde(3)%pde_fnc(1)%reaction => dummy_scalar
+! 	  
+! 	  pde(3)%pde_fnc(2)%elasticity => dummy_scalar  
+! 	  pde(3)%pde_fnc(2)%dispersion => dummy_tensor
+! 	  pde(3)%pde_fnc(2)%convection => dummy_vector
+! 	  pde(3)%pde_fnc(2)%der_convect => dummy_vector
+! 	  pde(3)%pde_fnc(2)%reaction => dummy_scalar
+! 	  
+! 	  pde(3)%pde_fnc(3)%elasticity => elas_S_to_solute
+! 	  pde(3)%pde_fnc(3)%dispersion => disp_S_to_solute
+! 	  pde(3)%pde_fnc(3)%convection => conv_S_to_solute
+! 	  pde(3)%pde_fnc(3)%der_convect => dummy_vector
+! 	  pde(3)%pde_fnc(3)%reaction => dummy_scalar
+! 	  
+! ! 	  ! ! ! ! Pocatecni podminky ! ! ! ! 
+! 	  pde(1)%initcond => modre_initcond
+! 	  pde(2)%initcond => modheat_initcond
+! 	  pde(3)%initcond => modsolute_initcond
+! 	  ! ! ! ! 
+! 	  
+! 
+! 	  do i=1, ubound(pde,1)  
+! 	    pde(i)%dt_check => time_check_ok
+! 	  end do
+! 	  
+! 	  ! okrajove podminky transportu vody
+! 	  do i=lbound(pde(1)%bc,1), ubound(pde(1)%bc,1)
+! 	    select case(pde(1)%bc(i)%code)
+! 	      case(-1)
+! 		  pde(1)%bc(i)%value_fnc => re_dirichlet_height_bc
+! 	      case(0)
+! 		    pde(1)%bc(i)%value_fnc => re_null_bc
+! 	      case(1)
+! 		    pde(1)%bc(i)%value_fnc => re_dirichlet_bc
+! 	      case(2)
+! 		    pde(1)%bc(i)%value_fnc => re_neumann_bc
+! 	      case(3)
+! 		    pde(1)%bc(i)%value_fnc => re_null_bc
+! 	      case default
+! 		    print *, "ERROR! You have specified an unsupported boundary type definition for the Richards equation"
+! 		    print *, "the incorrect boundary code specified is:", pde(1)%bc(i)%code
+! 		    ERROR stop
+! 	    end select
+! 	  end do
+! 
+! 	  ! okrajove podminky transportu tepla
+! 	  do i=lbound(pde(2)%bc,1), ubound(pde(2)%bc,1)
+! 	    select case(pde(2)%bc(i)%code)
+! 	      case(0)
+! 		    pde(2)%bc(i)%value_fnc => re_null_bc
+! 	      case(1)
+! 		    pde(2)%bc(i)%value_fnc => T_dirichlet_bc
+! 	      case(2)
+! 		    pde(2)%bc(i)%value_fnc => T_neumann_bc
+! 	      case(3)
+! 		    pde(2)%bc(i)%value_fnc => re_null_bc
+! 	      case default
+! 		    print *, "ERROR! You have specified an unsupported boundary type definition for the Richards equation"
+! 		    print *, "the incorrect boundary code specified is:", pde(1)%bc(i)%code
+! 		    ERROR stop
+! 	    end select
+! 	  end do
+! 	
+! 	  ! okrajove podminky transportu kontaminantu
+! 	  do i=lbound(pde(3)%bc,1), ubound(pde(3)%bc,1)
+! 	    select case(pde(1)%bc(i)%code)
+! 	      case(0)
+! 		    pde(3)%bc(i)%value_fnc => re_null_bc
+! 	      case(1)
+! 		    pde(3)%bc(i)%value_fnc => C_dirichlet_bc
+! 	      case(2)
+! 		    pde(3)%bc(i)%value_fnc => C_neumann_bc
+! 	      case(3)
+! 		    pde(3)%bc(i)%value_fnc => re_null_bc
+! 	      case default
+! 		    print *, "ERROR! You have specified an unsupported boundary type definition for the Richards equation"
+! 		    print *, "the incorrect boundary code specified is:", pde(1)%bc(i)%code
+! 		    ERROR stop
+! 	    end select
+! 	  end do
   
 
 end module manage_pointers

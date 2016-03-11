@@ -26,17 +26,17 @@ servers="miguel@neptun01.fsv.cvut.cz:~  miguel@matsrv-lin01.fsv.cvut.cz:~ miguel
 
 
 #----------------objects definitions-------------------------------
-CORE_obj := typy.o global_objs.o globals.o globals1D.o globals2D.o  debug_tools.o core_tools.o pde_objs.o
+CORE_obj := typy.o global_objs.o globals.o globals1D.o globals2D.o  debug_tools.o core_tools.o pde_objs.o dummy_procs.o
 POINTERMAN_obj := manage_pointers.o
-RE_obj := re_constitutive.o re_reader.o re_globals.o re_total.o
+RE_obj := re_constitutive.o re_reader.o re_globals.o re_total.o re_pointers.o
 MATHTOOLS_obj :=  linalg.o integral.o solver_interfaces.o simplelinalg.o
 TOOLS_obj := printtools.o simegen.o read_inputs.o drutes_init.o geom_tools.o postpro.o readtools.o
 FEMTOOLS_obj := feminittools.o capmat.o stiffmat.o fem.o fem_tools.o femmat.o
 DECOMPO_obj :=  decomp_tools.o schwarz_dd.o  decomp_vars.o decomposer.o schwarz_dd2subcyc.o
 PMAoo_obj := fullmatrix.o mtx.o mtx_int.o mtxiotools.o pmatools.o solvers.o sparsematrix.o sparsematrix_int.o
 modRE_obj := modRE_globals.o modRE_reader.o modRE_constitutive.o modRE_parameter_functions.o modRE_junctions.o
-BOUSSINESQ_obj := boussglob.o boussread.o boussfnc.o
-ADE_obj := ADE_fnc.o ADE_reader.o ADE_globals.o
+BOUSSINESQ_obj := boussglob.o boussread.o boussfnc.o bousspointers.o
+ADE_obj := ADE_fnc.o ADE_reader.o ADE_globals.o ADE_pointers.o
 
 
 ALL_objs := $(CORE_obj) $(TOOLS_obj) $(POINTERMAN_obj) $(MATHTOOLS_obj) $(FEMTOOLS_obj) $(DECOMPO_obj) $(RE_obj) $(PMAoo_obj) $(modRE_obj) $(BOUSSINESQ_obj) $(ADE_obj)
@@ -59,6 +59,8 @@ globals2D.o: typy.o global_objs.o src/core/globals2D.f90
 	$c -c src/core/globals2D.f90
 core_tools.o: typy.o global_objs.o globals.o pde_objs.o  src/core/core_tools.f90
 	$c -c src/core/core_tools.f90
+dummy_procs.o: typy.o global_objs.o globals.o pde_objs.o src/core/dummy_procs.f90
+	$c -c src/core/dummy_procs.f90
 debug_tools.o: typy.o core_tools.o src/core/debug_tools.f90
 	$c -c src/core/debug_tools.f90
 #---------end CORE_obj------------------------------
@@ -119,6 +121,8 @@ re_constitutive.o: $(CORE_obj) $(TOOLS_obj) re_globals.o src/models/RE/re_consti
 	$c -c src/models/RE/re_constitutive.f90
 re_total.o: $(CORE_obj) $(TOOLS_obj) re_globals.o re_constitutive.o src/models/RE/re_total.f90
 	$c -c src/models/RE/re_total.f90	
+re_pointers.o:  $(CORE_obj) re_globals.o re_constitutive.o re_total.o src/models/RE/re_pointers.f90
+	$c -c src/models/RE/re_pointers.f90
 re_reader.o:  $(CORE_obj) $(TOOLS_obj) re_globals.o src/models/RE/re_reader.f90
 	$c -c src/models/RE/re_reader.f90
 #-------end CONSTITUTIVE_obj--------------------------------
@@ -145,6 +149,8 @@ ADE_fnc.o: $(CORE_obj) ADE_globals.o src/models/ADE/ADE_fnc.f90
 	$c -c src/models/ADE/ADE_fnc.f90
 ADE_reader.o: $(CORE_obj) $(TOOLS_obj) ADE_globals.o src/models/ADE/ADE_reader.f90
 	$c -c src/models/ADE/ADE_reader.f90
+ADE_pointers.o: $(CORE_obj) $(TOOLS_obj) ADE_globals.o src/models/ADE/ADE_pointers.f90
+	$c -c src/models/ADE/ADE_pointers.f90
 #------end ADE_obj---------------------------------
 
 
@@ -155,6 +161,8 @@ boussread.o: $(CORE_obj) $(TOOLS_obj) boussglob.o src/models/boussinesq/boussrea
 	$c -c src/models/boussinesq/boussread.f90
 boussfnc.o:  $(CORE_obj) $(TOOLS_obj) boussglob.o src/models/boussinesq/boussfnc.f90
 	$c -c src/models/boussinesq/boussfnc.f90
+bousspointers.o: $(CORE_obj)  boussfnc.o boussglob.o src/models/boussinesq/bousspointers.f90
+	$c -c src/models/boussinesq/bousspointers.f90
 #-------end BOUSSINESQ-------------------------------
 
 

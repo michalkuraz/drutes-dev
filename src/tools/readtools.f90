@@ -236,7 +236,7 @@ module readtools
       if (present(options)) then
 	ok = .false.
 	do i=1, ubound(options, 1)
-	  if (ch == options(i)) then
+	  if (trim(ch) == options(i)) then
 	    ok = .true.
 	    EXIT
 	  end if

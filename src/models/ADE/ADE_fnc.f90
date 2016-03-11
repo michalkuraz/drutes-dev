@@ -4,6 +4,7 @@ module ADE_fnc
   public :: ADE_tder_coef, ADE_tder_cscl, ADE_tder_cscs
   public :: ADE_mass
   public :: ADE_reaction, ADE_zerorder, ADE_flux, ADE_icond, ADE_csbc
+  public :: ADE_cscl_react, ADE_cscs_react
   
   contains
     subroutine ADEdispersion(pde_loc, layer, quadpnt, x, tensor, scalar)
@@ -567,15 +568,7 @@ module ADE_fnc
       integer(kind=ikind) :: proc_cl
       real(kind=rkind) :: cs, cl
       
-      select case(drutes_config%name)
-	case("ADEstk")
-	  proc_cl = 1
-	case("ADEwRk")
-	  proc_cl = 2
-	case default
-	  print *, "this function should not be called, exited from ADE_fnc::ADE_cscs_react"
-	  ERROR STOP
-      end select
+      proc_cl = pde_loc%order - 1
       
       
       select case(adepar(layer)%sorption%name)
@@ -615,17 +608,8 @@ module ADE_fnc
 	case("langmu")
 	  val = adepar(layer)%sorption%adsorb*adepar(layer)%sorption%third
 	case("freund")
-	
 	  if (abs(adepar(layer)%sorption%third - 1.0_rkind ) > 10*epsilon(1.0_rkind)) then
-	    select case(drutes_config%name)
-	      case("ADEstk")
-		proc_cl = 1
-	      case("ADEwRk")
-		proc_cl = 2
-	      case default
-		print *, "this function should not be called, exited from ADE_fnc::ADE_cscl_react"
-		ERROR STOP
-	    end select
+	    proc_cl = pde_loc%order - 1
 	    cl = pde(proc_cl)%getval(quadpnt)
 	    val = adepar(layer)%sorption%adsorb*cl**(1-adepar(layer)%sorption%third)
 	  else

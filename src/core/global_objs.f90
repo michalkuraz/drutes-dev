@@ -85,8 +85,6 @@ module global_objs
     character(len=1)    :: damped_newton
     !> problem dimension 1 = 1D / 2 = 2D / 3 = 3D
     integer(kind=ikind) :: dimen
-    !> use ADE equation
-    logical   :: ADE_use
     !> mesh_type = 1 internal mesh generator (simple)
     !! mesh_type = 2 t3d mesh generator
     !< mesh type = 3 gmsh mesh generator
@@ -109,7 +107,8 @@ module global_objs
     !<
     integer(kind=ikind) :: it_method
     !> descriptor of the problem type (RE_std = standard Richards equation, RE_mod = modified Richards eq. (Noborio)
-    character(len=6) :: name
+    character(len=256) :: name
+    character(len=4096) :: fullname
 !     !> limit your execution time 
 !     type(execlimit_str) :: execlimit
   end type configuration

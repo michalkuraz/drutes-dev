@@ -90,6 +90,7 @@ module pde_objs
     !> procnodes(1) = lower id of the process base function
     !! procnodes(2) = upper id of the process base function
     integer, dimension(2) :: procbase_fnc
+    integer(kind=ikind) :: order
     procedure(getval_str), pass(pde_loc), pointer :: getval
     contains 
       !> get vector of gradient of the solution
@@ -283,7 +284,7 @@ module pde_objs
     end subroutine treat_pde_subrt
   end interface
   
-  public :: getgradp1, getvalp1
+  public :: getgradp1, getvalp1, do_nothing
   
   type(PDE_str), dimension(:), allocatable,  public :: PDE
   type(pde_common_str), public :: pde_common
@@ -562,5 +563,9 @@ module pde_objs
 
       
     end subroutine get2dderivative 
+    
+    subroutine do_nothing()
+    
+    end subroutine do_nothing
     
 end module pde_objs

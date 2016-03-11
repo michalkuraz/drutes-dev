@@ -35,6 +35,7 @@ module read_inputs
       character(len=4096) :: filename
       character(len=8192) :: msg
       integer :: local, global
+      character(len=256), dimension(17) :: probnames
       
       if (.not. www) then
 	local = file_global
@@ -64,16 +65,55 @@ module read_inputs
 	"   ADEstd = advection dispersion reaction equation (transport of solutes),  convection is specified in config files,", &
 	" equilibrium sorption", &
 	new_line("a"),  new_line("a"), &
-	"   ADEwRk = advection dispersion reaction equation (transport of solutes), convection is computed from the Richards equation, ", &
-	"kinetic sorption", &
-	new_line("a"),  new_line("a"), &
-	"   ADEstk = advection dispersion reaction equation (transport of solutes),  convection is specified in config files,", &
+        "   ADEstd_kinsorb = advection dispersion reaction equation (transport of solutes),",&
+        " convection is specified in config files,", &
 	" kinetic sorption", &
+        new_line("a"),  new_line("a"), &
+	"   ADE_RE_std = advection dispersion reaction equation (transport of solutes), convection is computed from", &
+	" the Richards equation in pressure head form, equilibrium sorption ", &
+	new_line("a"),  new_line("a"), &
+	"   ADE_REstdH = advection dispersion reaction equation (transport of solutes), convection is computed from", &
+	" the Richards equation in total hydraulic head form, equilibrium sorption ", &
+		new_line("a"),  new_line("a"), &
+	"   ADE_RE_rot = advection dispersion reaction equation (transport of solutes), convection is computed from", &
+	" the Richards equation in pressure hydraulic head form, cylindric coordinates (axisymmetric flow), equilibrium sorption ", &
+		new_line("a"),  new_line("a"), &
+	"   ADE_RErotH = advection dispersion reaction equation (transport of solutes), convection is computed from", &
+	" the Richards equation in total hydraulic head form, cylindric coordinates (axisymmetric flow), equilibrium sorption ", &
+		"   ADE_RE_std_kinsorb = advection dispersion reaction equation (transport of solutes), convection is computed from", &
+	" the Richards equation in pressure head form, kinetic sorption ", &
+	new_line("a"),  new_line("a"), &
+	"   ADE_REstdH_kinsorb = advection dispersion reaction equation (transport of solutes), convection is computed from", &
+	" the Richards equation in total hydraulic head form, kinetic sorption ", &
+		new_line("a"),  new_line("a"), &
+	"   ADE_RE_rot_kinsorb = advection dispersion reaction equation (transport of solutes), convection is computed from", &
+	" the Richards equation in pressure hydraulic head form, cylindric coordinates (axisymmetric flow), kinetic sorption ", &
+		new_line("a"),  new_line("a"), &
+	"   ADE_RErotH_kinsorb = advection dispersion reaction equation (transport of solutes), convection is computed from", &
+	" the Richards equation in total hydraulic head form, cylindric coordinates (axisymmetric flow), kinetic sorption ", &
+	new_line("a"),  new_line("a"), &
 	new_line("a"),  new_line("a"), new_line("a")
 	
-      call fileread(drutes_config%name, local, trim(msg), &
-	    options=(/"RE_std", "RE_mod", "REtest", "RE_rot", "REstdH", "RErotH", "boussi", "ADE_wr", "ADEstd", &
-	      "ADEwRk", "ADEstk"/))
+	probnames(1) = "RE_std"
+	probnames(2) = "RE_mod"
+	probnames(3) = "REtest"
+	probnames(4) = "RE_rot"
+	probnames(5) = "REstdH"
+	probnames(6) = "RErotH"
+	probnames(7) = "boussi"
+	probnames(8) = "ADEstd"
+	probnames(9) = "ADEstd_kinsorb"
+	probnames(10) = "ADE_RE_std"
+	probnames(11) = "ADE_REstdH"
+	probnames(12) = "ADE_RE_rot"
+	probnames(13) = "ADE_RErotH"
+	probnames(14) = "ADE_RE_std_kinsorb"
+	probnames(15) = "ADE_REstdH_kinsorb"
+	probnames(16) = "ADE_RE_rot_kinsorb"
+	probnames(17) = "ADE_RErotH_kinsorb"
+	
+	
+      call fileread(drutes_config%name, local, trim(msg), options=probnames)
 
       call fileread(drutes_config%dimen, local, ranges=(/1_ikind,2_ikind/))
       

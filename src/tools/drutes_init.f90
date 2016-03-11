@@ -177,18 +177,33 @@ module drutes_init
       use global_objs
       use globals
       use pde_objs
+      use dummy_procs
 
       integer(kind=ikind), intent(in) :: processes
       
-      integer :: i
+      integer :: i, j
 
       allocate(pde(processes))
 
       do i=1, processes
 	allocate(pde(i)%pde_fnc(processes))
+	do j=1, processes
+	  pde(i)%pde_fnc(j)%dispersion => dummy_tensor
+	  pde(i)%pde_fnc(j)%convection => dummy_vector
+	  pde(i)%pde_fnc(j)%der_convect => dummy_vector
+	  pde(i)%pde_fnc(j)%reaction => dummy_scalar
+	  pde(i)%pde_fnc(j)%zerord => dummy_scalar
+	  pde(i)%pde_fnc(j)%elasticity => dummy_scalar
+	end do  
         allocate(pde(i)%solution(nodes%kolik))
         allocate(pde(i)%obspt_unit(ubound(observation_array,1)))
         allocate(pde(i)%permut(nodes%kolik))
+        pde(i)%mass => dummy_scalar
+        pde(i)%flux => dummy_vector
+        pde(i)%dt_check => time_check_ok
+        pde(i)%process_change => do_nothing
+        pde(i)%getval => getvalp1
+        pde(i)%order = i
       end do
 
 

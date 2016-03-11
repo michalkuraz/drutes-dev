@@ -116,48 +116,10 @@ program main
   end if
   
 
+  call write_log("DRUtES solves Richards' equation", text2=drutes_config%fullname)
 
-  select case(drutes_config%name)
-    case("RE_std", "REstdH")
-      write(unit=ch, fmt="(I1,a)") drutes_config%dimen, "D"
-      call write_log("DRUtES solves Richards' equation", text2=ch, text3="in a classical regime")
-      coupled_problem = .false.
-      call solve_pde(success)      
-    case ("RE_rot", "RErotH")
-      call write_log("DRUtES solves Richards' equation in cylindrical coordinates (pseudo 3D)", &
-                    text2="in a classical regime")
-      coupled_problem = .false.
-      call solve_pde(success)  
-    case("boussi")
-          call write_log("DRUtES solves Boussinesq equation for hillslope runoff", &
-                    text2="(1D approximation of groundwater flow)")
-      coupled_problem = .false.
-      call solve_pde(success) 
-    
-    case("RE_mod")
-      write(unit=ch, fmt="(I1,a)") drutes_config%dimen, "D"
-      call write_log("DRUtES solves modified Richards' equation -- Noborio(1996)", text2=ch)
-      call solve_pde(success)
-    case("REtest")
-      write(unit=ch, fmt="(I1,a)") drutes_config%dimen, "D"
-      call write_log("DRUtES runs testing mode for coupled problems", text2=ch)
-      call solve_pde(success)
-    case ("ADEstd")
-      write(unit=ch, fmt="(I1,a)") drutes_config%dimen, "D"
-      call write_log("DRUtES solves advection-dispersion-reaction equation, advection is defined by user, domain dimension:",&
-      text2=ch)
-      call solve_pde(success)
-    case ("ADE_wr")
-      write(unit=ch, fmt="(I1,a)") drutes_config%dimen, "D"
-      call write_log("DRUtES solves Richards equation and advection-dispersion-reaction equation, &
-		     advection is computed from the Richards equation", text2=ch)
-      call solve_pde(success)
-    case default
-      print *, "unsupported problem type definition, your definition was:", drutes_config%name
-      print *, "called from main()"
-      ERROR STOP
-  end select
-
+  call solve_pde(success)      
+  
 
   sync all
   

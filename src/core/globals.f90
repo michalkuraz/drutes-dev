@@ -19,8 +19,6 @@ module globals
   use sparsematrix
 
 
-
-
   !> version id variable
   type(version), public :: version_id   
   !> file units ----------------------------------------------------------------------
