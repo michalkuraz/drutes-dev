@@ -57,7 +57,7 @@ module pde_objs
     integer(kind=ikind) :: xy_count
     integer(kind=ikind) :: layer
     !> if icond4neumann == .true. then the initial condition is supplied into the Neumann boundary nodes, otherwise the initial condition in the Neumann nodes is evaluated for such value, that the Neumann condition is satisfied
-    logical :: icond4neumann
+    logical :: icond4neumann = .false.
   end type boundary_vals
   
 

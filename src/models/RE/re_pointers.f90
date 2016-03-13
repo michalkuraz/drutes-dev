@@ -22,6 +22,7 @@ module RE_pointers
       pde_loc%pde_fnc(pde_loc%order)%convection => convection_rerot
       pde_loc%getval => getval_retot
       pde_loc%flux => darcy4totH
+      pde_loc%initcond => retot_initcond
 
     end subroutine RErotH
     
@@ -47,6 +48,8 @@ module RE_pointers
       	pde_loc%pde_fnc(pde_loc%order)%convection => dmualem_dh_tab
       end if
       pde_loc%flux => darcy_law
+      pde_loc%initcond => re_initcond
+     
     
     end subroutine RE_rot
     
@@ -72,6 +75,8 @@ module RE_pointers
       end if
 	
       pde_loc%flux => darcy_law
+      pde_loc%initcond => re_initcond
+     
     
     end subroutine RE_std
     
@@ -92,6 +97,7 @@ module RE_pointers
       pde_loc%getval => getval_retot
       
       pde_loc%flux => darcy4totH
+      pde_loc%initcond => retot_initcond
     
     end subroutine REstdH
     
@@ -177,10 +183,15 @@ module RE_pointers
       use re_reader
       
       class(pde_str), intent(in out) :: pde_loc
-      integer(kind=ikind) :: i
+      integer(kind=ikind) :: i	
+      logical, save :: read=.false.
       
       ! read inputs
-      call res_read(pde_loc)
+      if (.not. read) then
+	call res_read(pde_loc)
+	read = .true.
+      end if
+      
       
       call domainswitch("m")
       pde_common%nonlinear = .true.
@@ -204,9 +215,7 @@ module RE_pointers
 	end if
       end do
       
-      pde_loc%flux => darcy_law
-      pde_loc%initcond => re_initcond
-     
+
       
       
     

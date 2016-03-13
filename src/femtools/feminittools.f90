@@ -88,7 +88,7 @@ module feminittools
       
       if (drutes_config%it_method /= 1) then
 	call spmatrix%init(maxval(pde(i)%permut(:)),maxval(pde(i)%permut(:)))
-      end if	    
+      end if
 
       allocate(pde_common%bvect(maxval(pde(i)%permut(:)))) 
       allocate(pde_common%xvect(maxval(pde(i)%permut(:)),4))

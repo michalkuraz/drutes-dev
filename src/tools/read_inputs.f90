@@ -14,6 +14,7 @@ module read_inputs
       use typy
       use core_tools
       use readtools
+      use pde_objs
 
       integer(kind=ikind) :: i, j, n, ierr
       real(kind=rkind), dimension(3) :: tmp
@@ -224,8 +225,17 @@ module read_inputs
       call fileread(i=drutes_config%it_method, fileid=local, ranges=(/0_ikind,2_ikind/),&
 	errmsg="you have selected an improper iteration method")
       
+      write(msg, *) "Define method of time integration", new_line("a"), &
+      "   0 - steady state problem", &
+      new_line("a"), &
+      "   1 - unsteady problem with lumped (diagonal) capacity matrix (recommended)", new_line("a"), &
+      "   2 - unsteady problem with consistent capacity matrix"
+      
+      call fileread(pde_common%timeint_method, global, ranges=(/0_ikind,2_ikind/), errmsg=msg)
+      
+      
       call fileread(drutes_config%run_from_backup, global, errmsg="specify [y/n] if you want to relaunch your computation")
-
+      
       
       if (drutes_config%run_from_backup) then
 	call fileread(backup_file, global, errmsg="backup file not specified")

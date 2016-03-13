@@ -58,14 +58,7 @@ module re_reader
       call fileread(drutes_config%fnc_discr_length, file_waterm, ranges=(/tiny(0.0_rkind), maxpress/),  &
 	errmsg="the discretization step for precalculating constitutive functions must be positive and smaller &
 	then the bc")
-	
-      write(msg, *) "Define method of time integration", new_line("a"), &
-	"   0 - steady state problem", &
-	new_line("a"), &
-	"   1 - unsteady problem with lumped (diagonal) capacity matrix (recommended)", new_line("a"), &
-	"   2 - unsteady problem with consistent capacity matrix"
-      
-      call fileread(pde_common%timeint_method, file_waterm, ranges=(/0_ikind,2_ikind/), errmsg=msg)
+
       
       call fileread(n, file_waterm)
       

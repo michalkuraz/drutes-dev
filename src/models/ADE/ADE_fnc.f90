@@ -6,6 +6,7 @@ module ADE_fnc
   public :: ADE_reaction, ADE_zerorder, ADE_flux, ADE_icond, ADE_csbc
   public :: ADE_cscl_react, ADE_cscs_react
   public :: ADEcs_icond, ADEcs_mass
+  public :: ADE_dirichlet, ADE_neumann, ADE_null_bc
   
   contains
     subroutine ADEdispersion(pde_loc, layer, quadpnt, x, tensor, scalar)
@@ -31,7 +32,7 @@ module ADE_fnc
       
       real(kind=rkind), dimension(3,3) :: identity
       real(kind=rkind), dimension(3) :: q_w
-      real(kind=rkind) :: theta, q_abs, tortuo
+      real(kind=rkind) :: theta, q_abs, tortuo, ths
       integer(kind=ikind) :: D, i
       
      
@@ -41,23 +42,24 @@ module ADE_fnc
 	identity(i,i) = 1.0
       end do
       
-      if (drutes_config%name=="ADEstd") then
-	tensor(1:D, 1:D) = (ADEpar(layer)%diff*abs(ADEpar(layer)%convection) + &
-	  identity(1:D, 1:D)*adepar(layer)%difmol)* &
-	  adepar(layer)%water_cont
-	  RETURN
-      end if
+      select case(drutes_config%name)
+	case("ADEstd", "ADEstd_kinsorb")
+	  q_w = ADEpar(layer)%convection
+	  theta = adepar(layer)%water_cont
+	  ths = adepar(layer)%water_cont
+	case default
+	  theta = pde(1)%mass(layer, quadpnt)
+	  call pde(1)%flux(layer, quadpnt, vector_out = q_w(1:D))
+	  ths = vgset(layer)%ths
+      end select
       
-      theta = pde(1)%mass(layer, quadpnt)
-      
-      call pde(1)%flux(layer, quadpnt, vector_out = q_w(1:D))
-      
+
       q_abs = 0.0
       do i=1, D
 	q_abs =q_abs + q_w(i)*q_w(i)
       end do
       q_abs = sqrt(q_abs)
-      tortuo = theta**(10.0/3.0)/(vgset(layer)%ths*vgset(layer)%ths)
+      tortuo = theta**(10.0/3.0)/(ths*ths)
       
       
       if (present(tensor)) then
@@ -139,6 +141,8 @@ module ADE_fnc
       else
 	theta = adepar(layer)%water_cont
       end if
+      
+      print *, theta
       
       if (.not. adepar(layer)%sorption%kinetic) then
 	ka = adepar(layer)%sorption%adsorb
@@ -425,11 +429,33 @@ module ADE_fnc
 
       
       if (present(code)) then
-	code = 1
+	code = 2
       end if
       
 
     end subroutine ADE_neumann
+    
+    
+     subroutine ADE_null_bc(pde_loc, el_id, node_order, value, code) 
+      use typy
+      use globals
+      use global_objs
+      use pde_objs
+      
+      class(pde_str), intent(in) :: pde_loc
+      integer(kind=ikind), intent(in)  :: el_id, node_order
+      real(kind=rkind), intent(out), optional    :: value
+      integer(kind=ikind), intent(out), optional :: code
+
+      if (present(value)) then
+	value = 0.0_rkind
+      end if
+
+      if (present(code)) then
+	code = 2
+      end if
+	
+    end subroutine ADE_null_bc
     
     
     subroutine ADE_flux(pde_loc, layer, quadpnt, x, grad,  flux, flux_length)

@@ -66,6 +66,9 @@ module femmat
 
 	call solve_matrix(spmatrix, pde_common%bvect(1:fin), pde_common%xvect(1:fin,3),  itmax1=fin, &
 		  reps1=1e-15_rkind)
+		  
+		  
+       call printmtx(spmatrix) ; stop
 ! 
 
 	if (drutes_config%dimen >  0) then

@@ -68,8 +68,11 @@ module ADE_pointers
       
       pde_loc%pde_fnc(pde_loc%order)%reaction => ADE_cscs_react
       
+      allocate(pde_loc%bc(lbound(pde(pde_loc%order-1)%bc,1) : (ubound(pde(pde_loc%order-1)%bc,1) )  ))
+      
       do i=lbound(pde_loc%bc,1), ubound(pde_loc%bc,1)
-	pde_loc%bc(i)%code = 0
+	pde_loc%bc(i)%code = 2
+	pde_loc%bc(i)%value_fnc => ADE_null_bc
       end do 
       
       pde_loc%initcond => ADEcs_icond

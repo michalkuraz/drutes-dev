@@ -20,6 +20,7 @@ module ADE_reader
       character(len=4096) :: msg
       character(len=256) :: linetext
       logical :: crelative = .false.
+      logical :: with_richards_def
       
       
 
@@ -43,15 +44,7 @@ module ADE_reader
 	print *, "missing drutes.conf/ADE/contaminant.conf file"
 	ERROR STOP
       end if
-      
-      
-        write(msg, *) "Define method of time integration", new_line("a"), &
-	"   0 - steady state problem", &
-	new_line("a"), &
-	"   1 - unsteady problem with lumped (diagonal) capacity matrix (recommended)", new_line("a"), &
-	"   2 - unsteady problem with consistent capacity matrix"
-
-      call fileread(pde_common%timeint_method, file_contaminant, ranges=(/0_ikind,2_ikind/), errmsg=msg)
+     
 
       allocate(adepar(maxval(elements%material)))
       
@@ -137,17 +130,23 @@ module ADE_reader
        
        call fileread(with_richards, file_contaminant, errmsg=trim(msg))
        
-       if (.not. with_richards .and. drutes_config%name=="ADE_wr") then
-	 write(unit=terminal, fmt=*) "You have specified ADE_wr =(advection dispersion reaction equation, where &
-	       convection is computed from the Richards equation, but you want to specify convection here."
-	 write(unit=terminal, fmt=*) "Solution: specify model type ADEstd instead of ADE_wr."
-	 ERROR stop
-       else if (with_richards .and. drutes_config%name=="ADEstd") then
-	write(unit=terminal, fmt=*) "You have specified ADEstd =(advection dispersion reaction equation, where &
-	       convection is specified here, but you want the convection to be computed from the solution &
-	       of the Richards equation."
-	 write(unit=terminal, fmt=*) "Solution: specify model type ADE_wr instead of ADEstd."
-	 ERROR stop
+       select case(adjustl(trim(drutes_config%name)))
+	 case("ADEstd", "ADEstd_kinsorb")
+	   with_richards_def = .false.
+	 case default
+	   with_richards_def = .true.
+	end select
+       
+       if (.not. with_richards .and. with_richards_def) then
+	 write(unit=msg, fmt=*) "You have specified" , &
+	      " convection to be  computed from the Richards equation, but you want to specify the convection here." ,&
+	      new_line("a"), "   Solution: change model type setup in global.conf or comment out the convection values here."
+	 call file_error(file_contaminant, msg)
+       else if (with_richards .and. .not. with_richards_def) then
+	write(unit=msg, fmt=*) "You have specified here to compute the convection fromt the Richards equation, ",  &
+	       " but in your global config you have requested solving ADE equation only, and so convection has to be specified here.", &
+	 new_line("a"),  "   Solution:  change model type setup in global.conf or supply the convection here."
+	 call file_error(file_contaminant, msg)
        end if
          
        
@@ -160,9 +159,19 @@ module ADE_reader
 	   adepar(i)%water_cont = tmp_array(2)
 	 end do
       end if
+      
+      if (with_richards) then
+	write(unit=msg, fmt=*) "HINT1: Have you commented out all lines with convection values? ", &
+	"Since the convection is computed from the Richards equation.", new_line("a"), &
+	"   HINT2: The number of orders of reactions has to be positive or zero."
+      else
+	write(unit=msg, fmt=*) "HINT1: Is your number of lines with convection definition corresponding with the number of layers?",&
+	new_line("a"), &
+	"   HINT2: The number of orders of reactions has to be positive or zero."
+      end if
        
        call fileread(n, file_contaminant, ranges=(/0_ikind, 1_ikind*huge(n)/), & 
-	 errmsg="the number of orders of reactions has to be positive  or zero")
+	 errmsg=trim(msg))
        
        
        write(unit=msg, fmt=*) "You have requested ", n," different orders of reactions.", new_line("a"), &

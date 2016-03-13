@@ -162,7 +162,7 @@ module manage_pointers
 	  pde_common%treat_pde => schwarz_subcyc
       end select
     
-      
+
       select case(pde_common%timeint_method)
 	case(0)
 	  pde_common%time_integ => steady_state_int

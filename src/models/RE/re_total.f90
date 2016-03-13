@@ -405,7 +405,7 @@ module re_total
 	  end if
 	end do   
       end do
-
+  
 
     end subroutine retot_initcond
     
