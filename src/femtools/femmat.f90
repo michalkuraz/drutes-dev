@@ -173,6 +173,7 @@ module femmat
 		
 	stiff_mat = stiff_mat + cap_mat
 
+
 	call in2global(i,spmatrix, pde_common%bvect)
 
       end do

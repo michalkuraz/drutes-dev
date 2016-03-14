@@ -24,6 +24,7 @@ module capmat
       use geom_tools
       use feminittools
       use linAlg
+      use debug_tools
 
       integer(kind=ikind), intent(in) :: el_id
       !>subdomain number (inserted only if domain decomposition used and if only local data needed)
@@ -77,6 +78,7 @@ module capmat
         end do
       end do
 
+      
       cap_mat = cap_mat/gauss_points%area*elements%areas(el_id)
 
       bside =  bside + matmul(cap_mat, elnode_prev)
@@ -158,6 +160,8 @@ module capmat
       end do
     end do
 
+
+    
      cap_mat = cap_mat/gauss_points%area*elements%areas(el_id)
 
      bside = bside +   matmul(cap_mat, elnode_prev)

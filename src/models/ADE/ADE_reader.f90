@@ -206,13 +206,13 @@ module ADE_reader
        end do   
 
        
-       
-       if (drutes_config%name == "ADEwrk" .or. drutes_config%name=="ADEstk") then
-         adepar(:)%sorption%kinetic = .true.
-       else
-         adepar(:)%sorption%kinetic = .false.
-       end if
-
+       select case(adjustl(trim(drutes_config%name)))
+	  case("ADEstd_kinsorb", "ADE_RE_std_kinsorb", "ADE_REstdH_kinsorb", "ADE_RE_rot_kinsorb", "ADE_RErotH_kinsorb")
+	    adepar(:)%sorption%kinetic = .true.
+	  case default
+	    adepar(:)%sorption%kinetic = .false.
+	end select
+ 
       
       write(msg, *) "HINT1: The number of lines for kinetic/equilibrium sorption parameters has to be", &
       " equal to the number of materials" , &

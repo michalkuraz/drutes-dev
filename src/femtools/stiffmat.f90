@@ -62,8 +62,8 @@ module stiffmat
       end if
      
             
-      do iproc=ubound(pde,1),ubound(pde,1)
-	do jproc=ubound(pde,1), ubound(pde,1)
+      do iproc=1,ubound(pde,1)
+	do jproc=1, ubound(pde,1)
 	  do i=1, ubound(stiff_mat,1)/ ubound(pde,1)
 	    do j=1, ubound(stiff_mat,1)/ubound(pde,1)
 	      dsum = 0
