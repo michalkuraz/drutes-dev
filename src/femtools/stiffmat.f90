@@ -60,15 +60,16 @@ module stiffmat
 	quadpnt%ddlocal = .true.
 	quadpnt%subdom = domain_id
       end if
-      
+     
             
-      do iproc=1,ubound(pde,1)
-	do jproc=1, ubound(pde,1)
+      do iproc=ubound(pde,1),ubound(pde,1)
+	do jproc=ubound(pde,1), ubound(pde,1)
 	  do i=1, ubound(stiff_mat,1)/ ubound(pde,1)
 	    do j=1, ubound(stiff_mat,1)/ubound(pde,1)
 	      dsum = 0
 	      csum = 0
 	      rsum = 0
+	      
 	      
 	      v(1:top,1) = elements%ders(el_id,i,1:top)
 	      u(1,1:top) = elements%ders(el_id,j,1:top)
@@ -93,17 +94,21 @@ module stiffmat
 		  w = base_fnc(i,l)*base_fnc(j,l)
 		  csum = csum - dot_product(w(1,1:top), conv(1:top))*gauss_points%weight(l)
 	      end do
+	      
 
 	      do l=1, ubound(gauss_points%weight,1)
 	      	quadpnt%order = l
 		rsum = rsum + pde(iproc)%pde_fnc(jproc)%reaction(pde(iproc),layer(iproc, jproc), &
 		      quadpnt)*base_fnc(i,l)*base_fnc(j,l)*gauss_points%weight(l)
 	      end do
+	     
 	      
 
 	      ii = i + (iproc-1)*limits
 	      jj = j + (jproc-1)*limits
-	      	      
+	      
+	      
+	      
 	      stiff_mat(ii,jj) = (dsum(1,1) + csum + rsum)
 
 	    end do

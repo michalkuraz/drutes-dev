@@ -142,7 +142,6 @@ module ADE_fnc
 	theta = adepar(layer)%water_cont
       end if
       
-      print *, theta
       
       if (.not. adepar(layer)%sorption%kinetic) then
 	ka = adepar(layer)%sorption%adsorb
