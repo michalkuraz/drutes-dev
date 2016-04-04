@@ -72,6 +72,8 @@ module RE_constitutive
       real(kind=rkind) :: theta
 
       real(kind=rkind) :: a,n,m, theta_e
+      
+      get_direct_vals = .true.
 
       if (present(quadpnt) .and. present(x)) then
 	print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
@@ -129,6 +131,9 @@ module RE_constitutive
       
       
       real(kind=rkind) :: a,n,m
+      
+      
+       get_direct_vals = .true.     
 
       if (present(quadpnt) .and. present(x)) then
 	print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
@@ -194,7 +199,9 @@ module RE_constitutive
 
       integer(kind=ikind) :: pos
       real(kind=rkind) :: res, dist
-      
+ 
+      get_direct_vals = .true. 
+ 
       if (present(quadpnt) .and. present(x)) then
 	print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
 	print *, "exited from re_constitutive::vangen_tab"
@@ -278,6 +285,8 @@ module RE_constitutive
 
       real(kind=rkind) :: C, a, m, n, tr, ts 
       
+      get_direct_vals = .true.      
+      
       if (present(quadpnt) .and. present(x)) then
 	print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
 	print *, "exited from re_constitutive::vangen_elast"
@@ -341,6 +350,9 @@ module RE_constitutive
 
       integer(kind=ikind) :: pos
       real(kind=rkind) :: res, dist
+      
+      
+      get_direct_vals = .true.      
       
       if (present(quadpnt) .and. present(x)) then
 	print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
@@ -418,6 +430,9 @@ module RE_constitutive
       real(kind=rkind), intent(out), optional :: scalar
 
       real(kind=rkind) :: a,n,m, tmp
+      
+      
+       get_direct_vals = .true.     
 
       if (present(quadpnt) .and. present(x)) then
 	print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
@@ -482,6 +497,9 @@ module RE_constitutive
       real(kind=rkind) :: h
       integer(kind=ikind) :: pos
       real(kind=rkind) :: res, dist, tmp
+      
+      
+       get_direct_vals = .true.     
       
       if (present(quadpnt) .and. present(x)) then
 	print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
@@ -571,6 +589,9 @@ module RE_constitutive
 
       real(kind=rkind) :: a,n,m, tmp, h
       
+      
+       get_direct_vals = .true.     
+      
       if (present(quadpnt) .and. present(x)) then
 	print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
 	print *, "exited from re_constitutive::dmualem_dh"
@@ -645,6 +666,7 @@ module RE_constitutive
       integer(kind=ikind) :: layer_loc, vecino, i, D
 
 
+      get_direct_vals = .true.
       
       if (present(quadpnt) .and. present(x)) then
 	print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
@@ -750,6 +772,9 @@ module RE_constitutive
       real(kind=rkind) :: a,n,m, tmp, h, K, flux
       integer :: proc
       
+      
+       get_direct_vals = .true.     
+      
       if (present(quadpnt) .and. present(x)) then
 	print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
 	print *, "exited from re_constitutive::dmualem_dh"
@@ -827,6 +852,8 @@ module RE_constitutive
       real(kind=rkind) :: res, dist, tmp, h
       
 
+       get_direct_vals = .true.     
+      
       if (present(quadpnt) .and. present(x)) then
 	print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
 	print *, "exited from re_constitutive::vangen_tab"
@@ -914,7 +941,9 @@ module RE_constitutive
       real(kind=rkind), dimension(:), allocatable :: gradient
       
 
-
+      get_direct_vals = .true.
+      
+      
       if (present(quadpnt) .and. (present(grad) .or. present(x))) then
 	print *, "ERROR: the function can be called either with integ point or x value definition and gradient, not both of them"
 	ERROR stop
@@ -1585,6 +1614,8 @@ module RE_constitutive
 	type(integpnt_str) :: quadpnt
 	
         quadpnt%type_pnt = "ndpt"
+        
+       get_direct_vals = .true.       
 
 	do i=1, ubound(pde_loc%solution,1)
 	  el = nodes%element(i)%data(1)
@@ -1722,6 +1753,8 @@ module RE_constitutive
 	
 	integer(kind=ikind) :: edge_id, i, j
 	real(kind=rkind) :: tempval, node_height
+	
+      get_direct_vals = .true.	
 
 	if (present(value)) then
 	  edge_id = nodes%edge(elements%data(el_id, node_order))
@@ -1776,7 +1809,8 @@ module RE_constitutive
 	real(kind=rkind) :: bcval, gfluxval
 	integer :: i1
 
-
+        get_direct_vals = .true.
+      
 	if (present(value)) then
 	  edge_id = nodes%edge(elements%data(el_id, node_order))
 
@@ -1846,7 +1880,9 @@ module RE_constitutive
       integer(kind=ikind) :: layer
       real(kind=rkind) :: theta, bcval
       integer(kind=ikind) :: i, edge_id, j
-      
+  
+      get_direct_vals = .true.
+  
       if (present(code)) then
 	code = 2
       end if
@@ -1919,6 +1955,8 @@ module RE_constitutive
         
         D = drutes_config%dimen
 
+       get_direct_vals = .true.    
+        
         do i=1, elements%kolik
           layer = elements%material(i,1)
           do j=1, ubound(elements%data,2)
@@ -1961,7 +1999,7 @@ module RE_constitutive
         integer(kind=ikind) :: i, j, vecino, id, k, l, nd, ndvec
         
         id = maxval(nodes%edge) + 100
-
+        get_direct_vals = .true.
         do i=1, elements%kolik
 	  do j=1, ubound(elements%neighbours,2)
 	    vecino = elements%neighbours(i,j)

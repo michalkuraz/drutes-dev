@@ -429,23 +429,23 @@ module schwarz_dd
 
                         if (.not. elsolved(el)) then
 
-!                           quadpnt%type_pnt = "ndpt"
-! 			  quadpnt%column = 1			  
-! 			  do k = 1, ubound(elements%data,2)			      
-! 			    quadpnt%order = elements%data(el,k)
-! 			    elnode_prev(k) = pde(1)%getval(quadpnt)
-! 			  end do  
-			  do j=1+(proc-1)*limits, ubound(elements%data,2) + (proc-1)*limits
-			    ll = j - (proc-1)*ubound(stiff_mat,1)/ubound(pde,1)
-			    k = pde(proc)%permut(elements%data(el,ll))
-			    if (k > 0) then
-			      elnode_prev(j) = pde_common%xvect(k,1)
-			    else
-			      k = nodes%edge(elements%data(el,ll))
-			      call pde(proc)%bc(k)%value_fnc(pde(proc), el, ll, value)
-			      elnode_prev(j) = value
-			    end if
-			  end do
+                          quadpnt%type_pnt = "ndpt"
+			  quadpnt%column = 1			  
+			  do k = 1, ubound(elements%data,2)			      
+			    quadpnt%order = elements%data(el,k)
+			    elnode_prev(k) = pde(1)%getval(quadpnt)
+			  end do  
+! 			  do j=1+(proc-1)*limits, ubound(elements%data,2) + (proc-1)*limits
+! 			    ll = j - (proc-1)*ubound(stiff_mat,1)/ubound(pde,1)
+! 			    k = pde(proc)%permut(elements%data(el,ll))
+! 			    if (k > 0) then
+! 			      elnode_prev(j) = pde_common%xvect(k,1)
+! 			    else
+! 			      k = nodes%edge(elements%data(el,ll))
+! 			      call pde(proc)%bc(k)%value_fnc(pde(proc), el, ll, value)
+! 			      elnode_prev(j) = value
+! 			    end if
+! 			  end do
 			  
 			  
 			  call build_bvect(el, domain%time_step)

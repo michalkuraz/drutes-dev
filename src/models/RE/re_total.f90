@@ -13,6 +13,7 @@ module re_total
       use typy
       use pde_objs
       use geom_tools
+      use re_globals
       
       class(pde_str), intent(in) :: pde_loc
       type(integpnt_str), intent(in) :: quadpnt
@@ -25,7 +26,16 @@ module re_total
        
       call getcoor(quadpnt, xyz(1:D))
       
-      val = getvalp1(pde_loc, quadpnt) - xyz(D)
+      if (get_direct_vals) then
+      
+	val = getvalp1(pde_loc, quadpnt) 
+	
+	get_direct_vals = .false.
+	
+      else
+	val = getvalp1(pde_loc, quadpnt) - xyz(D)	
+      end if
+	
       
     end function getval_retot
     
@@ -35,6 +45,7 @@ module re_total
       use pde_objs
       use global_objs
       use debug_tools
+      use re_globals
        
       class(pde_str), intent(in) :: pde_loc
       integer(kind=ikind), intent(in)                          :: layer
@@ -52,7 +63,7 @@ module re_total
       real(kind=rkind), dimension(:), allocatable, save  :: vct
       real(kind=rkind) :: h
       
-
+      get_direct_vals = .true.
       D = drutes_config%dimen
 
       if (.not.(allocated(gradH))) then
@@ -114,6 +125,7 @@ module re_total
       use global_objs
       use pde_objs
       use geom_tools
+      use re_globals
 
       class(pde_str), intent(in) :: pde_loc
       integer(kind=ikind), intent(in)  :: el_id, node_order
@@ -124,6 +136,8 @@ module re_total
       type(integpnt_str) :: quadpnt
       real(kind=rkind), dimension(3) :: xyz
 
+      
+      get_direct_vals = .true.
       edge_id = nodes%edge(elements%data(el_id, node_order))
 
       quadpnt%type_pnt = "ndpt"
@@ -167,6 +181,7 @@ module re_total
       use global_objs
       use pde_objs
       use debug_tools
+      use re_globals
       
       class(pde_str), intent(in) :: pde_loc
       integer(kind=ikind), intent(in)  :: el_id, node_order
@@ -177,7 +192,7 @@ module re_total
       integer(kind=ikind) :: edge_id, i, j
       real(kind=rkind) :: tempval, node_height
       
-
+      get_direct_vals = .true.
       edge_id = nodes%edge(elements%data(el_id, node_order))
       node_height = nodes%data(elements%data(el_id, node_order), drutes_config%dimen)
 
@@ -217,6 +232,7 @@ module re_total
       use globals
       use global_objs
       use pde_objs
+      use re_globals
 
       class(pde_str), intent(in) :: pde_loc
       integer(kind=ikind), intent(in)  :: el_id, node_order
@@ -228,6 +244,8 @@ module re_total
       real(kind=rkind), dimension(3) :: gravflux, bcflux
       real(kind=rkind) :: bcval, gfluxval
       integer :: i1
+      
+      get_direct_vals = .true.
 
       if (present(value)) then
 	edge_id = nodes%edge(elements%data(el_id, node_order))
@@ -269,6 +287,7 @@ module re_total
       use globals
       use global_objs
       use pde_objs
+      use re_globals
 
       class(pde_str), intent(in) :: pde_loc
       integer(kind=ikind), intent(in)  :: el_id, node_order
@@ -281,6 +300,8 @@ module re_total
       integer(kind=ikind) :: layer
       real(kind=rkind) :: theta, bcval
       integer(kind=ikind) :: i, edge_id, j
+      
+      get_direct_vals = .true.
       
       if (present(code)) then
 	code = 2
@@ -328,6 +349,7 @@ module re_total
       use globals
       use global_objs
       use pde_objs
+      use re_globals
 
       class(pde_str), intent(in) :: pde_loc
       integer(kind=ikind), intent(in)  :: el_id, node_order
@@ -338,7 +360,7 @@ module re_total
       integer(kind=ikind) :: layer, D
       real(kind=rkind), dimension(3) :: gravflux
       
-      
+      get_direct_vals = .true.
       if (present(value)) then
 	
 	quadpnt%type_pnt = "ndpt"
@@ -380,7 +402,7 @@ module re_total
       integer(kind=ikind) :: i, j, k,l, m, layer, D
       real(kind=rkind) :: value
       
-   
+      get_direct_vals = .true.
       D = drutes_config%dimen
       do i=1, elements%kolik
 	layer = elements%material(i,1)
@@ -430,6 +452,7 @@ module re_total
       real(kind=rkind) :: tmp, dx, slope
       integer :: ierr
       
+      get_direct_vals = .true.     
       call find_unit(fileid(1), 200)
       open(unit=fileid(1), file="drutes.conf/boussinesq.conf/iconds/slopes.csv", action="read", status="old")
       
