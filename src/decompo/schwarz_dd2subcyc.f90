@@ -43,9 +43,31 @@ module schwarz_dd2subcyc
 	character(len=128) :: text
 	real(4), dimension(2,2) :: taaray
 	real(4), dimension(2) :: rslt
+	class(extsmtx), dimension(:), allocatable :: matrices
 
+        allocate(matrices(8))
 
-
+	call matrices(1)%read(name="1")
+	call matrices(2)%read(name="2")
+	call matrices(3)%read(name="3")
+	call matrices(4)%read(name="4")
+	
+	call matrices(5)%read(name="11")
+	call matrices(6)%read(name="12")
+	call matrices(7)%read(name="13")
+	call matrices(8)%read(name="14")	
+	
+	call matrices(1)%subm(matrices(5))
+	call matrices(2)%subm(matrices(6))
+	call matrices(3)%subm(matrices(7))
+	call matrices(4)%subm(matrices(8))
+	
+	call matrices(1)%write(name="test1")
+	call matrices(2)%write(name="test2")
+	call matrices(3)%write(name="test3")
+	call matrices(4)%write(name="test4")
+	
+	stop
 
         call etime(taaray(1,:), rslt(1))
 	proc = ubound(pde,1)
@@ -54,7 +76,7 @@ module schwarz_dd2subcyc
 	inner_criterion = 1e-4
 
 	!reset local-local cluster iteration count
-        ddcoarse_mesh(:)%iter_count = 1
+        ddcoarse_mesh(:)%iter_count = 4
 	
 	!the residual vector is not allocated, thus we are at the beginning
 	if (.not. allocated(resvct)) then
@@ -75,6 +97,8 @@ module schwarz_dd2subcyc
 ! 	    subdomain(i)%time_increased = .true.
 ! 	  end if
 	end do
+	
+	
         
 
 
@@ -115,8 +139,14 @@ module schwarz_dd2subcyc
 	    end if	    
 
 	  end do
-	  	  	  
-	  	  
+	  
+	  do i=1, ubound(subdomain,1)
+	    write(unit=text,fmt=*) i+10
+	    call subdomain(i)%matrix%write(name=adjustl(trim(text)))
+	  end do
+	  
+	  stop
+	  
 	  cumerr = 0
 	  
 	  subdoms:  do i=1, ubound(subdomain,1)
