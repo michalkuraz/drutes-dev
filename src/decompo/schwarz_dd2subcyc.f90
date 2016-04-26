@@ -43,31 +43,7 @@ module schwarz_dd2subcyc
 	character(len=128) :: text
 	real(4), dimension(2,2) :: taaray
 	real(4), dimension(2) :: rslt
-	class(extsmtx), dimension(:), allocatable :: matrices
 
-        allocate(matrices(8))
-
-	call matrices(1)%read(name="1")
-	call matrices(2)%read(name="2")
-	call matrices(3)%read(name="3")
-	call matrices(4)%read(name="4")
-	
-	call matrices(5)%read(name="11")
-	call matrices(6)%read(name="12")
-	call matrices(7)%read(name="13")
-	call matrices(8)%read(name="14")	
-	
-	call matrices(1)%subm(matrices(5))
-	call matrices(2)%subm(matrices(6))
-	call matrices(3)%subm(matrices(7))
-	call matrices(4)%subm(matrices(8))
-	
-	call matrices(1)%write(name="test1")
-	call matrices(2)%write(name="test2")
-	call matrices(3)%write(name="test3")
-	call matrices(4)%write(name="test4")
-	
-	stop
 
         call etime(taaray(1,:), rslt(1))
 	proc = ubound(pde,1)
@@ -140,12 +116,6 @@ module schwarz_dd2subcyc
 
 	  end do
 	  
-	  do i=1, ubound(subdomain,1)
-	    write(unit=text,fmt=*) i+10
-	    call subdomain(i)%matrix%write(name=adjustl(trim(text)))
-	  end do
-	  
-	  stop
 	  
 	  cumerr = 0
 	  
@@ -154,9 +124,13 @@ module schwarz_dd2subcyc
 	    resvct = 0
 	      
 	    resvct(subdomain(i)%permut(1:subdomain(i)%ndof)) = subdomain(i)%resvct%main
+	    
+	            call printmtx(subdomain(i)%resvct%main) ; call wait()
 	      
 	    resvct(subdomain(i)%extpermut(1:subdomain(i)%extndof)) = subdomain(i)%resvct%ext
-	      
+	     
+
+	     
 
 	    subfin = subdomain(i)%ndof
 		! check local residuum

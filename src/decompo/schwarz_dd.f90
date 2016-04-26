@@ -44,7 +44,6 @@ module schwarz_dd
 	real(4), dimension(2) :: rslt
 
 
-
         call etime(taaray(1,:), rslt(1))
 	proc = ubound(pde,1)
 	fin = maxval(pde(proc)%permut(:))
@@ -94,12 +93,6 @@ module schwarz_dd
 	    end if
 	  end do
 	  
-	  do i=1, ubound(subdomain,1)
-	    write(unit=text,fmt=*) i
-	    call subdomain(i)%matrix%write(name=adjustl(trim(text)))
-	  end do
-	  
-	  stop
 	  	  
 	  call get_residual(resvct)
 
@@ -137,6 +130,8 @@ module schwarz_dd
 	    call get_residual(resvct)
 
 	  end if
+	  
+	 call printmtx(resvct) ; stop
 	  
 
 	  cumerr = 0
