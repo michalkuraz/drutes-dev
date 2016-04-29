@@ -388,7 +388,7 @@ module read_inputs
       do i=1, elements%kolik
 	call comment(file_mesh)
 	read(unit=file_mesh, fmt=*) elements%id(i), elements%data(i,:), ch, ch, elements%material(i,1)
-	elements%material(i,1) = elements%material(i,1) ! - 10000
+	elements%material(i,1) = elements%material(i,1)  - 10000
       end do
      
 

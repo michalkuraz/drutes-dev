@@ -119,6 +119,10 @@ module re_reader
       end do
 
       
+      do i=1, ubound(vgmatrix,1)
+	call fileread(vgmatrix(i)%sinkterm, file_waterm,  errmsg="Have you defined sink term for each layer?")
+      end do
+      
       if (.not. www) then
 	do i=1, ubound(vgmatrix,1)
 	  call comment(file_waterm)

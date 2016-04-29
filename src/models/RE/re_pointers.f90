@@ -215,6 +215,8 @@ module RE_pointers
 	end if
       end do
       
+      pde_loc%pde_fnc(pde_loc%order)%zerord  => sinkterm
+      
 
       
       

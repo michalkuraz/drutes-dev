@@ -22,6 +22,7 @@ module re_globals
     character(len=5) :: icondtype
     type(rcza)       :: rcza_set
     real(kind=rkind) :: top, bottom
+    real(kind=rkind) :: sinkterm
   end type soilpar
 
 
@@ -54,5 +55,7 @@ module re_globals
    type(soilpar), dimension(:), pointer, public :: vgset
    
    integer, public :: file_waterm
+   
+   logical, public :: get_direct_vals = .false.
 
 end module re_globals
