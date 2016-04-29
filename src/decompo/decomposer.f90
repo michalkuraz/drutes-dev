@@ -170,6 +170,7 @@ module decomposer
       call init_addlevel()
       
 
+        
 
     end subroutine init_decomp
 
@@ -207,7 +208,6 @@ module decomposer
       ddcoarse_mesh(:)%evaluated = .false.
       
 
-
       processes_count = ubound(pde,1)
       if (.not.(allocated(subdomsdim))) then
 	allocate(subdomsdim(ubound(ddcoarse_mesh,1)))
@@ -236,7 +236,8 @@ module decomposer
 		    
 		    call plane_derivative(points(1,:), points(2,:), points(3,:), dgdx, dgdz)
 		    
-                    if ( ddcoarse_mesh(i)%iter_count > 1 .and. sqrt(dgdx*dgdx + dgdz*dgdz) > 0.0001 ) then
+!                     if ( ddcoarse_mesh(i)%iter_count > 1 .and. sqrt(dgdx*dgdx + dgdz*dgdz) > 0.0001 ) then
+                      if ( ddcoarse_mesh(i)%iter_count > 1 ) then
 		      ddcoarse_mesh(i)%treat_alone = .true.
 		      exited = .true.
 		      EXIT incoarse
@@ -251,7 +252,7 @@ module decomposer
 	end if
       end do
 
-
+      
       currentlev = 1
       subdomsdim = 0
       ddcoarse_mesh(:)%prevsub = ddcoarse_mesh(:)%subdomain

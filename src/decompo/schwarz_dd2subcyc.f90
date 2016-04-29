@@ -45,8 +45,6 @@ module schwarz_dd2subcyc
 	real(4), dimension(2) :: rslt
 
 
-
-
         call etime(taaray(1,:), rslt(1))
 	proc = ubound(pde,1)
 	fin = maxval(pde(proc)%permut(:))
@@ -54,7 +52,7 @@ module schwarz_dd2subcyc
 	inner_criterion = 1e-4
 
 	!reset local-local cluster iteration count
-        ddcoarse_mesh(:)%iter_count = 1
+        ddcoarse_mesh(:)%iter_count = 4
 	
 	!the residual vector is not allocated, thus we are at the beginning
 	if (.not. allocated(resvct)) then
@@ -75,6 +73,8 @@ module schwarz_dd2subcyc
 ! 	    subdomain(i)%time_increased = .true.
 ! 	  end if
 	end do
+	
+	
         
 
 
@@ -115,8 +115,8 @@ module schwarz_dd2subcyc
 	    end if	    
 
 	  end do
-	  	  	  
-	  	  
+	  
+	  
 	  cumerr = 0
 	  
 	  subdoms:  do i=1, ubound(subdomain,1)
@@ -124,9 +124,13 @@ module schwarz_dd2subcyc
 	    resvct = 0
 	      
 	    resvct(subdomain(i)%permut(1:subdomain(i)%ndof)) = subdomain(i)%resvct%main
+	    
+	            call printmtx(subdomain(i)%resvct%main) ; call wait()
 	      
 	    resvct(subdomain(i)%extpermut(1:subdomain(i)%extndof)) = subdomain(i)%resvct%ext
-	      
+	     
+
+	     
 
 	    subfin = subdomain(i)%ndof
 		! check local residuum

@@ -49,6 +49,8 @@ module decomp_tools
 	subdom%resvct%ext(i) = subdomain(domain_id)%xvect(ndloc,2)
       end do
       
+      call printmtx(subdomain(domain_id)%xvect(:,:)) ; stop
+      
       restmp = 0
       
       if (subdom%extndof > 0) then    
@@ -59,13 +61,15 @@ module decomp_tools
 	
       
       subdom%resvct%main = subdom%bvect - restmp(subdom%permut(1:subdom%ndof))
-      
+
       
       if (subdom%extndof > 0) then  
 	subdom%resvct%ext = subdom%extbvect - restmp(subdom%extpermut(1:subdom%extndof))
       end if
 	
-      
+            
+
+
     end subroutine getres_loc
   
     subroutine mulAx_dd(x,vct)

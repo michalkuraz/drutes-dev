@@ -44,7 +44,6 @@ module schwarz_dd
 	real(4), dimension(2) :: rslt
 
 
-
         call etime(taaray(1,:), rslt(1))
 	proc = ubound(pde,1)
 	fin = maxval(pde(proc)%permut(:))
@@ -52,7 +51,7 @@ module schwarz_dd
 	inner_criterion = 1e-4
 
 	!reset local-local cluster iteration count
-        ddcoarse_mesh(:)%iter_count = 1
+        ddcoarse_mesh(:)%iter_count = 4
 	
 	!the residual vector is not allocated, thus we are at the beginning
 	if (.not. allocated(resvct)) then
@@ -61,7 +60,7 @@ module schwarz_dd
 	  allocate(corrvct(fin))          
           call set_subdomains()
           subdomain(:)%time = 0
-          else
+        else
           first_run = .false.
         end if
 
@@ -93,6 +92,7 @@ module schwarz_dd
 	      call locmat_assembler(subdomain(i), ierr, i)
 	    end if
 	  end do
+	  
 	  	  
 	  call get_residual(resvct)
 
@@ -130,6 +130,8 @@ module schwarz_dd
 	    call get_residual(resvct)
 
 	  end if
+	  
+	 call printmtx(resvct) ; stop
 	  
 
 	  cumerr = 0
