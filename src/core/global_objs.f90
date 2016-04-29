@@ -52,6 +52,7 @@ module global_objs
   type, public, extends(smtx) :: extsmtx
     real(kind=rkind), dimension(:), allocatable :: weight
     logical :: weighted
+    type(smartarray_int) :: rowsfilled
   end type extsmtx
   
   type, public :: dirglob_str

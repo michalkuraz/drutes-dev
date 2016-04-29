@@ -22,15 +22,16 @@ module decomp_tools
       use debug_tools
       
       type(subdomain_str), intent(in out) :: subdom
-      real(kind=rkind), dimension(:), allocatable, save :: restmp
       integer(kind=ikind) :: i, nd, domain_id, ndloc, ndpt
             
-      if (.not. allocated(restmp)) then
-	allocate(restmp(maxval(pde(1)%permut)))
-      end if
+      real(kind=rkind), dimension(:), allocatable :: Arow
+      logical, dimension(:), allocatable, save :: coltrue
+      logical, dimension(:), allocatable, save :: extcoltrue
       
-
       
+      allocate(Arow(subdom%ndof+subdom%extndof))
+      
+      call printmtx(subdom%matrix%rowsfilled)     ; stop  
 !       subdom%resvct%ext = pde_common%xvect(subdom%extpermut(1:subdom%extndof),2)
       
       do i=1, ubound(subdom%resvct%ext,1)
@@ -51,20 +52,20 @@ module decomp_tools
       
       call printmtx(subdomain(domain_id)%xvect(:,:)) ; stop
       
-      restmp = 0
+!       restmp = 0
       
       if (subdom%extndof > 0) then    
-	restmp = subdom%matrix%mul(subdom%xvect(:,2)) + subdom%extmatrix%mul(subdom%resvct%ext)
+! 	restmp = subdom%matrix%mul(subdom%xvect(:,2)) + subdom%extmatrix%mul(subdom%resvct%ext)
       else    
-	restmp = subdom%matrix%mul(subdom%xvect(:,2))
+! 	restmp = subdom%matrix%mul(subdom%xvect(:,2))
       end if
 	
       
-      subdom%resvct%main = subdom%bvect - restmp(subdom%permut(1:subdom%ndof))
+!       subdom%resvct%main = subdom%bvect - restmp(subdom%permut(1:subdom%ndof))
 
       
       if (subdom%extndof > 0) then  
-	subdom%resvct%ext = subdom%extbvect - restmp(subdom%extpermut(1:subdom%extndof))
+! 	subdom%resvct%ext = subdom%extbvect - restmp(subdom%extpermut(1:subdom%extndof))
       end if
 	
             

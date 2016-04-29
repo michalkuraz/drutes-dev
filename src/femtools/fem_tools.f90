@@ -128,6 +128,9 @@ module fem_tools
                 if (n_row(i) > 0 .and. m_col(m) > 0) then
                   call locmatrix%add(stiff_mat(i,m), n_row(i), m_col(m))
                 end if
+                if (drutes_config%it_method == 2) then
+		  call locmatrix%rowsfilled%nrfill(n_row(i))
+		end if
               !**!
 ! 	      spmatrix%vals(g_row) = stiff_mat(i,m)
 ! 	      spmatrix%ii(g_row) = n(i)

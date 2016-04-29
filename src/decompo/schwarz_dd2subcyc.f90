@@ -73,9 +73,6 @@ module schwarz_dd2subcyc
 ! 	    subdomain(i)%time_increased = .true.
 ! 	  end if
 	end do
-	
-	
-        
 
 
 
@@ -109,7 +106,7 @@ module schwarz_dd2subcyc
 	      j = subdomain(i)%ndextra%pos
 	      call locmat_assembler(subdomain(i)%extmatrix, subdomain(i)%extbvect, subdomain(i)%time_step, &
 		 subdomain(i)%extpermut,subdomain(i)%extinvpermut)
-
+	 
 	      call getres_loc(subdomain(i))
 
 	    end if	    
@@ -482,9 +479,7 @@ module schwarz_dd2subcyc
 			  do k = 1, ubound(elements%data,2)			      
 			    quadpnt%order = elements%data(el,k)
 			    elnode_prev(k) = pde(1)%getval(quadpnt)
-                          end do
-			  
-			  
+                          end do		  
 			    
                           call build_stiff_np(el, time_step, domain_id)
 

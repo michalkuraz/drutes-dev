@@ -441,6 +441,7 @@ module decomposer
 
 
 
+
     end subroutine set_subdomains
   
     
@@ -549,12 +550,15 @@ module decomposer
       
       allocate(sub%xvect(sub%ndof,3))
       
+      allocate(sub%extxvect(sub%extndof,3))
+      
       allocate(sub%ovect(sub%ndof))
       
       allocate(sub%bvect(sub%ndof))
       
       sub%xvect(:,1:3) = pde_common%xvect(sub%permut(1:sub%ndof),1:3)
-
+      
+      sub%extxvect(:,1:3) = pde_common%xvect(sub%extpermut(1:sub%extndof),1:3)
             
     end subroutine init_subdomain
     

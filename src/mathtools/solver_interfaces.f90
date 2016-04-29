@@ -245,6 +245,8 @@ module solver_interfaces
 	b = 0.0_rkind
       end if
       
+      call A%rowsfilled%clear
+      
     end subroutine null_problem
 
 end module solver_interfaces

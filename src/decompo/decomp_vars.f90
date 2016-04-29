@@ -54,6 +54,8 @@ module decomp_vars
 !     integer(kind=ikind), dimension(:), allocatable  
     !> solution in the subdomain
     real(kind=rkind), dimension(:,:), allocatable :: xvect
+        !> solution in the subdomain
+    real(kind=rkind), dimension(:,:), allocatable :: extxvect
     !> used for subcycling -- solution in the subdomain for previous time level in terms of the global time step
     real(kind=rkind), dimension(:), allocatable :: xvect_init
     !> subdomain b vector
