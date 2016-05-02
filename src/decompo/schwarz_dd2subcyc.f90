@@ -74,8 +74,6 @@ module schwarz_dd2subcyc
 ! 	  end if
 	end do
 
-
-
                 
         !reset local subdomain iteration count
         subdomain(:)%itcount = 0                
@@ -89,7 +87,7 @@ module schwarz_dd2subcyc
         write(unit=terminal, fmt="(a)") "  "
         write(unit=terminal, fmt="(a, I4,a)") " Solving", ubound(subdomain,1),  " subdomains .... "
 
-
+        
 	picard_loop: do
 	
           itcount = itcount + 1
@@ -493,6 +491,7 @@ module schwarz_dd2subcyc
                         end if
                       end do
       end do loop_nodes
+
 
 
     end subroutine locmat_assembler

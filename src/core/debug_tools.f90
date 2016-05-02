@@ -259,7 +259,7 @@ module debug_tools
       use core_tools
       
       !parametry
-      integer(kind=ikind), dimension(:), intent(in out) :: V  !<vektor k tisknuti
+      integer(kind=ikind), dimension(:), intent(in) :: V  !<vektor k tisknuti
       integer, intent(in), optional :: filunit   
       character(len=*), intent(in), optional :: name
 

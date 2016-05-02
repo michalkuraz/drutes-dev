@@ -30,7 +30,7 @@ module decomp_tools
       
       
       allocate(Arow(subdom%ndof+subdom%extndof))
-      
+      print *, "wdw"
       call printmtx(subdom%matrix%rowsfilled)     ; stop  
 !       subdom%resvct%ext = pde_common%xvect(subdom%extpermut(1:subdom%extndof),2)
       

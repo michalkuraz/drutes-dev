@@ -385,7 +385,7 @@ module decomposer
 	call write_log(text="domain decomposition was adapted to the new solution, number of subdomains is:",&
 			int1=ddinfo%number, text2="@ simulation time:", real2=ddinfo%t_change)
 
-      
+
 
        ! create a list of nodes with a list of subdomains, where the node belongs.
         do sub=1, ubound(subdomain,1)
@@ -494,7 +494,6 @@ module decomposer
 	end if
       end do
       
-      
 
       call sub%matrix%init(maxval(pde(1)%permut(:)),sub%ndof)
       
@@ -545,20 +544,25 @@ module decomposer
 	allocate(sub%resvct%main(sub%ndof))
 	
 	allocate(sub%resvct%ext(sub%extndof))
+	
+	allocate(sub%extxvect(sub%extndof,3))
+	
+        sub%extxvect(:,1:3) = pde_common%xvect(sub%extpermut(1:sub%extndof),1:3)
 
       end if
       
       allocate(sub%xvect(sub%ndof,3))
       
-      allocate(sub%extxvect(sub%extndof,3))
+
       
       allocate(sub%ovect(sub%ndof))
       
       allocate(sub%bvect(sub%ndof))
+
       
       sub%xvect(:,1:3) = pde_common%xvect(sub%permut(1:sub%ndof),1:3)
       
-      sub%extxvect(:,1:3) = pde_common%xvect(sub%extpermut(1:sub%extndof),1:3)
+
             
     end subroutine init_subdomain
     

@@ -87,7 +87,7 @@ module fem_tools
 
     if (present(subprmt)) then
       do i=1, ubound(m_col,1)
-        if (n_row(i) > 0) then
+        if (n_row(i) > 0 ) then
           m_col(i) = subprmt(n_row(i))
         end if
       end do
@@ -127,10 +127,11 @@ module fem_tools
 	    case default
                 if (n_row(i) > 0 .and. m_col(m) > 0) then
                   call locmatrix%add(stiff_mat(i,m), n_row(i), m_col(m))
+                  if (drutes_config%it_method == 2 .or. drutes_config%it_method == 1) then
+                    call locmatrix%rowsfilled%nrfill(n_row(i))
+                  end if
                 end if
-                if (drutes_config%it_method == 2) then
-		  call locmatrix%rowsfilled%nrfill(n_row(i))
-		end if
+
               !**!
 ! 	      spmatrix%vals(g_row) = stiff_mat(i,m)
 ! 	      spmatrix%ii(g_row) = n(i)
