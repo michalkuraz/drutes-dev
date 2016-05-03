@@ -27,11 +27,59 @@ module decomp_tools
       real(kind=rkind), dimension(:), allocatable :: Arow
       logical, dimension(:), allocatable, save :: coltrue
       logical, dimension(:), allocatable, save :: extcoltrue
+      real(kind=rkind), dimension(:), allocatable, save :: colvals
+      integer(kind=ikind), dimension(:), allocatable, save :: jjvals
+      integer(kind=ikind) :: numbers, row, rowperm
       
       
-      allocate(Arow(subdom%ndof+subdom%extndof))
-      print *, "wdw"
-      call printmtx(subdom%matrix%rowsfilled)     ; stop  
+      
+      subdom%resvct%main=subdom%bvect
+      subdom%resvct%ext=subdom%extbvect
+      
+
+
+      
+      do i=1, subdom%matrix%rowsfilled%pos
+        row = subdom%matrix%rowsfilled%data(i)
+        
+        if (subdom%invpermut(row) /= 0) then
+          rowperm=subdom%invpermut(row)
+          call subdom%matrix%getrow(i=row, v=colvals, jj=jjvals, nelem=numbers)
+          
+!           subdom%resvct%main(rowperm) = subdom%resvct%main(rowperm) - dot_product(colvals(1:numbers), &
+!             subdom%xvect(jjvals(1:numbers), 2))
+            print *, dot_product(colvals(1:numbers), &
+            subdom%xvect(jjvals(1:numbers), 2)),  subdom%resvct%main(rowperm); call wait()
+
+        end if
+        
+        if (subdom%extinvpermut(row) /= 0 .and. subdom%invpermut(row) /= 0 ) then
+           rowperm=subdom%extinvpermut(row)
+           call subdom%extmatrix%getrow(i=row, v=colvals, jj=jjvals, nelem=numbers)
+          
+           subdom%resvct%main(rowperm) = subdom%resvct%main(rowperm) - dot_product(colvals(1:numbers), &
+            subdom%extxvect(jjvals(1:numbers), 2))
+        end if
+        
+      end do
+      
+      call printmtx(subdom%resvct%main) ; stop
+      
+      do i=1, subdom%extmatrix%rowsfilled%pos
+        row = subdom%extmatrix%rowsfilled%data(i)
+        
+        if (subdom%extinvpermut(row) /= 0) then
+        
+        end if
+        
+        if (subdom%invpermut(row) /= 0) then
+        
+        end if
+        
+      end do     
+              
+        
+ 
 !       subdom%resvct%ext = pde_common%xvect(subdom%extpermut(1:subdom%extndof),2)
       
       do i=1, ubound(subdom%resvct%ext,1)
