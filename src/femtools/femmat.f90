@@ -52,8 +52,10 @@ module femmat
 
 	itcount = itcount + 1
 	
-	call assemble_mat(ierr)
 	
+
+	
+	call assemble_mat(ierr)
 	
 	
 ! 	call estimeigvalues(spmatrix, lambda_l, lambda_h)
@@ -66,7 +68,7 @@ module femmat
 
 	call solve_matrix(spmatrix, pde_common%bvect(1:fin), pde_common%xvect(1:fin,3),  itmax1=fin, &
 		  reps1=1e-15_rkind)
-! 
+
 
 	if (drutes_config%dimen >  0) then
 	  write(unit=file_itcg, fmt = *) time, pcg_it, itcount

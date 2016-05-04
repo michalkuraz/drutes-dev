@@ -92,7 +92,7 @@ module schwarz_dd
 	      call locmat_assembler(subdomain(i), ierr, i)
 	    end if
 	  end do
-	  
+
 	  	  
 	  call get_residual(resvct)
 
@@ -459,13 +459,13 @@ module schwarz_dd
                           stiff_mat = stiff_mat + cap_mat
 
                           call in2global(el,domain%matrix, domain%bvect, domain%invpermut)
+                          print *, domain%bvect 
                           
                           elsolved(el) = .true.
                         end if
                       end do
       end do loop_nodes
-
-
+stop
     end subroutine locmat_assembler
     
 

@@ -45,11 +45,15 @@ module decomp_tools
         if (subdom%invpermut(row) /= 0) then
           rowperm=subdom%invpermut(row)
           call subdom%matrix%getrow(i=row, v=colvals, jj=jjvals, nelem=numbers)
+          if (row==19) then
+            print *, colvals(1:numbers), subdom%permut(jjvals(1:numbers))
+            stop
+          end if
           
 !           subdom%resvct%main(rowperm) = subdom%resvct%main(rowperm) - dot_product(colvals(1:numbers), &
 !             subdom%xvect(jjvals(1:numbers), 2))
-            print *, dot_product(colvals(1:numbers), &
-            subdom%xvect(jjvals(1:numbers), 2)),  subdom%resvct%main(rowperm); call wait()
+!             print *, dot_product(colvals(1:numbers), &
+!             subdom%xvect(jjvals(1:numbers), 2)),  subdom%resvct%main(rowperm); call wait()
 
         end if
         
