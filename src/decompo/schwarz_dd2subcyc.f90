@@ -98,16 +98,14 @@ module schwarz_dd2subcyc
 	  do i=1, ubound(subdomain,1)
 	    if (.not. subdomain(i)%solved) then
 	    
-	       call locmat_assembler_orig2(subdomain(i), ierr, i)
+	       call locmat_assembler(mtx=subdomain(i)%matrix, bvect=subdomain(i)%bvect, &
+	       permut=subdomain(i)%permut, dt=subdomain(i)%time_step, invpermut=subdomain(i)%invpermut, ierr=ierr)
 
-! 	      call locmat_assembler(subdomain(i)%matrix, subdomain(i)%bvect, subdomain(i)%time_step, &
-! 		subdomain(i)%permut, subdomain(i)%invpermut)
-! 		
-! 	      j = subdomain(i)%ndextra%pos
-! 	      call locmat_assembler(subdomain(i)%extmatrix, subdomain(i)%extbvect, subdomain(i)%time_step, &
-! 		 subdomain(i)%extpermut,subdomain(i)%extinvpermut)
-! 	 
-! 	      call getres_loc(subdomain(i))
+
+	       call locmat_assembler(mtx=subdomain(i)%extmatrix, bvect=subdomain(i)%extbvect, &
+	       permut=subdomain(i)%extpermut, dt=subdomain(i)%time_step, invpermut=subdomain(i)%extinvpermut, ierr=ierr)
+	 
+	       call getres_loc(subdomain(i))
 
 	    end if	    
 
@@ -121,13 +119,9 @@ module schwarz_dd2subcyc
 	    resvct = 0
 	      
 	    resvct(subdomain(i)%permut(1:subdomain(i)%ndof)) = subdomain(i)%resvct%main
-	    
-	            call printmtx(subdomain(i)%resvct%main) ; call wait()
 	      
 	    resvct(subdomain(i)%extpermut(1:subdomain(i)%extndof)) = subdomain(i)%resvct%ext
-	     
-
-	     
+	        
 
 	    subfin = subdomain(i)%ndof
 		! check local residuum
@@ -169,7 +163,7 @@ module schwarz_dd2subcyc
 
 	      subdomain(i)%itcount = itcount
 	      
-	      if (error <= iter_criterion .and.norm2(resvct(subdomain(i)%permut(1:subfin))) < inner_criterion) then 
+	      if (error <= iter_criterion .and. norm2(resvct(subdomain(i)%permut(1:subfin))) < inner_criterion) then 
 		subdomain(i)%solved = .true.
 		subdomain(i)%time  = subdomain(i)%time + subdomain(i)%time_step
 	      end if
@@ -182,7 +176,7 @@ module schwarz_dd2subcyc
 	    call combinevals(subdomain(i))
 	  end do
   	    
-  	  	      call build_xvect()
+  	  call build_xvect()
   
   	    
 	  call progressbar( int(100*ndofs_solved()/(1.0*ddinfo%ndofs_tot)))
@@ -414,7 +408,8 @@ module schwarz_dd2subcyc
 
       end function ndofs_solved
       
-    subroutine locmat_assembler(locmat, locbvct, dt, permut, invpermut)
+    
+   subroutine locmat_assembler(mtx, bvect, permut,  dt, invpermut, ierr)
       use typy
       use globals
       use global_objs
@@ -430,27 +425,30 @@ module schwarz_dd2subcyc
       use debug_tools     
       use decomp_vars
       
-      type(extsmtx), intent(in out) :: locmat
-      real(kind=rkind), dimension(:), intent(in out) :: locbvct
-      real(kind=rkind), intent(in) :: dt
+      type(extsmtx), intent(in out) :: mtx
+      real(kind=rkind), dimension(:), intent(out) :: bvect
       integer(kind=ikind), dimension(:), intent(in) :: permut
+      real(kind=rkind), intent(in) :: dt
       integer(kind=ikind), dimension(:), intent(in) :: invpermut
-      integer(kind=ikind) :: domain_id
-      integer(kind=ikind) :: el,j,k,l, proc, ll, limits, nd, ii, pnd, jaj, joj, i
+      integer, intent(out) :: ierr
+      integer(kind=ikind) :: el,j,k,l, proc, ll, limits, nd, ii, pnd, jaj, joj
       logical, dimension(:), allocatable, save :: elsolved
       type(integpnt_str) :: quadpnt
+      real(kind=rkind) :: value
+
       
       if (.not. allocated(elsolved)) then
         allocate(elsolved(elements%kolik))
       end if
       
       
+      call null_problem(mtx, bvect)
+
       
-      call null_problem(locmat, locbvct)
-
-
       elsolved = .false. 
-
+      
+!       limits = ubound(stiff_mat,1)/ubound(pde,1)
+      
       proc = 1
 
       loop_nodes: do pnd=1, ubound(permut,1)
@@ -467,171 +465,6 @@ module schwarz_dd2subcyc
                       do ii=1,nodes%el2integ(nd)%pos
 
                         el = nodes%el2integ(nd)%data(ii)
-                        
-
-                        if (.not. elsolved(el)) then
-
-                          domain_id = ddinfo%coarseinsub(ddinfo%elincoarse(el))
-
-                          quadpnt%type_pnt = "ndpt"
-                          quadpnt%column = 1
-                          quadpnt%ddlocal = .true.
-                          quadpnt%subdom = domain_id
-			  do k = 1, ubound(elements%data,2)			      
-			    quadpnt%order = elements%data(el,k)
-			    elnode_prev(k) = pde(1)%getval(quadpnt)
-                          end do		  
-			    
-                          call build_stiff_np(el, time_step, domain_id)
-
-                          call pde_common%time_integ(el, domain_id)
-
-                          stiff_mat = stiff_mat + cap_mat
-                          
-			  call in2global(el,locmat, locbvct, invpermut)
-			  
-			  print *, locbvct 
-			  
-                          elsolved(el) = .true.
-                        end if
-                      end do
-      end do loop_nodes
-      
-
-
-    end subroutine locmat_assembler
-    
-    
-    subroutine locmat_assembler_orig(domain,  ierr, kde)
-      use typy
-      use globals
-      use global_objs
-      use pde_objs
-      use capmat
-      use stiffmat
-      use feminittools
-      use geom_tools
-      use fem_tools
-      use re_constitutive
-      use linAlg
-      use solver_interfaces
-      use debug_tools     
-      use decomp_vars
-      
-      type(subdomain_str), intent(in out) :: domain 
-      integer, intent(out) :: ierr
-      integer(kind=ikind), intent(in) :: kde
-      integer(kind=ikind) :: el,j,k,l, proc, ll, limits, nd, ii, pnd, jaj, joj
-      logical, dimension(:), allocatable, save :: elsolved
-      type(integpnt_str) :: quadpnt
-
-      if (.not. allocated(elsolved)) then
-        allocate(elsolved(elements%kolik))
-      end if
-      
-      
-      call null_problem(domain%matrix, domain%bvect)
-
-      
-      elsolved = .false. 
-      
-      
-
-
-      loop_nodes: do pnd=1, ubound(domain%permut,1)
-
-                      if (domain%permut(pnd) == 0) then
-                        EXIT loop_nodes
-                      end if
-
-                      nd = domain%permut(pnd)
-
-                      nd = pde_common%invpermut(nd)
-                      
-		      quadpnt%type_pnt = "ndpt"
-		      quadpnt%column = 1			  
-		      do k = 1, ubound(elements%data,2)			      
-			quadpnt%order = elements%data(el,k)
-			elnode_prev(k) = pde(1)%getval(quadpnt)
-		      end do
-
-                      do ii=1,nodes%el2integ(nd)%pos
-
-                        el = nodes%el2integ(nd)%data(ii)
-
-                        if (.not. elsolved(el)) then    
-                        
-			  call build_bvect(el, domain%time_step)
-
-                          call build_stiff_np(el, domain%time_step)
-
-                          call pde_common%time_integ(el)
-
-                          stiff_mat = stiff_mat + cap_mat
-
-                          call in2global(el,domain%matrix, domain%bvect, domain%invpermut)
-                          
-                          elsolved(el) = .true.
-                        end if
-                      end do
-      end do loop_nodes
-
-
-    end subroutine locmat_assembler_orig
-    
-   subroutine locmat_assembler_orig2(domain,  ierr, kde)
-      use typy
-      use globals
-      use global_objs
-      use pde_objs
-      use capmat
-      use stiffmat
-      use feminittools
-      use geom_tools
-      use fem_tools
-      use re_constitutive
-      use linAlg
-      use solver_interfaces
-      use debug_tools     
-      use decomp_vars
-      
-      type(subdomain_str), intent(in out) :: domain 
-      integer, intent(out) :: ierr
-      integer(kind=ikind), intent(in) :: kde
-      integer(kind=ikind) :: el,j,k,l, proc, ll, limits, nd, ii, pnd, jaj, joj
-      logical, dimension(:), allocatable, save :: elsolved
-      type(integpnt_str) :: quadpnt
-      real(kind=rkind) :: value
-
-      
-      if (.not. allocated(elsolved)) then
-        allocate(elsolved(elements%kolik))
-      end if
-      
-      
-      call null_problem(domain%matrix, domain%bvect)
-
-      
-      elsolved = .false. 
-      
-!       limits = ubound(stiff_mat,1)/ubound(pde,1)
-      
-      proc = 1
-
-      loop_nodes: do pnd=1, ubound(domain%permut,1)
-
-                      if (domain%permut(pnd) == 0) then
-                        EXIT loop_nodes
-                      end if
-
-                      nd = domain%permut(pnd)
-
-                      nd = pde_common%invpermut(nd)
-
-
-                      do ii=1,nodes%el2integ(nd)%pos
-
-                        el = nodes%el2integ(nd)%data(ii)
 
                         if (.not. elsolved(el)) then
 
@@ -641,36 +474,25 @@ module schwarz_dd2subcyc
                             quadpnt%order = elements%data(el,k)
                             elnode_prev(k) = pde(1)%getval(quadpnt)
                           end do  
-!                         do j=1+(proc-1)*limits, ubound(elements%data,2) + (proc-1)*limits
-!                           ll = j - (proc-1)*ubound(stiff_mat,1)/ubound(pde,1)
-!                           k = pde(proc)%permut(elements%data(el,ll))
-!                           if (k > 0) then
-!                             elnode_prev(j) = pde_common%xvect(k,1)
-!                           else
-!                             k = nodes%edge(elements%data(el,ll))
-!                             call pde(proc)%bc(k)%value_fnc(pde(proc), el, ll, value)
-!                             elnode_prev(j) = value
-!                           end if
-!                         end do
-                          
-                          
-                          call build_bvect(el, domain%time_step)
 
-                          call build_stiff_np(el, domain%time_step)
+                          
+                          
+                          call build_bvect(el, dt)
+
+                          call build_stiff_np(el, dt)
 
                           call pde_common%time_integ(el)
 
                           stiff_mat = stiff_mat + cap_mat
 
-                          call in2global(el,domain%matrix, domain%bvect, domain%invpermut)
-                          print *, domain%bvect 
+                          call in2global(el,mtx, bvect, invpermut)
                           
                           elsolved(el) = .true.
                         end if
                       end do
       end do loop_nodes
-stop
-    end subroutine locmat_assembler_orig2
+
+    end subroutine locmat_assembler
 
 
 end module schwarz_dd2subcyc

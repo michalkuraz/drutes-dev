@@ -1988,7 +1988,7 @@ module RE_constitutive
             m = pde_loc%permut(k)
             if (m == 0) then
 	      call pde_loc%bc(l)%value_fnc(pde_loc, i, j, value)
-              pde_loc%solution(k) =  value
+              pde_loc%solution(k) =  value 
             else
               select case (vgset(layer)%icondtype)
 		case("H_tot")

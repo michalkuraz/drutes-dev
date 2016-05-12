@@ -131,9 +131,7 @@ module schwarz_dd
 
 	  end if
 	  
-	 call printmtx(resvct) ; stop
-	  
-
+! call printmtx(resvct) ; stop
 	  cumerr = 0
 	  subdoms:  do i=1, ubound(subdomain,1)
 
@@ -166,6 +164,7 @@ module schwarz_dd
 
 	      
 	      call diag_precond(a=subdomain(i)%matrix, x=corrvct(1:subfin), mode=-1)
+	      
 	      
 	      error = maxval(abs(corrvct(1:subfin)))
 	      
@@ -437,17 +436,7 @@ module schwarz_dd
 			    quadpnt%order = elements%data(el,k)
 			    elnode_prev(k) = pde(1)%getval(quadpnt)
 			  end do  
-! 			  do j=1+(proc-1)*limits, ubound(elements%data,2) + (proc-1)*limits
-! 			    ll = j - (proc-1)*ubound(stiff_mat,1)/ubound(pde,1)
-! 			    k = pde(proc)%permut(elements%data(el,ll))
-! 			    if (k > 0) then
-! 			      elnode_prev(j) = pde_common%xvect(k,1)
-! 			    else
-! 			      k = nodes%edge(elements%data(el,ll))
-! 			      call pde(proc)%bc(k)%value_fnc(pde(proc), el, ll, value)
-! 			      elnode_prev(j) = value
-! 			    end if
-! 			  end do
+
 			  
 			  
 			  call build_bvect(el, domain%time_step)
@@ -459,13 +448,12 @@ module schwarz_dd
                           stiff_mat = stiff_mat + cap_mat
 
                           call in2global(el,domain%matrix, domain%bvect, domain%invpermut)
-                          print *, domain%bvect 
                           
                           elsolved(el) = .true.
                         end if
                       end do
       end do loop_nodes
-stop
+
     end subroutine locmat_assembler
     
 

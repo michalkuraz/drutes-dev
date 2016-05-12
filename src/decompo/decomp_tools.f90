@@ -27,9 +27,9 @@ module decomp_tools
       real(kind=rkind), dimension(:), allocatable :: Arow
       logical, dimension(:), allocatable, save :: coltrue
       logical, dimension(:), allocatable, save :: extcoltrue
-      real(kind=rkind), dimension(:), allocatable, save :: colvals
-      integer(kind=ikind), dimension(:), allocatable, save :: jjvals
-      integer(kind=ikind) :: numbers, row, rowperm
+      real(kind=rkind), dimension(:), allocatable, save :: colvals, extcolvals
+      integer(kind=ikind), dimension(:), allocatable, save :: jjvals, extjjvals
+      integer(kind=ikind) :: numbers, row, rowperm, extrowperm
       
       
       
@@ -37,92 +37,51 @@ module decomp_tools
       subdom%resvct%ext=subdom%extbvect
       
 
-
-      
+      ! build resvct main
       do i=1, subdom%matrix%rowsfilled%pos
         row = subdom%matrix%rowsfilled%data(i)
         
         if (subdom%invpermut(row) /= 0) then
           rowperm=subdom%invpermut(row)
+          
           call subdom%matrix%getrow(i=row, v=colvals, jj=jjvals, nelem=numbers)
-          if (row==19) then
-            print *, colvals(1:numbers), subdom%permut(jjvals(1:numbers))
-            stop
-          end if
           
-!           subdom%resvct%main(rowperm) = subdom%resvct%main(rowperm) - dot_product(colvals(1:numbers), &
-!             subdom%xvect(jjvals(1:numbers), 2))
-!             print *, dot_product(colvals(1:numbers), &
-!             subdom%xvect(jjvals(1:numbers), 2)),  subdom%resvct%main(rowperm); call wait()
-
-        end if
-        
-        if (subdom%extinvpermut(row) /= 0 .and. subdom%invpermut(row) /= 0 ) then
-           rowperm=subdom%extinvpermut(row)
-           call subdom%extmatrix%getrow(i=row, v=colvals, jj=jjvals, nelem=numbers)
+          subdom%resvct%main(rowperm) = subdom%resvct%main(rowperm) - dot_product(colvals(1:numbers), &
+            subdom%xvect(jjvals(1:numbers), 2))
+            
+          call subdom%extmatrix%getrow(i=row, v=colvals, jj=jjvals, nelem=numbers)
           
-           subdom%resvct%main(rowperm) = subdom%resvct%main(rowperm) - dot_product(colvals(1:numbers), &
+	  if (numbers > 0) then
+	    subdom%resvct%main(rowperm) = subdom%resvct%main(rowperm) - dot_product(colvals(1:numbers), &
             subdom%extxvect(jjvals(1:numbers), 2))
-        end if
+          end if
+
+        end if   
         
       end do
       
-      call printmtx(subdom%resvct%main) ; stop
-      
+      ! build resvct ext  
       do i=1, subdom%extmatrix%rowsfilled%pos
         row = subdom%extmatrix%rowsfilled%data(i)
         
         if (subdom%extinvpermut(row) /= 0) then
-        
-        end if
-        
-        if (subdom%invpermut(row) /= 0) then
-        
-        end if
+          rowperm=subdom%extinvpermut(row)
+          
+          call subdom%extmatrix%getrow(i=row, v=colvals, jj=jjvals, nelem=numbers)      
+                    
+          subdom%resvct%ext(rowperm) = subdom%resvct%ext(rowperm) - dot_product(colvals(1:numbers), &
+            subdom%extxvect(jjvals(1:numbers), 2))
+            
+          call subdom%matrix%getrow(i=row, v=colvals, jj=jjvals, nelem=numbers) 
+          
+          if (numbers > 0) then
+	    subdom%resvct%ext(rowperm) = subdom%resvct%ext(rowperm) - dot_product(colvals(1:numbers), &
+            subdom%xvect(jjvals(1:numbers), 2))
+          end if         
+        end if 
         
       end do     
-              
-        
- 
-!       subdom%resvct%ext = pde_common%xvect(subdom%extpermut(1:subdom%extndof),2)
-      
-      do i=1, ubound(subdom%resvct%ext,1)
-        ndpt = subdom%extpermut(i)
-        nd = pde_common%invpermut(ndpt)
-	domain_id = ddinfo%nodesinsub(nd)%data(1)
-	ndloc = subdomain(domain_id)%invpermut(ndpt)
-! 	if (ndloc == 0) then 
-! 	  print *, nd
-! 	  print *, nd, domain_id
-! 	  do nd=1, nodes%kolik
-! 	    print *, nd, ddinfo%nodesinsub(nd)%data(1:ddinfo%nodesinsub(nd)%pos )
-! 	    end do
-! 	  stop
-! 	end if
-	subdom%resvct%ext(i) = subdomain(domain_id)%xvect(ndloc,2)
-      end do
-      
-      call printmtx(subdomain(domain_id)%xvect(:,:)) ; stop
-      
-!       restmp = 0
-      
-      if (subdom%extndof > 0) then    
-! 	restmp = subdom%matrix%mul(subdom%xvect(:,2)) + subdom%extmatrix%mul(subdom%resvct%ext)
-      else    
-! 	restmp = subdom%matrix%mul(subdom%xvect(:,2))
-      end if
-	
-      
-!       subdom%resvct%main = subdom%bvect - restmp(subdom%permut(1:subdom%ndof))
-
-      
-      if (subdom%extndof > 0) then  
-! 	subdom%resvct%ext = subdom%extbvect - restmp(subdom%extpermut(1:subdom%extndof))
-      end if
-	
             
-
-
     end subroutine getres_loc
   
     subroutine mulAx_dd(x,vct)
