@@ -1,10 +1,13 @@
 module schwarz_dd2subcyc
+    use typy
     public :: schwarz_subcyc
     private :: build_xvect
     private :: domains_solved
     private :: results_extractor
-    private :: locmat_assembler, locmat_assembler_orig
+    private :: locmat_assembler
     private :: search_error_cluster
+    
+    real(kind=rkind), dimension(:), allocatable, private, save :: resvct, corrvct
  
     contains
 
@@ -39,10 +42,10 @@ module schwarz_dd2subcyc
 	logical :: dt_fine, first_run, picard_done, reset_domains
 	integer :: ierr_loc
 	integer(kind=ikind), dimension(:), allocatable :: radek, radek2, radek3
-	real(kind=rkind), dimension(:), allocatable, save :: resvct, corrvct
 	character(len=128) :: text
 	real(4), dimension(2,2) :: taaray
 	real(4), dimension(2) :: rslt
+	real(kind=rkind) :: val
 
 
         call etime(taaray(1,:), rslt(1))
@@ -65,15 +68,11 @@ module schwarz_dd2subcyc
         end if
 
         subdomain(:)%time_step = time_step
-                
         
-	do i=1, ubound(subdomain,1)
-! 	  if (.not.  subdomain(i)%time_increased) then
-	    subdomain(i)%time = time + subdomain(i)%time_step
-! 	    subdomain(i)%time_increased = .true.
-! 	  end if
-	end do
-
+        subdomain(:)%time = time
+        
+        subdomain(1)%time_step = time_step/10.0
+              
                 
         !reset local subdomain iteration count
         subdomain(:)%itcount = 0                
@@ -86,76 +85,29 @@ module schwarz_dd2subcyc
 
         write(unit=terminal, fmt="(a)") "  "
         write(unit=terminal, fmt="(a, I4,a)") " Solving", ubound(subdomain,1),  " subdomains .... "
-
         
+
 	picard_loop: do
 	
           itcount = itcount + 1
-          
-
-  ! 	  !compute the local residuum
-  ! 	  !and create the local matrices
-	  do i=1, ubound(subdomain,1)
-	    if (.not. subdomain(i)%solved) then
-	    
-	       call locmat_assembler(mtx=subdomain(i)%matrix, bvect=subdomain(i)%bvect, &
-	       permut=subdomain(i)%permut, dt=subdomain(i)%time_step, invpermut=subdomain(i)%invpermut, ierr=ierr)
-
-
-	       call locmat_assembler(mtx=subdomain(i)%extmatrix, bvect=subdomain(i)%extbvect, &
-	       permut=subdomain(i)%extpermut, dt=subdomain(i)%time_step, invpermut=subdomain(i)%extinvpermut, ierr=ierr)
-	 
-	       call getres_loc(subdomain(i))
-
-	    end if	    
-
-	  end do
-	  
 	  
 	  cumerr = 0
 	  
 	  subdoms:  do i=1, ubound(subdomain,1)
 	  
-	    resvct = 0
-	      
-	    resvct(subdomain(i)%permut(1:subdomain(i)%ndof)) = subdomain(i)%resvct%main
-	      
-	    resvct(subdomain(i)%extpermut(1:subdomain(i)%extndof)) = subdomain(i)%resvct%ext
-	        
-
 	    subfin = subdomain(i)%ndof
-		! check local residuum
-	    res_error = norm2(resvct(subdomain(i)%permut(1:subfin)))
+	
 
-	    if (res_error > inner_criterion) then
-	      subdomain(i)%solved = .false.
-	    else
-	      subdomain(i)%solved = .true.
-	    end if
+
+! 	    if (res_error > inner_criterion) then
+! 	      subdomain(i)%solved = .false.
+! 	    else
+! 	      subdomain(i)%solved = .true.
+! 	    end if
 	    
 	    if (.not. subdomain(i)%solved) then
-	    
-	      corrvct(1:subfin) = 0.0
-
-	      if (subdomain(i)%critical) then
-		reps = 1e-20
-	      else
-		reps = 1e-10
-	      end if
-
-	      corrvct = 0
-	      
-	      call diag_precond(a=subdomain(i)%matrix, prmt=subdomain(i)%permut,  mode=1)
- 	                    
-	      call solve_matrix(subdomain(i)%matrix, resvct, corrvct(1:subfin), ilev1=0, itmax1=subfin, reps1=reps)
- 	      
-	      call diag_precond(a=subdomain(i)%matrix, x=corrvct(1:subfin), mode=-1)
- 	     	      
-	      error = maxval(abs(corrvct(1:subfin)))
- 
-	      cumerr = cumerr + error
-
-	      subdomain(i)%xvect(:,3) = subdomain(i)%xvect(:,2) + corrvct(1:subfin)
+	       
+	      call solve_subdomain(subdomain(i), reps=1e-20)
 
 	      call search_error_cluster(subdomain(i), itcount) 
 	      
@@ -163,18 +115,33 @@ module schwarz_dd2subcyc
 
 	      subdomain(i)%itcount = itcount
 	      
-	      if (error <= iter_criterion .and. norm2(resvct(subdomain(i)%permut(1:subfin))) < inner_criterion) then 
+	      
+	      if (abs(subdomain(i)%time - time - time_step) < 10*epsilon(time) ) then 
 		subdomain(i)%solved = .true.
-		subdomain(i)%time  = subdomain(i)%time + subdomain(i)%time_step
+	      else
+		if (norm2(corrvct(1:subfin)) < iter_criterion) then
+		  subdomain(i)%time  = subdomain(i)%time + subdomain(i)%time_step
+		  subdomain(i)%xvect(1,:) =  subdomain(i)%xvect(2,:)
+		  print *, "solved subdom:", i
+		end if
+		  
 	      end if
+	      
+	      	                  ! check local residual
+	      res_error = norm2(subdomain(i)%resvct%main)
+	      
+	      call combinevals(subdomain(i))
+	      
+	      val=subdomain(1)%xvect(subdomain(1)%invpermut(11),2)
+	      
+	      print *, i, "time:", subdomain(i)%time, norm2(corrvct(1:subfin)), subdomain(i)%solved, val
+	      
+	      call wait()
 	      
 	    end if
 	       
 	  end do subdoms
 	  
-	  do i=1, ubound(subdomain,1)
-	    call combinevals(subdomain(i))
-	  end do
   	    
   	  call build_xvect()
   
@@ -239,6 +206,54 @@ module schwarz_dd2subcyc
 
       end subroutine schwarz_subcyc
       
+      subroutine solve_subdomain(sub, reps)
+	use typy
+	use decomp_vars
+	use decomp_tools
+	use sparsematrix
+	use simplelinalg
+	use pde_objs
+	
+	class(subdomain_str), intent(in out) :: sub
+	real(kind=rkind), intent(in) :: reps
+	
+	integer(kind=ikind) :: subfin
+	real(kind=rkind) :: error
+	integer :: ierr
+
+      
+	call locmat_assembler(mtx=sub%matrix, bvect=sub%bvect, &
+	       permut=sub%permut, dt=sub%time_step, invpermut=sub%invpermut, ierr=ierr)
+
+
+	call locmat_assembler(mtx=sub%extmatrix, bvect=sub%extbvect, &
+	       permut=sub%extpermut, dt=sub%time_step, invpermut=sub%extinvpermut, ierr=ierr)
+	 
+	call getres_loc(sub)
+	
+        resvct = 0
+        
+        subfin = sub%ndof
+	      
+	resvct(sub%permut(1:sub%ndof)) = sub%resvct%main
+	      
+	resvct(sub%extpermut(1:sub%extndof)) = sub%resvct%ext
+	
+        corrvct(1:subfin) = 0.0
+        
+        call diag_precond(a=sub%matrix, prmt=sub%permut,  mode=1)
+ 	                    
+	call solve_matrix(sub%matrix, resvct, corrvct(1:subfin), ilev1=0, itmax1=subfin, reps1=reps)
+ 	      
+	call diag_precond(a=sub%matrix, x=corrvct(1:subfin), mode=-1)
+ 	     	      
+	error = maxval(abs(corrvct(1:subfin)))
+	
+	sub%xvect(:,3) = sub%xvect(:,2) + corrvct(1:subfin)
+
+      
+      end subroutine solve_subdomain
+      
       subroutine build_xvect()
 	use typy
 	use globals
@@ -277,6 +292,7 @@ module schwarz_dd2subcyc
 	use typy
 	use decomp_vars
 	use pde_objs
+	use debug_tools
 	
 	
 	type(subdomain_str), intent(in out) :: subdom
@@ -293,6 +309,8 @@ module schwarz_dd2subcyc
 	      loc = subdomain(sub)%invpermut(glob)
 	      value = value + subdomain(sub)%returnval(loc, subdom%time)*prolong_mtx%get(glob,sub)
 	    end do
+! 	    	      print *, value
+! 	      call wait()
 	    subdom%xvect(i, 2:3) = value
 	  end if
 	end do
@@ -425,7 +443,7 @@ module schwarz_dd2subcyc
       use debug_tools     
       use decomp_vars
       
-      type(extsmtx), intent(in out) :: mtx
+      class(extsmtx), intent(in out) :: mtx
       real(kind=rkind), dimension(:), intent(out) :: bvect
       integer(kind=ikind), dimension(:), intent(in) :: permut
       real(kind=rkind), intent(in) :: dt
