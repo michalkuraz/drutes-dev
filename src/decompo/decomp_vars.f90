@@ -118,6 +118,7 @@ module decomp_vars
     logical :: time_increased
     real(kind=rkind) :: time
     real(kind=rkind) :: tmpval
+    integer(kind=ikind) :: order
     logical :: finish
       contains 
 	procedure :: returnval
@@ -186,7 +187,7 @@ module decomp_vars
 	real(kind=rkind), intent(in) :: subtime
 	real(kind=rkind) :: value
 	
-	if (abs(subtime-subdom%time ) < epsilon(subtime)) then
+	if (abs(subtime-subdom%time)  < epsilon(subtime)) then
 	  value = subdom%xvect(i,2)
 	else
 	  value = (subdom%xvect(i,2) - subdom%xvect(i,1))/subdom%time_step*(subtime-subdom%time)+subdom%xvect(i,2)

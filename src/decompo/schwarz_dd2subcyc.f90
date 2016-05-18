@@ -69,9 +69,9 @@ module schwarz_dd2subcyc
 
         subdomain(:)%time_step = time_step
         
-        subdomain(:)%time = time
+        subdomain(1)%time_step = time_step
         
-        subdomain(1)%time_step = time_step/10.0
+        subdomain(:)%time = time + subdomain(:)%time_step
               
                 
         !reset local subdomain iteration count
@@ -86,123 +86,101 @@ module schwarz_dd2subcyc
         write(unit=terminal, fmt="(a)") "  "
         write(unit=terminal, fmt="(a, I4,a)") " Solving", ubound(subdomain,1),  " subdomains .... "
         
+        
+        schwarz: do
 
-	picard_loop: do
-	
-          itcount = itcount + 1
-	  
-	  cumerr = 0
-	  
 	  subdoms:  do i=1, ubound(subdomain,1)
-	  
-	    subfin = subdomain(i)%ndof
 	
-
-
-! 	    if (res_error > inner_criterion) then
-! 	      subdomain(i)%solved = .false.
-! 	    else
-! 	      subdomain(i)%solved = .true.
+! 	    if (.not. subdomain(i)%solved) then     
+	      call solve_subdomain(subdomain(i), reps=1e-20)
 ! 	    end if
 	    
-	    if (.not. subdomain(i)%solved) then
-	       
-	      call solve_subdomain(subdomain(i), reps=1e-20)
-
-	      call search_error_cluster(subdomain(i), itcount) 
-	      
-	      subdomain(i)%xvect(:,2) = subdomain(i)%xvect(:,3)
-
-	      subdomain(i)%itcount = itcount
-	      
-	      
-	      if (abs(subdomain(i)%time - time - time_step) < 10*epsilon(time) ) then 
-		subdomain(i)%solved = .true.
-	      else
-		if (norm2(corrvct(1:subfin)) < iter_criterion) then
-		  subdomain(i)%time  = subdomain(i)%time + subdomain(i)%time_step
-		  subdomain(i)%xvect(1,:) =  subdomain(i)%xvect(2,:)
-		  print *, "solved subdom:", i
-		end if
-		  
-	      end if
-	      
-	      	                  ! check local residual
-	      res_error = norm2(subdomain(i)%resvct%main)
-	      
-	      call combinevals(subdomain(i))
-	      
-	      val=subdomain(1)%xvect(subdomain(1)%invpermut(11),2)
-	      
-	      print *, i, "time:", subdomain(i)%time, norm2(corrvct(1:subfin)), subdomain(i)%solved, val
-	      
-	      call wait()
-	      
-	    end if
-	       
 	  end do subdoms
 	  
-  	    
-  	  call build_xvect()
-  
-  	    
-	  call progressbar( int(100*ndofs_solved()/(1.0*ddinfo%ndofs_tot)))
-	  
-
-	  if (domains_solved() == ubound(subdomain,1)) then
-	    call etime(taaray(2,:), rslt(2))
-	    do i=1, ubound(subdomain,1)
-	      if (.not. subdomain(i)%critical .and. subdomain(i)%itcount>1 ) then
-		reset_domains = .true.
-		EXIT
-	      else
-		reset_domains = .false.
-	      end if
-	    end do
-	   
-	    call printtime("Time spent on iterations: ", rslt(2)-rslt(1))
-	    
-	    if (reset_domains) then
-	      call build_xvect()
-	      call set_subdomains()
-	    end if
-	    
-	    
-	    success = .TRUE.
-	    ierr = 0
-	    write(unit=file_ddinfo, fmt=*) time, itcount, "|", subdomain(:)%ndof
-	    call flush(file_ddinfo)
-	    EXIT picard_loop
-	  end if
-
-	  if (itcount > max_itcount) then
-	    call set_subdomains()
-	    success = .FALSE.
-	    ierr = 1
-	    RETURN
-	  end if
-
-        end do picard_loop
-
-
-
-        do proc=1, ubound(pde,1)
 	  do i=1, ubound(subdomain,1)
-	    dt_fine = pde(proc)%dt_check()
+	  
+	   res_error = norm2(subdomain(i)%resvct%main)
+	   
+	   if (i==1) print *, res_error
+
+	   
+	   
+	   call combinevals(subdomain(i))
+	   
+	   
+	   if (i==1) call printmtx(subdomain(1)%xvect)
+
+      
+	    ! check local residual
+	   res_error = norm2(subdomain(i)%resvct%main)
+
+	    print *, i, res_error
+	   call wait()
 	  end do
-        end do
-        
-        if (.not.(dt_fine)) then
-          ierr = 2
-          success = .false.
-          RETURN
-        else
-          ierr = 0
-          call results_extractor()
-          do i=1, ubound(subdomain,1)
-	    subdomain(i)%xvect(:,1) = subdomain(i)%xvect(:,3)
-	  end do
-        end if
+
+	end do schwarz
+	  
+!   	    
+!   	  call build_xvect()
+!   
+!   	    
+! 	  call progressbar( int(100*ndofs_solved()/(1.0*ddinfo%ndofs_tot)))
+! 	  
+! 
+! 	  if (domains_solved() == ubound(subdomain,1)) then
+! 	    call etime(taaray(2,:), rslt(2))
+! 	    do i=1, ubound(subdomain,1)
+! 	      if (.not. subdomain(i)%critical .and. subdomain(i)%itcount>1 ) then
+! 		reset_domains = .true.
+! 		EXIT
+! 	      else
+! 		reset_domains = .false.
+! 	      end if
+! 	    end do
+! 	   
+! 	    call printtime("Time spent on iterations: ", rslt(2)-rslt(1))
+! 	    
+! 	    if (reset_domains) then
+! 	      call build_xvect()
+! 	      call set_subdomains()
+! 	    end if
+! 	    
+! 	    
+! 	    success = .TRUE.
+! 	    ierr = 0
+! 	    write(unit=file_ddinfo, fmt=*) time, itcount, "|", subdomain(:)%ndof
+! 	    call flush(file_ddinfo)
+! 	    EXIT picard_loop
+! 	  end if
+! 
+! 	  if (itcount > max_itcount) then
+! 	    call set_subdomains()
+! 	    success = .FALSE.
+! 	    ierr = 1
+! 	    RETURN
+! 	  end if
+! 
+!         end do picard_loop
+! 
+! 
+! 
+!         do proc=1, ubound(pde,1)
+! 	  do i=1, ubound(subdomain,1)
+! 	    dt_fine = pde(proc)%dt_check()
+! 	  end do
+!         end do
+!         
+!         if (.not.(dt_fine)) then
+!           ierr = 2
+!           success = .false.
+!           RETURN
+!         else
+!           ierr = 0
+!           call results_extractor()
+!           do i=1, ubound(subdomain,1)
+! 	    subdomain(i)%xvect(:,1) = subdomain(i)%xvect(:,3)
+! 	  end do
+!         end if
 
       end subroutine schwarz_subcyc
       
@@ -213,6 +191,7 @@ module schwarz_dd2subcyc
 	use sparsematrix
 	use simplelinalg
 	use pde_objs
+	use debug_tools
 	
 	class(subdomain_str), intent(in out) :: sub
 	real(kind=rkind), intent(in) :: reps
@@ -220,37 +199,49 @@ module schwarz_dd2subcyc
 	integer(kind=ikind) :: subfin
 	real(kind=rkind) :: error
 	integer :: ierr
+	
 
+
+	do
+	
+	  sub%itcount = sub%itcount + 1
       
-	call locmat_assembler(mtx=sub%matrix, bvect=sub%bvect, &
-	       permut=sub%permut, dt=sub%time_step, invpermut=sub%invpermut, ierr=ierr)
+	  call locmat_assembler(mtx=sub%matrix, bvect=sub%bvect, &
+		permut=sub%permut, dt=sub%time_step, invpermut=sub%invpermut, ierr=ierr)
 
 
-	call locmat_assembler(mtx=sub%extmatrix, bvect=sub%extbvect, &
-	       permut=sub%extpermut, dt=sub%time_step, invpermut=sub%extinvpermut, ierr=ierr)
-	 
-	call getres_loc(sub)
-	
-        resvct = 0
-        
-        subfin = sub%ndof
-	      
-	resvct(sub%permut(1:sub%ndof)) = sub%resvct%main
-	      
-	resvct(sub%extpermut(1:sub%extndof)) = sub%resvct%ext
-	
-        corrvct(1:subfin) = 0.0
-        
-        call diag_precond(a=sub%matrix, prmt=sub%permut,  mode=1)
- 	                    
-	call solve_matrix(sub%matrix, resvct, corrvct(1:subfin), ilev1=0, itmax1=subfin, reps1=reps)
- 	      
-	call diag_precond(a=sub%matrix, x=corrvct(1:subfin), mode=-1)
- 	     	      
-	error = maxval(abs(corrvct(1:subfin)))
-	
-	sub%xvect(:,3) = sub%xvect(:,2) + corrvct(1:subfin)
-
+	  call locmat_assembler(mtx=sub%extmatrix, bvect=sub%extbvect, &
+		permut=sub%extpermut, dt=sub%time_step, invpermut=sub%extinvpermut, ierr=ierr)
+	  
+	  call getres_loc(sub)
+	  
+	  resvct = 0
+	  
+	  subfin = sub%ndof
+		
+	  resvct(sub%permut(1:sub%ndof)) = sub%resvct%main
+		
+	  resvct(sub%extpermut(1:sub%extndof)) = sub%resvct%ext
+	  
+	  corrvct(1:subfin) = 0.0
+	  
+	  call diag_precond(a=sub%matrix, prmt=sub%permut,  mode=1)
+			      
+	  call solve_matrix(sub%matrix, resvct, corrvct(1:subfin), ilev1=0, itmax1=subfin, reps1=reps)
+		
+	  call diag_precond(a=sub%matrix, x=corrvct(1:subfin), mode=-1)
+			
+	  error = maxval(abs(corrvct(1:subfin)))
+	  
+	  sub%xvect(:,3) = sub%xvect(:,2) + corrvct(1:subfin)
+	   
+	  sub%xvect(:,2) = sub%xvect(:,3)
+	  
+	  if ( error < iter_criterion) then
+	    EXIT
+	  end if
+	  
+	end do
       
       end subroutine solve_subdomain
       

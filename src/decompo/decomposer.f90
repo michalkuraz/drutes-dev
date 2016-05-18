@@ -437,7 +437,10 @@ module decomposer
       do i=1, ubound(subdomain,1)
 	ddinfo%ndofs_tot = ddinfo%ndofs_tot + subdomain(i)%ndof
       end do
-
+      
+      do i = 1, ubound(subdomain,1)
+	subdomain(i)%order=i
+      end do
 
 
 
