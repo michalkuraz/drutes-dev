@@ -421,20 +421,28 @@ module pde_objs
 	    ppts = pde_loc%permut(pts)
 
             if (quadpnt%ddlocal) then
-	      where (ppts /= 0)
-		ppts = subdomain(quadpnt%subdom)%invpermut(ppts)
-	      end where
+	      if (.not. quadpnt%extended) then
+		where (ppts /= 0)
+		  ppts = subdomain(quadpnt%subdom)%invpermut(ppts)
+		end where
+	      else 
+		where (ppts /= 0)
+		  ppts = subdomain(quadpnt%subdom)%extinvpermut(ppts)
+		end where
+	      end if
 	    end if
 
-	    
-	    
-	    
+	        
 	    do i=1, ubound(elements%data,2)
 	      if (ppts(i) > 0) then
 		if (.not. quadpnt%ddlocal) then
 		  ndvals(i) = pde_common%xvect(ppts(i), quadpnt%column)
 		else
-		  ndvals(i) = subdomain(quadpnt%subdom)%xvect(ppts(i), quadpnt%column)
+		  if (.not. quadpnt%extended) then
+		    ndvals(i) = subdomain(quadpnt%subdom)%xvect(ppts(i), quadpnt%column)
+		  else
+		    ndvals(i) = subdomain(quadpnt%subdom)%extxvect(ppts(i), quadpnt%column)
+		  end if
 		end if
 	      else
 		edge = nodes%edge(pts(i))
@@ -442,9 +450,7 @@ module pde_objs
 	      end if
 	    end do
 
-
-	    
-	    
+    
 	    select case(quadpnt%type_pnt)
 	      case("gqnd")
 		select case(drutes_config%dimen)
@@ -467,9 +473,7 @@ module pde_objs
 		      end do
 		      a(i,3) = ndvals(i)
 		    end do
-		    
-
-		    
+		    	    
 		    call get2dderivative(a(1,:), a(2,:), a(3,:), xder, yder)
 		    
 		    val = ndvals(1) + xder*(observation_array(quadpnt%order)%xyz(1) - a(1,1)) + &
@@ -483,8 +487,15 @@ module pde_objs
 	      if (.not. quadpnt%ddlocal) then
 		val = pde_common%xvect(i, quadpnt%column)
 	      else
-		i = subdomain(quadpnt%subdom)%invpermut(i)
-		val = subdomain(quadpnt%subdom)%xvect(i, quadpnt%column)
+		if (.not. quadpnt%extended) then
+		  print *,  "as", i
+		  i = subdomain(quadpnt%subdom)%invpermut(i)
+		  print *, "aa", i
+		  val = subdomain(quadpnt%subdom)%xvect(i, quadpnt%column)
+		else
+		  i = subdomain(quadpnt%subdom)%extinvpermut(i)
+		  val = subdomain(quadpnt%subdom)%extxvect(i, quadpnt%column)
+		end if
 	      end if
 	    else
 	      edge = nodes%edge(quadpnt%order)

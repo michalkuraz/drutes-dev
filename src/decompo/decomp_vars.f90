@@ -42,21 +42,6 @@ module decomp_vars
     real(kind=rkind), dimension(:), allocatable :: ext
   end type resvct_str
   
-  !> structure with local matrix, b-vector, x-vectors, permut vectors, invpermut vectors, and residual vector
-  !! since the matrix has to consider both the extended structure (nodes out of subdomain with graph connection to the subdomain nodes) and local structure (nodes inside the subdomain) all matrix data are organized into structure
-  !<
-  type, private :: locmtx_data
-    type(extsmtx) :: matrix
-    real(kind=rkind), dimension(:), allocatable :: bvect
-    !> solution in the subdomain
-    real(kind=rkind), dimension(:,:), allocatable :: xvect
-    !> permut vector - local xvect to global xvect
-    integer(kind=ikind), dimension(:), allocatable :: permut
-    !> permut vector global xvect to local subdomain xvect, should be updated into sparse vector later
-    integer(kind=ikind), dimension(:), allocatable :: invpermut
-    !>residual vector
-    real(kind=rkind), dimension(:), allocatable :: resvct
-  end type locmtx_data
 
   type, public :: subdomain_str
     !> local matrix

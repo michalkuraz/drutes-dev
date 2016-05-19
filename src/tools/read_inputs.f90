@@ -504,10 +504,9 @@ module read_inputs
 	    
 	  case(2)
 	    jtmp = jtmp + 1
-	    read(unit=file_mesh, fmt=*) k, l, i, elements%material(jtmp,:), j,  elements%data(jtmp,:)
-	    if (i /= pde_common%processes + 1) then
-	      call write_log("number of tags for element must be equal to the number &
-	      of solution components plus one, e.g. Richards equation + ADE equation (solution h and c) number of tags = 2 + 1 ")
+	    read(unit=file_mesh, fmt=*) k, l, i, elements%material(jtmp,1), j,  elements%data(jtmp,:)
+	    if (i /= 2) then
+	      call write_log("number of tags for element must be equal 2")
 	      call write_log("update your GMSH input file!")
 	      if (i > pde_common%processes + 1) then
 		
@@ -537,6 +536,12 @@ module read_inputs
 	 end select
 	 
       end do
+      
+      if (pde_common%processes > 1) then
+	do i=2, pde_common%processes
+	  elements%material(:,i) = elements%material(:,1)
+	end do
+      end if
 
      
     end subroutine read_2dmesh_gmsh

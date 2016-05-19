@@ -91,7 +91,7 @@ module schwarz_dd2subcyc
 
 	  subdoms:  do i=1, ubound(subdomain,1)
 	
-! 	    if (.not. subdomain(i)%solved) then     
+! 	    if (.not. subdomain(i)%solved) then    
 	      call solve_subdomain(subdomain(i), reps=1e-20)
 ! 	    end if
 	    
@@ -101,9 +101,8 @@ module schwarz_dd2subcyc
 	  
 	   res_error = norm2(subdomain(i)%resvct%main)
 	   
-	   if (i==1) print *, res_error
 
-	   
+	   print *, i, res_error ; call wait()
 	   
 	   call combinevals(subdomain(i))
 	   
@@ -200,48 +199,49 @@ module schwarz_dd2subcyc
 	real(kind=rkind) :: error
 	integer :: ierr
 	
+        sub%itcount = 0
 
 
-	do
+	sub%itcount = sub%itcount + 1
 	
-	  sub%itcount = sub%itcount + 1
-      
-	  call locmat_assembler(mtx=sub%matrix, bvect=sub%bvect, &
-		permut=sub%permut, dt=sub%time_step, invpermut=sub%invpermut, ierr=ierr)
-
-
-	  call locmat_assembler(mtx=sub%extmatrix, bvect=sub%extbvect, &
-		permut=sub%extpermut, dt=sub%time_step, invpermut=sub%extinvpermut, ierr=ierr)
-	  
-	  call getres_loc(sub)
-	  
-	  resvct = 0
-	  
-	  subfin = sub%ndof
-		
-	  resvct(sub%permut(1:sub%ndof)) = sub%resvct%main
-		
-	  resvct(sub%extpermut(1:sub%extndof)) = sub%resvct%ext
-	  
-	  corrvct(1:subfin) = 0.0
-	  
-	  call diag_precond(a=sub%matrix, prmt=sub%permut,  mode=1)
-			      
-	  call solve_matrix(sub%matrix, resvct, corrvct(1:subfin), ilev1=0, itmax1=subfin, reps1=reps)
-		
-	  call diag_precond(a=sub%matrix, x=corrvct(1:subfin), mode=-1)
-			
-	  error = maxval(abs(corrvct(1:subfin)))
-	  
-	  sub%xvect(:,3) = sub%xvect(:,2) + corrvct(1:subfin)
+	call printmtx(sub%elsub) ; stop
+    
+print *, "ada"
+	call locmat_assembler(mtx=sub%matrix, bvect=sub%bvect, &
+	      permut=sub%permut, dt=sub%time_step, invpermut=sub%invpermut, domain_id=sub%order, extended=.false., &
+	      ierr=ierr)
+	      
 	   
-	  sub%xvect(:,2) = sub%xvect(:,3)
+
+print *, "adaa"
+	call locmat_assembler(mtx=sub%extmatrix, bvect=sub%extbvect, &
+	      permut=sub%extpermut, dt=sub%time_step, invpermut=sub%extinvpermut, &
+	      domain_id=sub%order, extended=.true.,ierr=ierr)
+	
+	call getres_loc(sub)
+	
+	resvct = 0
+	
+	subfin = sub%ndof
+	      
+	resvct(sub%permut(1:sub%ndof)) = sub%resvct%main
+	      
+	resvct(sub%extpermut(1:sub%extndof)) = sub%resvct%ext
+	
+	corrvct(1:subfin) = 0.0
+	
+	call diag_precond(a=sub%matrix, prmt=sub%permut,  mode=1)
+			    
+	call solve_matrix(sub%matrix, resvct, corrvct(1:subfin), ilev1=0, itmax1=subfin, reps1=reps)
+	      
+	call diag_precond(a=sub%matrix, x=corrvct(1:subfin), mode=-1)
+		      
+	error = maxval(abs(corrvct(1:subfin)))
+	
+	sub%xvect(:,3) = sub%xvect(:,2) + corrvct(1:subfin)
 	  
-	  if ( error < iter_criterion) then
-	    EXIT
-	  end if
-	  
-	end do
+	sub%xvect(:,2) = sub%xvect(:,3)
+	
       
       end subroutine solve_subdomain
       
@@ -418,7 +418,7 @@ module schwarz_dd2subcyc
       end function ndofs_solved
       
     
-   subroutine locmat_assembler(mtx, bvect, permut,  dt, invpermut, ierr)
+   subroutine locmat_assembler(mtx, bvect, permut,  dt, invpermut, domain_id, extended, ierr)
       use typy
       use globals
       use global_objs
@@ -439,6 +439,8 @@ module schwarz_dd2subcyc
       integer(kind=ikind), dimension(:), intent(in) :: permut
       real(kind=rkind), intent(in) :: dt
       integer(kind=ikind), dimension(:), intent(in) :: invpermut
+      integer(kind=ikind), intent(in) :: domain_id
+      logical, intent(in) :: extended
       integer, intent(out) :: ierr
       integer(kind=ikind) :: el,j,k,l, proc, ll, limits, nd, ii, pnd, jaj, joj
       logical, dimension(:), allocatable, save :: elsolved
@@ -478,19 +480,21 @@ module schwarz_dd2subcyc
                         if (.not. elsolved(el)) then
 
                           quadpnt%type_pnt = "ndpt"
-                          quadpnt%column = 1                      
+                          quadpnt%column = 1
+                          quadpnt%ddlocal=.true.
+                          quadpnt%subdom=domain_id
+                          quadpnt%extended = extended
+                          
                           do k = 1, ubound(elements%data,2)                           
                             quadpnt%order = elements%data(el,k)
-                            elnode_prev(k) = pde(1)%getval(quadpnt)
+                            elnode_prev(k) = pde(proc)%getval(quadpnt)
                           end do  
-
                           
-                          
-                          call build_bvect(el, dt)
+                          call build_bvect(el, dt)!, quadpnt)
 
-                          call build_stiff_np(el, dt)
+                          call build_stiff_np(el, dt) !, quadpnt)
 
-                          call pde_common%time_integ(el)
+                          call pde_common%time_integ(el) !, quadpnt)
 
                           stiff_mat = stiff_mat + cap_mat
 

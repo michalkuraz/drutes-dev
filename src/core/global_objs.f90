@@ -20,9 +20,11 @@ module global_objs
     !! if column = 2 then current iteration level is used
     !<
     integer(kind=ikind) :: column
-    !> if true, then the properties for quadpnt are returned from gthe local subdomain data, otherwise (default) the properties are returned from the pde_common%xvect array
+    !> if true, then the values for quadpnt are returned from the local subdomain data, otherwise (default) the values are returned from the pde_common%xvect array
     logical :: ddlocal = .false.
     integer(kind=ikind) :: subdom
+    !> if true then the values for quadpnt are returned from the exnteded subdomain data, 
+    logical :: extended = .false.
   end type integpnt_str
   
   type, public :: smartarray_int

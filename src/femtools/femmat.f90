@@ -75,7 +75,7 @@ module femmat
 	  call flush(file_itcg)
 	  call diag_precond(a=spmatrix, x=pde_common%xvect(1:fin,3), mode=-1)
 	end if
-	
+! 	
 
          error = norm2(pde_common%xvect(1:fin,2)-pde_common%xvect(1:fin,3))/ubound(pde_common%xvect,1)
 
