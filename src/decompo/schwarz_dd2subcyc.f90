@@ -101,20 +101,13 @@ module schwarz_dd2subcyc
 	  
 	   res_error = norm2(subdomain(i)%resvct%main)
 	   
-
-	   print *, i, res_error ; call wait()
-	   
 	   call combinevals(subdomain(i))
 	   
-	   
-	   if (i==1) call printmtx(subdomain(1)%xvect)
-
+	
       
 	    ! check local residual
 	   res_error = norm2(subdomain(i)%resvct%main)
 
-	    print *, i, res_error
-	   call wait()
 	  end do
 
 	end do schwarz

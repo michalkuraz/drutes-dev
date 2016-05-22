@@ -9,7 +9,7 @@ module re_total
   contains
   
     !> specific function for Richards equation in H-form (total hydraulic head form), replaces pde_objs::getvalp1 in order to obtain presssure head h
-    function getval_retot(pde_loc, quadpnt) result(val)
+    function getval_retot(pde_loc, quadpnt, time4eval) result(val)
       use typy
       use pde_objs
       use geom_tools
@@ -17,6 +17,7 @@ module re_total
       
       class(pde_str), intent(in) :: pde_loc
       type(integpnt_str), intent(in) :: quadpnt
+      real(kind=rkind), intent(in), optional :: time4eval
       real(kind=rkind) :: val
       
       real(kind=rkind), dimension(3) :: xyz
@@ -28,12 +29,20 @@ module re_total
       
       if (get_direct_vals) then
       
-	val = getvalp1(pde_loc, quadpnt) 
+	if (.not. present(time4eval)) then
+	  val = getvalp1(pde_loc, quadpnt) 
+	else
+	  val = getvalp1(pde_loc, quadpnt, time4eval)
+	end if
 	
 	get_direct_vals = .false.
 	
       else
-	val = getvalp1(pde_loc, quadpnt) - xyz(D)	
+	if (.not. present(time4eval)) then
+	  val = getvalp1(pde_loc, quadpnt) - xyz(D)
+	else
+	  val = getvalp1(pde_loc, quadpnt, time4eval) - xyz(D)
+	end if
       end if
 	
       

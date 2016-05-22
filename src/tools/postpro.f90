@@ -74,7 +74,11 @@ module postpro
 	  case("all_in_one")
 	    mode = -1
 	  case("separately")
-	    mode = 0
+	    if (drutes_config%mesh_type /= 3) then
+	      mode = 0
+	    else
+	      mode = -1
+	    end if
 	  case default
 	    print *, "Incorrect behaviour specified, called from postpro::make_print"
 	    ERROR stop
@@ -88,7 +92,7 @@ module postpro
       else if (drutes_config%mesh_type /=3 ) then
 	extension = ".sci"
       else
-	extension = ".gmsh"
+	extension = ".msh"
       end if
 
       call write_log("making output files for observation time")
@@ -168,8 +172,9 @@ module postpro
 	write(unit=filenames(proc,4), fmt=forma) trim(prefix), trim(pde(proc)%problem_name(1)), "_", trim(pde(proc)%flux_name(1)), "-", &
 						  run,  trim(extension)
 ! 	
-	if ( .not. anime .and. (mode == 0 .or. postpro_run == 1 ) .or. &
-	  (anime_run == 1 .and. anime)) then
+	if ( (.not. anime .and. mode == 0)  .or. &
+	  (anime_run == 1 .and. anime) .or. & 
+	 ( .not. anime .and. (mode == -1 .and. postpro_run == 0 ) ) ) then
 
 	  do i=1, ubound(filenames,2)
 	    call find_unit(ids(proc, i), 6000)
@@ -224,8 +229,11 @@ module postpro
 	  
 
 	else
-
-	  call print_gmsh(ids(proc,:), proc, quadpnt)
+	  if (present(dt)) then
+	    call print_gmsh(ids(proc,:), proc, quadpnt, dt)
+	  else
+	    call print_gmsh(ids(proc,:), proc, quadpnt)
+	  end if
 	
 	end if
       end do
@@ -234,7 +242,11 @@ module postpro
       if (.not. anime) then
    	  do proc=1, ubound(pde,1)
 	    do i=1,ubound(ids,2)
-	      close(ids(proc,i))
+	      if (mode == 0) then
+		close(ids(proc,i))
+	      else
+		call flush(ids(proc,i))
+	      end if
 	    end do
 	  end do	
       else      
@@ -254,6 +266,7 @@ module postpro
      end if
 
       deallocate(filenames)
+      
     end subroutine make_print
 
 
@@ -546,7 +559,7 @@ module postpro
   
   end subroutine print_pure
   
-  subroutine print_gmsh(ids, proc, quadpnt)
+  subroutine print_gmsh(ids, proc, quadpnt, dt)
     use typy
     use globals
     use global_objs
@@ -555,31 +568,48 @@ module postpro
     integer, dimension(:), intent(in) :: ids
     integer(kind=ikind), intent(in) :: proc
     type(integpnt_str), dimension(:), intent(in out) :: quadpnt
+    real(kind=rkind), intent(in), optional :: dt
     integer(kind=ikind) :: i
+    real(kind=rkind) :: curtime
+    
+    
+    if (present(dt)) then
+      curtime = time - time_step + dt
+    else
+      curtime = time
+    end if
   
-
-    write(unit=ids(1), fmt=*) "$MeshFormat"
-    write(unit=ids(1), fmt=*) "2.2 0 8"
-    write(unit=ids(1), fmt=*) "$EndMeshFormat"
-    write(unit=ids(1), fmt=*) "$Nodes"
+    write(unit=ids(1), fmt="(a)") "$MeshFormat"
+    write(unit=ids(1), fmt="(a)") "2.2 0 8"
+    write(unit=ids(1), fmt="(a)") "$EndMeshFormat"
+    write(unit=ids(1), fmt="(a)") "$Nodes"
+    
     write(unit=ids(1), fmt=*) nodes%kolik
     
     do i=1, nodes%kolik
       write(unit=ids(1), fmt=*) i,  nodes%data(i,:)
     end do
-    write(unit=ids(1), fmt=*) "$EndNodes"
-    write(unit=ids(1), fmt=*) "$Elements"
+    write(unit=ids(1), fmt="(a)") "$EndNodes"
+    write(unit=ids(1), fmt="(a)") "$Elements"
     write(unit=ids(1), fmt=*) elements%kolik
-      do i=1, elements%kolik
+    do i=1, elements%kolik
       write(unit=ids(1), fmt=*) i,  elements%data(i,:)
     end do
-    write(unit=ids(1), fmt=*) "$EndElements"
-    write(unit=ids(1), fmt=*) "$NodeData"
+    write(unit=ids(1), fmt="(a)") "$EndElements"
+    write(unit=ids(1), fmt="(a)") "$NodeData"
+    write(unit=ids(1), fmt=*) "1"
+    write(unit=ids(1), fmt=*) ' " ', trim(pde(proc)%problem_name(2)), " ", trim(pde(proc)%solution_name(1)) , ' " '
+    write(unit=ids(1), fmt=*) "1"
+    write(unit=ids(1), fmt=*) curtime  !///tohle udává čas
+    write(unit=ids(1), fmt=*) "3"
+    write(unit=ids(1), fmt=*) postpro_run
+    write(unit=ids(1), fmt=*) "1"
+    
     write(unit=ids(1), fmt=*) nodes%kolik
     do i=1, nodes%kolik
       write(unit=ids(1), fmt=*) i, pde(proc)%solution(i)
     end do
-    write(unit=ids(1), fmt=*) "$EndNodeData"
+    write(unit=ids(1), fmt="(a)") "$EndNodeData"
   
   end subroutine print_gmsh
 

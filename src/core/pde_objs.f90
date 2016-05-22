@@ -99,12 +99,13 @@ module pde_objs
   
   
   abstract interface
-    function getval_str(pde_loc, quadpnt) result(value)
+    function getval_str(pde_loc, quadpnt, time4eval) result(value)
       use typy
       use global_objs
       import::pde_str
       class(pde_str), intent(in) :: pde_loc
       type(integpnt_str), intent(in) :: quadpnt
+      real(kind=rkind), intent(in), optional :: time4eval
       real(kind=rkind) :: value
     end function getval_str
   end interface
@@ -287,6 +288,7 @@ module pde_objs
   end interface
   
   public :: getgradp1, getvalp1, do_nothing
+  private :: getvalp1loc
   
   type(PDE_str), dimension(:), allocatable,  public :: PDE
   type(pde_common_str), public :: pde_common
@@ -297,7 +299,7 @@ module pde_objs
   
 
   
-    subroutine getgradp1(pde_loc, quadpnt, grad)
+    subroutine getgradp1(pde_loc, quadpnt, grad, time4eval)
       use typy
       use decomp_vars
 
@@ -306,6 +308,7 @@ module pde_objs
       type(integpnt_str), intent(in) :: quadpnt
       type(integpnt_str), dimension(:), allocatable, save :: quadpntloc
       real(kind=rkind), dimension(:), allocatable, intent(out) :: grad
+      real(kind=rkind), intent(in), optional :: time4eval
       real(kind=rkind), dimension(3) :: gradloc
       integer(kind=ikind), dimension(:), allocatable, save :: pts
       real(kind=rkind), dimension(3)    :: a,b,c
@@ -359,7 +362,11 @@ module pde_objs
 	    dx = nodes%data(pts(2),1) - nodes%data(pts(1),1)
 	    quadpntloc(1)%order = pts(1)
 	    quadpntloc(2)%order = pts(2)
-	    gradloc(1) = gradloc(1) + (getvalp1(pde_loc,quadpntloc(2)) - getvalp1(pde_loc, quadpntloc(1)))/dx
+	    if (present(time4eval)) then
+	      gradloc(1) = gradloc(1) + (getvalp1(pde_loc,quadpntloc(2), time4eval) - getvalp1(pde_loc, quadpntloc(1), time4eval))/dx
+	    else
+	      gradloc(1) = gradloc(1) + (getvalp1(pde_loc,quadpntloc(2)) - getvalp1(pde_loc, quadpntloc(1)))/dx
+	    end if
 	  case(2)
 	    a(1:2) = nodes%data(pts(1),:)
 	    b(1:2) = nodes%data(pts(2),:)
@@ -386,7 +393,42 @@ module pde_objs
     
     end subroutine getgradp1
     
-    function getvalp1(pde_loc, quadpnt) result(val)
+    function getvalp1(pde_loc, quadpnt, time4eval) result(val)
+      use typy
+      use decomp_vars
+      
+      class(pde_str), intent(in) :: pde_loc
+      type(integpnt_str), intent(in) :: quadpnt
+      real(kind=rkind), intent(in), optional :: time4eval
+      real(kind=rkind) :: val
+      
+      type(integpnt_str) :: quadpntloc
+      real(kind=rkind) :: valprev, timeact, timeglob
+      
+      val = getvalp1loc(pde_loc, quadpnt)
+      
+      
+      if (.not. present(time4eval) .or. quadpnt%column==1) then
+	RETURN
+      else
+	quadpntloc = quadpnt
+	quadpntloc%column = 1
+	if (quadpnt%ddlocal) then
+	  timeact=subdomain(quadpnt%subdom)%time4solve
+	  timeglob = subdomain(quadpnt%subdom)%time
+	else
+	  timeact = time4solve
+	  timeglob = time
+	end if
+	quadpntloc%column=1
+	valprev = getvalp1loc(pde_loc, quadpntloc)
+	val = (val-valprev)/(timeact-timeglob)*(time4eval-timeglob)+valprev
+      end if
+	
+    
+    end function getvalp1
+    
+    function getvalp1loc(pde_loc, quadpnt) result(val)
       use typy
       use decomp_vars
       
@@ -517,7 +559,7 @@ module pde_objs
       end select
 	  
 
-    end function getvalp1
+    end function getvalp1loc
     
       
     subroutine get2dderivative(a,b,c,xder,yder)

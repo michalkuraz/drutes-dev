@@ -137,6 +137,8 @@ module globals
   real(kind=rkind), public :: time
   !> time step value
   real(kind=rkind), public :: time_step
+  !> equals to the actual time level plus time step which is being processed
+  real(kind=rkind), public :: time4solve
   !> previous time step
   real(kind=rkind), public :: dtprev
 

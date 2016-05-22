@@ -90,7 +90,8 @@ module fem
 	      
   ! 	    call make_print("all_in_one")
 	      dt = observe_time(obs_pos)%value - (time - time_step)
-	      call make_print("separately",dt, observe_time(obs_pos)%name)
+	      
+	      call make_print("separately", dt, observe_time(obs_pos)%name)
 	      
 	      obs_pos = obs_pos + 1
 	      write(unit=terminal, fmt=*)  " " //achar(27)//'[97m',"I: print time was reached, making output files..."&

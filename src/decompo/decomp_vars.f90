@@ -100,6 +100,8 @@ module decomp_vars
     type(smartarray_int) :: bcluster
     !> time step could be different on different subdomains (subcycling)
     real(kind=rkind) :: time_step
+    !> equals to the actual time level plus time step which is being processed
+    real(kind=rkind) :: time4solve
     logical :: time_increased
     real(kind=rkind) :: time
     real(kind=rkind) :: tmpval

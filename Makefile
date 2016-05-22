@@ -247,7 +247,7 @@ tar :
 	 tar -czf $d.tgz src Makefile drutes.conf 
 
 upcurrent:
-	rsync -avztu -e ssh --delete --exclude 'out/*' --exclude '*.o' --exclude '*.mod' --exclude 'bin/*'  --exclude '*~' ./ miguel@matsrv-lin01.fsv.cvut.cz:~/drutes-archive/
+	mv .git /tmp && rsync -avztu -e ssh --delete --exclude 'out/*' --exclude '*.o' --exclude '*.mod' --exclude 'bin/*'  --exclude '*~' ./ miguel@matsrv-lin01.fsv.cvut.cz:~/drutes-archive/ && mv /tmp/.git ./
 
 current:
 	rsync -avztu --delete --exclude 'out/*' rsync://drutes@matsrv-lin01.fsv.cvut.cz/drutes/ ./
