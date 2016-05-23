@@ -31,7 +31,6 @@ module fem
       integer(kind=ikind) :: i
       integer :: fileid
       real(4), dimension(3) :: act_time
-      real(kind=rkind) :: dt
       
 
       minimal_dt = dtmax
@@ -87,11 +86,8 @@ module fem
 	  call write_obs()
 	  if (printtime) then
 	    do i=1, nptimes
-	      
-  ! 	    call make_print("all_in_one")
-	      dt = observe_time(obs_pos)%value - (time - time_step)
-	      
-	      call make_print("separately", dt, observe_time(obs_pos)%name)
+	      	      
+	      call make_print("separately", observe_time(obs_pos)%value, observe_time(obs_pos)%name)
 	      
 	      obs_pos = obs_pos + 1
 	      write(unit=terminal, fmt=*)  " " //achar(27)//'[97m',"I: print time was reached, making output files..."&

@@ -209,6 +209,7 @@ module femmat
 	end do
       end do
 
+      pde_common%xvect(:,4) = pde_common%xvect(:,1)
       pde_common%xvect(:,1) = pde_common%xvect(:,3)
       pde_common%xvect(:,2) = pde_common%xvect(:,3)
 

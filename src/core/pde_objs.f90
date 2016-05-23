@@ -99,13 +99,12 @@ module pde_objs
   
   
   abstract interface
-    function getval_str(pde_loc, quadpnt, time4eval) result(value)
+    function getval_str(pde_loc, quadpnt) result(value)
       use typy
       use global_objs
       import::pde_str
       class(pde_str), intent(in) :: pde_loc
       type(integpnt_str), intent(in) :: quadpnt
-      real(kind=rkind), intent(in), optional :: time4eval
       real(kind=rkind) :: value
     end function getval_str
   end interface
@@ -299,7 +298,7 @@ module pde_objs
   
 
   
-    subroutine getgradp1(pde_loc, quadpnt, grad, time4eval)
+    subroutine getgradp1(pde_loc, quadpnt, grad)
       use typy
       use decomp_vars
 
@@ -308,7 +307,6 @@ module pde_objs
       type(integpnt_str), intent(in) :: quadpnt
       type(integpnt_str), dimension(:), allocatable, save :: quadpntloc
       real(kind=rkind), dimension(:), allocatable, intent(out) :: grad
-      real(kind=rkind), intent(in), optional :: time4eval
       real(kind=rkind), dimension(3) :: gradloc
       integer(kind=ikind), dimension(:), allocatable, save :: pts
       real(kind=rkind), dimension(3)    :: a,b,c
@@ -362,11 +360,7 @@ module pde_objs
 	    dx = nodes%data(pts(2),1) - nodes%data(pts(1),1)
 	    quadpntloc(1)%order = pts(1)
 	    quadpntloc(2)%order = pts(2)
-	    if (present(time4eval)) then
-	      gradloc(1) = gradloc(1) + (getvalp1(pde_loc,quadpntloc(2), time4eval) - getvalp1(pde_loc, quadpntloc(1), time4eval))/dx
-	    else
-	      gradloc(1) = gradloc(1) + (getvalp1(pde_loc,quadpntloc(2)) - getvalp1(pde_loc, quadpntloc(1)))/dx
-	    end if
+	     gradloc(1) = gradloc(1) + (getvalp1(pde_loc,quadpntloc(2)) - getvalp1(pde_loc, quadpntloc(1)))/dx
 	  case(2)
 	    a(1:2) = nodes%data(pts(1),:)
 	    b(1:2) = nodes%data(pts(2),:)
@@ -393,36 +387,35 @@ module pde_objs
     
     end subroutine getgradp1
     
-    function getvalp1(pde_loc, quadpnt, time4eval) result(val)
+    function getvalp1(pde_loc, quadpnt) result(val)
       use typy
       use decomp_vars
       
       class(pde_str), intent(in) :: pde_loc
       type(integpnt_str), intent(in) :: quadpnt
-      real(kind=rkind), intent(in), optional :: time4eval
       real(kind=rkind) :: val
       
       type(integpnt_str) :: quadpntloc
-      real(kind=rkind) :: valprev, timeact, timeglob
+      real(kind=rkind) :: valprev, timeprev, timeglob
+      
       
       val = getvalp1loc(pde_loc, quadpnt)
       
-      
-      if (.not. present(time4eval) .or. quadpnt%column==1) then
+      if (quadpnt%globtime .or. quadpnt%column==1) then
 	RETURN
       else
 	quadpntloc = quadpnt
-	quadpntloc%column = 1
+	quadpntloc%column = 4
 	if (quadpnt%ddlocal) then
-	  timeact=subdomain(quadpnt%subdom)%time4solve
 	  timeglob = subdomain(quadpnt%subdom)%time
+	  timeprev = subdomain(quadpnt%subdom)%time - subdomain(quadpnt%subdom)%time_step
 	else
-	  timeact = time4solve
 	  timeglob = time
+	  timeprev = time-time_step
 	end if
-	quadpntloc%column=1
 	valprev = getvalp1loc(pde_loc, quadpntloc)
-	val = (val-valprev)/(timeact-timeglob)*(time4eval-timeglob)+valprev
+
+	val = (val-valprev)/(timeglob-timeprev)*(quadpnt%time4eval-timeprev)+valprev
       end if
 	
     

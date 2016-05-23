@@ -25,7 +25,7 @@ module postpro
 
   contains
  
-    subroutine make_print(behaviour, dt, name)
+    subroutine make_print(behaviour, curtime, name)
       use typy
       use globals
       use global_objs
@@ -35,7 +35,7 @@ module postpro
       use debug_tools
 
       character(len=*), intent(in), optional                :: behaviour
-      real(kind=rkind), intent(in), optional                :: dt
+      real(kind=rkind), intent(in), optional                :: curtime
       character(len=*), intent(in), optional                :: name
       logical                                               :: anime
       integer(kind=ikind)                                   :: mode, no_prints
@@ -48,8 +48,8 @@ module postpro
       character(len=5)                                      :: extension
       character(len=15)                                     :: prefix
       real(kind=rkind)                                      :: distance, avgval, val1, val2, val3, tmp, flux
-      logical                                               :: first_run
-      type(integpnt_str), dimension(:), allocatable, save   :: quadpnt
+      logical, save                                         :: first_run=.true.
+      type(integpnt_str)                                    :: quadpnt
       integer(kind=ikind), save                             :: anime_run, anime_dec
       integer                                               :: ierr
       character(len=512) :: filename, iaction
@@ -86,6 +86,7 @@ module postpro
       else
 	mode = 0
       end if
+      
 
       if (drutes_config%dimen < 2  .or. www) then
 	extension = ".dat"
@@ -97,18 +98,6 @@ module postpro
 
       call write_log("making output files for observation time")
       
-      
-      if (.not. allocated(quadpnt)) then
-	select case(drutes_config%dimen)
-	  case(1)
-	    allocate(quadpnt(2))
-	  case(2)
-	    allocate(quadpnt(1))
-	end select
-	first_run = .true.
-      else
-	first_run = .false.
-      end if
 
       
       if (.not. anime) then
@@ -191,49 +180,30 @@ module postpro
 	end if
 
 
-	quadpnt(:)%type_pnt = "ndpt"
+	quadpnt%type_pnt = "ndpt"
 	
-	select case(observe_info%method)
-	  case(1)
-	      quadpnt(:)%column = 3
-	  case(2)
-	      if (.not. present(dt) .and. time > epsilon(time) .and. .not. (abs(time-end_time) < epsilon(time) .or. time > end_time)) then
-! 	       print *, abs(time-end_time), time, end_time
-		print *, "this is a BUG, insufficient input parameters, contact developer, called from postpro::make_print()"
-		error STOP
-	      end if
-	      if (time > epsilon(time) .and. abs(time-end_time) > epsilon(time) .and. time<end_time) then
-		quadpnt(:)%column = 4
-		pde_common%xvect(:,4) = (pde_common%xvect(:,3)-pde_common%xvect(:,1))/time_step*dt + pde_common%xvect(:,1)
-	      else if (time < epsilon(time) ) then
-		quadpnt(:)%column = 1
-	      else if (abs(time-end_time) < epsilon(time) .or. time > end_time) then
-		quadpnt(:)%column = 3
-	      end if
-		
-	 end select
-	 
+        if (time > epsilon(time) ) then
+          quadpnt%column = 3
+	else
+          quadpnt%column = 1
+        end if
+        
+        if (present(curtime)) then
+          quadpnt%globtime = .false.
+          quadpnt%time4eval = curtime
+        end if
 
-
+	
 	if (drutes_config%dimen == 1 .or. www) then
   
 	  call print_pure(ids(proc,:), proc, quadpnt)
 	  
 	else if  (drutes_config%mesh_type <= 2 ) then
 
-	  if (present(dt)) then
-	    call print_scilab(ids(proc,:), proc, quadpnt, dt)
-	  else
-	    call print_scilab(ids(proc,:), proc, quadpnt)
-	  end if
-	  
+	  call print_scilab(ids(proc,:), proc, quadpnt)	  
 
 	else
-	  if (present(dt)) then
-	    call print_gmsh(ids(proc,:), proc, quadpnt, dt)
-	  else
-	    call print_gmsh(ids(proc,:), proc, quadpnt)
-	  end if
+	  call print_gmsh(ids(proc,:), proc, quadpnt)
 	
 	end if
       end do
@@ -266,6 +236,8 @@ module postpro
      end if
 
       deallocate(filenames)
+      
+      first_run=.false.
       
     end subroutine make_print
 
@@ -392,7 +364,7 @@ module postpro
 
   end subroutine get_RAM_use
   
-  subroutine print_scilab(ids, proc, quadpnt, dt)
+  subroutine print_scilab(ids, proc, quadpnt)
     use typy
     use globals
     use global_objs
@@ -401,8 +373,7 @@ module postpro
     
     integer, dimension(:), intent(in) :: ids
     integer(kind=ikind), intent(in) :: proc
-    type(integpnt_str), dimension(:), intent(in out) :: quadpnt
-    real(kind=rkind), intent(in), optional :: dt
+    type(integpnt_str), intent(in out) :: quadpnt
     integer(kind=ikind) :: i, j, layer
     real(kind=rkind) :: tmp, flux
     real(kind=rkind), dimension(3,8) :: body
@@ -412,10 +383,11 @@ module postpro
     real(kind=rkind), dimension(:), allocatable, save :: deriv
     integer(kind=ikind) :: time_dec
     real(kind=rkind) :: curtime
+
     
     
-    if (present(dt)) then
-      curtime = time - time_step + dt
+    if (.not. quadpnt%globtime) then
+      curtime = quadpnt%time4eval
     else
       curtime = time
     end if
@@ -436,8 +408,8 @@ module postpro
     do i=1, elements%kolik
       do j=1,ubound(elements%data,2)
 	body(j,1:2) = nodes%data(elements%data(i,j),:)
-	quadpnt(1)%order = elements%data(i,j)
-	body(j,3) = pde(proc)%getval(quadpnt(1))
+	quadpnt%order = elements%data(i,j)
+	body(j,3) = pde(proc)%getval(quadpnt)
       end do
     
       ! mass (constant over element)
@@ -529,85 +501,85 @@ module postpro
     
     integer, dimension(:), intent(in) :: ids
     integer(kind=ikind), intent(in) :: proc
-    type(integpnt_str), dimension(:), intent(in out) :: quadpnt
+    type(integpnt_str),  intent(in out) :: quadpnt
+    real(kind=rkind) :: curtime
     integer(kind=ikind) :: i, layer
     real(kind=rkind) ::  distance, flux, avgval
 
   
     do i=1, nodes%kolik
-      quadpnt(1)%order = i
-      write(unit=ids(1), fmt="(50E24.12E3)") nodes%data(i,:), pde(proc)%getval(quadpnt(1)) 
+      quadpnt%order = i
+      write(unit=ids(1), fmt="(50E24.12E3)") nodes%data(i,:), pde(proc)%getval(quadpnt) 
+      
       layer = elements%material(nodes%element(i)%data(1), proc)
 
-      call pde(proc)%flux(layer, quadpnt(1), scalar=flux)
+      call pde(proc)%flux(layer, quadpnt, scalar=flux)
 
       write(unit=ids(4), fmt=*) nodes%data(i,:), flux
     end do
 
-
-    do i=1, elements%kolik
-      distance = (nodes%data(elements%data(i,1),1) + nodes%data(elements%data(i,2),1))/2.0
-      quadpnt(1)%order = elements%data(i,1)
-      quadpnt(2)%order = elements%data(i,2)
-      avgval = (pde(proc)%getval(quadpnt(1)) + pde(proc)%getval(quadpnt(2)))/2.0
-      layer = elements%material(i, proc)
-      write(unit=ids(2), fmt="(50E24.12E3)") distance, avgval
-      avgval = (pde(proc)%getval(quadpnt(1)) + pde(proc)%getval(quadpnt(2)))/2.0
-      write(unit=ids(3), fmt="(50E24.12E3)") distance, avgval
-
-    end do
   
   end subroutine print_pure
   
-  subroutine print_gmsh(ids, proc, quadpnt, dt)
+  subroutine print_gmsh(ids, proc, quadpnt)
     use typy
     use globals
     use global_objs
     use pde_objs
+    use debug_tools
     
     integer, dimension(:), intent(in) :: ids
     integer(kind=ikind), intent(in) :: proc
-    type(integpnt_str), dimension(:), intent(in out) :: quadpnt
-    real(kind=rkind), intent(in), optional :: dt
+    type(integpnt_str),  intent(in out) :: quadpnt
     integer(kind=ikind) :: i
+    logical, save :: printed = .false.
     real(kind=rkind) :: curtime
     
     
-    if (present(dt)) then
-      curtime = time - time_step + dt
+        
+    if (.not. quadpnt%globtime) then
+      curtime = quadpnt%time4eval
     else
       curtime = time
     end if
+    
+    if (.not. printed) then
   
-    write(unit=ids(1), fmt="(a)") "$MeshFormat"
-    write(unit=ids(1), fmt="(a)") "2.2 0 8"
-    write(unit=ids(1), fmt="(a)") "$EndMeshFormat"
-    write(unit=ids(1), fmt="(a)") "$Nodes"
+      write(unit=ids(1), fmt="(a)") "$MeshFormat"
+      write(unit=ids(1), fmt="(a)") "2.2 0 8"
+      write(unit=ids(1), fmt="(a)") "$EndMeshFormat"
+      write(unit=ids(1), fmt="(a)") "$Nodes"
+      
+      write(unit=ids(1), fmt=*) nodes%kolik
+      
+      do i=1, nodes%kolik
+        write(unit=ids(1), fmt=*) i,  nodes%data(i,:)
+      end do
+      write(unit=ids(1), fmt="(a)") "$EndNodes"
+      write(unit=ids(1), fmt="(a)") "$Elements"
+      write(unit=ids(1), fmt=*) elements%kolik
+      do i=1, elements%kolik
+        write(unit=ids(1), fmt=*) i,  elements%data(i,:)
+      end do
+      write(unit=ids(1), fmt="(a)") "$EndElements"
+      write(unit=ids(1), fmt="(a)") "$NodeData"
+      
+      printed = .true.
+    end if
+      write(unit=ids(1), fmt=*) "1"
+      write(unit=ids(1), fmt=*) ' " ', trim(pde(proc)%problem_name(2)), " ", trim(pde(proc)%solution_name(1)) , ' " '
+      write(unit=ids(1), fmt=*) "1"
+      write(unit=ids(1), fmt=*) curtime  !///tohle udává čas
+      write(unit=ids(1), fmt=*) "3"
+      write(unit=ids(1), fmt=*) postpro_run
+      write(unit=ids(1), fmt=*) "1"
+      
+
     
     write(unit=ids(1), fmt=*) nodes%kolik
-    
     do i=1, nodes%kolik
-      write(unit=ids(1), fmt=*) i,  nodes%data(i,:)
-    end do
-    write(unit=ids(1), fmt="(a)") "$EndNodes"
-    write(unit=ids(1), fmt="(a)") "$Elements"
-    write(unit=ids(1), fmt=*) elements%kolik
-    do i=1, elements%kolik
-      write(unit=ids(1), fmt=*) i,  elements%data(i,:)
-    end do
-    write(unit=ids(1), fmt="(a)") "$EndElements"
-    write(unit=ids(1), fmt="(a)") "$NodeData"
-    write(unit=ids(1), fmt=*) "1"
-    write(unit=ids(1), fmt=*) ' " ', trim(pde(proc)%problem_name(2)), " ", trim(pde(proc)%solution_name(1)) , ' " '
-    write(unit=ids(1), fmt=*) "1"
-    write(unit=ids(1), fmt=*) curtime  !///tohle udává čas
-    write(unit=ids(1), fmt=*) "3"
-    write(unit=ids(1), fmt=*) postpro_run
-    write(unit=ids(1), fmt=*) "1"
-    
-    write(unit=ids(1), fmt=*) nodes%kolik
-    do i=1, nodes%kolik
-      write(unit=ids(1), fmt=*) i, pde(proc)%solution(i)
+      quadpnt%order = i
+      write(unit=ids(1), fmt=*) i, pde(proc)%getval(quadpnt)
     end do
     write(unit=ids(1), fmt="(a)") "$EndNodeData"
   

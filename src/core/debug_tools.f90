@@ -3,6 +3,7 @@ module debug_tools
 !   public :: sparse_gem_pig
 !   public :: sparse_gem_pig_AtA
   public :: wait
+  private :: print_quadpnt
     
   interface printmtx
     module procedure print_real_matrix
@@ -14,12 +15,81 @@ module debug_tools
     module procedure print_smartarray_i
     module procedure print_logical_array
     module procedure print_real_vector4
+    module procedure print_quadpnt
   end interface printmtx
  
 
   contains
 
-
+    subroutine print_quadpnt(quadpnt, filunit, name)
+      use global_objs
+      use core_tools
+      use globals
+      
+      type(integpnt_str), intent(in) :: quadpnt
+      integer, intent(in), optional :: filunit
+      character(len=*), intent(in), optional :: name
+      
+      integer :: filloc
+      integer :: ierr
+      logical :: op   
+      
+      if (present(name)) then
+        call find_unit(filloc)
+        open(unit=filloc, file=name, action="write", status="replace", iostat=ierr)
+        if (ierr /= 0) then
+          print *, "unable to open dump file, called from debug_tools::printmtx"
+          error stop
+        end if
+      else if (present(filunit)) then
+        filloc = filunit
+        inquire(unit=filloc, opened=op)
+        if (.not. op) then
+          print *, "file not opened, called from debug_tools::printmtx"
+          error stop
+        end if
+      else
+        filloc = terminal
+      end if
+      
+      
+      write(unit=filloc, fmt=*) "type:", quadpnt%type_pnt
+      
+      if (quadpnt%type_pnt == "ndpt" .or. quadpnt%type_pnt == "obpt") then
+        write(unit=filloc, fmt=*) "order of point:", quadpnt%order
+      end if
+      
+      if (quadpnt%type_pnt == "gqnd") then
+        write(unit=filloc, fmt=*) "order of element:", quadpnt%element
+      end if
+      
+      write(unit=filloc, fmt=*) "column:", quadpnt%column
+      
+      if (quadpnt%ddlocal) then
+        write(unit=filloc, fmt=*) "using subdomain local data"
+        write(unit=filloc, fmt=*) "subdomain id", quadpnt%subdom
+        if (quadpnt%extended) then
+          write(unit=filloc, fmt=*) "node from extended subdomain (see subcycling man)"
+        end if
+      else
+        write(unit=filloc, fmt=*) "using global data"
+      end if
+      
+      if (.not. quadpnt%globtime) then
+        write(unit=filloc, fmt=*) "not using the global time, solution will be interpolated"
+        write(unit=filloc, fmt=*) "time 4 use:", quadpnt%time4eval
+      else
+        write(unit=filloc, fmt=*) "using the global time"
+      end if
+  
+      if (terminal /= filloc) then
+        close(filloc)
+      else
+        call flush(terminal)
+      end if
+      
+    end subroutine print_quadpnt
+  
     subroutine print_sparse_matrix(A, filunit, name)
       use sparsematrix
       use mtxiotools

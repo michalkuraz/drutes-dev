@@ -25,6 +25,9 @@ module global_objs
     integer(kind=ikind) :: subdom
     !> if true then the values for quadpnt are returned from the exnteded subdomain data, 
     logical :: extended = .false.
+    !> if .false. then the solution value will be evaluated for different time than the calculated time 
+    logical :: globtime=.true.
+    real(kind=rkind) :: time4eval
   end type integpnt_str
   
   type, public :: smartarray_int

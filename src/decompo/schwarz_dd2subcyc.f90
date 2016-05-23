@@ -90,10 +90,12 @@ module schwarz_dd2subcyc
         schwarz: do
 
 	  subdoms:  do i=1, ubound(subdomain,1)
-	
+
 ! 	    if (.not. subdomain(i)%solved) then    
 	      call solve_subdomain(subdomain(i), reps=1e-20)
 ! 	    end if
+
+
 	    
 	  end do subdoms
 	  
@@ -197,16 +199,11 @@ module schwarz_dd2subcyc
 
 	sub%itcount = sub%itcount + 1
 	
-	call printmtx(sub%elsub) ; stop
     
-print *, "ada"
 	call locmat_assembler(mtx=sub%matrix, bvect=sub%bvect, &
 	      permut=sub%permut, dt=sub%time_step, invpermut=sub%invpermut, domain_id=sub%order, extended=.false., &
 	      ierr=ierr)
 	      
-	   
-
-print *, "adaa"
 	call locmat_assembler(mtx=sub%extmatrix, bvect=sub%extbvect, &
 	      permut=sub%extpermut, dt=sub%time_step, invpermut=sub%extinvpermut, &
 	      domain_id=sub%order, extended=.true.,ierr=ierr)
@@ -478,7 +475,16 @@ print *, "adaa"
                           quadpnt%subdom=domain_id
                           quadpnt%extended = extended
                           
-                          do k = 1, ubound(elements%data,2)                           
+                          do k = 1, ubound(elements%data,2)
+                            nd = elements%data(el,k)
+                            if ( (.not. extended .and. subdomain(domain_id)%invpermut(nd) == 0) .or. &
+                                 (extended .and.  subdomain(domain_id)%extinvpermut(nd) == 0) )then
+                              quadpnt%globtime = .false.
+                              quadpnt%time4eval = subdomain(domain_id)%time
+                               quadpnt%column = 3
+                            else
+                              quadpnt%globtime = .true.
+                            end if
                             quadpnt%order = elements%data(el,k)
                             elnode_prev(k) = pde(proc)%getval(quadpnt)
                           end do  
