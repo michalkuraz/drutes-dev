@@ -532,10 +532,14 @@ module postpro
     integer(kind=ikind), intent(in) :: proc
     type(integpnt_str),  intent(in out) :: quadpnt
     integer(kind=ikind) :: i
-    logical, save :: printed = .false.
+    logical, dimension(:), allocatable, save :: printed 
     real(kind=rkind) :: curtime
     
     
+    if (.not. allocated(printed)) then
+      allocate(printed(ubound(pde,1)))
+      printed = .false.
+    end if
         
     if (.not. quadpnt%globtime) then
       curtime = quadpnt%time4eval
@@ -543,7 +547,7 @@ module postpro
       curtime = time
     end if
     
-    if (.not. printed) then
+    if (.not. printed(proc)) then
   
       write(unit=ids(1), fmt="(a)") "$MeshFormat"
       write(unit=ids(1), fmt="(a)") "2.2 0 8"
@@ -564,15 +568,17 @@ module postpro
       write(unit=ids(1), fmt="(a)") "$EndElements"
       write(unit=ids(1), fmt="(a)") "$NodeData"
       
-      printed = .true.
+      printed(proc) = .true.
     end if
-      write(unit=ids(1), fmt=*) "1"
-      write(unit=ids(1), fmt=*) ' " ', trim(pde(proc)%problem_name(2)), " ", trim(pde(proc)%solution_name(1)) , ' " '
-      write(unit=ids(1), fmt=*) "1"
-      write(unit=ids(1), fmt=*) curtime  !///tohle udává čas
-      write(unit=ids(1), fmt=*) "3"
-      write(unit=ids(1), fmt=*) postpro_run
-      write(unit=ids(1), fmt=*) "1"
+    
+    write(unit=ids(1), fmt="(a)") "$NodeData"     
+    write(unit=ids(1), fmt=*) "1"
+    write(unit=ids(1), fmt=*) ' " ', trim(pde(proc)%problem_name(2)), " ", trim(pde(proc)%solution_name(1)) , ' " '
+    write(unit=ids(1), fmt=*) "1"
+    write(unit=ids(1), fmt=*) curtime  !///tohle udává čas
+    write(unit=ids(1), fmt=*) "3"
+    write(unit=ids(1), fmt=*) postpro_run
+    write(unit=ids(1), fmt=*) "1"
       
 
     
