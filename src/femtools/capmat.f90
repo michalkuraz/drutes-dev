@@ -16,7 +16,7 @@ module capmat
   contains
 
     !> implicit euler method, nonlinear problem Picard iteration method - non-diagonal capacity matrix
-    subroutine impl_euler_np_nondiag(el_id, domain_id)
+    subroutine impl_euler_np_nondiag(el_id, domain_id, quadpnt_in)
       use typy
       use globals
       use global_objs
@@ -29,6 +29,7 @@ module capmat
       integer(kind=ikind), intent(in) :: el_id
       !>subdomain number (inserted only if domain decomposition used and if only local data needed)
       integer(kind=ikind), intent(in), optional :: domain_id
+      type(integpnt_str), intent(in out), optional :: quadpnt_in
       
       integer(kind=ikind) :: i,j,l, m
       real(kind=rkind) :: tmp
@@ -49,6 +50,10 @@ module capmat
 
 
       cap_mat = 0
+      
+      if (present(quadpnt_in)) then
+        quadpnt=quadpnt_in
+      end if
 
       limits = ubound(cap_mat,1)/ubound(pde,1)
       quadpnt%column = 2
@@ -88,7 +93,7 @@ module capmat
 
 
     !> implicit euler method, nonlinear problem Picard iteration method - diagonal capacity matrix
-    subroutine impl_euler_np_diag(el_id, domain_id)
+    subroutine impl_euler_np_diag(el_id, domain_id,  quadpnt_in)
       use typy
       use globals
       use global_objs
@@ -101,6 +106,8 @@ module capmat
       integer(kind=ikind), intent(in) :: el_id
       !>subdomain number (inserted only if domain decomposition used and if only local data needed)
       integer(kind=ikind), intent(in), optional :: domain_id
+      type(integpnt_str), intent(in out), optional :: quadpnt_in
+      
       
       integer(kind=ikind) :: i,j,l, m
       real(kind=rkind) :: tmp
@@ -169,7 +176,7 @@ module capmat
 
     end subroutine impl_euler_np_diag
 
-    subroutine steady_state_int(el_id, domain_id)
+    subroutine steady_state_int(el_id, domain_id, quadpnt_in)
       use typy
       use globals
       use global_objs
@@ -178,6 +185,7 @@ module capmat
       integer(kind=ikind), intent(in) :: el_id
       !>subdomain number (inserted only if domain decomposition used and if only local data needed)
       integer(kind=ikind), intent(in), optional :: domain_id
+      type(integpnt_str), intent(in out), optional :: quadpnt_in
 
       cap_mat = 0
 

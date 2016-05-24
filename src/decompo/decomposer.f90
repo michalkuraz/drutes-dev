@@ -548,13 +548,14 @@ module decomposer
 	
 	allocate(sub%resvct%ext(sub%extndof))
 	
-	allocate(sub%extxvect(sub%extndof,3))
+	allocate(sub%extxvect(sub%extndof,4))
 	
         sub%extxvect(:,1:3) = pde_common%xvect(sub%extpermut(1:sub%extndof),1:3)
+        sub%extxvect(:,4) = pde_common%xvect(sub%extpermut(1:sub%extndof),1)
 
       end if
       
-      allocate(sub%xvect(sub%ndof,3))
+      allocate(sub%xvect(sub%ndof,4))
       
 
       
@@ -564,6 +565,8 @@ module decomposer
 
       
       sub%xvect(:,1:3) = pde_common%xvect(sub%permut(1:sub%ndof),1:3)
+      
+      sub%xvect(:,4) = pde_common%xvect(sub%permut(1:sub%ndof),4)
       
 
             

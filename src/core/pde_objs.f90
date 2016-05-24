@@ -238,11 +238,13 @@ module pde_objs
 
 
   abstract interface
-    subroutine timeint_fnc(el_id, domain_id)
+    subroutine timeint_fnc(el_id, domain_id, quadpnt_in)
       use typy
+      use global_objs
       integer(kind=ikind), intent(in) :: el_id
       !>subdomain number (inserted only if domain decomposition used and if only local data needed)
       integer(kind=ikind), intent(in), optional :: domain_id
+      type(integpnt_str), intent(in out), optional :: quadpnt_in
     end subroutine timeint_fnc
   end interface
 
@@ -523,9 +525,10 @@ module pde_objs
 		val = pde_common%xvect(i, quadpnt%column)
 	      else
 		if (.not. quadpnt%extended) then
-		  print *,  "as", i
 		  i = subdomain(quadpnt%subdom)%invpermut(i)
-		  print *, "aa", i
+		  if (i==0) then
+                    print *, quadpnt%subdom, quadpnt%order
+                  end if
 		  val = subdomain(quadpnt%subdom)%xvect(i, quadpnt%column)
 		else
 		  i = subdomain(quadpnt%subdom)%extinvpermut(i)

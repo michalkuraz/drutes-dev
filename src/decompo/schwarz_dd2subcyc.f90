@@ -71,6 +71,7 @@ module schwarz_dd2subcyc
         
         subdomain(1)%time_step = time_step
         
+        subdomain(:)%timeprev = time
         subdomain(:)%time = time + subdomain(:)%time_step
               
                 
@@ -476,24 +477,30 @@ module schwarz_dd2subcyc
                           quadpnt%extended = extended
                           
                           do k = 1, ubound(elements%data,2)
+                          
                             nd = elements%data(el,k)
+                            
                             if ( (.not. extended .and. subdomain(domain_id)%invpermut(nd) == 0) .or. &
-                                 (extended .and.  subdomain(domain_id)%extinvpermut(nd) == 0) )then
+                                 (extended .and.  subdomain(domain_id)%extinvpermut(nd) == 0) ) then
+       
+                                 
                               quadpnt%globtime = .false.
                               quadpnt%time4eval = subdomain(domain_id)%time
-                               quadpnt%column = 3
+                              quadpnt%column = 3
+                              quadpnt%subdom=ddinfo%nodesinsub(nd)%data(1)
                             else
                               quadpnt%globtime = .true.
                             end if
-                            quadpnt%order = elements%data(el,k)
+                            
+                            quadpnt%order = nd
                             elnode_prev(k) = pde(proc)%getval(quadpnt)
                           end do  
                           
-                          call build_bvect(el, dt)!, quadpnt)
+                          call build_bvect(el, dt, quadpnt_in=quadpnt)
 
-                          call build_stiff_np(el, dt) !, quadpnt)
+                          call build_stiff_np(el, dt, quadpnt_in=quadpnt)
 
-                          call pde_common%time_integ(el) !, quadpnt)
+                          call pde_common%time_integ(el, quadpnt_in=quadpnt)
 
                           stiff_mat = stiff_mat + cap_mat
 

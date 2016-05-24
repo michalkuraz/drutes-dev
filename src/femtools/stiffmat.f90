@@ -5,7 +5,7 @@ module stiffmat
   contains
 
      !> build local stifness matrix for nonlinear problems and Picard method
-     subroutine build_stiff_np(el_id, dt, domain_id)
+     subroutine build_stiff_np(el_id, dt, domain_id, quadpnt_in)
       use typy
       use globals
       use global_objs
@@ -19,6 +19,7 @@ module stiffmat
       real(kind=rkind), intent(in) :: dt
       !>subdomain number (inserted only if domain decomposition used and if only local data needed)
       integer(kind=ikind), intent(in), optional :: domain_id
+      type(integpnt_str), intent(in out), optional :: quadpnt_in
 
       
       integer(kind=ikind), dimension(:,:), allocatable, save :: layer
@@ -51,6 +52,10 @@ module stiffmat
       limits = ubound(stiff_mat,1)/ubound(pde,1)
 
       top = drutes_config%dimen
+      
+      if (present(quadpnt_in)) then
+        quadpnt=quadpnt_in
+      end if
 
       quadpnt%element = el_id
       quadpnt%column = 2
@@ -123,7 +128,7 @@ module stiffmat
     end subroutine build_stiff_np
     
     
-    subroutine build_bvect(el_id, dt, domain_id)    
+    subroutine build_bvect(el_id, dt, domain_id, quadpnt_in)    
       use typy
       use globals
       use global_objs
@@ -136,12 +141,17 @@ module stiffmat
       real(kind=rkind), intent(in) :: dt
       !>subdomain number (inserted only if domain decomposition used and if only local data needed)
       integer(kind=ikind), intent(in), optional :: domain_id
+      type(integpnt_str) , intent(in), optional :: quadpnt_in
       
       integer(kind=ikind) :: iproc, limits, ii, i, l
       real(kind=rkind) :: suma
       type(integpnt_str) :: quadpnt
       
       bside = 0
+      
+      if (present(quadpnt_in)) then
+        quadpnt = quadpnt_in
+      end if
       
       quadpnt%element = el_id
       quadpnt%column = 2
