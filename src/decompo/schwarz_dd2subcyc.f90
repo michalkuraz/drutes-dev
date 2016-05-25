@@ -100,6 +100,7 @@ module schwarz_dd2subcyc
 	    
 	  end do subdoms
 	  
+	  stop
 	  do i=1, ubound(subdomain,1)
 	  
 	   res_error = norm2(subdomain(i)%resvct%main)
@@ -199,18 +200,18 @@ module schwarz_dd2subcyc
 
 
 	sub%itcount = sub%itcount + 1
-	
+	print *, "lala"
     
 	call locmat_assembler(mtx=sub%matrix, bvect=sub%bvect, &
 	      permut=sub%permut, dt=sub%time_step, invpermut=sub%invpermut, domain_id=sub%order, extended=.false., &
 	      ierr=ierr)
-	      
+	      print *, "lolo"
 	call locmat_assembler(mtx=sub%extmatrix, bvect=sub%extbvect, &
 	      permut=sub%extpermut, dt=sub%time_step, invpermut=sub%extinvpermut, &
 	      domain_id=sub%order, extended=.true.,ierr=ierr)
-	
+	        print *, "lele"
 	call getres_loc(sub)
-	
+
 	resvct = 0
 	
 	subfin = sub%ndof
@@ -433,7 +434,7 @@ module schwarz_dd2subcyc
       integer(kind=ikind), intent(in) :: domain_id
       logical, intent(in) :: extended
       integer, intent(out) :: ierr
-      integer(kind=ikind) :: el,j,k,l, proc, ll, limits, nd, ii, pnd, jaj, joj
+      integer(kind=ikind) :: el,j,k,l, proc, ll, limits, nd, ii, pnd, nnd, pnnd
       logical, dimension(:), allocatable, save :: elsolved
       type(integpnt_str) :: quadpnt
       real(kind=rkind) :: value
@@ -452,6 +453,7 @@ module schwarz_dd2subcyc
 !       limits = ubound(stiff_mat,1)/ubound(pde,1)
       
       proc = 1
+      
 
       loop_nodes: do pnd=1, ubound(permut,1)
 
@@ -463,12 +465,16 @@ module schwarz_dd2subcyc
 
                       nd = pde_common%invpermut(nd)
 
-
+print *, permut(pnd)
                       do ii=1,nodes%el2integ(nd)%pos
 
                         el = nodes%el2integ(nd)%data(ii)
 
                         if (.not. elsolved(el)) then
+                        
+                          if (permut(pnd)==30) then
+                            print *, "el", el
+                          end if
 
                           quadpnt%type_pnt = "ndpt"
                           quadpnt%column = 1
@@ -478,21 +484,28 @@ module schwarz_dd2subcyc
                           
                           do k = 1, ubound(elements%data,2)
                           
-                            nd = elements%data(el,k)
+                            nnd = elements%data(el,k)
+                            pnnd = pde(proc)%permut(nnd)
                             
-                            if ( (.not. extended .and. subdomain(domain_id)%invpermut(nd) == 0) .or. &
-                                 (extended .and.  subdomain(domain_id)%extinvpermut(nd) == 0) ) then
-       
-                                 
-                              quadpnt%globtime = .false.
-                              quadpnt%time4eval = subdomain(domain_id)%time
-                              quadpnt%column = 3
-                              quadpnt%subdom=ddinfo%nodesinsub(nd)%data(1)
-                            else
-                              quadpnt%globtime = .true.
+                                       if (permut(pnd)==30) then
+                            print *, "eel", el
+                          end if
+                           
+                            if (pnnd /= 0) then 
+                              if ( (.not. extended .and. subdomain(domain_id)%invpermut(pnnd) == 0) .or. &
+                                   (extended .and.  subdomain(domain_id)%extinvpermut(pnnd) == 0) ) then
+         
+                                   
+                                quadpnt%globtime = .false.
+                                quadpnt%time4eval = subdomain(domain_id)%time
+                                quadpnt%column = 3
+                                quadpnt%subdom=ddinfo%nodesinsub(nnd)%data(1)
+                              else
+                                quadpnt%globtime = .true.
+                              end if
                             end if
                             
-                            quadpnt%order = nd
+                            quadpnt%order = nnd
                             elnode_prev(k) = pde(proc)%getval(quadpnt)
                           end do  
                           
@@ -509,7 +522,11 @@ module schwarz_dd2subcyc
                           elsolved(el) = .true.
                         end if
                       end do
+                      
+        print *, permut(pnd)
       end do loop_nodes
+      
+      print *, "lala"
 
     end subroutine locmat_assembler
 

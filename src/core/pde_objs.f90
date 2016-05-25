@@ -527,7 +527,7 @@ module pde_objs
 		if (.not. quadpnt%extended) then
 		  i = subdomain(quadpnt%subdom)%invpermut(i)
 		  if (i==0) then
-                    print *, quadpnt%subdom, quadpnt%order
+                    print *, quadpnt%subdom, quadpnt%order, pde_loc%permut(quadpnt%order)
                   end if
 		  val = subdomain(quadpnt%subdom)%xvect(i, quadpnt%column)
 		else
