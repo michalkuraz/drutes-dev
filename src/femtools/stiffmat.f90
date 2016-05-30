@@ -65,6 +65,8 @@ module stiffmat
 	quadpnt%ddlocal = .true.
 	quadpnt%subdom = domain_id
       end if
+      
+
      
             
       do iproc=1,ubound(pde,1)

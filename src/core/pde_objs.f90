@@ -399,6 +399,7 @@ module pde_objs
       
       type(integpnt_str) :: quadpntloc
       real(kind=rkind) :: valprev, timeprev, timeglob
+   
       
       
       val = getvalp1loc(pde_loc, quadpnt)
@@ -415,6 +416,7 @@ module pde_objs
 	  timeglob = time
 	  timeprev = time-time_step
 	end if
+
 	valprev = getvalp1loc(pde_loc, quadpntloc)
 
 	val = (val-valprev)/(timeglob-timeprev)*(quadpnt%time4eval-timeprev)+valprev
@@ -436,6 +438,10 @@ module pde_objs
       integer(kind=ikind) :: i, edge, el, j, order
       real(kind=rkind) :: xder, yder
       real(kind=rkind), dimension(3,3) :: a
+      
+      if (quadpnt%debugstop) then
+        print *, "mam to 4"
+      end if
             
       
      select case(quadpnt%type_pnt)
@@ -482,8 +488,11 @@ module pde_objs
 		  end if
 		end if
 	      else
+
 		edge = nodes%edge(pts(i))
+
 		call pde_loc%bc(edge)%value_fnc(pde_loc, el, i, ndvals(i))
+		
 	      end if
 	    end do
 

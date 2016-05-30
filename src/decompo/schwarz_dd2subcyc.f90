@@ -434,7 +434,7 @@ module schwarz_dd2subcyc
       integer(kind=ikind), intent(in) :: domain_id
       logical, intent(in) :: extended
       integer, intent(out) :: ierr
-      integer(kind=ikind) :: el,j,k,l, proc, ll, limits, nd, ii, pnd, nnd, pnnd
+      integer(kind=ikind) :: el,j,k,l, proc, ll, limits, nd, ii, pnd, nnd, pnnd, coarseel
       logical, dimension(:), allocatable, save :: elsolved
       type(integpnt_str) :: quadpnt
       real(kind=rkind) :: value
@@ -465,7 +465,6 @@ module schwarz_dd2subcyc
 
                       nd = pde_common%invpermut(nd)
 
-print *, permut(pnd)
                       do ii=1,nodes%el2integ(nd)%pos
 
                         el = nodes%el2integ(nd)%data(ii)
@@ -479,27 +478,28 @@ print *, permut(pnd)
                           quadpnt%type_pnt = "ndpt"
                           quadpnt%column = 1
                           quadpnt%ddlocal=.true.
-                          quadpnt%subdom=domain_id
-                          quadpnt%extended = extended
+                          coarseel = ddinfo%elincoarse(el)
+                          
+                          if (domain_id /= ddinfo%coarseinsub(coarseel)) then
+                            quadpnt%extended = .false.
+                            quadpnt%subdom = ddinfo%coarseinsub(coarseel)
+                          else
+                            quadpnt%subdom=domain_id
+                            quadpnt%extended = extended
+                          end if
+
                           
                           do k = 1, ubound(elements%data,2)
                           
                             nnd = elements%data(el,k)
                             pnnd = pde(proc)%permut(nnd)
                             
-                                       if (permut(pnd)==30) then
-                            print *, "eel", el
-                          end if
                            
                             if (pnnd /= 0) then 
-                              if ( (.not. extended .and. subdomain(domain_id)%invpermut(pnnd) == 0) .or. &
-                                   (extended .and.  subdomain(domain_id)%extinvpermut(pnnd) == 0) ) then
-         
-                                   
+                              if (domain_id /= quadpnt%subdom) then                                   
                                 quadpnt%globtime = .false.
                                 quadpnt%time4eval = subdomain(domain_id)%time
-                                quadpnt%column = 3
-                                quadpnt%subdom=ddinfo%nodesinsub(nnd)%data(1)
+                                quadpnt%column = 2
                               else
                                 quadpnt%globtime = .true.
                               end if
@@ -507,7 +507,9 @@ print *, permut(pnd)
                             
                             quadpnt%order = nnd
                             elnode_prev(k) = pde(proc)%getval(quadpnt)
-                          end do  
+                          end do 
+                          
+         
                           
                           call build_bvect(el, dt, quadpnt_in=quadpnt)
 
@@ -522,11 +524,10 @@ print *, permut(pnd)
                           elsolved(el) = .true.
                         end if
                       end do
-                      
-        print *, permut(pnd)
+
       end do loop_nodes
       
-      print *, "lala"
+
 
     end subroutine locmat_assembler
 

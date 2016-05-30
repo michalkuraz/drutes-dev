@@ -443,8 +443,6 @@ module decomposer
       end do
 
 
-
-
     end subroutine set_subdomains
   
     

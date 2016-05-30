@@ -28,6 +28,7 @@ module global_objs
     !> if .false. then the solution value will be evaluated for different time than the calculated time 
     logical :: globtime=.true.
     real(kind=rkind) :: time4eval
+    logical :: debugstop=.false.
   end type integpnt_str
   
   type, public :: smartarray_int

@@ -483,6 +483,7 @@ module RE_constitutive
       use re_globals
       use pde_objs
       use core_tools
+      use debug_tools
 
       class(pde_str), intent(in) :: pde_loc
       integer(kind=ikind), intent(in) :: layer
@@ -499,6 +500,8 @@ module RE_constitutive
       integer(kind=ikind) :: pos
       real(kind=rkind) :: res, dist, tmp
       
+
+      
       
        get_direct_vals = .true.     
       
@@ -512,6 +515,9 @@ module RE_constitutive
 	ERROR stop
       end if
       
+      
+
+      
       if (present(quadpnt)) then
 	h = pde_loc%getval(quadpnt)
       else
@@ -523,6 +529,9 @@ module RE_constitutive
 	end if
 	h = x(1)
       end if
+      
+      
+
 
       
       if (h<0) then
