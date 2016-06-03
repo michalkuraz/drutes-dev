@@ -229,7 +229,7 @@ module RE_constitutive
 	if ( h/drutes_config%fnc_discr_length < 0.1*huge(1)) then
 	  
 	  pos = int(-h/drutes_config%fnc_discr_length)+1
-	  if (pos <= ubound(watcontab,2)) then
+	  if (pos <= ubound(watcontab,2)-1) then
 	    dist = -h - (pos - 1)*drutes_config%fnc_discr_length
 	    theta = (watcontab(layer,pos+1)-watcontab(layer,pos))/drutes_config%fnc_discr_length*dist + watcontab(layer,pos)
 	  else
@@ -380,7 +380,7 @@ module RE_constitutive
       if (h<0) then
 	if ( h/drutes_config%fnc_discr_length < 0.1*huge(1)) then
 	  pos = int(-h/drutes_config%fnc_discr_length)+1
-	  if (pos <= ubound(warecatab,2)) then
+	  if (pos <= ubound(warecatab,2)-1) then
 	    dist = -h - (pos - 1)*drutes_config%fnc_discr_length
 	    E = (warecatab(layer,pos+1)-warecatab(layer,pos))/drutes_config%fnc_discr_length*dist + warecatab(layer,pos)
 	  else
@@ -537,10 +537,7 @@ module RE_constitutive
       if (h<0) then
 	if (-h/drutes_config%fnc_discr_length < 0.1*huge(1) ) then
 	  pos = int(-h/drutes_config%fnc_discr_length)+1
-	  if (pos <= ubound(Ktab,2)) then
-	    if (pos < lbound(Ktab,2)) then
-	      print *, pos, h
-	    end if
+	  if (pos <= ubound(Ktab,2)-1) then
 	    dist = -h - (pos - 1)*drutes_config%fnc_discr_length
 	    tmp = (Ktab(layer,pos+1)-Ktab(layer,pos))/drutes_config%fnc_discr_length*dist + Ktab(layer,pos)
 	  else
@@ -912,7 +909,7 @@ module RE_constitutive
 	if (h/drutes_config%fnc_discr_length < 0.1*huge(1) ) then
 	
 	  pos = int(-h/drutes_config%fnc_discr_length)+1
-	  if (pos <= ubound(dKdhtab,2)) then
+	  if (pos <= ubound(dKdhtab,2)-1) then
 	    dist = -h - (pos - 1)*drutes_config%fnc_discr_length
 	    tmp = (dKdhtab(layer,pos+1)-dKdhtab(layer,pos))/drutes_config%fnc_discr_length*dist + dKdhtab(layer,pos)
 	  else
