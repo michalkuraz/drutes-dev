@@ -228,6 +228,12 @@ module drutes_init
 		    call getarg(i+1,oarg)
 		    if (trim(oarg) == "www") then
 		      www = .true.
+! 		      call write_log("DRUtES runs in mode with online GUI")
+		    end if
+		    
+		    if  (trim(oarg) == "optim") then
+		      optimization = .true.
+! 		      call write_log("DRUtES runs in mode for parameter search")
 		    end if
 		    skip = 1
 		    

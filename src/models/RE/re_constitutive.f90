@@ -26,8 +26,8 @@ module RE_constitutive
   logical, private :: tabwarning = .false.
   character(len=4096), private :: tabmsg = "DRUtES requested values of the constitutional functions out of the range of &
 					    your precalculated table, the function will be evaluated directly, it will & 
-					    slow down your computation, is everything ok? If yes, increase the value &
-					    maximal suction pressure in global.conf"   
+					    slow down your computation, is everything ok? If yes, increase the &
+					    length of interval for precaculating the constitutive functions in your config files"   
 					    
   logical, private :: intwarning = .false.
 
@@ -457,7 +457,7 @@ module RE_constitutive
 	h = x(1)
       end if
       
-      
+
       if (h >= 0) then
 	tmp = 1
       else

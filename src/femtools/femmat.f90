@@ -61,7 +61,8 @@ module femmat
 ! 	call estimeigvalues(spmatrix, lambda_l, lambda_h)
 ! 	
 ! 	print *, lambda_l, lambda_h
-	
+
+
 	if (drutes_config%dimen >  0) then
 	  call diag_precond(a=spmatrix, x=pde_common%xvect(1:fin,3), mode=1)
 	end if

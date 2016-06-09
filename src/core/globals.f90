@@ -174,6 +174,7 @@ module globals
   real(kind=rkind), dimension(:,:), allocatable :: integnode_now, integnode_prev
   real(kind=rkind), dimension(:), allocatable :: elnode_prev
   logical, public :: www = .false.
+  logical, public :: optimization = .false.
   real(kind=rkind), public :: cpu_max_time
   logical, public :: cpu_time_limit = .false.
   

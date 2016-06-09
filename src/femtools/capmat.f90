@@ -173,7 +173,7 @@ module capmat
 
      bside = bside +   matmul(cap_mat, elnode_prev)
      
-
+     
     end subroutine impl_euler_np_diag
 
     subroutine steady_state_int(el_id, domain_id, quadpnt_in)

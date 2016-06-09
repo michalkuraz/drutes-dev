@@ -93,7 +93,7 @@ module schwarz_dd2subcyc
 	  subdoms:  do i=1, ubound(subdomain,1)
 
 ! 	    if (.not. subdomain(i)%solved) then    
-	      call solve_subdomain(subdomain(i), reps=1e-20)
+	      call solve_subdomain(subdomain(i), reps=1e-20_rkind)
 ! 	    end if
 
 

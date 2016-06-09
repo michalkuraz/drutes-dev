@@ -81,7 +81,6 @@ module stiffmat
 	      v(1:top,1) = elements%ders(el_id,i,1:top)
 	      u(1,1:top) = elements%ders(el_id,j,1:top)
 
-
 	      do l=1, ubound(gauss_points%weight,1)
 		quadpnt%order = l
 	        call pde(iproc)%pde_fnc(jproc)%dispersion(pde(iproc), layer(iproc, jproc), &
@@ -90,7 +89,7 @@ module stiffmat
 		dsum = dsum - matmul(w(:,1:top) ,v(1:top,:))*gauss_points%weight(l)
 	      end do
 
-
+  
 	      do l=1, ubound(gauss_points%weight,1)
 		quadpnt%order = l
 		call pde(iproc)%pde_fnc(jproc)%convection(pde(iproc), layer(iproc, jproc), quadpnt, &
@@ -124,6 +123,7 @@ module stiffmat
       end do
 
      stiff_mat = stiff_mat/gauss_points%area*elements%areas(el_id)*dt
+
 
 
      

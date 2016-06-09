@@ -4,7 +4,7 @@ c=gfortran -fimplicit-none  -fcoarray=single -fbounds-check -fbacktrace -g -g3 -
 # c=gfortran-5 -fimplicit-none  -fcoarray=single -fbounds-check -g3 -fdefault-real-8 -O0 -finit-real=nan
 # c=gfortran-5 -fimplicit-none  -fcoarray=single -fbounds-check -g3 -fdefault-real-8 -O0 -finit-real=nan
 #     c=gfortran -fimplicit-none  -fcoarray=single -fbounds-check -g -fbacktrace
-# c=gfortran-5 -fimplicit-none  -fcoarray=single -O3
+# c=gfortran -fimplicit-none  -fcoarray=single -O3
 # c=g95 -g -fbounds-check  -O0 -fimplicit-none  -fintrinsic-extensions -ftr15581 -ftrace=full
 #   c=g95  -ftrace=full  -g -fbounds-check  -O3 -funroll-loops -ftr15581 -fimplicit-none
 # c=g95   -O3 -ftr15581 -fintrinsic-extensions -fimplicit-none
