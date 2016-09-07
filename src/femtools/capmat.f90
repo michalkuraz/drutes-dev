@@ -170,10 +170,11 @@ module capmat
 
     
      cap_mat = cap_mat/gauss_points%area*elements%areas(el_id)
+     
 
      bside = bside +   matmul(cap_mat, elnode_prev)
      
-     
+
     end subroutine impl_euler_np_diag
 
     subroutine steady_state_int(el_id, domain_id, quadpnt_in)

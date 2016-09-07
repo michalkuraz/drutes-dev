@@ -285,29 +285,29 @@ contains
         if ( present(caption) ) then
             cpt = adjustl(caption)
         else
-            cpt ="ridka matice"
+            cpt ="sparse matrix"
         end if
 
         print *, trim(cpt)
         if (a%aloc == 0) then
-            print *,"prazdna matice"
+            print *,"empty matrix"
         else
             !print *, "printsmtx 1"
             do i=1,a%getn()
                 call a%getrow(i,v,jj,nelem)
                 !print *,"printsmtx 2"
                 if ( nelem == 0) then
-                    print *, "radek ",i," je prazdny"
+                    print *, "row ",i," is empty"
                 else
-                    print *, "radek ",i," ma ",nelem," prvku"
+                    print *, "row ",i," has ",nelem," nonzeroes"
                     do j = 1,nelem
                         print *,v(j),jj(j)
                     end do
                 end if
             end do
         end if
-        print *, " pocet radku=",a%getn(), " pocet sloupcu=", a%getm(), &
-            " pocet nenulovych prvku=", a%nz
+        print *, " no. of rows=",a%getn(), " no. of columns=", a%getm(), &
+            " number of nonzeroes=", a%nz
 
     end subroutine sparseprint
 

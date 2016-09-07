@@ -4,7 +4,7 @@ c=gfortran -fimplicit-none  -fcoarray=single -fbounds-check -fbacktrace -g -g3 -
 # c=gfortran-5 -fimplicit-none  -fcoarray=single -fbounds-check -g3 -fdefault-real-8 -O0 -finit-real=nan
 # c=gfortran-5 -fimplicit-none  -fcoarray=single -fbounds-check -g3 -fdefault-real-8 -O0 -finit-real=nan
 #     c=gfortran -fimplicit-none  -fcoarray=single -fbounds-check -g -fbacktrace
-# c=gfortran -fimplicit-none  -fcoarray=single -O3
+# c=gfortran-5 -fimplicit-none  -fcoarray=single -O3
 # c=g95 -g -fbounds-check  -O0 -fimplicit-none  -fintrinsic-extensions -ftr15581 -ftrace=full
 #   c=g95  -ftrace=full  -g -fbounds-check  -O3 -funroll-loops -ftr15581 -fimplicit-none
 # c=g95   -O3 -ftr15581 -fintrinsic-extensions -fimplicit-none
@@ -37,12 +37,10 @@ PMAoo_obj := fullmatrix.o mtx.o mtx_int.o mtxiotools.o pmatools.o solvers.o spar
 modRE_obj := modRE_globals.o modRE_reader.o modRE_constitutive.o modRE_parameter_functions.o modRE_junctions.o
 BOUSSINESQ_obj := boussglob.o boussread.o boussfnc.o bousspointers.o
 ADE_obj := ADE_fnc.o ADE_reader.o ADE_globals.o ADE_pointers.o
+REDUAL_obj := Re_dual_totH.o Re_dual_globals.o Re_dual_pointers.o Re_dual_reader.o
 
-
-ALL_objs := $(CORE_obj) $(TOOLS_obj) $(POINTERMAN_obj) $(MATHTOOLS_obj) $(FEMTOOLS_obj) $(DECOMPO_obj) $(RE_obj) $(PMAoo_obj) $(modRE_obj) $(BOUSSINESQ_obj) $(ADE_obj)
+ALL_objs := $(CORE_obj) $(TOOLS_obj) $(POINTERMAN_obj) $(MATHTOOLS_obj) $(FEMTOOLS_obj) $(DECOMPO_obj) $(RE_obj) $(PMAoo_obj) $(modRE_obj) $(BOUSSINESQ_obj) $(ADE_obj) $(REDUAL_obj)
 #-----------------------------------------------------------------
-
-
 
 #-------begin CORE_obj--------------------------------
 typy.o: src/core/typy.f90
@@ -141,7 +139,6 @@ modRE_junctions.o: $(CORE_obj) $(TOOLS_obj) modRE_globals.o modRE_reader.o modRE
 	$c -c src/models/modRE/modRE_junctions.f90
 #-------end modRE_obj--------------------------------
 
-
 #-------begin ADE_obj-------------------------------
 ADE_globals.o: $(CORE_obj) src/models/ADE/ADE_globals.f90
 	$c -c src/models/ADE/ADE_globals.f90
@@ -153,6 +150,17 @@ ADE_pointers.o: $(CORE_obj) $(TOOLS_obj) ADE_globals.o  ADE_reader.o src/models/
 	$c -c src/models/ADE/ADE_pointers.f90
 #------end ADE_obj---------------------------------
 
+#-------begin REDUAL_obj-----------------------------
+Re_dual_globals.o: $(CORE_obj) src/models/RE_dual/Re_dual_globals.f90
+	$c -c src/models/RE_dual/Re_dual_globals.f90
+Re_dual_reader.o: $(CORE_obj) Re_dual_globals.o src/models/RE_dual/Re_dual_reader.f90
+	$c -c src/models/RE_dual/Re_dual_reader.f90
+Re_dual_totH.o: $(CORE_obj) $(ADE_obj) Re_dual_globals.o Re_dual_reader.o src/models/RE_dual/Re_dual_totH.f90
+	$c -c src/models/RE_dual/Re_dual_totH.f90
+Re_dual_pointers.o: $(CORE_obj) Re_dual_reader.o Re_dual_totH.o src/models/RE_dual/Re_dual_pointers.f90
+	$c -c src/models/RE_dual/Re_dual_pointers.f90
+
+#-------end REDUAL_obj-------------------------------
 
 #-------begin BOUSSINESQ-----------------------------
 boussglob.o:  $(CORE_obj) $(TOOLS_obj) src/models/boussinesq/boussglob.f90
@@ -185,7 +193,7 @@ fem.o: $(CORE_obj) $(LINALG_obj) $(DECOMPO_obj)  femmat.o  src/femtools/fem.f90
 
 
 #-------begin POINTERS_obj--------------------------------
-manage_pointers.o: $(CORE_obj) $(TOOLS_obj) $(CORE_obj) $(FEMTOOLS_obj) $(LINALG_obj) $(RE_obj) $(DECOMPO_obj) $(modRE_obj) $(BOUSSINESQ_obj) $(ADE_obj)  src/pointerman/manage_pointers.f90
+manage_pointers.o: $(CORE_obj) $(TOOLS_obj) $(CORE_obj) $(FEMTOOLS_obj) $(LINALG_obj) $(RE_obj) $(DECOMPO_obj) $(modRE_obj) $(BOUSSINESQ_obj) $(ADE_obj) $(REDUAL_obj) src/pointerman/manage_pointers.f90
 	$c -c src/pointerman/manage_pointers.f90
 #-------end pointers_obj--------------------------------
 

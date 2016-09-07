@@ -3,9 +3,9 @@ module schwarz_dd2subcyc
     public :: schwarz_subcyc
     private :: build_xvect
     private :: domains_solved
-    private :: results_extractor
     private :: locmat_assembler
     private :: search_error_cluster
+    private :: set_solved
     
     real(kind=rkind), dimension(:), allocatable, private, save :: resvct, corrvct
  
@@ -69,10 +69,13 @@ module schwarz_dd2subcyc
 
         subdomain(:)%time_step = time_step
         
-        subdomain(1)%time_step = time_step
+        subdomain(1)%time_step = time_step/3.0
+        subdomain(1)%short_dt = .true.
+        
         
         subdomain(:)%timeprev = time
-        subdomain(:)%time = time + subdomain(:)%time_step
+        subdomain(:)%time = time 
+        
               
                 
         !reset local subdomain iteration count
@@ -88,32 +91,23 @@ module schwarz_dd2subcyc
         write(unit=terminal, fmt="(a, I4,a)") " Solving", ubound(subdomain,1),  " subdomains .... "
         
         
+        
         schwarz: do
 
 	  subdoms:  do i=1, ubound(subdomain,1)
-
-! 	    if (.not. subdomain(i)%solved) then    
-	      call solve_subdomain(subdomain(i), reps=1e-20_rkind)
-! 	    end if
-
-
+	    
+	    if (.not. subdomain(i)%solved) then    
+	      call solve_subdomain(subdomain(i), reps=1e-10)
+	    end if
+  
+	    call combinevals(subdomain(i), short)
 	    
 	  end do subdoms
 	  
-	  stop
-	  do i=1, ubound(subdomain,1)
-	  
-	   res_error = norm2(subdomain(i)%resvct%main)
-	   
-	   call combinevals(subdomain(i))
-	   
+	  if (domains_solved() == ubound(subdomain,1)) then	  
+	    call combinevals(subdomain(i))
+	  end if
 	
-      
-	    ! check local residual
-	   res_error = norm2(subdomain(i)%resvct%main)
-
-	  end do
-
 	end do schwarz
 	  
 !   	    
@@ -193,23 +187,23 @@ module schwarz_dd2subcyc
 	real(kind=rkind), intent(in) :: reps
 	
 	integer(kind=ikind) :: subfin
-	real(kind=rkind) :: error
+	real(kind=rkind) :: error       
 	integer :: ierr
 	
         sub%itcount = 0
 
 
 	sub%itcount = sub%itcount + 1
-	print *, "lala"
+
     
 	call locmat_assembler(mtx=sub%matrix, bvect=sub%bvect, &
 	      permut=sub%permut, dt=sub%time_step, invpermut=sub%invpermut, domain_id=sub%order, extended=.false., &
 	      ierr=ierr)
-	      print *, "lolo"
+
 	call locmat_assembler(mtx=sub%extmatrix, bvect=sub%extbvect, &
 	      permut=sub%extpermut, dt=sub%time_step, invpermut=sub%extinvpermut, &
 	      domain_id=sub%order, extended=.true.,ierr=ierr)
-	        print *, "lele"
+
 	call getres_loc(sub)
 
 	resvct = 0
@@ -233,6 +227,14 @@ module schwarz_dd2subcyc
 	sub%xvect(:,3) = sub%xvect(:,2) + corrvct(1:subfin)
 	  
 	sub%xvect(:,2) = sub%xvect(:,3)
+	
+	if (error < iter_criterion) then
+	  sub%time = sub%time + sub%time_step
+	end if
+	
+	if (abs(sub%time - time - time_step) < 100*epsilon(time)) then
+	  sub%solved = .true.
+	end if
 	
       
       end subroutine solve_subdomain
@@ -271,7 +273,7 @@ module schwarz_dd2subcyc
 
       end subroutine build_xvect
       
-      subroutine combinevals(subdom)
+      subroutine combinevals(subdom, short)
 	use typy
 	use decomp_vars
 	use pde_objs
@@ -279,12 +281,14 @@ module schwarz_dd2subcyc
 	
 	
 	type(subdomain_str), intent(in out) :: subdom
+	logical, intent(in) :: short
 	integer(kind=ikind) :: i, glob, globgeom, j, sub, loc
-	real(kind=rkind) :: value
+	real(kind=rkind) :: value, oldvalue
 	
 	do i=1, ubound(subdom%xvect,1)
 	  glob = subdom%permut(i)
 	  globgeom = pde_common%invpermut(glob)
+	  oldvalue = subdom%xvect(i,2)
 	  if (ddinfo%nodesinsub(globgeom)%pos > 1) then
 	    value = 0
 	    do j=1, ddinfo%nodesinsub(globgeom)%pos
@@ -292,9 +296,19 @@ module schwarz_dd2subcyc
 	      loc = subdomain(sub)%invpermut(glob)
 	      value = value + subdomain(sub)%returnval(loc, subdom%time)*prolong_mtx%get(glob,sub)
 	    end do
-! 	    	      print *, value
-! 	      call wait()
-	    subdom%xvect(i, 2:3) = value
+
+	    if (short) then
+	      if (subdom%short_dt) then
+		subdom%xvect(i, 2:3) = value
+	      end if
+	    else
+	      subdom%xvect(i, 2:3) = value
+	    end if
+	    
+	    if (subdom%solved .and. abs(value-oldvalue) > iter_criterion) then
+	      call set_solved(subdom, mode=-1)
+	    end if
+	    
 	  end if
 	end do
 	
@@ -339,32 +353,7 @@ module schwarz_dd2subcyc
       end subroutine search_error_cluster
 
 
-      subroutine results_extractor()
-	  use typy
-	  use globals
-	  use global_objs
-	  use debug_tools
-	  use pde_objs
 
-	  integer(kind=ikind) :: i, j, proc
-
-
-	  do proc=1, ubound(pde,1)
-	      do i=1, nodes%kolik
-		  if (pde(proc)%permut(i) > 0) then
-		      pde(proc)%solution(i) = pde_common%xvect(pde(proc)%permut(i),3)
-		  else
-		      j = nodes%edge(i)
-		      pde(proc)%solution(i) = pde(proc)%bc(j)%value
-		  end if
-	      end do
-	  end do
-
-
-	  pde_common%xvect(:,1) = pde_common%xvect(:,3)
-	  pde_common%xvect(:,2) = pde_common%xvect(:,3)
-
-      end subroutine results_extractor
  
 
       !> counts number of solved subdomains
@@ -526,10 +515,41 @@ module schwarz_dd2subcyc
                       end do
 
       end do loop_nodes
+     
+
+    end subroutine 
+    
+    
+    subroutine set_solved(sub, mode)
+      use decomp_vars
       
-
-
-    end subroutine locmat_assembler
+      type(subdomain_str), intent(in out) :: sub
+      !> 0 - the short time step is solved
+      !! 1 - the long time step is solved
+      !! 2 - it's done burning the bridges, no way back
+      !! -1 - status solved is switched to unsolved
+      integer, intent(in) :: mode
+      
+      select case(mode)
+	case(0)
+	  sub%xvect(1,:) = sub%xvect(3,:)
+	case(1)
+	  sub%xvect(1,:) = sub%xvect(3,:)
+	  sub%solved = .true.
+	case(2)
+	  sub%xvect(1,:) = sub%xvect(3,:)
+	  sub%xvect(2,:) = sub%xvect(3,:)
+	  sub%xvect(4,:) = sub%xvect(3,:)
+	  sub%solved = .true.
+	case(-1)
+	  sub%solved = .false.
+	  sub%xvect(1,:) = sub%xvect(4,:)
+	case default
+	  print *, "code bug, incorrect mode value, exited from schwarz_dd2subcyc::set_solved"
+	  error stop
+      end select
+    
+    end subroutine set_solved
 
 
 end module schwarz_dd2subcyc

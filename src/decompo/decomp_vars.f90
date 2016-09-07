@@ -76,8 +76,9 @@ module decomp_vars
     integer(kind=ikind), dimension(:), allocatable :: invpermut
     !> permut vector global xvect to local xvect that lies out of subdomain, it is the x node with graph connections to the subdomain, should be updated into sparse vector later
     integer(kind=ikind), dimension(:), allocatable :: extinvpermut
-    logical :: solved
+    logical :: solved = .false.
     logical :: poor_res
+    logical :: short_dt = .false.
     integer(kind=ikind) :: itcount
     !> NDOF at subdomain
     integer(kind=ikind) :: ndof

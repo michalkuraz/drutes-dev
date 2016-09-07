@@ -457,7 +457,7 @@ module RE_constitutive
 	h = x(1)
       end if
       
-
+      
       if (h >= 0) then
 	tmp = 1
       else

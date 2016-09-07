@@ -28,12 +28,12 @@ module re_total
       
       if (get_direct_vals) then
 
-        val = getvalp1(pde_loc, quadpnt) - xyz(D)
+        val = getvalp1(pde_loc, quadpnt) 
 
 	get_direct_vals = .false.
 	
       else
-	  val = getvalp1(pde_loc, quadpnt) 
+	  val = getvalp1(pde_loc, quadpnt) - xyz(D)
       end if
 	
       

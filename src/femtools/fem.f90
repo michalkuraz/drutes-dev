@@ -260,17 +260,10 @@ module fem
       real(kind=rkind) :: valold
     
       call make_print("separately")
-      if (www .or. optimization) then
-	
-	if (www) then
-	  call write_log("failed to converge, you can run the code again with different setup, &
-	  the last output file can be used to relaunch your computation")
-	  ERROR STOP
-	else
-	   call write_log("failed to converge, due to the selected regime  (parameter calibration), error criterion reset to a HUGE value")
-	  time_step = (dtmin + dtmax)/2
-	  iter_criterion = 1e10
-	end if
+      if (www) then
+	call write_log("failed to converge, you can run the code again with different setup, &
+	the last output file can be used to relaunch your computation")
+	ERROR STOP
       else
 	call write_log("failed to converge, user can change some values now")
 	print *, "select the following:"

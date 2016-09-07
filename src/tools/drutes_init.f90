@@ -228,12 +228,6 @@ module drutes_init
 		    call getarg(i+1,oarg)
 		    if (trim(oarg) == "www") then
 		      www = .true.
-! 		      call write_log("DRUtES runs in mode with online GUI")
-		    end if
-		    
-		    if  (trim(oarg) == "optim") then
-		      optimization = .true.
-! 		      call write_log("DRUtES runs in mode for parameter search")
 		    end if
 		    skip = 1
 		    
@@ -354,7 +348,7 @@ module drutes_init
       select case (adjustl(trim(drutes_config%name)))
 	case("RE_std", "RE_rot", "REstdH", "RErotH", "boussi", "ADEstd")
 	  pde_common%processes = 1
-	case("ADE_RE_std", "ADE_REstdH", "ADE_RE_rot", "ADE_RErotH", "ADEstd_kinsorb")
+	case("ADE_RE_std", "ADE_REstdH", "ADE_RE_rot", "ADE_RErotH", "ADEstd_kinsorb", "Re_dual_totH")
 	  pde_common%processes = 2
 	case("RE_mod", "REtest", "ADE_RE_std_kinsorb", "ADE_REstdH_kinsorb", "ADE_RE_rot_kinsorb", &
 	     "ADE_RErotH_kinsorb")
@@ -536,6 +530,8 @@ module drutes_init
 	write(unit=pde_loc%obspt_unit(name), fmt=*) &
 	  "#-----------------------------------------------------------------------------------------------"
 	write(unit=pde_loc%obspt_unit(name), fmt=*)
+	!J added 
+	close(unit=pde_loc%obspt_unit(name))
       else
 	open(unit=pde_loc%obspt_unit(name), file=fileid, action="write", access="append", status="old")
       end if

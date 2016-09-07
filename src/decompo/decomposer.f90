@@ -564,7 +564,7 @@ module decomposer
       
       sub%xvect(:,1:3) = pde_common%xvect(sub%permut(1:sub%ndof),1:3)
       
-      sub%xvect(:,4) = pde_common%xvect(sub%permut(1:sub%ndof),4)
+      sub%xvect(:,4) = pde_common%xvect(sub%permut(1:sub%ndof),1)
       
 
             
