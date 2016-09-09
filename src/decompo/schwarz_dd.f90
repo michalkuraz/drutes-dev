@@ -146,12 +146,12 @@ module schwarz_dd
 	      subdomain(i)%solved = .true.
 	    end if
 	    
-	    if (.not. subdomain(i)%solved) then
+! 	    if (.not. subdomain(i)%solved) then
 
 	      corrvct(1:subfin) = 0.0
 
 	      if (subdomain(i)%critical) then
-		reps = 1e-20
+		reps = 1e-10
 	      else
 		reps = 1e-10
 	      end if
@@ -171,20 +171,20 @@ module schwarz_dd
 	      cumerr = cumerr + error
 
 	      subdomain(i)%xvect(:,3) = subdomain(i)%xvect(:,2) + corrvct(1:subfin)
+	      
 
 	      call search_error_cluster(subdomain(i), itcount) 
 	      
 	      subdomain(i)%xvect(:,2) = subdomain(i)%xvect(:,3)
 
 	      subdomain(i)%itcount = itcount
-	
 
 	      
 	      if (error <= iter_criterion .and. norm2(resvct(subdomain(i)%permut(1:subfin))) < inner_criterion) then 
 		subdomain(i)%solved = .true.
 		subdomain(i)%time  = subdomain(i)%time + subdomain(i)%time_step
 	      end if
-	    end if
+! 	    end if
 					
 	  end do subdoms
 	  
@@ -192,6 +192,8 @@ module schwarz_dd
 	  call progressbar( int(100*ndofs_solved()/(1.0*ddinfo%ndofs_tot)))
 
 	  call build_xvect()
+	  
+	  	 call printmtx(pde_common%xvect) ; stop
 
 	  if (domains_solved() == ubound(subdomain,1)) then
 	  

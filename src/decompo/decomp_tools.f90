@@ -43,7 +43,7 @@ module decomp_tools
         
         if (subdom%invpermut(row) /= 0) then
           rowperm=subdom%invpermut(row)
-          
+
           call subdom%matrix%getrow(i=row, v=colvals, jj=jjvals, nelem=numbers)
           
           subdom%resvct%main(rowperm) = subdom%resvct%main(rowperm) - dot_product(colvals(1:numbers), &

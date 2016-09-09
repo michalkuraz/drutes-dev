@@ -69,7 +69,7 @@ module schwarz_dd2subcyc
 
         subdomain(:)%time_step = time_step
         
-        subdomain(1)%time_step = time_step/3.0
+        subdomain(1)%time_step = time_step
         subdomain(1)%short_dt = .true.
         
         
@@ -96,16 +96,31 @@ module schwarz_dd2subcyc
 
 	  subdoms:  do i=1, ubound(subdomain,1)
 	    
-	    if (.not. subdomain(i)%solved) then    
+! 	    if (.not. subdomain(i)%solved) then    
 	      call solve_subdomain(subdomain(i), reps=1e-10)
-	    end if
-  
-	    call combinevals(subdomain(i), short)
+! 	    end if
+
 	    
 	  end do subdoms
 	  
-	  if (domains_solved() == ubound(subdomain,1)) then	  
-	    call combinevals(subdomain(i))
+	  call wait()
+	  
+	  do i=1, 9
+	   call combinevals(subdomain(i), short=.false.)
+	  end do
+! 	  print *, domains_solved()
+
+	 call printmtx(pde_common%xvect) ; stop
+	  
+! 	  call wait()
+	  
+	  if (domains_solved() == ubound(subdomain,1)) then
+	    do i=1, ubound(subdomain,1)
+	      call combinevals(subdomain(i), short=.false.)
+	    end do
+	    if (domains_solved() == ubound(subdomain,1)) then
+	      EXIT schwarz
+	    end if
 	  end if
 	
 	end do schwarz
@@ -224,17 +239,22 @@ module schwarz_dd2subcyc
 		      
 	error = maxval(abs(corrvct(1:subfin)))
 	
+	print *, sub%order, error
+
 	sub%xvect(:,3) = sub%xvect(:,2) + corrvct(1:subfin)
 	  
 	sub%xvect(:,2) = sub%xvect(:,3)
 	
 	if (error < iter_criterion) then
 	  sub%time = sub%time + sub%time_step
+	  if (abs(sub%time - time - time_step) < 100*epsilon(time)) then
+	    call set_solved(sub, mode=1)
+	  else
+	    call set_solved(sub, mode=0)
+	  end if
 	end if
 	
-	if (abs(sub%time - time - time_step) < 100*epsilon(time)) then
-	  sub%solved = .true.
-	end if
+
 	
       
       end subroutine solve_subdomain
@@ -289,7 +309,8 @@ module schwarz_dd2subcyc
 	  glob = subdom%permut(i)
 	  globgeom = pde_common%invpermut(glob)
 	  oldvalue = subdom%xvect(i,2)
-	  if (ddinfo%nodesinsub(globgeom)%pos > 1) then
+	  if (ddinfo%nodesinsub(globgeom)%pos >= 1) then
+	  
 	    value = 0
 	    do j=1, ddinfo%nodesinsub(globgeom)%pos
 	      sub = ddinfo%nodesinsub(globgeom)%data(j)
@@ -304,6 +325,9 @@ module schwarz_dd2subcyc
 	    else
 	      subdom%xvect(i, 2:3) = value
 	    end if
+	    
+	    
+	    pde_common%xvect(glob, 2:3) = value
 	    
 	    if (subdom%solved .and. abs(value-oldvalue) > iter_criterion) then
 	      call set_solved(subdom, mode=-1)
@@ -459,10 +483,6 @@ module schwarz_dd2subcyc
                         el = nodes%el2integ(nd)%data(ii)
 
                         if (.not. elsolved(el)) then
-                        
-                          if (permut(pnd)==30) then
-                            print *, "el", el
-                          end if
 
                           quadpnt%type_pnt = "ndpt"
                           quadpnt%column = 1
