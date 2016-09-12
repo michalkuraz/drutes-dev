@@ -99,18 +99,19 @@ module schwarz_dd2subcyc
 ! 	    if (.not. subdomain(i)%solved) then    
 	      call solve_subdomain(subdomain(i), reps=1e-10)
 ! 	    end if
-
+     
+!             call combinevals(subdomain(i), short=.false.)
 	    
 	  end do subdoms
 	  
-	  call wait()
-	  
-	  do i=1, 9
-	   call combinevals(subdomain(i), short=.false.)
-	  end do
+
+	  call build_xvect_loc()
+! 	  
+! 	  do i=1, 9
+! 	   call combinevals(subdomain(i), short=.false.)
+! 	  end do
 ! 	  print *, domains_solved()
 
-	 call printmtx(pde_common%xvect) ; stop
 	  
 ! 	  call wait()
 	  
@@ -238,8 +239,19 @@ module schwarz_dd2subcyc
 	call diag_precond(a=sub%matrix, x=corrvct(1:subfin), mode=-1)
 		      
 	error = maxval(abs(corrvct(1:subfin)))
+
+	if (sub%order == 1) then
 	
-	print *, sub%order, error
+	  call printmtx(resvct)
+	  
+	
+	  call printmtx(pde_common%invpermut(sub%permut(1:sub%ndof)))
+	  
+	  call printmtx(pde_common%invpermut(sub%extpermut(1:sub%extndof)))
+	  
+
+	  stop
+	end if
 
 	sub%xvect(:,3) = sub%xvect(:,2) + corrvct(1:subfin)
 	  
@@ -327,8 +339,6 @@ module schwarz_dd2subcyc
 	    end if
 	    
 	    
-	    pde_common%xvect(glob, 2:3) = value
-	    
 	    if (subdom%solved .and. abs(value-oldvalue) > iter_criterion) then
 	      call set_solved(subdom, mode=-1)
 	    end if
@@ -338,6 +348,35 @@ module schwarz_dd2subcyc
 	
       
       end subroutine combinevals
+      
+      
+      subroutine build_xvect_loc()
+	use typy
+	use globals
+	use global_objs
+	use pde_objs
+	use decomp_vars
+	use debug_tools
+	
+	integer(kind=ikind) :: i, glob, loc, subcrit
+
+
+        pde_common%xvect(:,2:3) = 0.0_rkind
+        
+        
+        do i = 1, ubound(subdomain,1)
+	  do loc = 1, subdomain(i)%ndof
+	    glob =  subdomain(i)%permut(loc)
+	    pde_common%xvect(glob,2:3) = pde_common%xvect(glob,2:3) + subdomain(i)%xvect(loc,2:3)*prolong_mtx%get(glob,i)
+	  end do
+	end do
+	
+	do i=1, ubound(subdomain,1)
+	  subdomain(i)%xvect(:,1:3) = pde_common%xvect(subdomain(i)%permut(1:subdomain(i)%ndof),1:3)
+	end do
+	
+	
+      end subroutine build_xvect_loc
 
       subroutine search_error_cluster(sub, itcount)
 	use typy

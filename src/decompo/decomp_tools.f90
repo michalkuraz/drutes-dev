@@ -80,7 +80,22 @@ module decomp_tools
           end if         
         end if 
         
-      end do     
+      end do    
+      
+      if (subdom%order == 1) then
+	 call printmtx(subdom%resvct%main)
+	 print *, "-----"
+	 call printmtx(subdom%resvct%ext)
+	 	  call printmtx(pde_common%invpermut(subdom%permut(1:subdom%ndof)))
+	 	  print *, "------"
+	 call printmtx(subdom%permut(1:subdom%ndof))	  
+	 print *, "-------"
+	 call printmtx(pde_common%invpermut(subdom%extpermut(1:subdom%extndof)))
+	 
+	 print *, "-------"
+	 call printmtx(subdom%extpermut(1:subdom%extndof))
+	 stop
+      end if
             
     end subroutine getres_loc
   

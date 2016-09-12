@@ -167,6 +167,11 @@ module schwarz_dd
 	      
 	      
 	      error = maxval(abs(corrvct(1:subfin)))
+
+	      if (i==1) then
+	      call printmtx(resvct) ; call wait()
+	      end if
+	      
 	      
 	      cumerr = cumerr + error
 
@@ -192,8 +197,6 @@ module schwarz_dd
 	  call progressbar( int(100*ndofs_solved()/(1.0*ddinfo%ndofs_tot)))
 
 	  call build_xvect()
-	  
-	  	 call printmtx(pde_common%xvect) ; stop
 
 	  if (domains_solved() == ubound(subdomain,1)) then
 	  
