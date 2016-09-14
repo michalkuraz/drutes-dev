@@ -105,7 +105,7 @@ module schwarz_dd2subcyc
 	  end do subdoms
 	  
 
-	  call build_xvect_loc()
+! 	  call build_xvect_loc()
 ! 	  
 ! 	  do i=1, 9
 ! 	   call combinevals(subdomain(i), short=.false.)
@@ -117,7 +117,7 @@ module schwarz_dd2subcyc
 	  
 	  if (domains_solved() == ubound(subdomain,1)) then
 	    do i=1, ubound(subdomain,1)
-	      call combinevals(subdomain(i), short=.false.)
+! 	      call combinevals(subdomain(i), short=.false.)
 	    end do
 	    if (domains_solved() == ubound(subdomain,1)) then
 	      EXIT schwarz
@@ -239,19 +239,6 @@ module schwarz_dd2subcyc
 	call diag_precond(a=sub%matrix, x=corrvct(1:subfin), mode=-1)
 		      
 	error = maxval(abs(corrvct(1:subfin)))
-
-	if (sub%order == 1) then
-	
-	  call printmtx(resvct)
-	  
-	
-	  call printmtx(pde_common%invpermut(sub%permut(1:sub%ndof)))
-	  
-	  call printmtx(pde_common%invpermut(sub%extpermut(1:sub%extndof)))
-	  
-
-	  stop
-	end if
 
 	sub%xvect(:,3) = sub%xvect(:,2) + corrvct(1:subfin)
 	  
@@ -486,7 +473,7 @@ module schwarz_dd2subcyc
       integer(kind=ikind), intent(in) :: domain_id
       logical, intent(in) :: extended
       integer, intent(out) :: ierr
-      integer(kind=ikind) :: el,j,k,l, proc, ll, limits, nd, ii, pnd, nnd, pnnd, coarseel
+      integer(kind=ikind) :: el,j,k,l, proc, ll, limits, nd, ii, pnd, nnd, pnnd, coarseel, iii, i
       logical, dimension(:), allocatable, save :: elsolved
       type(integpnt_str) :: quadpnt
       real(kind=rkind) :: value
@@ -517,6 +504,7 @@ module schwarz_dd2subcyc
 
                       nd = pde_common%invpermut(nd)
 
+
                       do ii=1,nodes%el2integ(nd)%pos
 
                         el = nodes%el2integ(nd)%data(ii)
@@ -527,6 +515,7 @@ module schwarz_dd2subcyc
                           quadpnt%column = 1
                           quadpnt%ddlocal=.true.
                           coarseel = ddinfo%elincoarse(el)
+        
                           
                           if (domain_id /= ddinfo%coarseinsub(coarseel)) then
                             quadpnt%extended = .false.
@@ -536,7 +525,6 @@ module schwarz_dd2subcyc
                             quadpnt%extended = extended
                           end if
 
-                          
                           do k = 1, ubound(elements%data,2)
                           
                             nnd = elements%data(el,k)
@@ -557,6 +545,7 @@ module schwarz_dd2subcyc
                             elnode_prev(k) = pde(proc)%getval(quadpnt)
                           end do 
                           
+			  
          
                           
                           call build_bvect(el, dt, quadpnt_in=quadpnt)
@@ -564,9 +553,15 @@ module schwarz_dd2subcyc
                           call build_stiff_np(el, dt, quadpnt_in=quadpnt)
 
                           call pde_common%time_integ(el, quadpnt_in=quadpnt)
-
-                          stiff_mat = stiff_mat + cap_mat
-
+                               
+                          quadpnt%element = el
+			  quadpnt%column = 2
+			  quadpnt%type_pnt = "gqnd"
+			  
+			  quadpnt%ddlocal = .true.			  
+			
+			  stiff_mat = stiff_mat + cap_mat
+			  
                           call in2global(el,mtx, bvect, invpermut)
                           
                           elsolved(el) = .true.

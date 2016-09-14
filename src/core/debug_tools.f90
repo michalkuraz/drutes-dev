@@ -70,7 +70,9 @@ module debug_tools
         write(unit=filloc, fmt=*) "subdomain id", quadpnt%subdom
         if (quadpnt%extended) then
           write(unit=filloc, fmt=*) "node from extended subdomain (see subcycling man)"
-        end if
+        else
+	  write(unit=filloc, fmt=*) "node inside the subdomain"
+	end if
       else
         write(unit=filloc, fmt=*) "using global data"
       end if
@@ -81,6 +83,7 @@ module debug_tools
       else
         write(unit=filloc, fmt=*) "using the global time"
       end if
+      
   
       if (terminal /= filloc) then
         close(filloc)

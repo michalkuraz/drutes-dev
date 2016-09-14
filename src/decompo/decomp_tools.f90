@@ -41,20 +41,20 @@ module decomp_tools
       do i=1, subdom%matrix%rowsfilled%pos
         row = subdom%matrix%rowsfilled%data(i)
         
+
+        
         if (subdom%invpermut(row) /= 0) then
           rowperm=subdom%invpermut(row)
+          
 
           call subdom%matrix%getrow(i=row, v=colvals, jj=jjvals, nelem=numbers)
           
           subdom%resvct%main(rowperm) = subdom%resvct%main(rowperm) - dot_product(colvals(1:numbers), &
             subdom%xvect(jjvals(1:numbers), 2))
             
+            
           call subdom%extmatrix%getrow(i=row, v=colvals, jj=jjvals, nelem=numbers)
           
-	  if (numbers > 0) then
-	    subdom%resvct%main(rowperm) = subdom%resvct%main(rowperm) - dot_product(colvals(1:numbers), &
-            subdom%extxvect(jjvals(1:numbers), 2))
-          end if
 
         end if   
         
@@ -82,20 +82,7 @@ module decomp_tools
         
       end do    
       
-      if (subdom%order == 1) then
-	 call printmtx(subdom%resvct%main)
-	 print *, "-----"
-	 call printmtx(subdom%resvct%ext)
-	 	  call printmtx(pde_common%invpermut(subdom%permut(1:subdom%ndof)))
-	 	  print *, "------"
-	 call printmtx(subdom%permut(1:subdom%ndof))	  
-	 print *, "-------"
-	 call printmtx(pde_common%invpermut(subdom%extpermut(1:subdom%extndof)))
-	 
-	 print *, "-------"
-	 call printmtx(subdom%extpermut(1:subdom%extndof))
-	 stop
-      end if
+     
             
     end subroutine getres_loc
   

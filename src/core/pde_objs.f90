@@ -392,18 +392,21 @@ module pde_objs
     function getvalp1(pde_loc, quadpnt) result(val)
       use typy
       use decomp_vars
+      use debug_tools
       
       class(pde_str), intent(in) :: pde_loc
       type(integpnt_str), intent(in) :: quadpnt
       real(kind=rkind) :: val
+      real(kind=rkind) :: tmp
       
       type(integpnt_str) :: quadpntloc
       real(kind=rkind) :: valprev, timeprev, timeglob
+      logical :: stopper=.false.
+
    
-      
-      
-      val = getvalp1loc(pde_loc, quadpnt)
-      
+       val = getvalp1loc(pde_loc, quadpnt)
+
+
       if (quadpnt%globtime .or. quadpnt%column==1) then
 	RETURN
       else
@@ -418,19 +421,23 @@ module pde_objs
 	end if
 
 	valprev = getvalp1loc(pde_loc, quadpntloc)
-
+        tmp=val
 	val = (val-valprev)/(timeglob-timeprev)*(quadpnt%time4eval-timeprev)+valprev
+
       end if
 	
     
     end function getvalp1
     
-    function getvalp1loc(pde_loc, quadpnt) result(val)
+    function getvalp1loc(pde_loc, quadpnt, stopme) result(val)
       use typy
       use decomp_vars
+      use debug_tools
+
       
       class(pde_str), intent(in) :: pde_loc
       type(integpnt_str), intent(in) :: quadpnt
+      logical, intent(in), optional :: stopme
       real(kind=rkind) :: val
       
       integer(kind=ikind), dimension(:), allocatable, save :: pts, ppts
@@ -439,9 +446,6 @@ module pde_objs
       real(kind=rkind) :: xder, yder
       real(kind=rkind), dimension(3,3) :: a
       
-      if (quadpnt%debugstop) then
-        print *, "mam to 4"
-      end if
             
       
      select case(quadpnt%type_pnt)
@@ -462,7 +466,8 @@ module pde_objs
 	      
 	    pts = elements%data(el,:)
 	    ppts = pde_loc%permut(pts)
-
+	    
+		
             if (quadpnt%ddlocal) then
 	      if (.not. quadpnt%extended) then
 		where (ppts /= 0)
@@ -475,9 +480,12 @@ module pde_objs
 	      end if
 	    end if
 
-	        
+
+	    
 	    do i=1, ubound(elements%data,2)
+	
 	      if (ppts(i) > 0) then
+
 		if (.not. quadpnt%ddlocal) then
 		  ndvals(i) = pde_common%xvect(ppts(i), quadpnt%column)
 		else
@@ -491,12 +499,13 @@ module pde_objs
 
 		edge = nodes%edge(pts(i))
 
+                
 		call pde_loc%bc(edge)%value_fnc(pde_loc, el, i, ndvals(i))
 		
 	      end if
 	    end do
 
-    
+       
 	    select case(quadpnt%type_pnt)
 	      case("gqnd")
 		select case(drutes_config%dimen)
@@ -529,16 +538,18 @@ module pde_objs
 		    
 	case("ndpt")
 	    i = pde_loc%permut(quadpnt%order)
+
 	    if (i > 0) then
 	      if (.not. quadpnt%ddlocal) then
 		val = pde_common%xvect(i, quadpnt%column)
 	      else
+	      
 		if (.not. quadpnt%extended) then
+
 		  i = subdomain(quadpnt%subdom)%invpermut(i)
-		  if (i==0) then
-                    print *, quadpnt%subdom, quadpnt%order, pde_loc%permut(quadpnt%order)
-                  end if
+
 		  val = subdomain(quadpnt%subdom)%xvect(i, quadpnt%column)
+
 		else
 		  i = subdomain(quadpnt%subdom)%extinvpermut(i)
 		  val = subdomain(quadpnt%subdom)%extxvect(i, quadpnt%column)
@@ -555,7 +566,7 @@ module pde_objs
 	      end do
 	      call pde_loc%bc(edge)%value_fnc(pde_loc, el, order, val)
 	    end if
-	    
+
 	case default
 	    print *, "RUNTIME ERROR: incorrect quadpnt type definition (value quadpnt%type_pnt)"
 	    print *, "the value specified in code was:", quadpnt%type_pnt

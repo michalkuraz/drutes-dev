@@ -39,7 +39,7 @@ BOUSSINESQ_obj := boussglob.o boussread.o boussfnc.o bousspointers.o
 ADE_obj := ADE_fnc.o ADE_reader.o ADE_globals.o ADE_pointers.o
 REDUAL_obj := Re_dual_totH.o Re_dual_globals.o Re_dual_pointers.o Re_dual_reader.o
 
-ALL_objs := $(CORE_obj) $(TOOLS_obj) $(POINTERMAN_obj) $(MATHTOOLS_obj) $(FEMTOOLS_obj) $(DECOMPO_obj) $(RE_obj) $(PMAoo_obj) $(modRE_obj) $(BOUSSINESQ_obj) $(ADE_obj) $(REDUAL_obj)
+ALL_objs := $(CORE_obj) $(TOOLS_obj) $(POINTERMAN_obj) $(MATHTOOLS_obj) $(FEMTOOLS_obj) $(DECOMPO_obj) $(RE_obj) $(PMAoo_obj) $(modRE_obj) $(BOUSSINESQ_obj) $(ADE_obj) 
 #-----------------------------------------------------------------
 
 #-------begin CORE_obj--------------------------------
@@ -193,7 +193,7 @@ fem.o: $(CORE_obj) $(LINALG_obj) $(DECOMPO_obj)  femmat.o  src/femtools/fem.f90
 
 
 #-------begin POINTERS_obj--------------------------------
-manage_pointers.o: $(CORE_obj) $(TOOLS_obj) $(CORE_obj) $(FEMTOOLS_obj) $(LINALG_obj) $(RE_obj) $(DECOMPO_obj) $(modRE_obj) $(BOUSSINESQ_obj) $(ADE_obj) $(REDUAL_obj) src/pointerman/manage_pointers.f90
+manage_pointers.o: $(CORE_obj) $(TOOLS_obj) $(CORE_obj) $(FEMTOOLS_obj) $(LINALG_obj) $(RE_obj) $(DECOMPO_obj) $(modRE_obj) $(BOUSSINESQ_obj) $(ADE_obj)  src/pointerman/manage_pointers.f90
 	$c -c src/pointerman/manage_pointers.f90
 #-------end pointers_obj--------------------------------
 
