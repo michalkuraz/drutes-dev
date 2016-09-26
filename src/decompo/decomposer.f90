@@ -330,6 +330,7 @@ module decomposer
 	 
 	allocate(subdomain(ddinfo%number))
         allocate(ddinfo%nodesinsub(nodes%kolik))
+        allocate(ddinfo%nodesinextsub(nodes%kolik))
        
 
 

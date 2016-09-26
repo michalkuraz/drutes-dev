@@ -392,7 +392,6 @@ module pde_objs
     function getvalp1(pde_loc, quadpnt) result(val)
       use typy
       use decomp_vars
-      use debug_tools
       
       class(pde_str), intent(in) :: pde_loc
       type(integpnt_str), intent(in) :: quadpnt
@@ -432,7 +431,6 @@ module pde_objs
     function getvalp1loc(pde_loc, quadpnt, stopme) result(val)
       use typy
       use decomp_vars
-      use debug_tools
 
       
       class(pde_str), intent(in) :: pde_loc

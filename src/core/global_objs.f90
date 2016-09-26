@@ -41,6 +41,7 @@ module global_objs
       procedure :: clear => ismartclear
       !> disjoint fill -- it fills value into array, only if the same value does not exist in the array
       procedure :: nrfill => ismartfill_norepeat
+      procedure :: exist => ismartexist
   end type smartarray_int
   
   type, public ::  smartarray_real
@@ -232,7 +233,7 @@ module global_objs
   end type integnodes
 
   
-  private :: ismartfill, ismartclear, ismartfill_norepeat, rsmartfill, rsmartclear, rsmartfill_norepeat
+  private :: ismartfill, ismartclear, ismartfill_norepeat, rsmartfill, rsmartclear, rsmartfill_norepeat, ismartexist
   
   contains
     subroutine ismartfill(array,input, info)
@@ -337,6 +338,25 @@ module global_objs
       array%pos = 0
       
     end subroutine ismartclear
+    
+    function ismartexist(array, value) result(exist)
+      use typy
+      class(smartarray_int), intent(in) :: array
+      integer(kind=ikind), intent(in) :: value
+      logical :: exist
+      
+      integer(kind=ikind) :: i
+      
+      exist = .false.
+      
+      do i=1, array%pos
+	if (array%data(i) == value) then
+	  exist = .true.
+	  RETURN
+	end if
+      end do
+      
+    end function ismartexist
     
 
     subroutine rsmartfill(array,input, info)

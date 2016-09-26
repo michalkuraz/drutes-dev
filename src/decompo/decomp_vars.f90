@@ -104,7 +104,7 @@ module decomp_vars
     !> equals to the previous time level of the subdomain
     real(kind=rkind) :: timeprev
     logical :: time_increased
-    !> equals to the time level, which ios curretnly being processed
+    !> equals to the time level, which is curretnly being processed
     real(kind=rkind) :: time
     real(kind=rkind) :: tmpval
     integer(kind=ikind) :: order
@@ -133,6 +133,8 @@ module decomp_vars
     integer(kind=ikind), dimension(:), allocatable :: coarseinsub
     !> list of nodes (geometrical) with a list of subdomains
     type(smartarray_int), dimension(:), allocatable :: nodesinsub
+    !> list of nodes (geometrical) with a list of extended subdomains
+    type(smartarray_int), dimension(:), allocatable :: nodesinextsub
   end type ddinfo_str
   
 

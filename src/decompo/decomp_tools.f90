@@ -342,7 +342,7 @@ module decomp_tools
 	end do level_loop
 	
 	!-------
-	!i f   s u b c y c l i n g 
+	! i f   s u b c y c l i n g 
 	!-------
 	!add an extra level including all neighbour nodes, here we start with adding an extra layer with elements, the neighbourhood elements are all elements that share at least a single node (different approach compared to the overlap construction, where the neighborhood elements are elements that share TWO nodes (edge))
 	if (drutes_config%it_method == 2) then
@@ -409,7 +409,7 @@ module decomp_tools
 	    end if
 	  end do
 	end do
-	
+
 	
        ! if subcycling, add nodes, that lie out of the domain, but still have a graph connection to the nodes, that lie inside the domain
 	if (drutes_config%it_method == 2) then
@@ -417,6 +417,7 @@ module decomp_tools
 	    el = subdomain(sub)%elextra%data(i)
 	    do j=1, ubound(elements%data,2)
 	      nd = elements%data(el, j)
+	      call ddinfo%nodesinextsub(nd)%nrfill(sub)
 	      if (.not. nd_inserted(nd)) then
 		call subdomain(sub)%ndextra%fill(nd)
 		nd_inserted(nd) = .true.
@@ -432,7 +433,7 @@ module decomp_tools
 	    nd = subdomain(sub)%ndextra%data(i)
 	    do k = 1, nodes%el2integ(nd)%pos
 	      el = nodes%el2integ(nd)%data(k)
-	      if (.not. el_inserted(el)) then	
+	      if (.not. el_inserted(el)) then
 		do l=1, ubound(elements%data,2)
 		  nd2 = elements%data(el,l)
 		  if (.not. nd_inserted(nd2)) then
@@ -443,7 +444,7 @@ module decomp_tools
 	      end if
 	    end do
 	  end do
-! 	  
+	  
 	  j = subdomain(sub)%ndextra%pos
 	  nd_inserted(subdomain(sub)%ndextra%data(1:j)) = .false.
 	  

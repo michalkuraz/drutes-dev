@@ -90,8 +90,6 @@ module schwarz_dd2subcyc
         write(unit=terminal, fmt="(a)") "  "
         write(unit=terminal, fmt="(a, I4,a)") " Solving", ubound(subdomain,1),  " subdomains .... "
         
-        
-        
         schwarz: do
 
 	  subdoms:  do i=1, ubound(subdomain,1)
@@ -202,7 +200,7 @@ module schwarz_dd2subcyc
 	class(subdomain_str), intent(in out) :: sub
 	real(kind=rkind), intent(in) :: reps
 	
-	integer(kind=ikind) :: subfin
+	integer(kind=ikind) :: subfin, i, s, nd, pnd, subnd, j
 	real(kind=rkind) :: error       
 	integer :: ierr
 	
@@ -239,10 +237,26 @@ module schwarz_dd2subcyc
 	call diag_precond(a=sub%matrix, x=corrvct(1:subfin), mode=-1)
 		      
 	error = maxval(abs(corrvct(1:subfin)))
+	
+	print *, error , sub%order; call wait()
 
 	sub%xvect(:,3) = sub%xvect(:,2) + corrvct(1:subfin)
 	  
 	sub%xvect(:,2) = sub%xvect(:,3)
+	
+	do i=1, ubound(sub%xvect,1)
+	  pnd = sub%permut(i)
+	  nd = pde_common%invpermut(pnd)
+	  do j=1, ddinfo%nodesinextsub(nd)%pos
+	    if (sub%order /= ddinfo%nodesinextsub(nd)%data(j)) then
+	      s = ddinfo%nodesinextsub(nd)%data(j)
+	      subnd = subdomain(s)%extinvpermut(pnd)
+	      if (subnd /= 0) then
+		subdomain(s)%extxvect(subnd,2:3) = sub%xvect(i, 2:3)
+	      end if
+	    end if
+	  end do
+	end do
 	
 	if (error < iter_criterion) then
 	  sub%time = sub%time + sub%time_step
