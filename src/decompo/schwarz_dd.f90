@@ -156,7 +156,10 @@ module schwarz_dd
 		reps = 1e-10
 	      end if
 
-
+	      	  do j=1, ubound(resvct,1)
+		    print *, resvct(j), j, pde_common%invpermut(j)
+		  end do
+	  stop
 	      call diag_precond(a=subdomain(i)%matrix, prmt=subdomain(i)%permut,  mode=1)
 	      
 
@@ -165,13 +168,12 @@ module schwarz_dd
 	      
 	      call diag_precond(a=subdomain(i)%matrix, x=corrvct(1:subfin), mode=-1)
 	      
+
+	      
 	      
 	      error = maxval(abs(corrvct(1:subfin)))
-
-	      if (i==1) then
-	      call printmtx(resvct) ; call wait()
-	      end if
 	      
+	      print *, error ; call wait()
 	      
 	      cumerr = cumerr + error
 

@@ -22,7 +22,7 @@ module fem_tools
 
   !> procedure to put local stiffness matrix into the global stiffness matrix
   !<
-  subroutine in2global(el_id, locmatrix, bvect, subprmt)
+  subroutine in2global(el_id, locmatrix, bvect, subprmt, debugme)
     use typy
     use sparsematrix
     use global_objs
@@ -36,6 +36,7 @@ module fem_tools
     real(kind=rkind), dimension(:) :: bvect
     !> permutation array for submatrices, supplied only for domain decomposition problems
     integer(kind=ikind), dimension(:), intent(in), optional :: subprmt
+    logical, intent(in), optional :: debugme
     
     integer(kind=ikind), dimension(:), allocatable, save :: bc
     integer(kind=ikind), dimension(:), allocatable, save :: n_row, m_col
@@ -85,6 +86,8 @@ module fem_tools
     
     
 
+    
+
     if (present(subprmt)) then
       do i=1, ubound(m_col,1)
         if (n_row(i) > 0 ) then
@@ -94,9 +97,6 @@ module fem_tools
     else
       m_col=n_row
     end if
-
-
-
 
  
 
@@ -125,12 +125,14 @@ module fem_tools
                   bvect(m_col(i)) = bvect(m_col(i)) - stiff_mat(i,m)*bcval(m)
                 end if
 	    case default
+
                 if (n_row(i) > 0 .and. m_col(m) > 0) then
                   call locmatrix%add(stiff_mat(i,m), n_row(i), m_col(m))
                   if (drutes_config%it_method == 2 .or. drutes_config%it_method == 1) then
                     call locmatrix%rowsfilled%nrfill(n_row(i))
                   end if
                 end if
+                
 
               !**!
 ! 	      spmatrix%vals(g_row) = stiff_mat(i,m)

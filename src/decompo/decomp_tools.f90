@@ -29,7 +29,7 @@ module decomp_tools
       logical, dimension(:), allocatable, save :: extcoltrue
       real(kind=rkind), dimension(:), allocatable, save :: colvals, extcolvals
       integer(kind=ikind), dimension(:), allocatable, save :: jjvals, extjjvals
-      integer(kind=ikind) :: numbers, row, rowperm, extrowperm
+      integer(kind=ikind) :: numbers, row, rowperm, extrowperm, j
       
       
       
@@ -46,14 +46,19 @@ module decomp_tools
         if (subdom%invpermut(row) /= 0) then
           rowperm=subdom%invpermut(row)
           
-
           call subdom%matrix%getrow(i=row, v=colvals, jj=jjvals, nelem=numbers)
+      
           
           subdom%resvct%main(rowperm) = subdom%resvct%main(rowperm) - dot_product(colvals(1:numbers), &
             subdom%xvect(jjvals(1:numbers), 2))
             
             
           call subdom%extmatrix%getrow(i=row, v=colvals, jj=jjvals, nelem=numbers)
+          
+          if (numbers > 0) then
+	    subdom%resvct%main(rowperm) = subdom%resvct%main(rowperm) - dot_product(colvals(1:numbers), &
+            subdom%extxvect(jjvals(1:numbers), 2))
+          end if
           
 
         end if   
@@ -73,6 +78,7 @@ module decomp_tools
             subdom%extxvect(jjvals(1:numbers), 2))
             
           call subdom%matrix%getrow(i=row, v=colvals, jj=jjvals, nelem=numbers) 
+          
           
           if (numbers > 0) then
 	    subdom%resvct%ext(rowperm) = subdom%resvct%ext(rowperm) - dot_product(colvals(1:numbers), &
@@ -234,6 +240,13 @@ module decomp_tools
 	  end do
 	end do
       end do
+      
+      if (.not. allocated(pde_common%bvect)) allocate(pde_common%bvect(maxval(pde(1)%permut(:))))
+      
+      do i=1, ubound(subdomain,1)
+	pde_common%bvect(subdomain(i)%permut(1:subdomain(i)%ndof)) = subdomain(i)%bvect(1:subdomain(i)%ndof)
+      end do
+      
     
       	
     end subroutine collect_matrices

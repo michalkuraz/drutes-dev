@@ -111,8 +111,6 @@ module core_tools
 
 
 
-
-
     function avg(a,b) result(c)
       use typy
       real(kind=rkind), intent(in) :: a
