@@ -13,7 +13,7 @@ module decomp_tools
 
   contains
   
-    subroutine getres_loc(subdom)
+    subroutine getres_loc(subdom, debugme)
       use typy 
       use globals
       use global_objs
@@ -22,6 +22,7 @@ module decomp_tools
       use debug_tools
       
       type(subdomain_str), intent(in out) :: subdom
+      logical, intent(in), optional :: debugme
       integer(kind=ikind) :: i, nd, domain_id, ndloc, ndpt
             
       real(kind=rkind), dimension(:), allocatable :: Arow

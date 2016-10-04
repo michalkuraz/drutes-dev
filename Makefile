@@ -222,7 +222,7 @@ clean:
 	rm -rf *.o *.mod bin/*
 	
 git:
-	rm -rf *.o *.mod bin/* && git commit -a
+	cat /etc/hostname > sync.stamp && date >> sync.stamp & rm -rf *.o *.mod bin/* && git commit -a
 
 push: 
 	git push

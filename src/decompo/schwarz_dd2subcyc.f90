@@ -93,42 +93,22 @@ module schwarz_dd2subcyc
         schwarz: do
 
 	  subdoms:  do i=1, ubound(subdomain,1)
-	    
-! 	    if (.not. subdomain(i)%solved) then    
+	 
+	    if (.not. subdomain(i)%solved) then    
 	      call solve_subdomain(subdomain(i), reps=1e-10)
-! 	    end if
-     
-!             call combinevals(subdomain(i), short=.false.)
-	    
+	    end if
+     	    
 	  end do subdoms
-	  
-	          call collect_matrices(spmatrix)
-        
-        print *, "----"
-        resvct = pde_common%bvect - spmatrix%mul(pde_common%xvect(:,2))
-        
-        	      	  do j=1, ubound(resvct,1)
-		    print *, resvct(j), j, pde_common%invpermut(j)
-		  end do
-        
-	  stop
-	  
-
-	  call build_xvect_loc()
-	  
-	  
-! 	  
-! 	  do i=1, 9
-! 	   call combinevals(subdomain(i), short=.false.)
-! 	  end do
-! 	  print *, domains_solved()
+	 
 
 	  
-! 	  call wait()
+	  call wait()
 	  
 	  if (domains_solved() == ubound(subdomain,1)) then
+	    call build_xvect_loc()
+	    
 	    do i=1, ubound(subdomain,1)
-! 	      call combinevals(subdomain(i), short=.false.)
+	      call combinevals(subdomain(i), short=.false.)
 	    end do
 	    if (domains_solved() == ubound(subdomain,1)) then
 	      EXIT schwarz
@@ -213,7 +193,7 @@ module schwarz_dd2subcyc
 	class(subdomain_str), intent(in out) :: sub
 	real(kind=rkind), intent(in) :: reps
 	
-	integer(kind=ikind) :: subfin, i, s, nd, pnd, subnd, j
+	integer(kind=ikind) :: subfin, i, s, nd, pnd, extdom, j, extpnd
 	real(kind=rkind) :: error       
 	integer :: ierr
 	
@@ -231,8 +211,8 @@ module schwarz_dd2subcyc
 	      permut=sub%extpermut, dt=sub%time_step, invpermut=sub%extinvpermut, &
 	      domain_id=sub%order, extended=.true.,ierr=ierr)
 
-	    
-	call getres_loc(sub)
+
+        call getres_loc(sub)
 
 	resvct = 0
 	
@@ -244,15 +224,6 @@ module schwarz_dd2subcyc
 	
 	corrvct(1:subfin) = 0.0
 	
-! 	
-	if (sub%order == 1) then
-	      	  do j=1, ubound(resvct,1)
-		    print *, resvct(j), j, pde_common%invpermut(j)
-		  end do
-		  stop
-	end if
-
-	
 	call diag_precond(a=sub%matrix, prmt=sub%permut,  mode=1)
 			    
 	call solve_matrix(sub%matrix, resvct, corrvct(1:subfin), ilev1=0, itmax1=subfin, reps1=reps)
@@ -261,11 +232,21 @@ module schwarz_dd2subcyc
 		      
 	error = maxval(abs(corrvct(1:subfin)))
 	
-
-
 	sub%xvect(:,2) = sub%xvect(:,2) + corrvct(1:subfin)
 	  
 	sub%xvect(:,3) = sub%xvect(:,2)
+	
+	do i=1, ubound(sub%xvect,1)
+          pnd = sub%permut(i)
+          nd = pde_common%invpermut(pnd)
+          do j=1, ddinfo%nodesinextsub(nd)%pos
+            extdom = ddinfo%nodesinextsub(nd)%data(j)
+            extpnd = subdomain(extdom)%extinvpermut(pnd)
+            if (extpnd /= 0) then
+              subdomain(extdom)%extxvect(extpnd,2:3) = (subdomain(extdom)%extxvect(extpnd,2:3) + sub%xvect(i,2:3))/2.0_rkind
+            end if
+          end do
+        end do
 	
 	
 	if (error < iter_criterion) then
@@ -349,14 +330,11 @@ module schwarz_dd2subcyc
 	  end do
 	end do
 	
+	pde_common%xvect(:,1) = pde_common%xvect(:,3)
+	
 	do i=1, ubound(subdomain,1)
-
-	  subdomain(i)%xvect(:,1:3) = pde_common%xvect(subdomain(i)%permut(1:subdomain(i)%ndof),1:3)
-          subdomain(i)%xvect(:,4) = pde_common%xvect(subdomain(i)%permut(1:subdomain(i)%ndof),1)
-          
-          subdomain(i)%extxvect(:,1:3) = pde_common%xvect(subdomain(i)%extpermut(1:subdomain(i)%extndof),1:3)
-          subdomain(i)%extxvect(:,4) = pde_common%xvect(subdomain(i)%extpermut(1:subdomain(i)%extndof),1)
-
+	  subdomain(i)%xvect(:,:) = pde_common%xvect(subdomain(i)%permut(1:subdomain(i)%ndof),:)
+          subdomain(i)%extxvect(:,:) = pde_common%xvect(subdomain(i)%extpermut(1:subdomain(i)%extndof),:)
 	end do
 	
 	
@@ -559,10 +537,8 @@ module schwarz_dd2subcyc
 			
 			  stiff_mat = stiff_mat + cap_mat
 			  
-
 	        	  call in2global(el,mtx, bvect, invpermut)
-! 			 
-			  
+ 			  
                           elsolved(el) = .true.
                         end if
                       end do

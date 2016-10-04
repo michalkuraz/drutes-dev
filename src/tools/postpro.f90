@@ -517,6 +517,8 @@ module postpro
 
       write(unit=ids(4), fmt=*) nodes%data(i,:), flux
     end do
+    
+    close(ids(1))
 
   
   end subroutine print_pure

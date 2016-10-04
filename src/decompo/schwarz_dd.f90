@@ -156,10 +156,6 @@ module schwarz_dd
 		reps = 1e-10
 	      end if
 
-	      	  do j=1, ubound(resvct,1)
-		    print *, resvct(j), j, pde_common%invpermut(j)
-		  end do
-	  stop
 	      call diag_precond(a=subdomain(i)%matrix, prmt=subdomain(i)%permut,  mode=1)
 	      
 
@@ -168,14 +164,17 @@ module schwarz_dd
 	      
 	      call diag_precond(a=subdomain(i)%matrix, x=corrvct(1:subfin), mode=-1)
 	      
-
-	      
 	      
 	      error = maxval(abs(corrvct(1:subfin)))
 	      
-	      print *, error ; call wait()
-	      
 	      cumerr = cumerr + error
+	      
+	      if (i==4) then
+                do j=1, ubound(resvct,1)
+                  print *, j, resvct(j), pde_common%invpermut(j)
+                end do
+                stop
+              end if
 
 	      subdomain(i)%xvect(:,3) = subdomain(i)%xvect(:,2) + corrvct(1:subfin)
 	      
@@ -199,9 +198,10 @@ module schwarz_dd
 	  call progressbar( int(100*ndofs_solved()/(1.0*ddinfo%ndofs_tot)))
 
 	  call build_xvect()
+	  
 
 	  if (domains_solved() == ubound(subdomain,1)) then
-	  
+	    
 	    call etime(taaray(2,:), rslt(2))
 	    do i=1, ubound(subdomain,1)
 	      if (.not. subdomain(i)%critical .and. subdomain(i)%itcount>1 ) then
@@ -331,10 +331,12 @@ module schwarz_dd
 		  end if
 	      end do
 	  end do
+	  
 
           pde_common%xvect(:,4) = pde_common%xvect(:,1)
 	  pde_common%xvect(:,1) = pde_common%xvect(:,3)
 	  pde_common%xvect(:,2) = pde_common%xvect(:,3)
+	  
 
       end subroutine results_extractor
  
