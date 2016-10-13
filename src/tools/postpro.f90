@@ -252,12 +252,9 @@ module postpro
       use pde_objs
       use debug_tools
 		
-      integer(kind=ikind)               :: i,j,m,l, k, n, layer, proc, D
-      real(kind=rkind)	              :: val, avgval, massval
-      real(kind=rkind), dimension(3)    :: advectval, gradient, advectval2
-      real(kind=rkind), dimension(3)    :: a,b,c
-      real(kind=rkind) 		      :: tmp, zdist, xdist, tmp1, tmp2, pointdist, dgdx, dgdz, dgdy
-      integer(kind=ikind), dimension(3) :: nodes_id
+      integer(kind=ikind) :: i, layer, proc, D
+      real(kind=rkind) :: val, massval
+      real(kind=rkind), dimension(3) :: advectval
       type(integpnt_str) :: quadpnt
       
       quadpnt%type_pnt = "obpt"
@@ -275,10 +272,13 @@ module postpro
 
 	  val = pde(proc)%getval(quadpnt)
 	  
+          massval = pde(proc)%mass(layer, quadpnt)
+	  
 	  observation_array(i)%cumflux(proc) = observation_array(i)%cumflux(proc) + &
 		    sqrt(dot_product(advectval(1:D), advectval(1:D)))*time_step
-	  
-	  write(unit=pde(proc)%obspt_unit(i), fmt="(50E24.12E3)") time, val,  advectval(1:D), observation_array(i)%cumflux(proc)
+                    
+
+	  write(unit=pde(proc)%obspt_unit(i), fmt="(50E24.12E3)") time, val, massval, advectval(1:D), observation_array(i)%cumflux(proc)
 
 	  call flush(pde(proc)%obspt_unit(i))
 	  
@@ -370,19 +370,20 @@ module postpro
     use global_objs
     use pde_objs
     use geom_tools
+    use debug_tools
     
     integer, dimension(:), intent(in) :: ids
     integer(kind=ikind), intent(in) :: proc
     type(integpnt_str), intent(in out) :: quadpnt
     integer(kind=ikind) :: i, j, layer
-    real(kind=rkind) :: tmp, flux
+    real(kind=rkind) :: tmp, totflux
+    real(kind=rkind), dimension(3) :: flux
     real(kind=rkind), dimension(3,8) :: body
     real(kind=rkind), dimension(2) :: vct1, vct2
     real(kind=rkind), dimension(8) :: vct_tmp
-    real(kind=rkind), dimension(2,2) :: blabla
-    real(kind=rkind), dimension(:), allocatable, save :: deriv
     integer(kind=ikind) :: time_dec
     real(kind=rkind) :: curtime
+    type(integpnt_str) :: qpntloc
 
     
     
@@ -400,10 +401,6 @@ module postpro
       write(unit=ids(i), fmt=*) "z=zeros(nt,3);"
     end do
 
-    if (.not. allocated(deriv)) then
-      allocate(deriv(drutes_config%dimen))
-    end if
-
 
     do i=1, elements%kolik
       do j=1,ubound(elements%data,2)
@@ -414,17 +411,26 @@ module postpro
     
       ! mass (constant over element)
       layer = elements%material(i, proc)
-      tmp = sum(body(:,3))/ubound(elements%data,2)
-      call pde(proc)%pde_fnc(proc)%dispersion(pde(proc), layer, x=(/tmp/), tensor=blabla)
-      body(:,4) = maxval(blabla)
-      body(:,5) = pde(proc)%mass(layer, x=(/tmp/))
+      qpntloc%element = i
+      qpntloc%column = 2
+      qpntloc%type_pnt = "gqnd"
+      tmp = 0
+      do j=1, ubound(gauss_points%weight,1)
+        qpntloc%order = j
+        tmp = tmp + pde(proc)%mass(layer, qpntloc)*gauss_points%weight(j)
+      end do
+      
+      body(:,5) = tmp/gauss_points%area
+        
+      if (ubound(gauss_points%weight,1) > 1) then
+        qpntloc%order = nint(ubound(gauss_points%weight,1)/2.0)
+      else
+        qpntloc%order = 1
+      end if
+      
+      call pde(proc)%flux(layer, qpntloc, vector_out=flux(1:drutes_config%dimen), scalar=totflux)
 
-      call plane_derivative(body(1,1:3), body(2,1:3), body(3,1:3), deriv(1), deriv(2))
-
-      call pde(proc)%flux(layer, x=(/tmp/), vector_in=deriv, scalar=flux)
-
-      body(:,6) = flux
-
+      body(:,6) = totflux
       
       vct1 = body(3, 1:2) - body(1, 1:2) 
       vct2 = body(3, 1:2) - body(2, 1:2)
@@ -505,6 +511,7 @@ module postpro
     real(kind=rkind) :: curtime
     integer(kind=ikind) :: i, layer
     real(kind=rkind) ::  distance, flux, avgval
+    type(integpnt_str) :: qpntloc
 
   
     do i=1, nodes%kolik
@@ -514,6 +521,8 @@ module postpro
       layer = elements%material(nodes%element(i)%data(1), proc)
 
       call pde(proc)%flux(layer, quadpnt, scalar=flux)
+      
+      write(unit=ids(3), fmt=*)  nodes%data(i,:), pde(proc)%mass(layer, quadpnt)
 
       write(unit=ids(4), fmt=*) nodes%data(i,:), flux
     end do

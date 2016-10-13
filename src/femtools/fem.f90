@@ -79,6 +79,8 @@ module fem
 	if (success) then
 	  write(unit=file_itcounts, fmt=*) time, itcount
 	  call flush(file_itcounts)
+	  write(unit=file_dt, fmt=*) time, time_step
+	  call flush(file_dt)
 	  
 
 	  time = time + time_step

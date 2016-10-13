@@ -321,6 +321,7 @@ module decomposer
             call clear_subdomain(subdomain(i))
 	  end do
 	  deallocate(ddinfo%nodesinsub)
+	  deallocate(ddinfo%nodesinextsub)
 	  deallocate(subdomain)
 	end if	
 	

@@ -23,7 +23,7 @@ module manage_pointers
       use bousspointers
       use re_pointers
       use ADE_pointers
-!       use Re_dual_pointers ! added J
+      use Re_dual_pointers
 
       integer(kind=ikind) :: i
 
@@ -97,13 +97,13 @@ module manage_pointers
            call RE_rot(pde(1))
            call ade(pde(2))           
 	  
-	  ! added J 13/6/16
-! 	  case("Re_dual_totH")
-! 	  		write(unit=drutes_config%fullname, fmt=*) " Richards equation ", &
-!      	  "in total hydraulic head form for dual (fracture and matrix) medium"	
-!            
-!            call RE_matrix(pde(1))
-!            call RE_fracture(pde(2))  
+
+      case("Re_dual_totH")
+	  		write(unit=drutes_config%fullname, fmt=*) " Richards equation ", &
+     	  "in total hydraulic head form for dual (fracture and matrix) medium"	
+           
+           call RE_matrix(pde(1))
+           call RE_fracture(pde(2))  
 
 
       case("ADE_RE_std_kinsorb")

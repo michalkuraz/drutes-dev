@@ -419,7 +419,6 @@ module drutes_init
 	    domain(k,:) = nodes%data(elements%data(j,k),:)
 	  end do
 	  if (inside(domain, observation_array(i)%xyz)) then
-
 	    observation_array(i)%element = j
 	    EXIT
 	  else
@@ -525,13 +524,13 @@ module drutes_init
 	write(unit=pde_loc%obspt_unit(name), fmt=*) "#        time                      ", &
 	  trim(pde_loc%solution_name(2)), "            ", &
 	!  trim(pde_loc%solution_name(2)), " (avg over el.)", &
-	!  "       ", trim(pde_loc%mass_name(2)), "       ",&
+	 "       ", trim(pde_loc%mass_name(2)), "       ",&
 	  trim(pde_loc%flux_name(2)), "   in    ", xyz(1:drutes_config%dimen), "     directions", "   cumulative flux"
 	write(unit=pde_loc%obspt_unit(name), fmt=*) &
 	  "#-----------------------------------------------------------------------------------------------"
 	write(unit=pde_loc%obspt_unit(name), fmt=*)
 	!J added 
-	close(unit=pde_loc%obspt_unit(name))
+! 	close(unit=pde_loc%obspt_unit(name))
       else
 	open(unit=pde_loc%obspt_unit(name), file=fileid, action="write", access="append", status="old")
       end if

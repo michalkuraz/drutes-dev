@@ -55,11 +55,7 @@ module femmat
 	
 	call assemble_mat(ierr)
 	
-	
-	
-! 	call estimeigvalues(spmatrix, lambda_l, lambda_h)
-! 	
-! 	print *, lambda_l, lambda_h
+	pde_common%xvect(1:fin,3) = 0.0
 	
 	if (drutes_config%dimen >  0) then
 	  call diag_precond(a=spmatrix, x=pde_common%xvect(1:fin,3), mode=1)
@@ -68,16 +64,15 @@ module femmat
 	call solve_matrix(spmatrix, pde_common%bvect(1:fin), pde_common%xvect(1:fin,3),  itmax1=fin, &
 		  reps1=1e-15_rkind)
 
-
 	if (drutes_config%dimen >  0) then
 	  write(unit=file_itcg, fmt = *) time, pcg_it, itcount
 	  call flush(file_itcg)
 	  call diag_precond(a=spmatrix, x=pde_common%xvect(1:fin,3), mode=-1)
-	end if
-! 	
+	end if	
 
-         error = norm2(pde_common%xvect(1:fin,2)-pde_common%xvect(1:fin,3))/ubound(pde_common%xvect,1)
-
+        error = norm2(pde_common%xvect(1:fin,2)-pde_common%xvect(1:fin,3))/ubound(pde_common%xvect,1)
+        
+    
          
 	if (itcount == 1 .or. error <= iter_criterion) then
 	  do proc=1, ubound(pde,1)
@@ -99,7 +94,6 @@ module femmat
 
 
 	if (error <= iter_criterion) then
-	  
 	
 	  ierr = 0
 	  call results_extractor()

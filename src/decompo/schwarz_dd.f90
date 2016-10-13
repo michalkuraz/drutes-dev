@@ -5,9 +5,10 @@ module schwarz_dd
     private :: results_extractor
     private :: locmat_assembler
     private :: search_error_cluster
+    
  
     contains
-
+    
       !>solves the problem using Picard method with Schwarz multiplicative domain decomposition reflecting the nonlinear problem
       subroutine schwarz_picard(ierr, itcount, success)
 	use typy
@@ -51,7 +52,7 @@ module schwarz_dd
 	inner_criterion = 1e-4
 
 	!reset local-local cluster iteration count
-        ddcoarse_mesh(:)%iter_count = 4
+        ddcoarse_mesh(:)%iter_count = 1
 	
 	!the residual vector is not allocated, thus we are at the beginning
 	if (.not. allocated(resvct)) then
@@ -146,7 +147,7 @@ module schwarz_dd
 	      subdomain(i)%solved = .true.
 	    end if
 	    
-! 	    if (.not. subdomain(i)%solved) then
+	    if (.not. subdomain(i)%solved) then
 
 	      corrvct(1:subfin) = 0.0
 
@@ -168,13 +169,6 @@ module schwarz_dd
 	      error = maxval(abs(corrvct(1:subfin)))
 	      
 	      cumerr = cumerr + error
-	      
-	      if (i==4) then
-                do j=1, ubound(resvct,1)
-                  print *, j, resvct(j), pde_common%invpermut(j)
-                end do
-                stop
-              end if
 
 	      subdomain(i)%xvect(:,3) = subdomain(i)%xvect(:,2) + corrvct(1:subfin)
 	      
@@ -190,7 +184,7 @@ module schwarz_dd
 		subdomain(i)%solved = .true.
 		subdomain(i)%time  = subdomain(i)%time + subdomain(i)%time_step
 	      end if
-! 	    end if
+	    end if
 					
 	  end do subdoms
 	  
@@ -202,6 +196,14 @@ module schwarz_dd
 
 	  if (domains_solved() == ubound(subdomain,1)) then
 	    
+	    dt_fine = pde(proc)%dt_check()
+	    
+	    if (.not.(dt_fine)) then
+	      ierr = 2
+	      success = .false.
+	      RETURN
+	    end if
+	    
 	    call etime(taaray(2,:), rslt(2))
 	    do i=1, ubound(subdomain,1)
 	      if (.not. subdomain(i)%critical .and. subdomain(i)%itcount>1 ) then
@@ -211,6 +213,7 @@ module schwarz_dd
 		reset_domains = .false.
 	      end if
 	    end do
+
 	   
 	    call printtime("Time spent on iterations: ", rslt(2)-rslt(1))
 	    if (reset_domains) call set_subdomains()
