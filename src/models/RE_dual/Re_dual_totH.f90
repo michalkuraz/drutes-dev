@@ -90,8 +90,7 @@ subroutine dual_mualemm(pde_loc, layer, quadpnt, x, tensor, scalar)
     m=vgmatrix(layer)%m
     weight=-exchange(layer)%weightm
 
-    print*, "pressure head in matrix"
- 	print*, h
+
     one=1.0_rkind    
     if(h < 0.0_rkind) then
       Kr=(one-(-alpha*h)**(n*m)*(one+(-alpha*h)**n)**(-m))**2/(one+(-alpha*h)**n)**(m/2)
@@ -146,14 +145,12 @@ subroutine dual_mualemf(pde_loc, layer, quadpnt, x, tensor, scalar)
 	  end if
 	h = x(1)
     end if
-    ! print *, "h in fracture"
-!     print *, h
+
     alpha=vgfracture(layer)%alpha
     n=vgfracture(layer)%n
     m=vgfracture(layer)%m
     weight=exchange(layer)%weightf
-    print*, "pressure head in fracture"
- 	print*, h
+
     one=1.0_rkind    
     
     if(h < 0.0_rkind) then
@@ -311,15 +308,11 @@ subroutine dual_mualemf(pde_loc, layer, quadpnt, x, tensor, scalar)
       Thr = vgmatrix(layer)%Thr
     
       if (h >=0.0_rkind) then
-	    theta = vgmatrix(layer)%Ths
-	    print*, "water content in matrix is:"
-	    print*, theta
-	  RETURN
+        theta = vgmatrix(layer)%Ths
+        RETURN
       else
 	    theta_e = 1/(1+(a*(abs(h)))**n)**m
 	    theta = theta_e*(Ths-Thr)+Thr
-	    print*, "water content in matrix is:"
-	    print*, theta
       end if
  end function vangen_d_m
    
@@ -359,19 +352,10 @@ subroutine dual_mualemf(pde_loc, layer, quadpnt, x, tensor, scalar)
       Thr = vgfracture(layer)%Thr
       if (h >=0.0_rkind) then
 	    theta = vgfracture(layer)%Ths
- 	    print*, "water content of fracture"
- 	    print*, theta
-
  	    RETURN
       else
 	    theta_e = 1/(1+(a*(abs(h)))**n)**m
 	    theta = theta_e*(Ths-Thr)+Thr
- 	    print*, "water content of fracture"
- 	    print*, theta
-
- 	    ! if(h > (-1000.0)) then
-!  	      STOP
-!  	    end if
       end if
  end function vangen_d_f      
  
@@ -430,9 +414,7 @@ subroutine dual_mualemf(pde_loc, layer, quadpnt, x, tensor, scalar)
      else
        ex_term=0.0_rkind
      end if
-     
-      print*, 'The exchange term is:'
-      print*, ex_term
+
   end function dual_coupling
   
   function dual_coupling_f(pde_loc, layer, quadpnt, x) result(ex_term)
