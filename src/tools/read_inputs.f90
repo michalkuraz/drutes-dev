@@ -457,7 +457,7 @@ module read_inputs
       end do
       
       do i=1, nodes%kolik
-	read(unit=file_mesh, fmt=*) ch, ch, nodes%data(i,:)
+	read(unit=file_mesh, fmt=*) itmp,  nodes%data(i,:)
       end do
       
       do 

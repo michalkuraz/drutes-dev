@@ -226,6 +226,7 @@ module geom_tools
     ! the verticality check
     if (abs(n(3)) < 1e2*reps) then
       print *, "the mesh is wrong, base function can't be vertical"
+      print *, abs(n(3))
       ERROR STOP
     end if 
     xder = -n(1)/n(3)

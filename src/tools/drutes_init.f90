@@ -28,6 +28,7 @@ module drutes_init
       use core_tools
       use read_inputs
       use readtools
+      use debug_tools
 
 
       integer :: i_err, i
