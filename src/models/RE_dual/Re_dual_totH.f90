@@ -410,11 +410,12 @@ subroutine dual_mualemf(pde_loc, layer, quadpnt, x, tensor, scalar)
      a=exchange(layer)%a
      gam_par=exchange(layer)%gam_par
      if(hf /= hm) then
-       ex_term=-beta/a**2*gam_par*Ka*(hf-hm)
+       ex_term=beta/a**2*gam_par*Ka*(hf-hm)
      else
        ex_term=0.0_rkind
      end if
-
+   !  print*, 'exchange term matrix'
+   !  print*, ex_term
   end function dual_coupling
   
   function dual_coupling_f(pde_loc, layer, quadpnt, x) result(ex_term)
@@ -466,18 +467,17 @@ subroutine dual_mualemf(pde_loc, layer, quadpnt, x, tensor, scalar)
      gam_par=exchange(layer)%gam_par
     
      one=1.0_rkind   
-     Ka_f=Ks*(one-(one-(one/(one+abs(alpha*hm)**n)))**m)**2/(one+abs(alpha*hm)**n)**(m/2)
-     Ka_m=Ks*(one-(one-(one/(one+abs(alpha*hf)**n)))**m)**2/(one+abs(alpha*hf)**n)**(m/2)
-
-     Ka=0.5*(Ka_f+Ka_m)
+     Ka_f=(one-(-alpha*hf)**(n*m)*(one+(-alpha*hf)**n)**(-m))**2/(one+(-alpha*hf)**n)**(m/2)
+     Ka_m=(one-(-alpha*hm)**(n*m)*(one+(-alpha*hm)**n)**(-m))**2/(one+(-alpha*hm)**n)**(m/2)
+     Ka=0.5*(Ka_f+Ka_m)*Ks
      if(hf /= hm) then
-       ex_term=beta/a**2*gam_par*Ka*(hf-hm)
+       ex_term=-beta/a**2*gam_par*Ka*(hf-hm)
      else
        ex_term=0
      end if
      
-!      print*, 'exchange term fracture'
-!     print*, ex_term
+!print*, 'exchange term fracture'
+   !  print*, ex_term
   end function dual_coupling_f
   
   subroutine darcy_law_d(pde_loc, layer, quadpnt, x, grad,  flux, flux_length)
