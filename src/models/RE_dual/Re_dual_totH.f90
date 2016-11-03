@@ -603,7 +603,7 @@ subroutine dual_mualemf(pde_loc, layer, quadpnt, x, tensor, scalar)
     m=vgexchange(layer)%m
     one=1.0_rkind 
     Ka_c=(one-(-alpha*h)**(n*m)*(one+(-alpha*h)**n)**(-m))**2/(one+(-alpha*h)**n)**(m/2)
-    print*, Ka_c
+    !print*, Ka_c
   end function dual_coupling_K
   ! Tabular versions dispersion: mualem_tab; elastisticty: dual_ret; mass= vangen_tab 
   
