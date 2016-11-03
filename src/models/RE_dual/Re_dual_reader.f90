@@ -14,7 +14,7 @@ module Re_dual_reader
       integer :: i_err, i, j, file_dual
       integer(kind=ikind) :: layers
 	  real(kind=rkind)::inicond
-	  	
+	  character(len=4096) :: msg	
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       !input pars
       
@@ -25,6 +25,24 @@ module Re_dual_reader
         print *, "missing dual.conf file in drutes.conf/REdual"
         ERROR STOP
       end if 
+      
+      write(msg, *) "define method of evaluation of constitutive functions for the Richards equation", new_line("a"), &
+	"   0 - direct evaluation (not recommended, extremely resources consuming due to complicated exponential functions)", &
+	new_line("a"), &
+	"   1 - function values are precalculated in program initialization and values between are linearly approximated"
+
+      
+      call fileread(drutes_config%fnc_method, file_dual, ranges=(/0_ikind,1_ikind/),errmsg=msg)
+      
+      call fileread(maxpress, file_dual, ranges=(/-huge(0.0_rkind), huge(0.0_rkind)/), &
+		errmsg="set some positive nonzero limit for maximal suction pressure (think in absolute values) ")
+		maxpress = abs(maxpress)
+      
+      call fileread(drutes_config%fnc_discr_length, file_dual, ranges=(/tiny(0.0_rkind), maxpress/),  &
+		errmsg="the discretization step for precalculating constitutive functions must be positive and smaller &
+		then the bc")
+
+      
       !number of materials
       call fileread(layers,file_dual,ranges=(/0_ikind,huge(0_ikind)/)&
       , errmsg="At least one layer")
