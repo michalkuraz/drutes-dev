@@ -3,7 +3,8 @@ module Re_dual_pointers
   public :: RE_matrix
   
   contains
-
+! change pointers to take tabular version
+! tabularize coupling function with coupling pars
     subroutine RE_matrix(pde_loc)
       use typy
       use globals
@@ -18,16 +19,21 @@ module Re_dual_pointers
       
       call Re_dual_readm(pde_loc)
 	  call Re_dual_var() 
-
-      pde_loc%pde_fnc(pde_loc%order)%dispersion => dual_mualemm
-      
-      pde_loc%pde_fnc(pde_loc%order)%reaction => dual_coupling
-
-      pde_loc%pde_fnc(pde_loc%order)%elasticity => dual_ret_capm
-      
-      pde_loc%mass => vangen_d_m
       
       pde_loc%flux => darcy_law_d!implement darcy law for fluxes
+      if (drutes_config%fnc_method == 0) then
+	    pde_loc%pde_fnc(pde_loc%order)%dispersion => dual_mualemm
+	    pde_loc%pde_fnc(pde_loc%order)%reaction => dual_coupling
+	    pde_loc%pde_fnc(pde_loc%order)%elasticity => dual_ret_capm
+	    pde_loc%mass => vangen_d_m
+      else
+	    call dual_tabvalues(pde_loc, Kfnc=dual_mualemm, Cfnc=dual_ret_capm, thetafnc=vangen_d_m&
+	    ,ex_K_fnc=dual_coupling_K,domainname='matrix')
+	    pde_loc%pde_fnc(pde_loc%order)%dispersion  => dual_mualem_m_tab		
+	    pde_loc%pde_fnc(pde_loc%order)%reaction => dual_coupling_tab
+	    pde_loc%pde_fnc(pde_loc%order)%elasticity => dual_ret_capm_tab
+	    pde_loc%mass => vangen_d_m_tab
+      end if
       
       ! boundary condition defined as different type boundary_vals
       do i=lbound(pde_loc%bc,1), ubound(pde_loc%bc,1)
@@ -56,13 +62,19 @@ module Re_dual_pointers
       
       call Re_dual_readf(pde_loc)
       
-      pde_loc%pde_fnc(pde_loc%order)%dispersion => dual_mualemf
-      
-      pde_loc%pde_fnc(pde_loc%order)%reaction => dual_coupling_f
-
-      pde_loc%pde_fnc(pde_loc%order)%elasticity => dual_ret_capf
-      
-      pde_loc%mass => vangen_d_f
+     if (drutes_config%fnc_method == 0) then
+	    pde_loc%pde_fnc(pde_loc%order)%dispersion => dual_mualemf
+	    pde_loc%pde_fnc(pde_loc%order)%reaction => dual_coupling_f
+	    pde_loc%pde_fnc(pde_loc%order)%elasticity => dual_ret_capf
+	    pde_loc%mass => vangen_d_m
+      else
+	    call dual_tabvalues(pde_loc, Kfnc=dual_mualemf, Cfnc=dual_ret_capf, thetafnc=vangen_d_f&
+	    ,ex_K_fnc=dual_coupling_K,domainname='fracture')
+	    pde_loc%pde_fnc(pde_loc%order)%dispersion  => dual_mualem_f_tab		
+	    pde_loc%pde_fnc(pde_loc%order)%reaction => dual_coupling_f_tab
+	    pde_loc%pde_fnc(pde_loc%order)%elasticity => dual_ret_capf_tab
+	    pde_loc%mass => vangen_d_f_tab
+      end if
       
       pde_loc%flux => darcy_law_d
       

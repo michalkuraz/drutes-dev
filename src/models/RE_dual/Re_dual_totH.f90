@@ -1,11 +1,23 @@
 module dual_por
+	use typy
+    use global_objs
+    use dual_globals
+
 
 public:: dual_mualemm,dual_mualemf, dual_ret_capf, dual_ret_capm, dual_coupling
 public:: vangen_d_f, vangen_d_m, dual_coupling_f
 public:: dual_inicond_f,dual_inicond_m
-public :: darcy_law_d
+public:: darcy_law_d
+public:: dual_mualem_m_tab,dual_mualem_f_tab
+public:: vangen_d_m_tab, vangen_d_f_tab
+public:: dual_ret_capf_tab, dual_ret_capm_tab
+public:: dual_coupling_f_tab,dual_coupling_tab,dual_coupling_K
+public:: dual_tabvalues
 
-
+real(kind=rkind), dimension(:,:), pointer, public :: Ktab_d,watcontab_d,warecatab_d,couptab
+real(kind=rkind), dimension(:,:,:), allocatable, target, public ::Ktabd_all,watcontabd_all
+real(kind=rkind), dimension(:,:,:), allocatable, target, public ::warecatabd_all
+real(kind=rkind), dimension(:,:), allocatable, target, public ::couptab_all
 contains 
 
  subroutine dual_inicond_m(pde_loc)
@@ -78,7 +90,7 @@ subroutine dual_mualemm(pde_loc, layer, quadpnt, x, tensor, scalar)
       if (ubound(x,1) /=1) then
 	    print *, "ERROR: van Genuchten function is a function of a single variable h"
 	    print *, "       your input data has:", ubound(x,1), "variables"
-	    print *, "exited from re_constitutive::mualem"
+	    print *, "exited from RE_dual::dual_mualemm"
 	    ERROR STOP
 	  end if
 	h = x(1)
@@ -140,7 +152,7 @@ subroutine dual_mualemf(pde_loc, layer, quadpnt, x, tensor, scalar)
       if (ubound(x,1) /=1) then
 	    print *, "ERROR: van Genuchten function is a function of a single variable h"
 	    print *, "       your input data has:", ubound(x,1), "variables"
-	    print *, "exited from re_constitutive::mualem"
+	    print *, "exited from RE_dual::mualemf"
 	    ERROR STOP
 	  end if
 	h = x(1)
@@ -198,7 +210,7 @@ subroutine dual_mualemf(pde_loc, layer, quadpnt, x, tensor, scalar)
         if (ubound(x,1) /=1) then
 	      print *, "ERROR: van Genuchten function is a function of a single variable h"
 	      print *, "       your input data has:", ubound(x,1), "variables"
-	      print *, "exited from re_constitutive::vangen_elast"
+	      print *, "exited from RE_dual::dual_ret_capm"
 	      ERROR STOP
 	    end if
 	    h = x(1)
@@ -249,7 +261,7 @@ subroutine dual_mualemf(pde_loc, layer, quadpnt, x, tensor, scalar)
         if (ubound(x,1) /=1) then
 	      print *, "ERROR: van Genuchten function is a function of a single variable h"
 	      print *, "       your input data has:", ubound(x,1), "variables"
-	      print *, "exited from re_constitutive::vangen_elast"
+	      print *, "exited from RE_dual::dual_ret_capf"
 	      ERROR STOP
 	    end if
 	    h = x(1)
@@ -295,7 +307,7 @@ subroutine dual_mualemf(pde_loc, layer, quadpnt, x, tensor, scalar)
 	 if (ubound(x,1) /=1) then
 	   print *, "ERROR: van Genuchten function is a function of a single variable h"
 	   print *, "       your input data has:", ubound(x,1), "variables"
-	   print *, "exited from re_constitutive::vangen"
+	   print *, "exited from RE_dual::vangen_d_m"
 	   ERROR STOP
 	 end if
 	   h = x(1)
@@ -339,7 +351,7 @@ subroutine dual_mualemf(pde_loc, layer, quadpnt, x, tensor, scalar)
 	 if (ubound(x,1) /=1) then
 	   print *, "ERROR: van Genuchten function is a function of a single variable h"
 	   print *, "       your input data has:", ubound(x,1), "variables"
-	   print *, "exited from re_constitutive::vangen"
+	   print *, "exited from RE_dual::vangen_d_f"
 	   ERROR STOP
 	 end if
 	   h = x(1)
@@ -383,15 +395,15 @@ subroutine dual_mualemf(pde_loc, layer, quadpnt, x, tensor, scalar)
 	    hm = pde(1)%getval(quadpnt)
 	    hf = pde(2)%getval(quadpnt)
       else
-	    if (ubound(x,1) /=1) then
-	      print *, "ERROR: van Genuchten function is a function of a single variable h"
+	    if (ubound(x,1) /=2) then
+	      print *, "ERROR: exchange term requires two variables h"
 	      print *, "       your input data has:", ubound(x,1), "variables"
 	      ERROR STOP
 	    end if
-      	if (ubound(x,1) /=1) then
-	      print *, "ERROR: van Genuchten function is a function of a single variable h"
+      	if (ubound(x,1) /=2) then
+	      print *, "ERROR: exchange term requires two variables h"
 	      print *, "       your input data has:", ubound(x,1), "variables"
-	      print *, "exited from re_constitutive::vangen_elast"
+	      print *, "exited from RE_dual::dual_coupling"
 	      ERROR STOP
 	   end if
 	   hm = x(1)
@@ -442,15 +454,15 @@ subroutine dual_mualemf(pde_loc, layer, quadpnt, x, tensor, scalar)
 	    hm = pde(1)%getval(quadpnt)
 	    hf = pde(2)%getval(quadpnt)
       else
-	    if (ubound(x,1) /=1) then
-	      print *, "ERROR: van Genuchten function is a function of a single variable h"
+	    if (ubound(x,1) /=2) then
+	      print *, "ERROR: exchange term requires two variables h"
 	      print *, "       your input data has:", ubound(x,1), "variables"
 	      ERROR STOP
 	    end if
-      	if (ubound(x,1) /=1) then
-	      print *, "ERROR: van Genuchten function is a function of a single variable h"
+      	if (ubound(x,1) /=2) then
+	      print *, "ERROR: exchange term requires two variables h"
 	      print *, "       your input data has:", ubound(x,1), "variables"
-	      print *, "exited from re_constitutive::vangen_elast"
+	      print *, "exited from RE_dual::dual_coupling"
 	      ERROR STOP
 	   end if
 	   hm = x(1)
@@ -558,5 +570,812 @@ subroutine dual_mualemf(pde_loc, layer, quadpnt, x, tensor, scalar)
       end if
 
     end subroutine darcy_law_d
+  
+  function dual_coupling_K(pde_loc,layer, quadpnt, x) result(Ka_c)
+    use typy
+    use global_objs
+    use pde_objs
+    use dual_globals
+    use Re_dual_reader
+    
+    class(pde_str), intent(in) :: pde_loc
+    integer(kind=ikind), intent(in) :: layer
+    real(kind=rkind), dimension(:),intent(in), optional    :: x
+    !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
+    type(integpnt_str), intent(in), optional :: quadpnt
+    real(kind=rkind)::Ka_c
+    real(kind=rkind)::n,m,alpha
+    real(kind=rkind):: one,h
+          
+     if (present(quadpnt)) then
+	   h = pde_loc%getval(quadpnt)
+     else
+	 if (ubound(x,1) /=1) then
+	   print *, "ERROR: van Genuchten function is a function of a single variable h"
+	   print *, "       your input data has:", ubound(x,1), "variables"
+	   print *, "exited from RE_dual::dual_coupling_K"
+	   ERROR STOP
+	 end if
+	   h = x(1)
+     end if  
+    alpha=vgexchange(layer)%alpha
+    n=vgexchange(layer)%n
+    m=vgexchange(layer)%m
+    one=1.0_rkind 
+    Ka_c=(one-(-alpha*h)**(n*m)*(one+(-alpha*h)**n)**(-m))**2/(one+(-alpha*h)**n)**(m/2)
+    print*, Ka_c
+  end function dual_coupling_K
+  ! Tabular versions dispersion: mualem_tab; elastisticty: dual_ret; mass= vangen_tab 
+  
+ subroutine dual_mualem_m_tab(pde_loc, layer, quadpnt,  x, tensor, scalar)
+      use typy
+      use dual_globals
+      use pde_objs
+      use core_tools
+      use debug_tools
+
+      class(pde_str), intent(in) :: pde_loc
+      integer(kind=ikind), intent(in) :: layer
+      !> pressure head
+      real(kind=rkind), dimension(:), intent(in), optional :: x
+      !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
+      type(integpnt_str), intent(in), optional :: quadpnt      
+      !> second order tensor of the unsaturated hydraulic conductivity
+      real(kind=rkind), dimension(:,:), intent(out), optional :: tensor		
+      !> relative hydraulic conductivity, (scalar value)
+      real(kind=rkind), intent(out), optional :: scalar
+
+      real(kind=rkind) :: h
+      integer(kind=ikind) :: pos
+      real(kind=rkind) :: res, dist, tmp
       
+      
+      if (present(quadpnt) .and. present(x)) then
+		print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
+		print *, "exited from Re_dual::mualem_m_tab"
+		ERROR stop
+      else if (.not. present(quadpnt) .and. .not. present(x)) then
+		print *, "ERROR: you have not specified either integ point or x value"
+        print *, "exited from Re_dual::mualem_m_tab"
+		ERROR stop
+      end if
+      
+     
+      if (present(quadpnt)) then
+		h = pde_loc%getval(quadpnt)
+      else
+      	if (ubound(x,1) /=1) then
+	  		print *, "ERROR: van Genuchten function is a function of a single variable h"
+	  		print *, "       your input data has:", ubound(x,1), "variables"
+	  		print *, "exited from re_constitutive::mualem_tab"
+	  		ERROR STOP
+		end if
+		h = x(1)
+      end if
+      
+      
+
+
+      
+ if (h<0) then
+   if (-h/drutes_config%fnc_discr_length < 0.1*huge(1) ) then
+      pos = int(-h/drutes_config%fnc_discr_length)+1
+	  if (pos <= ubound(Ktab_d,2)-1) then
+	    dist = -h - (pos - 1)*drutes_config%fnc_discr_length
+	    tmp = (Ktab_d(layer,pos+1)-Ktab_d(layer,pos))/drutes_config%fnc_discr_length*dist &
+	    + Ktab_d(layer,pos)
+	  else
+	  if (present(quadpnt)) call dual_mualemm(pde_loc, layer, quadpnt, scalar = tmp)
+	  if (present(x)) call dual_mualemm(pde_loc, layer, x=x, scalar = tmp)
+	  ! if (.not. tabwarning) then
+! 	    call write_log(trim(tabmsg))
+! 	    tabwarning = .true.
+! 	  end if
+	end if
+ else
+!  if (.not. intwarning) then
+!    call intoverflow()
+!    intwarning = .true.
+!  end if
+ 
+ if (present(quadpnt)) call dual_mualemm(pde_loc, layer, quadpnt, scalar = tmp)
+ if (present(x)) call dual_mualemm(pde_loc, layer, x=x, scalar = tmp)
+  end if 
+ else
+	tmp = 1
+  end if
+
+  if (present(tensor)) then
+	tensor = tmp* vgmatrix(layer)%Ks
+  end if
+
+  if (present(scalar)) then
+	scalar = tmp
+  end if
+end subroutine dual_mualem_m_tab
+
+subroutine dual_mualem_f_tab(pde_loc, layer, quadpnt,  x, tensor, scalar)
+      use typy
+      use dual_globals
+      use pde_objs
+      use core_tools
+      use debug_tools
+
+      class(pde_str), intent(in) :: pde_loc
+      integer(kind=ikind), intent(in) :: layer
+      !> pressure head
+      real(kind=rkind), dimension(:), intent(in), optional :: x
+      !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
+      type(integpnt_str), intent(in), optional :: quadpnt      
+      !> second order tensor of the unsaturated hydraulic conductivity
+      real(kind=rkind), dimension(:,:), intent(out), optional :: tensor		
+      !> relative hydraulic conductivity, (scalar value)
+      real(kind=rkind), intent(out), optional :: scalar
+
+      real(kind=rkind) :: h
+      integer(kind=ikind) :: pos
+      real(kind=rkind) :: res, dist, tmp
+      
+
+      if (present(quadpnt) .and. present(x)) then
+		print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
+		print *, "exited from Re_dual::mualem_m_tab"
+		ERROR stop
+      else if (.not. present(quadpnt) .and. .not. present(x)) then
+		print *, "ERROR: you have not specified either integ point or x value"
+        print *, "exited from Re_dual::mualem_m_tab"
+		ERROR stop
+      end if
+      
+     
+      if (present(quadpnt)) then
+		h = pde_loc%getval(quadpnt)
+      else
+      	if (ubound(x,1) /=1) then
+	  		print *, "ERROR: van Genuchten function is a function of a single variable h"
+	  		print *, "       your input data has:", ubound(x,1), "variables"
+	  		print *, "exited from re_constitutive::mualem_tab"
+	  		ERROR STOP
+		end if
+		h = x(1)
+      end if
+      
+      
+
+
+      
+ if (h<0) then
+   if (-h/drutes_config%fnc_discr_length < 0.1*huge(1) ) then
+      pos = int(-h/drutes_config%fnc_discr_length)+1
+	  if (pos <= ubound(Ktab_d,2)-1) then
+	    dist = -h - (pos - 1)*drutes_config%fnc_discr_length
+	    tmp = (Ktab_d(layer,pos+1)-Ktab_d(layer,pos))/drutes_config%fnc_discr_length*dist &
+	    + Ktab_d(layer,pos)
+	  else
+	  if (present(quadpnt)) call dual_mualemf(pde_loc, layer, quadpnt, scalar = tmp)
+	  if (present(x)) call dual_mualemf(pde_loc, layer, x=x, scalar = tmp)
+	  ! if (.not. tabwarning) then
+! 	    call write_log(trim(tabmsg))
+! 	    tabwarning = .true.
+! 	  end if
+	end if
+ else
+!  if (.not. intwarning) then
+!    call intoverflow()
+!    intwarning = .true.
+!  end if
+ 
+ if (present(quadpnt)) call dual_mualemf(pde_loc, layer, quadpnt, scalar = tmp)
+ if (present(x)) call dual_mualemf(pde_loc, layer, x=x, scalar = tmp)
+  end if 
+ else
+	tmp = 1
+  end if
+
+  if (present(tensor)) then
+	tensor = tmp* vgfracture(layer)%Ks
+  end if
+
+  if (present(scalar)) then
+	scalar = tmp
+  end if
+end subroutine dual_mualem_f_tab    
+
+function vangen_d_m_tab(pde_loc, layer, quadpnt, x) result(theta)
+      use typy
+      use dual_globals
+      use pde_objs
+      use core_tools
+      
+      class(pde_str), intent(in) :: pde_loc
+      integer(kind=ikind), intent(in) :: layer
+      !> pressure head
+      real(kind=rkind), intent(in), dimension(:), optional :: x
+      !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
+      type(integpnt_str), intent(in), optional :: quadpnt
+      real(kind=rkind) :: h
+      !> resulting water content
+      real(kind=rkind) :: theta
+
+      integer(kind=ikind) :: pos
+      real(kind=rkind) :: res, dist
+
+ 
+      if (present(quadpnt) .and. present(x)) then
+	print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
+	print *, "exited from RE_dual::vangen_tab"
+	ERROR stop
+      else if (.not. present(quadpnt) .and. .not. present(x)) then
+	print *, "ERROR: you have not specified either integ point or x value"
+        print *, "exited from RE_dual::vangen_tab"
+	ERROR stop
+      end if
+      
+      if (present(quadpnt)) then
+	h = pde_loc%getval(quadpnt)
+      else
+      	if (ubound(x,1) /=1) then
+	  print *, "ERROR: van Genuchten function is a function of a single variable h"
+	  print *, "       your input data has:", ubound(x,1), "variables"
+	  print *, "exited from re_constitutive::vangen_tab"
+	  ERROR STOP
+	end if
+	h = x(1)
+      end if
+
+      if (h<0) then
+	if ( h/drutes_config%fnc_discr_length < 0.1*huge(1)) then
+	  
+	  pos = int(-h/drutes_config%fnc_discr_length)+1
+	  if (pos <= ubound(watcontab_d,2)-1) then
+	    dist = -h - (pos - 1)*drutes_config%fnc_discr_length
+	    theta = (watcontab_d(layer,pos+1)-watcontab_d(layer,pos))/drutes_config%fnc_discr_length*dist + watcontab_d(layer,pos)
+	  else
+	    if (present(quadpnt)) theta = vangen_d_m(pde_loc, layer, quadpnt)
+	    if (present(x)) theta = vangen_d_m(pde_loc, layer, x=x)
+	   !  if (.not. tabwarning) then
+! 	      call write_log(trim(tabmsg))
+! 	      tabwarning = .true.
+! 	    end if
+	  end if
+	else
+	
+! 	  if (.not. intwarning) then
+! 	    call intoverflow()
+! 	    intwarning = .true.
+! 	  end if
+	
+	  if (present(quadpnt)) theta = vangen_d_m(pde_loc, layer, quadpnt)
+	  if (present(x)) theta = vangen_d_m(pde_loc, layer, x=x)
+	  
+	end if
+	
+      else
+	theta = vgmatrix(layer)%Ths	
+      end if
+      
+      
+
+    end function vangen_d_m_tab
+
+function vangen_d_f_tab(pde_loc, layer, quadpnt, x) result(theta)
+      use typy
+      use dual_globals
+      use pde_objs
+      use core_tools
+      
+      class(pde_str), intent(in) :: pde_loc
+      integer(kind=ikind), intent(in) :: layer
+      !> pressure head
+      real(kind=rkind), intent(in), dimension(:), optional :: x
+      !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
+      type(integpnt_str), intent(in), optional :: quadpnt
+      real(kind=rkind) :: h
+      !> resulting water content
+      real(kind=rkind) :: theta
+
+      integer(kind=ikind) :: pos
+      real(kind=rkind) :: res, dist
+
+ 
+      if (present(quadpnt) .and. present(x)) then
+	print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
+	print *, "exited from RE_dual::vangen_tab"
+	ERROR stop
+      else if (.not. present(quadpnt) .and. .not. present(x)) then
+	print *, "ERROR: you have not specified either integ point or x value"
+        print *, "exited from RE_dual::vangen_tab"
+	ERROR stop
+      end if
+      
+      if (present(quadpnt)) then
+	h = pde_loc%getval(quadpnt)
+      else
+      	if (ubound(x,1) /=1) then
+	  print *, "ERROR: van Genuchten function is a function of a single variable h"
+	  print *, "       your input data has:", ubound(x,1), "variables"
+	  print *, "exited from re_constitutive::vangen_tab"
+	  ERROR STOP
+	end if
+	h = x(1)
+      end if
+
+      if (h<0) then
+	if ( h/drutes_config%fnc_discr_length < 0.1*huge(1)) then
+	  
+	  pos = int(-h/drutes_config%fnc_discr_length)+1
+	  if (pos <= ubound(watcontab_d,2)-1) then
+	    dist = -h - (pos - 1)*drutes_config%fnc_discr_length
+	    theta = (watcontab_d(layer,pos+1)-watcontab_d(layer,pos))/drutes_config%fnc_discr_length*dist&
+	     + watcontab_d(layer,pos)
+	  else
+	    if (present(quadpnt)) theta = vangen_d_f(pde_loc, layer, quadpnt)
+	    if (present(x)) theta = vangen_d_f(pde_loc, layer, x=x)
+	   !  if (.not. tabwarning) then
+! 	      call write_log(trim(tabmsg))
+! 	      tabwarning = .true.
+! 	    end if
+	  end if
+	else
+	
+! 	  if (.not. intwarning) then
+! 	    call intoverflow()
+! 	    intwarning = .true.
+! 	  end if
+	
+	  if (present(quadpnt)) theta = vangen_d_f(pde_loc, layer, quadpnt)
+	  if (present(x)) theta = vangen_d_f(pde_loc, layer, x=x)	  
+	  end if
+	
+      else
+	  theta = vgfracture(layer)%Ths	
+    end if
+         
+
+end function vangen_d_f_tab
+ 
+function dual_ret_capm_tab(pde_loc, layer, quadpnt, x) result(E)
+      use typy
+      use dual_globals
+      use pde_objs
+      use core_tools
+
+      class(pde_str), intent(in) :: pde_loc 
+      integer(kind=ikind), intent(in) :: layer
+      !> pressure head
+      real(kind=rkind), dimension(:), intent(in), optional :: x
+      !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
+      type(integpnt_str), intent(in), optional :: quadpnt
+      real(kind=rkind) :: h
+      !> resulting system elasticity
+      real(kind=rkind) :: E
+
+      integer(kind=ikind) :: pos
+      real(kind=rkind) :: res, dist
+      
+   
+      
+      if (present(quadpnt) .and. present(x)) then
+	print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
+	print *, "exited from re_constitutive::vangen_elast_tab"
+	ERROR stop
+      else if (.not. present(quadpnt) .and. .not. present(x)) then
+	print *, "ERROR: you have not specified either integ point or x value"
+        print *, "exited from re_constitutive::vangen_elast_tab"
+	ERROR stop
+      end if
+      
+      if (present(quadpnt)) then
+	h = pde_loc%getval(quadpnt)
+      else
+      	if (ubound(x,1) /=1) then
+	  print *, "ERROR: van Genuchten function is a function of a single variable h"
+	  print *, "       your input data has:", ubound(x,1), "variables"
+	  print *, "exited from re_constitutive::vangen_elast_tab"
+	  ERROR STOP
+	end if
+	h = x(1)
+      end if
+
+      if (h<0) then
+	if ( h/drutes_config%fnc_discr_length < 0.1*huge(1)) then
+	  pos = int(-h/drutes_config%fnc_discr_length)+1
+	  if (pos <= ubound(warecatab_d,2)-1) then
+	    dist = -h - (pos - 1)*drutes_config%fnc_discr_length
+	    E = (warecatab_d(layer,pos+1)-warecatab_d(layer,pos))/drutes_config%fnc_discr_length*dist &
+	    + warecatab_d(layer,pos)
+	  else
+	    if (present(quadpnt)) E = dual_ret_capm(pde_loc, layer, quadpnt)
+	    if (present(x)) E = dual_ret_capm(pde_loc, layer, x=x)
+! 	    if (.not. tabwarning) then
+! 	      call write_log(trim(tabmsg))
+! 	      tabwarning = .true.
+! 	    end if
+	  end if
+	else
+	 
+! 	  if (.not. intwarning) then
+! 	    call intoverflow()
+! 	    intwarning = .true.
+! 	  end if
+	  if (present(quadpnt)) E = dual_ret_capm(pde_loc, layer, quadpnt)
+	  if (present(x)) E = dual_ret_capm(pde_loc, layer, x=x)	  
+	
+	end if 
+      else
+	E = vgmatrix(layer)%Ss	
+      end if
+
+
+    end function dual_ret_capm_tab
+ 
+function dual_ret_capf_tab(pde_loc, layer, quadpnt, x) result(E)
+      use typy
+      use dual_globals
+      use pde_objs
+      use core_tools
+
+      class(pde_str), intent(in) :: pde_loc 
+      integer(kind=ikind), intent(in) :: layer
+      !> pressure head
+      real(kind=rkind), dimension(:), intent(in), optional :: x
+      !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
+      type(integpnt_str), intent(in), optional :: quadpnt
+      real(kind=rkind) :: h
+      !> resulting system elasticity
+      real(kind=rkind) :: E
+
+      integer(kind=ikind) :: pos
+      real(kind=rkind) :: res, dist
+      
+   
+      
+      if (present(quadpnt) .and. present(x)) then
+	print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
+	print *, "exited from re_constitutive::vangen_elast_tab"
+	ERROR stop
+      else if (.not. present(quadpnt) .and. .not. present(x)) then
+	print *, "ERROR: you have not specified either integ point or x value"
+        print *, "exited from re_constitutive::vangen_elast_tab"
+	ERROR stop
+      end if
+      
+      if (present(quadpnt)) then
+	h = pde_loc%getval(quadpnt)
+      else
+      	if (ubound(x,1) /=1) then
+	  print *, "ERROR: van Genuchten function is a function of a single variable h"
+	  print *, "       your input data has:", ubound(x,1), "variables"
+	  print *, "exited from re_constitutive::vangen_elast_tab"
+	  ERROR STOP
+	end if
+	h = x(1)
+      end if
+
+     if (h<0) then
+	  if ( h/drutes_config%fnc_discr_length < 0.1*huge(1)) then
+	    pos = int(-h/drutes_config%fnc_discr_length)+1
+	    if (pos <= ubound(warecatab_d,2)-1) then
+	      dist = -h - (pos - 1)*drutes_config%fnc_discr_length
+	      E = (warecatab_d(layer,pos+1)-warecatab_d(layer,pos))/drutes_config%fnc_discr_length*dist &
+	      + warecatab_d(layer,pos)
+	    else
+	    if (present(quadpnt)) E = dual_ret_capf(pde_loc, layer, quadpnt)
+	    if (present(x)) E = dual_ret_capf(pde_loc, layer, x=x)
+	    end if
+	  else
+	    if (present(quadpnt)) E = dual_ret_capf(pde_loc, layer, quadpnt)
+	    if (present(x)) E = dual_ret_capf(pde_loc, layer, x=x)	  
+	  end if 
+    else
+      E = vgfracture(layer)%Ss	
+    end if
+    
+    end function dual_ret_capf_tab 
+
+function dual_coupling_tab(pde_loc, layer, quadpnt, x) result(ex_term)
+      use typy
+      use dual_globals
+      use pde_objs
+      use core_tools
+
+      class(pde_str), intent(in) :: pde_loc 
+      integer(kind=ikind), intent(in) :: layer
+      !> pressure head
+      real(kind=rkind), dimension(:), intent(in), optional :: x
+      !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
+      type(integpnt_str), intent(in), optional :: quadpnt
+      !> resulting system elasticity
+      real(kind=rkind)::beta,a,gam_par
+      real(kind=rkind)::Ks
+      real(kind=rkind):: Ka_f,Ka_m,Ka,ex_term
+      real(kind=rkind):: hm,hf,one
+      integer(kind=ikind) :: pos
+      real(kind=rkind) :: res, dist
+
+      beta=exchange(layer)%beta
+      a=exchange(layer)%a
+      gam_par=exchange(layer)%gam_par
+      Ks=vgexchange(layer)%KS_local(1) 
+      
+      if (present(quadpnt) .and. present(x)) then
+	print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
+	print *, "exited from RE_dual: dual_coupling_tab"
+	ERROR stop
+      else if (.not. present(quadpnt) .and. .not. present(x)) then
+	print *, "ERROR: you have not specified either integ point or x value"
+        print *, "exited from RE_dual: dual_coupling_tab"
+	ERROR stop
+      end if
+      
+	if (present(quadpnt)) then
+	  hm = pde(1)%getval(quadpnt)
+	  hf = pde(2)%getval(quadpnt)
+    else
+	if (ubound(x,1) /=2) then
+	  print *, "ERROR: the coupling term is a function of two variables hm and hf"
+	  print *, "       your input data has:", ubound(x,1), "variables"
+	  ERROR STOP
+	end if
+    if (ubound(x,1) /=2) then
+	  print *, "ERROR: the coupling term is a function of two variables hm and hf"
+	  print *, "       your input data has:", ubound(x,1), "variables"
+	  print *, "exited from RE_dual::dual_coupling_tab"
+	  ERROR STOP
+	end if
+	   hm = x(1)
+	   hf = x(2)
+    end if
+    
+    if (hm<0) then
+	  if ( hm/drutes_config%fnc_discr_length < 0.1*huge(1)) then
+	    pos = int(-hm/drutes_config%fnc_discr_length)+1
+	    if (pos <= ubound(couptab,2)-1) then
+	      dist = -hm - (pos - 1)*drutes_config%fnc_discr_length
+	      Ka_m = (couptab(layer,pos+1)-couptab(layer,pos))/drutes_config%fnc_discr_length*dist &
+	      + couptab(layer,pos)
+	    else
+	      Ka_m= dual_coupling_K(pde_loc,layer,x=[hm])
+	    end if
+	  else
+	    Ka_m= dual_coupling_K(pde_loc,layer,x=[hm])
+      end if
+    end if
+    
+    if (hf<0) then
+	  if ( hf/drutes_config%fnc_discr_length < 0.1*huge(1)) then
+	    pos = int(-hf/drutes_config%fnc_discr_length)+1
+	    if (pos <= ubound(couptab,2)-1) then
+	      dist = -hf - (pos - 1)*drutes_config%fnc_discr_length
+	      Ka_f = (couptab(layer,pos+1)-couptab(layer,pos))/drutes_config%fnc_discr_length*dist&
+	       + couptab(layer,pos)
+	    else
+	      Ka_f= dual_coupling_K(pde_loc,layer,x=[hf])
+	    end if
+	  else
+	    Ka_f= dual_coupling_K(pde_loc,layer,x=[hf])
+      end if
+    end if
+    
+    Ka=0.5*(Ka_f+Ka_m)*Ks
+    if(hf /= hm) then
+      ex_term=beta/a**2*gam_par*Ka*(hf-hm)
+    else
+      ex_term=0.0_rkind
+    end if
+  end function dual_coupling_tab 
+
+function dual_coupling_f_tab(pde_loc, layer, quadpnt, x) result(ex_term)
+      use typy
+      use dual_globals
+      use pde_objs
+      use core_tools
+
+      class(pde_str), intent(in) :: pde_loc 
+      integer(kind=ikind), intent(in) :: layer
+      !> pressure head
+      real(kind=rkind), dimension(:), intent(in), optional :: x
+      !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
+      type(integpnt_str), intent(in), optional :: quadpnt
+      !> resulting system elasticity
+      real(kind=rkind)::beta,a,gam_par
+      real(kind=rkind)::Ks
+      real(kind=rkind):: Ka_f,Ka_m,Ka,ex_term
+      real(kind=rkind):: hm,hf,one
+      integer(kind=ikind) :: pos
+      real(kind=rkind) :: res, dist
+
+      beta=exchange(layer)%beta
+      a=exchange(layer)%a
+      gam_par=exchange(layer)%gam_par
+      Ks=vgexchange(layer)%KS_local(1) 
+      
+      if (present(quadpnt) .and. present(x)) then
+	print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
+	print *, "exited from RE_dual: dual_coupling_tab"
+	ERROR stop
+      else if (.not. present(quadpnt) .and. .not. present(x)) then
+	print *, "ERROR: you have not specified either integ point or x value"
+        print *, "exited from RE_dual: dual_coupling_tab"
+	ERROR stop
+      end if
+      
+	if (present(quadpnt)) then
+	  hm = pde(1)%getval(quadpnt)
+	  hf = pde(2)%getval(quadpnt)
+    else
+	if (ubound(x,1) /=2) then
+	  print *, "ERROR: the coupling term is a function of two variables hm and hf"
+	  print *, "       your input data has:", ubound(x,1), "variables"
+	  ERROR STOP
+	end if
+    if (ubound(x,1) /=2) then
+	  print *, "ERROR: the coupling term is a function of two variables hm and hf"
+	  print *, "       your input data has:", ubound(x,1), "variables"
+	  print *, "exited from RE_dual::dual_coupling_tab"
+	  ERROR STOP
+	end if
+	   hm = x(1)
+	   hf = x(2)
+    end if
+    
+    if (hm<0) then
+	  if ( hm/drutes_config%fnc_discr_length < 0.1*huge(1)) then
+	    pos = int(-hm/drutes_config%fnc_discr_length)+1
+	    if (pos <= ubound(couptab,2)-1) then
+	      dist = -hm - (pos - 1)*drutes_config%fnc_discr_length
+	      Ka_m = (couptab(layer,pos+1)-couptab(layer,pos))/drutes_config%fnc_discr_length*dist&
+	       + couptab(layer,pos)
+	    else
+	      Ka_m= dual_coupling_K(pde_loc,layer,x=[hm])
+	    end if
+	  else	
+	    Ka_m= dual_coupling_K(pde_loc,layer,x=[hm])
+      end if
+    end if
+    if (hf<0) then
+	  if ( hf/drutes_config%fnc_discr_length < 0.1*huge(1)) then
+	    pos = int(-hf/drutes_config%fnc_discr_length)+1
+	    if (pos <= ubound(couptab,2)-1) then
+	      dist = -hf - (pos - 1)*drutes_config%fnc_discr_length
+	      Ka_f = (couptab(layer,pos+1)-couptab(layer,pos))/drutes_config%fnc_discr_length*dist &
+	      + couptab(layer,pos)
+	    else
+	      Ka_f= dual_coupling_K(pde_loc,layer,x=[hf])
+	    end if
+	  else
+        Ka_f= dual_coupling_K(pde_loc,layer,x=[hf])
+      end if
+    end if
+    
+     Ka=0.5*(Ka_f+Ka_m)*Ks
+    if(hf /= hm) then
+      ex_term=-beta/a**2*gam_par*Ka*(hf-hm)
+    else
+      ex_term=0.0_rkind
+    end if
+  end function dual_coupling_f_tab 
+! tabular function
+ !> creates a table of values of constitutive functions for the Richards equation to be linearly approximated 
+ subroutine dual_tabvalues(pde_loc, Kfnc, Cfnc, thetafnc,ex_K_fnc, domainname)
+      use typy
+      use globals
+      use pde_objs
+      use printtools
+      use core_tools
+
+      class(pde_str), intent(in) :: pde_loc
+      character(len=*),intent(in):: domainname
+      
+      interface
+	subroutine Kfnc(pde_loc, layer, quadpnt, x, tensor, scalar)	
+	  use typy
+	  use pde_objs
+	  use global_objs
+	  class(pde_str), intent(in) :: pde_loc
+	  integer(kind=ikind), intent(in)                           :: layer
+	  type(integpnt_str), intent(in), optional                   :: quadpnt
+	  real(kind=rkind), dimension(:), intent(in), optional      :: x
+	  real(kind=rkind), intent(out), dimension(:,:), optional   :: tensor
+	  real(kind=rkind), intent(out), optional                   :: scalar 
+	end subroutine Kfnc
+      end interface
+
+      interface
+	function Cfnc(pde_loc, layer, quadpnt,  x) result(val)	
+	  use typy
+	  use pde_objs
+	  use global_objs
+	  class(pde_str), intent(in) :: pde_loc
+	  integer(kind=ikind), intent(in)                      :: layer
+	  type(integpnt_str), intent(in), optional             :: quadpnt
+	  real(kind=rkind), dimension(:), intent(in), optional :: x
+	  real(kind=rkind)                                     :: val
+	end function Cfnc
+      end interface
+
+
+      interface
+	function thetafnc(pde_loc, layer, quadpnt, x) result(val)	
+	  use typy
+	  use pde_objs
+	  use global_objs
+	  class(pde_str), intent(in) :: pde_loc	  
+	  integer(kind=ikind), intent(in)                      :: layer
+	  type(integpnt_str), intent(in), optional             :: quadpnt
+	  real(kind=rkind), dimension(:), intent(in), optional :: x
+	  real(kind=rkind)                                     :: val
+	end function thetafnc
+      end interface
+
+      interface
+	function ex_K_fnc(pde_loc, layer, quadpnt, x) result(val)	
+	  use typy
+	  use pde_objs
+	  use global_objs
+	  class(pde_str), intent(in) :: pde_loc	  
+	  integer(kind=ikind), intent(in)                      :: layer
+	  type(integpnt_str), intent(in), optional             :: quadpnt
+	  real(kind=rkind), dimension(:), intent(in), optional :: x
+	  real(kind=rkind)                                     :: val
+	end function ex_K_fnc
+      end interface
+
+      integer(kind=ikind) :: i,j, n	
+      integer :: l
+      integer(kind=ikind) :: maxcalls, counter
+      real(kind=rkind) :: dx
+
+      n = int(maxpress/drutes_config%fnc_discr_length) !+1 why plus 1?
+      
+      drutes_config%fnc_discr_length = 1.0_rkind*maxpress/n
+
+      dx = drutes_config%fnc_discr_length
+
+      if (.not. allocated(Ktabd_all)) then
+        allocate(Ktabd_all(2, ubound(vgmatrix,1), n))
+      end if
+      if (.not. allocated(warecatabd_all)) then
+        allocate(warecatabd_all(2, ubound(vgmatrix,1),n))
+      end if
+      if (.not. allocated(watcontabd_all)) then
+        allocate(watcontabd_all(2, ubound(vgmatrix,1), n))
+      end if
+      if (.not. allocated(couptab_all)) then
+        allocate(couptab_all(ubound(vgmatrix,1), n))
+      end if
+
+	maxcalls = ubound(vgmatrix,1)*n
+	counter = maxcalls
+	couptab => couptab_all(:,:)
+	if (domainname == "matrix") then
+	  Ktab_d => Ktabd_all(1,:,:)
+	  warecatab_d => warecatabd_all(1,:,:)
+	  watcontab_d => watcontabd_all(1,:,:)
+    else if (domainname == "fracture") then
+	  Ktab_d => Ktabd_all(2,:,:)
+	  warecatab_d => warecatabd_all(2,:,:)
+	  watcontab_d => watcontabd_all(2,:,:)
+    else
+    
+	  ERROR STOP "runtime error, invalid argument in RE_pointers::domainname not correctly identified"
+    end if
+
+	call write_log(text="creating constitutive function table for:",text2=domainname)
+	do i=1, ubound(vgmatrix,1)
+	  do j=1, n
+	    if (this_image() == 1) then
+	      counter = counter - 1
+	      l = 100*(maxcalls - counter)/maxcalls
+	      call progressbar(l)
+	    end if
+	    call Kfnc(pde_loc,i, x=(/-(j-1)*dx/), scalar=Ktab_d(i,j))
+	    warecatab_d(i,j) = Cfnc(pde_loc, i, x=(/-(j-1)*dx/))
+	    watcontab_d(i,j) = thetafnc(pde_loc, i, x=(/-(j-1)*dx/))
+	    couptab(i,j) = ex_K_fnc(pde_loc, i, x=(/-(j-1)*dx/))
+	  end do
+	end do
+
+    end subroutine dual_tabvalues
+
 end module dual_por
