@@ -13,12 +13,17 @@ module Re_dual_pointers
       use dual_por
       use Re_dual_reader
       use RE_constitutive
+      use debug_tools
       
       class(pde_str), intent(in out) :: pde_loc
       integer(kind=ikind) :: i
-      
+
+           
+      pde_loc%getval => getval_retot_dual
       call Re_dual_readm(pde_loc)
-	  call Re_dual_var() 
+      call Re_dual_var() 
+      
+
       
       pde_loc%flux => darcy_law_d!implement darcy law for fluxes
       if (drutes_config%fnc_method == 0) then
@@ -56,9 +61,12 @@ module Re_dual_pointers
       use dual_por
       use Re_dual_reader
       use RE_constitutive
+      use debug_tools
       
       class(pde_str), intent(in out) :: pde_loc  
       integer(kind=ikind) :: i
+      
+      pde_loc%getval => getval_retot_dual
       
       call Re_dual_readf(pde_loc)
       

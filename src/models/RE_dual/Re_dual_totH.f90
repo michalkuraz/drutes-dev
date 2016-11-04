@@ -13,12 +13,45 @@ public:: vangen_d_m_tab, vangen_d_f_tab
 public:: dual_ret_capf_tab, dual_ret_capm_tab
 public:: dual_coupling_f_tab,dual_coupling_tab,dual_coupling_K
 public:: dual_tabvalues
+public :: getval_retot_dual
 
 real(kind=rkind), dimension(:,:), pointer, public :: Ktab_d,watcontab_d,warecatab_d,couptab
 real(kind=rkind), dimension(:,:,:), allocatable, target, public ::Ktabd_all,watcontabd_all
 real(kind=rkind), dimension(:,:,:), allocatable, target, public ::warecatabd_all
 real(kind=rkind), dimension(:,:), allocatable, target, public ::couptab_all
 contains 
+
+  !> specific function for Richards equation in H-form (total hydraulic head form), replaces pde_objs::getvalp1 in order to distinguish between H and h 
+ function getval_retot_dual(pde_loc, quadpnt) result(val)
+    use typy
+    use pde_objs
+    use geom_tools
+    use dual_globals
+
+    class(pde_str), intent(in) :: pde_loc
+    type(integpnt_str), intent(in) :: quadpnt
+    real(kind=rkind) :: val
+
+    real(kind=rkind), dimension(3) :: xyz
+    integer(kind=ikind) :: D
+
+    D = drutes_config%dimen
+     
+    call getcoor(quadpnt, xyz(1:D))
+
+
+    if (get_pressh_vals) then
+
+      val = getvalp1(pde_loc, quadpnt) 
+
+      get_pressh_vals = .false.
+      
+    else
+        val = getvalp1(pde_loc, quadpnt) - xyz(D)
+    end if
+        
+      
+ end function getval_retot_dual
 
  subroutine dual_inicond_m(pde_loc)
    use typy
@@ -83,6 +116,8 @@ subroutine dual_mualemm(pde_loc, layer, quadpnt, x, tensor, scalar)
   !> vg parameters, later from conf file
   real(kind=rkind)::n,m,alpha, weight       
   real(kind=rkind) :: h,Kr,one
+  
+  get_pressh_vals = .true.
       
     if (present(quadpnt)) then
 	  h = pde_loc%getval(quadpnt)
@@ -145,6 +180,8 @@ subroutine dual_mualemf(pde_loc, layer, quadpnt, x, tensor, scalar)
   real(kind=rkind)::n,m,alpha,weight
          
   real(kind=rkind) :: h,Kr,one
+  
+  get_pressh_vals = .true.
       
     if (present(quadpnt)) then
 	  h = pde_loc%getval(quadpnt)
@@ -188,6 +225,7 @@ subroutine dual_mualemf(pde_loc, layer, quadpnt, x, tensor, scalar)
       use core_tools
       use dual_globals
       use Re_dual_reader
+      use debug_tools
       
       class(pde_str), intent(in) :: pde_loc 
       integer(kind=ikind), intent(in) :: layer
@@ -198,6 +236,9 @@ subroutine dual_mualemf(pde_loc, layer, quadpnt, x, tensor, scalar)
       !> vg parameters, later from conf file
       real(kind=rkind)::n,m,alpha,thetaS,thetaR,weight
       real(kind=rkind)::E,h,C
+      
+      
+      get_pressh_vals = .true.
       
       if (present(quadpnt)) then
 	    h = pde_loc%getval(quadpnt)
@@ -221,6 +262,8 @@ subroutine dual_mualemf(pde_loc, layer, quadpnt, x, tensor, scalar)
      n=vgmatrix(layer)%n
      m=vgmatrix(layer)%m
      weight=-exchange(layer)%weightm
+     
+
      
      if(h<0.0_rkind) then
        C=(thetaS-thetaR)*alpha*m*n*abs(alpha*h)**(n-1)*(abs(alpha*h)**n+1)**(-m-1)
@@ -249,6 +292,9 @@ subroutine dual_mualemf(pde_loc, layer, quadpnt, x, tensor, scalar)
       !> vg parameters
       real(kind=rkind)::n,m,alpha,thetaS,thetaR,weight
       real(kind=rkind)::E,h,C
+      
+      
+      get_pressh_vals = .true.
       
       if (present(quadpnt)) then
 	    h = pde_loc%getval(quadpnt)
@@ -300,7 +346,7 @@ subroutine dual_mualemf(pde_loc, layer, quadpnt, x, tensor, scalar)
 
    real(kind=rkind) :: a,n,m,ths,thr, theta_e
 
-      
+      get_pressh_vals = .true.
      if (present(quadpnt)) then
 	   h = pde_loc%getval(quadpnt)
      else
@@ -344,6 +390,8 @@ subroutine dual_mualemf(pde_loc, layer, quadpnt, x, tensor, scalar)
 
    real(kind=rkind) :: a,n,m,ths,thr, theta_e
 
+   
+   get_pressh_vals = .true.
       
      if (present(quadpnt)) then
 	   h = pde_loc%getval(quadpnt)
@@ -390,6 +438,8 @@ subroutine dual_mualemf(pde_loc, layer, quadpnt, x, tensor, scalar)
       real(kind=rkind)				  :: Ka_f,Ka_m,Ka,ex_term
       real(kind=rkind)				  :: hm,hf,one
       
+        
+       get_pressh_vals = .true.
             
       if (present(quadpnt)) then
 	    hm = pde(1)%getval(quadpnt)
@@ -449,6 +499,7 @@ subroutine dual_mualemf(pde_loc, layer, quadpnt, x, tensor, scalar)
       real(kind=rkind)				  :: Ka_f,Ka_m,Ka,ex_term
       real(kind=rkind)				  :: hm,hf,one
       
+       get_pressh_vals = .true.
             
       if (present(quadpnt)) then
 	    hm = pde(1)%getval(quadpnt)
@@ -516,6 +567,7 @@ subroutine dual_mualemf(pde_loc, layer, quadpnt, x, tensor, scalar)
       real(kind=rkind), dimension(:), allocatable :: gradient
       
       
+      
       if (present(quadpnt) .and. (present(grad) .or. present(x))) then
 	print *, "ERROR: the function can be called either with integ point or x value definition and gradient, not both of them"
 	ERROR stop
@@ -526,8 +578,9 @@ subroutine dual_mualemf(pde_loc, layer, quadpnt, x, tensor, scalar)
       end if
       
       if (present(quadpnt)) then
-	h = pde_loc%getval(quadpnt)
 	call pde_loc%getgrad(quadpnt, gradient)
+	get_pressh_vals = .true.
+	h = pde_loc%getval(quadpnt)
       else
         if (ubound(x,1) /=1) then
 	  print *, "ERROR: van Genuchten function is a function of a single variable h"
@@ -588,6 +641,7 @@ subroutine dual_mualemf(pde_loc, layer, quadpnt, x, tensor, scalar)
     real(kind=rkind):: one,h
           
      if (present(quadpnt)) then
+           get_pressh_vals = .true.
 	   h = pde_loc%getval(quadpnt)
      else
 	 if (ubound(x,1) /=1) then
@@ -628,7 +682,7 @@ subroutine dual_mualemf(pde_loc, layer, quadpnt, x, tensor, scalar)
       integer(kind=ikind) :: pos
       real(kind=rkind) :: res, dist, tmp
       
-      
+      get_pressh_vals = .true.
       if (present(quadpnt) .and. present(x)) then
 		print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
 		print *, "exited from Re_dual::mualem_m_tab"
@@ -715,7 +769,7 @@ subroutine dual_mualem_f_tab(pde_loc, layer, quadpnt,  x, tensor, scalar)
       integer(kind=ikind) :: pos
       real(kind=rkind) :: res, dist, tmp
       
-
+      get_pressh_vals = .true.
       if (present(quadpnt) .and. present(x)) then
 		print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
 		print *, "exited from Re_dual::mualem_m_tab"
@@ -799,7 +853,8 @@ function vangen_d_m_tab(pde_loc, layer, quadpnt, x) result(theta)
       integer(kind=ikind) :: pos
       real(kind=rkind) :: res, dist
 
- 
+      get_pressh_vals = .true.
+      
       if (present(quadpnt) .and. present(x)) then
 	print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
 	print *, "exited from RE_dual::vangen_tab"
@@ -876,7 +931,7 @@ function vangen_d_f_tab(pde_loc, layer, quadpnt, x) result(theta)
       integer(kind=ikind) :: pos
       real(kind=rkind) :: res, dist
 
- 
+      get_pressh_vals = .true.
       if (present(quadpnt) .and. present(x)) then
 	print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
 	print *, "exited from RE_dual::vangen_tab"
@@ -938,6 +993,7 @@ function dual_ret_capm_tab(pde_loc, layer, quadpnt, x) result(E)
       use dual_globals
       use pde_objs
       use core_tools
+      use debug_tools
 
       class(pde_str), intent(in) :: pde_loc 
       integer(kind=ikind), intent(in) :: layer
@@ -953,7 +1009,7 @@ function dual_ret_capm_tab(pde_loc, layer, quadpnt, x) result(E)
       real(kind=rkind) :: res, dist
       
    
-      
+      get_pressh_vals = .true.
       if (present(quadpnt) .and. present(x)) then
 	print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
 	print *, "exited from re_constitutive::vangen_elast_tab"
@@ -976,6 +1032,8 @@ function dual_ret_capm_tab(pde_loc, layer, quadpnt, x) result(E)
 	h = x(1)
       end if
 
+
+     
       if (h<0) then
 	if ( h/drutes_config%fnc_discr_length < 0.1*huge(1)) then
 	  pos = int(-h/drutes_config%fnc_discr_length)+1
@@ -986,21 +1044,12 @@ function dual_ret_capm_tab(pde_loc, layer, quadpnt, x) result(E)
 	  else
 	    if (present(quadpnt)) E = dual_ret_capm(pde_loc, layer, quadpnt)
 	    if (present(x)) E = dual_ret_capm(pde_loc, layer, x=x)
-! 	    if (.not. tabwarning) then
-! 	      call write_log(trim(tabmsg))
-! 	      tabwarning = .true.
-! 	    end if
 	  end if
 	else
-	 
-! 	  if (.not. intwarning) then
-! 	    call intoverflow()
-! 	    intwarning = .true.
-! 	  end if
 	  if (present(quadpnt)) E = dual_ret_capm(pde_loc, layer, quadpnt)
 	  if (present(x)) E = dual_ret_capm(pde_loc, layer, x=x)	  
+	end if
 	
-	end if 
       else
 	E = vgmatrix(layer)%Ss	
       end if
@@ -1013,6 +1062,7 @@ function dual_ret_capf_tab(pde_loc, layer, quadpnt, x) result(E)
       use dual_globals
       use pde_objs
       use core_tools
+      use debug_tools
 
       class(pde_str), intent(in) :: pde_loc 
       integer(kind=ikind), intent(in) :: layer
@@ -1028,7 +1078,7 @@ function dual_ret_capf_tab(pde_loc, layer, quadpnt, x) result(E)
       real(kind=rkind) :: res, dist
       
    
-      
+      get_pressh_vals = .true.
       if (present(quadpnt) .and. present(x)) then
 	print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
 	print *, "exited from re_constitutive::vangen_elast_tab"
@@ -1059,8 +1109,8 @@ function dual_ret_capf_tab(pde_loc, layer, quadpnt, x) result(E)
 	      E = (warecatab_d(layer,pos+1)-warecatab_d(layer,pos))/drutes_config%fnc_discr_length*dist &
 	      + warecatab_d(layer,pos)
 	    else
-	    if (present(quadpnt)) E = dual_ret_capf(pde_loc, layer, quadpnt)
-	    if (present(x)) E = dual_ret_capf(pde_loc, layer, x=x)
+              if (present(quadpnt)) E = dual_ret_capf(pde_loc, layer, quadpnt)
+              if (present(x)) E = dual_ret_capf(pde_loc, layer, x=x)
 	    end if
 	  else
 	    if (present(quadpnt)) E = dual_ret_capf(pde_loc, layer, quadpnt)
@@ -1096,6 +1146,8 @@ function dual_coupling_tab(pde_loc, layer, quadpnt, x) result(ex_term)
       a=exchange(layer)%a
       gam_par=exchange(layer)%gam_par
       Ks=vgexchange(layer)%KS_local(1) 
+      
+      get_pressh_vals = .true.
       
       if (present(quadpnt) .and. present(x)) then
 	print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
@@ -1184,6 +1236,9 @@ function dual_coupling_f_tab(pde_loc, layer, quadpnt, x) result(ex_term)
       integer(kind=ikind) :: pos
       real(kind=rkind) :: res, dist
 
+      
+      get_pressh_vals = .true.
+      
       beta=exchange(layer)%beta
       a=exchange(layer)%a
       gam_par=exchange(layer)%gam_par

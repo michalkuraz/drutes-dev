@@ -123,8 +123,7 @@ module stiffmat
       end do
 
      stiff_mat = stiff_mat/gauss_points%area*elements%areas(el_id)*dt
-
-
+     
      
     end subroutine build_stiff_np
     

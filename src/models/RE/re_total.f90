@@ -8,7 +8,7 @@ module re_total
   
   contains
   
-    !> specific function for Richards equation in H-form (total hydraulic head form), replaces pde_objs::getvalp1 in order to obtain presssure head h
+    !> specific function for Richards equation in H-form (total hydraulic head form), replaces pde_objs::getvalp1 in order to distinguish between H and h 
     function getval_retot(pde_loc, quadpnt) result(val)
       use typy
       use pde_objs
@@ -25,6 +25,7 @@ module re_total
       D = drutes_config%dimen
        
       call getcoor(quadpnt, xyz(1:D))
+      
       
       if (get_direct_vals) then
 

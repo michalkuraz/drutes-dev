@@ -87,6 +87,7 @@ module capmat
       cap_mat = cap_mat/gauss_points%area*elements%areas(el_id)
 
       bside =  bside + matmul(cap_mat, elnode_prev)
+      
 
     end subroutine impl_euler_np_nondiag
 
@@ -139,7 +140,7 @@ module capmat
 	quadpnt%subdom = domain_id
       end if
 
-!       if (.not. quadpnt%ddlocal) stop "stifmmat"
+
 
       do iproc=1, ubound(pde,1)
         do jproc=1, ubound(pde,1)
@@ -175,6 +176,8 @@ module capmat
      bside = bside +   matmul(cap_mat, elnode_prev)
      
 
+     call printmtx(cap_mat) ; call wait()
+     
     end subroutine impl_euler_np_diag
 
     subroutine steady_state_int(el_id, domain_id, quadpnt_in)

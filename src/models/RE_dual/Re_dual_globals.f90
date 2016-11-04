@@ -22,4 +22,6 @@ module dual_globals
   
   !> formula of the retention curve
   integer(kind=ikind), public :: retc_method
+  !> if false getval returns hydraulic head H, if true getval returns pressure head h
+  logical, public :: get_pressh_vals = .false.
 end module dual_globals
