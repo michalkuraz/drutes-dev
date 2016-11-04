@@ -603,7 +603,6 @@ subroutine dual_mualemf(pde_loc, layer, quadpnt, x, tensor, scalar)
     m=vgexchange(layer)%m
     one=1.0_rkind 
     Ka_c=(one-(-alpha*h)**(n*m)*(one+(-alpha*h)**n)**(-m))**2/(one+(-alpha*h)**n)**(m/2)
-    !print*, Ka_c
   end function dual_coupling_K
   ! Tabular versions dispersion: mualem_tab; elastisticty: dual_ret; mass= vangen_tab 
   
@@ -1325,13 +1324,15 @@ function dual_coupling_f_tab(pde_loc, layer, quadpnt, x) result(ex_term)
       integer :: l
       integer(kind=ikind) :: maxcalls, counter
       real(kind=rkind) :: dx
-
-      n = int(maxpress/drutes_config%fnc_discr_length) !+1 why plus 1?
-      
+	
+	if (domainname == "matrix") then
+		n = int(maxpress/drutes_config%fnc_discr_length)+1! why plus 1?
+    else if (domainname == "fracture") then
+        n = int(maxpress/drutes_config%fnc_discr_length)
+    end if
       drutes_config%fnc_discr_length = 1.0_rkind*maxpress/n
-
       dx = drutes_config%fnc_discr_length
-
+      print*,n
       if (.not. allocated(Ktabd_all)) then
         allocate(Ktabd_all(2, ubound(vgmatrix,1), n))
       end if
@@ -1357,7 +1358,6 @@ function dual_coupling_f_tab(pde_loc, layer, quadpnt, x) result(ex_term)
 	  warecatab_d => warecatabd_all(2,:,:)
 	  watcontab_d => watcontabd_all(2,:,:)
     else
-    
 	  ERROR STOP "runtime error, invalid argument in RE_pointers::domainname not correctly identified"
     end if
 
