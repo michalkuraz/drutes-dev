@@ -15,9 +15,12 @@ public:: dual_coupling_f_tab,dual_coupling_tab,dual_coupling_K
 public:: dual_tabvalues
 public :: getval_retot_dual
 
-real(kind=rkind), dimension(:,:), pointer, public :: Ktab_d,watcontab_d,warecatab_d,couptab
-real(kind=rkind), dimension(:,:,:), allocatable, target, public ::Ktabd_all,watcontabd_all
-real(kind=rkind), dimension(:,:,:), allocatable, target, public ::warecatabd_all
+real(kind=rkind), dimension(:,:), pointer, public :: Ktab_dm,watcontab_dm,warecatab_dm,couptab
+real(kind=rkind), dimension(:,:), pointer, public :: Ktab_df,watcontab_df,warecatab_df
+real(kind=rkind), dimension(:,:), allocatable, target, public ::Ktabd_tget_m,watcontabd_tget_m
+real(kind=rkind), dimension(:,:), allocatable, target, public ::warecatabd_tget_m
+real(kind=rkind), dimension(:,:), allocatable, target, public ::Ktabd_tget_f,watcontabd_tget_f
+real(kind=rkind), dimension(:,:), allocatable, target, public ::warecatabd_tget_f
 real(kind=rkind), dimension(:,:), allocatable, target, public ::couptab_all
 contains 
 
@@ -713,10 +716,10 @@ subroutine dual_mualemf(pde_loc, layer, quadpnt, x, tensor, scalar)
  if (h<0) then
    if (-h/drutes_config%fnc_discr_length < 0.1*huge(1) ) then
       pos = int(-h/drutes_config%fnc_discr_length)+1
-	  if (pos <= ubound(Ktab_d,2)-1) then
+	  if (pos <= ubound(Ktab_dm,2)-1) then
 	    dist = -h - (pos - 1)*drutes_config%fnc_discr_length
-	    tmp = (Ktab_d(layer,pos+1)-Ktab_d(layer,pos))/drutes_config%fnc_discr_length*dist &
-	    + Ktab_d(layer,pos)
+	    tmp = (Ktab_dm(layer,pos+1)-Ktab_dm(layer,pos))/drutes_config%fnc_discr_length*dist &
+	    + Ktab_dm(layer,pos)
 	  else
 	  if (present(quadpnt)) call dual_mualemm(pde_loc, layer, quadpnt, scalar = tmp)
 	  if (present(x)) call dual_mualemm(pde_loc, layer, x=x, scalar = tmp)
@@ -800,10 +803,10 @@ subroutine dual_mualem_f_tab(pde_loc, layer, quadpnt,  x, tensor, scalar)
  if (h<0) then
    if (-h/drutes_config%fnc_discr_length < 0.1*huge(1) ) then
       pos = int(-h/drutes_config%fnc_discr_length)+1
-	  if (pos <= ubound(Ktab_d,2)-1) then
+	  if (pos <= ubound(Ktab_df,2)-1) then
 	    dist = -h - (pos - 1)*drutes_config%fnc_discr_length
-	    tmp = (Ktab_d(layer,pos+1)-Ktab_d(layer,pos))/drutes_config%fnc_discr_length*dist &
-	    + Ktab_d(layer,pos)
+	    tmp = (Ktab_df(layer,pos+1)-Ktab_df(layer,pos))/drutes_config%fnc_discr_length*dist &
+	    + Ktab_df(layer,pos)
 	  else
 	  if (present(quadpnt)) call dual_mualemf(pde_loc, layer, quadpnt, scalar = tmp)
 	  if (present(x)) call dual_mualemf(pde_loc, layer, x=x, scalar = tmp)
@@ -881,9 +884,10 @@ function vangen_d_m_tab(pde_loc, layer, quadpnt, x) result(theta)
 	if ( h/drutes_config%fnc_discr_length < 0.1*huge(1)) then
 	  
 	  pos = int(-h/drutes_config%fnc_discr_length)+1
-	  if (pos <= ubound(watcontab_d,2)-1) then
+	  if (pos <= ubound(watcontab_dm,2)-1) then
 	    dist = -h - (pos - 1)*drutes_config%fnc_discr_length
-	    theta = (watcontab_d(layer,pos+1)-watcontab_d(layer,pos))/drutes_config%fnc_discr_length*dist + watcontab_d(layer,pos)
+	    theta = (watcontab_dm(layer,pos+1)-watcontab_dm(layer,pos))/drutes_config%fnc_discr_length*dist &
+	    + watcontab_dm(layer,pos)
 	  else
 	    if (present(quadpnt)) theta = vangen_d_m(pde_loc, layer, quadpnt)
 	    if (present(x)) theta = vangen_d_m(pde_loc, layer, x=x)
@@ -958,10 +962,10 @@ function vangen_d_f_tab(pde_loc, layer, quadpnt, x) result(theta)
 	if ( h/drutes_config%fnc_discr_length < 0.1*huge(1)) then
 	  
 	  pos = int(-h/drutes_config%fnc_discr_length)+1
-	  if (pos <= ubound(watcontab_d,2)-1) then
+	  if (pos <= ubound(watcontab_df,2)-1) then
 	    dist = -h - (pos - 1)*drutes_config%fnc_discr_length
-	    theta = (watcontab_d(layer,pos+1)-watcontab_d(layer,pos))/drutes_config%fnc_discr_length*dist&
-	     + watcontab_d(layer,pos)
+	    theta = (watcontab_df(layer,pos+1)-watcontab_df(layer,pos))/drutes_config%fnc_discr_length*dist&
+	     + watcontab_df(layer,pos)
 	  else
 	    if (present(quadpnt)) theta = vangen_d_f(pde_loc, layer, quadpnt)
 	    if (present(x)) theta = vangen_d_f(pde_loc, layer, x=x)
@@ -1034,13 +1038,13 @@ function dual_ret_capm_tab(pde_loc, layer, quadpnt, x) result(E)
 
 
      
-      if (h<0) then
+      if (h<0) then !same as 1104
 	if ( h/drutes_config%fnc_discr_length < 0.1*huge(1)) then
 	  pos = int(-h/drutes_config%fnc_discr_length)+1
-	  if (pos <= ubound(warecatab_d,2)-1) then
+	  if (pos <= ubound(warecatab_dm,2)-1) then
 	    dist = -h - (pos - 1)*drutes_config%fnc_discr_length
-	    E = (warecatab_d(layer,pos+1)-warecatab_d(layer,pos))/drutes_config%fnc_discr_length*dist &
-	    + warecatab_d(layer,pos)
+	    E = (warecatab_dm(layer,pos+1)-warecatab_dm(layer,pos))/drutes_config%fnc_discr_length*dist &
+	    + warecatab_dm(layer,pos)
 	  else
 	    if (present(quadpnt)) E = dual_ret_capm(pde_loc, layer, quadpnt)
 	    if (present(x)) E = dual_ret_capm(pde_loc, layer, x=x)
@@ -1104,10 +1108,10 @@ function dual_ret_capf_tab(pde_loc, layer, quadpnt, x) result(E)
      if (h<0) then
 	  if ( h/drutes_config%fnc_discr_length < 0.1*huge(1)) then
 	    pos = int(-h/drutes_config%fnc_discr_length)+1
-	    if (pos <= ubound(warecatab_d,2)-1) then
+	    if (pos <= ubound(warecatab_df,2)-1) then
 	      dist = -h - (pos - 1)*drutes_config%fnc_discr_length
-	      E = (warecatab_d(layer,pos+1)-warecatab_d(layer,pos))/drutes_config%fnc_discr_length*dist &
-	      + warecatab_d(layer,pos)
+	      E = (warecatab_df(layer,pos+1)-warecatab_df(layer,pos))/drutes_config%fnc_discr_length*dist &
+	      + warecatab_df(layer,pos)
 	    else
               if (present(quadpnt)) E = dual_ret_capf(pde_loc, layer, quadpnt)
               if (present(x)) E = dual_ret_capf(pde_loc, layer, x=x)
@@ -1311,7 +1315,7 @@ function dual_coupling_f_tab(pde_loc, layer, quadpnt, x) result(ex_term)
   end function dual_coupling_f_tab 
 ! tabular function
  !> creates a table of values of constitutive functions for the Richards equation to be linearly approximated 
- subroutine dual_tabvalues(pde_loc, Kfnc, Cfnc, thetafnc,ex_K_fnc, domainname)
+ subroutine dual_tabvalues(pde_loc, Kfnc, Cfnc, thetafnc_f, Kfnc_f, Cfnc_f, thetafnc,ex_K_fnc)
       use typy
       use globals
       use pde_objs
@@ -1319,7 +1323,6 @@ function dual_coupling_f_tab(pde_loc, layer, quadpnt, x) result(ex_term)
       use core_tools
 
       class(pde_str), intent(in) :: pde_loc
-      character(len=*),intent(in):: domainname
       
       interface
 	subroutine Kfnc(pde_loc, layer, quadpnt, x, tensor, scalar)	
@@ -1361,6 +1364,48 @@ function dual_coupling_f_tab(pde_loc, layer, quadpnt, x) result(ex_term)
 	  real(kind=rkind)                                     :: val
 	end function thetafnc
       end interface
+      
+      interface
+	subroutine Kfnc_f(pde_loc, layer, quadpnt, x, tensor, scalar)	
+	  use typy
+	  use pde_objs
+	  use global_objs
+	  class(pde_str), intent(in) :: pde_loc
+	  integer(kind=ikind), intent(in)                           :: layer
+	  type(integpnt_str), intent(in), optional                   :: quadpnt
+	  real(kind=rkind), dimension(:), intent(in), optional      :: x
+	  real(kind=rkind), intent(out), dimension(:,:), optional   :: tensor
+	  real(kind=rkind), intent(out), optional                   :: scalar 
+	end subroutine Kfnc_f
+      end interface
+
+      interface
+	function Cfnc_f(pde_loc, layer, quadpnt,  x) result(val)	
+	  use typy
+	  use pde_objs
+	  use global_objs
+	  class(pde_str), intent(in) :: pde_loc
+	  integer(kind=ikind), intent(in)                      :: layer
+	  type(integpnt_str), intent(in), optional             :: quadpnt
+	  real(kind=rkind), dimension(:), intent(in), optional :: x
+	  real(kind=rkind)                                     :: val
+	end function Cfnc_f
+      end interface
+
+
+      interface
+	function thetafnc_f(pde_loc, layer, quadpnt, x) result(val)	
+	  use typy
+	  use pde_objs
+	  use global_objs
+	  class(pde_str), intent(in) :: pde_loc	  
+	  integer(kind=ikind), intent(in)                      :: layer
+	  type(integpnt_str), intent(in), optional             :: quadpnt
+	  real(kind=rkind), dimension(:), intent(in), optional :: x
+	  real(kind=rkind)                                     :: val
+	end function thetafnc_f
+      end interface
+
 
       interface
 	function ex_K_fnc(pde_loc, layer, quadpnt, x) result(val)	
@@ -1380,43 +1425,52 @@ function dual_coupling_f_tab(pde_loc, layer, quadpnt, x) result(ex_term)
       integer(kind=ikind) :: maxcalls, counter
       real(kind=rkind) :: dx
 	
-	if (domainname == "matrix") then
-		n = int(maxpress/drutes_config%fnc_discr_length)+1! why plus 1?
-    else if (domainname == "fracture") then
-        n = int(maxpress/drutes_config%fnc_discr_length)
-    end if
+	!if (domainname == "matrix") then
+		n = int(maxpress/drutes_config%fnc_discr_length)+1
+    !else if (domainname == "fracture") then
+     !   n = int(maxpress/drutes_config%fnc_discr_length)
+    !end if
       drutes_config%fnc_discr_length = 1.0_rkind*maxpress/n
       dx = drutes_config%fnc_discr_length
-      print*,n
-      if (.not. allocated(Ktabd_all)) then
-        allocate(Ktabd_all(2, ubound(vgmatrix,1), n))
+
+      if (.not. allocated(Ktabd_tget_m)) then
+        allocate(Ktabd_tget_m(ubound(vgmatrix,1), n))
       end if
-      if (.not. allocated(warecatabd_all)) then
-        allocate(warecatabd_all(2, ubound(vgmatrix,1),n))
+      if (.not. allocated(warecatabd_tget_m)) then
+        allocate(warecatabd_tget_m(ubound(vgmatrix,1),n))
       end if
-      if (.not. allocated(watcontabd_all)) then
-        allocate(watcontabd_all(2, ubound(vgmatrix,1), n))
+      if (.not. allocated(watcontabd_tget_m)) then
+        allocate(watcontabd_tget_m(ubound(vgmatrix,1), n))
       end if
       if (.not. allocated(couptab_all)) then
         allocate(couptab_all(ubound(vgmatrix,1), n))
       end if
-
+      if (.not. allocated(Ktabd_tget_f)) then
+        allocate(Ktabd_tget_f(ubound(vgmatrix,1), n))
+      end if
+      if (.not. allocated(warecatabd_tget_f)) then
+        allocate(warecatabd_tget_f(ubound(vgmatrix,1),n))
+      end if
+      if (.not. allocated(watcontabd_tget_f)) then
+        allocate(watcontabd_tget_f(ubound(vgmatrix,1), n))
+      end if
+      
 	maxcalls = ubound(vgmatrix,1)*n
 	counter = maxcalls
 	couptab => couptab_all(:,:)
-	if (domainname == "matrix") then
-	  Ktab_d => Ktabd_all(1,:,:)
-	  warecatab_d => warecatabd_all(1,:,:)
-	  watcontab_d => watcontabd_all(1,:,:)
-    else if (domainname == "fracture") then
-	  Ktab_d => Ktabd_all(2,:,:)
-	  warecatab_d => warecatabd_all(2,:,:)
-	  watcontab_d => watcontabd_all(2,:,:)
-    else
-	  ERROR STOP "runtime error, invalid argument in RE_pointers::domainname not correctly identified"
-    end if
+	!if (domainname == "matrix") then
+	  Ktab_dm => Ktabd_tget_m(:,:)
+	  warecatab_dm => warecatabd_tget_m(:,:)
+	  watcontab_dm => watcontabd_tget_m(:,:)
+    !else if (domainname == "fracture") then
+	  Ktab_df => Ktabd_tget_f(:,:)
+	  warecatab_df => warecatabd_tget_f(:,:)
+	  watcontab_df => watcontabd_tget_f(:,:)
+    !else
+	!  ERROR STOP "runtime error, invalid argument in RE_pointers::domainname not correctly identified"
+    !end if
 
-	call write_log(text="creating constitutive function table for:",text2=domainname)
+	call write_log(text="creating constitutive function table for: matrix and fracture")
 	do i=1, ubound(vgmatrix,1)
 	  do j=1, n
 	    if (this_image() == 1) then
@@ -1424,9 +1478,12 @@ function dual_coupling_f_tab(pde_loc, layer, quadpnt, x) result(ex_term)
 	      l = 100*(maxcalls - counter)/maxcalls
 	      call progressbar(l)
 	    end if
-	    call Kfnc(pde_loc,i, x=(/-(j-1)*dx/), scalar=Ktab_d(i,j))
-	    warecatab_d(i,j) = Cfnc(pde_loc, i, x=(/-(j-1)*dx/))
-	    watcontab_d(i,j) = thetafnc(pde_loc, i, x=(/-(j-1)*dx/))
+	    call Kfnc(pde_loc,i, x=(/-(j-1)*dx/), scalar=Ktab_dm(i,j))
+	    warecatab_dm(i,j) = Cfnc(pde_loc, i, x=(/-(j-1)*dx/))
+	    watcontab_dm(i,j) = thetafnc(pde_loc, i, x=(/-(j-1)*dx/))
+	    call Kfnc_f(pde_loc,i, x=(/-(j-1)*dx/), scalar=Ktab_df(i,j))
+	    warecatab_df(i,j) = Cfnc_f(pde_loc, i, x=(/-(j-1)*dx/))
+	    watcontab_df(i,j) = thetafnc_f(pde_loc, i, x=(/-(j-1)*dx/))
 	    couptab(i,j) = ex_K_fnc(pde_loc, i, x=(/-(j-1)*dx/))
 	  end do
 	end do

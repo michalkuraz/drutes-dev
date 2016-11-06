@@ -32,8 +32,9 @@ module Re_dual_pointers
 	    pde_loc%pde_fnc(pde_loc%order)%elasticity => dual_ret_capm
 	    pde_loc%mass => vangen_d_m
       else
-	    call dual_tabvalues(pde_loc, Kfnc=dual_mualemm, Cfnc=dual_ret_capm, thetafnc=vangen_d_m&
-	    ,ex_K_fnc=dual_coupling_K,domainname='matrix')
+	    call dual_tabvalues(pde_loc, Kfnc=dual_mualemm, Cfnc=dual_ret_capm,&
+	     thetafnc=vangen_d_m,Kfnc_f=dual_mualemf, Cfnc_f=dual_ret_capf, &
+	     thetafnc_f=vangen_d_f,ex_K_fnc=dual_coupling_K)
 	    pde_loc%pde_fnc(pde_loc%order)%dispersion  => dual_mualem_m_tab		
 	    pde_loc%pde_fnc(pde_loc%order)%reaction => dual_coupling_tab
 	    pde_loc%pde_fnc(pde_loc%order)%elasticity => dual_ret_capm_tab
@@ -76,8 +77,6 @@ module Re_dual_pointers
 	    pde_loc%pde_fnc(pde_loc%order)%elasticity => dual_ret_capf
 	    pde_loc%mass => vangen_d_m
       else
-	    call dual_tabvalues(pde_loc, Kfnc=dual_mualemf, Cfnc=dual_ret_capf, thetafnc=vangen_d_f&
-	    ,ex_K_fnc=dual_coupling_K,domainname='fracture')
 	    pde_loc%pde_fnc(pde_loc%order)%dispersion  => dual_mualem_f_tab		
 	    pde_loc%pde_fnc(pde_loc%order)%reaction => dual_coupling_f_tab
 	    pde_loc%pde_fnc(pde_loc%order)%elasticity => dual_ret_capf_tab
