@@ -31,6 +31,7 @@ module fem
       integer(kind=ikind) :: i
       integer :: fileid
       real(4), dimension(3) :: act_time
+      real(4) :: logtime=0.0, logtime_dt=900
       
 
       minimal_dt = dtmax
@@ -114,6 +115,10 @@ module fem
 	  RETURN
 	end if
 	call etime(act_time(1:2), act_time(3))
+	if (act_time(3) > logtime) then
+	  call write_log("current simulation time:", real1=time, text2="total iteration count:", int2=itcum, hidden=.true.)
+	  logtime = logtime + logtime_dt
+	end if
 	if (cpu_time_limit .and. act_time(3) >= cpu_max_time) then
 	  call write_log("maximal allowed CPU time reached, exiting....")
 	  success = .false.

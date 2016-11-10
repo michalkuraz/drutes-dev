@@ -73,8 +73,8 @@ module RE_constitutive
       real(kind=rkind) :: theta
 
       real(kind=rkind) :: a,n,m, theta_e
+      type(integpnt_str) :: quadpnt_loc
       
-      get_direct_vals = .true.
 
       if (present(quadpnt) .and. present(x)) then
 	print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
@@ -87,7 +87,9 @@ module RE_constitutive
       end if
       
       if (present(quadpnt)) then
-	h = pde_loc%getval(quadpnt)
+	quadpnt_loc=quadpnt
+	quadpnt_loc%preproc=.true.
+	h = pde_loc%getval(quadpnt_loc)
       else
 	if (ubound(x,1) /=1) then
 	  print *, "ERROR: van Genuchten function is a function of a single variable h"
@@ -132,9 +134,9 @@ module RE_constitutive
       
       
       real(kind=rkind) :: a,n,m
+      type(integpnt_str) :: quadpnt_loc
       
-      
-       get_direct_vals = .true.     
+ 
 
       if (present(quadpnt) .and. present(x)) then
 	print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
@@ -147,7 +149,9 @@ module RE_constitutive
       end if
       
       if (present(quadpnt)) then
-	theta = pde_loc%getval(quadpnt)
+      	quadpnt_loc=quadpnt
+	quadpnt_loc%preproc=.true.
+	theta = pde_loc%getval(quadpnt_loc)
       else
 	if (ubound(x,1) /=1) then
 	  print *, "ERROR: van Genuchten function is a function of a single variable h"
@@ -200,9 +204,8 @@ module RE_constitutive
 
       integer(kind=ikind) :: pos
       real(kind=rkind) :: res, dist
- 
-      get_direct_vals = .true. 
- 
+      type(integpnt_str) :: quadpnt_loc      
+
       if (present(quadpnt) .and. present(x)) then
 	print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
 	print *, "exited from re_constitutive::vangen_tab"
@@ -214,7 +217,9 @@ module RE_constitutive
       end if
       
       if (present(quadpnt)) then
-	h = pde_loc%getval(quadpnt)
+      	quadpnt_loc=quadpnt
+	quadpnt_loc%preproc=.true.
+	h = pde_loc%getval(quadpnt_loc)
       else
       	if (ubound(x,1) /=1) then
 	  print *, "ERROR: van Genuchten function is a function of a single variable h"
@@ -285,8 +290,8 @@ module RE_constitutive
       real(kind=rkind) :: E
 
       real(kind=rkind) :: C, a, m, n, tr, ts 
-      
-      get_direct_vals = .true.      
+      type(integpnt_str) :: quadpnt_loc      
+          
       
       if (present(quadpnt) .and. present(x)) then
 	print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
@@ -299,7 +304,9 @@ module RE_constitutive
       end if
       
       if (present(quadpnt)) then
-	h = pde_loc%getval(quadpnt)
+        quadpnt_loc=quadpnt
+	quadpnt_loc%preproc=.true.
+	h = pde_loc%getval(quadpnt_loc)
       else
 	if (ubound(x,1) /=1) then
 	  print *, "ERROR: van Genuchten function is a function of a single variable h"
@@ -351,9 +358,8 @@ module RE_constitutive
 
       integer(kind=ikind) :: pos
       real(kind=rkind) :: res, dist
-      
-      
-      get_direct_vals = .true.      
+      type(integpnt_str) :: quadpnt_loc     
+         
       
       if (present(quadpnt) .and. present(x)) then
 	print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
@@ -366,7 +372,9 @@ module RE_constitutive
       end if
       
       if (present(quadpnt)) then
-	h = pde_loc%getval(quadpnt)
+        quadpnt_loc=quadpnt
+	quadpnt_loc%preproc=.true.
+	h = pde_loc%getval(quadpnt_loc)
       else
       	if (ubound(x,1) /=1) then
 	  print *, "ERROR: van Genuchten function is a function of a single variable h"
@@ -397,7 +405,7 @@ module RE_constitutive
 	    call intoverflow()
 	    intwarning = .true.
 	  end if
-	  if (present(quadpnt)) E = vangen_elast(pde_loc, layer, quadpnt)
+	  if (present(quadpnt)) E = vangen_elast(pde_loc, layer, quadpnt_loc)
 	  if (present(x)) E = vangen_elast(pde_loc, layer, x=x)	  
 	
 	end if 
@@ -431,9 +439,9 @@ module RE_constitutive
       real(kind=rkind), intent(out), optional :: scalar
 
       real(kind=rkind) :: a,n,m, tmp
+      type(integpnt_str) :: quadpnt_loc
       
-      
-       get_direct_vals = .true.     
+  
 
       if (present(quadpnt) .and. present(x)) then
 	print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
@@ -446,7 +454,9 @@ module RE_constitutive
       end if
       
       if (present(quadpnt)) then
-	h = pde_loc%getval(quadpnt)
+        quadpnt_loc=quadpnt
+	quadpnt_loc%preproc=.true.
+	h = pde_loc%getval(quadpnt_loc)
       else
       	if (ubound(x,1) /=1) then
 	  print *, "ERROR: van Genuchten function is a function of a single variable h"
@@ -473,7 +483,7 @@ module RE_constitutive
       end if
 
       if (present(scalar)) then
-	scalar = tmp!*vgset(layer)%Ks(1,1)
+	scalar = tmp
       end if
     end subroutine mualem
 
@@ -499,11 +509,9 @@ module RE_constitutive
       real(kind=rkind) :: h
       integer(kind=ikind) :: pos
       real(kind=rkind) :: res, dist, tmp
+      type(integpnt_str) :: quadpnt_loc      
       
-
-      
-      
-       get_direct_vals = .true.     
+   
       
       if (present(quadpnt) .and. present(x)) then
 	print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
@@ -519,7 +527,9 @@ module RE_constitutive
 
       
       if (present(quadpnt)) then
-	h = pde_loc%getval(quadpnt)
+        quadpnt_loc=quadpnt
+	quadpnt_loc%preproc=.true.
+	h = pde_loc%getval(quadpnt_loc)
       else
       	if (ubound(x,1) /=1) then
 	  print *, "ERROR: van Genuchten function is a function of a single variable h"
@@ -553,7 +563,7 @@ module RE_constitutive
 	    call intoverflow()
 	    intwarning = .true.
 	  end if
-	  if (present(quadpnt)) call mualem(pde_loc, layer, quadpnt, scalar = tmp)
+	  if (present(quadpnt)) call mualem(pde_loc, layer, quadpnt_loc, scalar = tmp)
 	  if (present(x)) call mualem(pde_loc, layer, x=x, scalar = tmp)
 	end if 
 	 
@@ -566,7 +576,7 @@ module RE_constitutive
       end if
 
       if (present(scalar)) then
-	scalar = tmp!*vgset(layer)%Ks(1,1)
+	scalar = tmp
       end if
     end subroutine mualem_tab
 
@@ -595,9 +605,9 @@ module RE_constitutive
       real(kind=rkind), intent(out), optional :: scalar
 
       real(kind=rkind) :: a,n,m, tmp, h
+      type(integpnt_str) :: quadpnt_loc     
       
-      
-       get_direct_vals = .true.     
+         
       
       if (present(quadpnt) .and. present(x)) then
 	print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
@@ -610,7 +620,9 @@ module RE_constitutive
       end if
       
       if (present(quadpnt)) then
-	h = pde_loc%getval(quadpnt)
+        quadpnt_loc=quadpnt
+	quadpnt_loc%preproc=.true.
+	h = pde_loc%getval(quadpnt_loc)
       else
       	if (ubound(x,1) /=1) then
 	  print *, "ERROR: van Genuchten function is a function of a single variable h"
@@ -670,10 +682,9 @@ module RE_constitutive
       real(kind=rkind) :: dKdx
       real(kind=rkind), dimension(:,:), allocatable, save :: pts
       type(integpnt_str) :: quadpnt_loc
-      integer(kind=ikind) :: layer_loc, vecino, i, D
+      integer(kind=ikind) :: layer_loc, vecino, i, D   
 
 
-      get_direct_vals = .true.
       
       if (present(quadpnt) .and. present(x)) then
 	print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
@@ -686,7 +697,9 @@ module RE_constitutive
       end if
       
       if (present(quadpnt)) then
-	h = pde_loc%getval(quadpnt)
+        quadpnt_loc=quadpnt
+	quadpnt_loc%preproc=.true.
+	h = pde_loc%getval(quadpnt_loc)
       else
 	if (ubound(x,1) /=1) then
 	  print *, "ERROR: van Genuchten function is a function of a single variable h"
@@ -778,10 +791,9 @@ module RE_constitutive
 
       real(kind=rkind) :: a,n,m, tmp, h, K, flux
       integer :: proc
+      type(integpnt_str) :: quadpnt_loc    
       
-      
-       get_direct_vals = .true.     
-      
+
       if (present(quadpnt) .and. present(x)) then
 	print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
 	print *, "exited from re_constitutive::dmualem_dh"
@@ -793,7 +805,9 @@ module RE_constitutive
       end if
       
       if (present(quadpnt)) then
-	h = pde_loc%getval(quadpnt)
+        quadpnt_loc=quadpnt
+	quadpnt_loc%preproc=.true.
+	h = pde_loc%getval(quadpnt_loc)
       else
       	if (ubound(x,1) /=1) then
 	  print *, "ERROR: van Genuchten function is a function of a single variable h"
@@ -879,9 +893,9 @@ module RE_constitutive
 
       integer(kind=ikind) :: pos
       real(kind=rkind) :: res, dist, tmp, h
+      type(integpnt_str) :: quadpnt_loc     
       
-
-       get_direct_vals = .true.     
+    
       
       if (present(quadpnt) .and. present(x)) then
 	print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
@@ -894,7 +908,9 @@ module RE_constitutive
       end if
       
       if (present(quadpnt)) then
-	h = pde_loc%getval(quadpnt)
+        quadpnt_loc=quadpnt
+	quadpnt_loc%preproc=.true.
+	h = pde_loc%getval(quadpnt_loc)
       else
       	if (ubound(x,1) /=1) then
 	  print *, "ERROR: van Genuchten function is a function of a single variable h"
@@ -925,7 +941,7 @@ module RE_constitutive
 	    call intoverflow()
 	    intwarning = .true.
 	  end if
-	  if (present(quadpnt))call dmualem_dh(pde_loc, layer, quadpnt, scalar=tmp)
+	  if (present(quadpnt))call dmualem_dh(pde_loc, layer, quadpnt_loc, scalar=tmp)
 	  if (present(x))call dmualem_dh(pde_loc, layer, x=x, scalar=tmp)
 	end if
 	  
@@ -968,9 +984,9 @@ module RE_constitutive
       real(kind=rkind), dimension(3)  :: vct
       real(kind=rkind) :: h
       real(kind=rkind), dimension(:), allocatable :: gradient
+      type(integpnt_str) :: quadpnt_loc
       
 
-      get_direct_vals = .true.
       
       
       if (present(quadpnt) .and. (present(grad) .or. present(x))) then
@@ -983,7 +999,9 @@ module RE_constitutive
       end if
       
       if (present(quadpnt)) then
-	h = pde_loc%getval(quadpnt)
+        quadpnt_loc=quadpnt
+	quadpnt_loc%preproc=.true.
+	h = pde_loc%getval(quadpnt_loc)
 	call pde_loc%getgrad(quadpnt, gradient)
       else
         if (ubound(x,1) /=1) then
@@ -1337,15 +1355,6 @@ module RE_constitutive
 	 sync all 
 
 
-! 
-!         if (this_image() == 1) then
-!         do j=1, ubound(table,1)
-!   	call printmatrix(table(j,:,:))
-!         print *, "-----------------------------------------------"
-!         end do
-!         call flush(6)
-!         end if
-! stop
 
 
 	
@@ -1353,161 +1362,7 @@ module RE_constitutive
 	deallocate(images_run)
 	deallocate(cotable)
 
-!       type(soilpar), intent(in out), dimension(:) :: vg
-!       integer(kind=ikind) :: i, j, l
-!       integer :: i_err
-!       logical :: increased, overzero
-!       real(kind=rkind) :: theta, htest, htest2, h, tmp1, tmp2, m, inflex_point
-!       real(kind=rkind), dimension(:,:,:), allocatable :: cotable
-!       character(len=7) :: procentas
-!       integer(kind=ikind) :: n
-!       logical :: backward
-! 
-!       n = int(maxpress/drutes_config%fnc_discr_length)+1    
-! 
-! 
-!       do i=1, ubound(vg,1)
-! 	if (vg(i)%rcza_set%use) then
-!          allocate(vg(i)%rcza_set%tab(n, 3))
-! 	 vg(i)%rcza_set%tab = 0
-! 	end if
-!       end do
-!     
-! 
-!       allocate(cotable(ubound(vgset,1), n, 3))
-! 
-! !       do i=2, NUM_IMAGES()
-! ! 	images_run(i,1) = images_run(i-1,2) + 1
-! ! 	if (images_run(i,1) + int(ubound(vgset,1)/NUM_IMAGES()) <= ubound(vgset,1) ) then
-! ! 	  images_run(i,2) = images_run(i,1) + int(ubound(vgset,1)/NUM_IMAGES())
-! ! 	else
-! ! 	  images_run(i,2) = images_run(i,1)
-! ! 	end if
-! !       end do
-! 
-! 
-!     
-! 
-!       layers: do j=1, ubound(vg,1)
-! 		if (vg(j)%rcza_set%use) then
-! 		  !backward
-! 		  write(unit=terminal, fmt=*) "preparing layer:", j
-! 		  this_layer = j
-! 		  call solve_bisect(-epsilon(h), -maxpress, secondder_retc, 0.001_rkind, i_err, inflex_point)
-! 
-! 		  print *, "inflex point of the layer:", j, "found at:", inflex_point
-! 		  
-! 
-! 		  levels: do i=1, ubound(cotable,2)
-! 			    if (this_image() == 1) then
-! 			      call progressbar(int(50*i/ubound(cotable,2)))
-! 			    end if
-! 			    h = -drutes_config%fnc_discr_length*i
-! 			    if (i < 2) then
-! 			      htest = -drutes_config%fnc_discr_length
-! 			    else
-! 			      htest = cotable(j,i-1,2)
-! 			    end if
-! ! 			    htest = h
-! 			    rough: do	
-! 				    if (zone_error_val(h, htest, vgset(j)%rcza_set%val)) then
-! 						  cotable(j,i,1) = h
-! 						  cotable(j,i,2) = htest
-! 						  exit rough
-! 				    else
-! 				      htest = htest - drutes_config%fnc_discr_length
-! 				      if (htest < -2*maxpress) then
-! 					cotable(j,i:ubound(cotable,2),2) = htest
-! 					do l= i, ubound(cotable,2)
-! 					  cotable(j,l,1) = -drutes_config%fnc_discr_length*l
-! 					end do
-! 					exit levels
-! 				      end if
-! 				    end if
-! 			    end do rough
-! 		  end do levels
-! 		  
-! 
-!     ! 		  !forward
-! 		  levels2: do i=1, ubound(cotable,2)
-! 			    if (this_image() == 1) then
-! 			      call progressbar(int(50*i/ubound(cotable,2)+50))
-! 			    end if
-! 			    h = cotable(j,i,1)
-! 			    
-! ! 			    if (i>1) then
-! ! 			      if (cotable(j,i-1,3) > 1.1*inflex_point) then
-! ! 				htest = h
-! 				backward = .true.
-! ! 			      else
-! ! 				htest = cotable(j,i-1,3)
-! ! 				backward = .false.
-! ! 			      end if
-! ! 			    else
-! 			      htest = h
-! ! 			    end if
-! 
-! 			    
-! 
-! 			      
-! 
-! ! 			    if (i < 2) then
-! ! 			      htest = -drutes_config%fnc_discr_length
-! ! 			      backward = .false.
-! ! 			    else
-! ! 			      if (cotable(j,i-1,3) > inflex_point) then
-! ! 			      else
-! ! 				htest = cotable(j,i-1,3)
-! ! 			      end if
-! ! 			    end if
-! 			    rough2: do
-! 				      if ((zone_error_val(h, htest, vgset(j)%rcza_set%val))) then
-! 					cotable(j,i,3) = htest
-! 					exit rough2
-! 				      else if (htest >= 0) then
-! 					cotable(j,i,3) = huge(1.0_rkind)
-! 					 exit rough2
-! 				      else
-! 					if (backward) then
-! 					  htest = htest + drutes_config%fnc_discr_length
-! 					else
-! 					  htest = htest - drutes_config%fnc_discr_length
-! 					end if
-! 
-! 				      end if
-! 			     end do rough2
-! 		  end do levels2 
-! 		  if (this_image() == 1) then
-! 		    print *, " "
-! 		    call flush(6)
-! 		  end if
-! 	  end if
-! 	end do layers
-! 
-! 
-! 	
-! 
-! 	  do j=1, ubound(vg,1)
-! 	    if (vg(j)%rcza_set%use) then
-! 	      vg(j)%rcza_set%tab = cotable(j,:,:)
-! 	    end if
-! 	  end do
-! 	
-! ! 
-! !         if (this_image() == 1) then
-! !         do j=1, ubound(table,2)
-! !   	call printmtx(cotable(1,:,:))
-! !         print *, "-----------------------------------------------"
-! !         end do
-! !         call flush(6)
-! !         end if
-! ! stop
-! 
-! 
-! 	
-! 
-! 
-! 	deallocate(cotable)
+
 
 
       end subroutine init_zones
@@ -1533,22 +1388,6 @@ module RE_constitutive
 		vangen(pde(1), this_layer, x=(/htest/))) - taylor_max
 
 
-
-!       function zone_error_val(h, htest, taylor_max) result(valid)
-! 	use typy
-! 	use pde_objs
-! 
-! 	!> starting point
-! 	real(kind=rkind), intent(in) :: h
-! 	!> point to be evaluated
-! 	real(kind=rkind), intent(in) :: htest
-! 	!> maximal error of taylor series
-! 	real(kind=rkind), intent(in) :: taylor_max
-! 	!> error value of first order taylor approximation starting at point h and evaluating at point htest
-! 	logical :: valid
-! 
-! 	valid = abs(vangen(pde_loc, this_layer, x=(/h/)) + vangen_elast(pde_loc, this_layer, x=(/htest/))*(htest-h)- &
-! 		vangen(pde_loc, this_layer, x=(/htest/))) > taylor_max
 
 
 
@@ -1643,8 +1482,7 @@ module RE_constitutive
 	type(integpnt_str) :: quadpnt
 	
         quadpnt%type_pnt = "ndpt"
-        
-       get_direct_vals = .true.       
+               
 
 	do i=1, ubound(pde_loc%solution,1)
 	  el = nodes%element(i)%data(1)
@@ -1652,11 +1490,10 @@ module RE_constitutive
 	    
 	  quadpnt%order = i
 	  quadpnt%column = 1
+	  quadpnt%preproc=.true.
 	  hprev = pde_loc%getval(quadpnt)
 	  quadpnt%column = 2
 	  h = pde_loc%getval(quadpnt)
-! 	  hprev = solution(i,1)
-! 	  h = solution(i,3)
 	  if (vgset(mat)%rcza_set%use) then
 	    if ( hprev<0 ) then
 	      position = int(-hprev/drutes_config%fnc_discr_length)+1
@@ -1671,34 +1508,6 @@ module RE_constitutive
 	 end do
 
  	passed = .true.
-
-	      
-!         do i=1, ubound(solution,1)
-! 	  if (present(permut)) then
-! 	    pos = permut(i)
-! 	  else
-! 	    pos = i
-! 	  end if
-! 	  el = nodes%element(pos)%data(1)
-! 	  mat = elements%material(el,1)
-!           if (vgset(mat)%rcza_set%use) then
-!             hprev = solution(i,1)
-!             h = solution(i,3)
-!             if ( h<0 ) then
-!               position = int(-hprev/drutes_config%fnc_discr_length)+1
-!               low = vgset(mat)%rcza_set%tab(position,2)
-!               high = vgset(mat)%rcza_set%tab(position,3)
-!               if (h < low .or. h > high) then
-! ! 		print *, h, low, high
-!                 passed = .false.
-!                 RETURN
-!               end if
-!             end if
-!           end if
-!         end do
-
-
-
 
 
       end function rcza_check
@@ -1783,7 +1592,6 @@ module RE_constitutive
 	integer(kind=ikind) :: edge_id, i, j
 	real(kind=rkind) :: tempval, node_height
 	
-      get_direct_vals = .true.	
 
 	if (present(value)) then
 	  edge_id = nodes%edge(elements%data(el_id, node_order))
@@ -1838,7 +1646,6 @@ module RE_constitutive
 	real(kind=rkind) :: bcval, gfluxval
 	integer :: i1
 
-        get_direct_vals = .true.
       
 	if (present(value)) then
 	  edge_id = nodes%edge(elements%data(el_id, node_order))
@@ -1910,7 +1717,6 @@ module RE_constitutive
       real(kind=rkind) :: theta, bcval
       integer(kind=ikind) :: i, edge_id, j
   
-      get_direct_vals = .true.
   
       if (present(code)) then
 	code = 2
@@ -1983,8 +1789,7 @@ module RE_constitutive
         real(kind=rkind) :: value
         
         D = drutes_config%dimen
-
-       get_direct_vals = .true.    
+  
         
         do i=1, elements%kolik
           layer = elements%material(i,1)
@@ -2005,15 +1810,12 @@ module RE_constitutive
 		  value = inverse_vangen(pde_loc, layer, x=(/vgset(layer)%initcond/))
 		  pde_loc%solution(k) = value
 	      end select
-!               pde_loc%solution(k) = vgset(layer)%initcond 
             end if
           end do   
         end do
         
         
-        
 
-! 	call setmatflux()
 
 
       end subroutine re_initcond
@@ -2028,7 +1830,6 @@ module RE_constitutive
         integer(kind=ikind) :: i, j, vecino, id, k, l, nd, ndvec
         
         id = maxval(nodes%edge) + 100
-        get_direct_vals = .true.
         do i=1, elements%kolik
 	  do j=1, ubound(elements%neighbours,2)
 	    vecino = elements%neighbours(i,j)

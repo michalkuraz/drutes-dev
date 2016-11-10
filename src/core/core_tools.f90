@@ -27,7 +27,7 @@ module core_tools
 
 
   
-  subroutine write_log(text, real1, int1, text2, real2, int2, text3, real3, int3)
+  subroutine write_log(text, real1, int1, text2, real2, int2, text3, real3, int3, hidden)
     use typy
     use globals
     character(len=*), intent(in) :: text
@@ -40,6 +40,7 @@ module core_tools
     character(len=8) :: dater
 
     character(len=1024) :: ch1, ch2, ch3, ch4, ch5, ch6, ch7, ch8
+    logical, optional :: hidden
 
     if (present(real1)) then
       write(unit=ch1, fmt=*) real1
@@ -96,9 +97,15 @@ module core_tools
     write(unit=logfile, fmt = *)  timer(1:2), "hrs", " : ", timer(3:4), "min"," : ", timer(5:10), "s", "  -  ", dater(1:4), &
        "/", dater(5:6), "/", dater(7:8), "    ",  trim(text), trim(ch1), trim(ch2), trim(ch3), trim(ch4), trim(ch5), &
 	    trim(ch6), trim(ch7), trim(ch8)
-    write(unit=terminal, fmt=*) trim(text), trim(ch1), trim(ch2), trim(ch3), trim(ch4), trim(ch5), &
+    if (.not. present(hidden)) then	    
+      write(unit=terminal, fmt=*) trim(text), trim(ch1), trim(ch2), trim(ch3), trim(ch4), trim(ch5), &
 		      trim(ch6), trim(ch7), trim(ch8)
-     
+    else 
+      if (.not. hidden) then
+	write(unit=terminal, fmt=*) trim(text), trim(ch1), trim(ch2), trim(ch3), trim(ch4), trim(ch5), &
+	      trim(ch6), trim(ch7), trim(ch8)
+      end if
+    end if
       
 
  

@@ -56,6 +56,4 @@ module re_globals
    
    integer, public :: file_waterm
    
-   logical, public :: get_direct_vals = .false.
-
 end module re_globals

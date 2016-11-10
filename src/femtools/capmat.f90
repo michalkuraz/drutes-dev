@@ -175,8 +175,6 @@ module capmat
 
      bside = bside +   matmul(cap_mat, elnode_prev)
      
-
-     call printmtx(cap_mat) ; call wait()
      
     end subroutine impl_euler_np_diag
 

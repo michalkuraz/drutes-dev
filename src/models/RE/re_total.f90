@@ -22,19 +22,18 @@ module re_total
       real(kind=rkind), dimension(3) :: xyz
       integer(kind=ikind) :: D
       
-      D = drutes_config%dimen
+
+           
+      if (quadpnt%preproc) then
+      
+	D = drutes_config%dimen
        
-      call getcoor(quadpnt, xyz(1:D))
-      
-      
-      if (get_direct_vals) then
+	call getcoor(quadpnt, xyz(1:D))
 
-        val = getvalp1(pde_loc, quadpnt) 
-
-	get_direct_vals = .false.
-	
+        val = getvalp1(pde_loc, quadpnt) - xyz(D)
+! 	
       else
-	  val = getvalp1(pde_loc, quadpnt) - xyz(D)
+        val = getvalp1(pde_loc, quadpnt)
       end if
 	
       
@@ -63,8 +62,8 @@ module re_total
       real(kind=rkind), dimension(:), allocatable, save  :: gradH
       real(kind=rkind), dimension(:), allocatable, save  :: vct
       real(kind=rkind) :: h
+      type(integpnt_str) :: quadpnt_loc
       
-      get_direct_vals = .true.
       D = drutes_config%dimen
 
       if (.not.(allocated(gradH))) then
@@ -83,7 +82,9 @@ module re_total
       end if
       
       if (present(quadpnt)) then
-	h = pde_loc%getval(quadpnt)
+        quadpnt_loc=quadpnt
+	quadpnt_loc%preproc=.true.
+	h = pde_loc%getval(quadpnt_loc)
 	call pde_loc%getgrad(quadpnt, gradH)
       else
         if (ubound(x,1) /=1) then
@@ -138,7 +139,7 @@ module re_total
       real(kind=rkind), dimension(3) :: xyz
 
       
-      get_direct_vals = .true.
+      
       edge_id = nodes%edge(elements%data(el_id, node_order))
 
       quadpnt%type_pnt = "ndpt"
@@ -193,7 +194,7 @@ module re_total
       integer(kind=ikind) :: edge_id, i, j
       real(kind=rkind) :: tempval, node_height
       
-      get_direct_vals = .true.
+      
       edge_id = nodes%edge(elements%data(el_id, node_order))
       node_height = nodes%data(elements%data(el_id, node_order), drutes_config%dimen)
 
@@ -246,7 +247,7 @@ module re_total
       real(kind=rkind) :: bcval, gfluxval
       integer :: i1
       
-      get_direct_vals = .true.
+      
 
       if (present(value)) then
 	edge_id = nodes%edge(elements%data(el_id, node_order))
@@ -302,7 +303,7 @@ module re_total
       real(kind=rkind) :: theta, bcval
       integer(kind=ikind) :: i, edge_id, j
       
-      get_direct_vals = .true.
+      
       
       if (present(code)) then
 	code = 2
@@ -361,7 +362,7 @@ module re_total
       integer(kind=ikind) :: layer, D
       real(kind=rkind), dimension(3) :: gravflux
       
-      get_direct_vals = .true.
+      
       if (present(value)) then
 	
 	quadpnt%type_pnt = "ndpt"
@@ -403,7 +404,7 @@ module re_total
       integer(kind=ikind) :: i, j, k,l, m, layer, D
       real(kind=rkind) :: value
       
-      get_direct_vals = .true.
+      
       D = drutes_config%dimen
       do i=1, elements%kolik
 	layer = elements%material(i,1)
@@ -453,7 +454,7 @@ module re_total
       real(kind=rkind) :: tmp, dx, slope
       integer :: ierr
       
-      get_direct_vals = .true.     
+           
       call find_unit(fileid(1), 200)
       open(unit=fileid(1), file="drutes.conf/boussinesq.conf/iconds/slopes.csv", action="read", status="old")
       

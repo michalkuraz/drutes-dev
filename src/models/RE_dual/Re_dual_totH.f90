@@ -1,226 +1,233 @@
 module dual_por
-	use typy
-    use global_objs
-    use dual_globals
+  use typy
+  use global_objs
+  use dual_globals
 
 
-public:: dual_mualemm,dual_mualemf, dual_ret_capf, dual_ret_capm, dual_coupling
-public:: vangen_d_f, vangen_d_m, dual_coupling_f
-public:: dual_inicond_f,dual_inicond_m
-public:: darcy_law_d
-public:: dual_mualem_m_tab,dual_mualem_f_tab
-public:: vangen_d_m_tab, vangen_d_f_tab
-public:: dual_ret_capf_tab, dual_ret_capm_tab
-public:: dual_coupling_f_tab,dual_coupling_tab,dual_coupling_K
-public:: dual_tabvalues
-public :: getval_retot_dual
+  public:: dual_mualemm,dual_mualemf, dual_ret_capf, dual_ret_capm, dual_coupling
+  public:: vangen_d_f, vangen_d_m, dual_coupling_f
+  public:: dual_inicond_f,dual_inicond_m
+  public:: darcy_law_d
+  public:: dual_mualem_m_tab,dual_mualem_f_tab
+  public:: vangen_d_m_tab, vangen_d_f_tab
+  public:: dual_ret_capf_tab, dual_ret_capm_tab
+  public:: dual_coupling_f_tab,dual_coupling_tab,dual_coupling_K
+  public:: dual_tabvalues
+  public :: getval_retot_dual
 
-real(kind=rkind), dimension(:,:), pointer, public :: Ktab_dm,watcontab_dm,warecatab_dm,couptab
-real(kind=rkind), dimension(:,:), pointer, public :: Ktab_df,watcontab_df,warecatab_df
-real(kind=rkind), dimension(:,:), allocatable, target, public ::Ktabd_tget_m,watcontabd_tget_m
-real(kind=rkind), dimension(:,:), allocatable, target, public ::warecatabd_tget_m
-real(kind=rkind), dimension(:,:), allocatable, target, public ::Ktabd_tget_f,watcontabd_tget_f
-real(kind=rkind), dimension(:,:), allocatable, target, public ::warecatabd_tget_f
-real(kind=rkind), dimension(:,:), allocatable, target, public ::couptab_all
-contains 
-
-  !> specific function for Richards equation in H-form (total hydraulic head form), replaces pde_objs::getvalp1 in order to distinguish between H and h 
- function getval_retot_dual(pde_loc, quadpnt) result(val)
-    use typy
-    use pde_objs
-    use geom_tools
-    use dual_globals
-
-    class(pde_str), intent(in) :: pde_loc
-    type(integpnt_str), intent(in) :: quadpnt
-    real(kind=rkind) :: val
-
-    real(kind=rkind), dimension(3) :: xyz
-    integer(kind=ikind) :: D
-
-    D = drutes_config%dimen
-     
-    call getcoor(quadpnt, xyz(1:D))
-
-
-    if (get_pressh_vals) then
-
-      val = getvalp1(pde_loc, quadpnt) 
-
-      get_pressh_vals = .false.
-      
-    else
-        val = getvalp1(pde_loc, quadpnt) - xyz(D)
-    end if
-        
-      
- end function getval_retot_dual
-
- subroutine dual_inicond_m(pde_loc)
-   use typy
-   use globals
-   use global_objs
-   use pde_objs
-   use dual_globals
-     class(pde_str), intent(in out) :: pde_loc
-     integer(kind=ikind) :: i, j, k,l, m, layer
-     real(kind=rkind) :: value
-     
-      do i=1, elements%kolik
-	    layer = elements%material(i,1)
-	    do j=1, ubound(elements%data,2)
-	      k = elements%data(i,j)
-          pde_loc%solution(k)=vgmatrix(layer)%initcond
-	    end do   
-      end do
-      
-  end subroutine dual_inicond_m
+  real(kind=rkind), dimension(:,:), pointer, public :: Ktab_dm,watcontab_dm,warecatab_dm,couptab
+  real(kind=rkind), dimension(:,:), pointer, public :: Ktab_df,watcontab_df,warecatab_df
+  real(kind=rkind), dimension(:,:), allocatable, target, public ::Ktabd_tget_m,watcontabd_tget_m
+  real(kind=rkind), dimension(:,:), allocatable, target, public ::warecatabd_tget_m
+  real(kind=rkind), dimension(:,:), allocatable, target, public ::Ktabd_tget_f,watcontabd_tget_f
+  real(kind=rkind), dimension(:,:), allocatable, target, public ::warecatabd_tget_f
+  real(kind=rkind), dimension(:,:), allocatable, target, public ::couptab_all
   
-   subroutine dual_inicond_f(pde_loc)
-   use typy
-   use globals
-   use global_objs
-   use pde_objs
-   use dual_globals
-     class(pde_str), intent(in out) :: pde_loc
-     integer(kind=ikind) :: i, j, k,l, m, layer
-     real(kind=rkind) :: value
-     
-      do i=1, elements%kolik
-	    layer = elements%material(i,1)
-	    do j=1, ubound(elements%data,2)
-	      k = elements%data(i,j)
-          pde_loc%solution(k)=vgfracture(layer)%initcond
-	    end do   
-      end do
+  contains 
+
+    !> specific function for Richards equation in H-form (total hydraulic head form), replaces pde_objs::getvalp1 in order to distinguish between H and h 
+    function getval_retot_dual(pde_loc, quadpnt) result(val)
+      use typy
+      use pde_objs
+      use geom_tools
+      use re_globals
       
-  end subroutine dual_inicond_f
+      class(pde_str), intent(in) :: pde_loc
+      type(integpnt_str), intent(in) :: quadpnt
+      real(kind=rkind) :: val
+      
+      real(kind=rkind), dimension(3) :: xyz
+      integer(kind=ikind) :: D
+      
+
+	  
+      if (quadpnt%preproc) then
+      
+	D = drutes_config%dimen
+      
+	call getcoor(quadpnt, xyz(1:D))
+
+	val = getvalp1(pde_loc, quadpnt) - xyz(D)
+    ! 	
+      else
+	val = getvalp1(pde_loc, quadpnt)
+      end if
+	
+      
+	
+    end function getval_retot_dual
+
+    subroutine dual_inicond_m(pde_loc)
+      use typy
+      use globals
+      use global_objs
+      use pde_objs
+      use dual_globals
+	class(pde_str), intent(in out) :: pde_loc
+	integer(kind=ikind) :: i, j, k,l, m, layer
+	real(kind=rkind) :: value
+	
+	  do i=1, elements%kolik
+		layer = elements%material(i,1)
+		do j=1, ubound(elements%data,2)
+		  k = elements%data(i,j)
+	      pde_loc%solution(k)=vgmatrix(layer)%initcond
+		end do   
+	  end do
+	  
+      end subroutine dual_inicond_m
+    
+    subroutine dual_inicond_f(pde_loc)
+      use typy
+      use globals
+      use global_objs
+      use pde_objs
+      use dual_globals
+      class(pde_str), intent(in out) :: pde_loc
+      integer(kind=ikind) :: i, j, k,l, m, layer
+      real(kind=rkind) :: value
+	
+      do i=1, elements%kolik
+	layer = elements%material(i,1)
+	do j=1, ubound(elements%data,2)
+	  k = elements%data(i,j)
+	  pde_loc%solution(k)=vgfracture(layer)%initcond
+	end do   
+      end do
+	  
+    end subroutine dual_inicond_f
  
-subroutine dual_mualemm(pde_loc, layer, quadpnt, x, tensor, scalar)
-  use typy
-  use global_objs
-  use pde_objs
-  use globals
-  use debug_tools
-  use dual_globals
-  use Re_dual_reader
-      
-  class(pde_str), intent(in) :: pde_loc
-  !> value of the nonlinear function
-  real(kind=rkind), dimension(:), intent(in), optional    :: x
-  !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
-  type(integpnt_str), intent(in), optional :: quadpnt
-  !> material ID
-  integer(kind=ikind), intent(in) :: layer
-  !> return tensor
-  real(kind=rkind), dimension(:,:), intent(out), optional :: tensor
-  !> relative scalar value of the nonlinear function 
-  real(kind=rkind), intent(out), optional                 :: scalar
-  !> vg parameters, later from conf file
-  real(kind=rkind)::n,m,alpha, weight       
-  real(kind=rkind) :: h,Kr,one
-  
-  get_pressh_vals = .true.
-      
-    if (present(quadpnt)) then
-	  h = pde_loc%getval(quadpnt)
-    else
-      if (ubound(x,1) /=1) then
-	    print *, "ERROR: van Genuchten function is a function of a single variable h"
-	    print *, "       your input data has:", ubound(x,1), "variables"
-	    print *, "exited from RE_dual::dual_mualemm"
-	    ERROR STOP
-	  end if
-	h = x(1)
-    end if
-!     print *, "h in matrix"
-!     print *, h
-    alpha=vgmatrix(layer)%alpha
-    n=vgmatrix(layer)%n
-    m=vgmatrix(layer)%m
-    weight=-exchange(layer)%weightm
+    subroutine dual_mualemm(pde_loc, layer, quadpnt, x, tensor, scalar)
+      use typy
+      use global_objs
+      use pde_objs
+      use globals
+      use debug_tools
+      use dual_globals
+      use Re_dual_reader
+	  
+      class(pde_str), intent(in) :: pde_loc
+      !> value of the nonlinear function
+      real(kind=rkind), dimension(:), intent(in), optional    :: x
+      !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
+      type(integpnt_str), intent(in), optional :: quadpnt
+      !> material ID
+      integer(kind=ikind), intent(in) :: layer
+      !> return tensor
+      real(kind=rkind), dimension(:,:), intent(out), optional :: tensor
+      !> relative scalar value of the nonlinear function 
+      real(kind=rkind), intent(out), optional                 :: scalar
+      !> vg parameters, later from conf file
+      real(kind=rkind)::n,m,alpha, weight       
+      real(kind=rkind) :: h,Kr,one
+      type(integpnt_str) :: quadpnt_loc
+	
+
+	  
+	if (present(quadpnt)) then
+	  quadpnt_loc=quadpnt
+	  quadpnt_loc%preproc=.true.
+	  h = pde_loc%getval(quadpnt_loc)
+	else
+	  if (ubound(x,1) /=1) then
+		print *, "ERROR: van Genuchten function is a function of a single variable h"
+		print *, "       your input data has:", ubound(x,1), "variables"
+		print *, "exited from RE_dual::dual_mualemm"
+		ERROR STOP
+	      end if
+	    h = x(1)
+	end if
+    !     print *, "h in matrix"
+    !     print *, h
+	alpha=vgmatrix(layer)%alpha
+	n=vgmatrix(layer)%n
+	m=vgmatrix(layer)%m
+	weight=-exchange(layer)%weightm
 
 
-    one=1.0_rkind    
-    if(h < 0.0_rkind) then
-      Kr=(one-(-alpha*h)**(n*m)*(one+(-alpha*h)**n)**(-m))**2/(one+(-alpha*h)**n)**(m/2)
-    else
-      Kr=1.0_rkind
-    end if
-        
-    if (present(tensor)) then
-		tensor=vgmatrix(layer)%KS*Kr*weight
-    end if
-      
-    if (present(scalar)) then
-      scalar=Kr*weight
-    end if
-!      print*, " weighted hydraulic conductivty of matrix"
-!     print *, Kr
-  end subroutine dual_mualemm 
+	one=1.0_rkind    
+	if(h < 0.0_rkind) then
+	  Kr=(one-(-alpha*h)**(n*m)*(one+(-alpha*h)**n)**(-m))**2/(one+(-alpha*h)**n)**(m/2)
+	else
+	  Kr=1.0_rkind
+	end if
+	    
+	if (present(tensor)) then
+		    tensor=vgmatrix(layer)%KS*Kr*weight
+	end if
+	  
+	if (present(scalar)) then
+	  scalar=Kr*weight
+	end if
+    !      print*, " weighted hydraulic conductivty of matrix"
+    !     print *, Kr
+      end subroutine dual_mualemm 
      
-subroutine dual_mualemf(pde_loc, layer, quadpnt, x, tensor, scalar)
-  use typy
-  use global_objs
-  use pde_objs
-  use globals
-  use debug_tools
-  use dual_globals
-  use Re_dual_reader
-       
-  class(pde_str), intent(in) :: pde_loc
-  !> value of the nonlinear function
-  real(kind=rkind), dimension(:), intent(in), optional    :: x
-  !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
-  type(integpnt_str), intent(in), optional :: quadpnt
-  !> material ID
-  integer(kind=ikind), intent(in) :: layer
-  !> return tensor
-  real(kind=rkind), dimension(:,:), intent(out), optional :: tensor
-  !> relative scalar value of the nonlinear function 
-  real(kind=rkind), intent(out), optional                 :: scalar
-  !> vg parameters, later from conf file
-  real(kind=rkind)::n,m,alpha,weight
-         
-  real(kind=rkind) :: h,Kr,one
-  
-  get_pressh_vals = .true.
-      
-    if (present(quadpnt)) then
-	  h = pde_loc%getval(quadpnt)
-    else
-      if (ubound(x,1) /=1) then
-	    print *, "ERROR: van Genuchten function is a function of a single variable h"
-	    print *, "       your input data has:", ubound(x,1), "variables"
-	    print *, "exited from RE_dual::mualemf"
-	    ERROR STOP
+      subroutine dual_mualemf(pde_loc, layer, quadpnt, x, tensor, scalar)
+	use typy
+	use global_objs
+	use pde_objs
+	use globals
+	use debug_tools
+	use dual_globals
+	use Re_dual_reader
+	    
+	class(pde_str), intent(in) :: pde_loc
+	!> value of the nonlinear function
+	real(kind=rkind), dimension(:), intent(in), optional    :: x
+	!> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
+	type(integpnt_str), intent(in), optional :: quadpnt
+	!> material ID
+	integer(kind=ikind), intent(in) :: layer
+	!> return tensor
+	real(kind=rkind), dimension(:,:), intent(out), optional :: tensor
+	!> relative scalar value of the nonlinear function 
+	real(kind=rkind), intent(out), optional                 :: scalar
+	!> vg parameters, later from conf file
+	real(kind=rkind)::n,m,alpha,weight
+	      
+	real(kind=rkind) :: h,Kr,one
+	type(integpnt_str) :: quadpnt_loc
+	
+	
+	    
+	  if (present(quadpnt)) then
+	    quadpnt_loc=quadpnt
+	    quadpnt_loc%preproc=.true.
+	    h = pde_loc%getval(quadpnt_loc)
+	  else
+	    if (ubound(x,1) /=1) then
+		  print *, "ERROR: van Genuchten function is a function of a single variable h"
+		  print *, "       your input data has:", ubound(x,1), "variables"
+		  print *, "exited from RE_dual::mualemf"
+		  ERROR STOP
+		end if
+	      h = x(1)
 	  end if
-	h = x(1)
-    end if
 
-    alpha=vgfracture(layer)%alpha
-    n=vgfracture(layer)%n
-    m=vgfracture(layer)%m
-    weight=exchange(layer)%weightf
+	  alpha=vgfracture(layer)%alpha
+	  n=vgfracture(layer)%n
+	  m=vgfracture(layer)%m
+	  weight=exchange(layer)%weightf
 
-    one=1.0_rkind    
-    
-    if(h < 0.0_rkind) then
-      Kr=(one-(-alpha*h)**(n*m)*(one+(-alpha*h)**n)**(-m))**2/(one+(-alpha*h)**n)**(m/2)
-    else
-      Kr=1.0_rkind
-    end if
-    
-    if (present(tensor)) then
-		tensor=vgfracture(layer)%KS*Kr*(-weight)
-    end if
-      
-    if (present(scalar)) then
-      scalar=Kr*(-weight)
-    end if
-!      print*, " weighted hydraulic conductivty of fracture"
-!      print*, Kr
-  end subroutine dual_mualemf
+	  one=1.0_rkind    
+	  
+	  if(h < 0.0_rkind) then
+	    Kr=(one-(-alpha*h)**(n*m)*(one+(-alpha*h)**n)**(-m))**2/(one+(-alpha*h)**n)**(m/2)
+	  else
+	    Kr=1.0_rkind
+	  end if
+	  
+	  if (present(tensor)) then
+		      tensor=vgfracture(layer)%KS*Kr*(-weight)
+	  end if
+	    
+	  if (present(scalar)) then
+	    scalar=Kr*(-weight)
+	  end if
+      !      print*, " weighted hydraulic conductivty of fracture"
+      !      print*, Kr
+	end subroutine dual_mualemf
    
   function dual_ret_capm(pde_loc,layer,quadpnt,x) result(E)
       use typy
@@ -239,12 +246,14 @@ subroutine dual_mualemf(pde_loc, layer, quadpnt, x, tensor, scalar)
       !> vg parameters, later from conf file
       real(kind=rkind)::n,m,alpha,thetaS,thetaR,weight
       real(kind=rkind)::E,h,C
+      type(integpnt_str) :: quadpnt_loc
       
       
-      get_pressh_vals = .true.
       
       if (present(quadpnt)) then
-	    h = pde_loc%getval(quadpnt)
+	quadpnt_loc=quadpnt
+	quadpnt_loc%preproc=.true.
+	h = pde_loc%getval(quadpnt_loc)
       else
         if (ubound(x,1) /=1) then
 	      print *, "ERROR: van Genuchten function is a function of a single variable h"
@@ -295,12 +304,15 @@ subroutine dual_mualemf(pde_loc, layer, quadpnt, x, tensor, scalar)
       !> vg parameters
       real(kind=rkind)::n,m,alpha,thetaS,thetaR,weight
       real(kind=rkind)::E,h,C
+      type(integpnt_str) :: quadpnt_loc
       
       
-      get_pressh_vals = .true.
+      
       
       if (present(quadpnt)) then
-	    h = pde_loc%getval(quadpnt)
+        quadpnt_loc=quadpnt
+	quadpnt_loc%preproc=.true.
+	h = pde_loc%getval(quadpnt_loc)
       else
         if (ubound(x,1) /=1) then
 	      print *, "ERROR: van Genuchten function is a function of a single variable h"
@@ -348,10 +360,13 @@ subroutine dual_mualemf(pde_loc, layer, quadpnt, x, tensor, scalar)
    real(kind=rkind) :: theta
 
    real(kind=rkind) :: a,n,m,ths,thr, theta_e
-
-      get_pressh_vals = .true.
+   type(integpnt_str) :: quadpnt_loc
+      
+      
      if (present(quadpnt)) then
-	   h = pde_loc%getval(quadpnt)
+        quadpnt_loc=quadpnt
+	quadpnt_loc%preproc=.true.
+	h = pde_loc%getval(quadpnt_loc)
      else
 	 if (ubound(x,1) /=1) then
 	   print *, "ERROR: van Genuchten function is a function of a single variable h"
@@ -392,12 +407,13 @@ subroutine dual_mualemf(pde_loc, layer, quadpnt, x, tensor, scalar)
    real(kind=rkind) :: theta,weight
 
    real(kind=rkind) :: a,n,m,ths,thr, theta_e
-
+   type(integpnt_str) :: quadpnt_loc
    
-   get_pressh_vals = .true.
       
      if (present(quadpnt)) then
-	   h = pde_loc%getval(quadpnt)
+        quadpnt_loc=quadpnt
+	quadpnt_loc%preproc=.true.
+	h = pde_loc%getval(quadpnt_loc)
      else
 	 if (ubound(x,1) /=1) then
 	   print *, "ERROR: van Genuchten function is a function of a single variable h"
@@ -440,13 +456,15 @@ subroutine dual_mualemf(pde_loc, layer, quadpnt, x, tensor, scalar)
       real(kind=rkind)::n,m,alpha,Ks
       real(kind=rkind)				  :: Ka_f,Ka_m,Ka,ex_term
       real(kind=rkind)				  :: hm,hf,one
-      
+      type(integpnt_str) :: quadpnt_loc     
         
-       get_pressh_vals = .true.
+       
             
       if (present(quadpnt)) then
-	    hm = pde(1)%getval(quadpnt)
-	    hf = pde(2)%getval(quadpnt)
+        quadpnt_loc=quadpnt
+	quadpnt_loc%preproc=.true.
+	hm = pde(1)%getval(quadpnt_loc)
+	hf = pde(2)%getval(quadpnt_loc)
       else
 	    if (ubound(x,1) /=2) then
 	      print *, "ERROR: exchange term requires two variables h"
@@ -501,12 +519,14 @@ subroutine dual_mualemf(pde_loc, layer, quadpnt, x, tensor, scalar)
       real(kind=rkind)::n,m,alpha, Ks
       real(kind=rkind)				  :: Ka_f,Ka_m,Ka,ex_term
       real(kind=rkind)				  :: hm,hf,one
-      
-       get_pressh_vals = .true.
+      type(integpnt_str) :: quadpnt_loc
+ 
+ 
+       
             
       if (present(quadpnt)) then
-	    hm = pde(1)%getval(quadpnt)
-	    hf = pde(2)%getval(quadpnt)
+	hm = pde(1)%getval(quadpnt_loc)
+	hf = pde(2)%getval(quadpnt_loc)
       else
 	    if (ubound(x,1) /=2) then
 	      print *, "ERROR: exchange term requires two variables h"
@@ -568,6 +588,7 @@ subroutine dual_mualemf(pde_loc, layer, quadpnt, x, tensor, scalar)
       real(kind=rkind), dimension(3)  :: vct
       real(kind=rkind) :: h
       real(kind=rkind), dimension(:), allocatable :: gradient
+      type(integpnt_str) :: quadpnt_loc
       
       
       
@@ -582,8 +603,9 @@ subroutine dual_mualemf(pde_loc, layer, quadpnt, x, tensor, scalar)
       
       if (present(quadpnt)) then
 	call pde_loc%getgrad(quadpnt, gradient)
-	get_pressh_vals = .true.
-	h = pde_loc%getval(quadpnt)
+        quadpnt_loc=quadpnt
+	quadpnt_loc%preproc=.true.
+	h = pde_loc%getval(quadpnt_loc)
       else
         if (ubound(x,1) /=1) then
 	  print *, "ERROR: van Genuchten function is a function of a single variable h"
@@ -642,10 +664,12 @@ subroutine dual_mualemf(pde_loc, layer, quadpnt, x, tensor, scalar)
     real(kind=rkind)::Ka_c
     real(kind=rkind)::n,m,alpha
     real(kind=rkind):: one,h
+    type(integpnt_str) :: quadpnt_loc
           
      if (present(quadpnt)) then
-           get_pressh_vals = .true.
-	   h = pde_loc%getval(quadpnt)
+        quadpnt_loc=quadpnt
+	quadpnt_loc%preproc=.true.
+	h = pde_loc%getval(quadpnt_loc)
      else
 	 if (ubound(x,1) /=1) then
 	   print *, "ERROR: van Genuchten function is a function of a single variable h"
@@ -684,8 +708,9 @@ subroutine dual_mualemf(pde_loc, layer, quadpnt, x, tensor, scalar)
       real(kind=rkind) :: h
       integer(kind=ikind) :: pos
       real(kind=rkind) :: res, dist, tmp
+      type(integpnt_str) :: quadpnt_loc 
       
-      get_pressh_vals = .true.
+      
       if (present(quadpnt) .and. present(x)) then
 		print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
 		print *, "exited from Re_dual::mualem_m_tab"
@@ -698,7 +723,9 @@ subroutine dual_mualemf(pde_loc, layer, quadpnt, x, tensor, scalar)
       
      
       if (present(quadpnt)) then
-		h = pde_loc%getval(quadpnt)
+        quadpnt_loc=quadpnt
+	quadpnt_loc%preproc=.true.
+	h = pde_loc%getval(quadpnt_loc)
       else
       	if (ubound(x,1) /=1) then
 	  		print *, "ERROR: van Genuchten function is a function of a single variable h"
@@ -771,8 +798,9 @@ subroutine dual_mualem_f_tab(pde_loc, layer, quadpnt,  x, tensor, scalar)
       real(kind=rkind) :: h
       integer(kind=ikind) :: pos
       real(kind=rkind) :: res, dist, tmp
+      type(integpnt_str) :: quadpnt_loc 
       
-      get_pressh_vals = .true.
+      
       if (present(quadpnt) .and. present(x)) then
 		print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
 		print *, "exited from Re_dual::mualem_m_tab"
@@ -785,7 +813,9 @@ subroutine dual_mualem_f_tab(pde_loc, layer, quadpnt,  x, tensor, scalar)
       
      
       if (present(quadpnt)) then
-		h = pde_loc%getval(quadpnt)
+        quadpnt_loc=quadpnt
+	quadpnt_loc%preproc=.true.
+	h = pde_loc%getval(quadpnt_loc)
       else
       	if (ubound(x,1) /=1) then
 	  		print *, "ERROR: van Genuchten function is a function of a single variable h"
@@ -821,7 +851,7 @@ subroutine dual_mualem_f_tab(pde_loc, layer, quadpnt,  x, tensor, scalar)
 !    intwarning = .true.
 !  end if
  
- if (present(quadpnt)) call dual_mualemf(pde_loc, layer, quadpnt, scalar = tmp)
+ if (present(quadpnt)) call dual_mualemf(pde_loc, layer, quadpnt_loc, scalar = tmp)
  if (present(x)) call dual_mualemf(pde_loc, layer, x=x, scalar = tmp)
   end if 
  else
@@ -855,8 +885,9 @@ function vangen_d_m_tab(pde_loc, layer, quadpnt, x) result(theta)
 
       integer(kind=ikind) :: pos
       real(kind=rkind) :: res, dist
+      type(integpnt_str) :: quadpnt_loc
 
-      get_pressh_vals = .true.
+      
       
       if (present(quadpnt) .and. present(x)) then
 	print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
@@ -869,7 +900,9 @@ function vangen_d_m_tab(pde_loc, layer, quadpnt, x) result(theta)
       end if
       
       if (present(quadpnt)) then
-	h = pde_loc%getval(quadpnt)
+        quadpnt_loc=quadpnt
+	quadpnt_loc%preproc=.true.
+	h = pde_loc%getval(quadpnt_loc)
       else
       	if (ubound(x,1) /=1) then
 	  print *, "ERROR: van Genuchten function is a function of a single variable h"
@@ -934,8 +967,9 @@ function vangen_d_f_tab(pde_loc, layer, quadpnt, x) result(theta)
 
       integer(kind=ikind) :: pos
       real(kind=rkind) :: res, dist
+      type(integpnt_str) :: quadpnt_loc        
 
-      get_pressh_vals = .true.
+      
       if (present(quadpnt) .and. present(x)) then
 	print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
 	print *, "exited from RE_dual::vangen_tab"
@@ -947,7 +981,9 @@ function vangen_d_f_tab(pde_loc, layer, quadpnt, x) result(theta)
       end if
       
       if (present(quadpnt)) then
-	h = pde_loc%getval(quadpnt)
+        quadpnt_loc=quadpnt
+	quadpnt_loc%preproc=.true.
+	h = pde_loc%getval(quadpnt_loc)
       else
       	if (ubound(x,1) /=1) then
 	  print *, "ERROR: van Genuchten function is a function of a single variable h"
@@ -1011,9 +1047,10 @@ function dual_ret_capm_tab(pde_loc, layer, quadpnt, x) result(E)
 
       integer(kind=ikind) :: pos
       real(kind=rkind) :: res, dist
+      type(integpnt_str) :: quadpnt_loc      
       
    
-      get_pressh_vals = .true.
+      
       if (present(quadpnt) .and. present(x)) then
 	print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
 	print *, "exited from re_constitutive::vangen_elast_tab"
@@ -1025,7 +1062,9 @@ function dual_ret_capm_tab(pde_loc, layer, quadpnt, x) result(E)
       end if
       
       if (present(quadpnt)) then
-	h = pde_loc%getval(quadpnt)
+        quadpnt_loc=quadpnt
+	quadpnt_loc%preproc=.true.
+	h = pde_loc%getval(quadpnt_loc)
       else
       	if (ubound(x,1) /=1) then
 	  print *, "ERROR: van Genuchten function is a function of a single variable h"
@@ -1080,9 +1119,10 @@ function dual_ret_capf_tab(pde_loc, layer, quadpnt, x) result(E)
 
       integer(kind=ikind) :: pos
       real(kind=rkind) :: res, dist
+      type(integpnt_str) :: quadpnt_loc  
       
    
-      get_pressh_vals = .true.
+      
       if (present(quadpnt) .and. present(x)) then
 	print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
 	print *, "exited from re_constitutive::vangen_elast_tab"
@@ -1094,7 +1134,9 @@ function dual_ret_capf_tab(pde_loc, layer, quadpnt, x) result(E)
       end if
       
       if (present(quadpnt)) then
-	h = pde_loc%getval(quadpnt)
+        quadpnt_loc=quadpnt
+	quadpnt_loc%preproc=.true.
+	h = pde_loc%getval(quadpnt_loc)
       else
       	if (ubound(x,1) /=1) then
 	  print *, "ERROR: van Genuchten function is a function of a single variable h"
@@ -1145,13 +1187,14 @@ function dual_coupling_tab(pde_loc, layer, quadpnt, x) result(ex_term)
       real(kind=rkind):: hm,hf,one
       integer(kind=ikind) :: pos
       real(kind=rkind) :: res, dist
+      type(integpnt_str) :: quadpnt_loc 
 
       beta=exchange(layer)%beta
       a=exchange(layer)%a
       gam_par=exchange(layer)%gam_par
       Ks=vgexchange(layer)%KS_local(1) 
       
-      get_pressh_vals = .true.
+      
       
       if (present(quadpnt) .and. present(x)) then
 	print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
@@ -1164,8 +1207,10 @@ function dual_coupling_tab(pde_loc, layer, quadpnt, x) result(ex_term)
       end if
       
 	if (present(quadpnt)) then
-	  hm = pde(1)%getval(quadpnt)
-	  hf = pde(2)%getval(quadpnt)
+	  quadpnt_loc=quadpnt
+	  quadpnt_loc%preproc=.true.
+	  hm = pde(1)%getval(quadpnt_loc)
+	  hf = pde(2)%getval(quadpnt_loc)
     else
 	if (ubound(x,1) /=2) then
 	  print *, "ERROR: the coupling term is a function of two variables hm and hf"
@@ -1239,9 +1284,10 @@ function dual_coupling_f_tab(pde_loc, layer, quadpnt, x) result(ex_term)
       real(kind=rkind):: hm,hf,one
       integer(kind=ikind) :: pos
       real(kind=rkind) :: res, dist
+      type(integpnt_str) :: quadpnt_loc 
 
       
-      get_pressh_vals = .true.
+      
       
       beta=exchange(layer)%beta
       a=exchange(layer)%a
@@ -1259,8 +1305,10 @@ function dual_coupling_f_tab(pde_loc, layer, quadpnt, x) result(ex_term)
       end if
       
 	if (present(quadpnt)) then
-	  hm = pde(1)%getval(quadpnt)
-	  hf = pde(2)%getval(quadpnt)
+	  quadpnt_loc=quadpnt
+	  quadpnt_loc%preproc=.true.
+	  hm = pde(1)%getval(quadpnt_loc)
+	  hf = pde(2)%getval(quadpnt_loc)
     else
 	if (ubound(x,1) /=2) then
 	  print *, "ERROR: the coupling term is a function of two variables hm and hf"

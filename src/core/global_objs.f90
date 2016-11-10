@@ -29,6 +29,8 @@ module global_objs
     logical :: globtime=.true.
     real(kind=rkind) :: time4eval
     logical :: debugstop=.false.
+    !> use preprocessed values (some PDE problems e.g. Richards equation in total hydraulic head form distiguish between pressure head h and total hydraulic head H, where H is the solution, but e.g. the function for the water content (retention curve) requires h. In this case for evaluating the water content we need to use preprocessed values. The preprocessor could be created as a part of model setup by changing the default pointer pde%getval to your own routine. Because pde%getval is called both from your constitutive functions and from the FEM solver, you should be able to tell your own getval function, which value you want to get H or h? By default it is false.
+    logical :: preproc=.false.
   end type integpnt_str
   
   type, public :: smartarray_int
@@ -76,14 +78,6 @@ module global_objs
     character(len=7) :: reliability
   end type version
   
-!   type, private :: execlimit_str
-!     logical :: valid
-!     real(kind=rkind) :: maxtime
-!     character(len=3) :: units
-!     !> max cpu time in seconds, converted from maxtime in drutes_init::parse_globals
-!     real(kind=rkind) :: tlim
-!   end type execlimit_str
-
 
   !>structure with basic model configuration
   type, public :: configuration
@@ -117,8 +111,6 @@ module global_objs
     !> descriptor of the problem type (RE_std = standard Richards equation, RE_mod = modified Richards eq. (Noborio)
     character(len=256) :: name
     character(len=4096) :: fullname
-!     !> limit your execution time 
-!     type(execlimit_str) :: execlimit
   end type configuration
 
 
@@ -136,9 +128,21 @@ module global_objs
   end type observe_time_str
   
   type, public :: observe_info_str
+    !> methods for observation time print 
+    !! 1 - adjust time stepping to observation time values
+    !! 2 - linearly interpolate solution between two consecutive solutions (recommended)
+    !<
     integer(kind=ikind) :: method
+    !> format of outputs for observation times
+    !! pure - raw data are printed, just nodes id with FEM coefficients
+    !! scil - scilab output 
+    !! gmsh - gmsh output
+    !<
+    character(len=4) :: fmt
     logical :: anime
     integer(kind=ikind) :: nframes
+    !> format of output files for observation
+    character(len=4) :: output_fmt
   end type observe_info_str
 
   type, public, extends(observation) :: measured

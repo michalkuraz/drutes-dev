@@ -52,50 +52,39 @@ module postpro
       type(integpnt_str)                                    :: quadpnt
       integer(kind=ikind), save                             :: anime_run, anime_dec
       integer                                               :: ierr
-      character(len=512) :: filename, iaction
-
 
       if (present(name)) then
 	select case(name)
 	  case("obs")
 	    anime = .false.
+	    mode = 0
 	  case("avi")
 	    anime = .true.
+	    mode = -1
 	  case default
 	    print *, "this is a BUG, contact developer, called from postpro::make_print()"
             error STOP
         end select
       else
 	anime = .false.
-      end if
-
-      if (present(behaviour) ) then
-	select case(behaviour)
-	  case("all_in_one")
-	    mode = -1
-	  case("separately")
-	    if (drutes_config%mesh_type /= 3) then
-	      mode = 0
-	    else
-	      mode = -1
-	    end if
-	  case default
-	    print *, "Incorrect behaviour specified, called from postpro::make_print"
-	    ERROR stop
-	end select
-      else
 	mode = 0
       end if
       
 
       if (drutes_config%dimen < 2  .or. www) then
 	extension = ".dat"
-      else if (drutes_config%mesh_type /=3 ) then
-	extension = ".sci"
-      else
-	extension = ".msh"
+      else 
+	select case(observe_info%fmt)
+	  case("pure")
+	    extension = ".dat"
+	  case("scil")
+	    extension = ".sci"
+	  case("gmsh")
+	    extension = ".msh"
+	end select
       end if
-
+	  
+  
       call write_log("making output files for observation time")
       
 
@@ -198,27 +187,29 @@ module postpro
   
 	  call print_pure(ids(proc,:), proc, quadpnt)
 	  
-	else if  (drutes_config%mesh_type <= 2 ) then
-
-	  call print_scilab(ids(proc,:), proc, quadpnt)	  
-
 	else
-	  call print_gmsh(ids(proc,:), proc, quadpnt)
-	
+	  select case(observe_info%fmt)
+	    case("pure")
+	      call print_pure(ids(proc,:), proc, quadpnt)
+	    case("scil")
+	      call print_scilab(ids(proc,:), proc, quadpnt)
+	    case("gmsh")
+	      call print_gmsh(ids(proc,:), proc, quadpnt)
+	  end select
 	end if
       end do
 
 
       if (.not. anime) then
-   	  do proc=1, ubound(pde,1)
-	    do i=1,ubound(ids,2)
-	      if (mode == 0) then
-		close(ids(proc,i))
-	      else
-		call flush(ids(proc,i))
-	      end if
-	    end do
-	  end do	
+   	do proc=1, ubound(pde,1)
+	  do i=1,ubound(ids,2)
+	    if (mode == 0) then
+              close(ids(proc,i))
+	    else
+              call flush(ids(proc,i))
+	    end if
+	  end do
+	end do	
       else      
 	do proc=1, ubound(pde,1)
 	  do i=1,ubound(ids,2)
@@ -231,13 +222,11 @@ module postpro
 	
       end if
       
-     if (anime) then
-       inquire(unit=ids(1,1), name=filename, action=iaction) 
-     end if
 
       deallocate(filenames)
       
       first_run=.false.
+      
       
     end subroutine make_print
 
@@ -402,6 +391,7 @@ module postpro
     end do
 
 
+    quadpnt%preproc=.true.
     do i=1, elements%kolik
       do j=1,ubound(elements%data,2)
 	body(j,1:2) = nodes%data(elements%data(i,j),:)
@@ -489,9 +479,6 @@ module postpro
       end if
       
       
-
-!   xtitle('$\mathbf{\LARGE t=     300.00  } \quad \mbox{\Large  hrs}$')
-!       write(unit=ids(proc,i), fmt="(a,F10.2,a,a)")  "xtitle('$\mathbf{\LARGE t= ", time,"  ", "} \quad \mbox{\Large  hrs}$')"
       write(unit=ids(i), fmt=*) "plot3d1(x',y',z',alpha=0, theta=-90);"
 
     end do 
@@ -516,15 +503,15 @@ module postpro
   
     do i=1, nodes%kolik
       quadpnt%order = i
-      write(unit=ids(1), fmt="(50E24.12E3)") nodes%data(i,:), pde(proc)%getval(quadpnt) 
+      write(unit=ids(1), fmt=*) i,  nodes%data(i,:), pde(proc)%getval(quadpnt) 
       
       layer = elements%material(nodes%element(i)%data(1), proc)
 
       call pde(proc)%flux(layer, quadpnt, scalar=flux)
       
-      write(unit=ids(3), fmt=*)  nodes%data(i,:), pde(proc)%mass(layer, quadpnt)
+      write(unit=ids(3), fmt=*)  i, nodes%data(i,:), pde(proc)%mass(layer, quadpnt)
 
-      write(unit=ids(4), fmt=*) nodes%data(i,:), flux
+      write(unit=ids(4), fmt=*) i, nodes%data(i,:), flux
     end do
     
     close(ids(1))

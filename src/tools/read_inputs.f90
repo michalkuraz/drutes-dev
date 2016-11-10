@@ -148,15 +148,24 @@ module read_inputs
       errmsg="maximal time step must be greater than the minimal time step, &
 		and smaller than the maximal number your computer can handle :)")
       
-      call fileread(print_level, global)
-      
-      call fileread(info_level, global)
+      write(msg, *) "set correct value for the terminal outputs", new_line('a'), "     0 - standard output", &
+	new_line('a'),  "     1 - everything goes to out/screen.log", new_line('a'), &
+	"    -1 - everything goes to /dev/null (use only on Linux based systems (I have no idea about MAC OS))"
+      call fileread(print_level, global, ranges=(/-1_ikind, 1_ikind/), errmsg=msg)
       
       write(msg, fmt=*) "methods for observation time print could be only", new_line('a'), &
 	"	1 - adjust time stepping to observation time values",  new_line('a'), &
 	"	2 - linearly interpolate solution between two consecutive solutions (recommended)"
       
       call fileread(observe_info%method, local, ranges=(/1_ikind, 2_ikind/), errmsg=msg)
+      
+      write(msg, fmt=*) "set correct name for the observation time outputs format", new_line('a'), &
+	"	scil - scilab output files",  new_line('a'), &
+	"	pure - just raw data with nodes IDs and FEM coefficients", new_line('a'), &  
+	"       gmsh - gmsh output files"
+      
+      call fileread(observe_info%fmt, global, options=(/"scil", "pure", "gmsh"/))
+      
       
       call fileread(observe_info%anime, global)
       
