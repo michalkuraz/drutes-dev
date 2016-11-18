@@ -15,13 +15,8 @@ module dual_por
   public:: dual_tabvalues
   public :: getval_retot_dual
 
-  real(kind=rkind), dimension(:,:), pointer, public :: Ktab_dm,watcontab_dm,warecatab_dm,couptab
-  real(kind=rkind), dimension(:,:), pointer, public :: Ktab_df,watcontab_df,warecatab_df
-  real(kind=rkind), dimension(:,:), allocatable, target, public ::Ktabd_tget_m,watcontabd_tget_m
-  real(kind=rkind), dimension(:,:), allocatable, target, public ::warecatabd_tget_m
-  real(kind=rkind), dimension(:,:), allocatable, target, public ::Ktabd_tget_f,watcontabd_tget_f
-  real(kind=rkind), dimension(:,:), allocatable, target, public ::warecatabd_tget_f
-  real(kind=rkind), dimension(:,:), allocatable, target, public ::couptab_all
+  real(kind=rkind), dimension(:,:), allocatable, public :: Ktab_dm,watcontab_dm,warecatab_dm,couptab
+  real(kind=rkind), dimension(:,:), allocatable, public :: Ktab_df,watcontab_df,warecatab_df
   
   contains 
 
@@ -1481,42 +1476,30 @@ function dual_coupling_f_tab(pde_loc, layer, quadpnt, x) result(ex_term)
       drutes_config%fnc_discr_length = 1.0_rkind*maxpress/n
       dx = drutes_config%fnc_discr_length
 
-      if (.not. allocated(Ktabd_tget_m)) then
-        allocate(Ktabd_tget_m(ubound(vgmatrix,1), n))
+      if (.not. allocated(Ktab_dm)) then
+        allocate(Ktab_dm(ubound(vgmatrix,1), n))
       end if
-      if (.not. allocated(warecatabd_tget_m)) then
-        allocate(warecatabd_tget_m(ubound(vgmatrix,1),n))
+      if (.not. allocated(warecatab_dm)) then
+        allocate(warecatab_dm(ubound(vgmatrix,1),n))
       end if
-      if (.not. allocated(watcontabd_tget_m)) then
-        allocate(watcontabd_tget_m(ubound(vgmatrix,1), n))
+      if (.not. allocated(watcontab_dm)) then
+        allocate(watcontab_dm(ubound(vgmatrix,1), n))
       end if
-      if (.not. allocated(couptab_all)) then
-        allocate(couptab_all(ubound(vgmatrix,1), n))
+      if (.not. allocated(couptab)) then
+        allocate(couptab(ubound(vgmatrix,1), n))
       end if
-      if (.not. allocated(Ktabd_tget_f)) then
-        allocate(Ktabd_tget_f(ubound(vgmatrix,1), n))
+      if (.not. allocated(Ktab_df)) then
+        allocate(Ktab_df(ubound(vgfracture,1), n))
       end if
-      if (.not. allocated(warecatabd_tget_f)) then
-        allocate(warecatabd_tget_f(ubound(vgmatrix,1),n))
+      if (.not. allocated(warecatab_df)) then
+        allocate(warecatab_df(ubound(vgfracture,1),n))
       end if
-      if (.not. allocated(watcontabd_tget_f)) then
-        allocate(watcontabd_tget_f(ubound(vgmatrix,1), n))
+      if (.not. allocated(watcontab_df)) then
+        allocate(watcontab_df(ubound(vgfracture,1), n))
       end if
       
 	maxcalls = ubound(vgmatrix,1)*n
 	counter = maxcalls
-	couptab => couptab_all(:,:)
-	!if (domainname == "matrix") then
-	  Ktab_dm => Ktabd_tget_m(:,:)
-	  warecatab_dm => warecatabd_tget_m(:,:)
-	  watcontab_dm => watcontabd_tget_m(:,:)
-    !else if (domainname == "fracture") then
-	  Ktab_df => Ktabd_tget_f(:,:)
-	  warecatab_df => warecatabd_tget_f(:,:)
-	  watcontab_df => watcontabd_tget_f(:,:)
-    !else
-	!  ERROR STOP "runtime error, invalid argument in RE_pointers::domainname not correctly identified"
-    !end if
 
 	call write_log(text="creating constitutive function table for: matrix and fracture")
 	do i=1, ubound(vgmatrix,1)
