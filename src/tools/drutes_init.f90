@@ -137,9 +137,9 @@ module drutes_init
 	      end if
 	      call read_2dmesh_t3d()
 	    case(3)
-	      open(unit=file_mesh, file="drutes.conf/mesh/mesh.gmsh", action="read", status="old", iostat=i_err)
+	      open(unit=file_mesh, file="drutes.conf/mesh/mesh.msh", action="read", status="old", iostat=i_err)
 	      if (i_err /= 0) then
-		print *, "missing drutes.conf/mesh/mesh.gmsh file"
+		print *, "missing drutes.conf/mesh/mesh.msh file"
 		ERROR STOP
 	      end if
 	      call read_2dmesh_gmsh()
