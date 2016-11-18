@@ -44,6 +44,8 @@ module Re_dual_pointers
       ! boundary condition defined as different type boundary_vals
       do i=lbound(pde_loc%bc,1), ubound(pde_loc%bc,1)
 	   select case(pde_loc%bc(i)%code)
+	   	 case(0)
+	       pde_loc%bc(i)%value_fnc => re_null_bc
 	     case(1)
 	       pde_loc%bc(i)%value_fnc => re_dirichlet_bc
 	     case(2)
@@ -87,6 +89,8 @@ module Re_dual_pointers
       
       do i=lbound(pde_loc%bc,1), ubound(pde_loc%bc,1)
 	   select case(pde_loc%bc(i)%code)
+	   	 case(0)
+	       pde_loc%bc(i)%value_fnc => re_null_bc
 	     case(1)
 	       pde_loc%bc(i)%value_fnc => re_dirichlet_bc
 	     case(2)
