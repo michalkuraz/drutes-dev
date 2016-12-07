@@ -257,6 +257,8 @@ module postpro
 
 	  quadpnt%order = i
 	  
+	  quadpnt%preproc=.true.
+	  
 	  call pde(proc)%flux(layer=layer, quadpnt=quadpnt,  vector_out=advectval(1:D))
 
 	  val = pde(proc)%getval(quadpnt)
