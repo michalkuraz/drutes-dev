@@ -152,8 +152,7 @@ module Re_dual_reader
       ! exchange
       do i=1,layers
         call comment(file_dual)
-        read(unit=file_dual, fmt= *, iostat=i_err) vgexchange(i)%alpha, vgexchange(i)%n, vgexchange(i)%m, &
-                            vgexchange(i)%Ths, vgexchange(i)%Thr, vgexchange(i)%Ss
+        read(unit=file_dual, fmt= *, iostat=i_err) vgexchange(i)%alpha, vgexchange(i)%n, vgexchange(i)%m
         if (i_err /= 0) then
           print *, "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
           print *, "HINT: You don't seem to have defined a sufficient number of van Genuchten &
@@ -197,10 +196,9 @@ module Re_dual_reader
       ! initial conditions
       
       do i=1,layers
-		call fileread(inicond, file_dual,ranges=(/-huge(0.0_rkind),0.0_rkind/),&
-      	errmsg="Start unsaturated, please.")
-        vgmatrix(i)%initcond=inicond
-		vgfracture(i)%initcond=inicond
+        read(unit=file_dual, fmt= *, iostat=i_err) vgmatrix(i)%initcond, vgmatrix(i)%icondtype
+		vgfracture(i)%initcond= vgmatrix(i)%initcond
+		vgfracture(i)%icondtype= vgmatrix(i)%icondtype
       end do
 
       close(file_dual)

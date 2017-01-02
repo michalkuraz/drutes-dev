@@ -8,7 +8,17 @@ module dual_globals
     real(kind=rkind), dimension(:), allocatable   :: Ks_local
     real(kind=rkind), dimension(:), allocatable   :: anisoangle
     real(kind=rkind) :: initcond
+    character(len=5) :: icondtype
   end type soilpar
+  
+  type, public :: exch_K
+    real(kind=rkind) :: alpha, n, m
+    !> hydraulic conductivity tensor of second order
+    real(kind=rkind), dimension(:,:), allocatable :: Ks
+    real(kind=rkind), dimension(:), allocatable   :: Ks_local
+    real(kind=rkind), dimension(:), allocatable   :: anisoangle
+  end type exch_K
+  
 
  type,public :: expar
   real(kind=rkind)::beta,a,gam_par,weightm,weightf
@@ -16,7 +26,7 @@ module dual_globals
   
   !> soil and layer parameters
   type(soilpar), dimension(:), allocatable, public :: vgmatrix
-  type(soilpar), dimension(:), allocatable, public :: vgexchange
+  type(exch_K), dimension(:), allocatable, public :: vgexchange
   type(soilpar), dimension(:), allocatable, public :: vgfracture
   type(expar), dimension(:), allocatable, public :: exchange
   

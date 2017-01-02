@@ -77,7 +77,7 @@ module Re_dual_pointers
 	    pde_loc%pde_fnc(pde_loc%order)%dispersion => dual_mualemf
 	    pde_loc%pde_fnc(pde_loc%order)%reaction => dual_coupling_f
 	    pde_loc%pde_fnc(pde_loc%order)%elasticity => dual_ret_capf
-	    pde_loc%mass => vangen_d_m
+	    pde_loc%mass => vangen_d_f
       else
 	    pde_loc%pde_fnc(pde_loc%order)%dispersion  => dual_mualem_f_tab		
 	    pde_loc%pde_fnc(pde_loc%order)%reaction => dual_coupling_f_tab
