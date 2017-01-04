@@ -260,9 +260,11 @@ module postpro
 	  quadpnt%preproc=.true.
 	  
 	  call pde(proc)%flux(layer=layer, quadpnt=quadpnt,  vector_out=advectval(1:D))
-
+	  !if(i==1)then
+	  !  print*, advectval(1:D)
+	  !end if
 	  val = pde(proc)%getval(quadpnt)
-	  
+
           massval = pde(proc)%mass(layer, quadpnt)
 	  
 	  observation_array(i)%cumflux(proc) = observation_array(i)%cumflux(proc) + &
@@ -275,7 +277,6 @@ module postpro
 	  
 	end do
       end do
-      
     end subroutine write_obs
  
 
@@ -505,6 +506,7 @@ module postpro
   
     do i=1, nodes%kolik
       quadpnt%order = i
+      quadpnt%preproc=.true.
       write(unit=ids(1), fmt=*) i,  nodes%data(i,:), pde(proc)%getval(quadpnt) 
       
       layer = elements%material(nodes%element(i)%data(1), proc)
