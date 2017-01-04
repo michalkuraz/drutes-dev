@@ -101,8 +101,9 @@ module Re_dual_reader
       ! Matrix
       do i=1,layers
         call comment(file_dual)
-        read(unit=file_dual, fmt= *, iostat=i_err) vgmatrix(i)%alpha, vgmatrix(i)%n, vgmatrix(i)%m, &
+        read(unit=file_dual, fmt= *, iostat=i_err) vgmatrix(i)%alpha, vgmatrix(i)%n, &
                             vgmatrix(i)%Ths, vgmatrix(i)%Thr, vgmatrix(i)%Ss
+        vgmatrix(i)%m=1.0_rkind-1.0/vgmatrix(i)%n
         if (i_err /= 0) then
           print *, "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
           print *, "HINT: You don't seem to have defined a sufficient number of van Genuchten &
@@ -127,9 +128,9 @@ module Re_dual_reader
       ! Fracture
       do i=1,layers
         call comment(file_dual)
-        read(unit=file_dual, fmt= *, iostat=i_err) vgfracture(i)%alpha, vgfracture(i)%n, vgfracture(i)%m, &
+        read(unit=file_dual, fmt= *, iostat=i_err) vgfracture(i)%alpha, vgfracture(i)%n,  &
                             vgfracture(i)%Ths, vgfracture(i)%Thr, vgfracture(i)%Ss
-                            
+        vgfracture(i)%m=1.0_rkind-1.0/vgfracture(i)%n
         if (i_err /= 0) then
           print *, "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
           print *, "HINT: You don't seem to have defined a sufficient number of van Genuchten &
@@ -152,7 +153,8 @@ module Re_dual_reader
       ! exchange
       do i=1,layers
         call comment(file_dual)
-        read(unit=file_dual, fmt= *, iostat=i_err) vgexchange(i)%alpha, vgexchange(i)%n, vgexchange(i)%m
+        read(unit=file_dual, fmt= *, iostat=i_err) vgexchange(i)%alpha, vgexchange(i)%n
+        vgexchange(i)%m=1.0_rkind-1.0_rkind/vgexchange(i)%n
         if (i_err /= 0) then
           print *, "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
           print *, "HINT: You don't seem to have defined a sufficient number of van Genuchten &
@@ -176,7 +178,8 @@ module Re_dual_reader
 	  do i=1,layers
 	    call comment(file_dual)
 	    read(unit=file_dual, fmt= *, iostat=i_err) exchange(i)%beta, exchange(i)%a,&
-	    exchange(i)%gam_par,exchange(i)%weightf,exchange(i)%weightm
+	    exchange(i)%gam_par,exchange(i)%weightf
+	    exchange(i)%weightm=1.0_rkind-exchange(i)%weightf
         if (i_err /= 0) then
           print *, "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
           print *, "HINT: You don't seem to have defined a sufficient number of Exchange &
@@ -184,9 +187,15 @@ module Re_dual_reader
           print *, "----------------------------------------"
           call file_error(file_dual)
         end if
-        if((exchange(i)%weightf+exchange(i)%weightm)/=1.0_rkind) then
+        if(exchange(i)%weightf>1.0_rkind) then
           print *, "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-          print *, "In dual permeability fracture weight and matrix weight have to sum up to one!"
+          print *, "The fracture weight cannot be greater than 1!"
+          print *, "----------------------------------------"
+          call file_error(file_dual)
+        end if
+        if(exchange(i)%weightf<0.0_rkind) then
+          print *, "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+          print *, "The fracture weight cannot be negative!"
           print *, "----------------------------------------"
           call file_error(file_dual)
         end if
@@ -196,6 +205,7 @@ module Re_dual_reader
       ! initial conditions
       
       do i=1,layers
+      call comment(file_dual)
         read(unit=file_dual, fmt= *, iostat=i_err) vgmatrix(i)%initcond, vgmatrix(i)%icondtype
 		vgfracture(i)%initcond= vgmatrix(i)%initcond
 		vgfracture(i)%icondtype= vgmatrix(i)%icondtype

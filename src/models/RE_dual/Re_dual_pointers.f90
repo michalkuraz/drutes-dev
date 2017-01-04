@@ -3,8 +3,7 @@ module Re_dual_pointers
   public :: RE_matrix
   
   contains
-! change pointers to take tabular version
-! tabularize coupling function with coupling pars
+
     subroutine RE_matrix(pde_loc)
       use typy
       use globals
@@ -82,7 +81,7 @@ module Re_dual_pointers
 	    pde_loc%pde_fnc(pde_loc%order)%dispersion  => dual_mualem_f_tab		
 	    pde_loc%pde_fnc(pde_loc%order)%reaction => dual_coupling_f_tab
 	    pde_loc%pde_fnc(pde_loc%order)%elasticity => dual_ret_capf_tab
-	    pde_loc%mass => vangen_d_f_tab
+	    pde_loc%mass => vangen_d_m_tab
       end if
       
       pde_loc%flux => darcy_law_d

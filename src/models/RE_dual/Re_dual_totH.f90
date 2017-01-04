@@ -21,11 +21,12 @@ module dual_por
   contains 
 
     !> specific function for Richards equation in H-form (total hydraulic head form), replaces pde_objs::getvalp1 in order to distinguish between H and h 
+    !> pointers point to this with pde_loc%getval
     function getval_retot_dual(pde_loc, quadpnt) result(val)
       use typy
       use pde_objs
       use geom_tools
-      use re_globals
+      use dual_globals
       
       class(pde_str), intent(in) :: pde_loc
       type(integpnt_str), intent(in) :: quadpnt
@@ -52,46 +53,110 @@ module dual_por
 	
     end function getval_retot_dual
 
-    subroutine dual_inicond_m(pde_loc)
-      use typy
-      use globals
-      use global_objs
-      use pde_objs
-      use dual_globals
-	class(pde_str), intent(in out) :: pde_loc
-	integer(kind=ikind) :: i, j, k,l, m, layer
-	real(kind=rkind) :: value
-	
-	  do i=1, elements%kolik
-		layer = elements%material(i,1)
-		do j=1, ubound(elements%data,2)
-		  k = elements%data(i,j)
-	      pde_loc%solution(k)=vgmatrix(layer)%initcond
-		end do   
-	  end do
-	  
+   subroutine dual_inicond_m(pde_loc) 
+      	use typy
+       	use globals
+       	use global_objs
+       	use pde_objs
+       	use dual_globals
+        
+        class(pde_str), intent(in out) :: pde_loc
+        integer(kind=ikind) :: i, j, k,l, m, layer, D
+        
+        D = drutes_config%dimen
+  
+        
+        do i=1, elements%kolik
+          layer = elements%material(i,1)
+          do j=1, ubound(elements%data,2)
+            k = elements%data(i,j)
+            l = nodes%edge(k)
+              select case (vgmatrix(layer)%icondtype)
+		case("H_tot")
+		  pde_loc%solution(k)=vgmatrix(layer)%initcond - nodes%data(k,D)
+		case("hpres")
+		  pde_loc%solution(k)=vgmatrix(layer)%initcond
+		case("theta")
+		  pde_loc%solution(k) = vgmatrix(layer)%initcond
+	      end select
+            
+          end do   
+        end do
+
       end subroutine dual_inicond_m
-    
-    subroutine dual_inicond_f(pde_loc)
-      use typy
-      use globals
-      use global_objs
-      use pde_objs
-      use dual_globals
-      class(pde_str), intent(in out) :: pde_loc
-      integer(kind=ikind) :: i, j, k,l, m, layer
-      real(kind=rkind) :: value
-	
-      do i=1, elements%kolik
-	layer = elements%material(i,1)
-	do j=1, ubound(elements%data,2)
-	  k = elements%data(i,j)
-	  pde_loc%solution(k)=vgfracture(layer)%initcond
-	end do   
-      end do
-	  
-    end subroutine dual_inicond_f
- 
+      
+    subroutine dual_inicond_f(pde_loc) 
+      	use typy
+       	use globals
+       	use global_objs
+       	use pde_objs
+       	use dual_globals
+        
+        class(pde_str), intent(in out) :: pde_loc
+        integer(kind=ikind) :: i, j, k,l, m, layer, D
+        
+        D = drutes_config%dimen
+        
+        do i=1, elements%kolik
+          layer = elements%material(i,1)
+          do j=1, ubound(elements%data,2)
+            k = elements%data(i,j)
+            l = nodes%edge(k)
+            m = pde_loc%permut(k)
+              select case (vgfracture(layer)%icondtype)
+		case("H_tot")
+		  pde_loc%solution(k)=vgfracture(layer)%initcond - nodes%data(k,D)
+		case("hpres")
+		  pde_loc%solution(k)=vgfracture(layer)%initcond
+		case("theta")
+		  pde_loc%solution(k) = vgfracture(layer)%initcond
+	      end select
+            
+          end do   
+        end do
+
+      end subroutine dual_inicond_f
+
+    ! subroutine dual_inicond_m(pde_loc)
+!       use typy
+!       use globals
+!       use global_objs
+!       use pde_objs
+!       use dual_globals
+! 	class(pde_str), intent(in out) :: pde_loc
+! 	integer(kind=ikind) :: i, j, k,l, m, layer
+! 	real(kind=rkind) :: value
+! 	
+! 	  do i=1, elements%kolik
+! 		layer = elements%material(i,1)
+! 		do j=1, ubound(elements%data,2)
+! 		  k = elements%data(i,j)
+! 	      pde_loc%solution(k)=vgmatrix(layer)%initcond
+! 		end do   
+! 	  end do
+! 	  
+!       end subroutine dual_inicond_m
+!     
+!     subroutine dual_inicond_f(pde_loc)
+!       use typy
+!       use globals
+!       use global_objs
+!       use pde_objs
+!       use dual_globals
+!       class(pde_str), intent(in out) :: pde_loc
+!       integer(kind=ikind) :: i, j, k,l, m, layer
+!       real(kind=rkind) :: value
+! 	
+!       do i=1, elements%kolik
+! 	layer = elements%material(i,1)
+! 	do j=1, ubound(elements%data,2)
+! 	  k = elements%data(i,j)
+! 	  pde_loc%solution(k)=vgfracture(layer)%initcond
+! 	end do   
+!       end do
+! 	  
+!     end subroutine dual_inicond_f
+! !  
     subroutine dual_mualemm(pde_loc, layer, quadpnt, x, tensor, scalar)
       use typy
       use global_objs
@@ -122,7 +187,7 @@ module dual_por
 	if (present(quadpnt)) then
 	  quadpnt_loc=quadpnt
 	  quadpnt_loc%preproc=.true.
-	  h = pde_loc%getval(quadpnt_loc)
+	 h = pde_loc%getval(quadpnt_loc)
 	else
 	  if (ubound(x,1) /=1) then
 		print *, "ERROR: van Genuchten function is a function of a single variable h"
@@ -137,12 +202,12 @@ module dual_por
 	alpha=vgmatrix(layer)%alpha
 	n=vgmatrix(layer)%n
 	m=vgmatrix(layer)%m
-	weight=-exchange(layer)%weightm
+	weight=exchange(layer)%weightm
 
 
 	one=1.0_rkind    
 	if(h < 0.0_rkind) then
-	  Kr=(one-(-alpha*h)**(n*m)*(one+(-alpha*h)**n)**(-m))**2/(one+(-alpha*h)**n)**(m/2)
+	  Kr=(one-(alpha*abs(h))**(n*m)*(one+(alpha*abs(h))**n)**(-m))**2/(one+(alpha*abs(h))**n)**(m/2)
 	else
 	  Kr=1.0_rkind
 	end if
@@ -189,7 +254,7 @@ module dual_por
 	  if (present(quadpnt)) then
 	    quadpnt_loc=quadpnt
 	    quadpnt_loc%preproc=.true.
-	    h = pde_loc%getval(quadpnt_loc)
+	   h = pde_loc%getval(quadpnt_loc)
 	  else
 	    if (ubound(x,1) /=1) then
 		  print *, "ERROR: van Genuchten function is a function of a single variable h"
@@ -208,17 +273,17 @@ module dual_por
 	  one=1.0_rkind    
 	  
 	  if(h < 0.0_rkind) then
-	    Kr=(one-(-alpha*h)**(n*m)*(one+(-alpha*h)**n)**(-m))**2/(one+(-alpha*h)**n)**(m/2)
+	    Kr=(one-(alpha*abs(h))**(n*m)*(one+(alpha*abs(h))**n)**(-m))**2/(one+(alpha*abs(h))**n)**(m/2)
 	  else
 	    Kr=1.0_rkind
 	  end if
 	  
 	  if (present(tensor)) then
-		      tensor=vgfracture(layer)%KS*Kr*(-weight)
+		      tensor=vgfracture(layer)%KS*Kr*(weight)
 	  end if
 	    
 	  if (present(scalar)) then
-	    scalar=Kr*(-weight)
+	    scalar=Kr*(weight)
 	  end if
       !      print*, " weighted hydraulic conductivty of fracture"
       !      print*, Kr
@@ -268,18 +333,18 @@ module dual_por
      alpha=vgmatrix(layer)%alpha
      n=vgmatrix(layer)%n
      m=vgmatrix(layer)%m
-     weight=-exchange(layer)%weightm
+     weight=exchange(layer)%weightm
      
 
      
      if(h<0.0_rkind) then
-       C=(thetaS-thetaR)*alpha*m*n*abs(alpha*h)**(n-1)*(abs(alpha*h)**n+1)**(-m-1)
+       C=(thetaS-thetaR)*alpha*m*n*(alpha*abs(h))**(n-1)*((alpha*abs(h))**n+1)**(-m-1)
      else
        E=vgmatrix(layer)%SS*weight
        RETURN
      end if
      
-      E=(C+vangen_d_m(pde_loc,layer,x=(/h/))/thetaS)*weight
+      E=(C+vangen_d_m(pde_loc,layer,x=(/h/))/thetaS)*weight!*vgmatrix(layer)%Ss
 !      print*,"weighted elasticity retention of matrix"
 !       print*, E
   end function dual_ret_capm  
@@ -330,12 +395,12 @@ module dual_por
      weight=exchange(layer)%weightf
      
      if(h<0.0_rkind) then
-       C=(thetaS-thetaR)*alpha*m*n*abs(alpha*h)**(n-1)*(abs(alpha*h)**n+1)**(-m-1)
+       C=(thetaS-thetaR)*alpha*m*n*(alpha*abs(h))**(n-1)*((alpha*abs(h))**n+1)**(-m-1)
      else
-       E=vgfracture(layer)%SS*(-weight)
+       E=vgfracture(layer)%SS*(weight)
        RETURN
      end if     
-      E=(C+vangen_d_f(pde_loc,layer,x=(/h/))/thetaS)*(-weight)
+      E=(C+vangen_d_f(pde_loc,layer,x=(/h/))/thetaS)*(weight)!*vgfracture(layer)%Ss
 !      print*,"weighted elasticity retention of fracture "
 !      print*, E
   end function dual_ret_capf
@@ -481,8 +546,8 @@ module dual_por
      m=vgexchange(layer)%m
      Ks=vgexchange(layer)%KS_local(1)
      one=1.0_rkind   
-     Ka_f=(one-(-alpha*hf)**(n*m)*(one+(-alpha*hf)**n)**(-m))**2/(one+(-alpha*hf)**n)**(m/2)
-     Ka_m=(one-(-alpha*hm)**(n*m)*(one+(-alpha*hm)**n)**(-m))**2/(one+(-alpha*hm)**n)**(m/2)
+     Ka_f=(one-abs(alpha*hf)**(n*m)*(one+abs(alpha*hf)**n)**(-m))**2/(one+abs(alpha*hf)**n)**(m/2)
+     Ka_m=(one-abs(alpha*hm)**(n*m)*(one+abs(alpha*hm)**n)**(-m))**2/(one+abs(alpha*hm)**n)**(m/2)
      Ka=0.5*(Ka_f+Ka_m)*Ks
      beta=exchange(layer)%beta
      a=exchange(layer)%a
@@ -492,8 +557,7 @@ module dual_por
      else
        ex_term=0.0_rkind
      end if
-   !  print*, 'exchange term matrix'
-   !  print*, ex_term
+
   end function dual_coupling
   
   function dual_coupling_f(pde_loc, layer, quadpnt, x) result(ex_term)
@@ -520,6 +584,8 @@ module dual_por
        
             
       if (present(quadpnt)) then
+    quadpnt_loc=quadpnt
+	quadpnt_loc%preproc=.true.
 	hm = pde(1)%getval(quadpnt_loc)
 	hf = pde(2)%getval(quadpnt_loc)
       else
@@ -548,8 +614,8 @@ module dual_por
      gam_par=exchange(layer)%gam_par
     
      one=1.0_rkind   
-     Ka_f=(one-(-alpha*hf)**(n*m)*(one+(-alpha*hf)**n)**(-m))**2/(one+(-alpha*hf)**n)**(m/2)
-     Ka_m=(one-(-alpha*hm)**(n*m)*(one+(-alpha*hm)**n)**(-m))**2/(one+(-alpha*hm)**n)**(m/2)
+     Ka_f=(one-abs(alpha*hf)**(n*m)*(one+abs(alpha*hf)**n)**(-m))**2/(one+abs(alpha*hf)**n)**(m/2)
+     Ka_m=(one-abs(alpha*hm)**(n*m)*(one+abs(alpha*hm)**n)**(-m))**2/(one+abs(alpha*hm)**n)**(m/2)
      Ka=0.5*(Ka_f+Ka_m)*Ks
      if(hf /= hm) then
        ex_term=-beta/a**2*gam_par*Ka*(hf-hm)
@@ -557,8 +623,6 @@ module dual_por
        ex_term=0
      end if
      
-!print*, 'exchange term fracture'
-   !  print*, ex_term
   end function dual_coupling_f
   
   subroutine darcy_law_d(pde_loc, layer, quadpnt, x, grad,  flux, flux_length)
@@ -592,7 +656,7 @@ module dual_por
 	ERROR stop
       else if ((.not. present(grad) .or. .not. present(x)) .and. .not. present(quadpnt)) then
 	print *, "ERROR: you have not specified either integ point or x value"
-        print *, "exited from re_constitutive::darcy_law"
+        print *, "exited from Re_dual_totH::darcy_law"
 	ERROR stop
       end if
       
@@ -605,7 +669,7 @@ module dual_por
         if (ubound(x,1) /=1) then
 	  print *, "ERROR: van Genuchten function is a function of a single variable h"
 	  print *, "       your input data has:", ubound(x,1), "variables"
-	  print *, "exited from re_constitutive::darcy_law"
+	  print *, "exited from Re_dual_totH::darcy_law"
 	  ERROR STOP
 	end if
 	h = x(1)
@@ -678,7 +742,7 @@ module dual_por
     n=vgexchange(layer)%n
     m=vgexchange(layer)%m
     one=1.0_rkind 
-    Ka_c=(one-(-alpha*h)**(n*m)*(one+(-alpha*h)**n)**(-m))**2/(one+(-alpha*h)**n)**(m/2)
+    Ka_c=(one-(alpha*abs(h))**(n*m)*(one+(alpha*abs(h))**n)**(-m))**2/(one+(alpha*abs(h))**n)**(m/2)
   end function dual_coupling_K
   ! Tabular versions dispersion: mualem_tab; elastisticty: dual_ret; mass= vangen_tab 
   
@@ -908,37 +972,37 @@ function vangen_d_m_tab(pde_loc, layer, quadpnt, x) result(theta)
 	h = x(1)
       end if
 
-      if (h<0) then
-	if ( h/drutes_config%fnc_discr_length < 0.1*huge(1)) then
+    if (h<0) then
+		if ( h/drutes_config%fnc_discr_length < 0.1*huge(1)) then
 	  
-	  pos = int(-h/drutes_config%fnc_discr_length)+1
-	  if (pos <= ubound(watcontab_dm,2)-1) then
+	  	pos = int(-h/drutes_config%fnc_discr_length)+1
+	  		if (pos <= ubound(watcontab_dm,2)-1) then
 	    dist = -h - (pos - 1)*drutes_config%fnc_discr_length
 	    theta = (watcontab_dm(layer,pos+1)-watcontab_dm(layer,pos))/drutes_config%fnc_discr_length*dist &
 	    + watcontab_dm(layer,pos)
-	  else
-	    if (present(quadpnt)) theta = vangen_d_m(pde_loc, layer, quadpnt)
-	    if (present(x)) theta = vangen_d_m(pde_loc, layer, x=x)
+	  		else
+	    		if (present(quadpnt)) theta = vangen_d_m(pde_loc, layer, quadpnt)
+	    		if (present(x)) theta = vangen_d_m(pde_loc, layer, x=x)
 	   !  if (.not. tabwarning) then
 ! 	      call write_log(trim(tabmsg))
 ! 	      tabwarning = .true.
 ! 	    end if
-	  end if
-	else
+	  		end if
+		else
 	
 ! 	  if (.not. intwarning) then
 ! 	    call intoverflow()
 ! 	    intwarning = .true.
 ! 	  end if
 	
-	  if (present(quadpnt)) theta = vangen_d_m(pde_loc, layer, quadpnt)
-	  if (present(x)) theta = vangen_d_m(pde_loc, layer, x=x)
+	  		if (present(quadpnt)) theta = vangen_d_m(pde_loc, layer, quadpnt)
+	  		if (present(x)) theta = vangen_d_m(pde_loc, layer, x=x)
 	  
-	end if
+		end if
 	
-      else
-	theta = vgmatrix(layer)%Ths	
-      end if
+    else
+		theta = vgmatrix(layer)%Ths	
+    end if
       
       
 
