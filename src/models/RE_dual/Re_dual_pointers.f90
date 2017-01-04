@@ -13,6 +13,7 @@ module Re_dual_pointers
       use Re_dual_reader
       use RE_constitutive
       use debug_tools
+      use RE_pointers
       
       class(pde_str), intent(in out) :: pde_loc
       integer(kind=ikind) :: i
@@ -21,8 +22,8 @@ module Re_dual_pointers
       pde_loc%getval => getval_retot_dual
       call Re_dual_readm(pde_loc)
       call Re_dual_var() 
-      
-
+      pde_loc%initcond => dual_inicond_m
+   	  call RE_totheadbc(pde_loc)
       
       pde_loc%flux => darcy_law_d!implement darcy law for fluxes
       if (drutes_config%fnc_method == 0) then
@@ -41,17 +42,17 @@ module Re_dual_pointers
       end if
       
       ! boundary condition defined as different type boundary_vals
-      do i=lbound(pde_loc%bc,1), ubound(pde_loc%bc,1)
-	   select case(pde_loc%bc(i)%code)
-	   	 case(0)
-	       pde_loc%bc(i)%value_fnc => re_null_bc
-	     case(1)
-	       pde_loc%bc(i)%value_fnc => re_dirichlet_bc
-	     case(2)
-	       pde_loc%bc(i)%value_fnc => re_neumann_bc
-	   end select
-      end do  
-    pde_loc%initcond => dual_inicond_m
+!       do i=lbound(pde_loc%bc,1), ubound(pde_loc%bc,1)
+! 	   select case(pde_loc%bc(i)%code)
+! 	   	 case(0)
+! 	       pde_loc%bc(i)%value_fnc => re_null_bc
+! 	     case(1)
+! 	       pde_loc%bc(i)%value_fnc => retot_dirichlet_bc
+! 	     case(2)
+! 	       pde_loc%bc(i)%value_fnc => retot_neumann_bc
+! 	   end select
+!       end do  
+
    
     end subroutine RE_matrix
     
@@ -64,13 +65,15 @@ module Re_dual_pointers
       use Re_dual_reader
       use RE_constitutive
       use debug_tools
+      use RE_pointers
       
       class(pde_str), intent(in out) :: pde_loc  
       integer(kind=ikind) :: i
       
       pde_loc%getval => getval_retot_dual
-      
       call Re_dual_readf(pde_loc)
+      pde_loc%initcond => dual_inicond_f
+      call RE_totheadbc(pde_loc)
       
      if (drutes_config%fnc_method == 0) then
 	    pde_loc%pde_fnc(pde_loc%order)%dispersion => dual_mualemf
@@ -86,18 +89,18 @@ module Re_dual_pointers
       
       pde_loc%flux => darcy_law_d
       
-      do i=lbound(pde_loc%bc,1), ubound(pde_loc%bc,1)
-	   select case(pde_loc%bc(i)%code)
-	   	 case(0)
-	       pde_loc%bc(i)%value_fnc => re_null_bc
-	     case(1)
-	       pde_loc%bc(i)%value_fnc => re_dirichlet_bc
-	     case(2)
-	       pde_loc%bc(i)%value_fnc => re_neumann_bc
-	   end select
-     end do  
+!       do i=lbound(pde_loc%bc,1), ubound(pde_loc%bc,1)
+! 	   select case(pde_loc%bc(i)%code)
+! 	   	 case(0)
+! 	       pde_loc%bc(i)%value_fnc => re_null_bc
+! 	     case(1)
+! 	       pde_loc%bc(i)%value_fnc => retot_dirichlet_bc
+! 	     case(2)
+! 	       pde_loc%bc(i)%value_fnc => retot_neumann_bc
+! 	   end select
+!      end do  
      
-    pde_loc%initcond => dual_inicond_f
+
     end subroutine RE_fracture
       
 

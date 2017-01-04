@@ -294,8 +294,9 @@ subroutine Re_dual_readf(pde_loc)
         print *, "missing boundary condition for dual permeability problem"
         ERROR STOP
       end if  
-      call fileread(dim_bc, file_bc)
-     
+      call fileread(dim_bc, file_bc, ranges=(/1_ikind, huge(1_ikind)/), &
+	errmsg="at least one boundary must be specified (and no negative values here)")
+
       call readbcvals(unitW=file_bc,struct=pde_loc%bc,dimen=dim_bc,dirname = "drutes.conf/dual/dual_bc.conf")
 
       close(file_bc)

@@ -59,9 +59,11 @@ module dual_por
        	use global_objs
        	use pde_objs
        	use dual_globals
+       	!use RE_constitutive 
         
-        class(pde_str), intent(in out) :: pde_loc
+       class(pde_str), intent(in out) :: pde_loc
         integer(kind=ikind) :: i, j, k,l, m, layer, D
+        real(kind=rkind) :: value
         
         D = drutes_config%dimen
   
@@ -71,18 +73,20 @@ module dual_por
           do j=1, ubound(elements%data,2)
             k = elements%data(i,j)
             l = nodes%edge(k)
-              select case (vgmatrix(layer)%icondtype)
-		case("H_tot")
-		  pde_loc%solution(k)=vgmatrix(layer)%initcond - nodes%data(k,D)
-		case("hpres")
-		  pde_loc%solution(k)=vgmatrix(layer)%initcond
-		case("theta")
-		  pde_loc%solution(k) = vgmatrix(layer)%initcond
-	      end select
-            
+            m = pde_loc%permut(k)
+            if (m == 0) then
+	      	  call pde_loc%bc(l)%value_fnc(pde_loc, i, j, value)
+              pde_loc%solution(k) =  value 
+            else
+        	  select case (vgmatrix(layer)%icondtype)
+				case("H_tot")
+		  		  pde_loc%solution(k) = vgmatrix(layer)%initcond ! nodes%data(k,D)
+				case("hpres")
+		  		  pde_loc%solution(k) = vgmatrix(layer)%initcond+nodes%data(k,D)
+	      	  end select
+            end if
           end do   
         end do
-
       end subroutine dual_inicond_m
       
     subroutine dual_inicond_f(pde_loc) 
@@ -91,11 +95,14 @@ module dual_por
        	use global_objs
        	use pde_objs
        	use dual_globals
+        use RE_constitutive 
         
-        class(pde_str), intent(in out) :: pde_loc
+		class(pde_str), intent(in out) :: pde_loc
         integer(kind=ikind) :: i, j, k,l, m, layer, D
+        real(kind=rkind) :: value
         
         D = drutes_config%dimen
+  
         
         do i=1, elements%kolik
           layer = elements%material(i,1)
@@ -103,15 +110,17 @@ module dual_por
             k = elements%data(i,j)
             l = nodes%edge(k)
             m = pde_loc%permut(k)
-              select case (vgfracture(layer)%icondtype)
-		case("H_tot")
-		  pde_loc%solution(k)=vgfracture(layer)%initcond - nodes%data(k,D)
-		case("hpres")
-		  pde_loc%solution(k)=vgfracture(layer)%initcond
-		case("theta")
-		  pde_loc%solution(k) = vgfracture(layer)%initcond
-	      end select
-            
+            if (m == 0) then
+	      call pde_loc%bc(l)%value_fnc(pde_loc, i, j, value)
+              pde_loc%solution(k) =  value 
+            else
+        	  select case (vgfracture(layer)%icondtype)
+				case("H_tot")
+		  		  pde_loc%solution(k) = vgfracture(layer)%initcond !- nodes%data(k,D)
+				case("hpres")
+		  		  pde_loc%solution(k) = vgfracture(layer)%initcond +nodes%data(k,D)
+	      	  end select
+            end if
           end do   
         end do
 
@@ -640,19 +649,24 @@ module dual_por
       real(kind=rkind), intent(out), optional                  :: flux_length
 
       real(kind=rkind), dimension(3,3)  :: K
-      integer                           :: D
+      integer(kind=ikind)               :: D
       integer(kind=ikind)               :: i
-      integer(kind=ikind), dimension(3) :: nablaz
-      real(kind=rkind), dimension(3)  :: gradH
-      real(kind=rkind), dimension(3)  :: vct
+      real(kind=rkind), dimension(:), allocatable, save  :: gradH
+      real(kind=rkind), dimension(:), allocatable, save  :: vct
       real(kind=rkind) :: h
-      real(kind=rkind), dimension(:), allocatable :: gradient
       type(integpnt_str) :: quadpnt_loc
       
       
-      
+           D = drutes_config%dimen
+
+      if (.not.(allocated(gradH))) then
+	    allocate(gradH(1:D))
+	    allocate(vct(1:D))
+      end if
+
       if (present(quadpnt) .and. (present(grad) .or. present(x))) then
 	print *, "ERROR: the function can be called either with integ point or x value definition and gradient, not both of them"
+        print *, "exited from Re_dual_totH::darcy_law"
 	ERROR stop
       else if ((.not. present(grad) .or. .not. present(x)) .and. .not. present(quadpnt)) then
 	print *, "ERROR: you have not specified either integ point or x value"
@@ -661,10 +675,10 @@ module dual_por
       end if
       
       if (present(quadpnt)) then
-	call pde_loc%getgrad(quadpnt, gradient)
         quadpnt_loc=quadpnt
 	quadpnt_loc%preproc=.true.
 	h = pde_loc%getval(quadpnt_loc)
+	call pde_loc%getgrad(quadpnt, gradH)
       else
         if (ubound(x,1) /=1) then
 	  print *, "ERROR: van Genuchten function is a function of a single variable h"
@@ -673,23 +687,15 @@ module dual_por
 	  ERROR STOP
 	end if
 	h = x(1)
-	allocate(gradient(ubound(grad,1)))
-	gradient = grad
+	gradH(1:D) = grad
       end if
       
-      D = drutes_config%dimen
-
-      nablaz = 0
-      nablaz(D) = 1
-      
-      gradH(1:D) = gradient(1:D) + nablaz(1:D)
-
       call pde_loc%pde_fnc(pde_loc%order)%dispersion(pde_loc, layer, x=(/h/), tensor=K(1:D, 1:D))
      
       
       vct(1:D) = matmul(-K(1:D,1:D), gradH(1:D))
 
-
+	 !print*,vct
       if (present(flux_length)) then
         select case(D)
           case(1)
