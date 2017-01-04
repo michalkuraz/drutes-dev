@@ -155,7 +155,7 @@ Re_dual_globals.o: $(CORE_obj) src/models/RE_dual/Re_dual_globals.f90
 	$c -c src/models/RE_dual/Re_dual_globals.f90
 Re_dual_reader.o: $(CORE_obj) $(TOOLS_obj) Re_dual_globals.o src/models/RE_dual/Re_dual_reader.f90
 	$c -c src/models/RE_dual/Re_dual_reader.f90
-Re_dual_totH.o: $(CORE_obj) Re_dual_globals.o Re_dual_reader.o src/models/RE_dual/Re_dual_totH.f90
+Re_dual_totH.o: $(CORE_obj) $(TOOLS_obj) $(RE_obj) Re_dual_globals.o Re_dual_reader.o src/models/RE_dual/Re_dual_totH.f90
 	$c -c src/models/RE_dual/Re_dual_totH.f90
 Re_dual_pointers.o: $(CORE_obj) $(RE_obj) Re_dual_reader.o Re_dual_totH.o src/models/RE_dual/Re_dual_pointers.f90
 	$c -c src/models/RE_dual/Re_dual_pointers.f90
