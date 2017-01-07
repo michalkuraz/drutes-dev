@@ -1,6 +1,6 @@
 module RE_pointers
   public :: RE_std, RE_rot, RErotH, REstdH
-  private :: RE_pressheadbc,  RE_totheadbc, allREpointers
+  public :: RE_pressheadbc,  RE_totheadbc, allREpointers
   
   contains
   
