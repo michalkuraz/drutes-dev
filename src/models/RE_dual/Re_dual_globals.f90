@@ -13,12 +13,12 @@ module dual_globals
   
   type, public :: exch_K
     real(kind=rkind) :: alpha, n, m
-    !> hydraulic conductivity tensor of second order
     real(kind=rkind), dimension(:,:), allocatable :: Ks
     real(kind=rkind), dimension(:), allocatable   :: Ks_local
     real(kind=rkind), dimension(:), allocatable   :: anisoangle
   end type exch_K
-  
+
+ integer(kind=ikind), public :: coup_model
 
  type,public :: expar
   real(kind=rkind)::beta,a,gam_par,weightm,weightf
@@ -29,6 +29,7 @@ module dual_globals
   type(exch_K), dimension(:), allocatable, public :: vgexchange
   type(soilpar), dimension(:), allocatable, public :: vgfracture
   type(expar), dimension(:), allocatable, public :: exchange
+  
   
   !> formula of the retention curve
   integer(kind=ikind), public :: retc_method

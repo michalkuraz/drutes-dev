@@ -14,6 +14,8 @@ module Re_dual_pointers
       use RE_constitutive
       use debug_tools
       use RE_pointers
+      use dual_tab
+      use dual_coup
       
       class(pde_str), intent(in out) :: pde_loc
       integer(kind=ikind) :: i
@@ -28,7 +30,15 @@ module Re_dual_pointers
       pde_loc%flux => darcy_law_d!implement darcy law for fluxes
       if (drutes_config%fnc_method == 0) then
 	    pde_loc%pde_fnc(pde_loc%order)%dispersion => dual_mualemm
-	    pde_loc%pde_fnc(pde_loc%order)%reaction => dual_coupling
+	    select case(coup_model)
+	     case(1:2)
+	       pde_loc%pde_fnc(pde_loc%order)%reaction => dual_coupling
+	     case(3:4)
+	       pde_loc%pde_fnc(pde_loc%order)%reaction =>dual_coup_min
+	     case default
+	     stop
+	    end select
+	    
 	    pde_loc%pde_fnc(pde_loc%order)%elasticity => dual_ret_capm
 	    pde_loc%mass => vangen_d_m
       else
@@ -66,6 +76,8 @@ module Re_dual_pointers
       use RE_constitutive
       use debug_tools
       use RE_pointers
+      use dual_tab
+      use dual_coup
       
       class(pde_str), intent(in out) :: pde_loc  
       integer(kind=ikind) :: i
@@ -77,7 +89,14 @@ module Re_dual_pointers
       
      if (drutes_config%fnc_method == 0) then
 	    pde_loc%pde_fnc(pde_loc%order)%dispersion => dual_mualemf
-	    pde_loc%pde_fnc(pde_loc%order)%reaction => dual_coupling_f
+	    select case(coup_model)
+	     case(1:2)
+	       pde_loc%pde_fnc(pde_loc%order)%reaction => dual_coupling
+	     case(3:4)
+	       pde_loc%pde_fnc(pde_loc%order)%reaction =>dual_coup_min
+	     case default
+	     stop
+	    end select
 	    pde_loc%pde_fnc(pde_loc%order)%elasticity => dual_ret_capf
 	    pde_loc%mass => vangen_d_f
       else

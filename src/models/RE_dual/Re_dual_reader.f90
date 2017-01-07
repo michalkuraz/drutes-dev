@@ -151,31 +151,11 @@ module Re_dual_reader
       end do
       
       ! exchange
-      do i=1,layers
-        call comment(file_dual)
-        read(unit=file_dual, fmt= *, iostat=i_err) vgexchange(i)%alpha, vgexchange(i)%n
-        vgexchange(i)%m=1.0_rkind-1.0_rkind/vgexchange(i)%n
-        if (i_err /= 0) then
-          print *, "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-          print *, "HINT: You don't seem to have defined a sufficient number of van Genuchten &
-           parameters for all >> exchange << layers!"
-          print *, "----------------------------------------"
-          call file_error(file_dual)
-        end if
-      end do
       
-      do i=1,layers
-      call comment(file_dual)
-      read(unit=file_dual, fmt= *, iostat=i_err) vgexchange(i)%anisoangle, vgexchange(i)%Ks_local(:)
-        if(drutes_config%dimen>1) then
-	  	  call set_tensor(vgexchange(i)%Ks_local(:), vgexchange(i)%anisoangle(:),  vgexchange(i)%Ks)
-	  	else
-	  	  vgexchange(i)%Ks(1,1)=vgexchange(i)%Ks_local(1)
-	  	end if	 
-      end do
-      
+    call fileread(coup_model, file_dual, ranges=(/1_ikind, 4_ikind/), &
+		errmsg="Select model for exchange term, valid selections are (integer): 1,2,3,4 ")
     
-	  do i=1,layers
+    do i=1,layers
 	    call comment(file_dual)
 	    read(unit=file_dual, fmt= *, iostat=i_err) exchange(i)%beta, exchange(i)%a,&
 	    exchange(i)%gam_par,exchange(i)%weightf
@@ -201,6 +181,42 @@ module Re_dual_reader
         end if
       end do
       
+    if(coup_model<3) then
+     do i=1,layers
+        call comment(file_dual)
+        read(unit=file_dual, fmt= *, iostat=i_err) vgexchange(i)%alpha, vgexchange(i)%n &
+        , vgexchange(i)%Ks_local(:)
+        vgexchange(i)%anisoangle=0.0_rkind
+        if(drutes_config%dimen>1) then
+	  	  call set_tensor(vgexchange(i)%Ks_local(:), vgexchange(i)%anisoangle(:),  vgexchange(i)%Ks)
+	  	else
+ 	  	  vgexchange(i)%Ks(1,1)=vgexchange(i)%Ks_local(1)
+ 	  	end if
+        vgexchange(i)%m=1.0_rkind-1.0_rkind/vgexchange(i)%n
+        if (i_err /= 0) then
+          print *, "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+          print *, "HINT: You don't seem to have defined a sufficient number of van Genuchten &
+           parameters for all >> exchange << layers!"
+          print *, "----------------------------------------"
+          call file_error(file_dual)
+        end if
+      end do
+    else
+    ! assigning dummy variables
+      do i=1,layers
+        vgexchange(i)%alpha=1.0_rkind
+        vgexchange(i)%n=1.0_rkind
+        vgexchange(i)%Ks_local(:)=1.0_rkind
+        vgexchange(i)%anisoangle=0.0_rkind
+        if(drutes_config%dimen>1) then
+	  	  call set_tensor(vgexchange(i)%Ks_local(:), vgexchange(i)%anisoangle(:),  vgexchange(i)%Ks)
+	  	else
+ 	  	  vgexchange(i)%Ks(1,1)=vgexchange(i)%Ks_local(1)
+ 	  	end if
+        vgexchange(i)%m=1.0_rkind-1.0_rkind/vgexchange(i)%n
+      end do
+    end if
+
             
       ! initial conditions
       
