@@ -37,7 +37,7 @@ PMAoo_obj := fullmatrix.o mtx.o mtx_int.o mtxiotools.o pmatools.o solvers.o spar
 modRE_obj := modRE_globals.o modRE_reader.o modRE_constitutive.o modRE_parameter_functions.o modRE_junctions.o
 BOUSSINESQ_obj := boussglob.o boussread.o boussfnc.o bousspointers.o
 ADE_obj := ADE_fnc.o ADE_reader.o ADE_globals.o ADE_pointers.o
-REDUAL_obj := Re_dual_totH.o Re_dual_globals.o Re_dual_pointers.o Re_dual_reader.o
+REDUAL_obj := Re_dual_totH.o Re_dual_globals.o Re_dual_pointers.o Re_dual_reader.o Re_dual_tab.o Re_dual_coupling.o
 
 ALL_objs := $(CORE_obj) $(TOOLS_obj) $(POINTERMAN_obj) $(MATHTOOLS_obj) $(FEMTOOLS_obj) $(DECOMPO_obj) $(RE_obj) $(PMAoo_obj) $(modRE_obj) $(BOUSSINESQ_obj) $(ADE_obj) $(REDUAL_obj)  
 #-----------------------------------------------------------------
@@ -157,9 +157,12 @@ Re_dual_reader.o: $(CORE_obj) $(TOOLS_obj) Re_dual_globals.o src/models/RE_dual/
 	$c -c src/models/RE_dual/Re_dual_reader.f90
 Re_dual_totH.o: $(CORE_obj) $(TOOLS_obj) $(RE_obj) Re_dual_globals.o Re_dual_reader.o src/models/RE_dual/Re_dual_totH.f90
 	$c -c src/models/RE_dual/Re_dual_totH.f90
-Re_dual_pointers.o: $(CORE_obj) $(RE_obj) Re_dual_reader.o Re_dual_totH.o src/models/RE_dual/Re_dual_pointers.f90
+Re_dual_coupling.o: $(CORE_obj) $(TOOLS_obj) Re_dual_globals.o Re_dual_reader.o Re_dual_totH.o src/models/RE_dual/Re_dual_coupling.f90
+	$c -c src/models/RE_dual/Re_dual_coupling.f90
+Re_dual_tab.o: $(CORE_obj) $(TOOLS_obj) Re_dual_globals.o Re_dual_reader.o Re_dual_totH.o Re_dual_coupling.o src/models/RE_dual/Re_dual_tab.f90
+	$c -c src/models/RE_dual/Re_dual_tab.f90	
+Re_dual_pointers.o: $(CORE_obj) $(RE_obj) Re_dual_reader.o Re_dual_totH.o Re_dual_tab.o src/models/RE_dual/Re_dual_pointers.f90
 	$c -c src/models/RE_dual/Re_dual_pointers.f90
-
 #-------end REDUAL_obj-------------------------------
 
 #-------begin BOUSSINESQ-----------------------------
