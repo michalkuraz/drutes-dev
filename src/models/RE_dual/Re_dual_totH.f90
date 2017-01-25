@@ -8,7 +8,7 @@ module dual_por
   public:: dual_mualemm,dual_mualemf, dual_ret_capf, dual_ret_capm
   public:: vangen_d_f, vangen_d_m
   public:: dual_inicond_f,dual_inicond_m
-  public:: darcy_law_d
+  public:: darcy_law_d 
   public :: getval_retot_dual
 
   contains 
@@ -346,7 +346,7 @@ module dual_por
        RETURN
      end if
      
-      E=(C+vangen_d_m(pde_loc,layer,x=(/h/))/thetaS)*weight!*vgmatrix(layer)%Ss
+      E=C*weight
 !      print*,"weighted elasticity retention of matrix"
 !       print*, E
   end function dual_ret_capm  
@@ -402,7 +402,7 @@ module dual_por
        E=vgfracture(layer)%SS*(weight)
        RETURN
      end if     
-      E=(C+vangen_d_f(pde_loc,layer,x=(/h/))/thetaS)*(weight)!*vgfracture(layer)%Ss
+      E=C*weight
 !      print*,"weighted elasticity retention of fracture "
 !      print*, E
   end function dual_ret_capf
@@ -486,6 +486,7 @@ module dual_por
 	   h = x(1)
      end if    
       
+      
       a = vgfracture(layer)%alpha
       n = vgfracture(layer)%n
       m = vgfracture(layer)%m
@@ -500,7 +501,7 @@ module dual_por
       end if
  end function vangen_d_f      
  
-  subroutine darcy_law_d(pde_loc, layer, quadpnt, x, grad,  flux, flux_length)
+      subroutine darcy_law_d(pde_loc, layer, quadpnt, x, grad,  flux, flux_length)
       use typy
       use pde_objs
       use global_objs
@@ -522,8 +523,7 @@ module dual_por
       real(kind=rkind) :: h
       type(integpnt_str) :: quadpnt_loc
       
-      
-           D = drutes_config%dimen
+      D = drutes_config%dimen
 
       if (.not.(allocated(gradH))) then
 	    allocate(gradH(1:D))
@@ -579,5 +579,8 @@ module dual_por
       end if
 
     end subroutine darcy_law_d
+    
+    
+    
  
 end module dual_por

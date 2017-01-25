@@ -13,10 +13,9 @@ module Re_dual_pointers
       use Re_dual_reader
       use RE_constitutive
       use debug_tools
-      use RE_pointers
       use dual_tab
       use dual_coup
-      
+      use re_total
       class(pde_str), intent(in out) :: pde_loc
       integer(kind=ikind) :: i
 
@@ -25,9 +24,8 @@ module Re_dual_pointers
       call Re_dual_readm(pde_loc)
       call Re_dual_var() 
       pde_loc%initcond => dual_inicond_m
-   	  call RE_totheadbc(pde_loc)
-      
-      pde_loc%flux => darcy_law_d!implement darcy law for fluxes
+
+      pde_loc%flux => darcy_law_d
       if (drutes_config%fnc_method == 0) then
 	    pde_loc%pde_fnc(pde_loc%order)%dispersion => dual_mualemm
 	    select case(coup_model)
@@ -52,16 +50,22 @@ module Re_dual_pointers
       end if
       
       ! boundary condition defined as different type boundary_vals
-!       do i=lbound(pde_loc%bc,1), ubound(pde_loc%bc,1)
-! 	   select case(pde_loc%bc(i)%code)
-! 	   	 case(0)
-! 	       pde_loc%bc(i)%value_fnc => re_null_bc
-! 	     case(1)
-! 	       pde_loc%bc(i)%value_fnc => retot_dirichlet_bc
-! 	     case(2)
-! 	       pde_loc%bc(i)%value_fnc => retot_neumann_bc
-! 	   end select
-!       end do  
+      do i=lbound(pde_loc%bc,1), ubound(pde_loc%bc,1)
+	select case(pde_loc%bc(i)%code)
+	  case(-1)
+	      pde_loc%bc(i)%value_fnc => retot_dirichlet_height_bc
+	  case(0)
+		pde_loc%bc(i)%value_fnc => re_null_bc
+	  case(1)
+		pde_loc%bc(i)%value_fnc => retot_dirichlet_bc
+	  case(2)
+		pde_loc%bc(i)%value_fnc => retot_neumann_bc_m
+	  case default
+		print *, "ERROR! You have specified an unsupported boundary type definition for the Richards equation"
+		print *, "the incorrect boundary code specified is:", pde_loc%bc(i)%code
+		ERROR stop
+	end select
+      end do 
 
    
     end subroutine RE_matrix
@@ -75,17 +79,16 @@ module Re_dual_pointers
       use Re_dual_reader
       use RE_constitutive
       use debug_tools
-      use RE_pointers
       use dual_tab
       use dual_coup
-      
+      use re_total
       class(pde_str), intent(in out) :: pde_loc  
       integer(kind=ikind) :: i
       
       pde_loc%getval => getval_retot_dual
       call Re_dual_readf(pde_loc)
       pde_loc%initcond => dual_inicond_f
-      call RE_totheadbc(pde_loc)
+
       
      if (drutes_config%fnc_method == 0) then
 	    pde_loc%pde_fnc(pde_loc%order)%dispersion => dual_mualemf
@@ -103,24 +106,147 @@ module Re_dual_pointers
 	    pde_loc%pde_fnc(pde_loc%order)%dispersion  => dual_mualem_f_tab		
 	    pde_loc%pde_fnc(pde_loc%order)%reaction => dual_coupling_f_tab
 	    pde_loc%pde_fnc(pde_loc%order)%elasticity => dual_ret_capf_tab
-	    pde_loc%mass => vangen_d_m_tab
+	    pde_loc%mass => vangen_d_f_tab
       end if
       
       pde_loc%flux => darcy_law_d
       
-!       do i=lbound(pde_loc%bc,1), ubound(pde_loc%bc,1)
-! 	   select case(pde_loc%bc(i)%code)
-! 	   	 case(0)
-! 	       pde_loc%bc(i)%value_fnc => re_null_bc
-! 	     case(1)
-! 	       pde_loc%bc(i)%value_fnc => retot_dirichlet_bc
-! 	     case(2)
-! 	       pde_loc%bc(i)%value_fnc => retot_neumann_bc
-! 	   end select
-!      end do  
+      do i=lbound(pde_loc%bc,1), ubound(pde_loc%bc,1)
+	select case(pde_loc%bc(i)%code)
+	  case(-1)
+	      pde_loc%bc(i)%value_fnc => retot_dirichlet_height_bc
+	  case(0)
+		pde_loc%bc(i)%value_fnc => re_null_bc
+	  case(1)
+		pde_loc%bc(i)%value_fnc => retot_dirichlet_bc
+	  case(2)
+		pde_loc%bc(i)%value_fnc => retot_neumann_bc_f
+	  case default
+		print *, "ERROR! You have specified an unsupported boundary type definition for the Richards equation"
+		print *, "the incorrect boundary code specified is:", pde_loc%bc(i)%code
+		ERROR stop
+	end select
+      end do 
      
 
     end subroutine RE_fracture
+
+ 
+ subroutine retot_neumann_bc_m(pde_loc, el_id, node_order, value, code) 
+      use typy
+      use globals
+      use global_objs
+      use pde_objs
+      use dual_globals
+      !use re_globals
+
+      class(pde_str), intent(in) :: pde_loc
+      integer(kind=ikind), intent(in)  :: el_id, node_order
+      real(kind=rkind), intent(out), optional    :: value
+      integer(kind=ikind), intent(out), optional :: code
+     
+
+      integer(kind=ikind) :: i, edge_id, j,layer
+      real(kind=rkind), dimension(3) :: gravflux, bcflux
+      real(kind=rkind) :: bcval, gfluxval, weight
+      integer :: i1
+      
       
 
+      if (present(value)) then
+	edge_id = nodes%edge(elements%data(el_id, node_order))
+
+	i = pde_loc%permut(elements%data(el_id, node_order))
+	
+
+	if (pde_loc%bc(edge_id)%file) then
+	  do i=1, ubound(pde_loc%bc(edge_id)%series,1)
+	    if (pde_loc%bc(edge_id)%series(i,1) > time) then
+	      if (i > 1) then
+		j = i-1
+	      else
+		j = i
+	      end if
+	      layer=pde_loc%bc(edge_id)%layer
+	      bcval = pde_loc%bc(edge_id)%series(j,2)*exchange(layer)%weightm
+	      EXIT
+	    end if
+	  end do
+	else
+	  layer=pde_loc%bc(edge_id)%layer
+	  bcval = pde_loc%bc(edge_id)%value*exchange(layer)%weightm
+	end if
+	
+
+
+	value = bcval
+
+      end if
+      
+      if (present(code)) then
+	code = 2
+      end if
+
+
+    end subroutine retot_neumann_bc_m
+    
+     subroutine retot_neumann_bc_f(pde_loc, el_id, node_order, value, code) 
+      use typy
+      use globals
+      use global_objs
+      use pde_objs
+      use dual_globals
+      !use re_globals
+
+      class(pde_str), intent(in) :: pde_loc
+      integer(kind=ikind), intent(in)  :: el_id, node_order
+      real(kind=rkind), intent(out), optional    :: value
+      integer(kind=ikind), intent(out), optional :: code
+     
+
+      integer(kind=ikind) :: i, edge_id, j, layer
+      real(kind=rkind), dimension(3) :: gravflux, bcflux
+      real(kind=rkind) :: bcval, gfluxval, weight
+      integer :: i1
+      
+      
+
+      if (present(value)) then
+	edge_id = nodes%edge(elements%data(el_id, node_order))
+
+	i = pde_loc%permut(elements%data(el_id, node_order))
+	
+	
+
+	if (pde_loc%bc(edge_id)%file) then
+	  do i=1, ubound(pde_loc%bc(edge_id)%series,1)
+	    if (pde_loc%bc(edge_id)%series(i,1) > time) then
+	      if (i > 1) then
+		j = i-1
+	      else
+		j = i
+	      end if
+	      layer=pde_loc%bc(edge_id)%layer
+	      bcval = pde_loc%bc(edge_id)%series(j,2)*exchange(layer)%weightf
+	      EXIT
+	    end if
+	  end do
+	else
+	 layer=pde_loc%bc(edge_id)%layer
+	  bcval = pde_loc%bc(edge_id)%value*exchange(layer)%weightf
+	end if
+	
+
+
+	value = bcval
+
+      end if
+      
+      if (present(code)) then
+	code = 2
+      end if
+
+
+    end subroutine retot_neumann_bc_f
+ 
 end module Re_dual_pointers
