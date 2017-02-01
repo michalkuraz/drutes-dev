@@ -80,7 +80,7 @@ module dual_tab
  if (h<0) then
    if (-h/drutes_config%fnc_discr_length < 0.1*huge(1) ) then
       pos = int(-h/drutes_config%fnc_discr_length)+1
-	  if (pos <= ubound(Ktab_dm,2)-1) then
+	  if (abs(pos) <= ubound(Ktab_dm,2)-1) then
 	    dist = -h - (pos - 1)*drutes_config%fnc_discr_length
 	    tmp = (Ktab_dm(layer,pos+1)-Ktab_dm(layer,pos))/drutes_config%fnc_discr_length*dist &
 	    + Ktab_dm(layer,pos)
@@ -171,7 +171,7 @@ subroutine dual_mualem_f_tab(pde_loc, layer, quadpnt,  x, tensor, scalar)
  if (h<0) then
    if (-h/drutes_config%fnc_discr_length < 0.1*huge(1) ) then
       pos = int(-h/drutes_config%fnc_discr_length)+1
-	  if (pos <= ubound(Ktab_df,2)-1) then
+	  if (abs(pos) <= ubound(Ktab_df,2)-1) then
 	    dist = -h - (pos - 1)*drutes_config%fnc_discr_length
 	    tmp = (Ktab_df(layer,pos+1)-Ktab_df(layer,pos))/drutes_config%fnc_discr_length*dist &
 	    + Ktab_df(layer,pos)
@@ -256,7 +256,7 @@ function vangen_d_m_tab(pde_loc, layer, quadpnt, x) result(theta)
 		if ( h/drutes_config%fnc_discr_length < 0.1*huge(1)) then
 	  
 	  	pos = int(-h/drutes_config%fnc_discr_length)+1
-	  		if (pos <= ubound(watcontab_dm,2)-1) then
+	  		if (abs(pos) <= ubound(watcontab_dm,2)-1) then
 	    dist = -h - (pos - 1)*drutes_config%fnc_discr_length
 	    theta = (watcontab_dm(layer,pos+1)-watcontab_dm(layer,pos))/drutes_config%fnc_discr_length*dist &
 	    + watcontab_dm(layer,pos)
@@ -338,7 +338,7 @@ function vangen_d_f_tab(pde_loc, layer, quadpnt, x) result(theta)
 	if ( h/drutes_config%fnc_discr_length < 0.1*huge(1)) then
 	  
 	  pos = int(-h/drutes_config%fnc_discr_length)+1
-	  if (pos <= ubound(watcontab_df,2)-1) then
+	  if (abs(pos) <= ubound(watcontab_df,2)-1) then
 	    dist = -h - (pos - 1)*drutes_config%fnc_discr_length
 	    theta = (watcontab_df(layer,pos+1)-watcontab_df(layer,pos))/drutes_config%fnc_discr_length*dist&
 	     + watcontab_df(layer,pos)
@@ -421,7 +421,7 @@ function dual_ret_capm_tab(pde_loc, layer, quadpnt, x) result(E)
       if (h<0) then !same as 1104
 	if ( h/drutes_config%fnc_discr_length < 0.1*huge(1)) then
 	  pos = int(-h/drutes_config%fnc_discr_length)+1
-	  if (pos <= ubound(warecatab_dm,2)-1) then
+	  if (abs(pos) <= ubound(warecatab_dm,2)-1) then
 	    dist = -h - (pos - 1)*drutes_config%fnc_discr_length
 	    E = (warecatab_dm(layer,pos+1)-warecatab_dm(layer,pos))/drutes_config%fnc_discr_length*dist &
 	    + warecatab_dm(layer,pos)
@@ -492,7 +492,7 @@ function dual_ret_capf_tab(pde_loc, layer, quadpnt, x) result(E)
      if (h<0) then
 	  if ( h/drutes_config%fnc_discr_length < 0.1*huge(1)) then
 	    pos = int(-h/drutes_config%fnc_discr_length)+1
-	    if (pos <= ubound(warecatab_df,2)-1) then
+	    if (abs(pos) <= ubound(warecatab_df,2)-1) then
 	      dist = -h - (pos - 1)*drutes_config%fnc_discr_length
 	      E = (warecatab_df(layer,pos+1)-warecatab_df(layer,pos))/drutes_config%fnc_discr_length*dist &
 	      + warecatab_df(layer,pos)
@@ -525,7 +525,7 @@ function dual_coupling_tab(pde_loc, layer, quadpnt, x) result(ex_term)
       type(integpnt_str), intent(in), optional :: quadpnt
       !> resulting system elasticity
       real(kind=rkind)::beta,a,gam_par
-      real(kind=rkind)::Ks,weightf,weightm
+      real(kind=rkind)::Ks,weightf,weightm,Ksm,Ksf
       real(kind=rkind):: Ka_f,Ka_m,Ka,ex_term,Ka_fm,Ka_mf,Ka_mm,Ka_ff,Ka_fw,Ka_mw
       real(kind=rkind):: hm,hf,one,hw
       integer(kind=ikind) :: pos
@@ -537,7 +537,8 @@ function dual_coupling_tab(pde_loc, layer, quadpnt, x) result(ex_term)
       gam_par=exchange(layer)%gam_par
       weightm=exchange(layer)%weightm
       weightf=exchange(layer)%weightf
-           
+      Ksm=vgmatrix(layer)%KS_local(1)
+      Ksf=vgfracture(layer)%KS_local(1)     
       if (present(quadpnt) .and. present(x)) then
 	print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
 	print *, "exited from RE_dual: dual_coupling_tab"
@@ -576,7 +577,7 @@ function dual_coupling_tab(pde_loc, layer, quadpnt, x) result(ex_term)
 		if (hm<0) then
 		  if ( hm/drutes_config%fnc_discr_length < 0.1*huge(1)) then
 			pos = int(-hm/drutes_config%fnc_discr_length)+1
-			if (pos <= ubound(couptab,2)-1) then
+			if (abs(pos) <= ubound(couptab,2)-1) then
 			  dist = -hm - (pos - 1)*drutes_config%fnc_discr_length
 			  Ka_m = (couptab(layer,pos+1)-couptab(layer,pos))/drutes_config%fnc_discr_length*dist &
 			  + couptab(layer,pos)
@@ -586,12 +587,14 @@ function dual_coupling_tab(pde_loc, layer, quadpnt, x) result(ex_term)
 		  else
 			Ka_m= dual_coupling_K(pde_loc,layer,x=[hm])
 		  end if
+		else
+		  Ka_m= dual_coupling_K(pde_loc,layer,x=[hm])
 		end if
 	
 		if (hf<0) then
 		  if ( hf/drutes_config%fnc_discr_length < 0.1*huge(1)) then
 			pos = int(-hf/drutes_config%fnc_discr_length)+1
-			if (pos <= ubound(couptab,2)-1) then
+			if (abs(pos) <= ubound(couptab,2)-1) then
 			  dist = -hf - (pos - 1)*drutes_config%fnc_discr_length
 			  Ka_f = (couptab(layer,pos+1)-couptab(layer,pos))/drutes_config%fnc_discr_length*dist&
 			   + couptab(layer,pos)
@@ -601,13 +604,14 @@ function dual_coupling_tab(pde_loc, layer, quadpnt, x) result(ex_term)
 		  else
 			Ka_f= dual_coupling_K(pde_loc,layer,x=[hf])
 		  end if
+		else
+		  Ka_f= dual_coupling_K(pde_loc,layer,x=[hf])
 		end if
-		
     case(3)
 		if (hm<0) then
 		  if ( hm/drutes_config%fnc_discr_length < 0.1*huge(1)) then
 			pos = int(-hm/drutes_config%fnc_discr_length)+1
-			if (pos <= ubound(couptab,2)-1) then
+			if (abs(pos) <= ubound(couptab,2)-1) then
 			  dist = -hm - (pos - 1)*drutes_config%fnc_discr_length
 			  Ka_mm = (Ktab_dm(layer,pos+1)-Ktab_dm(layer,pos))/drutes_config%fnc_discr_length*dist &
 			  + Ktab_dm(layer,pos)
@@ -621,12 +625,15 @@ function dual_coupling_tab(pde_loc, layer, quadpnt, x) result(ex_term)
 			call  dual_mualemm(pde_loc,layer,x=[hm],scalar=Ka_mm)
 			call  dual_mualemf(pde_loc,layer,x=[hm],scalar=Ka_fm)
 		  end if
+		else
+			call  dual_mualemm(pde_loc,layer,x=[hm],scalar=Ka_mm)
+			call  dual_mualemf(pde_loc,layer,x=[hm],scalar=Ka_fm)
 		end if
     
 		if (hf<0) then
 		  if ( hf/drutes_config%fnc_discr_length < 0.1*huge(1)) then
 			pos = int(-hf/drutes_config%fnc_discr_length)+1
-			if (pos <= ubound(couptab,2)-1) then
+			if (abs(pos) <= ubound(couptab,2)-1) then
 			  dist = -hf - (pos - 1)*drutes_config%fnc_discr_length
 			  Ka_ff = (Ktab_df(layer,pos+1)-Ktab_df(layer,pos))/drutes_config%fnc_discr_length*dist &
 			  + Ktab_df(layer,pos)
@@ -640,14 +647,20 @@ function dual_coupling_tab(pde_loc, layer, quadpnt, x) result(ex_term)
 			  call dual_mualemm(pde_loc,layer,x=[hf],scalar=Ka_mf)
 			  call dual_mualemf(pde_loc,layer,x=[hf],scalar=Ka_ff)
 		  end if
+		else
+			call dual_mualemm(pde_loc,layer,x=[hf],scalar=Ka_mf)
+			call dual_mualemf(pde_loc,layer,x=[hf],scalar=Ka_ff)
 		end if
-     	   
+		Ka_mm=Ka_mm*Ksm
+		Ka_fm=Ka_fm*Ksf
+		Ka_mf=Ka_mf*Ksm
+		Ka_ff=Ka_ff*Ksf
 	case(4)
 
 		if (hw<0) then
 		  if ( hw/drutes_config%fnc_discr_length < 0.1*huge(1)) then
 			pos = int(-hw/drutes_config%fnc_discr_length)+1
-			if (pos <= ubound(couptab,2)-1) then
+			if (abs(pos) <= ubound(couptab,2)-1) then
 			  dist = -hw - (pos - 1)*drutes_config%fnc_discr_length
 			  Ka_fw = (Ktab_df(layer,pos+1)-Ktab_df(layer,pos))/drutes_config%fnc_discr_length*dist &
 			  + Ktab_df(layer,pos)
@@ -661,8 +674,12 @@ function dual_coupling_tab(pde_loc, layer, quadpnt, x) result(ex_term)
 			  call dual_mualemm(pde_loc,layer,x=[hw],scalar=Ka_mw)
 			  call dual_mualemf(pde_loc,layer,x=[hw],scalar=Ka_fw)
 		  end if
+		else
+			call dual_mualemm(pde_loc,layer,x=[hw],scalar=Ka_mw)
+			call dual_mualemf(pde_loc,layer,x=[hw],scalar=Ka_fw)
 		end if
-		
+		Ka_fw=Ka_fw*Ksf
+		Ka_mw=Ka_mw*Ksm
 	case default
 		print *, "ERROR! You have specified an unsupported coupling term model in dual.conf file"
 		print *, "the incorrect value specified is:", coup_model
@@ -705,7 +722,7 @@ function dual_coupling_f_tab(pde_loc, layer, quadpnt, x) result(ex_term)
       real(kind=rkind)::beta,a,gam_par
       real(kind=rkind)::Ks
       real(kind=rkind):: Ka_f,Ka_m,Ka,ex_term,Ka_fm,Ka_mf,Ka_mm,Ka_ff,Ka_fw,Ka_mw
-      real(kind=rkind):: hm,hf,one,hw
+      real(kind=rkind):: hm,hf,one,hw,Ksm,Ksf
       integer(kind=ikind) :: pos
       real(kind=rkind) :: res, dist,weightf,weightm
       type(integpnt_str) :: quadpnt_loc 
@@ -715,7 +732,9 @@ function dual_coupling_f_tab(pde_loc, layer, quadpnt, x) result(ex_term)
       gam_par=exchange(layer)%gam_par
       weightm=exchange(layer)%weightm
       weightf=exchange(layer)%weightf
-           
+      Ksm=vgmatrix(layer)%KS_local(1)
+      Ksf=vgfracture(layer)%KS_local(1)         
+      
       if (present(quadpnt) .and. present(x)) then
 	print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
 	print *, "exited from RE_dual: dual_coupling_tab"
@@ -754,7 +773,7 @@ function dual_coupling_f_tab(pde_loc, layer, quadpnt, x) result(ex_term)
 		if (hm<0) then
 		  if ( hm/drutes_config%fnc_discr_length < 0.1*huge(1)) then
 			pos = int(-hm/drutes_config%fnc_discr_length)+1
-			if (pos <= ubound(couptab,2)-1) then
+			if (abs(pos) <= ubound(couptab,2)-1) then
 			  dist = -hm - (pos - 1)*drutes_config%fnc_discr_length
 			  Ka_m = (couptab(layer,pos+1)-couptab(layer,pos))/drutes_config%fnc_discr_length*dist &
 			  + couptab(layer,pos)
@@ -764,12 +783,14 @@ function dual_coupling_f_tab(pde_loc, layer, quadpnt, x) result(ex_term)
 		  else
 			Ka_m= dual_coupling_K(pde_loc,layer,x=[hm])
 		  end if
+		else
+		  Ka_m= dual_coupling_K(pde_loc,layer,x=[hm])
 		end if
 	
 		if (hf<0) then
 		  if ( hf/drutes_config%fnc_discr_length < 0.1*huge(1)) then
 			pos = int(-hf/drutes_config%fnc_discr_length)+1
-			if (pos <= ubound(couptab,2)-1) then
+			if (abs(pos) <= ubound(couptab,2)-1) then
 			  dist = -hf - (pos - 1)*drutes_config%fnc_discr_length
 			  Ka_f = (couptab(layer,pos+1)-couptab(layer,pos))/drutes_config%fnc_discr_length*dist&
 			   + couptab(layer,pos)
@@ -779,13 +800,14 @@ function dual_coupling_f_tab(pde_loc, layer, quadpnt, x) result(ex_term)
 		  else
 			Ka_f= dual_coupling_K(pde_loc,layer,x=[hf])
 		  end if
+		else
+		  Ka_f= dual_coupling_K(pde_loc,layer,x=[hf])
 		end if
-		
     case(3)
 		if (hm<0) then
 		  if ( hm/drutes_config%fnc_discr_length < 0.1*huge(1)) then
 			pos = int(-hm/drutes_config%fnc_discr_length)+1
-			if (pos <= ubound(couptab,2)-1) then
+			if (abs(pos) <= ubound(couptab,2)-1) then
 			  dist = -hm - (pos - 1)*drutes_config%fnc_discr_length
 			  Ka_mm = (Ktab_dm(layer,pos+1)-Ktab_dm(layer,pos))/drutes_config%fnc_discr_length*dist &
 			  + Ktab_dm(layer,pos)
@@ -799,12 +821,15 @@ function dual_coupling_f_tab(pde_loc, layer, quadpnt, x) result(ex_term)
 			call  dual_mualemm(pde_loc,layer,x=[hm],scalar=Ka_mm)
 			call  dual_mualemf(pde_loc,layer,x=[hm],scalar=Ka_fm)
 		  end if
+		else
+		  call  dual_mualemm(pde_loc,layer,x=[hm],scalar=Ka_mm)
+		  call  dual_mualemf(pde_loc,layer,x=[hm],scalar=Ka_fm)
 		end if
     
 		if (hf<0) then
 		  if ( hf/drutes_config%fnc_discr_length < 0.1*huge(1)) then
 			pos = int(-hf/drutes_config%fnc_discr_length)+1
-			if (pos <= ubound(couptab,2)-1) then
+			if (abs(pos) <= ubound(couptab,2)-1) then
 			  dist = -hf - (pos - 1)*drutes_config%fnc_discr_length
 			  Ka_ff = (Ktab_df(layer,pos+1)-Ktab_df(layer,pos))/drutes_config%fnc_discr_length*dist &
 			  + Ktab_df(layer,pos)
@@ -818,14 +843,20 @@ function dual_coupling_f_tab(pde_loc, layer, quadpnt, x) result(ex_term)
 			  call dual_mualemm(pde_loc,layer,x=[hf],scalar=Ka_mf)
 			  call dual_mualemf(pde_loc,layer,x=[hf],scalar=Ka_ff)
 		  end if
+		else
+		  call dual_mualemm(pde_loc,layer,x=[hf],scalar=Ka_mf)
+		  call dual_mualemf(pde_loc,layer,x=[hf],scalar=Ka_ff)
 		end if
-     	   
+     	Ka_mm=Ka_mm*Ksm
+		Ka_fm=Ka_fm*Ksf
+		Ka_mf=Ka_mf*Ksm
+		Ka_ff=Ka_ff*Ksf   
 	case(4)
 
 		if (hw<0) then
 		  if ( hw/drutes_config%fnc_discr_length < 0.1*huge(1)) then
 			pos = int(-hw/drutes_config%fnc_discr_length)+1
-			if (pos <= ubound(couptab,2)-1) then
+			if (abs(pos) <= ubound(couptab,2)-1) then
 			  dist = -hw - (pos - 1)*drutes_config%fnc_discr_length
 			  Ka_fw = (Ktab_df(layer,pos+1)-Ktab_df(layer,pos))/drutes_config%fnc_discr_length*dist &
 			  + Ktab_df(layer,pos)
@@ -839,8 +870,12 @@ function dual_coupling_f_tab(pde_loc, layer, quadpnt, x) result(ex_term)
 			  call dual_mualemm(pde_loc,layer,x=[hw],scalar=Ka_mw)
 			  call dual_mualemf(pde_loc,layer,x=[hw],scalar=Ka_fw)
 		  end if
+		else
+		  call dual_mualemm(pde_loc,layer,x=[hw],scalar=Ka_mw)
+		  call dual_mualemf(pde_loc,layer,x=[hw],scalar=Ka_fw)
 		end if
-		
+		Ka_fw=Ka_fw*Ksf
+		Ka_mw=Ka_mw*Ksm
 	case default
 		print *, "ERROR! You have specified an unsupported coupling term model in dual.conf file"
 		print *, "the incorrect value specified is:", coup_model

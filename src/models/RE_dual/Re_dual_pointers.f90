@@ -4,7 +4,7 @@ module Re_dual_pointers
   
   contains
 
-    subroutine RE_matrix(pde_loc)
+    subroutine RE_matrix()
       use typy
       use globals
       use global_objs
@@ -16,53 +16,56 @@ module Re_dual_pointers
       use dual_tab
       use dual_coup
       use re_total
-      class(pde_str), intent(in out) :: pde_loc
+      !class(pde_str), intent(in out) :: pde_loc
       integer(kind=ikind) :: i
 
            
-      pde_loc%getval => getval_retot_dual
-      call Re_dual_readm(pde_loc)
+      pde(1)%getval => getval_retot_dual
+      call Re_dual_readm(pde(1))
       call Re_dual_var() 
-      pde_loc%initcond => dual_inicond_m
+      pde(1)%initcond => dual_inicond_m
 
-      pde_loc%flux => darcy_law_d
+      pde(1)%flux => darcy_law_d
       if (drutes_config%fnc_method == 0) then
-	    pde_loc%pde_fnc(pde_loc%order)%dispersion => dual_mualemm
+	    pde(1)%pde_fnc(1)%dispersion => dual_mualemm
 	    select case(coup_model)
 	     case(1:2)
-	       pde_loc%pde_fnc(pde_loc%order)%reaction => dual_coupling
+	       pde(1)%pde_fnc(1)%reaction => dual_coupling
+	       pde(1)%pde_fnc(2)%reaction => dual_coupling_f
 	     case(3:4)
-	       pde_loc%pde_fnc(pde_loc%order)%reaction =>dual_coup_min
+	       pde(1)%pde_fnc(1)%reaction =>dual_coup_min
+	       pde(1)%pde_fnc(2)%reaction =>dual_coup_min_f
 	     case default
 	     stop
 	    end select
 	    
-	    pde_loc%pde_fnc(pde_loc%order)%elasticity => dual_ret_capm
-	    pde_loc%mass => vangen_d_m
+	    pde(1)%pde_fnc(1)%elasticity => dual_ret_capm
+	    pde(1)%mass => vangen_d_m
       else
-	    call dual_tabvalues(pde_loc, Kfnc=dual_mualemm, Cfnc=dual_ret_capm,&
+	    call dual_tabvalues(pde(1), Kfnc=dual_mualemm, Cfnc=dual_ret_capm,&
 	     thetafnc=vangen_d_m,Kfnc_f=dual_mualemf, Cfnc_f=dual_ret_capf, &
 	     thetafnc_f=vangen_d_f,ex_K_fnc=dual_coupling_K)
-	    pde_loc%pde_fnc(pde_loc%order)%dispersion  => dual_mualem_m_tab		
-	    pde_loc%pde_fnc(pde_loc%order)%reaction => dual_coupling_tab
-	    pde_loc%pde_fnc(pde_loc%order)%elasticity => dual_ret_capm_tab
-	    pde_loc%mass => vangen_d_m_tab
+	    pde(1)%pde_fnc(1)%dispersion  => dual_mualem_m_tab		
+	    pde(1)%pde_fnc(1)%reaction => dual_coupling_tab
+	    pde(1)%pde_fnc(2)%reaction => dual_coupling_f_tab
+	    pde(1)%pde_fnc(1)%elasticity => dual_ret_capm_tab
+	    pde(1)%mass => vangen_d_m_tab
       end if
       
       ! boundary condition defined as different type boundary_vals
-      do i=lbound(pde_loc%bc,1), ubound(pde_loc%bc,1)
-	select case(pde_loc%bc(i)%code)
+      do i=lbound(pde(1)%bc,1), ubound(pde(1)%bc,1)
+	select case(pde(1)%bc(i)%code)
 	  case(-1)
-	      pde_loc%bc(i)%value_fnc => retot_dirichlet_height_bc
+	      pde(1)%bc(i)%value_fnc => retot_dirichlet_height_bc
 	  case(0)
-		pde_loc%bc(i)%value_fnc => re_null_bc
+		pde(1)%bc(i)%value_fnc => re_null_bc
 	  case(1)
-		pde_loc%bc(i)%value_fnc => retot_dirichlet_bc
+		pde(1)%bc(i)%value_fnc => retot_dirichlet_bc
 	  case(2)
-		pde_loc%bc(i)%value_fnc => retot_neumann_bc_m
+		pde(1)%bc(i)%value_fnc => retot_neumann_bc_m
 	  case default
 		print *, "ERROR! You have specified an unsupported boundary type definition for the Richards equation"
-		print *, "the incorrect boundary code specified is:", pde_loc%bc(i)%code
+		print *, "the incorrect boundary code specified is:", pde(1)%bc(i)%code
 		ERROR stop
 	end select
       end do 
@@ -70,7 +73,7 @@ module Re_dual_pointers
    
     end subroutine RE_matrix
     
-    subroutine RE_fracture(pde_loc)
+    subroutine RE_fracture()
       use typy
       use globals
       use global_objs
@@ -82,48 +85,51 @@ module Re_dual_pointers
       use dual_tab
       use dual_coup
       use re_total
-      class(pde_str), intent(in out) :: pde_loc  
+      !class(pde_str), intent(in out) :: pde_loc  
       integer(kind=ikind) :: i
       
-      pde_loc%getval => getval_retot_dual
-      call Re_dual_readf(pde_loc)
-      pde_loc%initcond => dual_inicond_f
+      pde(2)%getval => getval_retot_dual
+      call Re_dual_readf(pde(2))
+      pde(2)%initcond => dual_inicond_f
 
       
      if (drutes_config%fnc_method == 0) then
-	    pde_loc%pde_fnc(pde_loc%order)%dispersion => dual_mualemf
+	    pde(2)%pde_fnc(2)%dispersion => dual_mualemf
 	    select case(coup_model)
 	     case(1:2)
-	       pde_loc%pde_fnc(pde_loc%order)%reaction => dual_coupling
+	       pde(2)%pde_fnc(2)%reaction => dual_coupling_f
+	       pde(2)%pde_fnc(1)%reaction => dual_coupling
 	     case(3:4)
-	       pde_loc%pde_fnc(pde_loc%order)%reaction =>dual_coup_min
+	       pde(2)%pde_fnc(2)%reaction =>dual_coup_min_f
+	       pde(2)%pde_fnc(1)%reaction =>dual_coup_min
 	     case default
 	     stop
 	    end select
-	    pde_loc%pde_fnc(pde_loc%order)%elasticity => dual_ret_capf
-	    pde_loc%mass => vangen_d_f
+	    pde(2)%pde_fnc(2)%elasticity => dual_ret_capf
+	    pde(2)%mass => vangen_d_f
       else
-	    pde_loc%pde_fnc(pde_loc%order)%dispersion  => dual_mualem_f_tab		
-	    pde_loc%pde_fnc(pde_loc%order)%reaction => dual_coupling_f_tab
-	    pde_loc%pde_fnc(pde_loc%order)%elasticity => dual_ret_capf_tab
-	    pde_loc%mass => vangen_d_f_tab
+	    pde(2)%pde_fnc(2)%dispersion  => dual_mualem_f_tab		
+	    pde(2)%pde_fnc(2)%reaction => dual_coupling_f_tab
+	    pde(2)%pde_fnc(1)%reaction => dual_coupling_tab
+	    pde(2)%pde_fnc(2)%elasticity => dual_ret_capf_tab
+	    pde(2)%mass => vangen_d_f_tab
       end if
       
-      pde_loc%flux => darcy_law_d
+      pde(2)%flux => darcy_law_d
       
-      do i=lbound(pde_loc%bc,1), ubound(pde_loc%bc,1)
-	select case(pde_loc%bc(i)%code)
+      do i=lbound(pde(2)%bc,1), ubound(pde(2)%bc,1)
+	select case(pde(2)%bc(i)%code)
 	  case(-1)
-	      pde_loc%bc(i)%value_fnc => retot_dirichlet_height_bc
+	      pde(2)%bc(i)%value_fnc => retot_dirichlet_height_bc
 	  case(0)
-		pde_loc%bc(i)%value_fnc => re_null_bc
+		pde(2)%bc(i)%value_fnc => re_null_bc
 	  case(1)
-		pde_loc%bc(i)%value_fnc => retot_dirichlet_bc
+		pde(2)%bc(i)%value_fnc => retot_dirichlet_bc
 	  case(2)
-		pde_loc%bc(i)%value_fnc => retot_neumann_bc_f
+		pde(2)%bc(i)%value_fnc => retot_neumann_bc_f
 	  case default
 		print *, "ERROR! You have specified an unsupported boundary type definition for the Richards equation"
-		print *, "the incorrect boundary code specified is:", pde_loc%bc(i)%code
+		print *, "the incorrect boundary code specified is:", pde(2)%bc(i)%code
 		ERROR stop
 	end select
       end do 

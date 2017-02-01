@@ -342,7 +342,7 @@ module dual_por
      if(h<0.0_rkind) then
        C=(thetaS-thetaR)*alpha*m*n*(alpha*abs(h))**(n-1)*((alpha*abs(h))**n+1)**(-m-1)
      else
-       E=vgmatrix(layer)%SS*weight
+       E=vgmatrix(layer)%Ss*weight
        RETURN
      end if
      
