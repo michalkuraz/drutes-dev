@@ -545,7 +545,7 @@ module readtools
           do j=1, counter
             read(unit=fileid, fmt=*, iostat=ierr) struct(i)%series(j,:)
             if (ierr /= 0) then
-              write(unit=msg, fmt="(a,a,a,i4)"), "incorrect data in file:  ", trim(filename), "    at line:", j
+              write(unit=msg, fmt="(a,a,a,i4)") "incorrect data in file:  ", trim(filename), "    at line:", j
               call file_error(fileid, msg)
             end if
           end do

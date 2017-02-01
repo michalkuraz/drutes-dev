@@ -102,8 +102,8 @@ module manage_pointers
 	  		write(unit=drutes_config%fullname, fmt=*) " Richards equation ", &
      	  "in total hydraulic head form for dual (fracture and matrix) medium"	
            
-           call RE_matrix(pde(1))
-           call RE_fracture(pde(2))  
+           call RE_matrix()
+           call RE_fracture()  
 
 
       case("ADE_RE_std_kinsorb")
