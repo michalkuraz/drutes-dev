@@ -1,7 +1,7 @@
 module fem
   use typy  
   public :: solve_pde
-  private :: terminal_info, exitme
+  private :: terminal_info, exitme, close_all_observe
   integer(kind=ikind), private :: itcount, obs_pos, obs_count, nptimes
   logical, private :: go_clusters
   logical, private :: printtime
@@ -111,6 +111,7 @@ module fem
 	
 	if (time >= end_time) then
 	  call make_print()
+	  call close_all_observe()
 	  success = .true.
 	  RETURN
 	end if
@@ -128,6 +129,20 @@ module fem
 
 	  
     end subroutine solve_pde
+    
+    subroutine close_all_observe()
+      use typy
+      use pde_objs
+      
+      integer(kind=ikind) :: i, name
+
+      do i=1, ubound(pde,1)
+        do name=1, ubound(pde(i)%obspt_unit,1)
+          close(pde(i)%obspt_unit(name))
+        end do
+      end do
+    end subroutine close_all_observe
+        
 
     subroutine evol_dt(ierr, itcount)
       use typy
