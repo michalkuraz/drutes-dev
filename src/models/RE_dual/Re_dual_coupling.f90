@@ -40,6 +40,7 @@ module dual_coup
       if (present(quadpnt)) then
         quadpnt_loc=quadpnt
 	quadpnt_loc%preproc=.true.
+
 	hm = pde(1)%getval(quadpnt_loc)
 	hf = pde(2)%getval(quadpnt_loc)
       else
@@ -84,8 +85,8 @@ module dual_coup
      beta=exchange(layer)%beta
      a=exchange(layer)%a
      gam_par=exchange(layer)%gam_par
-     if(hf /= hm) then
-       ex_term=beta/a**2*gam_par*Ka*(hf-hm)
+     if(abs(hm-hf)>max(hm,hf)*epsilon(hm)) then
+       ex_term=beta/a**2*gam_par*Ka
      else
        ex_term=0.0_rkind
      end if
@@ -118,6 +119,7 @@ module dual_coup
       if (present(quadpnt)) then
     quadpnt_loc=quadpnt
 	quadpnt_loc%preproc=.true.
+	quadpnt_loc%column=1
 	hm = pde(1)%getval(quadpnt_loc)
 	hf = pde(2)%getval(quadpnt_loc)
       else
@@ -163,8 +165,8 @@ module dual_coup
          Ka=(Ka_f*Ka_m)**0.5_rkind*Ks
      end select
     
-     if(hf /= hm) then
-       ex_term=-beta/a**2*gam_par*Ka*(hf-hm)
+     if(abs(hm-hf)>max(hm,hf)*epsilon(hm)) then
+       ex_term=-beta/a**2*gam_par*Ka
      else
        ex_term=0
      end if
@@ -252,8 +254,8 @@ module dual_coup
      a=exchange(layer)%a
      gam_par=exchange(layer)%gam_par
      
-     if(hf /= hm) then
-       ex_term=beta/a**2*gam_par*Ka*(hf-hm)
+     if(abs(hm-hf)>max(hm,hf)*epsilon(hm)) then
+       ex_term=beta/a**2*gam_par*Ka
      else
        ex_term=0.0_rkind
      end if
@@ -330,8 +332,8 @@ module dual_coup
      beta=exchange(layer)%beta
      a=exchange(layer)%a
      gam_par=exchange(layer)%gam_par
-     if(hf /= hm) then
-       ex_term=-beta/a**2*gam_par*Ka*(hf-hm)
+     if(abs(hm-hf)>max(hm,hf)*epsilon(hm)) then
+       ex_term=-beta/a**2*gam_par*Ka
      else
        ex_term=0
      end if

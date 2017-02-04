@@ -30,11 +30,11 @@ module Re_dual_pointers
 	    pde(1)%pde_fnc(1)%dispersion => dual_mualemm
 	    select case(coup_model)
 	     case(1:2)
-	       pde(1)%pde_fnc(1)%reaction => dual_coupling
-	       pde(1)%pde_fnc(2)%reaction => dual_coupling_f
+	       pde(1)%pde_fnc(1)%reaction => dual_coupling_f
+	       pde(1)%pde_fnc(2)%reaction => dual_coupling
 	     case(3:4)
-	       pde(1)%pde_fnc(1)%reaction =>dual_coup_min
-	       pde(1)%pde_fnc(2)%reaction =>dual_coup_min_f
+	       pde(1)%pde_fnc(1)%reaction =>dual_coup_min_f
+	       pde(1)%pde_fnc(2)%reaction =>dual_coup_min
 	     case default
 	     stop
 	    end select
@@ -46,8 +46,8 @@ module Re_dual_pointers
 	     thetafnc=vangen_d_m,Kfnc_f=dual_mualemf, Cfnc_f=dual_ret_capf, &
 	     thetafnc_f=vangen_d_f,ex_K_fnc=dual_coupling_K)
 	    pde(1)%pde_fnc(1)%dispersion  => dual_mualem_m_tab		
-	    pde(1)%pde_fnc(1)%reaction => dual_coupling_tab
-	    pde(1)%pde_fnc(2)%reaction => dual_coupling_f_tab
+	    pde(1)%pde_fnc(1)%reaction => dual_coupling_f_tab
+	    pde(1)%pde_fnc(2)%reaction => dual_coupling_tab
 	    pde(1)%pde_fnc(1)%elasticity => dual_ret_capm_tab
 	    pde(1)%mass => vangen_d_m_tab
       end if

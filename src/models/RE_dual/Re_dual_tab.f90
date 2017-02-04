@@ -698,8 +698,8 @@ function dual_coupling_tab(pde_loc, layer, quadpnt, x) result(ex_term)
 	   Ka=minval((/Ka_fw,Ka_mw/))
    end select
     
-    if(hf /= hm) then
-      ex_term=beta/a**2*gam_par*Ka*(hf-hm)
+    if(abs(hm-hf)>max(hm,hf)*epsilon(hm)) then
+      ex_term=beta/a**2*gam_par*Ka
     else
       ex_term=0.0_rkind
     end if
@@ -894,8 +894,8 @@ function dual_coupling_f_tab(pde_loc, layer, quadpnt, x) result(ex_term)
 	   Ka=minval((/Ka_fw,Ka_mw/))
    end select
     
-    if(hf /= hm) then
-      ex_term=-beta/a**2*gam_par*Ka*(hf-hm)
+    if(abs(hm-hf)>max(hm,hf)*epsilon(hm)) then
+      ex_term=-beta/a**2*gam_par*Ka
     else
       ex_term=0.0_rkind
     end if
