@@ -21,7 +21,7 @@ module read_inputs
       character(len=4096) :: filename
       character(len=8192) :: msg
       integer :: local, global
-      character(len=256), dimension(18) :: probnames
+      character(len=256), dimension(19) :: probnames
       
       if (.not. www) then
 	local = file_global
@@ -81,6 +81,8 @@ module read_inputs
 	"   Re_dual_totH = Richards equation dual porosity with total hydraulic head", &
 	" the Richards equation in total hydraulic head form ", &
 	new_line("a"),  new_line("a"), &
+	"   heat = Heat conduction equation (Sophoclea, 1979)", &
+	new_line("a"),  new_line("a"), &
 	new_line("a"),  new_line("a"), new_line("a")
 	
 	probnames(1) = "RE_std"
@@ -100,7 +102,8 @@ module read_inputs
 	probnames(15) = "ADE_REstdH_kinsorb"
 	probnames(16) = "ADE_RE_rot_kinsorb"
 	probnames(17) = "ADE_RErotH_kinsorb"
-	probnames(18) = "Re_dual_totH" !(added J 13/6/16)
+	probnames(18) = "Re_dual_totH" 
+	probnames(19) = "heat"
 	
       call fileread(drutes_config%name, local, trim(msg), options=probnames)
 

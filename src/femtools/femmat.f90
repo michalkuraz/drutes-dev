@@ -55,6 +55,7 @@ module femmat
 	
 	call assemble_mat(ierr)
 	
+	
 	pde_common%xvect(1:fin,3) = 0.0
       
 	

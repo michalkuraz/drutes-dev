@@ -34,12 +34,12 @@ TOOLS_obj := printtools.o simegen.o read_inputs.o drutes_init.o geom_tools.o pos
 FEMTOOLS_obj := feminittools.o capmat.o stiffmat.o fem.o fem_tools.o femmat.o
 DECOMPO_obj :=  decomp_tools.o schwarz_dd.o  decomp_vars.o decomposer.o schwarz_dd2subcyc.o
 PMAoo_obj := fullmatrix.o mtx.o mtx_int.o mtxiotools.o pmatools.o solvers.o sparsematrix.o sparsematrix_int.o
-modRE_obj := modRE_globals.o modRE_reader.o modRE_constitutive.o modRE_parameter_functions.o modRE_junctions.o
 BOUSSINESQ_obj := boussglob.o boussread.o boussfnc.o bousspointers.o
 ADE_obj := ADE_fnc.o ADE_reader.o ADE_globals.o ADE_pointers.o
 REDUAL_obj := Re_dual_totH.o Re_dual_globals.o Re_dual_pointers.o Re_dual_reader.o Re_dual_tab.o Re_dual_coupling.o
+HEAT_obj := heat_fnc.o heat_pointers.o heat_globals.o heat_reader.o
 
-ALL_objs := $(CORE_obj) $(TOOLS_obj) $(POINTERMAN_obj) $(MATHTOOLS_obj) $(FEMTOOLS_obj) $(DECOMPO_obj) $(RE_obj) $(PMAoo_obj) $(modRE_obj) $(BOUSSINESQ_obj) $(ADE_obj) $(REDUAL_obj)  
+ALL_objs := $(CORE_obj) $(TOOLS_obj) $(POINTERMAN_obj) $(MATHTOOLS_obj) $(FEMTOOLS_obj) $(DECOMPO_obj) $(RE_obj) $(PMAoo_obj) $(BOUSSINESQ_obj) $(ADE_obj) $(REDUAL_obj)  $(HEAT_obj)
 #-----------------------------------------------------------------
 
 #-------begin CORE_obj--------------------------------
@@ -125,19 +125,17 @@ re_pointers.o:  $(CORE_obj) re_globals.o re_constitutive.o re_total.o re_reader.
 	$c -c src/models/RE/re_pointers.f90
 #-------end CONSTITUTIVE_obj--------------------------------
 
+#------begin HEAT_obj -----------------------------------
+heat_globals.o: $(CORE_obj) src/models/heat/heat_globals.f90
+	$c -c src/models/heat/heat_globals.f90
+heat_fnc.o: $(CORE_obj) heat_globals.o src/models/heat/heat_fnc.f90
+	$c -c src/models/heat/heat_fnc.f90
+heat_reader.o: $(CORE_obj) heat_globals.o heat_fnc.o src/models/heat/heat_reader.f90
+	$c -c src/models/heat/heat_reader.f90
+heat_pointers.o: $(CORE_obj) heat_globals.o heat_fnc.o heat_reader.o src/models/heat/heat_pointers.f90
+	$c -c src/models/heat/heat_pointers.f90
+#------end HEAT_obj-------------------------------------
 
-#-------begin modRE_obj--------------------------------
-modRE_globals.o: $(CORE_obj) $(TOOLS_obj) src/models/modRE/modRE_globals.f90
-	$c -c src/models/modRE/modRE_globals.f90
-modRE_reader.o:  $(CORE_obj) $(TOOLS_obj) $(RE_obj) modRE_globals.o src/models/modRE/modRE_reader.f90
-	$c -c src/models/modRE/modRE_reader.f90
-modRE_parameter_functions.o : $(CORE_obj) $(TOOLS_obj) modRE_globals.o modRE_reader.o src/models/modRE/modRE_parameter_functions.f90
-	$c -c src/models/modRE/modRE_parameter_functions.f90
-modRE_constitutive.o : $(CORE_obj) $(TOOLS_obj) modRE_globals.o modRE_reader.o modRE_parameter_functions.o src/models/modRE/modRE_constitutive.f90
-	$c -c src/models/modRE/modRE_constitutive.f90
-modRE_junctions.o: $(CORE_obj) $(TOOLS_obj) modRE_globals.o modRE_reader.o modRE_parameter_functions.o modRE_constitutive.o src/models/modRE/modRE_junctions.f90
-	$c -c src/models/modRE/modRE_junctions.f90
-#-------end modRE_obj--------------------------------
 
 #-------begin ADE_obj-------------------------------
 ADE_globals.o: $(CORE_obj) src/models/ADE/ADE_globals.f90
@@ -149,6 +147,7 @@ ADE_reader.o: $(CORE_obj) $(TOOLS_obj) ADE_globals.o src/models/ADE/ADE_reader.f
 ADE_pointers.o: $(CORE_obj) $(TOOLS_obj) ADE_globals.o  ADE_reader.o src/models/ADE/ADE_pointers.f90
 	$c -c src/models/ADE/ADE_pointers.f90
 #------end ADE_obj---------------------------------
+
 
 #-------begin REDUAL_obj-----------------------------
 Re_dual_globals.o: $(CORE_obj) src/models/RE_dual/Re_dual_globals.f90
@@ -164,6 +163,7 @@ Re_dual_tab.o: $(CORE_obj) $(TOOLS_obj) Re_dual_globals.o Re_dual_reader.o Re_du
 Re_dual_pointers.o: $(CORE_obj) $(RE_obj) Re_dual_reader.o Re_dual_totH.o Re_dual_tab.o src/models/RE_dual/Re_dual_pointers.f90
 	$c -c src/models/RE_dual/Re_dual_pointers.f90
 #-------end REDUAL_obj-------------------------------
+
 
 #-------begin BOUSSINESQ-----------------------------
 boussglob.o:  $(CORE_obj) $(TOOLS_obj) src/models/boussinesq/boussglob.f90

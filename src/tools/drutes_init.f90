@@ -94,7 +94,7 @@ module drutes_init
 	write(dirname, fmt=*) trim(dirglob%dir), "drutes_global.conf/global.conf" 
 	open(unit=file_wwwglob,file=trim(adjustl(dirname)), action="read", status="old", iostat = i_err)
 	if (i_err /= 0) then
-	  print *, "incorrect definition of global confispozditguration file"
+	  print *, "incorrect definition of global configuration file"
 	  print *, "your definition was: ", trim(dirglob%dir)
 	  print *, "the constructed path was: ", trim(adjustl(dirname))
 	  ERROR stop
@@ -347,13 +347,17 @@ module drutes_init
       
       
       select case (adjustl(trim(drutes_config%name)))
-	case("RE_std", "RE_rot", "REstdH", "RErotH", "boussi", "ADEstd")
+	case("RE_std", "RE_rot", "REstdH", "RErotH", "boussi", "ADEstd", "heat")
 	  pde_common%processes = 1
 	case("ADE_RE_std", "ADE_REstdH", "ADE_RE_rot", "ADE_RErotH", "ADEstd_kinsorb", "Re_dual_totH")
 	  pde_common%processes = 2
 	case("RE_mod", "REtest", "ADE_RE_std_kinsorb", "ADE_REstdH_kinsorb", "ADE_RE_rot_kinsorb", &
 	     "ADE_RErotH_kinsorb")
 	  pde_common%processes = 3
+	case default
+          print *, "your new model: ", trim(drutes_config%name), " requires definition of the number of the coupled processes"
+          print *, "exited from drutes_init::set_global_vars"
+          ERROR stop
       end select
 
       backup_runs = 0

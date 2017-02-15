@@ -24,6 +24,7 @@ module manage_pointers
       use re_pointers
       use ADE_pointers
       use Re_dual_pointers
+      use heat_pointers
 
       integer(kind=ikind) :: i
 
@@ -148,6 +149,15 @@ module manage_pointers
 	  do i=1, 3
 	    call RE_std(pde(i))
 	  end do
+	  
+       case("heat")
+         write(unit=drutes_config%fullname, fmt=*) "DRUtES solves heat conduction with convection"
+         call heat(pde(1))
+	  
+       case default
+          print *, "your new model: ", trim(drutes_config%name), " requires pointer linking"
+          print *, "exited from manage_pointers::set_pointers"
+          ERROR stop
 
 	  
     end select
