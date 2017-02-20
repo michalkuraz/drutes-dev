@@ -117,8 +117,10 @@ module Re_dual_reader
       do i=1,layers
         call comment(file_dual)
         read(unit=file_dual, fmt= *, iostat=i_err) vgmatrix(i)%anisoangle, vgmatrix(i)%Ks_local(:)
+        
         if(drutes_config%dimen>1) then
 	  	  call set_tensor(vgmatrix(i)%Ks_local(:), vgmatrix(i)%anisoangle(:),  vgmatrix(i)%Ks)
+	  	 
 	  	else
 	  	  vgmatrix(i)%Ks(1,1)=vgmatrix(i)%Ks_local(1)
 	  	end if	  
@@ -152,8 +154,8 @@ module Re_dual_reader
       
       ! exchange
       
-    call fileread(coup_model, file_dual, ranges=(/1_ikind, 4_ikind/), &
-		errmsg="Select model for exchange term, valid selections are (integer): 1,2,3,4 ")
+    call fileread(coup_model, file_dual, ranges=(/1_ikind, 5_ikind/), &
+		errmsg="Select model for exchange term, valid selections are (integer): 1,2,3,4,5 ")
     
     do i=1,layers
 	    call comment(file_dual)
@@ -181,11 +183,10 @@ module Re_dual_reader
         end if
       end do
       
-    if(coup_model<3) then
+    if(coup_model<4) then
      do i=1,layers
         call comment(file_dual)
-        read(unit=file_dual, fmt= *, iostat=i_err) vgexchange(i)%alpha, vgexchange(i)%n &
-        , vgexchange(i)%Ks_local(:)
+        read(unit=file_dual, fmt= *, iostat=i_err) vgexchange(i)%Ks_local(:)
         vgexchange(i)%anisoangle=0.0_rkind
         if(drutes_config%dimen>1) then
 	  	  call set_tensor(vgexchange(i)%Ks_local(:), vgexchange(i)%anisoangle(:),  vgexchange(i)%Ks)
@@ -204,8 +205,6 @@ module Re_dual_reader
     else
     ! assigning dummy variables
       do i=1,layers
-        vgexchange(i)%alpha=1.0_rkind
-        vgexchange(i)%n=1.0_rkind
         vgexchange(i)%Ks_local(:)=1.0_rkind
         vgexchange(i)%anisoangle=0.0_rkind
         if(drutes_config%dimen>1) then
@@ -213,6 +212,28 @@ module Re_dual_reader
 	  	else
  	  	  vgexchange(i)%Ks(1,1)=vgexchange(i)%Ks_local(1)
  	  	end if
+      end do
+    end if
+    
+    if(coup_model<3) then
+     do i=1,layers
+        call comment(file_dual)
+        read(unit=file_dual, fmt= *, iostat=i_err) vgexchange(i)%alpha, vgexchange(i)%n
+        vgexchange(i)%m=1.0_rkind-1.0_rkind/vgexchange(i)%n
+        if (i_err /= 0) then
+          print *, "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+          print *, "HINT: You don't seem to have defined a sufficient number of van Genuchten &
+           parameters for all >> exchange << layers!"
+          print *, "----------------------------------------"
+          call file_error(file_dual)
+        end if
+      end do
+     else
+    
+    ! assigning dummy variables
+      do i=1,layers
+        vgexchange(i)%alpha=1.0_rkind
+        vgexchange(i)%n=1.0_rkind
         vgexchange(i)%m=1.0_rkind-1.0_rkind/vgexchange(i)%n
       end do
     end if
