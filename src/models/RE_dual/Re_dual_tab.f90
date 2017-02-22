@@ -607,7 +607,7 @@ function dual_coupling_tab(pde_loc, layer, quadpnt, x) result(ex_term)
 		else
 		  Ka_f= dual_coupling_K(pde_loc,layer,x=[hf])
 		end if
-    case(3)
+    case(4)
 		if (hm<0) then
 		  if ( hm/drutes_config%fnc_discr_length < 0.1*huge(1)) then
 			pos = int(-hm/drutes_config%fnc_discr_length)+1
@@ -655,7 +655,7 @@ function dual_coupling_tab(pde_loc, layer, quadpnt, x) result(ex_term)
 		Ka_fm=Ka_fm*Ksf
 		Ka_mf=Ka_mf*Ksm
 		Ka_ff=Ka_ff*Ksf
-	case(4)
+	case(5)
 
 		if (hw<0) then
 		  if ( hw/drutes_config%fnc_discr_length < 0.1*huge(1)) then
@@ -680,6 +680,8 @@ function dual_coupling_tab(pde_loc, layer, quadpnt, x) result(ex_term)
 		end if
 		Ka_fw=Ka_fw*Ksf
 		Ka_mw=Ka_mw*Ksm
+	case(3)
+	
 	case default
 		print *, "ERROR! You have specified an unsupported coupling term model in dual.conf file"
 		print *, "the incorrect value specified is:", coup_model
@@ -693,8 +695,10 @@ function dual_coupling_tab(pde_loc, layer, quadpnt, x) result(ex_term)
 	 case(2)
 	   Ka=(Ka_f*Ka_m)**0.5*Ks
 	 case(3)
-	   Ka=minval((/Ka_ff,Ka_fm,Ka_mm,Ka_mf/))
+       Ka=vgexchange(layer)%KS_local(1)
 	 case(4)
+	   Ka=minval((/Ka_ff,Ka_fm,Ka_mm,Ka_mf/))
+	 case(5)
 	   Ka=minval((/Ka_fw,Ka_mw/))
    end select
     
@@ -803,7 +807,7 @@ function dual_coupling_f_tab(pde_loc, layer, quadpnt, x) result(ex_term)
 		else
 		  Ka_f= dual_coupling_K(pde_loc,layer,x=[hf])
 		end if
-    case(3)
+    case(4)
 		if (hm<0) then
 		  if ( hm/drutes_config%fnc_discr_length < 0.1*huge(1)) then
 			pos = int(-hm/drutes_config%fnc_discr_length)+1
@@ -851,7 +855,7 @@ function dual_coupling_f_tab(pde_loc, layer, quadpnt, x) result(ex_term)
 		Ka_fm=Ka_fm*Ksf
 		Ka_mf=Ka_mf*Ksm
 		Ka_ff=Ka_ff*Ksf   
-	case(4)
+	case(5)
 
 		if (hw<0) then
 		  if ( hw/drutes_config%fnc_discr_length < 0.1*huge(1)) then
@@ -876,6 +880,8 @@ function dual_coupling_f_tab(pde_loc, layer, quadpnt, x) result(ex_term)
 		end if
 		Ka_fw=Ka_fw*Ksf
 		Ka_mw=Ka_mw*Ksm
+	case(3)
+	  
 	case default
 		print *, "ERROR! You have specified an unsupported coupling term model in dual.conf file"
 		print *, "the incorrect value specified is:", coup_model
@@ -889,8 +895,10 @@ function dual_coupling_f_tab(pde_loc, layer, quadpnt, x) result(ex_term)
 	 case(2)
 	   Ka=(Ka_f*Ka_m)**0.5*Ks
 	 case(3)
-	   Ka=minval((/Ka_ff,Ka_fm,Ka_mm,Ka_mf/))
+       Ka=vgexchange(layer)%KS_local(1)
 	 case(4)
+	   Ka=minval((/Ka_ff,Ka_fm,Ka_mm,Ka_mf/))
+	 case(5)
 	   Ka=minval((/Ka_fw,Ka_mw/))
    end select
     

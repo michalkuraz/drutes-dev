@@ -80,6 +80,8 @@ module dual_coup
      	 Ka=0.5*(Ka_f+Ka_m)*Ks
        case(2)
          Ka=(Ka_f*Ka_m)**0.5_rkind*Ks
+       case(3)
+         Ka=vgexchange(layer)%KS_local(1)
     end select
     
      beta=exchange(layer)%beta
@@ -163,6 +165,8 @@ module dual_coup
      	 Ka=0.5*(Ka_f+Ka_m)*Ks
        case(2)
          Ka=(Ka_f*Ka_m)**0.5_rkind*Ks
+       case(3)
+         Ka=vgexchange(layer)%KS_local(1)
      end select
     
      if(abs(hm-hf)>max(hm,hf)*epsilon(hm)) then
@@ -229,7 +233,7 @@ module dual_coup
      end if
           
      select case(coup_model)
-	   case(3)
+	   case(4)
 		 call dual_mualemm(pde_loc, layer, x=[hm],scalar=Ka_mm)
 		 call dual_mualemm(pde_loc, layer, x=[hf],scalar=Ka_mf)
 		 call dual_mualemf(pde_loc, layer, x=[hm],scalar=Ka_fm)
@@ -240,7 +244,7 @@ module dual_coup
 		 Ka_fm=Ka_fm*Ksf
 		 Ka=minval((/Ka_ff,Ka_mf,Ka_mm,Ka_fm/))
 
-       case(4)
+       case(5)
          weightm=exchange(layer)%weightm
      	 weightf=exchange(layer)%weightf
      	 call dual_mualemm(pde_loc, layer, x=[hm*weightm+hf*weightf],scalar=Ka_m)
@@ -309,7 +313,7 @@ module dual_coup
      end if
      
      select case(coup_model)
-	   case(3)
+	   case(4)
 		 call dual_mualemm(pde_loc, layer, x=[hm],scalar=Ka_mm)
 		 call dual_mualemm(pde_loc, layer, x=[hf],scalar=Ka_mf)
 		 call dual_mualemf(pde_loc, layer, x=[hm],scalar=Ka_fm)
@@ -319,7 +323,7 @@ module dual_coup
 		 Ka_mm=Ka_mm*Ksm
 		 Ka_fm=Ka_fm*Ksf
 		 Ka=minval((/Ka_ff,Ka_mf,Ka_mm,Ka_fm/))
-       case(4)
+       case(5)
          weightm=exchange(layer)%weightm
      	 weightf=exchange(layer)%weightf
      	 call dual_mualemm(pde_loc, layer, x=[hm*weightm+hf*weightf],scalar=Ka_m)

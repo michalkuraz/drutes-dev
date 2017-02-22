@@ -29,10 +29,10 @@ module Re_dual_pointers
       if (drutes_config%fnc_method == 0) then
 	    pde(1)%pde_fnc(1)%dispersion => dual_mualemm
 	    select case(coup_model)
-	     case(1:2)
+	     case(1:3)
 	       pde(1)%pde_fnc(1)%reaction => dual_coupling_f
 	       pde(1)%pde_fnc(2)%reaction => dual_coupling
-	     case(3:4)
+	     case(4:5)
 	       pde(1)%pde_fnc(1)%reaction =>dual_coup_min_f
 	       pde(1)%pde_fnc(2)%reaction =>dual_coup_min
 	     case default
@@ -63,6 +63,8 @@ module Re_dual_pointers
 		pde(1)%bc(i)%value_fnc => retot_dirichlet_bc
 	  case(2)
 		pde(1)%bc(i)%value_fnc => retot_neumann_bc_m
+	  case(3)
+		pde(1)%bc(i)%value_fnc => retot_freedrainage
 	  case default
 		print *, "ERROR! You have specified an unsupported boundary type definition for the Richards equation"
 		print *, "the incorrect boundary code specified is:", pde(1)%bc(i)%code
@@ -96,10 +98,10 @@ module Re_dual_pointers
      if (drutes_config%fnc_method == 0) then
 	    pde(2)%pde_fnc(2)%dispersion => dual_mualemf
 	    select case(coup_model)
-	     case(1:2)
+	     case(1:3)
 	       pde(2)%pde_fnc(2)%reaction => dual_coupling_f
 	       pde(2)%pde_fnc(1)%reaction => dual_coupling
-	     case(3:4)
+	     case(4:5)
 	       pde(2)%pde_fnc(2)%reaction =>dual_coup_min_f
 	       pde(2)%pde_fnc(1)%reaction =>dual_coup_min
 	     case default
@@ -127,6 +129,8 @@ module Re_dual_pointers
 		pde(2)%bc(i)%value_fnc => retot_dirichlet_bc
 	  case(2)
 		pde(2)%bc(i)%value_fnc => retot_neumann_bc_f
+	  case(3)
+		pde(2)%bc(i)%value_fnc => retot_freedrainage
 	  case default
 		print *, "ERROR! You have specified an unsupported boundary type definition for the Richards equation"
 		print *, "the incorrect boundary code specified is:", pde(2)%bc(i)%code
