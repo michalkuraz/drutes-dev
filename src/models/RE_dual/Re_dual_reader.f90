@@ -10,6 +10,7 @@ module Re_dual_reader
      use dual_globals
      use readtools
      use pde_objs
+     use debug_tools
      
       integer :: i_err, i, j, file_dual
       integer(kind=ikind) :: layers
@@ -182,6 +183,7 @@ module Re_dual_reader
       end do
       
     if(coup_model<3) then
+
      do i=1,layers
         call comment(file_dual)
         read(unit=file_dual, fmt= *, iostat=i_err) vgexchange(i)%alpha, vgexchange(i)%n &
@@ -192,7 +194,9 @@ module Re_dual_reader
 	  	else
  	  	  vgexchange(i)%Ks(1,1)=vgexchange(i)%Ks_local(1)
  	  	end if
+
         vgexchange(i)%m=1.0_rkind-1.0_rkind/vgexchange(i)%n
+
         if (i_err /= 0) then
           print *, "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
           print *, "HINT: You don't seem to have defined a sufficient number of van Genuchten &

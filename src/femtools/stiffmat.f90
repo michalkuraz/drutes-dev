@@ -122,6 +122,7 @@ module stiffmat
 	end do
       end do
 
+      
      stiff_mat = stiff_mat/gauss_points%area*elements%areas(el_id)*dt
      
      

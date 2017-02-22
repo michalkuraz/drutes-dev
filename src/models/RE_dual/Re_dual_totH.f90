@@ -52,6 +52,7 @@ module dual_por
        	use global_objs
        	use pde_objs
        	use dual_globals
+       	use debug_tools
        	!use RE_constitutive 
         
        class(pde_str), intent(in out) :: pde_loc
@@ -80,6 +81,8 @@ module dual_por
             end if
           end do   
         end do
+        
+
       end subroutine dual_inicond_m
       
     subroutine dual_inicond_f(pde_loc) 

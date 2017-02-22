@@ -35,7 +35,7 @@ module femmat
       logical :: dt_fine
       integer :: ierr_loc
       real(kind=rkind), dimension(:), allocatable :: vcttmp
-      real(kind=rkind) :: lambda_l, lambda_h
+      real(kind=rkind) :: lambda_l, lambda_h, tmpxx=0, maxtime=0
 
       
       proc = ubound(pde,1)
@@ -170,7 +170,7 @@ module femmat
 		
 	stiff_mat = stiff_mat + cap_mat
 
-
+	
 	call in2global(i,spmatrix, pde_common%bvect)
 
       end do
