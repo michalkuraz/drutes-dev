@@ -184,12 +184,12 @@ module Re_dual_reader
         end if
       end do
       
-<<<<<<< HEAD
+! <<<<<<< HEAD
     if(coup_model<3) then
-
-=======
+end if
+! =======
     if(coup_model<4) then
->>>>>>> 4c0532fe18a3a305c91b5e8e00da630bee129158
+! >>>>>>> 4c0532fe18a3a305c91b5e8e00da630bee129158
      do i=1,layers
         call comment(file_dual)
         read(unit=file_dual, fmt= *, iostat=i_err) vgexchange(i)%Ks_local(:)
