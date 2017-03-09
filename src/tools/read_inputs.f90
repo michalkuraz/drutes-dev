@@ -412,7 +412,7 @@ module read_inputs
     end subroutine read_2dmesh_t3d
     
     
-    subroutine read_2dmesh_gmsh
+    subroutine read_2dmesh_gmsh()
       use typy
       use globals
       use globals2D
@@ -420,12 +420,25 @@ module read_inputs
       use readtools
       use pde_objs
       use debug_tools
+      use geom_tools
       
       character(len=256) :: ch
-      integer(kind=ikind) :: i, itmp, jtmp, itmp2, edge, nd1, nd2, i_err, k, l, j
+      integer(kind=ikind) :: i, itmp, jtmp, itmp2, edge, nd1, nd2, i_err, k, l, j, n, id, el
       integer(kind=ikind), dimension(:), allocatable :: tmp_array
+      logical :: use_filemat=.false.
+      integer :: file_mat
+      real(kind=rkind), dimension(:,:), allocatable :: domain, smalldom
+      real(kind=rkind), dimension(2) :: point
       
-    
+      
+      read(unit=file_mesh, fmt=*, iostat=i_err) ch
+!       
+      if (i_err == 0) then
+	if (adjustl(trim(ch)) == "materials.conf") then
+	  use_filemat=.true.
+	end if
+      end if
+      
       do
 	read(unit=file_mesh, fmt=*) ch
 	if (trim(ch) == "$Nodes") EXIT
@@ -558,6 +571,48 @@ module read_inputs
 	end do
       end if
 
+      
+      if (use_filemat) then
+	allocate(smalldom(3,2))
+	call find_unit(file_mat)
+	open(unit=file_mat, file="drutes.conf/mesh/materials.conf", action="read", iostat=i_err)
+	if (i_err /= 0) then
+	  print *, "unable to open drutes.conf/mesh/materials.conf"
+	  print *, "exited from read_inputs::read_2dmesh_gmsh"
+	  ERROR STOP
+	end if
+	call fileread(n, file_mat)
+	do i=1, n
+	  call fileread(id, file_mat)
+	  call fileread(j, file_mat)
+	  
+	  if (allocated(domain)) then
+	    deallocate(domain)
+	  end if
+	  
+	  allocate(domain(j,2))
+	  do k=1,j
+	    call fileread(domain(k,:), file_mat)
+	  end do
+	  
+	  
+	  do el=1, elements%kolik
+
+	    do l=1, ubound(elements%data,2)
+	      smalldom(l,:)=nodes%data(elements%data(el,l),:)
+	    end do
+
+	    point=gravity_center(smalldom(1,:), smalldom(2,:), smalldom(3,:))
+
+	    
+	    if (inside(domain, point)) then
+	      elements%material(el,:) = id
+	    end if
+	  end do
+	end do
+      end if
+	
+	
      
     end subroutine read_2dmesh_gmsh
     
