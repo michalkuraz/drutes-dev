@@ -425,10 +425,11 @@ module read_inputs
       character(len=256) :: ch
       integer(kind=ikind) :: i, itmp, jtmp, itmp2, edge, nd1, nd2, i_err, k, l, j, n, id, el
       integer(kind=ikind), dimension(:), allocatable :: tmp_array
-      logical :: use_filemat=.false.
+      logical :: use_filemat=.false., update
       integer :: file_mat
       real(kind=rkind), dimension(:,:), allocatable :: domain, smalldom
       real(kind=rkind), dimension(2) :: point
+      integer(kind=ikind), dimension(:), allocatable :: excl_ids
       
       
       read(unit=file_mesh, fmt=*, iostat=i_err) ch
@@ -582,6 +583,12 @@ module read_inputs
 	  ERROR STOP
 	end if
 	call fileread(n, file_mat)
+	allocate(excl_ids(n))
+	do i=1, n
+          call fileread(excl_ids, file_mat)
+        end do
+        
+	call fileread(n, file_mat)
 	do i=1, n
 	  call fileread(id, file_mat)
 	  call fileread(j, file_mat)
@@ -606,7 +613,16 @@ module read_inputs
 
 	    
 	    if (inside(domain, point)) then
-	      elements%material(el,:) = id
+              update=.true.
+              do l=1, ubound(excl_ids,1)
+                if (elements%material(el,1) == excl_ids(l)) then
+                  update=.false.
+                  exit
+                end if
+              end do
+              if (update) then
+                elements%material(el,:) = id
+              end if
 	    end if
 	  end do
 	end do
