@@ -300,7 +300,7 @@ module re_total
       
       type(integpnt_str) :: quadpnt
       integer(kind=ikind) :: layer
-      real(kind=rkind) :: theta, bcval
+      real(kind=rkind) :: theta, rain, evap
       integer(kind=ikind) :: i, edge_id, j
       
       
@@ -323,23 +323,23 @@ module re_total
 	      else
 		j = i
 	      end if
-	      bcval = pde_loc%bc(edge_id)%series(j,2)
+	      rain = pde_loc%bc(edge_id)%series(j,2)
+	      evap = pde_loc%bc(edge_id)%series(j,3)
 	      EXIT
 	    end if
 	  end do
 	else
-	  bcval = pde_loc%bc(edge_id)%value
+	  print *, "atmospheric boundary must be time dependent, check record for the boundary", edge_id
+	  ERROR STOP
 	end if
 	
-	if (bcval < 0) then
-	  quadpnt%type_pnt = "ndpt"
-	  quadpnt%order = elements%data(el_id,node_order)
-	  layer = elements%material(el_id,1)
-	  theta =  pde_loc%mass(layer, quadpnt)
-	  value = bcval*(theta*theta)**(1.0_rkind/3.0_rkind)
-	else
-	  value = bcval
-	end if
+	
+        quadpnt%type_pnt = "ndpt"
+        quadpnt%order = elements%data(el_id,node_order)
+        layer = elements%material(el_id,1)
+        theta =  pde_loc%mass(layer, quadpnt)
+        value = rain - evap*theta**(2.0_rkind/3.0_rkind)
+
 
       end if
       

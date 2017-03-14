@@ -21,11 +21,21 @@ module core_tools
   public :: avg
   public :: mesh_allocater
   public :: find_unit
+  public :: cut
 
 
   contains
 
-
+  function cut(ch) result(out_ch)
+  
+    character(len=*), intent(in) :: ch
+    character(len=:), allocatable :: out_ch
+    
+    allocate(character(len=LEN(adjustl(TRIM(ch)))) :: out_ch)
+    
+    out_ch=adjustl(TRIM(ch))
+    
+  end function cut
   
   subroutine write_log(text, real1, int1, text2, real2, int2, text3, real3, int3, hidden)
     use typy

@@ -453,6 +453,7 @@ module readtools
       use pde_objs
       use core_tools
 
+
       integer, intent(in) :: unitW
       type(boundary_vals), dimension(:), allocatable, intent(out) :: struct
       integer(kind=ikind), intent(in) :: dimen
@@ -462,10 +463,11 @@ module readtools
       character(len=3) :: ch
       character(len=1) :: y_file, y_cond
       integer :: ierr, fileid
-      integer(kind=ikind) :: counter
+      integer(kind=ikind) :: counter, counter2
       character(len=256) :: filename
       real(kind=rkind) :: tmp
       character(len=1024) :: msg
+      real(kind=rkind), dimension(256) :: tester
       
       
       if (.not. allocated(struct)) then
@@ -540,7 +542,24 @@ module readtools
 
           counter = counter - 1
           
-          allocate(struct(i)%series(counter,2))
+          tmp=-1.0
+          
+          counter2=0
+          
+          tester = sqrt(tmp)
+          
+          read(unit=fileid, fmt=*, iostat=ierr) tester
+          backspace fileid
+          
+          do j=1, 256
+            if (isnan(tester(j))) then
+              EXIT
+            else
+              counter2=counter2+1
+            end if
+          end do
+          
+          allocate(struct(i)%series(counter,counter2))
 
           do j=1, counter
             read(unit=fileid, fmt=*, iostat=ierr) struct(i)%series(j,:)
