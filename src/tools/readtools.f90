@@ -452,6 +452,7 @@ module readtools
       use global_objs
       use pde_objs
       use core_tools
+      use debug_tools
 
 
       integer, intent(in) :: unitW
@@ -459,7 +460,7 @@ module readtools
       integer(kind=ikind), intent(in) :: dimen
       !> directory name, where data with boundary condition are stored
       character(len=*), intent(in) :: dirname
-      integer(kind=ikind) :: i, j
+      integer(kind=ikind) :: i, j, n
       character(len=3) :: ch
       character(len=1) :: y_file, y_cond
       integer :: ierr, fileid
@@ -467,7 +468,7 @@ module readtools
       character(len=256) :: filename
       real(kind=rkind) :: tmp
       character(len=1024) :: msg
-      real(kind=rkind), dimension(256) :: tester
+      real(kind=rkind), dimension(:), allocatable :: tester
       
       
       if (.not. allocated(struct)) then
@@ -521,7 +522,7 @@ module readtools
         if (struct(i)%file) then
           call find_unit(fileid)
           write(unit=filename, fmt="(a, I3, a)") trim(dirname), i, ".bc"
-          open(unit=fileid, file=trim(filename), action="read", status="old", iostat=ierr)
+          open(unit=fileid, file=trim(filename), action="read", status="old",  iostat=ierr)
           if (ierr /= 0) then
             write(unit=msg, fmt=*) "ERROR: if using unsteady boundary value data, you must supply the file with data!", &
             "ERROR: file required:", trim(filename)
@@ -535,10 +536,8 @@ module readtools
               EXIT
             end if
           end do
-
-          do j=1, counter+1
-            backspace fileid
-          end do
+          
+          close(fileid)
 
           counter = counter - 1
           
@@ -546,12 +545,27 @@ module readtools
           
           counter2=0
           
-          tester = sqrt(tmp)
+          n=2
+          do 
+            open(unit=fileid, file=trim(filename), action="read", status="old",  iostat=ierr)
+            allocate(tester(n))
+            tester = sqrt(tmp)
+            read(unit=fileid, fmt=*, iostat=ierr) tester
+            if (isnan(tester(ubound(tester,1))) ) then
+              close(fileid)
+              EXIT
+            else
+              deallocate(tester)
+              n=n*2
+              close(fileid)
+            end if
+          end do
+           
+          open(unit=fileid, file=trim(filename), action="read", status="old",  iostat=ierr)
+   
           
-          read(unit=fileid, fmt=*, iostat=ierr) tester
-          backspace fileid
           
-          do j=1, 256
+          do j=1, ubound(tester,1)
             if (isnan(tester(j))) then
               EXIT
             else
@@ -559,7 +573,7 @@ module readtools
             end if
           end do
           
-          allocate(struct(i)%series(counter,counter2))
+          allocate(struct(i)%series(counter,counter2/counter))
 
           do j=1, counter
             read(unit=fileid, fmt=*, iostat=ierr) struct(i)%series(j,:)
@@ -570,8 +584,7 @@ module readtools
           end do
 
           struct(i)%series_pos = 1
-
-
+       
           if (struct(i)%series(counter,1) < end_time) then
             call file_error(fileid, &
             "ERROR: end time in unsteady boundary data must be equal or higher than the simulation end time" )
