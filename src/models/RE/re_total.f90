@@ -398,6 +398,7 @@ module re_total
       use pde_objs
       use re_globals
       use re_constitutive
+      use geom_tools
 
       
       class(pde_str), intent(in out) :: pde_loc
@@ -429,6 +430,9 @@ module re_total
 	  end if
 	end do   
       end do
+      
+      call map1d2d("data.in")
+      
   
 
     end subroutine retot_initcond

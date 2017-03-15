@@ -30,6 +30,7 @@ module geom_tools
   public :: find_neighbours
   public :: getcoor
   private :: shoot
+  public :: map1d2d
   
   contains
   
@@ -908,7 +909,108 @@ module geom_tools
     end subroutine find_neighbours
 
   
-
+    subroutine map1d2d(filename)
+      use typy
+      use global_objs
+      use globals
+      use pde_objs
+      use core_tools
+      use readtools
+      use debug_tools
+      
+      character(len=*), intent(in) :: filename
+      
+      integer :: fileid, ierr
+      integer(kind=ikind) :: i, counter, k, l, m, proc, j, ii
+      real(kind=rkind), dimension(:,:), allocatable :: input
+      real(kind=rkind) :: tmp, value, grad
+      logical :: val_defined
+      
+      call find_unit(fileid)
+      
+      
+      open(unit=fileid, file=cut(filename), action="read", iostat=ierr)
+      
+      if (ierr /= 0) then
+        print *, "unable to open file with the vertical distribution of the initial condition, exiting...."
+        print *, "called from map1d2d::drutes_init"
+        ERROR STOP
+      end if
+      
+      counter = 0
+      
+      do
+        call comment(fileid)
+        read(fileid, fmt=*, iostat=ierr) tmp
+        if (ierr /= 0) then
+          EXIT
+        else
+          counter = counter + 1
+        end if
+      end do
+      
+      allocate(input(counter, ubound(pde,1)+1))
+      
+      close(fileid)
+      
+      open(unit=fileid, file=cut(filename), action="read")
+      
+      do i=1, counter
+        call fileread(input(i,:), fileid)
+      end do
+            
+      
+      do i=1, elements%kolik
+        do j=1, ubound(elements%data,2)
+          k = elements%data(i,j)
+          l = nodes%edge(k)
+          do proc=1, ubound(pde,1)
+            m = pde(proc)%permut(k)
+            if (m == 0) then
+              if (l>100) then
+                call pde(proc)%bc(l)%value_fnc(pde(proc), i, j, value)
+                val_defined=.true.
+              else
+                print *, "runtime error, exited from map1d2d::drutes_init"
+                ERROR STOP
+              end if             
+            else
+              val_defined=.false.
+              do ii=1, ubound(input,1)-1
+                if (nodes%data(k,2) >= input(ii,1) .and. nodes%data(k,2) <= input(ii+1,1)) then
+                  grad = (input(ii+1,proc+1) - input(ii,proc+1))/(input(ii+1,1) - input(ii,1))
+                  value =  input(ii,proc+1) + grad*(nodes%data(k,2) - input(ii,1))
+                  val_defined=.true.
+                  if (isnan(value)) then
+                    call file_error(fileid, "bad input file with initial conditions")
+                  end if
+                  EXIT
+                end if
+              end do
+              if (.not. val_defined) then
+                if (nodes%data(k,2) < minval(input(:,1))) then
+                  value = input(minloc(input(:,1),1), proc)
+                  val_defined=.true.
+                end if
+                if (nodes%data(k,2) < maxval(input(:,1))) then
+                  value = input(maxloc(input(:,1),1), proc)
+                  val_defined=.true.
+                end if
+                if (.not. val_defined) then
+                  print *, nodes%data(k,2) ; stop
+                  call file_error(fileid, "Have you covered the entire vertical profile with data for the initial condition?")
+                end if
+              end if
+            end if
+            pde(proc)%solution(k) =  value 
+          end do
+        end do
+      end do
+            
+      close(fileid)
+ 
+      
+    end subroutine map1d2d
 
 
 end module geom_tools

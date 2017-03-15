@@ -496,10 +496,10 @@ module readtools
 	call file_error(unitW, trim(msg))
       end if
 
-      
+
       do i = lbound(struct,1), ubound(struct,1)
         call comment(unitW)
-        read(unit=unitW, fmt=*, iostat=ierr) struct(i)%ID, struct(i)%code, y_file, struct(i)%value, struct(i)%layer!, y_cond
+        read(unit=unitW, fmt=*, iostat=ierr) struct(i)%ID, struct(i)%code, y_file, struct(i)%value, struct(i)%layer
         select case(y_file)
           case("y")
             struct(i)%file = .true.
@@ -510,8 +510,7 @@ module readtools
             "set [y/n] value for file in boundary condition description, see file info bellow")
         end select
 
-
-            struct(i)%icond4neumann = .false.
+        struct(i)%icond4neumann = .false.
 
         if (ierr /= 0) then
           inquire(unit=unitW, name=filename)
@@ -526,7 +525,7 @@ module readtools
           if (ierr /= 0) then
             write(unit=msg, fmt=*) "ERROR: if using unsteady boundary value data, you must supply the file with data!", &
             "ERROR: file required:", trim(filename)
-            call file_error(unitW)
+            call file_error(unitW, msg)
           end if
           counter = 0
           do 
@@ -536,6 +535,7 @@ module readtools
               EXIT
             end if
           end do
+
           
           close(fileid)
 
