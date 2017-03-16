@@ -100,7 +100,7 @@ readtools.o: $(CORE_obj) src/tools/readtools.f90
 	$c -c src/tools/readtools.f90
 printtools.o: $(CORE_obj) src/tools/printtools.f90
 	$c -c src/tools/printtools.f90
-geom_tools.o: $(CORE_obj) $(MATHTOOLS_obj) core_tools.o src/tools/geom_tools.f90
+geom_tools.o: $(CORE_obj) $(MATHTOOLS_obj) core_tools.o readtools.o src/tools/geom_tools.f90
 	$c -c src/tools/geom_tools.f90
 simegen.o:  $(CORE_obj) core_tools.o geom_tools.o src/tools/simegen.f90
 	$c -c src/tools/simegen.f90
