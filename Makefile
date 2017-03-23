@@ -1,3 +1,4 @@
+#I will add extra commands here
 # c=/opt/gcc-trunk/bin/gfortran -fimplicit-none -fbounds-check
 # c=gfortran -fimplicit-none  -fcoarray=single -fbounds-check -g3 -fdefault-real-8 -Wextra -Wunused
 c=gfortran -fimplicit-none  -fcoarray=single -fbounds-check -fbacktrace -g -g3 -fdefault-real-8 -O0 -finit-real=nan
