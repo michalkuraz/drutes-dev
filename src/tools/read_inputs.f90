@@ -585,7 +585,7 @@ module read_inputs
 	call fileread(n, file_mat)
 	allocate(excl_ids(n))
 	do i=1, n
-          call fileread(excl_ids, file_mat)
+          call fileread(excl_ids(i), file_mat)
         end do
         
 	call fileread(n, file_mat)
