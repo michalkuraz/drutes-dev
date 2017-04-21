@@ -8,6 +8,7 @@ module dual_globals
     real(kind=rkind), dimension(:), allocatable   :: Ks_local
     real(kind=rkind), dimension(:), allocatable   :: anisoangle
     real(kind=rkind) :: initcond
+    
     character(len=5) :: icondtype
   end type soilpar
   
@@ -19,7 +20,10 @@ module dual_globals
   end type exch_K
 
  integer(kind=ikind), public :: coup_model
-
+ real(kind=rkind),public :: disttozero
+ real(kind=rkind),public ::infweight
+ character(len=50) :: fracfile, matfile
+ 
  type,public :: expar
   real(kind=rkind)::beta,a,gam_par,weightm,weightf
  end type expar
