@@ -41,7 +41,7 @@ module dual_por
       else
 	val = getvalp1(pde_loc, quadpnt)
       end if
-	
+
       
 	
     end function getval_retot_dual
@@ -53,17 +53,22 @@ module dual_por
        	use pde_objs
        	use dual_globals
        	use debug_tools
+       	use geom_tools
        	!use RE_constitutive 
         
        class(pde_str), intent(in out) :: pde_loc
-        integer(kind=ikind) :: i, j, k,l, m, layer, D
+        integer(kind=ikind) :: i, j, k,l, m, layer, D,n
         real(kind=rkind) :: value
         
         D = drutes_config%dimen
   
-        
+       select case (vgmatrix(1_ikind)%icondtype)
+            case("input")
+		      call map1d2dJ(pde_loc,"drutes.conf/REdual/hinim.in")
+        end select
         do i=1, elements%kolik
           layer = elements%material(i,1)
+
           do j=1, ubound(elements%data,2)
             k = elements%data(i,j)
             l = nodes%edge(k)
@@ -74,7 +79,7 @@ module dual_por
             else
         	  select case (vgmatrix(layer)%icondtype)
 				case("H_tot")
-		  		  pde_loc%solution(k) = vgmatrix(layer)%initcond ! nodes%data(k,D)
+		  		  pde_loc%solution(k) = vgmatrix(layer)%initcond+disttozero ! nodes%data(k,D)
 				case("hpres")
 		  		  pde_loc%solution(k) = vgmatrix(layer)%initcond+nodes%data(k,D)
 	      	  end select
@@ -92,16 +97,21 @@ module dual_por
        	use pde_objs
        	use dual_globals
         use RE_constitutive 
-        
+        use geom_tools
 		class(pde_str), intent(in out) :: pde_loc
-        integer(kind=ikind) :: i, j, k,l, m, layer, D
+		
+        integer(kind=ikind) :: i, j, k,l, m, layer, D,n
         real(kind=rkind) :: value
         
         D = drutes_config%dimen
-  
-        
+          select case (vgfracture(1_ikind)%icondtype)
+            case("input")
+		     call map1d2dJ(pde_loc,"drutes.conf/REdual/hinif.in")
+          end select
+
         do i=1, elements%kolik
           layer = elements%material(i,1)
+
           do j=1, ubound(elements%data,2)
             k = elements%data(i,j)
             l = nodes%edge(k)
@@ -112,9 +122,9 @@ module dual_por
             else
         	  select case (vgfracture(layer)%icondtype)
 				case("H_tot")
-		  		  pde_loc%solution(k) = vgfracture(layer)%initcond !- nodes%data(k,D)
+		  		  pde_loc%solution(k) = vgfracture(layer)%initcond+disttozero !- nodes%data(k,D)
 				case("hpres")
-		  		  pde_loc%solution(k) = vgfracture(layer)%initcond +nodes%data(k,D)
+		  		  pde_loc%solution(k) = vgfracture(layer)%initcond+nodes%data(k,D)
 	      	  end select
             end if
           end do   
