@@ -52,7 +52,7 @@ module schwarz_dd
 	inner_criterion = 1e-4
 
 	!reset local-local cluster iteration count
-        ddcoarse_mesh(:)%iter_count = 1
+        ddcoarse_mesh(:)%iter_count = 2
 	
 	!the residual vector is not allocated, thus we are at the beginning
 	if (.not. allocated(resvct)) then
@@ -132,7 +132,6 @@ module schwarz_dd
 
 	  end if
 	  
-! call printmtx(resvct) ; stop
 	  cumerr = 0
 	  subdoms:  do i=1, ubound(subdomain,1)
 
