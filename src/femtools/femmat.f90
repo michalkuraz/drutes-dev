@@ -31,7 +31,7 @@ module femmat
       integer(kind=ikind) ::  fin, pcg_it
       logical, intent(out) :: success
       integer(kind=ikind) :: i, proc,j, m, l, k, top, bot
-      real(kind=rkind) :: error, loc_error
+      real(kind=rkind) :: error, loc_error, reps_err
       logical :: dt_fine
       integer :: ierr_loc
       real(kind=rkind), dimension(:), allocatable :: vcttmp
@@ -64,10 +64,10 @@ module femmat
 	end if
 
 	call solve_matrix(spmatrix, pde_common%bvect(1:fin), pde_common%xvect(1:fin,3),  itmax1=fin, &
-		  reps1=1e-15_rkind)
+		  reps1=1e-15_rkind, itfin1=pcg_it, repsfin1=reps_err)
 
 	if (drutes_config%dimen >  0) then
-	  write(unit=file_itcg, fmt = *) time, pcg_it, itcount
+	  write(unit=file_itcg, fmt = *) time, pcg_it, reps_err
 	  call flush(file_itcg)
 	  call diag_precond(a=spmatrix, x=pde_common%xvect(1:fin,3), mode=-1)
 	end if	

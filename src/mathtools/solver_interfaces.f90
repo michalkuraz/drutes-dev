@@ -172,7 +172,7 @@ module solver_interfaces
         end if
 
 
-        call CGnormal(A=A, b=b,x=x,ilev1=ilevel,itmax1=itmax1,reps1=reps1)
+        call CGnormal(A=A, b=b,x=x,ilev1=ilevel,itmax1=itmax1,reps1=reps1, itfin1=itfin1, repsfin1=repsfin1)
 
 
       end subroutine CG_normal_face
