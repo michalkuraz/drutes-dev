@@ -33,7 +33,7 @@ module femmat
       integer(kind=ikind) :: i, proc,j, m, l, k, top, bot
       real(kind=rkind) :: error, loc_error, reps_err
       logical :: dt_fine
-      integer :: ierr_loc
+      integer :: ierr_loc, ll
       real(kind=rkind), dimension(:), allocatable :: vcttmp
       real(kind=rkind) :: lambda_l, lambda_h, tmpxx=0, maxtime=0
 
@@ -56,7 +56,7 @@ module femmat
 	call assemble_mat(ierr)
 	
 	
-	pde_common%xvect(1:fin,3) = 0.0
+! 	pde_common%xvect(1:fin,3) = 0.0
       
 	
 	if (drutes_config%dimen >  0) then
@@ -65,6 +65,13 @@ module femmat
 
 	call solve_matrix(spmatrix, pde_common%bvect(1:fin), pde_common%xvect(1:fin,3),  itmax1=fin, &
 		  reps1=1e-15_rkind, itfin1=pcg_it, repsfin1=reps_err)
+		  
+	if (pcg_it > 0.27*fin) then 
+          ierr=-1
+        else
+          ierr=0
+        end if
+		  
 
 	if (drutes_config%dimen >  0) then
 	  write(unit=file_itcg, fmt = *) time, pcg_it, reps_err
@@ -97,7 +104,8 @@ module femmat
 
 	if (error <= iter_criterion) then
 	
-	  ierr = 0
+	  if (ierr /= -1) ierr = 0
+	  
 	  call results_extractor()
 	  
 
