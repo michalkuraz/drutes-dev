@@ -43,6 +43,8 @@ module Re_dual_reader
 		errmsg="the discretization step for precalculating constitutive functions must be positive and smaller &
 		then the bc")
 
+      call fileread(disttozero,file_dual,ranges=(/-huge(0.0_rkind), huge(0.0_rkind)/)&
+      , errmsg="specify distance to origin 0. This can be negative or positive")
       
       !number of materials
       call fileread(layers,file_dual,ranges=(/0_ikind,huge(0_ikind)/)&
@@ -255,7 +257,7 @@ end if
 		vgfracture(i)%initcond= vgmatrix(i)%initcond
 		vgfracture(i)%icondtype= vgmatrix(i)%icondtype
       end do
-
+      
       close(file_dual)
 
     end subroutine Re_dual_var
@@ -285,7 +287,7 @@ end if
 
     ! boundary values
     
-      call find_unit(file_bc, 400)
+            call find_unit(file_bc, 400)
       open(unit = file_bc,file = "drutes.conf/REdual/dual_bc.conf", action = "read", status = "old", iostat = i_err)
       if (i_err > 0) then
         print *, "something is wrong with your input"
@@ -297,6 +299,13 @@ end if
         ERROR STOP
       end if  
       call fileread(dim_bc, file_bc)
+      call comment(file_bc)
+      read(unit=file_bc, fmt= *, iostat=i_err) infweight
+      if (i_err /= 0) then
+        print *, "missing infiltration weight. Needs to be there even if you're not using boundary type 5"
+        ERROR STOP
+      end if 
+      
       call readbcvals(unitW=file_bc,struct=pde_loc%bc,dimen=dim_bc,dirname = "drutes.conf/REdual/")
 
       close(file_bc)
@@ -327,7 +336,6 @@ subroutine Re_dual_readf(pde_loc)
       pde_loc%mass_name(2) = "theta [-]"
 
     ! boundary values
-    
       call find_unit(file_bc, 400)
       open(unit = file_bc,file = "drutes.conf/REdual/dual_bc.conf", action = "read", status = "old", iostat = i_err)
       if (i_err > 0) then
@@ -340,8 +348,14 @@ subroutine Re_dual_readf(pde_loc)
         ERROR STOP
       end if  
       call fileread(dim_bc, file_bc, ranges=(/1_ikind, huge(1_ikind)/), &
-	errmsg="at least one boundary must be specified (and no negative values here)")
-
+	  errmsg="at least one boundary must be specified (and no negative values here)")
+	  call comment(file_bc)
+      read(unit=file_bc, fmt= *, iostat=i_err) infweight
+      if (i_err /= 0) then
+        print *, "missing infiltration weight. Needs to be there even if you're not using boundary type 5"
+        ERROR STOP
+      end if 
+      
       call readbcvals(unitW=file_bc,struct=pde_loc%bc,dimen=dim_bc,dirname = "drutes.conf/REdual/")
 
       close(file_bc)

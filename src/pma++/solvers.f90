@@ -1618,7 +1618,7 @@ module solvers
             end if
             repsfin = sqrt(r2/r0)
             if (repsfin < reps) exit
-            if ((rcount1>5) .and. (rcount > 5)) then
+            if ((rcount1>500) .and. (rcount > 500)) then
                 errcode = 6
                 exit
             end if

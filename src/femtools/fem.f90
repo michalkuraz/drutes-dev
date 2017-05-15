@@ -158,7 +158,7 @@ module fem
 
 
       select case(ierr)
-	case(0)
+	case(-1, 0)
 	  dtprev = time_step
 	  if (itcount < 0.25*max_itcount) then
 	    time_step = min(dtmax, 1.06*time_step) 
@@ -166,7 +166,7 @@ module fem
 	    time_step = time_step
 	  end if
 	  
-	  if (itcount >0.45*max_itcount) then
+	  if (itcount >0.45*max_itcount .or. ierr==-1) then
 	    time_step = max(dtmin, 0.9*time_step)
 	  end if
 	    
@@ -248,6 +248,20 @@ module fem
 	  call time2finish()
 	  write(unit=terminal, fmt=*)" " //achar(27)//'[93m',  "-----------------------------------------------------------" &
 					  //achar(27)//'[0m'
+	case(-1)
+	  write(unit=terminal, fmt=*)" " //achar(27)//'[93m',  "--------------------OK-------------------------------------" &
+                                          //achar(27)//'[0m'
+          write(unit=terminal, fmt=*) " " //achar(27)//'[92m', "actual simulation time: " //achar(27)//'[0m', time, "  | ", &
+                                      "previous time step: ", dtprev
+          write(unit=terminal, fmt=*) "       _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _"
+          write(unit=terminal, fmt=*) "  "
+          write(unit=terminal, fmt=*) "total iteration count: ", itcum,"         | ", "current iteration count: ", itcount
+          write(unit=terminal, fmt=*) "W: time step decreased due slower convergence of conjugate gradient method...  "
+          write(unit=terminal, fmt="(a, I4, a, I4, a)") " observation time files written: ", obs_pos-1, "/", obs_count
+          write(unit=terminal, fmt=*) "  "
+          call time2finish()
+          write(unit=terminal, fmt=*)" " //achar(27)//'[93m',  "-----------------------------------------------------------" &
+                                          //achar(27)//'[0m'
 	case(1)
           write(unit=terminal, fmt=*)" " //achar(27)//'[91m',  "--------------------WARNING!-------------------------------" &
 					  //achar(27)//'[0m'
