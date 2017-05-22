@@ -3,7 +3,7 @@ module RE_constitutive
   use global_objs
   use re_globals
 
-  public :: vangen, vangen_tab, inverse_vangen
+  public :: vangen, vangen_tab, inverse_vangen, gardner_wc, gardner_ks, gardner_elast
   public :: vangen_elast, vangen_elast_tab
   public :: mualem, mualem_tab
   public :: dmualem_dh, dmualem_dh_tab
@@ -24,7 +24,7 @@ module RE_constitutive
   integer(kind=ikind), private :: this_layer
   
   logical, private :: tabwarning = .false.
-  character(len=4096), private :: tabmsg = "DRUtES requested values of the constitutional functions out of the range of &
+  character(len=4096), private :: tabmsg = "DRUtES requested values of the constitutive functions out of the range of &
 					    your precalculated table, the function will be evaluated directly, it will & 
 					    slow down your computation, is everything ok? If yes, increase the &
 					    length of interval for precaculating the constitutive functions in your config files"   
@@ -116,6 +116,67 @@ module RE_constitutive
       end if
 
     end function vangen
+    
+    
+    !> \brief Gardner relation \f[ \theta = f(pressure) \f]
+    !!  \f[ \theta = \frac{1}{(1+(\alpha*h)^n)^m} \f]
+    !!
+    !<
+    function gardner_wc(pde_loc, layer, quadpnt, x) result(theta)
+      use typy
+      use re_globals
+      use pde_objs
+      class(pde_str), intent(in) :: pde_loc
+      integer(kind=ikind), intent(in) :: layer
+      !> pressure head
+      real(kind=rkind), intent(in), dimension(:), optional :: x
+      !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
+      type(integpnt_str), intent(in), optional :: quadpnt
+      real(kind=rkind) :: h
+      !> resulting water content
+      real(kind=rkind) :: theta
+
+      type(integpnt_str) :: quadpnt_loc
+      
+
+      if (present(quadpnt) .and. present(x)) then
+	print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
+	print *, "exited from re_constitutive::gardner_wc"
+	ERROR stop
+      else if (.not. present(quadpnt) .and. .not. present(x)) then
+	print *, "ERROR: you have not specified either integ point or x value"
+        print *, "exited from re_constitutive::gardner_wc"
+	ERROR stop
+      end if
+      
+      if (present(quadpnt)) then
+	quadpnt_loc=quadpnt
+	quadpnt_loc%preproc=.true.
+	h = pde_loc%getval(quadpnt_loc)
+      else
+	if (ubound(x,1) /=1) then
+	  print *, "ERROR: van Genuchten function is a function of a single variable h"
+	  print *, "       your input data has:", ubound(x,1), "variables"
+	  print *, "exited from re_constitutive::gardner_wc"
+	  ERROR STOP
+	end if
+	h = x(1)
+      end if
+      
+      
+
+
+
+      if (h >=0.0_rkind) then
+	  theta = vgset(layer)%Ths
+	  RETURN
+      else
+	  theta = vgset(layer)%Thr+(vgset(layer)%Ths - vgset(layer)%Thr)*exp(vgset(layer)%alpha*h)
+      end if
+
+    end function gardner_wc
+    
+    
     
     function inverse_vangen(pde_loc, layer, quadpnt, x) result(hpress)
       use typy
@@ -338,6 +399,74 @@ module RE_constitutive
       
 
     end function vangen_elast
+    
+    
+    !> \brief so-called retention water capacity, it is a derivative to retention curve function
+    !! \f E(h) = C(h) + \frac{\theta(h)}{\theta_s}S_s \f]
+    !! where
+    !! \f[ C(h) = \left\{ \begin{array}{l l} \alpha (\theta_s - \theta_r) exp(\alpha h) ,  & \quad \mbox{$\forall$ $h \in (-\infty, 0 )$}\\ 0, & \quad \mbox{$\forall$ $h \in \langle 0, + \infty )$}\\ \end{array} \right. \f]
+    !<
+    function gardner_elast(pde_loc,layer, quadpnt, x) result(E)
+      use typy
+      use re_globals
+      use pde_objs
+      use core_tools
+
+      class(pde_str), intent(in) :: pde_loc 
+      integer(kind=ikind), intent(in) :: layer
+      !> pressure head
+      real(kind=rkind), intent(in), dimension(:),  optional :: x
+      !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
+      type(integpnt_str), intent(in), optional :: quadpnt
+      real(kind=rkind) :: h
+      !> resulting system elasticity
+      real(kind=rkind) :: E
+
+      real(kind=rkind) :: C, a,  tr, ts 
+      type(integpnt_str) :: quadpnt_loc      
+          
+      
+      if (present(quadpnt) .and. present(x)) then
+	print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
+	print *, "exited from re_constitutive::vangen_elast"
+	ERROR stop
+      else if (.not. present(quadpnt) .and. .not. present(x)) then
+	print *, "ERROR: you have not specified either integ point or x value"
+        print *, "exited from re_constitutive::gardner_elast"
+	ERROR stop
+      end if
+      
+      if (present(quadpnt)) then
+        quadpnt_loc=quadpnt
+	quadpnt_loc%preproc=.true.
+	h = pde_loc%getval(quadpnt_loc)
+      else
+	if (ubound(x,1) /=1) then
+	  print *, "ERROR: Gardner function is a function of a single variable h"
+	  print *, "       your input data has:", ubound(x,1), "variables"
+	  ERROR STOP
+	end if
+      	if (ubound(x,1) /=1) then
+	  print *, "ERROR: Gardner function is a function of a single variable h"
+	  print *, "       your input data has:", ubound(x,1), "variables"
+	  print *, "exited from re_constitutive::gardner_elast"
+	  ERROR STOP
+	end if
+	h = x(1)
+      end if
+
+      if (h < 0) then
+	a = vgset(layer)%alpha
+	tr = vgset(layer)%Thr
+	ts = vgset(layer)%Ths
+	E = a*(-tr + ts)*exp(a*h)
+      else
+	E = 0
+	RETURN
+      end if
+
+
+    end function gardner_elast
 
 
     function vangen_elast_tab(pde_loc, layer, quadpnt, x) result(E)
@@ -486,6 +615,74 @@ module RE_constitutive
 	scalar = tmp
       end if
     end subroutine mualem
+    
+    
+    
+      !> \brief Gardner's fucntion for unsaturated hydraulic conductivity
+    !! \f[   K(h) = K_s exp(\alpha h),  &  \mbox{$\forall$  $h \in$ $(-\infty,0)$}\\ K_s, & \mbox{$\forall$   $h \in$ $\langle 0, +\infty)$}\\ \end{array} \right. \f]
+    !<
+    subroutine gardner_ks(pde_loc, layer, quadpnt,  x, tensor, scalar)
+      use typy
+      use re_globals
+      use pde_objs
+
+      class(pde_str), intent(in) :: pde_loc
+      integer(kind=ikind), intent(in) :: layer
+      !> pressure head
+      real(kind=rkind), dimension(:), intent(in), optional :: x
+      !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
+      type(integpnt_str), intent(in), optional :: quadpnt      
+      !> second order tensor of the unsaturated hydraulic conductivity
+      real(kind=rkind), dimension(:,:), intent(out), optional :: tensor
+      real(kind=rkind) :: h
+      !> relative hydraulic conductivity, (scalar value)
+      real(kind=rkind), intent(out), optional :: scalar
+
+      real(kind=rkind) :: tmp
+      type(integpnt_str) :: quadpnt_loc
+      
+  
+
+      if (present(quadpnt) .and. present(x)) then
+	print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
+	print *, "exited from re_constitutive::gardner_ks"
+	ERROR stop
+      else if (.not. present(quadpnt) .and. .not. present(x)) then
+	print *, "ERROR: you have not specified either integ point or x value"
+        print *, "exited from re_constitutive::gardner_ks"
+	ERROR stop
+      end if
+      
+      if (present(quadpnt)) then
+        quadpnt_loc=quadpnt
+	quadpnt_loc%preproc=.true.
+	h = pde_loc%getval(quadpnt_loc)
+      else
+      	if (ubound(x,1) /=1) then
+	  print *, "ERROR: van Genuchten function is a function of a single variable h"
+	  print *, "       your input data has:", ubound(x,1), "variables"
+	  print *, "exited from re_constitutive::gardner_ks"
+	  ERROR STOP
+	end if
+	h = x(1)
+      end if
+      
+      
+      if (h >= 0) then
+	tmp = 1
+      else
+
+	tmp = exp(vgset(layer)%alpha*h)
+      end if
+	
+      if (present(tensor)) then
+	tensor = tmp* vgset(layer)%Ks
+      end if
+
+      if (present(scalar)) then
+	scalar = tmp
+      end if
+    end subroutine gardner_ks
 
 
     subroutine mualem_tab(pde_loc, layer, quadpnt,  x, tensor, scalar)

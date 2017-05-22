@@ -30,7 +30,7 @@ servers="miguel@neptun01.fsv.cvut.cz:~  miguel@matsrv-lin01.fsv.cvut.cz:~ miguel
 #----------------objects definitions-------------------------------
 CORE_obj := typy.o global_objs.o globals.o globals1D.o globals2D.o  debug_tools.o core_tools.o pde_objs.o dummy_procs.o
 POINTERMAN_obj := manage_pointers.o
-RE_obj := re_constitutive.o re_reader.o re_globals.o re_total.o re_pointers.o
+RE_obj := re_constitutive.o re_reader.o re_globals.o re_total.o re_pointers.o re_analytical.o
 MATHTOOLS_obj :=  linalg.o integral.o solver_interfaces.o simplelinalg.o
 TOOLS_obj := printtools.o simegen.o read_inputs.o drutes_init.o geom_tools.o postpro.o readtools.o
 FEMTOOLS_obj := feminittools.o capmat.o stiffmat.o fem.o fem_tools.o femmat.o
@@ -125,6 +125,8 @@ re_reader.o:  $(CORE_obj) $(TOOLS_obj) re_globals.o src/models/RE/re_reader.f90
 	$c -c src/models/RE/re_reader.f90	
 re_pointers.o:  $(CORE_obj) re_globals.o re_constitutive.o re_total.o re_reader.o src/models/RE/re_pointers.f90
 	$c -c src/models/RE/re_pointers.f90
+re_analytical.o:  $(CORE_obj) re_globals.o re_constitutive.o src/models/RE/re_analytical.f90
+	$c -c src/models/RE/re_analytical.f90
 #-------end CONSTITUTIVE_obj--------------------------------
 
 #------begin HEAT_obj -----------------------------------
