@@ -85,24 +85,25 @@ module dual_tab
 	    tmp = (Ktab_dm(layer,pos+1)-Ktab_dm(layer,pos))/drutes_config%fnc_discr_length*dist &
 	    + Ktab_dm(layer,pos)
 	  else
-	  if (present(quadpnt)) call dual_mualemm(pde_loc, layer, quadpnt, scalar = tmp)
-	  if (present(x)) call dual_mualemm(pde_loc, layer, x=x, scalar = tmp)
+	    if (present(quadpnt)) call dual_mualemm(pde_loc, layer, quadpnt, scalar = tmp)
+	    if (present(x)) call dual_mualemm(pde_loc, layer, x=x, scalar = tmp)
 	  ! if (.not. tabwarning) then
 ! 	    call write_log(trim(tabmsg))
 ! 	    tabwarning = .true.
 ! 	  end if
-	end if
- else
+	  end if
+ 	else
 !  if (.not. intwarning) then
 !    call intoverflow()
 !    intwarning = .true.
 !  end if
  
- if (present(quadpnt)) call dual_mualemm(pde_loc, layer, quadpnt, scalar = tmp)
- if (present(x)) call dual_mualemm(pde_loc, layer, x=x, scalar = tmp)
-  end if 
+ 	  if (present(quadpnt)) call dual_mualemm(pde_loc, layer, quadpnt, scalar = tmp)
+ 	  if (present(x)) call dual_mualemm(pde_loc, layer, x=x, scalar = tmp)
+  	end if 
  else
-	tmp = 1
+	if (present(quadpnt)) call dual_mualemm(pde_loc, layer, quadpnt, scalar = tmp)
+ 	if (present(x)) call dual_mualemm(pde_loc, layer, x=x, scalar = tmp)
   end if
 
   if (present(tensor)) then
@@ -193,11 +194,12 @@ subroutine dual_mualem_f_tab(pde_loc, layer, quadpnt,  x, tensor, scalar)
  if (present(x)) call dual_mualemf(pde_loc, layer, x=x, scalar = tmp)
   end if 
  else
-	tmp = 1
+	if (present(quadpnt)) call dual_mualemf(pde_loc, layer, quadpnt_loc, scalar = tmp)
+    if (present(x)) call dual_mualemf(pde_loc, layer, x=x, scalar = tmp)
   end if
 
   if (present(tensor)) then
-	tensor = tmp* vgfracture(layer)%Ks
+	tensor = tmp*vgfracture(layer)%Ks
   end if
 
   if (present(scalar)) then
