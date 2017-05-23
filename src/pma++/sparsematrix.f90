@@ -121,15 +121,11 @@ contains
             end if
         else
             if ( index > 0 ) then
-                !print *, "prvek uz existuje"
                 a%v(index)%vl = r
             else
-                !print *, "prvek neexistuje" 
                 call a%insert(r,i,j)
             end if
         end if
-        !call a%dump
-        !pause
     end subroutine setsp
 
     !> prida neexistujici prvek do matice
@@ -285,29 +281,27 @@ contains
         if ( present(caption) ) then
             cpt = adjustl(caption)
         else
-            cpt ="sparse matrix"
+            cpt ="ridka matice"
         end if
 
         print *, trim(cpt)
         if (a%aloc == 0) then
-            print *,"empty matrix"
+            print *,"prazdna matice"
         else
-            !print *, "printsmtx 1"
             do i=1,a%getn()
                 call a%getrow(i,v,jj,nelem)
-                !print *,"printsmtx 2"
                 if ( nelem == 0) then
-                    print *, "row ",i," is empty"
+                    print *, "radek ",i," je prazdny"
                 else
-                    print *, "row ",i," has ",nelem," nonzeroes"
+                    print *, "radek ",i," ma ",nelem," prvku"
                     do j = 1,nelem
                         print *,v(j),jj(j)
                     end do
                 end if
             end do
         end if
-        print *, " no. of rows=",a%getn(), " no. of columns=", a%getm(), &
-            " number of nonzeroes=", a%nz
+        print *, " pocet radku=",a%getn(), " pocet sloupcu=", a%getm(), &
+            " pocet nenulovych prvku=", a%nz
 
     end subroutine sparseprint
 

@@ -402,9 +402,7 @@ module RE_constitutive
     
     
     !> \brief so-called retention water capacity, it is a derivative to retention curve function
-    !! \f E(h) = C(h) + \frac{\theta(h)}{\theta_s}S_s \f]
-    !! where
-    !! \f[ C(h) = \left\{ \begin{array}{l l} \alpha (\theta_s - \theta_r) exp(\alpha h) ,  & \quad \mbox{$\forall$ $h \in (-\infty, 0 )$}\\ 0, & \quad \mbox{$\forall$ $h \in \langle 0, + \infty )$}\\ \end{array} \right. \f]
+    !! \f[ E(h) = \left\{ \begin{array}{l l} \alpha (\theta_s - \theta_r) exp(\alpha h) ,  & \quad \mbox{$\forall$ $h \in (-\infty, 0 )$}\\ 0, & \quad \mbox{$\forall$ $h \in \langle 0, + \infty )$}\\ \end{array} \right. \f]
     !<
     function gardner_elast(pde_loc,layer, quadpnt, x) result(E)
       use typy
