@@ -11,9 +11,9 @@ module simegen
       use globals
       use globals1d
       use core_tools
+      use debug_tools
 
 
-      !> vstup pozadovany krok deleni
       integer(kind=ikind) :: pocet1
       integer(kind=ikind), dimension(:), allocatable :: pocty, sumy
       real(kind=rkind) :: dx1
@@ -23,40 +23,6 @@ module simegen
       allocate(pocty(ubound(deltax_1d,1)))
       allocate(sumy(0:ubound(deltax_1d,1)))
       
-      if (abs(length_1D-(deltax_1d(ubound(deltax_1d,1), 3)-deltax_1d(1,2))) > 10*epsilon(dx1)) then
-       write(unit=terminal, fmt=*) " "
-       write(unit=terminal, fmt=*) " " //achar(27)//'[91m', "!!ERROR!!" //achar(27)//'[0m'
-        write(unit=terminal, fmt=*)"incorrect definition in either:"
-        write(unit=terminal, fmt=*)"                          - domain length definition"
-        write(unit=terminal, fmt=*)"or"
-        write(unit=terminal, fmt=*)"                          - the mesh description values"
-        write(unit=terminal, fmt=*)" "
-        write(unit=terminal, fmt=*)"in file drutes.conf/mesh/drumesh1d.conf"
-        write(unit=terminal, fmt=*)" "
-        write(unit=terminal, fmt=*)"the mesh description must cover (and cannot overlap) the entire domain length"
-        write(unit=terminal, fmt=*)"-----------------------------------------------------------------------------"
-        ERROR STOP
-      end if
-
-
-      if (abs(length_1D-(materials_1d(ubound(materials_1d,1), 2)-deltax_1d(1,2))) > 10*epsilon(dx1) .or. &
-         abs(materials_1d(1,1) - deltax_1d(1,2)) >  10*epsilon(dx1) ) then
-         
-        write(unit=terminal, fmt=*) " "
-        write(unit=terminal, fmt=*) " " //achar(27)//'[91m', "!!ERROR!!" //achar(27)//'[0m' 
-        write(unit=terminal, fmt=*)"incorrect definition in either:"
-        write(unit=terminal, fmt=*)"                          - domain length definition"
-        write(unit=terminal, fmt=*)"or"
-        write(unit=terminal, fmt=*)"                          - the description of the material distribution"
-        write(unit=terminal, fmt=*)" "
-        write(unit=terminal, fmt=*)"in file drutes.conf/mesh/drumesh1d.conf"
-        write(unit=terminal, fmt=*)" "
-        write(unit=terminal, fmt=*)"the description of the material distribution must cover (and cannot overlap) &
-	  the entire domain length"
-        write(unit=terminal, fmt=*)"-----------------------------------------------------------------------------"
-        ERROR STOP
-      end if
-
      
       pocet1 = 0
       do i = 1, ubound(deltax_1d,1)
@@ -108,14 +74,16 @@ module simegen
 
       do i=1, elements%kolik
 	do j=1,ubound(materials_1D,1)
-	  if (avg(nodes%data(elements%data(i,1),1), nodes%data(elements%data(i,2),1)) > materials_1D(j,1) .and. &
-	      avg(nodes%data(elements%data(i,1),1), nodes%data(elements%data(i,2),1)) < materials_1D(j,2)) then
+	  if (avg(nodes%data(elements%data(i,1),1), nodes%data(elements%data(i,2),1)) > materials_1D(j,2) .and. &
+	      avg(nodes%data(elements%data(i,1),1), nodes%data(elements%data(i,2),1)) <= materials_1D(j,3)) then
 	      
 	      elements%material(i, :) = j
 	      EXIT
 	  end if
 	end do
       end do
+      
+
       if (minval(elements%material) == 0) then
 	print *, "check file drutes.conf/mesh/drumesh1d.conf, seems like the material description does not cover the entire domain"
 	ERROR STOP

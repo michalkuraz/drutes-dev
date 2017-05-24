@@ -296,18 +296,42 @@ module read_inputs
 	  if (ierr /= 0) call file_error(file_mesh)
       end do
       
+      
+     if (abs(length_1D-(deltax_1d(ubound(deltax_1d,1), 3)-deltax_1d(1,2))) > 10*epsilon(deltax_1d(1,2))) then
+
+        write(unit=msg, fmt=*)"incorrect definition in either:" , new_line("a"),  &
+        "                          - domain length definition" ,  new_line("a") ,&
+       "or" , new_line("a"),  &
+        "                          - the mesh description values" ,  new_line("a"), &
+        " " ,  new_line("a") ,&
+        "in file drutes.conf/mesh/drumesh1d.conf" ,  new_line("a") ,&
+        " " , new_line("a") , &
+       "the mesh description must cover (and cannot overlap) the entire domain length",  new_line("a"), &
+        "-----------------------------------------------------------------------------"
+        call file_error(file_mesh)
+      end if
+      
       call comment(file_mesh)
 
       read(unit=file_mesh, fmt=*, iostat=ierr) n ; if (ierr /= 0) call file_error(file_mesh)
 
-      allocate(materials_1D(n,2))
+      allocate(materials_1D(n,3))
 
       do i=1,n
 	 call comment(file_mesh)
-	 read(unit=file_mesh, fmt=* , iostat=ierr) j, materials_1D(i,:) ; if (ierr /= 0) call file_error(file_mesh)
+	 read(unit=file_mesh, fmt=* , iostat=ierr)  materials_1D(i,:) ; if (ierr /= 0) call file_error(file_mesh)
       end do
-	
-      if (materials_1D(n,2) < length_1D) then
+      
+
+      do i=1, ubound(materials_1D,1)-1
+        if (abs(materials_1D(i,3)-materials_1D(i+1,2)) > epsilon(materials_1D(i+1,1))) then
+          write(msg,*) "ERROR! material description does not cover the entire domain, check material id:", int(materials_1D(i+1,1))
+          call file_error(file_mesh, msg)
+        end if
+      end do
+      
+      
+      if (maxval(abs(materials_1D)) < length_1D) then
 	msg = "ERROR! material description does not cover the entire domain, check 1D domain length value"
 	call file_error(file_mesh, msg)
       end if

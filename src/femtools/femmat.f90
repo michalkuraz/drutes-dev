@@ -66,7 +66,9 @@ module femmat
 	call solve_matrix(spmatrix, pde_common%bvect(1:fin), pde_common%xvect(1:fin,3),  itmax1=fin, &
 		  reps1=1e-15_rkind, itfin1=pcg_it, repsfin1=reps_err)
 		  
-	if (pcg_it > 0.27*fin) then 
+        call printmtx(pde_common%xvect(1:fin,3)) ; stop
+		  
+	if (pcg_it > 0.35*fin) then 
           ierr=-1
         else
           ierr=0
