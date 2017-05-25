@@ -16,19 +16,41 @@
 
 module typy
 
-    
     integer, parameter, public :: lowikind=selected_int_kind(5)
     
     integer, parameter, public :: dprec=selected_real_kind(15,99) 
     
     integer, parameter, public :: sprec=selected_real_kind(8,9)
 
-    !> kind pro realna cisla 18 cifer
+    !> real number specification
     integer, parameter, public :: rkind = selected_real_kind(15,99)
-    !> kind pro cela cisla 10 cifer
+    !> integer number specification
     integer, parameter, public :: ikind = selected_int_kind(10)
-    !> velmi dlouha cela cisla
+    !> long integers
     integer, parameter, public :: likind = selected_int_kind(16)
+    !> unicode char type
+    integer, parameter, public :: chkind=selected_char_kind("default")!"ASCII")!"ISO_10646")
+
+    !> 4byte real
+    integer, parameter :: r4  = selected_real_kind(5,10)
+    !> 8byte real
+    integer, parameter :: r8  = selected_real_kind(12,20)
+    !> 16byte real
+    integer, parameter :: r16 = selected_real_kind(30)
+
+    !---------petr mayer's definitions----------
+    integer, parameter, public :: maxlen = 200
+    !> seznam retezcu
+    type, public :: StringList
+        !> jednotlive retezce
+        character(len=maxlen), dimension(:), allocatable :: name
+        !> delky retezcu
+        integer, dimension(:), allocatable :: delka
+        !> skutecny pocet retezcu
+        integer :: pocet = 0
+    end type StringList
+
+
 
     !> pocitadlo operaci
     type, public :: tcount
@@ -42,8 +64,39 @@ module typy
         real(kind=rkind) :: time = 0
     end type tcount
 
+    !> maximalni delka retezce jedne polozky beznych dat
+    integer, parameter, public :: strmax = 1024
+
+    !> typ pro retezec s promennou delkou
+    type, public :: Tident
+        !> skutecny obsah
+        character(len=:), allocatable :: nm
+        !prozatim jen
+        ! dopsat metody
+        !character(len=strmax), allocatable :: nm ! jen pro stary linux
+    end type Tident
+
+
+    !> koren pro funkce
+    type, public :: funroot
+        contains
+        !> vycisleni funkce v komplexnim oboru
+        procedure evalc
+        !>  vycisleni funkce v realnem oboru
+        procedure evalr
+        !> pretizena verze vycisleni funkce
+        generic :: eval => evalr, evalc
+        !> vycisli derivaci funkce, komplexni
+        procedure derevalc
+        !> vycisli derivaci funkce, realna
+        procedure derevalr
+        !> vycisli derivaci funkce, pretizena
+        generic :: dereval => derevalc, derevalr
+    end type funroot
+
     public :: print_info
     public :: update_info
+    public :: norm2 ! casem zrusit, duvodem je chyba v 16b implementaci
     contains
     !> vytiskne udaje o pocitani
     subroutine print_info(info)
@@ -51,36 +104,73 @@ module typy
         !> data o spotrebe prace
         type(tcount), intent(in) :: info
         print *, "pocty operaci aditivni:",info%ad," nasobeni:",info%mul,&
-            " deleni:",info%div, " cas:",info%time
+        " deleni:",info%div, " cas:",info%time
     end subroutine print_info
 
     !> pricte info2 k info1
     subroutine update_info(info1,info2)
         implicit none
         type(tcount), intent(inout) :: info1
-        type(tcount), intent(in) :: info2
+        type(tcount), intent(in)    :: info2
 
-        info1%ad = info1%ad + info2%ad
-        info1%mul = info1%mul + info2%mul
-        info1%div = info1%div + info2%div
+        info1%ad   = info1%ad   + info2%ad
+        info1%mul  = info1%mul  + info2%mul
+        info1%div  = info1%div  + info2%div
         info1%time = info1%time + info2%time
 
     end subroutine update_info
-    
-!     function norm2(a) result(cislo)
-!       real(kind=rkind), dimension(:), intent(in) :: a
-!       real(kind=rkind) :: cislo
-!       
-!       integer(kind=ikind) :: i
-!       
-!       cislo = 0
-!       do i=1, ubound(a,1)
-! 	cislo = cislo + a(1)*a(1)
-!       end do
-!       
-!       cislo = sqrt(cislo)
-!     
-!     end function norm2
 
+
+    function evalr(r,x) result(y)
+        implicit none
+        class(funroot), intent(in) :: r
+        real(kind=rkind), intent(in) :: x
+        real(kind=rkind) :: y
+        y = 0
+        stop "Neimplentovana funkcionalita"
+    end function evalr
+
+    function evalc(r,x) result(y)
+        implicit none
+        class(funroot), intent(in) :: r
+        complex(kind=rkind), intent(in) :: x
+        complex(kind=rkind) :: y
+        y = 0
+        stop "Neimplentovana funkcionalita"
+    end function evalc
+
+    function derevalr(r,x) result(y)
+        implicit none
+        class(funroot), intent(in) :: r
+        real(kind=rkind), intent(in) :: x
+        real(kind=rkind) :: y
+        stop "Neimplentovana funkcionalita"
+    end function derevalr
+
+    function derevalc(r,x) result(y)
+        implicit none
+        class(funroot), intent(in) :: r
+        complex(kind=rkind), intent(in) :: x
+        complex(kind=rkind) :: y
+        stop "Neimplentovana funkcionalita"
+    end function derevalc
+
+
+    !> spocte L2 normu vektoru
+    function norm2(v) result(y)
+        implicit none
+        real(kind=rkind), dimension(:), intent(in) :: v
+        real(kind=rkind) :: y
+        integer :: i
+
+        y=0
+        do i = lbound(v,1), ubound(v,1)
+            y = y + v(i)*v(i)
+        end do
+        y = sqrt(y)
+    end function norm2
 
 end module typy
+
+
+

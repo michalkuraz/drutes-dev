@@ -51,10 +51,21 @@ module solver_interfaces
         !! - 6 ... prestalo klesat residuum i energie
         integer, intent(out), optional :: errcode1
         
+        integer(kind=ikind), dimension(:), allocatable, save :: p1, p2
         
-         call LDUd(A, ilev=0)
+        
+        if (.not. allocated(p1)) then
+          allocate(p1(ubound(b,1)))
+          allocate(p2(ubound(b,1)))
+        end if
+    
+         call LDUd(A, pivtype=5, ilev=0, perm1=p1, perm2=p2)
          
-         call LDUback(A, b, x)
+         call LDUback(A, b, x, p1=p1, p2=p2)
+         
+         if (present(itfin1)) then 
+           itfin1 = 1
+         end if
 
       end subroutine LDU_face
 

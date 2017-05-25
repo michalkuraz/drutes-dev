@@ -139,7 +139,7 @@ contains
         !> souradnice
         integer(kind=ikind), intent(in) :: i,j
 
-        type(elemt), dimension(:), allocatable :: temp
+        type(elemt), dimension(:), allocatable :: tmp
         integer(kind=ikind) :: k, w1
 
         if (a%aloc == 0 ) then
@@ -161,10 +161,14 @@ contains
         if ( a%firstfree == -1) then
             ! neni misto, musim ho udelat
             if (a%nz /= a%aloc) stop "insert: nekonzistentni data v matici"
-            a%aloc = max(a%aloc+10,a%aloc + a%aloc/10)
-            allocate(temp(1:a%aloc))
-            temp(1:ubound(a%v,1)) = a%v
-            call move_alloc(temp,a%v)
+            a%aloc = max(a%aloc+10,a%aloc + a%aloc)
+            !print *,"insert2a0", a%aloc
+            allocate(tmp(1:a%aloc)) ! selhava ve 32 bitech pri optimalizaci
+            !print *,"insert2a1"
+            tmp(1:ubound(a%v,1)) = a%v
+            !print *,"insert2a2"
+            call move_alloc(tmp,a%v)
+            !print *, "insert2a3"
             ! dodat to do volnyho mista
             do k=a%nz+1,a%aloc
                 a%v(k) = elemt(0.0,0,0,k+1,k+1)
@@ -288,8 +292,10 @@ contains
         if (a%aloc == 0) then
             print *,"prazdna matice"
         else
+            !print *, "printsmtx 1"
             do i=1,a%getn()
                 call a%getrow(i,v,jj,nelem)
+                !print *,"printsmtx 2"
                 if ( nelem == 0) then
                     print *, "radek ",i," je prazdny"
                 else
@@ -525,3 +531,5 @@ contains
 
 
 end module sparsematrix
+
+

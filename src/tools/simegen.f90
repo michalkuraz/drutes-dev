@@ -42,6 +42,7 @@ module simegen
 	pocet1 = pocet1 + n
 	sumy(i) = pocet1
       end do
+      
 
       nodes%kolik=pocet1
       elements%kolik = nodes%kolik - 1
@@ -51,7 +52,6 @@ module simegen
       deltax_1d(0,3) = deltax_1d(1,2)
 
       
-
 	
       do i=1, ubound(pocty,1)
 	do j=1, pocty(i) 
@@ -63,7 +63,7 @@ module simegen
 	end do
       end do
 	
-      elements%data(1,1) = 1
+      elements%data(1,1) = 1 
       elements%data(1,2) = 2
       do i=2, elements%kolik
 	elements%data(i,1) = elements%data(i-1,2)
@@ -90,12 +90,14 @@ module simegen
       end if
 
       nodes%edge = 0
-
-      nodes%edge(1) = 101
-
-      nodes%edge(ubound(nodes%edge,1)) = 102
-  
       
+      if (nodes%data(1,1) < nodes%data(nodes%kolik,1) ) then
+        nodes%edge(1) = 101
+        nodes%edge(ubound(nodes%edge,1)) = 102
+      else
+        nodes%edge(1) = 102
+        nodes%edge(ubound(nodes%edge,1)) = 101
+      end if
 
 
     end subroutine simegen1D
