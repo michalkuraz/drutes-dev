@@ -389,6 +389,38 @@ module re_total
       end if
       
     end subroutine retot_freedrainage
+    
+    
+    subroutine retot_seepageface(pde_loc, el_id, node_order, value, code) 
+      use typy
+      use globals
+      use global_objs
+      use pde_objs
+      use re_globals
+      
+      class(pde_str), intent(in) :: pde_loc
+      integer(kind=ikind), intent(in)  :: el_id, node_order
+      real(kind=rkind), intent(out), optional    :: value
+      integer(kind=ikind), intent(out), optional :: code
+      
+      ! local variables
+      type(integpnt_str) :: quadpnt
+      
+      quadpnt%type_pnt = "ndpt"
+      quadpnt%column = 1
+      quadpnt%order = elements%data(el_id, node_order)
+      
+      val=pde_loc%getval(quadpnt)
+    
+      if (val < 0) then
+        if (present(code)) code=2
+        if (present(value)) value=0
+        RETURN
+      else
+      
+      end if
+        
+    end subroutine retot_seepageface
 
 
     subroutine retot_initcond(pde_loc) 
@@ -436,6 +468,7 @@ module re_total
   
 
     end subroutine retot_initcond
+    
     
     subroutine iconddebouss(pde_loc)
       use typy

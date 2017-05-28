@@ -1033,11 +1033,11 @@ module RE_constitutive
       
       vector_out(2) = tmp
       
-      if (abs(coord(2)) < -12.5 ) then
+!       if (abs(coord(2)) < -12.5 ) then
 	vector_out(1) =  1.0_rkind/coord(1)*vector_out(1)	
-      else
-	vector_out(1) = 0
-      end if
+!       else
+! 	vector_out(1) = 0
+!       end if
 
     end subroutine convection_rerot
     
