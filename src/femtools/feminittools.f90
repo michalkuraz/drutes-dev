@@ -571,7 +571,7 @@ module feminittools
 
                       elements%length(i,k) = elements%length(i,k) + &
                                               dist(nodes%data(elements%data(i,j),:), nodes%data(elements%data(i,k),:))/2
-                      elements%nvect_z(i,k) = get_nz(i,j,k)
+                      elements%nvect_z(i,k) = get_nz(i, j,k)
 
 		      found = elements%data(i,k)
 
@@ -628,13 +628,13 @@ module feminittools
 	      ang = ang + angle(A,B,C)*180.0_rkind/(4*datan(1.0d0))
 	    end if
 	  end do
-	  if (ang > 359.99 ) then
+	  if (ang > 359.9999 ) then
 	    EXIT
 	  end if
 	end do
 
 
-	if (ang < 359.99) then
+	if (ang < 359.9999) then
 	  nodes%boundary(id) = .true.
 	  found = .true.
         else
@@ -651,7 +651,8 @@ module feminittools
 	use core_tools
 	use printtools
 	
-	integer(kind=ikind) :: i, j, k
+	integer(kind=ikind) :: i, j, k, el
+	integer(kind=ikind), dimension(:), allocatable :: nd
 	logical :: found
 
 	do i=1, elements%kolik
@@ -664,7 +665,28 @@ module feminittools
 	    end if
 	  end do outer   
 	end do	
-	      
+	
+	nodes%boundary_order=0
+	
+	allocate(nd(ubound(elements%data,2)))
+	
+        do el=1, elements%kolik
+          j=0
+          do i=1, ubound(elements%data,2)
+            nd=elements%data(el,i)
+            if (nodes%boundary(nd)) j=j+1
+          end do
+          ! just a single triangle edge is at boundary -> easy
+          if (j==2) then
+            
+          end if
+          
+          ! boundary triangle has more edges at boundary -> harder stuff
+          if (j>2) then
+            
+	 end if 
+	 
+        end do
 
       end subroutine set_boundary
       
