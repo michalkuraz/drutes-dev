@@ -836,6 +836,7 @@ module geom_tools
       use printtools
       use core_tools
       use debug_tools
+      use debug_tools
 
       type(element), intent(in out) :: el
       type(node), intent(in) :: nd
@@ -846,12 +847,12 @@ module geom_tools
       
       select case(drutes_config%dimen)
 	case(1)
-	  do i=1, elements%kolik - 1
-	    elements%neighbours(i,1) = i-1
-	    elements%neighbours(i,2) = i+1
+	  do i=1, el%kolik - 1
+	    el%neighbours(i,1) = i-1
+	    el%neighbours(i,2) = i+1
 	   end do
-	   elements%neighbours(elements%kolik,1) = elements%kolik - 1
-	   elements%neighbours(elements%kolik,2) = 0
+	   el%neighbours(elements%kolik,1) = elements%kolik - 1
+	   el%neighbours(elements%kolik,2) = 0
 	case(2)
 	    !set neighbours
 	    do i=1, el%kolik

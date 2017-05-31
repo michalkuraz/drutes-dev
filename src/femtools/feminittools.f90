@@ -640,6 +640,7 @@ module feminittools
         else
 	  found = .false.
 	end if
+	
 
       end subroutine search_bnd_nodes
       
@@ -651,12 +652,12 @@ module feminittools
 	use core_tools
 	use printtools
 	
-	integer(kind=ikind) :: i, j, k, el
-	integer(kind=ikind), dimension(:), allocatable :: nd
+	integer(kind=ikind) :: i, j, k, el, nd, elfirst, counter, nodes_at_bc
 	logical :: found
+	type(smartarray_int) :: bc_el
+	logical, dimension(:), allocatable :: bc_el_true
 
 	do i=1, elements%kolik
-! 	  call progressbar(100*nint(i/(1.0*elements%kolik)))
 	  outer: do j=1, ubound(elements%data,2)
 	    if (elements%neighbours(i,j) == 0) then
 	      inner: do k = 1, ubound(elements%data,2)
@@ -667,26 +668,71 @@ module feminittools
 	end do	
 	
 	nodes%boundary_order=0
-	
-	allocate(nd(ubound(elements%data,2)))
-	
+		
+        allocate(bc_el_true(elements%kolik))
+        bc_el_true = .false.
+
+        found = .false.
         do el=1, elements%kolik
           j=0
           do i=1, ubound(elements%data,2)
             nd=elements%data(el,i)
             if (nodes%boundary(nd)) j=j+1
           end do
-          ! just a single triangle edge is at boundary -> easy
-          if (j==2) then
-            
-          end if
           
-          ! boundary triangle has more edges at boundary -> harder stuff
-          if (j>2) then
-            
-	 end if 
+          if (j > 1) then
+            call bc_el%fill(el)
+            bc_el_true = .true.
+            if (.not. found) then
+              elfirst = el
+              found = .true.
+            end if
+          end if
 	 
         end do
+        
+        nodes_at_bc = 0
+        
+        do i=1, nodes%kolik
+          if (nodes%boundary(i)) nodes_at_bc = nodes_at_bc + 1
+        end do
+        
+        el = elfirst 
+        counter = 0
+        els: do 
+          counter = counter + 1
+          nds: do j=1, ubound(elements%data,2)
+            nd = elements%data(el,j)
+            if (nodes%boundary(nd)) then
+              nodes%boundary_order(nd) = counter
+              EXIT nds
+            end if
+          end do nds
+          
+          els2: do i=1, nodes%element(nd)%pos
+            el = nodes%element(nd)%data(i)
+            if (bc_el_true(el)) then
+              EXIT els2
+            end if
+            
+            if (i == nodes%element(nd)%pos) then
+              print *, "contact developer michalkuraz@gmail.com"
+              print *, "exited from feminittools::set_boundary"
+              ERROR STOP
+            end if
+            
+          end do els2
+          
+          if (counter == nodes_at_bc ) then
+            EXIT els
+          end if
+          
+        end do els
+              
+            
+        
+        
+               
 
       end subroutine set_boundary
       
