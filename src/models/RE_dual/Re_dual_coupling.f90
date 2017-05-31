@@ -1,5 +1,6 @@
 module dual_coup
 ! This module contains variants of coupling terms of the dual permeability model
+! Testing if I only update dual branch from local
   use typy
   use global_objs
   use dual_globals
