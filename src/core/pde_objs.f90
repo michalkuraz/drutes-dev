@@ -332,6 +332,7 @@ module pde_objs
 	case("gqnd", "obpt")
 	  top = 1
 	case("ndpt")
+          !in case of ndpt the gradient is assumed as an average value of gradients at neighbourhood points
 	  top = nodes%element(quadpnt%order)%pos
 	case default
 	  print *, "RUNTIME ERROR: incorrect quadpnt type definition (value quadpnt%type_pnt)"
@@ -362,7 +363,7 @@ module pde_objs
 	    dx = nodes%data(pts(2),1) - nodes%data(pts(1),1)
 	    quadpntloc(1)%order = pts(1)
 	    quadpntloc(2)%order = pts(2)
-	     gradloc(1) = gradloc(1) + (getvalp1(pde_loc,quadpntloc(2)) - getvalp1(pde_loc, quadpntloc(1)))/dx
+	    gradloc(1) = gradloc(1) + (getvalp1(pde_loc,quadpntloc(2)) - getvalp1(pde_loc, quadpntloc(1)))/dx
 	  case(2)
 	    a(1:2) = nodes%data(pts(1),:)
 	    b(1:2) = nodes%data(pts(2),:)

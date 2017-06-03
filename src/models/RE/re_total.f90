@@ -5,6 +5,7 @@ module re_total
   public :: retot_atmospheric
   public :: retot_initcond
   public :: iconddebouss
+  public :: retot_seepage
   
   contains
   
@@ -224,6 +225,62 @@ module re_total
       end if
       
     end subroutine retot_dirichlet_height_bc
+    
+    
+    
+    subroutine retot_seepage(pde_loc, el_id, node_order, value, code)
+      use typy
+      use globals
+      use global_objs
+      use pde_objs
+      use debug_tools
+      use re_globals
+      
+      class(pde_str), intent(in) :: pde_loc
+      integer(kind=ikind), intent(in)  :: el_id, node_order
+      real(kind=rkind), intent(out), optional    :: value
+      integer(kind=ikind), intent(out), optional :: code
+      
+      real(kind=rkind) :: solval
+      real(kind=rkind), dimension(:), allocatable :: solgrad
+      type(integpnt_str) :: quadpnt
+      integer(kind=ikind) :: i
+      
+              
+              
+      quadpnt%type_pnt = "ndpt"
+      quadpnt%order = elements%data(el_id,node_order)
+      quadpnt%column = 1
+      
+      if (.not. allocated(pde_common%xvect) ) then
+        if (present(value)) value = 0
+        if (present(code)) code = 2
+        RETURN
+      end if
+      
+      
+      solval = pde_loc%getval(quadpnt)
+      call pde_loc%getgrad(quadpnt, solgrad)
+      
+      do i=1, nodes%kolik
+        if (nodes%boundary(i)) then
+          print *, nodes%data(i,:)
+        end if
+      end do
+      
+      stop
+          
+!       if (solval >= 0  ) then
+!         solgrad=pde_loc%getgrad(quadpnt)
+!         
+!         if (solgrad >=0) then
+!           code=1
+          
+        
+      
+          
+    
+    end subroutine retot_seepage
 
 
 

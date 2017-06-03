@@ -168,6 +168,8 @@ module global_objs
     real(kind=rkind), dimension(:,:), allocatable  :: results
     !> logical array.if true, then the particular node is the domain boundary node, the domain should be sufficiently Lipshitz type
     logical, dimension(:), allocatable             :: boundary
+    !> integer array, if the node is a boundary node, then this stores the order of boundary node on the boundary curve (for 2D)
+    integer(kind=ikind), dimension(:), allocatable :: boundary_order
     !> array of elements el2integ(i)%data that are covered by basis function the basis function that originates from the node el2integ(i)
     type(smartarray_int), dimension(:), allocatable :: el2integ
     !> list of elements of geometrical discretization, where this node belongs

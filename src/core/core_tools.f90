@@ -164,6 +164,8 @@ module core_tools
       allocate(elements%material(elements%kolik, n))
       
       allocate(elements%neighbours(elements%kolik, ubound(elements%data,2)))
+      
+      allocate(nodes%boundary_order(nodes%kolik))
 
       
 

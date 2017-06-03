@@ -161,6 +161,8 @@ module RE_pointers
 		pde_loc%bc(i)%value_fnc => retot_neumann_bc
 	  case(3)
 		pde_loc%bc(i)%value_fnc => retot_freedrainage
+	  case(4)
+                pde_loc%bc(i)%value_fnc => retot_seepage	
 	  case default
 		print *, "ERROR! You have specified an unsupported boundary type definition for the Richards equation"
 		print *, "the incorrect boundary code specified is:", pde_loc%bc(i)%code

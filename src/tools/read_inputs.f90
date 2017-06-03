@@ -415,7 +415,7 @@ module read_inputs
       do i=1, nodes%kolik
 	call comment(file_mesh)
 	read(unit=file_mesh, fmt=*) nodes%id(i), nodes%data(i,:), ch, ch, ch, nodes%edge(i) 
-	if (nodes%edge(i) > 100 .and. nodes%edge(i) < 1000 ) then
+	if (nodes%edge(i) > 100) then
 	  CONTINUE
 	else
 	  nodes%edge(i) = 0
@@ -427,7 +427,7 @@ module read_inputs
       do i=1, elements%kolik
 	call comment(file_mesh)
 	read(unit=file_mesh, fmt=*) elements%id(i), elements%data(i,:), ch, ch, elements%material(i,1)
-	elements%material(i,1) = elements%material(i,1)  - 10000
+	elements%material(i,1) = elements%material(i,1) ! - 10000
       end do
      
 
