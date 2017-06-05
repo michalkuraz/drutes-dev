@@ -26,33 +26,32 @@ module Re_dual_pointers
       pde(1)%getval => getval_retot_dual
       call Re_dual_readm(pde(1))
       call Re_dual_var() 
-      pde(1)%initcond => dual_inicond_m
+      pde(1)%initcond => dual_inicond
 
       pde(1)%flux => darcy_law_d
       if (drutes_config%fnc_method == 0) then
-	    pde(1)%pde_fnc(1)%dispersion => dual_mualemm
+	    pde(1)%pde_fnc(1)%dispersion => dual_mualem
 	    select case(coup_model)
 	     case(1:3)
 	       pde(1)%pde_fnc(1)%reaction => dual_coupling_f
 	       pde(1)%pde_fnc(2)%reaction => dual_coupling
 	     case(4:5)
-	       pde(1)%pde_fnc(1)%reaction =>dual_coup_min_f
-	       pde(1)%pde_fnc(2)%reaction =>dual_coup_min
+	       pde(1)%pde_fnc(1)%reaction => dual_coup_min_f
+	       pde(1)%pde_fnc(2)%reaction => dual_coup_min
 	     case default
 	     stop
 	    end select
 	    
-	    pde(1)%pde_fnc(1)%elasticity => dual_ret_capm
-	    pde(1)%mass => vangen_d_m
+	    pde(1)%pde_fnc(1)%elasticity => dual_ret_cap
+	    pde(1)%mass => vangen_d
       else
-	    call dual_tabvalues(pde(1), Kfnc=dual_mualemm, Cfnc=dual_ret_capm,&
-	     thetafnc=vangen_d_m,Kfnc_f=dual_mualemf, Cfnc_f=dual_ret_capf, &
-	     thetafnc_f=vangen_d_f,ex_K_fnc=dual_coupling_K)
-	    pde(1)%pde_fnc(1)%dispersion  => dual_mualem_m_tab		
-	    pde(1)%pde_fnc(1)%reaction => dual_coupling_f_tab
+	    call dual_tabvalues(pde(1), Kfnc=dual_mualem, Cfnc=dual_ret_cap,&
+            thetafnc=vangen_d,ex_K_fnc=dual_coupling_K)
+	    pde(1)%pde_fnc(1)%dispersion  => dual_mualem_tab		
+	    pde(1)%pde_fnc(1)%reaction => dual_coupling_neg_tab
 	    pde(1)%pde_fnc(2)%reaction => dual_coupling_tab
-	    pde(1)%pde_fnc(1)%elasticity => dual_ret_capm_tab
-	    pde(1)%mass => vangen_d_m_tab
+	    pde(1)%pde_fnc(1)%elasticity => dual_ret_cap_tab
+	    pde(1)%mass => vangen_d_tab
       end if
       
       ! boundary condition defined as different type boundary_vals
@@ -99,11 +98,11 @@ module Re_dual_pointers
       
       pde(2)%getval => getval_retot_dual
       call Re_dual_readf(pde(2))
-      pde(2)%initcond => dual_inicond_f
+      pde(2)%initcond => dual_inicond
 
       
      if (drutes_config%fnc_method == 0) then
-	    pde(2)%pde_fnc(2)%dispersion => dual_mualemf
+	    pde(2)%pde_fnc(2)%dispersion => dual_mualem
 	    select case(coup_model)
 	     case(1:3)
 	       pde(2)%pde_fnc(2)%reaction => dual_coupling_f
@@ -114,14 +113,16 @@ module Re_dual_pointers
 	     case default
 	     stop
 	    end select
-	    pde(2)%pde_fnc(2)%elasticity => dual_ret_capf
-	    pde(2)%mass => vangen_d_f
+	    pde(2)%pde_fnc(2)%elasticity => dual_ret_cap
+	    pde(2)%mass => vangen_d
       else
-	    pde(2)%pde_fnc(2)%dispersion  => dual_mualem_f_tab		
-	    pde(2)%pde_fnc(2)%reaction => dual_coupling_f_tab
+      	    call dual_tabvalues(pde(2), Kfnc=dual_mualem, Cfnc=dual_ret_cap,&
+            thetafnc=vangen_d,ex_K_fnc=dual_coupling_K)
+	    pde(2)%pde_fnc(2)%dispersion  => dual_mualem_tab		
+	    pde(2)%pde_fnc(2)%reaction => dual_coupling_neg_tab
 	    pde(2)%pde_fnc(1)%reaction => dual_coupling_tab
-	    pde(2)%pde_fnc(2)%elasticity => dual_ret_capf_tab
-	    pde(2)%mass => vangen_d_f_tab
+	    pde(2)%pde_fnc(2)%elasticity => dual_ret_cap_tab
+	    pde(2)%mass => vangen_d_tab
       end if
       
       pde(2)%flux => darcy_law_d

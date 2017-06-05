@@ -235,10 +235,10 @@ module dual_coup
           
      select case(coup_model)
 	   case(4)
-		 call dual_mualemm(pde_loc, layer, x=[hm],scalar=Ka_mm)
-		 call dual_mualemm(pde_loc, layer, x=[hf],scalar=Ka_mf)
-		 call dual_mualemf(pde_loc, layer, x=[hm],scalar=Ka_fm)
-		 call dual_mualemf(pde_loc, layer, x=[hf],scalar=Ka_ff)
+		 call dual_mualem(pde_loc, layer, x=[hm],scalar=Ka_mm)
+		 call dual_mualem(pde_loc, layer, x=[hf],scalar=Ka_mf)
+		 call dual_mualem(pde_loc, layer, x=[hm],scalar=Ka_fm)
+		 call dual_mualem(pde_loc, layer, x=[hf],scalar=Ka_ff)
 		 Ka_ff=Ka_ff*Ksf
 		 Ka_mf=Ka_mf*Ksm
 		 Ka_mm=Ka_mm*Ksm
@@ -248,8 +248,8 @@ module dual_coup
        case(5)
          weightm=exchange(layer)%weightm
      	 weightf=exchange(layer)%weightf
-     	 call dual_mualemm(pde_loc, layer, x=[hm*weightm+hf*weightf],scalar=Ka_m)
-     	 call dual_mualemf(pde_loc, layer, x=[hm*weightm+hf*weightf],scalar=Ka_f)
+     	 call dual_mualem(pde_loc, layer, x=[hm*weightm+hf*weightf],scalar=Ka_m)
+     	 call dual_mualem(pde_loc, layer, x=[hm*weightm+hf*weightf],scalar=Ka_f)
      	 Ka_m=Ka_m*Ksm
      	 Ka_f=Ka_f*Ksf
    		 Ka=minval((/Ka_f,Ka_m/))
@@ -315,10 +315,10 @@ module dual_coup
      
      select case(coup_model)
 	   case(4)
-		 call dual_mualemm(pde_loc, layer, x=[hm],scalar=Ka_mm)
-		 call dual_mualemm(pde_loc, layer, x=[hf],scalar=Ka_mf)
-		 call dual_mualemf(pde_loc, layer, x=[hm],scalar=Ka_fm)
-		 call dual_mualemf(pde_loc, layer, x=[hf],scalar=Ka_mf)
+		 call dual_mualem(pde_loc, layer, x=[hm],scalar=Ka_mm)
+		 call dual_mualem(pde_loc, layer, x=[hf],scalar=Ka_mf)
+		 call dual_mualem(pde_loc, layer, x=[hm],scalar=Ka_fm)
+		 call dual_mualem(pde_loc, layer, x=[hf],scalar=Ka_mf)
 		 Ka_ff=Ka_ff*Ksf
 		 Ka_mf=Ka_mf*Ksm
 		 Ka_mm=Ka_mm*Ksm
@@ -327,8 +327,8 @@ module dual_coup
        case(5)
          weightm=exchange(layer)%weightm
      	 weightf=exchange(layer)%weightf
-     	 call dual_mualemm(pde_loc, layer, x=[hm*weightm+hf*weightf],scalar=Ka_m)
-     	 call dual_mualemf(pde_loc, layer, x=[hm*weightm+hf*weightf],scalar=Ka_f)
+     	 call dual_mualem(pde_loc, layer, x=[hm*weightm+hf*weightf],scalar=Ka_m)
+     	 call dual_mualem(pde_loc, layer, x=[hm*weightm+hf*weightf],scalar=Ka_f)
      	 Ka_m=Ka_m*Ksm
      	 Ka_f=Ka_f*Ksf
    		 Ka=minval((/Ka_f,Ka_m/))

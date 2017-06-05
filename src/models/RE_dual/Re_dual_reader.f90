@@ -276,7 +276,7 @@ end if
       pde_loc%problem_name(1) = "Re_dual_totH_m"
       pde_loc%problem_name(2) = "Richards' equation"
 
-      pde_loc%solution_name(1) = "total_head_m" !file output name
+      pde_loc%solution_name(1) = "pressure_head_m" !file output name
       pde_loc%solution_name(2) = "h  [L]" ! caption
 
       pde_loc%flux_name(1) = "flux_m"  
@@ -284,7 +284,7 @@ end if
 
       pde_loc%mass_name(1) = "theta_m"
       pde_loc%mass_name(2) = "theta [-]"
-
+      pde_loc%mfswitch= "m"
     ! boundary values
     
             call find_unit(file_bc, 400)
@@ -326,7 +326,7 @@ subroutine Re_dual_readf(pde_loc)
       pde_loc%problem_name(1) = "Re_dual_totH_f"
       pde_loc%problem_name(2) = "Richards' equation"
 
-      pde_loc%solution_name(1) = "total_head_f" !file output name
+      pde_loc%solution_name(1) = "pressure_head_f" !file output name
       pde_loc%solution_name(2) = "h  [L]" ! caption
 
       pde_loc%flux_name(1) = "flux_f"  
@@ -334,7 +334,7 @@ subroutine Re_dual_readf(pde_loc)
 
       pde_loc%mass_name(1) = "theta_f"
       pde_loc%mass_name(2) = "theta [-]"
-
+      pde_loc%mfswitch= "f"
     ! boundary values
       call find_unit(file_bc, 400)
       open(unit = file_bc,file = "drutes.conf/REdual/dual_bc.conf", action = "read", status = "old", iostat = i_err)
