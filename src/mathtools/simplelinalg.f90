@@ -2,6 +2,7 @@ module simplelinalg
   public :: diag_precond
   public :: invert_matrix
   private ::  determinant
+  public :: factorial
 
 
     contains
@@ -188,6 +189,21 @@ module simplelinalg
 
 
     end function determinant
+    
+    function factorial(in) result(fact)
+      use typy
+      
+      integer(kind=ikind), intent(in) :: in
+      integer(kind=ikind) :: fact
+      
+      integer(kind=ikind) :: i
+      
+      fact = in
+      do i=in-1, 1, -1
+        fact = fact*i
+      end do
+      
+    end function factorial
 
  
 

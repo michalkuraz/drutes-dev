@@ -244,7 +244,7 @@ module re_total
       real(kind=rkind) :: solval
       real(kind=rkind), dimension(:), allocatable :: solgrad
       type(integpnt_str) :: quadpnt
-      integer(kind=ikind) :: i
+      integer(kind=ikind) :: i, el_vecino, nd_vecino, nd_tmp, nd
       
               
               
@@ -260,7 +260,28 @@ module re_total
       
       
       solval = pde_loc%getval(quadpnt)
-      call pde_loc%getgrad(quadpnt, solgrad)
+      
+      nd = elements%data(el_id, node_order)
+      
+      do i=1, nodes%element(nd)%pos
+        el_vecino = nodes%element(nd)%data(i)
+        if (elements%border(el_vecino)%pos > 0) then
+          EXIT
+        end if
+        if (i==nodes%element(nd)%pos) el_vecino=0
+      end do
+      
+      do i=1, elements%border(el_vecino)%pos
+        nd_tmp = elements%border(el_vecino)%data(i)
+        if (nd_tmp == nd) then
+          if (i<elements%border(el_vecino)%pos) then
+            nd_vecino = elements%border(el_vecino)%data(i+1)
+          else
+           nd_vecino = elements%border(el_vecino)%data(i-1)
+          end if
+        end if
+      end do
+      
       
       do i=1, nodes%kolik
         if (nodes%boundary(i)) then
@@ -462,6 +483,7 @@ module re_total
       
       ! local variables
       type(integpnt_str) :: quadpnt
+      real(kind=rkind) :: val
       
       quadpnt%type_pnt = "ndpt"
       quadpnt%column = 1

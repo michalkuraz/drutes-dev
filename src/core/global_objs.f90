@@ -229,6 +229,8 @@ module global_objs
     integer(kind=ikind), dimension(:,:), allocatable   :: material
     !> domain id -- array, type smartarray_int, carries id number of subdomain, the subdomain split is of an overlap type
     type(smartarray_int), dimension(:), allocatable :: subdom
+    !> if element lies at domain boundary, then this array contains list of nodes at boundary
+    type(smartarray_int), dimension(:), allocatable :: border
   end type element
 
 
