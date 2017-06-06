@@ -244,8 +244,8 @@ module re_total
       real(kind=rkind) :: solval
       real(kind=rkind), dimension(:), allocatable :: solgrad
       type(integpnt_str) :: quadpnt
-      integer(kind=ikind) :: i, el_vecino, nd_vecino, nd_tmp, nd
-      
+      integer(kind=ikind) :: i, el_vecino, el_vecino2, nd_tmp, nd, counter, status, nd_vecino, nd_vecino2
+      integer(kind=ikind), dimension(2) :: nd_vecino
               
               
       quadpnt%type_pnt = "ndpt"
@@ -263,40 +263,107 @@ module re_total
       
       nd = elements%data(el_id, node_order)
       
-      do i=1, nodes%element(nd)%pos
-        el_vecino = nodes%element(nd)%data(i)
-        if (elements%border(el_vecino)%pos > 0) then
-          EXIT
-        end if
-        if (i==nodes%element(nd)%pos) el_vecino=0
-      end do
+      status = nodes%element(nd)%pos
       
-      do i=1, elements%border(el_vecino)%pos
-        nd_tmp = elements%border(el_vecino)%data(i)
-        if (nd_tmp == nd) then
-          if (i<elements%border(el_vecino)%pos) then
-            nd_vecino = elements%border(el_vecino)%data(i+1)
-          else
-           nd_vecino = elements%border(el_vecino)%data(i-1)
-          end if
-        end if
-      end do
+      if (status == 3 .and. elements%border(el_id)%pos > 0) then
+        status = 2
+      end if
       
-      
-      do i=1, nodes%kolik
-        if (nodes%boundary(i)) then
-          print *, nodes%data(i,:)
-        end if
-      end do
-      
-      stop
+      select case(status)
+        case(1)
+          el_vecino = el_id
+          el_vecino2 = el_id
+        case(2)      
+          do i=1, nodes%element(nd)%pos
+            el_vecino = nodes%element(nd)%data(i)
+            if (elements%border(el_vecino)%pos > 0 .and. el_vecino /= el_id) then
+              EXIT
+            end if
+            if (i==nodes%element(nd)%pos) el_vecino=0
+          end do
+          el_vecino2 = el_id
+        case default
+          do i=1, nodes%element(nd)%pos
+            el_vecino = nodes%element(nd)%data(i)
+            if (elements%border(el_vecino)%pos > 0 .and. el_vecino /= el_id) then
+              EXIT
+            end if
+            if (i==nodes%element(nd)%pos) el_vecino=0
+          end do
           
-!       if (solval >= 0  ) then
-!         solgrad=pde_loc%getgrad(quadpnt)
+          do i=1, nodes%element(nd)%pos
+            el_vecino2 = nodes%element(nd)%data(i)
+            if (elements%border(el_vecino2)%pos > 0 .and. el_vecino2 /= el_id .and. el_vecino2 /= el_vecino) then
+              EXIT
+            end if
+            if (i==nodes%element(nd)%pos) el_vecino2=0
+          end do
+      end select
+      
+      
+      if (el_vecino == 0 .or. el_vecino2 == 0) then
+        print *, "bug in re_total::re_seepage, bug keyword: all neighbours are zeroes (don't worry if you don't understand it)", 
+        print *, "contact Michal -> michalkuraz@gmail.com"
+        ERROR STOP
+      end if
+      
+
+      do i=1, elements
+      
+      
+!       if (el_vecino /= el_id .and. el_vecino /= 0 ) then
+!         do i=1, elements%border(el_vecino)%pos
+!           nd_tmp = elements%border(el_vecino)%data(i)
+!           if (nd_tmp == nd) then
+!             if (i<elements%border(el_vecino)%pos) then
+!               nd_vecino(1) = elements%border(el_vecino)%data(i+1)
+!             else
+!              nd_vecino(1) = elements%border(el_vecino)%data(i-1)
+!             end if
+!           end if
+!         end do
 !         
-!         if (solgrad >=0) then
-!           code=1
-          
+!         if (elements%border(el_id)%pos > 0 ) then
+!           el_vecino2 = el_id
+!         else
+!            do i=1, nodes%element(nd)%pos
+!              
+!           
+!         
+!       else if (el_vecino == el_id) then
+!         counter=0
+!         do i=1, ubound(elements%data,2)
+!           if (elements%data(el_id,i) == nd) then
+!             select case(i)
+!               case(1)
+!                 nd_vecino(1) = elements%data(el_id, ubound(elements%data,2))
+!                 nd_vecino(2) = elements%data(el_id, i+1)
+!               case(ubound(elements%data,2))
+!                 nd_vecino(1) = elements%data(el_id, i-1)
+!                 nd_vecino(2) = elements%data(el_id, 1)
+!               case default
+!                 nd_vecino(1) = elements%data(el_id, i-1)
+!                 nd_vecino(2) = elements%data(el_id, i+1)
+!             end select
+!             EXIT
+!           end if
+!         end do
+!       end if
+!       
+!       do i=1, nodes%kolik
+!         if (nodes%boundary(i)) then
+!           print *, nodes%data(i,:)
+!         end if
+!       end do
+!       
+!       stop
+!           
+! !       if (solval >= 0  ) then
+! !         solgrad=pde_loc%getgrad(quadpnt)
+! !         
+! !         if (solgrad >=0) then
+! !           code=1
+!           
         
       
           
