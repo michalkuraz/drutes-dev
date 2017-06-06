@@ -33,10 +33,10 @@ module Re_dual_pointers
 	    pde(1)%pde_fnc(1)%dispersion => dual_mualem
 	    select case(coup_model)
 	     case(1:3)
-	       pde(1)%pde_fnc(1)%reaction => dual_coupling_f
+	       pde(1)%pde_fnc(1)%reaction => dual_coupling_neg
 	       pde(1)%pde_fnc(2)%reaction => dual_coupling
 	     case(4:5)
-	       pde(1)%pde_fnc(1)%reaction => dual_coup_min_f
+	       pde(1)%pde_fnc(1)%reaction => dual_coup_min_neg
 	       pde(1)%pde_fnc(2)%reaction => dual_coup_min
 	     case default
 	     stop
@@ -105,10 +105,10 @@ module Re_dual_pointers
 	    pde(2)%pde_fnc(2)%dispersion => dual_mualem
 	    select case(coup_model)
 	     case(1:3)
-	       pde(2)%pde_fnc(2)%reaction => dual_coupling_f
+	       pde(2)%pde_fnc(2)%reaction => dual_coupling_neg
 	       pde(2)%pde_fnc(1)%reaction => dual_coupling
 	     case(4:5)
-	       pde(2)%pde_fnc(2)%reaction =>dual_coup_min_f
+	       pde(2)%pde_fnc(2)%reaction =>dual_coup_min_neg
 	       pde(2)%pde_fnc(1)%reaction =>dual_coup_min
 	     case default
 	     stop

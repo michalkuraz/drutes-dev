@@ -6,8 +6,8 @@ module dual_coup
   use dual_globals
   use dual_por
 
-  public:: dual_coupling,dual_coupling_f
-  public:: dual_coup_min,dual_coup_min_f
+  public:: dual_coupling,dual_coupling_neg
+  public:: dual_coup_min,dual_coup_min_neg
 
   public:: dual_coupling_K
   contains 
@@ -96,7 +96,7 @@ module dual_coup
 
   end function dual_coupling
   
-  function dual_coupling_f(pde_loc, layer, quadpnt, x) result(ex_term)
+  function dual_coupling_neg(pde_loc, layer, quadpnt, x) result(ex_term)
       use typy
       use global_objs
       use pde_objs
@@ -110,73 +110,18 @@ module dual_coup
       !> material ID
       integer(kind=ikind), intent(in) :: layer
       !> vg and ex parameters, later from conf file
-      real(kind=rkind)::beta,a,gam_par
-      real(kind=rkind)::n,m,alpha, Ks
-      real(kind=rkind)				  :: Ka_f,Ka_m,Ka,ex_term
-      real(kind=rkind)				  :: hm,hf,one
-      type(integpnt_str) :: quadpnt_loc
- 
- 
-       
+      real(kind=rkind)   ::ex_term
+          
             
       if (present(quadpnt)) then
-    quadpnt_loc=quadpnt
-	quadpnt_loc%preproc=.true.
-	quadpnt_loc%column=1
-	hm = pde(1)%getval(quadpnt_loc)
-	hf = pde(2)%getval(quadpnt_loc)
-      else
-	    if (ubound(x,1) /=2) then
-	      print *, "ERROR: exchange term requires two variables h"
-	      print *, "       your input data has:", ubound(x,1), "variables"
-	      ERROR STOP
-	    end if
-      	if (ubound(x,1) /=2) then
-	      print *, "ERROR: exchange term requires two variables h"
-	      print *, "       your input data has:", ubound(x,1), "variables"
-	      print *, "exited from RE_dual::dual_coupling"
-	      ERROR STOP
-	   end if
-	   hm = x(1)
-	   hf = x(2)
-     end if
-     
+        ex_term=-dual_coupling(pde_loc, layer, quadpnt)
+      end if
+      if (present(x)) then
+        ex_term=-dual_coupling(pde_loc, layer, x=x)
+      end if
 
-     alpha=vgexchange(layer)%alpha
-     n=vgexchange(layer)%n
-     m=vgexchange(layer)%m
-     Ks=vgexchange(layer)%Ks_local(1)
-     beta=exchange(layer)%beta
-     a=exchange(layer)%a
-     gam_par=exchange(layer)%gam_par
-    
-     one=1.0_rkind   
-     if(hf<0) then
-       Ka_f=(one-abs(alpha*hf)**(n*m)*(one+abs(alpha*hf)**n)**(-m))**2/(one+abs(alpha*hf)**n)**(m/2)
-     else
-       Ka_f=1.0_rkind
-     end if
-     if(hm<0) then
-       Ka_m=(one-abs(alpha*hm)**(n*m)*(one+abs(alpha*hm)**n)**(-m))**2/(one+abs(alpha*hm)**n)**(m/2)
-     else
-       Ka_m=1.0_rkind
-     end if  
-     select case(coup_model)
-	   case(1)
-     	 Ka=0.5*(Ka_f+Ka_m)*Ks
-       case(2)
-         Ka=(Ka_f*Ka_m)**0.5_rkind*Ks
-       case(3)
-         Ka=vgexchange(layer)%KS_local(1)
-     end select
-    
-     if(abs(hm-hf)>max(hm,hf)*epsilon(hm)) then
-       ex_term=-beta/a**2*gam_par*Ka
-     else
-       ex_term=0
-     end if
      
-  end function dual_coupling_f
+  end function dual_coupling_neg
 
   !> case(3)The following coupling scheme chooses the minimum value of $min(K_f(hf),Kf(hm),K_m(hf),Km(h_m))$
   ! This has the advantage that no extra parameters need to be defined describing the hydraulic properties at the boundary
@@ -267,7 +212,7 @@ module dual_coup
 
   end function dual_coup_min
   
-  function dual_coup_min_f(pde_loc, layer, quadpnt, x) result(ex_term)
+  function dual_coup_min_neg(pde_loc, layer, quadpnt, x) result(ex_term)
       use typy
       use global_objs
       use pde_objs
@@ -281,69 +226,19 @@ module dual_coup
       !> material ID
       integer(kind=ikind), intent(in) :: layer
       !> vg and ex parameters, later from conf file
-      real(kind=rkind)::beta,a,gam_par
-      real(kind=rkind)::weightf,weightm, Ks,Ksm,Ksf
-      real(kind=rkind)				  :: Ka_ff,Ka_mf,Ka_mm,Ka_fm,Ka,ex_term,Ka_m,Ka_f
-      real(kind=rkind)				  :: hm,hf
-      type(integpnt_str) :: quadpnt_loc
- 
-      Ksm=vgmatrix(layer)%KS_local(1)
-      Ksf=vgfracture(layer)%KS_local(1) 
-       
+
+      real(kind=rkind)   ::ex_term
+          
             
       if (present(quadpnt)) then
-    quadpnt_loc=quadpnt
-	quadpnt_loc%preproc=.true.
-	quadpnt_loc%column=1
-	hm = pde(1)%getval(quadpnt_loc)
-	hf = pde(2)%getval(quadpnt_loc)
-      else
-	    if (ubound(x,1) /=2) then
-	      print *, "ERROR: exchange term requires two variables h"
-	      print *, "       your input data has:", ubound(x,1), "variables"
-	      ERROR STOP
-	    end if
-      	if (ubound(x,1) /=2) then
-	      print *, "ERROR: exchange term requires two variables h"
-	      print *, "       your input data has:", ubound(x,1), "variables"
-	      print *, "exited from RE_dual::dual_coupling"
-	      ERROR STOP
-	   end if
-	   hm = x(1)
-	   hf = x(2)
-     end if
+        ex_term=-dual_coup_min(pde_loc, layer, quadpnt)
+      end if
+      if (present(x)) then
+        ex_term=-dual_coup_min(pde_loc, layer, x=x)
+      end if
+
      
-     select case(coup_model)
-	   case(4)
-		 call dual_mualem(pde_loc, layer, x=[hm],scalar=Ka_mm)
-		 call dual_mualem(pde_loc, layer, x=[hf],scalar=Ka_mf)
-		 call dual_mualem(pde_loc, layer, x=[hm],scalar=Ka_fm)
-		 call dual_mualem(pde_loc, layer, x=[hf],scalar=Ka_mf)
-		 Ka_ff=Ka_ff*Ksf
-		 Ka_mf=Ka_mf*Ksm
-		 Ka_mm=Ka_mm*Ksm
-		 Ka_fm=Ka_fm*Ksf
-		 Ka=minval((/Ka_ff,Ka_mf,Ka_mm,Ka_fm/))
-       case(5)
-         weightm=exchange(layer)%weightm
-     	 weightf=exchange(layer)%weightf
-     	 call dual_mualem(pde_loc, layer, x=[hm*weightm+hf*weightf],scalar=Ka_m)
-     	 call dual_mualem(pde_loc, layer, x=[hm*weightm+hf*weightf],scalar=Ka_f)
-     	 Ka_m=Ka_m*Ksm
-     	 Ka_f=Ka_f*Ksf
-   		 Ka=minval((/Ka_f,Ka_m/))
-    end select
-     
-     beta=exchange(layer)%beta
-     a=exchange(layer)%a
-     gam_par=exchange(layer)%gam_par
-     if(abs(hm-hf)>max(hm,hf)*epsilon(hm)) then
-       ex_term=-beta/a**2*gam_par*Ka
-     else
-       ex_term=0
-     end if
-     
-  end function dual_coup_min_f
+  end function dual_coup_min_neg
   
 
   
