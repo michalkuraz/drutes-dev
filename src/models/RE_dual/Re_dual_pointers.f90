@@ -229,7 +229,6 @@ module Re_dual_pointers
       use global_objs
       use pde_objs
       use dual_globals
-      !use re_globals
 
       class(pde_str), intent(in) :: pde_loc
       integer(kind=ikind), intent(in)  :: el_id, node_order
@@ -242,7 +241,12 @@ module Re_dual_pointers
       real(kind=rkind) :: bcval, gfluxval, weight
       integer :: i1
       
-      
+      select case (pde_loc%mfswitch)
+        case("m")
+          weight=(1_rkind-infweight)
+        case("f")
+          weight=infweight
+      end select
 
       if (present(value)) then
 	edge_id = nodes%edge(elements%data(el_id, node_order))
@@ -259,26 +263,14 @@ module Re_dual_pointers
 		j = i
 	      end if
 	      layer=pde_loc%bc(edge_id)%layer
-              select case (pde_loc%mfswitch)
-                case("m")
-                  bcval = pde_loc%bc(edge_id)%series(j,2)*(1_rkind-infweight)
-                case("f")
-                  bcval = pde_loc%bc(edge_id)%series(j,2)*infweight
-              end select
+              bcval = pde_loc%bc(edge_id)%series(j,2)*weight
 	      EXIT
 	    end if
 	  end do
 	else
 	  layer=pde_loc%bc(edge_id)%layer
-          select case (pde_loc%mfswitch)
-            case("m")
-              bcval = pde_loc%bc(edge_id)%series(j,2)*(1_rkind-infweight)
-            case("f")
-              bcval = pde_loc%bc(edge_id)%series(j,2)*infweight
-          end select
+          bcval = pde_loc%bc(edge_id)%value*weight
 	end if
-	
-
 
 	value = bcval
 
