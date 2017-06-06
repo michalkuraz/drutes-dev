@@ -28,7 +28,6 @@ module dual_por
       real(kind=rkind), dimension(3) :: xyz
       integer(kind=ikind) :: D
       
-
 	  
       if (quadpnt%preproc) then
       
@@ -37,7 +36,6 @@ module dual_por
 	call getcoor(quadpnt, xyz(1:D))
 
 	val = getvalp1(pde_loc, quadpnt) - xyz(D)
-    ! 	
       else
 	val = getvalp1(pde_loc, quadpnt)
       end if
@@ -278,74 +276,74 @@ module dual_por
 
   end function dual_ret_cap
   
-   function vangen_d(pde_loc,layer,quadpnt,x) result(theta)
-   use typy
-   use dual_globals
-   use pde_objs
-   class(pde_str), intent(in) :: pde_loc
-   integer(kind=ikind), intent(in) :: layer
-   !> pressure head
-   real(kind=rkind), intent(in), dimension(:), optional :: x
-   !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
-   type(integpnt_str), intent(in), optional :: quadpnt
-   real(kind=rkind) :: h
-   !> resulting water content
-   real(kind=rkind) :: theta
+  function vangen_d(pde_loc,layer,quadpnt,x) result(theta)
+        use typy
+        use dual_globals
+        use pde_objs
+        class(pde_str), intent(in) :: pde_loc
+        integer(kind=ikind), intent(in) :: layer
+        !> pressure head
+        real(kind=rkind), intent(in), dimension(:), optional :: x
+        !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
+        type(integpnt_str), intent(in), optional :: quadpnt
+        real(kind=rkind) :: h
+        !> resulting water content
+        real(kind=rkind) :: theta
 
-   real(kind=rkind)::n,m,alpha,thetaS,thetaR,weight, theta_e
-   type(integpnt_str) :: quadpnt_loc
+        real(kind=rkind)::n,m,alpha,thetaS,thetaR,weight, theta_e
+        type(integpnt_str) :: quadpnt_loc
+        
       
-      
-     if (present(quadpnt)) then
-        quadpnt_loc=quadpnt
-	quadpnt_loc%preproc=.true.
-	h = pde_loc%getval(quadpnt_loc)
-     else
-	 if (ubound(x,1) /=1) then
-	   print *, "ERROR: van Genuchten function is a function of a single variable h"
-	   print *, "       your input data has:", ubound(x,1), "variables"
-	   print *, "exited from RE_dual::vangen_d_m"
-	   ERROR STOP
-	 end if
-	   h = x(1)
-     end if    
-     select case (pde_loc%mfswitch)
-      case("m")
-        thetaS=vgmatrix(layer)%ThS
-        thetaR=vgmatrix(layer)%ThR
-        alpha=vgmatrix(layer)%alpha
-        n=vgmatrix(layer)%n
-        m=vgmatrix(layer)%m
-        weight=exchange(layer)%weightm
-      case("f")  
-        thetaS=vgfracture(layer)%ThS
-        thetaR=vgfracture(layer)%ThR
-        alpha=vgfracture(layer)%alpha
-        n=vgfracture(layer)%n
-        m=vgfracture(layer)%m
-        weight=exchange(layer)%weightf
-      case default
-        print *, "ERROR! Something is wrong"
-        print *, "the error is in dual_por::dual_ret_cap"
-        ERROR stop
-    end select
-    
-      if (h >=0.0_rkind) then
-      select case (pde_loc%mfswitch)
-          case("m")
-            theta = vgmatrix(layer)%Ths
-          case("f")  
-            theta = vgfracture(layer)%Ths
+        if (present(quadpnt)) then
+            quadpnt_loc=quadpnt
+            quadpnt_loc%preproc=.true.
+            h = pde_loc%getval(quadpnt_loc)
+        else
+            if (ubound(x,1) /=1) then
+            print *, "ERROR: van Genuchten function is a function of a single variable h"
+            print *, "       your input data has:", ubound(x,1), "variables"
+            print *, "exited from RE_dual::vangen_d_m"
+            ERROR STOP
+            end if
+            h = x(1)
+        end if    
+        select case (pde_loc%mfswitch)
+        case("m")
+            thetaS=vgmatrix(layer)%ThS
+            thetaR=vgmatrix(layer)%ThR
+            alpha=vgmatrix(layer)%alpha
+            n=vgmatrix(layer)%n
+            m=vgmatrix(layer)%m
+            weight=exchange(layer)%weightm
+        case("f")  
+            thetaS=vgfracture(layer)%ThS
+            thetaR=vgfracture(layer)%ThR
+            alpha=vgfracture(layer)%alpha
+            n=vgfracture(layer)%n
+            m=vgfracture(layer)%m
+            weight=exchange(layer)%weightf
+        case default
+            print *, "ERROR! Something is wrong"
+            print *, "the error is in dual_por::dual_ret_cap"
+            ERROR stop
         end select
+        
+        if (h >=0.0_rkind) then
+        select case (pde_loc%mfswitch)
+            case("m")
+                theta = vgmatrix(layer)%Ths
+            case("f")  
+                theta = vgfracture(layer)%Ths
+            end select
 
-        RETURN
-      else
-	    theta_e = 1/(1+(alpha*(abs(h)))**n)**m
-	    theta = theta_e*(thetaS- thetaR)+ thetaR
-      end if
- end function vangen_d
+            RETURN
+        else
+                theta_e = 1/(1+(alpha*(abs(h)))**n)**m
+                theta = theta_e*(thetaS- thetaR)+ thetaR
+        end if
+  end function vangen_d
  
-   subroutine darcy_law_d(pde_loc, layer, quadpnt, x, grad,  flux, flux_length)
+  subroutine darcy_law_d(pde_loc, layer, quadpnt, x, grad,  flux, flux_length)
       use typy
       use pde_objs
       use global_objs

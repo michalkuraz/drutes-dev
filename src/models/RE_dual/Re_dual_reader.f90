@@ -55,31 +55,31 @@ module Re_dual_reader
       ! vgmatrix, vgexchange and vgfracture all come from dual_globals, exchange contains specific exchange parameters
       
       if (.not. allocated(vgmatrix)) then
-	    allocate (vgmatrix(layers))
-	   	  do i=1, layers
-	  	    allocate(vgmatrix(i)%Ks_local(drutes_config%dimen))
-	  		allocate(vgmatrix(i)%Ks(drutes_config%dimen, drutes_config%dimen))	  
-	  		if(drutes_config%dimen>1) then
-	  		  j = max(1,drutes_config%dimen-1)
-	  		  allocate(vgmatrix(i)%anisoangle(j))	
-	  		else
-	  		  allocate(vgmatrix(i)%anisoangle(1))
-	  		end if		
-		  end do
+        allocate (vgmatrix(layers))
+        do i=1, layers
+            allocate(vgmatrix(i)%Ks_local(drutes_config%dimen))
+            allocate(vgmatrix(i)%Ks(drutes_config%dimen, drutes_config%dimen))	  
+            if(drutes_config%dimen>1) then
+                j = max(1,drutes_config%dimen-1)
+                allocate(vgmatrix(i)%anisoangle(j))	
+            else
+                allocate(vgmatrix(i)%anisoangle(1))
+            end if		
+        end do
       end if
       
       if (.not. allocated(vgexchange)) then
-	    allocate (vgexchange(layers))
-	   	  do i=1, layers
-	  	    allocate(vgexchange(i)%Ks_local(drutes_config%dimen))
-	  		allocate(vgexchange(i)%Ks(drutes_config%dimen, drutes_config%dimen))	  
-	  		if(drutes_config%dimen>1) then
-	  		  j = max(1,drutes_config%dimen-1)
-	  		  allocate(vgexchange(i)%anisoangle(j))	
-	  		else
-	  		  allocate(vgexchange(i)%anisoangle(1))
-	  		end if			
-		  end do
+        allocate (vgexchange(layers))
+        do i=1, layers
+            allocate(vgexchange(i)%Ks_local(drutes_config%dimen))
+            allocate(vgexchange(i)%Ks(drutes_config%dimen, drutes_config%dimen))	  
+            if(drutes_config%dimen>1) then
+                j = max(1,drutes_config%dimen-1)
+                allocate(vgexchange(i)%anisoangle(j))	
+            else
+                allocate(vgexchange(i)%anisoangle(1))
+            end if			
+        end do
       end if
       
       if (.not. allocated(exchange)) then
@@ -87,17 +87,17 @@ module Re_dual_reader
       end if
       
       if (.not. allocated(vgfracture)) then
-	    allocate (vgfracture(layers))
-	   	  do i=1, layers
-	  	    allocate(vgfracture(i)%Ks_local(drutes_config%dimen))
-	  		allocate(vgfracture(i)%Ks(drutes_config%dimen, drutes_config%dimen))	  
-	  		if(drutes_config%dimen>1) then
-	  		  j = max(1,drutes_config%dimen-1)
-	  		  allocate(vgfracture(i)%anisoangle(j))	
-	  		else
-	  		  allocate(vgfracture(i)%anisoangle(1))
-	  		end if			
-		  end do
+        allocate (vgfracture(layers))
+        do i=1, layers
+            allocate(vgfracture(i)%Ks_local(drutes_config%dimen))
+            allocate(vgfracture(i)%Ks(drutes_config%dimen, drutes_config%dimen))	  
+            if(drutes_config%dimen>1) then
+                j = max(1,drutes_config%dimen-1)
+                allocate(vgfracture(i)%anisoangle(j))	
+            else
+                allocate(vgfracture(i)%anisoangle(1))
+            end if			
+        end do
       end if
       
      
@@ -122,11 +122,11 @@ module Re_dual_reader
         read(unit=file_dual, fmt= *, iostat=i_err) vgmatrix(i)%anisoangle, vgmatrix(i)%Ks_local(:)
         
         if(drutes_config%dimen>1) then
-	  	  call set_tensor(vgmatrix(i)%Ks_local(:), vgmatrix(i)%anisoangle(:),  vgmatrix(i)%Ks)
+            call set_tensor(vgmatrix(i)%Ks_local(:), vgmatrix(i)%anisoangle(:),  vgmatrix(i)%Ks)
 	  	 
-	  	else
-	  	  vgmatrix(i)%Ks(1,1)=vgmatrix(i)%Ks_local(1)
-	  	end if	  
+        else
+            vgmatrix(i)%Ks(1,1)=vgmatrix(i)%Ks_local(1)
+        end if	  
       end do
 
 
@@ -149,21 +149,20 @@ module Re_dual_reader
         call comment(file_dual)
         read(unit=file_dual, fmt= *, iostat=i_err) vgfracture(i)%anisoangle, vgfracture(i)%Ks_local(:)
         if(drutes_config%dimen>1) then
-	  	  call set_tensor(vgfracture(i)%Ks_local(:), vgfracture(i)%anisoangle(:),  vgfracture(i)%Ks)
-	  	else
-	  	  vgfracture(i)%Ks(1,1)=vgfracture(i)%Ks_local(1)
-	  	end if	  
+            call set_tensor(vgfracture(i)%Ks_local(:), vgfracture(i)%anisoangle(:),  vgfracture(i)%Ks)
+        else
+            vgfracture(i)%Ks(1,1)=vgfracture(i)%Ks_local(1)
+        end if	  
       end do
       
       ! exchange
-      
-    call fileread(coup_model, file_dual, ranges=(/1_ikind, 5_ikind/), &
+      call fileread(coup_model, file_dual, ranges=(/1_ikind, 5_ikind/), &
 		errmsg="Select model for exchange term, valid selections are (integer): 1,2,3,4,5 ")
     
-    do i=1,layers
-	    call comment(file_dual)
-	    read(unit=file_dual, fmt= *, iostat=i_err) exchange(i)%beta, exchange(i)%a,&
-	    exchange(i)%gam_par,exchange(i)%weightf
+      do i=1,layers
+        call comment(file_dual)
+        read(unit=file_dual, fmt= *, iostat=i_err) exchange(i)%beta, exchange(i)%a,&
+        exchange(i)%gam_par,exchange(i)%weightf
 	    exchange(i)%weightm=1.0_rkind-exchange(i)%weightf
         if (i_err /= 0) then
           print *, "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
@@ -186,21 +185,19 @@ module Re_dual_reader
         end if
       end do
       
-! <<<<<<< HEAD
-    if(coup_model<3) then
-end if
-! =======
+
+
     if(coup_model<4) then
-! >>>>>>> 4c0532fe18a3a305c91b5e8e00da630bee129158
+
      do i=1,layers
         call comment(file_dual)
         read(unit=file_dual, fmt= *, iostat=i_err) vgexchange(i)%Ks_local(:)
         vgexchange(i)%anisoangle=0.0_rkind
         if(drutes_config%dimen>1) then
-	  	  call set_tensor(vgexchange(i)%Ks_local(:), vgexchange(i)%anisoangle(:),  vgexchange(i)%Ks)
-	  	else
- 	  	  vgexchange(i)%Ks(1,1)=vgexchange(i)%Ks_local(1)
- 	  	end if
+            call set_tensor(vgexchange(i)%Ks_local(:), vgexchange(i)%anisoangle(:),  vgexchange(i)%Ks)
+        else
+            vgexchange(i)%Ks(1,1)=vgexchange(i)%Ks_local(1)
+        end if
 
         vgexchange(i)%m=1.0_rkind-1.0_rkind/vgexchange(i)%n
 
@@ -218,10 +215,10 @@ end if
         vgexchange(i)%Ks_local(:)=1.0_rkind
         vgexchange(i)%anisoangle=0.0_rkind
         if(drutes_config%dimen>1) then
-	  	  call set_tensor(vgexchange(i)%Ks_local(:), vgexchange(i)%anisoangle(:),  vgexchange(i)%Ks)
-	  	else
- 	  	  vgexchange(i)%Ks(1,1)=vgexchange(i)%Ks_local(1)
- 	  	end if
+            call set_tensor(vgexchange(i)%Ks_local(:), vgexchange(i)%anisoangle(:),  vgexchange(i)%Ks)
+        else
+            vgexchange(i)%Ks(1,1)=vgexchange(i)%Ks_local(1)
+        end if
       end do
     end if
     
@@ -252,10 +249,10 @@ end if
       ! initial conditions
       
       do i=1,layers
-      call comment(file_dual)
+        call comment(file_dual)
         read(unit=file_dual, fmt= *, iostat=i_err) vgmatrix(i)%initcond, vgmatrix(i)%icondtype
-		vgfracture(i)%initcond= vgmatrix(i)%initcond
-		vgfracture(i)%icondtype= vgmatrix(i)%icondtype
+        vgfracture(i)%initcond= vgmatrix(i)%initcond
+        vgfracture(i)%icondtype= vgmatrix(i)%icondtype
       end do
       
       close(file_dual)
