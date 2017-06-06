@@ -160,7 +160,6 @@ module Re_dual_pointers
       use global_objs
       use pde_objs
       use dual_globals
-      !use re_globals
 
       class(pde_str), intent(in) :: pde_loc
       integer(kind=ikind), intent(in)  :: el_id, node_order
@@ -204,15 +203,16 @@ module Re_dual_pointers
 	  layer=pde_loc%bc(edge_id)%layer
           select case (pde_loc%mfswitch)
             case("m")
-              bcval = pde_loc%bc(edge_id)%series(j,2)*exchange(layer)%weightm
+              bcval = pde_loc%bc(edge_id)%value*exchange(layer)%weightm
             case("f")
-              bcval = pde_loc%bc(edge_id)%series(j,2)*exchange(layer)%weightf
+              bcval = pde_loc%bc(edge_id)%value*exchange(layer)%weightf
           end select
 	end if
 	
 
 
 	value = bcval
+	print*, pde_loc%mfswitch, value
 
       end if
       
