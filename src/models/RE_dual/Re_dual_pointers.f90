@@ -208,11 +208,9 @@ module Re_dual_pointers
               bcval = pde_loc%bc(edge_id)%value*exchange(layer)%weightf
           end select
 	end if
-	
-
+    
 
 	value = bcval
-	print*, pde_loc%mfswitch, value
 
       end if
       
