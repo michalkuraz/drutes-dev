@@ -244,8 +244,8 @@ module re_total
       real(kind=rkind) :: solval
       real(kind=rkind), dimension(:), allocatable :: solgrad
       type(integpnt_str) :: quadpnt
-      integer(kind=ikind) :: i, el_vecino, el_vecino2, nd_tmp, nd, counter, status, nd_vecino, nd_vecino2
-      integer(kind=ikind), dimension(2) :: nd_vecino
+      integer(kind=ikind) :: i, el_vecino, el_vecino2, nd_tmp, nd, counter, status, nd_vecino, nd_vecino2, pos
+
               
               
       quadpnt%type_pnt = "ndpt"
@@ -302,14 +302,47 @@ module re_total
       
       
       if (el_vecino == 0 .or. el_vecino2 == 0) then
-        print *, "bug in re_total::re_seepage, bug keyword: all neighbours are zeroes (don't worry if you don't understand it)", 
+        print *, "bug in re_total::re_seepage, bug keyword: all neighbours are zeroes (don't worry if you don't understand it)"
         print *, "contact Michal -> michalkuraz@gmail.com"
         ERROR STOP
       end if
       
 
-      do i=1, elements
+      do i=1, elements%border(el_vecino)%pos
+        if (elements%border(el_vecino)%data(i) == nd) then
+        
+          if (i < elements%border(el_vecino)%pos) then
+            nd_vecino = elements%border(el_vecino)%data(i+1)
+          else
+            nd_vecino = elements%border(el_vecino)%data(1)
+          end if
+          EXIT
+        end if
+      end do
+              
+      do i=1, elements%border(el_vecino2)%pos
+        if (elements%border(el_vecino2)%data(i) == nd) then
+          if (i < elements%border(el_vecino2)%pos) then
+            nd_vecino2 = elements%border(el_vecino2)%data(i+1)
+            if (nd_vecino2 == nd_vecino) then
+              pos = i-1
+              if (pos < 1) then
+                pos = elements%border(el_vecino)%pos
+              end if
+              nd_vecino2 = elements%border(el_vecino2)%data(pos)
+            end if
+          else
+            nd_vecino2 = elements%border(el_vecino2)%data(1)
+            if (nd_vecino2 == nd_vecino) then
+              pos = i-1
+              nd_vecino2 = elements%border(el_vecino2)%data(pos)
+            end if
+          end if
+          EXIT
+        end if
+      end do
       
+      print *, "uzel", nd, ":soused1", nd_vecino, "soused2", nd_vecino2 ; call wait()
       
 !       if (el_vecino /= el_id .and. el_vecino /= 0 ) then
 !         do i=1, elements%border(el_vecino)%pos
