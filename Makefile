@@ -240,19 +240,9 @@ syncup:
 syncdown:
 	tar -czf /tmp/git.tgz .git && rsync -avztu -e ssh --delete --exclude 'out/*' miguel@cml.fsv.cvut.cz:~/drutes-obj/ ./ && echo "last sync:" && cat sync.stamp && tar -xzf /tmp/git.tgz
 		
-	
-alesup: 
-	date > jsync.stamp &&  rsync -avztu -e ssh --delete --exclude 'out' --exclude '*.o' --exclude '*.mod' --exclude 'bin'  --exclude '*~' ./ jakub@matsrv-lin01.fsv.cvut.cz:~/drutes/
+pull-dd:
+	git checkout dev-dd && git pull https://www.github.com/michalkuraz/drutes-dev dev-dd
 
-alesdown: 
-	rsync -avztu -e ssh --delete --exclude 'out/*' jakub@matsrv-lin01.fsv.cvut.cz:~/drutes/ ./
-
-
-petrup:
-	rsync -avztu -e ssh --delete --exclude 'out' --exclude '*.o' --exclude '*.mod' --exclude 'bin'  --exclude '*~' ./ pmayer@matsrv-lin01.fsv.cvut.cz:~/drutes/
-	
-petrdown:
-	rsync -avztu -e ssh --delete --exclude 'out/*' pmayer@matsrv-lin01.fsv.cvut.cz:~/drutes/ ./
 
 
 save:
@@ -261,8 +251,4 @@ save:
 tar :
 	 tar -czf $d.tgz src Makefile drutes.conf 
 
-upcurrent:
-	mv .git /tmp && rsync -avztu -e ssh --delete --exclude 'out/*' --exclude '*.o' --exclude '*.mod' --exclude 'bin/*'  --exclude '*~' ./ miguel@matsrv-lin01.fsv.cvut.cz:~/drutes-archive/ && mv /tmp/.git ./
 
-current:
-	rsync -avztu --delete --exclude 'out/*' rsync://drutes@matsrv-lin01.fsv.cvut.cz/drutes/ ./

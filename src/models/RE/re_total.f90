@@ -242,9 +242,11 @@ module re_total
       integer(kind=ikind), intent(out), optional :: code
       
       real(kind=rkind) :: solval
-      real(kind=rkind), dimension(:), allocatable :: solgrad
+      real(kind=rkind), dimension(:), allocatable, save :: solgrad
       type(integpnt_str) :: quadpnt
-      integer(kind=ikind) :: i, el_vecino, el_vecino2, nd_tmp, nd, counter, status, nd_vecino, nd_vecino2, pos
+      integer(kind=ikind) :: i, el_vecino, el_vecino2, nd_tmp, nd, counter, status, nd_vecino, nd_vecino2, pos, test1, test2
+      real(kind=rkind), dimension(3,2) :: points
+ 
 
               
               
@@ -302,7 +304,15 @@ module re_total
       
       
       if (el_vecino == 0 .or. el_vecino2 == 0) then
-        print *, "bug in re_total::re_seepage, bug keyword: all neighbours are zeroes (don't worry if you don't understand it)"
+        print *, "bug in re_total::re_seepage "
+        print *,  "bug keyword: all neighbours are zeroes (don't worry if you don't understand it)"
+        print *, "contact Michal -> michalkuraz@gmail.com"
+        ERROR STOP
+      end if
+      
+      if (el_vecino == el_vecino2) then
+        print *, "bug in re_total::re_seepage"
+        print *, "bug keyword: element neighbours are the same (don't worry if you don't understand it)"
         print *, "contact Michal -> michalkuraz@gmail.com"
         ERROR STOP
       end if
@@ -310,39 +320,100 @@ module re_total
 
       do i=1, elements%border(el_vecino)%pos
         if (elements%border(el_vecino)%data(i) == nd) then
-        
-          if (i < elements%border(el_vecino)%pos) then
-            nd_vecino = elements%border(el_vecino)%data(i+1)
+          if (elements%border(el_vecino)%pos < 3 .or. nodes%element(nd)%pos == 1) then
+            if (i < elements%border(el_vecino)%pos) then
+              nd_vecino = elements%border(el_vecino)%data(i+1)
+            else
+              nd_vecino = elements%border(el_vecino)%data(1)
+            end if
+            EXIT
           else
-            nd_vecino = elements%border(el_vecino)%data(1)
+            if (i < elements%border(el_vecino)%pos .and. i > 1) then
+              test1 = i+1
+              test2 = i-1
+            else if (i == elements%border(el_vecino)%pos ) then
+              test1 = 1
+              test2 = i-1
+            else if (i == 1) then
+              test1 = 2
+              test2 = elements%border(el_vecino)%pos
+            end if
+            
+            if (nodes%element(elements%data(el_vecino,test1))%pos == 1) then
+              nd_vecino = elements%data(el_vecino,test1)
+            else if  (nodes%element(elements%data(el_vecino,test2))%pos == 1) then
+              nd_vecino = elements%data(el_vecino,test2)
+            else
+              print *, "bug in re_total::re_seepage, bug keyword: unable to find neighbour vecino1 "
+              print *, "(don't worry if you don't understand it)"
+              print *, "contact Michal -> michalkuraz@gmail.com"
+              ERROR STOP  
+            end if   
+            EXIT        
           end if
-          EXIT
         end if
       end do
               
       do i=1, elements%border(el_vecino2)%pos
         if (elements%border(el_vecino2)%data(i) == nd) then
-          if (i < elements%border(el_vecino2)%pos) then
-            nd_vecino2 = elements%border(el_vecino2)%data(i+1)
-            if (nd_vecino2 == nd_vecino) then
-              pos = i-1
-              if (pos < 1) then
-                pos = elements%border(el_vecino)%pos
+          if (elements%border(el_vecino2)%pos < 3 .or. nodes%element(nd)%pos == 1) then
+            if (i < elements%border(el_vecino2)%pos) then
+              nd_vecino2 = elements%border(el_vecino2)%data(i+1)
+              if (nd_vecino2 == nd_vecino) then
+                pos = i-1
+                if (pos < 1) then
+                  pos = elements%border(el_vecino)%pos
+                end if
+                nd_vecino2 = elements%border(el_vecino2)%data(pos)
               end if
-              nd_vecino2 = elements%border(el_vecino2)%data(pos)
+            else
+              nd_vecino2 = elements%border(el_vecino2)%data(1)
+              if (nd_vecino2 == nd_vecino) then
+                pos = i-1
+                nd_vecino2 = elements%border(el_vecino2)%data(pos)
+              end if
             end if
-          else
-            nd_vecino2 = elements%border(el_vecino2)%data(1)
-            if (nd_vecino2 == nd_vecino) then
-              pos = i-1
-              nd_vecino2 = elements%border(el_vecino2)%data(pos)
+            EXIT
+          else 
+            if (i < elements%border(el_vecino2)%pos .and. i > 1) then
+              test1 = i+1
+              test2 = i-1
+            else if (i == elements%border(el_vecino2)%pos ) then
+              test1 = 1
+              test2 = i-1
+            else if (i == 1) then
+              test1 = 2
+              test2 = elements%border(el_vecino2)%pos
             end if
+            
+            if (nodes%element(elements%data(el_vecino2,test1))%pos == 1) then
+              nd_vecino2 = elements%data(el_vecino2,test1)
+            else if  (nodes%element(elements%data(el_vecino2,test2))%pos == 1) then
+              nd_vecino2 = elements%data(el_vecino2,test2)
+            else
+              print *, "bug in re_total::re_seepage, bug keyword: unable to find neighbour vecino2 "
+              print *, "(don't worry if you don't understand it)"
+              print *, "contact Michal -> michalkuraz@gmail.com"
+              ERROR STOP  
+            end if   
+            EXIT         
           end if
-          EXIT
         end if
       end do
       
-      print *, "uzel", nd, ":soused1", nd_vecino, "soused2", nd_vecino2 ; call wait()
+      call pde_loc%getgrad(quadpnt, solgrad)
+      
+      points(1,:) = nodes%data(nd_vecino,:)
+      points(2,:) = nodes%data(nd,:)
+      points(3,:) = nodes%data(nd_vecino2,:)
+      
+
+      
+      
+      
+
+      
+       
       
 !       if (el_vecino /= el_id .and. el_vecino /= 0 ) then
 !         do i=1, elements%border(el_vecino)%pos
@@ -402,7 +473,7 @@ module re_total
           
     
     end subroutine retot_seepage
-
+    
 
 
 
