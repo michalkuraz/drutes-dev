@@ -602,7 +602,7 @@ module geom_tools
 
     if ((f(xmin) > 0 .and. f(xmax) > 0) .or. (f(xmin) < 0 .and. f(xmax) < 0)) then
       ierr = -1
-      call  write_log("WARNING! the geom_tools::solve_bisect returned error code -1")
+      call  write_log("WARNING! geom_tools::solve_bisect returned error code -1")
       RETURN
     end if
 
@@ -613,7 +613,7 @@ module geom_tools
     do 
       if ((f(x1) > 0 .and. f(x2) > 0) .or. (f(x1) < 0 .and. f(x2) < 0)) then
 	ierr = -2
-	call  write_log("WARNING! the geom_tools::solve_bisect returned error code -2")
+	call  write_log("WARNING! geom_tools::solve_bisect returned error code -2")
 	RETURN
       end if
       if (f(x1) > 0 .and. f(x2) < 0) then
@@ -677,10 +677,8 @@ module geom_tools
         nad = .true.
       end if
     else
-
       if (abs(b(1)-a(1)) < 100*epsilon(xa1)) then ! vertical line
-
-!    
+ 
         if (c(1) >= b(1)) then 
           nad = .false.
         else 
@@ -690,7 +688,6 @@ module geom_tools
       end if
       
       if (abs(b(2)-a(2)) < 100*epsilon(xa1)) then ! horizontal line
-
         
         if (c(2) >= b(2)) then
           nad = .true.
@@ -703,7 +700,7 @@ module geom_tools
   end function aboveline
   
   
-    !> this function returns normal boundary vector
+  !> this function returns outer normal boundary vector
   !! bcpoints - nodes ids at the element boundary, integer, dimension(2)
   !! thirdpt - coordinates of a point at at element, which lies out of the boundary. It is important in order to obtain proper positive direction of the normal vector
   !<    
@@ -725,32 +722,40 @@ module geom_tools
       k = (bcpoints(1,2)-bcpoints(2,2))/(bcpoints(1,1)-bcpoints(2,1))
      
       if (aboveline(bcpoints(1,:), bcpoints(2,:), thirdpt)) then
-        nvect(1) = abs(1.0_rkind/k)
+        nvect(2) = -1
       else
-        nvect(1) = -abs(1.0_rkind/k)
+        nvect(2) = 1
       end if
       
-      nvect(2) = -1.0
+      ! change x for y
+      if (aboveline((/bcpoints(1,2), bcpoints(1,1)/), (/bcpoints(2,2), bcpoints(2,1)/), (/thirdpt(2), thirdpt(1)/))) then
+        nvect(1) =  -abs(1.0_rkind/k)
+      else
+        nvect(1) = abs(1.0_rkind/k)
+      end if
+      
+      nvect = nvect/(sqrt(nvect(1)*nvect(1)+nvect(2)*nvect(2)))
      
     !vertical line
     else if (abs(bcpoints(1,1)-bcpoints(2,1)) < 100*epsilon(bcpoints(1,1)) .and. &
        abs(bcpoints(1,2)-bcpoints(2,2)) > 100*epsilon(bcpoints(1,1))) then
        
        if (aboveline(bcpoints(1,:), bcpoints(2,:), thirdpt)) then
-         nvect(1) = -1
-       else
          nvect(1) = 1
+       else
+         nvect(1) = -1
        end if
        
        nvect(2) = 0
-     !vertical line
+       
+     !horizontal line
     else if (abs(bcpoints(1,1)-bcpoints(2,1)) > 100*epsilon(bcpoints(1,1)) .and. &
        abs(bcpoints(1,2)-bcpoints(2,2)) < 100*epsilon(bcpoints(1,1))) then
        
        if (aboveline(bcpoints(1,:), bcpoints(2,:), thirdpt)) then
-         nvect(2) = 1
-       else
          nvect(2) = -1
+       else
+         nvect(2) = 1
        end if
        
        nvect(1) = 0
@@ -1022,11 +1027,7 @@ module geom_tools
         call fileread(input(i,:), fileid)
       end do
             
-      print*, input(:,1)
-      print*, input(:,2)
-      print*, input(:,3)
-      print*, ubound(pde,1)
-      stop
+
       do i=1, elements%kolik
         do j=1, ubound(elements%data,2)
           k = elements%data(i,j)
@@ -1064,13 +1065,11 @@ module geom_tools
                   val_defined=.true.
                 end if
                 if (.not. val_defined) then
-                  print *, nodes%data(k,2) ; stop
                   call file_error(fileid, "Have you covered the entire vertical profile with data for the initial condition?")
                 end if
               end if
             end if
             pde(proc)%solution(k) =  value 
-            print*, value
           end do
         end do
       end do

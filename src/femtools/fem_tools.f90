@@ -102,7 +102,7 @@ module fem_tools
 
     do i=1, ubound(stiff_mat,1)
       ! fill bside
-      if (abs(bc(i)) /= 1) then
+      if (bc(i) /= 1) then
 	select case(bc(i))
 	  case(0,3)
               if (m_col(i) > 0) then
@@ -113,19 +113,23 @@ module fem_tools
                 bvect(m_col(i)) = bvect(m_col(i)) - bcval(i)*surface(i)*time_step + bside(i)
               end if
 	  case(4)
-	    print *, "seepage face boundary not yet implemented"
-	    print *, "the program was interupted from fem_tools::in2global procedure"
-	    ERROR STOP
+              bvect(m_col(i)) = bcval(i)
 	end select
 	! fill stiffness matrix
 	do m=1, ubound(stiff_mat,1)
 	  select case(bc(m))
-	    case(-1,1)
+	    case(1)
                 if (m_col(i) > 0) then
                   bvect(m_col(i)) = bvect(m_col(i)) - stiff_mat(i,m)*bcval(m)
                 end if
+                
+            case(4)
+                call locmatrix%set(1.0_rkind, n_row(i), m_col(i))
+                if (drutes_config%it_method == 2 .or. drutes_config%it_method == 1) then
+                  call locmatrix%rowsfilled%nrfill(n_row(i))
+                end if
 	    case default
-
+                
                 if (n_row(i) > 0 .and. m_col(m) > 0) then
                   call locmatrix%add(stiff_mat(i,m), n_row(i), m_col(m))
                   if (drutes_config%it_method == 2 .or. drutes_config%it_method == 1) then

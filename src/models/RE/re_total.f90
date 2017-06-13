@@ -235,33 +235,30 @@ module re_total
       use pde_objs
       use debug_tools
       use re_globals
+      use geom_tools
       
       class(pde_str), intent(in) :: pde_loc
       integer(kind=ikind), intent(in)  :: el_id, node_order
       real(kind=rkind), intent(out), optional    :: value
       integer(kind=ikind), intent(out), optional :: code
       
-      real(kind=rkind) :: solval
-      real(kind=rkind), dimension(:), allocatable, save :: solgrad
+      real(kind=rkind) :: solval, gradn
+      real(kind=rkind), dimension(:), allocatable, save :: solgrad, nvect
       type(integpnt_str) :: quadpnt
-      integer(kind=ikind) :: i, el_vecino, el_vecino2, nd_tmp, nd, counter, status, nd_vecino, nd_vecino2, pos, test1, test2
-      real(kind=rkind), dimension(3,2) :: points
+      integer(kind=ikind) :: i, el_vecino, el_vecino2, nd_tmp, nd, counter, status, nd_vecino, nd_vecino2, pos, test1, test2, nd3
+      integer(kind=ikind) :: myel
+      real(kind=rkind), dimension(2,2) :: points
+      real(kind=rkind), dimension(2) :: third
  
 
               
-              
-      quadpnt%type_pnt = "ndpt"
-      quadpnt%order = elements%data(el_id,node_order)
-      quadpnt%column = 1
       
       if (.not. allocated(pde_common%xvect) ) then
         if (present(value)) value = 0
         if (present(code)) code = 2
         RETURN
       end if
-      
-      
-      solval = pde_loc%getval(quadpnt)
+     
       
       nd = elements%data(el_id, node_order)
       
@@ -310,12 +307,6 @@ module re_total
         ERROR STOP
       end if
       
-      if (el_vecino == el_vecino2) then
-        print *, "bug in re_total::re_seepage"
-        print *, "bug keyword: element neighbours are the same (don't worry if you don't understand it)"
-        print *, "contact Michal -> michalkuraz@gmail.com"
-        ERROR STOP
-      end if
       
 
       do i=1, elements%border(el_vecino)%pos
@@ -400,79 +391,62 @@ module re_total
           end if
         end if
       end do
-      
-      call pde_loc%getgrad(quadpnt, solgrad)
-      
-      points(1,:) = nodes%data(nd_vecino,:)
-      points(2,:) = nodes%data(nd,:)
-      points(3,:) = nodes%data(nd_vecino2,:)
-      
-
-      
-      
-      
-
-      
        
+      points(1,:) = nodes%data(nd_vecino,:)
+      points(2,:) = nodes%data(nd_vecino2,:)
       
-!       if (el_vecino /= el_id .and. el_vecino /= 0 ) then
-!         do i=1, elements%border(el_vecino)%pos
-!           nd_tmp = elements%border(el_vecino)%data(i)
-!           if (nd_tmp == nd) then
-!             if (i<elements%border(el_vecino)%pos) then
-!               nd_vecino(1) = elements%border(el_vecino)%data(i+1)
-!             else
-!              nd_vecino(1) = elements%border(el_vecino)%data(i-1)
-!             end if
-!           end if
-!         end do
-!         
-!         if (elements%border(el_id)%pos > 0 ) then
-!           el_vecino2 = el_id
-!         else
-!            do i=1, nodes%element(nd)%pos
-!              
-!           
-!         
-!       else if (el_vecino == el_id) then
-!         counter=0
-!         do i=1, ubound(elements%data,2)
-!           if (elements%data(el_id,i) == nd) then
-!             select case(i)
-!               case(1)
-!                 nd_vecino(1) = elements%data(el_id, ubound(elements%data,2))
-!                 nd_vecino(2) = elements%data(el_id, i+1)
-!               case(ubound(elements%data,2))
-!                 nd_vecino(1) = elements%data(el_id, i-1)
-!                 nd_vecino(2) = elements%data(el_id, 1)
-!               case default
-!                 nd_vecino(1) = elements%data(el_id, i-1)
-!                 nd_vecino(2) = elements%data(el_id, i+1)
-!             end select
-!             EXIT
-!           end if
-!         end do
-!       end if
-!       
-!       do i=1, nodes%kolik
-!         if (nodes%boundary(i)) then
-!           print *, nodes%data(i,:)
-!         end if
-!       end do
-!       
-!       stop
-!           
-! !       if (solval >= 0  ) then
-! !         solgrad=pde_loc%getgrad(quadpnt)
-! !         
-! !         if (solgrad >=0) then
-! !           code=1
-!           
+      
+      if (elements%border(el_id)%pos < 2) then
+        myel = el_id
+      else
+        myel = elements%neighbours(el_id,1)
+      end if
+      
+      do i=1, ubound(elements%data,2)
+        nd3 =  elements%data(myel, i)
+        if ( nd3 /= nd .and. nd3 /= nd_vecino .and. nd3 /= nd_vecino2) then
+          third = nodes%data(nd3,:)
+          EXIT
+        end if
         
+        if (i == ubound(elements%data,2)) then
+          print *,  "bug in re_total::re_seepage, bug keyword: unable to find internal element node"
+          print *, "(don't worry if you don't understand it)"
+          print *, "contact Michal -> michalkuraz@gmail.com"
+          ERROR STOP  
+        end if
+     end do  
+     
+     
+     call getnormal(points, third, nvect)    
+     
+     quadpnt%type_pnt = "ndpt"
+     quadpnt%order = elements%data(el_id,node_order)
+     quadpnt%column = 1
+      
+     quadpnt%preproc = .true.
+      
+     solval = pde_loc%getval(quadpnt)
+      
+     quadpnt%preproc = .false.
+      
+     call pde_loc%getgrad(quadpnt, solgrad)
+     
+     gradn = solgrad(1)*nvect(1) + solgrad(2)*nvect(2)
+     
+     if (solval < 0 .or. gradn > 0) then
+       code = 2
+       value = 0
+     else 
+       code = 4
+       value = nodes%data(nd,2)
+     end if
+       
+     
       
           
     
-    end subroutine retot_seepage
+   end subroutine retot_seepage
     
 
 
@@ -500,10 +474,8 @@ module re_total
 
       if (present(value)) then
 	edge_id = nodes%edge(elements%data(el_id, node_order))
-
 	i = pde_loc%permut(elements%data(el_id, node_order))
 	
-
 	if (pde_loc%bc(edge_id)%file) then
 	  do i=1, ubound(pde_loc%bc(edge_id)%series,1)
 	    if (pde_loc%bc(edge_id)%series(i,1) > time) then
