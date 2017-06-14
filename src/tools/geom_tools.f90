@@ -714,6 +714,12 @@ module geom_tools
     
     real(kind=rkind) :: k
     
+    if (drutes_config%dimen == 1) then
+      print *, "RUNTIME ERROR, function geomtools::getnormal is called for 1D problem"
+      print *, "if (desporate) contact Michal -> michalkuraz@gmail.com"
+      ERROR STOP
+    end if    
+    
     if (.not. allocated(nvect)) allocate(nvect(drutes_config%dimen))
   
     if (abs(bcpoints(1,1)-bcpoints(2,1)) > 100*epsilon(bcpoints(1,1)) .and. &

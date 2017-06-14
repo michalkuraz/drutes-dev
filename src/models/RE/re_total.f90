@@ -262,191 +262,206 @@ module re_total
       
       nd = elements%data(el_id, node_order)
       
-      status = nodes%element(nd)%pos
-      
-      if (status == 3 .and. elements%border(el_id)%pos > 0) then
-        status = 2
-      end if
-      
-      select case(status)
-        case(1)
-          el_vecino = el_id
-          el_vecino2 = el_id
-        case(2)      
-          do i=1, nodes%element(nd)%pos
-            el_vecino = nodes%element(nd)%data(i)
-            if (elements%border(el_vecino)%pos > 0 .and. el_vecino /= el_id) then
-              EXIT
-            end if
-            if (i==nodes%element(nd)%pos) el_vecino=0
-          end do
-          el_vecino2 = el_id
-        case default
-          do i=1, nodes%element(nd)%pos
-            el_vecino = nodes%element(nd)%data(i)
-            if (elements%border(el_vecino)%pos > 0 .and. el_vecino /= el_id) then
-              EXIT
-            end if
-            if (i==nodes%element(nd)%pos) el_vecino=0
-          end do
-          
-          do i=1, nodes%element(nd)%pos
-            el_vecino2 = nodes%element(nd)%data(i)
-            if (elements%border(el_vecino2)%pos > 0 .and. el_vecino2 /= el_id .and. el_vecino2 /= el_vecino) then
-              EXIT
-            end if
-            if (i==nodes%element(nd)%pos) el_vecino2=0
-          end do
-      end select
+      quadpnt%type_pnt = "ndpt"
+      quadpnt%order = elements%data(el_id,node_order)
+      quadpnt%column = 1
+        
+      quadpnt%preproc = .true.
+        
+      solval = pde_loc%getval(quadpnt)
+        
+      quadpnt%preproc = .false.
+        
+      call pde_loc%getgrad(quadpnt, solgrad)
       
       
-      if (el_vecino == 0 .or. el_vecino2 == 0) then
-        print *, "bug in re_total::re_seepage "
-        print *,  "bug keyword: all neighbours are zeroes (don't worry if you don't understand it)"
-        print *, "contact Michal -> michalkuraz@gmail.com"
-        ERROR STOP
-      end if
       
+      if (drutes_config%dimen > 1) then
       
-
-      do i=1, elements%border(el_vecino)%pos
-        if (elements%border(el_vecino)%data(i) == nd) then
-          if (elements%border(el_vecino)%pos < 3 .or. nodes%element(nd)%pos == 1) then
-            if (i < elements%border(el_vecino)%pos) then
-              nd_vecino = elements%border(el_vecino)%data(i+1)
-            else
-              nd_vecino = elements%border(el_vecino)%data(1)
-            end if
-            EXIT
-          else
-            if (i < elements%border(el_vecino)%pos .and. i > 1) then
-              test1 = i+1
-              test2 = i-1
-            else if (i == elements%border(el_vecino)%pos ) then
-              test1 = 1
-              test2 = i-1
-            else if (i == 1) then
-              test1 = 2
-              test2 = elements%border(el_vecino)%pos
-            end if
-            
-            if (nodes%element(elements%data(el_vecino,test1))%pos == 1) then
-              nd_vecino = elements%data(el_vecino,test1)
-            else if  (nodes%element(elements%data(el_vecino,test2))%pos == 1) then
-              nd_vecino = elements%data(el_vecino,test2)
-            else
-              print *, "bug in re_total::re_seepage, bug keyword: unable to find neighbour vecino1 "
-              print *, "(don't worry if you don't understand it)"
-              print *, "contact Michal -> michalkuraz@gmail.com"
-              ERROR STOP  
-            end if   
-            EXIT        
-          end if
-        end if
-      end do
-              
-      do i=1, elements%border(el_vecino2)%pos
-        if (elements%border(el_vecino2)%data(i) == nd) then
-          if (elements%border(el_vecino2)%pos < 3 .or. nodes%element(nd)%pos == 1) then
-            if (i < elements%border(el_vecino2)%pos) then
-              nd_vecino2 = elements%border(el_vecino2)%data(i+1)
-              if (nd_vecino2 == nd_vecino) then
-                pos = i-1
-                if (pos < 1) then
-                  pos = elements%border(el_vecino)%pos
-                end if
-                nd_vecino2 = elements%border(el_vecino2)%data(pos)
-              end if
-            else
-              nd_vecino2 = elements%border(el_vecino2)%data(1)
-              if (nd_vecino2 == nd_vecino) then
-                pos = i-1
-                nd_vecino2 = elements%border(el_vecino2)%data(pos)
-              end if
-            end if
-            EXIT
-          else 
-            if (i < elements%border(el_vecino2)%pos .and. i > 1) then
-              test1 = i+1
-              test2 = i-1
-            else if (i == elements%border(el_vecino2)%pos ) then
-              test1 = 1
-              test2 = i-1
-            else if (i == 1) then
-              test1 = 2
-              test2 = elements%border(el_vecino2)%pos
-            end if
-            
-            if (nodes%element(elements%data(el_vecino2,test1))%pos == 1) then
-              nd_vecino2 = elements%data(el_vecino2,test1)
-            else if  (nodes%element(elements%data(el_vecino2,test2))%pos == 1) then
-              nd_vecino2 = elements%data(el_vecino2,test2)
-            else
-              print *, "bug in re_total::re_seepage, bug keyword: unable to find neighbour vecino2 "
-              print *, "(don't worry if you don't understand it)"
-              print *, "contact Michal -> michalkuraz@gmail.com"
-              ERROR STOP  
-            end if   
-            EXIT         
-          end if
-        end if
-      end do
-       
-      points(1,:) = nodes%data(nd_vecino,:)
-      points(2,:) = nodes%data(nd_vecino2,:)
-      
-      
-      if (elements%border(el_id)%pos < 2) then
-        myel = el_id
-      else
-        myel = elements%neighbours(el_id,1)
-      end if
-      
-      do i=1, ubound(elements%data,2)
-        nd3 =  elements%data(myel, i)
-        if ( nd3 /= nd .and. nd3 /= nd_vecino .and. nd3 /= nd_vecino2) then
-          third = nodes%data(nd3,:)
-          EXIT
+        status = nodes%element(nd)%pos
+        
+        if (status == 3 .and. elements%border(el_id)%pos > 0) then
+          status = 2
         end if
         
-        if (i == ubound(elements%data,2)) then
-          print *,  "bug in re_total::re_seepage, bug keyword: unable to find internal element node"
-          print *, "(don't worry if you don't understand it)"
+        select case(status)
+          case(1)
+            el_vecino = el_id
+            el_vecino2 = el_id
+          case(2)      
+            do i=1, nodes%element(nd)%pos
+              el_vecino = nodes%element(nd)%data(i)
+              if (elements%border(el_vecino)%pos > 0 .and. el_vecino /= el_id) then
+                EXIT
+              end if
+              if (i==nodes%element(nd)%pos) el_vecino=0
+            end do
+            el_vecino2 = el_id
+          case default
+            do i=1, nodes%element(nd)%pos
+              el_vecino = nodes%element(nd)%data(i)
+              if (elements%border(el_vecino)%pos > 0 .and. el_vecino /= el_id) then
+                EXIT
+              end if
+              if (i==nodes%element(nd)%pos) el_vecino=0
+            end do
+            
+            do i=1, nodes%element(nd)%pos
+              el_vecino2 = nodes%element(nd)%data(i)
+              if (elements%border(el_vecino2)%pos > 0 .and. el_vecino2 /= el_id .and. el_vecino2 /= el_vecino) then
+                EXIT
+              end if
+              if (i==nodes%element(nd)%pos) el_vecino2=0
+            end do
+        end select
+        
+        
+        if (el_vecino == 0 .or. el_vecino2 == 0) then
+          print *, "bug in re_total::re_seepage "
+          print *,  "bug keyword: all neighbours are zeroes (don't worry if you don't understand it)"
           print *, "contact Michal -> michalkuraz@gmail.com"
-          ERROR STOP  
+          ERROR STOP
         end if
-     end do  
-     
-     
-     call getnormal(points, third, nvect)    
-     
-     quadpnt%type_pnt = "ndpt"
-     quadpnt%order = elements%data(el_id,node_order)
-     quadpnt%column = 1
+        
+        
+
+        do i=1, elements%border(el_vecino)%pos
+          if (elements%border(el_vecino)%data(i) == nd) then
+            if (elements%border(el_vecino)%pos < 3 .or. nodes%element(nd)%pos == 1) then
+              if (i < elements%border(el_vecino)%pos) then
+                nd_vecino = elements%border(el_vecino)%data(i+1)
+              else
+                nd_vecino = elements%border(el_vecino)%data(1)
+              end if
+              EXIT
+            else
+              if (i < elements%border(el_vecino)%pos .and. i > 1) then
+                test1 = i+1
+                test2 = i-1
+              else if (i == elements%border(el_vecino)%pos ) then
+                test1 = 1
+                test2 = i-1
+              else if (i == 1) then
+                test1 = 2
+                test2 = elements%border(el_vecino)%pos
+              end if
+              
+              if (nodes%element(elements%data(el_vecino,test1))%pos == 1) then
+                nd_vecino = elements%data(el_vecino,test1)
+              else if  (nodes%element(elements%data(el_vecino,test2))%pos == 1) then
+                nd_vecino = elements%data(el_vecino,test2)
+              else
+                print *, "bug in re_total::re_seepage, bug keyword: unable to find neighbour vecino1 "
+                print *, "(don't worry if you don't understand it)"
+                print *, "contact Michal -> michalkuraz@gmail.com"
+                ERROR STOP  
+              end if   
+              EXIT        
+            end if
+          end if
+        end do
+                
+        do i=1, elements%border(el_vecino2)%pos
+          if (elements%border(el_vecino2)%data(i) == nd) then
+            if (elements%border(el_vecino2)%pos < 3 .or. nodes%element(nd)%pos == 1) then
+              if (i < elements%border(el_vecino2)%pos) then
+                nd_vecino2 = elements%border(el_vecino2)%data(i+1)
+                if (nd_vecino2 == nd_vecino) then
+                  pos = i-1
+                  if (pos < 1) then
+                    pos = elements%border(el_vecino)%pos
+                  end if
+                  nd_vecino2 = elements%border(el_vecino2)%data(pos)
+                end if
+              else
+                nd_vecino2 = elements%border(el_vecino2)%data(1)
+                if (nd_vecino2 == nd_vecino) then
+                  pos = i-1
+                  nd_vecino2 = elements%border(el_vecino2)%data(pos)
+                end if
+              end if
+              EXIT
+            else 
+              if (i < elements%border(el_vecino2)%pos .and. i > 1) then
+                test1 = i+1
+                test2 = i-1
+              else if (i == elements%border(el_vecino2)%pos ) then
+                test1 = 1
+                test2 = i-1
+              else if (i == 1) then
+                test1 = 2
+                test2 = elements%border(el_vecino2)%pos
+              end if
+              
+              if (nodes%element(elements%data(el_vecino2,test1))%pos == 1) then
+                nd_vecino2 = elements%data(el_vecino2,test1)
+              else if  (nodes%element(elements%data(el_vecino2,test2))%pos == 1) then
+                nd_vecino2 = elements%data(el_vecino2,test2)
+              else
+                print *, "bug in re_total::re_seepage, bug keyword: unable to find neighbour vecino2 "
+                print *, "(don't worry if you don't understand it)"
+                print *, "contact Michal -> michalkuraz@gmail.com"
+                ERROR STOP  
+              end if   
+              EXIT         
+            end if
+          end if
+        end do
+        
+        points(1,:) = nodes%data(nd_vecino,:)
+        points(2,:) = nodes%data(nd_vecino2,:)
+        
+        
+        if (elements%border(el_id)%pos < 2) then
+          myel = el_id
+        else
+          myel = elements%neighbours(el_id,1)
+        end if
+        
+        do i=1, ubound(elements%data,2)
+          nd3 =  elements%data(myel, i)
+          if ( nd3 /= nd .and. nd3 /= nd_vecino .and. nd3 /= nd_vecino2) then
+            third = nodes%data(nd3,:)
+            EXIT
+          end if
+          
+          if (i == ubound(elements%data,2)) then
+            print *,  "bug in re_total::re_seepage, bug keyword: unable to find internal element node"
+            print *, "(don't worry if you don't understand it)"
+            print *, "contact Michal -> michalkuraz@gmail.com"
+            ERROR STOP  
+          end if
+        end do  
       
-     quadpnt%preproc = .true.
       
-     solval = pde_loc%getval(quadpnt)
+        call getnormal(points, third, nvect)    
       
-     quadpnt%preproc = .false.
+
+        gradn = solgrad(1)*nvect(1) + solgrad(2)*nvect(2)
       
-     call pde_loc%getgrad(quadpnt, solgrad)
+      else
      
-     gradn = solgrad(1)*nvect(1) + solgrad(2)*nvect(2)
+        if (node_order == 1) then
+          gradn = solgrad(1)
+        else
+          gradn = -solgrad(1)
+        end if
+      
+      end if
      
-     if (solval < 0 .or. gradn > 0) then
-       code = 2
-       value = 0
-     else 
-       code = 4
-       value = nodes%data(nd,2)
-     end if
+      
+      
+      if (solval < 0 .or. gradn > 0) then
+        code = 2
+        value = 0
+      else 
+        code = 4
+        value = nodes%data(nd,2)
+      end if
        
-     
-      
           
     
-   end subroutine retot_seepage
+    end subroutine retot_seepage
     
 
 
@@ -595,7 +610,11 @@ module re_total
 	
       	select case(D)
 	  case(1)
-	    value = K(1,1) * elements%nvect_z(el_id, node_order)
+            if (node_order == 1) then
+              value = K(1,1) 
+            else
+              value = -K(1,1)
+            end if
 	  case(2)	  
 	    gravflux(1) = sqrt(1-elements%nvect_z(el_id, node_order)*elements%nvect_z(el_id, node_order))*K(1,2)
 	    
