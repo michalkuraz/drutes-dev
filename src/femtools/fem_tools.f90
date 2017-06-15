@@ -124,16 +124,20 @@ module fem_tools
                 end if
                 
             case(4)
-                call locmatrix%set(1.0_rkind, n_row(i), m_col(i))
-                if (drutes_config%it_method == 2 .or. drutes_config%it_method == 1) then
-                  call locmatrix%rowsfilled%nrfill(n_row(i))
+                if (i == m) then
+                  call locmatrix%set(1.0_rkind, n_row(i), m_col(i))
+                  if (drutes_config%it_method == 2 .or. drutes_config%it_method == 1) then
+                    call locmatrix%rowsfilled%nrfill(n_row(i))
+                  end if
                 end if
 	    case default
                 
-                if (n_row(i) > 0 .and. m_col(m) > 0) then
-                  call locmatrix%add(stiff_mat(i,m), n_row(i), m_col(m))
-                  if (drutes_config%it_method == 2 .or. drutes_config%it_method == 1) then
-                    call locmatrix%rowsfilled%nrfill(n_row(i))
+                if (bc(i) /= 4 ) then 
+                  if (n_row(i) > 0 .and. m_col(m) > 0) then
+                    call locmatrix%add(stiff_mat(i,m), n_row(i), m_col(m))
+                    if (drutes_config%it_method == 2 .or. drutes_config%it_method == 1) then
+                      call locmatrix%rowsfilled%nrfill(n_row(i))
+                    end if
                   end if
                 end if
                 

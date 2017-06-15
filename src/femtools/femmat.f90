@@ -55,6 +55,8 @@ module femmat
 	
 	call assemble_mat(ierr)
 	
+	call printmtx(spmatrix) ; stop
+	
 	      
 	
 	if (drutes_config%dimen >  1) then

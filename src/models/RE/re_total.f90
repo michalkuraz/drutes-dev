@@ -246,7 +246,7 @@ module re_total
       real(kind=rkind), dimension(:), allocatable, save :: solgrad, nvect
       type(integpnt_str) :: quadpnt
       integer(kind=ikind) :: i, el_vecino, el_vecino2, nd_tmp, nd, counter, status, nd_vecino, nd_vecino2, pos, test1, test2, nd3
-      integer(kind=ikind) :: myel
+      integer(kind=ikind) :: myel, edge_id
       real(kind=rkind), dimension(2,2) :: points
       real(kind=rkind), dimension(2) :: third
  
@@ -449,9 +449,9 @@ module re_total
       
       end if
      
+      edge_id = nodes%edge(elements%data(el_id, node_order))
       
-      
-      if (solval < 0 .or. gradn > 0) then
+      if (solval < pde_loc%bc(edge_id)%value .or. gradn > 0) then
         code = 2
         value = 0
       else 

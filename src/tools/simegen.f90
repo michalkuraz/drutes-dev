@@ -11,6 +11,7 @@ module simegen
       use globals
       use globals1d
       use core_tools
+      use readtools
       use debug_tools
 
 
@@ -18,11 +19,14 @@ module simegen
       integer(kind=ikind), dimension(:), allocatable :: pocty, sumy
       real(kind=rkind) :: dx1
       integer(kind=ikind) :: i,j, last, n
+      logical, dimension(:), allocatable :: testmat
+      logical :: err_mat = .false.
 
 
       allocate(pocty(ubound(deltax_1d,1)))
       allocate(sumy(0:ubound(deltax_1d,1)))
       
+
      
       pocet1 = 0
       do i = 1, ubound(deltax_1d,1)
@@ -77,17 +81,34 @@ module simegen
 	  if (avg(nodes%data(elements%data(i,1),1), nodes%data(elements%data(i,2),1)) > materials_1D(j,2) .and. &
 	      avg(nodes%data(elements%data(i,1),1), nodes%data(elements%data(i,2),1)) <= materials_1D(j,3)) then
 	      
-	      elements%material(i, :) = j
+	      elements%material(i, :) =  nint(materials_1D(j,1))
 	      EXIT
 	  end if
 	end do
       end do
-      
 
       if (minval(elements%material) == 0) then
 	print *, "check file drutes.conf/mesh/drumesh1d.conf, seems like the material description does not cover the entire domain"
 	ERROR STOP
       end if
+      
+      allocate(testmat(nint(maxval(materials_1D(:,1)))))
+      
+      testmat = .false.
+      
+      do i=1, ubound(elements%material,1)
+        testmat(elements%material(i,1)) = .true.
+      end do
+      
+      do i=1, ubound(testmat,1)
+        if (.not. testmat(i)) then
+          print *, "ERROR! material with ID", i, "undefined in drutes.conf/mesh.conf/drumesh1d.conf"
+          err_mat = .true.
+        end if
+      end do
+      
+      if (err_mat) call file_error(file_mesh, "ERROR!! check your material description")
+
 
       nodes%edge = 0
       
