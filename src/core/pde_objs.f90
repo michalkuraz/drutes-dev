@@ -300,7 +300,7 @@ module pde_objs
   contains 
   
 
-  
+    !> returns solution gradient for p1 approximation
     subroutine getgradp1(pde_loc, quadpnt, grad)
       use typy
       use decomp_vars
@@ -333,6 +333,7 @@ module pde_objs
 	case("gqnd", "obpt")
 	  top = 1
 	case("ndpt")
+          !in case of ndpt the gradient is assumed as an average value of gradients at neighbourhood points
 	  top = nodes%element(quadpnt%order)%pos
 	case default
 	  print *, "RUNTIME ERROR: incorrect quadpnt type definition (value quadpnt%type_pnt)"
@@ -363,7 +364,7 @@ module pde_objs
 	    dx = nodes%data(pts(2),1) - nodes%data(pts(1),1)
 	    quadpntloc(1)%order = pts(1)
 	    quadpntloc(2)%order = pts(2)
-	     gradloc(1) = gradloc(1) + (getvalp1(pde_loc,quadpntloc(2)) - getvalp1(pde_loc, quadpntloc(1)))/dx
+	    gradloc(1) = gradloc(1) + (getvalp1(pde_loc,quadpntloc(2)) - getvalp1(pde_loc, quadpntloc(1)))/dx
 	  case(2)
 	    a(1:2) = nodes%data(pts(1),:)
 	    b(1:2) = nodes%data(pts(2),:)
@@ -390,6 +391,7 @@ module pde_objs
     
     end subroutine getgradp1
     
+    !> returns solution value for p1 approximation
     function getvalp1(pde_loc, quadpnt) result(val)
       use typy
       use decomp_vars
@@ -429,6 +431,8 @@ module pde_objs
     
     end function getvalp1
     
+    
+    !> in case of asynchronyous temporal integration this function is separated from getvalp1, if standard temporal integration used, then this function is called from the first line of getvalp1
     function getvalp1loc(pde_loc, quadpnt, stopme) result(val)
       use typy
       use decomp_vars
@@ -444,6 +448,12 @@ module pde_objs
       integer(kind=ikind) :: i, edge, el, j, order
       real(kind=rkind) :: xder, yder
       real(kind=rkind), dimension(3,3) :: a
+      
+      if (.not. allocated(pde_common%xvect)) then
+        print *, "runtime error, you are probably calling getval function too early, vector with solution is not yet allocated"
+        print *, "contact Michal -> michalkuraz@gmail.com"
+        ERROR STOP
+      end if
       
             
       

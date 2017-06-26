@@ -159,11 +159,14 @@ module core_tools
       allocate(elements%data(elements%kolik, drutes_config%dimen+1))
       allocate(elements%areas(elements%kolik))
       allocate(elements%ders(elements%kolik, drutes_config%dimen+1, drutes_config%dimen))
+      allocate(elements%border(elements%kolik))
       
       n = pde_common%processes
       allocate(elements%material(elements%kolik, n))
       
       allocate(elements%neighbours(elements%kolik, ubound(elements%data,2)))
+      
+      allocate(nodes%boundary_order(nodes%kolik))
 
       
 

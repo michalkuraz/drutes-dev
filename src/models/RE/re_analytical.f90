@@ -56,7 +56,7 @@ module re_analytical
       real(kind=rkind) :: alpha
       real(kind=rkind) :: a
       real(kind=rkind) :: L, absval
-      integer :: i
+      integer(kind=ikind) :: i
   
 
       a = width

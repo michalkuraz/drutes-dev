@@ -546,7 +546,7 @@ module RE_constitutive
 
 
     !> \brief Mualem's fucntion for unsaturated hydraulic conductivity with van Genuchten's water content substitution
-    !! \f[   K(h) = \left\{ \begin{array}{l l} K_s\frac{\left( 1- (-\alpha h)^{n_{vg}m_{vg}} \left( 1+ (-\alpha h)^{n_{vg}} \right)^{-m_{vg}} \right)^2}{\left(1+(-\alpha h)^{n_{vg}} \right)^{\frac{m_{vg}}{2}}},  &  \mbox{$\forall$  $h \in$ $(-\infty,0)$}\\ K_s, & \mbox{$\forall$   $h \in$ $\langle 0, +\infty)$}\\ \end{array} \right. \f]
+    !! \f[   K(h) = \left\{ \begin{array}{l l} K_s\frac{\left( 1- (-\alpha h)^{n_{vg}m_{vg}} \left( 1+ (-\alpha h)^{n_{vg}} \right)^{-m_{vg}} \right)^2}{\left(1+(-\alpha h)^{n_{vg}} \right)^{\frac{m_{vg}}{2}}},  &  \mbox{$\forall$  $h \in$ $(-\infty,0)$}\\ K_s,  \mbox{$\forall$   $h \in$ $\langle 0, +\infty)$}\\ \end{array} \right. \f]
     !<
     subroutine mualem(pde_loc, layer, quadpnt,  x, tensor, scalar)
       use typy
@@ -617,7 +617,7 @@ module RE_constitutive
     
     
       !> \brief Gardner's fucntion for unsaturated hydraulic conductivity
-    !! \f[   K(h) = K_s exp(\alpha h),  &  \mbox{$\forall$  $h \in$ $(-\infty,0)$}\\ K_s, & \mbox{$\forall$   $h \in$ $\langle 0, +\infty)$}\\ \end{array} \right. \f]
+    !! \f[   K(h) = K_s exp(\alpha h),    \mbox{$\forall$  $h \in$ $(-\infty,0)$}\\ K_s,  \mbox{$\forall$   $h \in$ $\langle 0, +\infty)$}. \f]
     !<
     subroutine gardner_ks(pde_loc, layer, quadpnt,  x, tensor, scalar)
       use typy
@@ -777,7 +777,7 @@ module RE_constitutive
 
 
     !> \brief derivative of Mualem's function with van Genuchten's substitution for water content function
-    !! \f[ \begin{split} \frac{\textrm{d} K(h)}{\textrm{d} h}  = \left\{ \begin{array}{l l} K_s \frac{1}{2} \alpha (-\alpha h)^{(-1 + n)} (1 + (-\alpha h)^n)^{(-1 - m/ 2)} (1 - (-\alpha h)^{(m n)} \\ (1 + (-\alpha h)^n)^{-m})^2 m n +  2 (1 + (-\alpha h)^n)^{(-m/2)} (1 - (-\alpha h)^{(m n)}  \\ (1 + (-\alpha h)^n)^{-m}) (-\alpha (-\alpha h)^{(-1 + n + m n)}  \\ (1 + (-\alpha h)^n)^{(-1 - m)} m n + \alpha (-\alpha h)^{(-1 + m n)} \\ (1 + (-a h)^n)^{-m} m n),  \quad  \mbox{$\forall$  $h \in$ $(-\infty,0)$}\\ 0, \quad \mbox{$\forall$   $h \in$ $\langle 0, +\infty)$}\\ \end{array} \right. \end{split} \f]
+    !! \f[  \frac{\textrm{d} K(h)}{\textrm{d} h}  = \left\{ \begin{array}{l l} K_s \frac{1}{2} \alpha (-\alpha h)^{(-1 + n)} (1 + (-\alpha h)^n)^{(-1 - m/ 2)} (1 - (-\alpha h)^{(m n)}  (1 + (-\alpha h)^n)^{-m})^2 m n +  2 (1 + (-\alpha h)^n)^{(-m/2)} (1 - (-\alpha h)^{(m n)}   (1 + (-\alpha h)^n)^{-m}) (-\alpha (-\alpha h)^{(-1 + n + m n)}   (1 + (-\alpha h)^n)^{(-1 - m)} m n + \alpha (-\alpha h)^{(-1 + m n)}  (1 + (-a h)^n)^{-m} m n),  \quad  \mbox{$\forall$  $h \in$ $(-\infty,0)$}\\ 0, \quad \mbox{$\forall$   $h \in$ $\langle 0, +\infty)$}\\ \end{array} \right. \f]
     !<
     subroutine dmualem_dh(pde_loc, layer, quadpnt, x, vector_in, vector_out, scalar)
       use typy
@@ -1033,11 +1033,11 @@ module RE_constitutive
       
       vector_out(2) = tmp
       
-      if (abs(coord(2)) < -12.5 ) then
+!       if (abs(coord(2)) < -12.5 ) then
 	vector_out(1) =  1.0_rkind/coord(1)*vector_out(1)	
-      else
-	vector_out(1) = 0
-      end if
+!       else
+! 	vector_out(1) = 0
+!       end if
 
     end subroutine convection_rerot
     

@@ -22,7 +22,7 @@ module geom_tools
   public :: angle
   public :: inline
   public :: solve_bisect
-  public :: nad_carou
+  private :: aboveline
   public :: najdi_bod
   public :: max_height
   public :: interpolate
@@ -31,6 +31,7 @@ module geom_tools
   public :: getcoor
   private :: shoot
   public :: map1d2d,map1d2dJ !later modified by J due to laziness
+  public :: getnormal
   
   contains
   
@@ -326,7 +327,7 @@ module geom_tools
 	order3=1
     end select
 
-    if (.not. nad_carou(bod1, bod2, nodes%data(elements%data(el_id, order3),:))) then
+    if (.not. aboveline(bod1, bod2, nodes%data(elements%data(el_id, order3),:))) then
       zcoord = -zcoord
     end if
 
@@ -601,7 +602,7 @@ module geom_tools
 
     if ((f(xmin) > 0 .and. f(xmax) > 0) .or. (f(xmin) < 0 .and. f(xmax) < 0)) then
       ierr = -1
-      call  write_log("WARNING! the geom_tools::solve_bisect returned error code -1")
+      call  write_log("WARNING! geom_tools::solve_bisect returned error code -1")
       RETURN
     end if
 
@@ -612,7 +613,7 @@ module geom_tools
     do 
       if ((f(x1) > 0 .and. f(x2) > 0) .or. (f(x1) < 0 .and. f(x2) < 0)) then
 	ierr = -2
-	call  write_log("WARNING! the geom_tools::solve_bisect returned error code -2")
+	call  write_log("WARNING! geom_tools::solve_bisect returned error code -2")
 	RETURN
       end if
       if (f(x1) > 0 .and. f(x2) < 0) then
@@ -639,10 +640,11 @@ module geom_tools
   end subroutine solve_bisect
 
 
- !> function to determine if the point C lies above or bellow the line defined by points A and B
-  !! result is logical value nad, if true point lies above if false it lies bellow
+ !> function to determine if the point C lies above or below the line defined by points A and B
+  !! result is logical value nad, if true point lies above if false it lies below
+  !! if the line is vertical, then if true the point lies on the left hand side from the line, if false the point lies on the right hand side from the line.
   !<
-  function nad_carou (a,b,c) result(nad)
+  function aboveline (a,b,c) result(nad)
     use typy
     use globals
     use globals2d
@@ -675,11 +677,9 @@ module geom_tools
         nad = .true.
       end if
     else
-
-      if (abs(b(1)-a(1)) < 100*epsilon(xa1)) then ! je to svisla primka
-
-!    
-        if (c(1) >= b(1)) then ! je to napravo, ale beru to tim jako, ze je v prvnim kv.
+      if (abs(b(1)-a(1)) < 100*epsilon(xa1)) then ! vertical line
+ 
+        if (c(1) >= b(1)) then 
           nad = .false.
         else 
           nad = .true.
@@ -687,8 +687,7 @@ module geom_tools
         
       end if
       
-      if (abs(b(2)-a(2)) < 100*epsilon(xa1)) then ! je to vodorovna primka
-
+      if (abs(b(2)-a(2)) < 100*epsilon(xa1)) then ! horizontal line
         
         if (c(2) >= b(2)) then
           nad = .true.
@@ -698,7 +697,81 @@ module geom_tools
       end if
     end if
       
-  end function nad_carou
+  end function aboveline
+  
+  
+  !> this function returns outer normal boundary vector
+  !! bcpoints - nodes ids at the element boundary, integer, dimension(2)
+  !! thirdpt - coordinates of a point at at element, which lies out of the boundary. It is important in order to obtain proper positive direction of the normal vector
+  !<    
+  subroutine getnormal(bcpoints, thirdpt, nvect)
+    use typy
+    use globals
+    
+    real(kind=rkind), dimension(:,:), intent(in) :: bcpoints
+    real(kind=rkind), dimension(:), intent(in) :: thirdpt
+    real(kind=rkind), dimension(:), allocatable, intent(out) :: nvect
+    
+    real(kind=rkind) :: k
+    
+    if (drutes_config%dimen == 1) then
+      print *, "RUNTIME ERROR, function geomtools::getnormal is called for 1D problem"
+      print *, "if (desporate) contact Michal -> michalkuraz@gmail.com"
+      ERROR STOP
+    end if    
+    
+    if (.not. allocated(nvect)) allocate(nvect(drutes_config%dimen))
+  
+    if (abs(bcpoints(1,1)-bcpoints(2,1)) > 100*epsilon(bcpoints(1,1)) .and. &
+      abs(bcpoints(1,2)-bcpoints(2,2)) > 100*epsilon(bcpoints(1,1))) then
+     
+      k = (bcpoints(1,2)-bcpoints(2,2))/(bcpoints(1,1)-bcpoints(2,1))
+     
+      if (aboveline(bcpoints(1,:), bcpoints(2,:), thirdpt)) then
+        nvect(2) = -1
+      else
+        nvect(2) = 1
+      end if
+      
+      ! change x for y
+      if (aboveline((/bcpoints(1,2), bcpoints(1,1)/), (/bcpoints(2,2), bcpoints(2,1)/), (/thirdpt(2), thirdpt(1)/))) then
+        nvect(1) =  -abs(1.0_rkind/k)
+      else
+        nvect(1) = abs(1.0_rkind/k)
+      end if
+      
+      nvect = nvect/(sqrt(nvect(1)*nvect(1)+nvect(2)*nvect(2)))
+     
+    !vertical line
+    else if (abs(bcpoints(1,1)-bcpoints(2,1)) < 100*epsilon(bcpoints(1,1)) .and. &
+       abs(bcpoints(1,2)-bcpoints(2,2)) > 100*epsilon(bcpoints(1,1))) then
+       
+       if (aboveline(bcpoints(1,:), bcpoints(2,:), thirdpt)) then
+         nvect(1) = 1
+       else
+         nvect(1) = -1
+       end if
+       
+       nvect(2) = 0
+       
+     !horizontal line
+    else if (abs(bcpoints(1,1)-bcpoints(2,1)) > 100*epsilon(bcpoints(1,1)) .and. &
+       abs(bcpoints(1,2)-bcpoints(2,2)) < 100*epsilon(bcpoints(1,1))) then
+       
+       if (aboveline(bcpoints(1,:), bcpoints(2,:), thirdpt)) then
+         nvect(2) = -1
+       else
+         nvect(2) = 1
+       end if
+       
+       nvect(1) = 0
+     else
+       print *, "runtime error, exited from geomtools::getnormal seems like your boundary is defined by a single point"
+       print *, "check your mesh, if your mesh is ok, then contact Michal -> michalkuraz@gmail.com"
+       ERROR STOP
+     end if
+  
+  end subroutine getnormal
 
 
  !> subroutine seeking for the point which is on line identified by points a and b, and line between this point and c is rectangular to the line <a,b>
@@ -836,6 +909,7 @@ module geom_tools
       use printtools
       use core_tools
       use debug_tools
+      use debug_tools
 
       type(element), intent(in out) :: el
       type(node), intent(in) :: nd
@@ -846,12 +920,12 @@ module geom_tools
       
       select case(drutes_config%dimen)
 	case(1)
-	  do i=1, elements%kolik - 1
-	    elements%neighbours(i,1) = i-1
-	    elements%neighbours(i,2) = i+1
+	  do i=1, el%kolik - 1
+	    el%neighbours(i,1) = i-1
+	    el%neighbours(i,2) = i+1
 	   end do
-	   elements%neighbours(elements%kolik,1) = elements%kolik - 1
-	   elements%neighbours(elements%kolik,2) = 0
+	   el%neighbours(elements%kolik,1) = elements%kolik - 1
+	   el%neighbours(elements%kolik,2) = 0
 	case(2)
 	    !set neighbours
 	    do i=1, el%kolik
@@ -959,11 +1033,7 @@ module geom_tools
         call fileread(input(i,:), fileid)
       end do
             
-      print*, input(:,1)
-      print*, input(:,2)
-      print*, input(:,3)
-      print*, ubound(pde,1)
-      stop
+
       do i=1, elements%kolik
         do j=1, ubound(elements%data,2)
           k = elements%data(i,j)
@@ -1001,13 +1071,11 @@ module geom_tools
                   val_defined=.true.
                 end if
                 if (.not. val_defined) then
-                  print *, nodes%data(k,2) ; stop
                   call file_error(fileid, "Have you covered the entire vertical profile with data for the initial condition?")
                 end if
               end if
             end if
             pde(proc)%solution(k) =  value 
-            print*, value
           end do
         end do
       end do

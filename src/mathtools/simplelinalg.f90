@@ -2,30 +2,14 @@ module simplelinalg
   public :: diag_precond
   public :: invert_matrix
   private ::  determinant
+  public :: factorial
 
 
     contains
         
           !> right hand side diagonal preconditioner - preprocessor and postprocesor
-    !! preforms the diagonal matrix scaling as described is
-    !! \f[ \left(
-    !! \begin{matrix}
-    !! a_{11} &  a_{12} & a_{13}  & \ldots & a_{1n}\\
-    !! a_{21}  &  a_{22} & a_{23} & \ldots & a_{2n}\\
-    !! a_{31}  &  a_{32} & a_{33} & \ldots & a_{3n}\\
-    !! \vdots & \vdots & \vdots & \ddots & \vdots\\
-    !! a_{n1}  &   a_{n2} &  \ldots      & \ldots & a_{nn}
-    !! \end{matrix}
-    !! \right) \mbox{\fontsize{20}{24}\selectfont $\longrightarrow$}
-    !! \left(
-    !! \begin{matrix}
-    !! 1.0 &  \frac{a_{12}}{a_{22}} & \frac{a_{13}}{a_{33}}  & \ldots & \frac{a_{1n}}{a_{nn}} \\
-    !! \frac{a_{21}}{a_{11}}  &  1.0 & \frac{a_{23}}{a_{33}} & \ldots & \frac{a_{2n}}{a_{nn}} \\
-    !! \frac{a_{31}}{a_{11}}  &  \frac{a_{32}}{a_{22}} & 1.0 & \ldots & \frac{a_{3n}}{a_{nn}} \\
-    !! \vdots & \vdots & \vdots  & \ddots & \vdots \\
-    !! \frac{a_{n1}}{a_{11}}  &   \frac{a_{n2}}{a_{22}} &  \ldots      & \ldots & 1.0
-    !! \end{matrix} \right) \f]
-    !! \n
+    !! preforms the diagonal matrix scaling as described in Kuraz & Mayer: Algorithms for solving Darcian flow in structured porous media
+    !! 
     !! the postprocesor performs following operation with the vector of solution
     !! \f[ \mathbf{x} = \mathbf{x} \times \frac{1}{\mathbf{a_{diag}}} \f]
     !! where a_diag is a vector of diagonal values in solution matrix \n
@@ -188,6 +172,21 @@ module simplelinalg
 
 
     end function determinant
+    
+    function factorial(in) result(fact)
+      use typy
+      
+      integer(kind=ikind), intent(in) :: in
+      integer(kind=ikind) :: fact
+      
+      integer(kind=ikind) :: i
+      
+      fact = in
+      do i=in-1, 1, -1
+        fact = fact*i
+      end do
+      
+    end function factorial
 
  
 

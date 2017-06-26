@@ -571,7 +571,7 @@ module feminittools
 
                       elements%length(i,k) = elements%length(i,k) + &
                                               dist(nodes%data(elements%data(i,j),:), nodes%data(elements%data(i,k),:))/2
-                      elements%nvect_z(i,k) = get_nz(i,j,k)
+                      elements%nvect_z(i,k) = get_nz(i, j,k)
 
 		      found = elements%data(i,k)
 
@@ -607,7 +607,6 @@ module feminittools
 
 
 
-
 	ang = 0.0_rkind
 	do i=1, nodes%el2integ(id)%pos
 	  j=nodes%el2integ(id)%data(i)
@@ -628,18 +627,20 @@ module feminittools
 	      ang = ang + angle(A,B,C)*180.0_rkind/(4*datan(1.0d0))
 	    end if
 	  end do
-	  if (ang > 359.99 ) then
+	  if (ang >= 360 - 100*epsilon(ang) ) then
 	    EXIT
 	  end if
 	end do
 
 
-	if (ang < 359.99) then
+	if (ang < 360 - 100*epsilon(ang)) then
 	  nodes%boundary(id) = .true.
 	  found = .true.
         else
+          nodes%boundary(id) = .false.
 	  found = .false.
 	end if
+
 
       end subroutine search_bnd_nodes
       
@@ -650,21 +651,88 @@ module feminittools
 	use debug_tools
 	use core_tools
 	use printtools
+	use simplelinalg
 	
-	integer(kind=ikind) :: i, j, k
+	integer(kind=ikind) :: i, j, k, el, nd, elfirst, counter, nodes_at_bc, elprev, n, ii, jj, el1, el2
 	logical :: found
+        logical, dimension(:), allocatable, save :: nd_processed
+        integer(kind=ikind), dimension(:,:), allocatable :: el_combi
+
+        nodes%boundary = .false.
+        
+	if (.not. allocated(nd_processed)) then
+          allocate(nd_processed(nodes%kolik))
+          nd_processed = .false.
+        end if
 
 	do i=1, elements%kolik
-! 	  call progressbar(100*nint(i/(1.0*elements%kolik)))
 	  outer: do j=1, ubound(elements%data,2)
 	    if (elements%neighbours(i,j) == 0) then
 	      inner: do k = 1, ubound(elements%data,2)
-		call search_bnd_nodes(elements%data(i,k), found)
+                nd = elements%data(i,k)
+                if (.not. nd_processed(nd)) then
+                  call search_bnd_nodes(elements%data(i,k), found)
+                  nd_processed(nd) = .true.
+                end if
 	      end do inner
 	    end if
 	  end do outer   
 	end do	
-	      
+	
+
+	
+	nodes%boundary_order=0
+        
+        allocate(el_combi(ubound(elements%data,2),2))
+        
+
+        do el=1, elements%kolik
+          j=0
+          do i=1, ubound(elements%data,2)
+            nd=elements%data(el,i)
+            if (nodes%boundary(nd)) j=j+1
+          end do
+          
+          found=.false.
+
+           if (j>1 .and. j<=ubound(elements%data,2)) then
+            el_combi=0
+            do i=1,ubound(elements%data,2)
+              if (i<ubound(elements%data,2)) then
+                el_combi(i,:) = (/elements%data(el,i), elements%data(el, i+1)/)
+              else
+                el_combi(i,:) =  (/elements%data(el,i), elements%data(el, 1)/)
+              end if
+            end do
+            
+            found = .true.
+            elcomb: do i=1, ubound(el_combi,1)
+              if (nodes%boundary(el_combi(i,1)) .and. nodes%boundary(el_combi(i,2))) then
+                el_test: do ii=1, nodes%element(el_combi(i,1))%pos
+                  el1 = nodes%element(el_combi(i,1))%data(ii)
+                  do jj=1, nodes%element(el_combi(i,2))%pos
+                    el2 = nodes%element(el_combi(i,2))%data(jj)
+                    if (el1==el2 .and. el1 /= el .and. el2 /= el) then
+                      found=.false.
+                      exit el_test
+                    end if
+                  end do 
+                end do el_test
+                if (found) then
+                  call elements%border(el)%nrfill(el_combi(i,1))
+                  call elements%border(el)%nrfill(el_combi(i,2))
+                end if
+              end if
+            end do elcomb
+          
+          end if
+            
+	 
+        end do
+        
+
+
+               
 
       end subroutine set_boundary
       
