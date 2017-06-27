@@ -38,7 +38,6 @@ module feminittools
 
       allocate(elnode_prev(locmatdim))
 
-
       allocate(a_s(drutes_config%dimen+1, drutes_config%dimen+1))
 
       call init_integ()

@@ -1,5 +1,4 @@
-#I will add extra commands here
-# i will really add something new here
+#compiler options
 # c=/opt/gcc-trunk/bin/gfortran -fimplicit-none -fbounds-check
 # c=gfortran -fimplicit-none  -fcoarray=single -fbounds-check -g3 -fdefault-real-8 -Wextra -Wunused
 c=gfortran -fimplicit-none  -fcoarray=single -fbounds-check -fbacktrace -g -g3 -fdefault-real-8 -O0 -finit-real=nan
@@ -32,7 +31,7 @@ CORE_obj := typy.o global_objs.o globals.o globals1D.o globals2D.o  debug_tools.
 POINTERMAN_obj := manage_pointers.o
 RE_obj := re_constitutive.o re_reader.o re_globals.o re_total.o re_pointers.o re_analytical.o
 MATHTOOLS_obj :=  linalg.o integral.o solver_interfaces.o simplelinalg.o
-TOOLS_obj := printtools.o simegen.o read_inputs.o drutes_init.o geom_tools.o postpro.o readtools.o
+TOOLS_obj := printtools.o simegen.o read_inputs.o drutes_init.o geom_tools.o postpro.o readtools.o objfnc.o
 FEMTOOLS_obj := feminittools.o capmat.o stiffmat.o fem.o fem_tools.o femmat.o
 DECOMPO_obj :=  decomp_tools.o schwarz_dd.o  decomp_vars.o decomposer.o schwarz_dd2subcyc.o
 PMAoo_obj := fullmatrix.o mtx.o mtx_int.o mtxiotools.o pmatools.o solvers.o sparsematrix.o sparsematrix_int.o
@@ -112,6 +111,8 @@ drutes_init.o: read_inputs.o readtools.o core_tools.o $(CORE_obj) src/tools/drut
 	$c -c src/tools/drutes_init.f90
 postpro.o: $(CORE_obj) $(MATHTOOLS_obj) geom_tools.o src/tools/postpro.f90
 	$c -c src/tools/postpro.f90
+objfnc.o: $(CORE_obj) readtools.o src/tools/objfnc.f90
+	$c -c  src/tools/objfnc.f90
 #-------end TOOLS_obj------------------------------------
 
 #-------begin RE_obj--------------------------------

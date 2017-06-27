@@ -167,7 +167,7 @@ module manage_pointers
  	    solve_matrix => LDU_face
 !  	    solve_matrix => CG_normal_face
 	case(2)
-!  solve_matrix => pcg
+!           solve_matrix => pcg
 ! 	    solve_matrix => LDU_face
 	    solve_matrix => CG_normal_face
 ! 	    solve_matrix => sparse_gem_pig_AtA

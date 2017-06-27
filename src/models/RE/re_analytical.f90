@@ -16,9 +16,9 @@ module re_analytical
 
       real(kind=rkind) :: hbar, alpha
     
-      hbar = 1 - exp(alpha*hinit)
-      
       alpha = vgset(1)%alpha
+    
+      hbar = 1 - exp(alpha*hinit)
 
       bcval = 1.0/alpha*log(exp(alpha*hinit) + hbar*sin(4*atan(1.0)*x_coord/width))
 
@@ -57,6 +57,15 @@ module re_analytical
       real(kind=rkind) :: a
       real(kind=rkind) :: L, absval
       integer(kind=ikind) :: i
+      
+      if (abs(t) < epsilon(t)) then
+        if (abs(coord(2)-length) < epsilon(length)) then
+          call tracy_bc(h, coord(1), width, hinit)
+        else
+          h=hinit
+        end if
+        RETURN
+      end if
   
 
       a = width
@@ -84,9 +93,9 @@ module re_analytical
         lambda = i*4*atan(1.0)/L
         gamma = 1/c*(beta*beta + lambda*lambda)
         tmp = ((-1)**i)*lambda/gamma*sin(lambda*coord(2))*exp(-gamma*t)
-        if (i==1) absval=abs(1/c*lambda/gamma) * abs(exp(-gamma*t))
+        if (i==1) absval=abs(tmp)
 	suma = suma + tmp
-        if (abs(1/c*lambda/gamma) * abs(exp(-gamma*t)) < absval*epsilon(tmp) ) then
+        if (abs(tmp) < absval*epsilon(tmp) ) then
           EXIT
         end if
       
@@ -98,7 +107,7 @@ module re_analytical
       hbar = phi + hss
 
 
-      h = 1/alpha*log(exp(alpha*hr)+hbar)
+      h = 1/alpha*log(exp(alpha*hinit)+hbar)
 
 
   end subroutine tracy
