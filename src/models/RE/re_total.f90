@@ -456,7 +456,7 @@ module re_total
         value = 0
       else 
         code = 4
-        value = nodes%data(nd,2)
+        value = nodes%data(nd,drutes_config%dimen)
       end if
        
           
