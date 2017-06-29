@@ -6,11 +6,18 @@ module objfnc
   
   integer, private :: exp_file
   
-  real(kind=rkind), dimension(:,:), allocatable, private :: exp_data
-  real(kind=rkind), dimension(:,:), allocatable, private :: model_data
+  type, private :: point_str
+    real(kind=rkind), dimension(:), allocatable :: time
+    real(kind=rkind), dimension(:), allocatable :: data
+  end type point_str
+  
+
+  type(point_str), dimension(:), allocatable, private :: exp_data
+  type(point_str), dimension(:), allocatable, private :: model_data
   integer(kind=ikind), dimension(:), allocatable, private :: obs_ids, columns
   integer(kind=ikind), private :: noprop
   character(len=4096), private :: fileinputs
+  
   
   contains
     
@@ -19,10 +26,11 @@ module objfnc
       use readtools
       use core_tools
       
-      integer :: fileid
+      integer :: fileid, expfile, ierr
       
-      integer(kind=ikind) :: n, i
+      integer(kind=ikind) :: n, i, counter
       character(len=4096) :: msg
+      real(kind=rkind) :: r
       
       open(newunit=fileid, file="drutes.conf/inverse_modeling/objfnc.conf")
       
@@ -48,7 +56,32 @@ module objfnc
       
       call fileread(fileinputs, fileid)
       
-      call write_log("The file with inputs is", text2=trim(fileinputs))
+      call write_log("The file with inputs for inverse modeling is", text2=trim(fileinputs))
+      
+      open(newunit=expfile, file=adjustl(trim(fileinputs)), iostat=ierr)
+      
+      if (ierr /= 0) then
+        write(msg, *) "ERROR!, You have specified bad path for input file with experimental data for inverse modeling.", & 
+        new_line("a"), &
+        " The path you have spefied is: ", adjustl(trim(fileinputs)), new_line("a"), &
+        " The path should start with your DRUtES root directory", new_line("a"), &
+        " e.g. drutes.conf/inverse_modeling/inputs.dat"
+        call file_error(fileid, msg)
+      end if
+      
+      counter=0
+      do 
+        counter=counter+1
+        call comment(expfile)
+        read(unit=expfile, iostat=ierr) r
+        if (ierr /= 0) then
+          counter = counter-1
+          EXIT
+        end if
+      end do
+      
+      allocate(exp_data(counter))
+      
       
     
     end subroutine reader
