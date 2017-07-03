@@ -11,12 +11,19 @@ module objfnc
     real(kind=rkind), dimension(:), allocatable :: data
   end type point_str
   
+  type, private :: ram_limit_str
+    logical :: set
+    real(kind=rkind) :: memsize
+    character(len=2) :: units
+  end type ram_limit_str
 
   type(point_str), dimension(:), allocatable, private :: exp_data
   type(point_str), dimension(:), allocatable, private :: model_data
   integer(kind=ikind), dimension(:), allocatable, private :: obs_ids, columns
   integer(kind=ikind), private :: noprop
   character(len=4096), private :: fileinputs
+  type(ram_limit_str), private :: ram_limit
+  
   
   
   contains
@@ -31,6 +38,7 @@ module objfnc
       integer(kind=ikind) :: n, i, counter
       character(len=4096) :: msg
       real(kind=rkind) :: r
+      real(kind=rkind), dimension(:), allocatable :: tmpdata
       
       open(newunit=fileid, file="drutes.conf/inverse_modeling/objfnc.conf")
       
@@ -51,12 +59,19 @@ module objfnc
       msg="Is the number of properties for evaluating your objective function correct?"
       
       do i=1, noprop
-        call fileread(columns(i), fileid, ranges=(/0_ikind, huge(n)/), errmsg=msg)
+!       time, val, massval, advectval(1:D), observation_array(i)%cumflux(proc) - in total 4 properties + time
+        call fileread(columns(i), fileid, ranges=(/0_ikind, 4_ikind/), errmsg=msg)
       end do
       
       call fileread(fileinputs, fileid)
       
       call write_log("The file with inputs for inverse modeling is", text2=trim(fileinputs))
+
+      call fileread(ram_limit%set, fileid)
+      
+      call fileread(ram_limit%memsize, fileid)
+      
+      call fileread(ram_limit%units, fileid, options=(/"kB", "MB", "GB"/))
       
       open(newunit=expfile, file=adjustl(trim(fileinputs)), iostat=ierr)
       
@@ -80,7 +95,21 @@ module objfnc
         end if
       end do
       
-      allocate(exp_data(counter))
+      allocate(exp_data(noprop))
+      
+      allocate(exp_data(1)%time(counter))
+      
+      do i=1, noprop
+        allocate(exp_data(i)%data(counter))
+      end do
+      
+      close(exp_file)
+      
+      open(newunit=expfile, file=adjustl(trim(fileinputs)))
+
+!       do i=1, counter
+!         call fileread( tmpdata(, exp
+!       
       
       
     
