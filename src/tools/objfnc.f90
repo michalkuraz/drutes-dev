@@ -35,7 +35,7 @@ module objfnc
       
       integer :: fileid, expfile, ierr
       
-      integer(kind=ikind) :: n, i, counter
+      integer(kind=ikind) :: n, i, counter, tmpbound, expcols, i1, i2
       character(len=4096) :: msg
       real(kind=rkind) :: r
       real(kind=rkind), dimension(:), allocatable :: tmpdata
@@ -105,12 +105,38 @@ module objfnc
       
       close(exp_file)
       
-      open(newunit=expfile, file=adjustl(trim(fileinputs)))
-
-!       do i=1, counter
-!         call fileread( tmpdata(, exp
-!       
       
+      tmpbound=2
+      
+      allocate(tmpdata(tmpbound))
+
+      do 
+        open(newunit=expfile, file=adjustl(trim(fileinputs)))
+        call fileread(tmpdata(1:tmpbound-1), expfile)
+        i1 = ftell(expfile)
+        call fileread(tmpdata(1:tmpbound), expfile)
+        i2 = ftell(expfile)
+        
+        if (i1 == i2) then
+          tmpbound = tmpbound + 1
+          if (ubound(tmpdata,1) < tmpbound) then
+            deallocate(tmpdata)
+            allocate(tmpdata(2*tmpbound))
+          end if
+          
+        else
+          expcols = tmpbound - 1
+          EXIT
+        end if
+      end do
+      
+      if (expcols - 1 /= noprop*ubound(obs_ids,1) ) then
+        write(msg, *) "ERROR! You have either wrong definition in drutes.conf/inverse_modeling/objfnc.conf ", new_line("a") , &
+        "or wrong number of columns in", trim(fileinputs), new_line("a"), &
+        "e.g. for 2 observation points and 2 properties (in total 4 values per time) you need", new_line("a"), &
+        "5 columns -> 1st col. = time, col. 2-5  = your properties"
+        call file_error(expfile)
+      end if
       
     
     end subroutine reader
