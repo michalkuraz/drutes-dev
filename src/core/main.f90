@@ -106,17 +106,6 @@ program main
 
   end if
   
-  open(unit=5555, file="ll")
-  do i=1,100
-    do j=1,200
-      t=0
-      call tracy(-1000.0_rkind, (/1.0_rkind*i, 1.0_rkind*j/), t,  100.0_rkind, 200.0_rkind, r)
-      write(unit=5555, fmt=*) i, j, r
-    end do
-  end do
-  
-  close(5555)
-  stop
   
   call write_log("DRUtES solves ", text2=adjustl(trim(drutes_config%fullname)))
 
