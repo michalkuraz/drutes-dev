@@ -1194,7 +1194,6 @@ module geom_tools
               end if
             end if
             pde_loc%solution(k) =  value+nodes%data(k,D) 
-            print*, pde_loc%solution(k) 
         end do
       end do
         
