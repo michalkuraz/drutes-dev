@@ -40,7 +40,13 @@ module objfnc
       real(kind=rkind) :: r
       real(kind=rkind), dimension(:), allocatable :: tmpdata
       
-      open(newunit=fileid, file="drutes.conf/inverse_modeling/objfnc.conf")
+      open(newunit=fileid, file="drutes.conf/inverse_modeling/objfnc.conf", action="read", status="old", iostat=ierr)
+      
+      if (ierr /= 0) then
+        call write_log("unable to open file drutes.conf/inverse_modeling/objfnc.conf with objective function &
+        configuration, exiting DRUtES....")
+        ERROR STOP
+      end if
       
       call fileread(n, fileid, ranges=(/0_ikind, huge(n)/))
       
@@ -67,13 +73,16 @@ module objfnc
       
       call write_log("The file with inputs for inverse modeling is", text2=trim(fileinputs))
 
+
       call fileread(ram_limit%set, fileid)
       
       call fileread(ram_limit%memsize, fileid)
       
       call fileread(ram_limit%units, fileid, options=(/"kB", "MB", "GB"/))
       
+            
       open(newunit=expfile, file=adjustl(trim(fileinputs)), iostat=ierr)
+      
       
       if (ierr /= 0) then
         write(msg, *) "ERROR!, You have specified bad path for input file with experimental data for inverse modeling.", & 
@@ -84,11 +93,12 @@ module objfnc
         call file_error(fileid, msg)
       end if
       
+      
       counter=0
       do 
         counter=counter+1
         call comment(expfile)
-        read(unit=expfile, iostat=ierr) r
+        read(unit=expfile, fmt=*, iostat=ierr) r
         if (ierr /= 0) then
           counter = counter-1
           EXIT
@@ -103,7 +113,8 @@ module objfnc
         allocate(exp_data(i)%data(counter))
       end do
       
-      close(exp_file)
+      
+      close(expfile)
       
       
       tmpbound=2
@@ -114,8 +125,13 @@ module objfnc
         open(newunit=expfile, file=adjustl(trim(fileinputs)))
         call fileread(tmpdata(1:tmpbound-1), expfile)
         i1 = ftell(expfile)
+        close(expfile)
+        open(newunit=expfile, file=adjustl(trim(fileinputs)))
         call fileread(tmpdata(1:tmpbound), expfile)
         i2 = ftell(expfile)
+        close(expfile)
+        
+        print *, i1, i2, tmpbound
         
         if (i1 == i2) then
           tmpbound = tmpbound + 1
@@ -125,10 +141,12 @@ module objfnc
           end if
           
         else
-          expcols = tmpbound - 1
+          expcols = tmpbound - 2
           EXIT
         end if
       end do
+      
+      print *, expcols ; stop
       
       if (expcols - 1 /= noprop*ubound(obs_ids,1) ) then
         write(msg, *) "ERROR! You have either wrong definition in drutes.conf/inverse_modeling/objfnc.conf ", new_line("a") , &

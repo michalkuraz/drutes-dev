@@ -231,7 +231,7 @@ module readtools
       
       call comment(fileid)
       
-      read(unit=fileid, fmt=*, iostat=ierr) ch
+      read(unit=fileid, fmt="(a)", iostat=ierr) ch
       
       if (present(options)) then
 	ok = .false.
