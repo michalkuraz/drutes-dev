@@ -19,8 +19,9 @@ module objfnc
 
   type(point_str), dimension(:), allocatable, private :: exp_data
   type(point_str), dimension(:), allocatable, private :: model_data
-  integer(kind=ikind), dimension(:), allocatable, private :: obs_ids, columns
-  integer(kind=ikind), private :: noprop
+  integer(kind=ikind), dimension(:), allocatable, private :: obs_ids
+  integer(kind=ikind), dimension(:), allocatable, private :: noprop
+  integer(kind=ikind), dimension(:,:), allocatable, private :: columns
   character(len=4096), private :: fileinputs
   type(ram_limit_str), private :: ram_limit
   
@@ -52,37 +53,49 @@ module objfnc
       
       allocate(obs_ids(n))
       
-      msg="Is the number of observation points for evaluating your objective function correct?"
+      msg="Are the numbers of observation points for evaluating your objective function correct?"
       
       do i=1, n
-        call fileread(obs_ids(i), fileid, ranges=(/0_ikind, huge(n)/), errmsg=msg)
+        call fileread(obs_ids(i), fileid, ranges=(/1_ikind, ubound(observation_array,1)/), errmsg=msg)
       end do
-        
-      call fileread(noprop, fileid, ranges=(/0_ikind, huge(n)/))
+
+      allocate(noprop(n))
       
-      allocate(columns(noprop))
+      msg="For each observation point you must specify number of properties you want to check, the range is 1 till 4"
+      do i=1,n        
+        call fileread(noprop(i), fileid, ranges=(/1_ikind, 4_ikind/), errmsg=msg)
+      end do  
+      
+      allocate(columns(ubound(noprop,1), (maxval(noprop))))
       
       msg="Is the number of properties for evaluating your objective function correct?"
       
-      do i=1, noprop
+      columns = 0
+      
+      do i=1, ubound(noprop,1)
 !       time, val, massval, advectval(1:D), observation_array(i)%cumflux(proc) - in total 4 properties + time
-        call fileread(columns(i), fileid, ranges=(/0_ikind, 4_ikind/), errmsg=msg)
+        call fileread(columns(i, 1:noprop(i)), fileid, ranges=(/0_ikind, 4_ikind/), errmsg=msg, checklen=.TRUE.)
       end do
       
       call fileread(fileinputs, fileid)
       
       call write_log("The file with inputs for inverse modeling is", text2=trim(fileinputs))
-
-
+      
+      expcols=0
+      
+      do i=1, ubound(noprop,1)
+        expcols=expcols+noprop(i)
+      end do
+      
+      
+            
+      open(newunit=expfile, file=adjustl(trim(fileinputs)), iostat=ierr)
+      
       call fileread(ram_limit%set, fileid)
       
       call fileread(ram_limit%memsize, fileid)
       
       call fileread(ram_limit%units, fileid, options=(/"kB", "MB", "GB"/))
-      
-            
-      open(newunit=expfile, file=adjustl(trim(fileinputs)), iostat=ierr)
-      
       
       if (ierr /= 0) then
         write(msg, *) "ERROR!, You have specified bad path for input file with experimental data for inverse modeling.", & 
@@ -105,54 +118,39 @@ module objfnc
         end if
       end do
       
-      allocate(exp_data(noprop))
+      allocate(exp_data(ubound(noprop,1)))
       
       allocate(exp_data(1)%time(counter))
       
-      do i=1, noprop
-        allocate(exp_data(i)%data(counter))
+      do i=1, ubound(noprop,1)
+        allocate(exp_data(i)%data(counter, noprop(i)))
       end do
       
       
       close(expfile)
+       
+      open(newunit=expfile, file=adjustl(trim(fileinputs)))
       
-      
-      tmpbound=2
-      
-      allocate(tmpdata(tmpbound))
-
-      do 
-        open(newunit=expfile, file=adjustl(trim(fileinputs)))
-        call fileread(tmpdata(1:tmpbound-1), expfile)
-        i1 = ftell(expfile)
-        close(expfile)
-        open(newunit=expfile, file=adjustl(trim(fileinputs)))
-        call fileread(tmpdata(1:tmpbound), expfile)
-        i2 = ftell(expfile)
-        close(expfile)
-        
-        print *, i1, i2, tmpbound
-        
-        if (i1 == i2) then
-          tmpbound = tmpbound + 1
-          if (ubound(tmpdata,1) < tmpbound) then
-            deallocate(tmpdata)
-            allocate(tmpdata(2*tmpbound))
-          end if
-          
-        else
-          expcols = tmpbound - 2
-          EXIT
-        end if
-      end do
-      
-      print *, expcols ; stop
-      
-      if (expcols - 1 /= noprop*ubound(obs_ids,1) ) then
-        write(msg, *) "ERROR! You have either wrong definition in drutes.conf/inverse_modeling/objfnc.conf ", new_line("a") , &
+      write(msg, *) "ERROR! You have either wrong definition in drutes.conf/inverse_modeling/objfnc.conf ", new_line("a") , &
         "or wrong number of columns in", trim(fileinputs), new_line("a"), &
         "e.g. for 2 observation points and 2 properties (in total 4 values per time) you need", new_line("a"), &
         "5 columns -> 1st col. = time, col. 2-5  = your properties"
+        
+        
+      allocate(tmpdata(expcols+1))
+      
+      do i=1, counter     
+        call fileread(tmpdata, expfile, checklen=.TRUE.)
+        exp_data(1)%time(i) = tmpdata(1)
+        do j=2, ubound(tmpdata,1)
+          
+
+
+      
+      print *, expcols ; stop
+      
+
+
         call file_error(expfile)
       end if
       

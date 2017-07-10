@@ -175,20 +175,59 @@ module readtools
     
     
 
-    subroutine read_real_array(r, fileid, ranges, errmsg, noexit)
+    subroutine read_real_array(r, fileid, ranges, errmsg, checklen, noexit)
       use typy
       use globals
       real(kind=rkind), dimension(:), intent(out) :: r
       integer, intent(in) :: fileid
       real(kind=rkind), dimension(:), optional :: ranges
       character(len=*), intent(in), optional :: errmsg
+      !> checks if the array length is equal to the length of line in file
+      logical, intent(in), optional :: checklen
       logical, intent(in), optional :: noexit
       
             !logical vars
       integer :: ierr
-      integer(kind=ikind) :: i
+      integer(kind=ikind) :: i, i1, i2, arraybound
+      real(kind=rkind), dimension(:), allocatable :: tmpdata
       
       call comment(fileid)
+      
+      arraybound=1
+      
+      allocate(tmpdata(arraybound))
+      
+      if (present(checklen)) then
+        if (checklen) then
+          do 
+            call comment(fileid)
+            read(unit=fileid, fmt=*, iostat=ierr) tmpdata(1:arraybound-1)
+            i1=ftell(fileid)
+            backspace fileid
+            call comment(fileid)
+            read(unit=fileid, fmt=*, iostat=ierr) tmpdata(1:arraybound)
+            i2 = ftell(fileid)
+            backspace fileid
+           
+            if (i1 == i2) then
+              arraybound = arraybound + 1
+              if (ubound(tmpdata,1) < arraybound) then
+                deallocate(tmpdata)
+                allocate(tmpdata(2*arraybound))
+              end if    
+            else
+              arraybound = arraybound - 1
+              deallocate(tmpdata)
+              EXIT
+            end if
+          end do
+          if (arraybound /= ubound(r,1)) then
+            write(unit=terminal, fmt=*) " " //achar(27)//'[91m', "the line in your input file has &
+               incorrect number of values, check your inputs" //achar(27)//'[0m'
+            call file_error(fileid, errmsg)
+         end if
+        end if
+      end if
       
       read(unit=fileid, fmt=*, iostat=ierr) r
       
