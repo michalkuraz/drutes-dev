@@ -8,7 +8,7 @@ module objfnc
   
   type, private :: point_str
     real(kind=rkind), dimension(:), allocatable :: time
-    real(kind=rkind), dimension(:), allocatable :: data
+    real(kind=rkind), dimension(:,:), allocatable :: data
   end type point_str
   
   type, private :: ram_limit_str
@@ -24,6 +24,8 @@ module objfnc
   integer(kind=ikind), dimension(:,:), allocatable, private :: columns
   character(len=4096), private :: fileinputs
   type(ram_limit_str), private :: ram_limit
+  integer(kind=ikind), private :: pde_component, no_pdes
+  
   
   
   
@@ -33,10 +35,13 @@ module objfnc
       use typy
       use readtools
       use core_tools
+      use globals
+      use debug_tools
+      use pde_objs
       
       integer :: fileid, expfile, ierr
       
-      integer(kind=ikind) :: n, i, counter, tmpbound, expcols, i1, i2
+      integer(kind=ikind) :: n, i, counter, tmpbound, expcols, i1, j, low, top
       character(len=4096) :: msg
       real(kind=rkind) :: r
       real(kind=rkind), dimension(:), allocatable :: tmpdata
@@ -49,37 +54,71 @@ module objfnc
         ERROR STOP
       end if
       
-      call fileread(n, fileid, ranges=(/0_ikind, huge(n)/))
+      write(msg, *) "Set the total number of components you want to model correctly", new_line("a"), &
+                    "    e.g. your objective function consists of concetration and pressure head values",  new_line("a"), &
+                    "    then this numebr is equal 2"
+                    
+      call fileread(no_pdes, fileid, errmsg=msg, ranges=(/1_ikind, 1_ikind*ubound(pde,1)/))
+      
+      
+      
+      write(msg, *) "The number of PDE component is defined as follows:" , new_line("a"), &
+           "      Richards equation - always 1, no other option",  new_line("a"), &
+           "      Dual permeability problem - 1 for matrix, 2 for fracture",  new_line("a"), &
+           "      Advection-dispersion-reaction equation with advection defined in conf files - always 1 , no other option", &
+           new_line("a"), &
+           "      Advection-dispersion-reaction equation with advection computed - 1 for e.g. pressure head, &
+            2 for concentration" , & 
+           new_line("a"), &
+           "      Advection-dispersion-reaction equation with advection computed and kinetic sorption - & 
+           1 for e.g. pressure head, 2 for &
+           concentration in liquid phase, 3 for concentration in solid phase"
+           
+      call fileread(pde_component, fileid, errmsg=msg, ranges=(/1_ikind, 1_ikind*ubound(pde,1)/))
+           
+      
+      
+      write(msg, *) "Check the number of your points for constructing objective function, it should be equal or lower than ", &
+          "the number of observation points and at least 1.", new_line("a"), &
+          "   Your number of observation points is: ",   ubound(observation_array,1)
+      
+      call fileread(n, fileid, ranges=(/1_ikind, 1_ikind*ubound(observation_array,1)/), errmsg=msg)
       
       allocate(obs_ids(n))
       
       msg="Are the numbers of observation points for evaluating your objective function correct?"
       
       do i=1, n
-        call fileread(obs_ids(i), fileid, ranges=(/1_ikind, ubound(observation_array,1)/), errmsg=msg)
+        call fileread(obs_ids(i), fileid, ranges=(/1_ikind, 1_ikind*ubound(observation_array,1)/), errmsg=msg)
       end do
 
       allocate(noprop(n))
       
-      msg="For each observation point you must specify number of properties you want to check, the range is 1 till 4"
+      write(msg, *) "   For each observation point you must specify number of properties you want to check, &
+          the range is 1 till 4", &
+        new_line("a"), "1st property is typically solution, 2nd is mass (e.g. water content), 3rd is flux, 4th cummulative flux.", & 
+        new_line("a"), "See the head of the output file of the observation points!!" 
       do i=1,n        
         call fileread(noprop(i), fileid, ranges=(/1_ikind, 4_ikind/), errmsg=msg)
       end do  
       
+      
       allocate(columns(ubound(noprop,1), (maxval(noprop))))
       
-      msg="Is the number of properties for evaluating your objective function correct?"
+      write(msg, *) "Is the number of columns for evaluating your objective function correct?", new_line("a"), &
+          " 1st column is reserved for time, start with 2nd column, which is typically reserved for the primary solution"
       
       columns = 0
       
       do i=1, ubound(noprop,1)
 !       time, val, massval, advectval(1:D), observation_array(i)%cumflux(proc) - in total 4 properties + time
-        call fileread(columns(i, 1:noprop(i)), fileid, ranges=(/0_ikind, 4_ikind/), errmsg=msg, checklen=.TRUE.)
+        call fileread(columns(i, 1:noprop(i)), fileid, ranges=(/2_ikind, 5_ikind/), errmsg=msg, checklen=.TRUE.)
       end do
+      
       
       call fileread(fileinputs, fileid)
       
-      call write_log("The file with inputs for inverse modeling is", text2=trim(fileinputs))
+      call write_log("The file with inputs for inverse modeling is: ", text2=adjustl(trim(fileinputs)))
       
       expcols=0
       
@@ -87,9 +126,13 @@ module objfnc
         expcols=expcols+noprop(i)
       end do
       
-      
             
-      open(newunit=expfile, file=adjustl(trim(fileinputs)), iostat=ierr)
+      open(newunit=expfile, file=adjustl(trim(fileinputs)), status="old", action="read", iostat=ierr)
+      
+      if (ierr /= 0) then
+        print *, "the file with your inputs doesn't exist"
+        ERROR STOP
+      end if
       
       call fileread(ram_limit%set, fileid)
       
@@ -142,17 +185,17 @@ module objfnc
       do i=1, counter     
         call fileread(tmpdata, expfile, checklen=.TRUE.)
         exp_data(1)%time(i) = tmpdata(1)
-        do j=2, ubound(tmpdata,1)
-          
-
-
+        low=2
+        do j=1, ubound(exp_data,1)
+          top=low+noprop(j)-1
+          exp_data(j)%data(i, 1:noprop(j)) = tmpdata(low:top)
+          low=top+1
+        end do  
+      end do
+  
+      deallocate(tmpdata)
       
-      print *, expcols ; stop
       
-
-
-        call file_error(expfile)
-      end if
       
     
     end subroutine reader

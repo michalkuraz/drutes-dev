@@ -85,7 +85,7 @@ module re_reader
       end if
 
       write(msg, *) "HINT 1 : check number of layers in matrix", new_line("a"), &
-         "   HINT 2 : have you specified all values in the folowwing order: ", new_line("a"), &
+         "   HINT 2 : have you specified all values in the following order: ", new_line("a"), &
          "         alpha   n   m   theta_r   theta_s   S_s "
       allocate(tmpdata(6))
       do i = 1, ubound(vgmatrix,1)

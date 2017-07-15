@@ -105,20 +105,89 @@ module readtools
     end subroutine read_int_std
 
 
-    subroutine read_int_array(i, fileid, errmsg, noexit)
+     subroutine read_int_array(r, fileid, ranges, errmsg, checklen, noexit)
       use typy
-      integer(kind=ikind), dimension(:), intent(out) :: i
+      use globals
+      integer(kind=ikind), dimension(:), intent(out) :: r
       integer, intent(in) :: fileid
+      integer(kind=ikind), dimension(:), optional :: ranges
       character(len=*), intent(in), optional :: errmsg
+      !> checks if the array length is equal to the length of line in file
+      logical, intent(in), optional :: checklen
       logical, intent(in), optional :: noexit
-
-      !local vars
-      integer :: ierr
-
+      
+            !logical vars
+      integer :: ierr, ierr2
+      integer(kind=ikind) :: i, i1, i2, arraybound, current_pos, chpos
+      real(kind=rkind), dimension(:), allocatable :: tmpdata
+      
       call comment(fileid)
-
-      read(unit=fileid, fmt=*, iostat=ierr) i
-
+      
+      arraybound=1
+      
+      allocate(tmpdata(arraybound))
+      
+      if (present(checklen)) then
+        if (checklen) then
+          current_pos = ftell(fileid)
+          do 
+            call comment(fileid)
+            read(unit=fileid, fmt=*, iostat=ierr) tmpdata(1:arraybound-1)
+            i1=ftell(fileid)
+            backspace fileid
+            call comment(fileid)
+            read(unit=fileid, fmt=*, iostat=ierr) tmpdata(1:arraybound)
+            i2 = ftell(fileid)
+            backspace fileid
+           
+            if (ierr /= 0) then
+              arraybound = arraybound - 1
+              do
+                chpos = ftell(fileid)
+                if (chpos == current_pos) then
+                  EXIT
+                else
+                  backspace(unit=fileid, iostat=ierr2)
+                end if
+              end do
+              deallocate(tmpdata)
+              EXIT
+            end if
+            
+            if (i1 == i2) then
+              arraybound = arraybound + 1
+              if (ubound(tmpdata,1) < arraybound) then
+                deallocate(tmpdata)
+                allocate(tmpdata(2*arraybound))
+              end if    
+            else 
+              arraybound = arraybound - 1
+              do
+                chpos = ftell(fileid)
+                if (chpos == current_pos) then
+                  EXIT
+                else
+                  backspace(unit=fileid, iostat=ierr2)
+                end if
+              end do
+              deallocate(tmpdata)
+              EXIT
+            end if
+          end do
+  
+          if (arraybound /= ubound(r,1)) then
+            write(unit=terminal, fmt=*) " " //achar(27)//'[91m', "the line in your input file has &
+               incorrect number of values, check your inputs" //achar(27)//'[0m'
+            call file_error(fileid, errmsg)
+         end if
+        end if
+      end if
+      
+      call comment(fileid)
+      read(unit=fileid, fmt=*, iostat=ierr) r
+    
+      
+      
       if (ierr /= 0) then
         if (present(errmsg)) then
           call file_error(fileid,errmsg)
@@ -131,8 +200,19 @@ module readtools
 	  end if
 	end if
       end if
-
+      
+      if (present(ranges)) then
+	do i=1, ubound(r,1)
+	  if (r(i) < ranges(1) .or. r(i) > ranges(2)) then
+	    write(unit=terminal, fmt=*) " " //achar(27)//'[91m', "incorrect ranges of input parameter(s)" //achar(27)//'[0m'
+	    call file_error(fileid, errmsg)
+	  end if
+	end do
+      end if
+      
+      
     end subroutine read_int_array
+    
     
     
     subroutine read_real(r, fileid, ranges, errmsg, noexit)
@@ -187,8 +267,8 @@ module readtools
       logical, intent(in), optional :: noexit
       
             !logical vars
-      integer :: ierr
-      integer(kind=ikind) :: i, i1, i2, arraybound
+      integer :: ierr, ierr2
+      integer(kind=ikind) :: i, i1, i2, arraybound, current_pos, chpos
       real(kind=rkind), dimension(:), allocatable :: tmpdata
       
       call comment(fileid)
@@ -199,6 +279,7 @@ module readtools
       
       if (present(checklen)) then
         if (checklen) then
+          current_pos = ftell(fileid)
           do 
             call comment(fileid)
             read(unit=fileid, fmt=*, iostat=ierr) tmpdata(1:arraybound-1)
@@ -209,18 +290,41 @@ module readtools
             i2 = ftell(fileid)
             backspace fileid
            
+            if (ierr /= 0) then
+              arraybound = arraybound - 1
+              do
+                chpos = ftell(fileid)
+                if (chpos == current_pos) then
+                  EXIT
+                else
+                  backspace(unit=fileid, iostat=ierr2)
+                end if
+              end do
+              deallocate(tmpdata)
+              EXIT
+            end if
+            
             if (i1 == i2) then
               arraybound = arraybound + 1
               if (ubound(tmpdata,1) < arraybound) then
                 deallocate(tmpdata)
                 allocate(tmpdata(2*arraybound))
               end if    
-            else
+            else 
               arraybound = arraybound - 1
+              do
+                chpos = ftell(fileid)
+                if (chpos == current_pos) then
+                  EXIT
+                else
+                  backspace(unit=fileid, iostat=ierr2)
+                end if
+              end do
               deallocate(tmpdata)
               EXIT
             end if
           end do
+  
           if (arraybound /= ubound(r,1)) then
             write(unit=terminal, fmt=*) " " //achar(27)//'[91m', "the line in your input file has &
                incorrect number of values, check your inputs" //achar(27)//'[0m'
@@ -229,7 +333,10 @@ module readtools
         end if
       end if
       
+      call comment(fileid)
       read(unit=fileid, fmt=*, iostat=ierr) r
+    
+      
       
       if (ierr /= 0) then
         if (present(errmsg)) then
@@ -285,6 +392,13 @@ module readtools
       end if
       
       if (ierr /= 0 .or. .not.(ok) .and. (.not. present(noexit) .or. .not. noexit)) then
+        if (.not. ok) then
+          print *, "the value in your input file was: ", trim(ch)
+          print *, "however the allowed options for this field are:"
+          do i=1, ubound(options,1)
+            print *, "-  ", adjustl(trim(options(i)))
+          end do
+        end if
         if (present(errmsg)) then
           call file_error(fileid,errmsg)
         end if
