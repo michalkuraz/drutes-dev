@@ -402,7 +402,7 @@ module drutes_init
       use pde_objs
       use geom_tools
       use core_tools
-
+      use debug_tools
 
       integer(kind=ikind) :: i, j, k, point, dec
       real(kind=rkind), dimension(:,:), allocatable :: domain
@@ -432,7 +432,6 @@ module drutes_init
 	end do
       end do
 
-
       do i=1, ubound(observation_array,1)
 	if (observation_array(i)%element == 0) then
 	  print *, "ERROR: observation point: ", i, "with coordinates: ", observation_array(i)%xyz, "lies out of domain"
@@ -444,6 +443,10 @@ module drutes_init
 	ERROR STOP "error in observation points definition, check drutes.conf/global.conf"
       end if
 
+      
+      do i=1, ubound(pde,1)
+        allocate(pde(i)%obspt_filename(ubound(observation_array,1)))
+      end do
 
 
       do point=1, ubound(observation_array,1)
@@ -508,10 +511,9 @@ module drutes_init
       use global_objs
       use pde_objs
 
-      class(pde_str), intent(in) :: pde_loc
+      class(pde_str), intent(in out) :: pde_loc
       integer(kind=ikind), intent(in) :: name
       integer(kind=ikind), intent(in) :: decimals
-      character(len=256) :: fileid
       character(len=64) :: forma
       character(len=10), dimension(3) :: xyz
 
@@ -521,10 +523,10 @@ module drutes_init
       xyz(3) = "y"
       
       write(unit=forma, fmt="(a, I16, a)") "(a, a, a, I", decimals, ", a)"
-      write(unit=fileid, fmt=forma) "out/obspt_", adjustl(trim(pde_loc%problem_name(1))), "-", name, ".out"
+      write(unit=pde_loc%obspt_filename(name), fmt=forma) "out/obspt_", adjustl(trim(pde_loc%problem_name(1))), "-", name, ".out"
      
       if (.not. drutes_config%run_from_backup) then
-	open(unit=pde_loc%obspt_unit(name), file=fileid, action="write", status="replace")
+	open(unit=pde_loc%obspt_unit(name), file=adjustl(trim(pde_loc%obspt_filename(name))), action="write", status="replace")
 	
 	write(unit=pde_loc%obspt_unit(name), fmt=*) "#        time                      ", &
 	  trim(pde_loc%solution_name(2)), "            ", &
@@ -537,7 +539,8 @@ module drutes_init
 	!J added 
 ! 	close(unit=pde_loc%obspt_unit(name))
       else
-	open(unit=pde_loc%obspt_unit(name), file=fileid, action="write", access="append", status="old")
+	open(unit=pde_loc%obspt_unit(name), file=adjustl(trim(pde_loc%obspt_filename(name))), &
+              action="write", access="append", status="old")
       end if
 
 	  

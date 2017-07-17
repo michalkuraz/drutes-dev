@@ -106,34 +106,37 @@ module re_reader
         "      for 3D problem you must specify exactly Kxx, Kyy and Kzz values.", new_line("a"), &
         "       Obviously for 2D problem there must be exactly only Kxx and Kzz value, analogicaly for 1D problem", &
         new_line("a") , &
-        "       for 2D problem supply only 1 angle, for 3D problem supply 2 angles, and &
-        for 1D problem leave the angle value blank"
+        "       for 2D problem supply only 1 angle, for 3D problem supply 2 angles, and", new_line("a"), &
+        "       for 1D problem the angle value defines the angle between the VERTICAL and the flow trajectory", new_line("a"), &
+        "       (carefull some other softwares consider HORIZONTAL!!)"
         
-        deallocate(tmpdata)
-        
-        allocate(tmpdata(2*drutes_config%dimen-1))
+      deallocate(tmpdata)
       
+      select case(drutes_config%dimen)
+        case(1,2)
+          allocate(tmpdata(drutes_config%dimen+1))
+        case(3)
+          allocate(tmpdata(drutes_config%dimen+2))
+      end select
       
       do i = 1, ubound(vgmatrix,1)
         call fileread(tmpdata, file_waterm, errmsg=msg, checklen=.TRUE.)
         
-        if (drutes_config%dimen > 1) vgmatrix(i)%anisoangle(:) = tmpdata(1:drutes_config%dimen-1)
+        if (drutes_config%dimen > 1) then
+          vgmatrix(i)%anisoangle(:) = tmpdata(1:drutes_config%dimen-1)
+        else
+          vgmatrix(i)%anisoangle(:) = tmpdata(1)
+        end if
         
-        vgmatrix(i)%Ks_local(:) = tmpdata(drutes_config%dimen:) 
-        
-        
-          !nacteni pole pudnich charakteristik, podle schemat v deklaracich
-!           call comment(file_waterm)
-!           read(unit=file_waterm, fmt= *, iostat=ierr) vgmatrix(i)%anisoangle(:), vgmatrix(i)%Ks_local(:)
-!           if (ierr /= 0) then
-!             print *, "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-!             print *, "1st HINT: check number of records of anisothropy description in water.conf/matrix.conf!!"
-!             print *, "2nd HINT: for 3D problem you must specify exactly Kxx, Kyy and Kzz values."
-!             print *, "          Obviously for 2D problem there must be exactly only Kxx and Kzz value, analogicaly for 1D problem"
-!             print *, "3rd HINT: for 1D and 2D problem supply only 1 angle, for 3D problem supply 2 angles"
-!             print *, "----------------------------------------"
-!             call file_error(file_waterm)
-!           end if
+        select case(drutes_config%dimen)
+          case(1)
+            vgmatrix(i)%Ks_local(:) = tmpdata(2)
+          case(2)
+            vgmatrix(i)%Ks_local(:) = tmpdata(2:3)
+          case(3)
+            vgmatrix(i)%Ks_local(:) = tmpdata(3:5)
+        end select
+
         call set_tensor(vgmatrix(i)%Ks_local(:), vgmatrix(i)%anisoangle(:),  vgmatrix(i)%Ks)
       end do
 

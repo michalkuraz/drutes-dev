@@ -25,6 +25,7 @@ module objfnc
   character(len=4096), private :: fileinputs
   type(ram_limit_str), private :: ram_limit
   integer(kind=ikind), private :: pde_component, no_pdes
+  integer, dimension(:), allocatable :: datafiles
   
   
   
@@ -196,6 +197,40 @@ module objfnc
       deallocate(tmpdata)
       
       
+      allocate(model_data(ubound(obs_ids,1)*no_pdes))
+      
+      allocate(datafiles(ubound(obs_ids,1)*no_pdes))
+      
+      
+      do i=1, no_pdes
+        do j=1, ubound(obs_ids,1)
+          open(newunit=datafiles((i-1)*ubound(obs_ids,1)+j), file=pde(i)%obspt_filename(j), action="read", status="old", & 
+               iostat=ierr)
+          if (ierr/=0) then
+            print *, "error opening files with observation points"
+            print *, "this is a bug"
+            print *, "called from objfnc::reader"
+            print *, "contact Michal -> michalkuraz@gmail.com"
+            ERROR STOP
+          end if
+        end do
+      end do
+      
+      counter = 0
+      
+      do 
+        counter=counter+1
+        call comment(datafiles(1))
+        read(unit=datafiles(1), fmt=*, iostat=ierr) r
+        if (ierr /= 0) then
+          counter = counter-1
+          EXIT
+        end if     
+      end do
+      
+!       memsize = rkind*ubound(datafiles,1
+!       
+!       call write_log("DRUtES will allocate: ", int1=rkind*
       
     
     end subroutine reader

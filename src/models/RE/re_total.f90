@@ -21,7 +21,7 @@ module re_total
       real(kind=rkind) :: val
       
       real(kind=rkind), dimension(3) :: xyz
-      integer(kind=ikind) :: D
+      integer(kind=ikind) :: D, layer
       
 
            
@@ -30,9 +30,13 @@ module re_total
 	D = drutes_config%dimen
        
 	call getcoor(quadpnt, xyz(1:D))
-
-        val = getvalp1(pde_loc, quadpnt) - xyz(D)
-! 	
+	
+	if (drutes_config%dimen>1) then
+          val = getvalp1(pde_loc, quadpnt) - xyz(D)
+        else
+          layer = get_layer(quadpnt)
+ 	  val = getvalp1(pde_loc, quadpnt) - xyz(D)*cos(4*atan(1.0_rkind)/180*vgset(layer)%anisoangle(1))
+        end if
       else
         val = getvalp1(pde_loc, quadpnt)
       end if
@@ -442,9 +446,9 @@ module re_total
       else
      
         if (node_order == 1) then
-          gradn = solgrad(1)
-        else
           gradn = -solgrad(1)
+        else
+          gradn = solgrad(1)
         end if
       
       end if
@@ -456,7 +460,7 @@ module re_total
         value = 0
       else 
         code = 4
-        value = nodes%data(nd,2)
+        value = nodes%data(nd,drutes_config%dimen)
       end if
        
           

@@ -246,8 +246,10 @@ module read_inputs
       "   1 - unsteady problem with lumped (diagonal) capacity matrix (recommended)", new_line("a"), &
       "   2 - unsteady problem with consistent capacity matrix"
       
+      
       call fileread(pde_common%timeint_method, global, ranges=(/0_ikind,2_ikind/), errmsg=msg)
       
+      call fileread(drutes_config%compute_objfnc, global)
       
       call fileread(drutes_config%run_from_backup, global, errmsg="specify [y/n] if you want to relaunch your computation")
       

@@ -44,7 +44,7 @@ program main
   real(kind=rkind) :: r, t
   integer :: fileid, i, j
   
-  
+  print *, rkind ; stop
   call system("rm -rf out/*")
   
   
@@ -107,13 +107,13 @@ program main
 
   end if
   
-  call get_objval() ; stop
   
   call write_log("DRUtES solves ", text2=adjustl(trim(drutes_config%fullname)))
 
   call solve_pde(success)      
   
-
+  if (drutes_config%compute_objfnc) call get_objval()
+  
   sync all
   
   if (this_image() == 1) then

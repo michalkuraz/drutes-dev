@@ -295,7 +295,7 @@ module fem
       integer(kind=ikind) :: selection, i, ii, itold
       real(kind=rkind) :: valold
     
-      call make_print("separately")
+      
       if (www) then
 	call write_log("failed to converge, you can run the code again with different setup, &
 	the last output file can be used to relaunch your computation")
@@ -306,7 +306,8 @@ module fem
 	print *, "                     1 - update number of iterations"
 	print *, "                     2 - update minimal time step"
 	print *, "                     3 - update Picard iteration threshold"
-	print *, "                     4 - exit the code"
+	print *, "                     4 - exit the code and write your solution into file"
+	print *, "                     5 - exit the code don't save anything"
 ! 	read(*,iostat=i) selection
 	i = 0
 	read(*,*) selection
@@ -365,8 +366,15 @@ module fem
 	      text2="the previous value was", real2 = valold)
 	    case(4)
 	    
-	      call write_log("You have decided to EXIT this unstable and tormented computation. BYE!")
+              call make_print("separately")
+              
+	      call write_log("You have decided to EXIT this unstable and tormented computation. BYE!, Your last solution values saved.")
 	      STOP
+	    
+	    case(5)
+              call write_log("You have decided to EXIT this unstable and tormented computation. BYE!")
+	      STOP
+              
 	    
 	    case default
 	      print *, "You have typed an unsupported keyword here, I'll see you here probably over again :)"

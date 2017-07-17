@@ -132,6 +132,8 @@ module global_objs
     character(len=256) :: name
     !> full name of the partial differential equation problem -- e.g. dual permeability Richards equation in total hydraulic head form
     character(len=4096) :: fullname
+    !> when performing inverse analyses, by setting this value .true., drutes can compute value(s) of objective function(s)
+    logical :: compute_objfnc
   end type configuration
 
 
