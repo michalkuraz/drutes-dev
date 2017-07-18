@@ -13,18 +13,18 @@ module objfnc
   
   type, private :: ram_limit_str
     logical :: set
-    real(kind=rkind) :: memsize
+    real(kind=rkind) :: memsize=0.0
     character(len=2) :: units
   end type ram_limit_str
 
   type(point_str), dimension(:), allocatable, private :: exp_data
   type(point_str), dimension(:), allocatable, private :: model_data
   integer(kind=ikind), dimension(:), allocatable, private :: obs_ids
-  integer(kind=ikind), dimension(:), allocatable, private :: noprop
+  integer(kind=ikind), dimension(:), allocatable, private :: noprop, pde_comp
   integer(kind=ikind), dimension(:,:), allocatable, private :: columns
   character(len=4096), private :: fileinputs
   type(ram_limit_str), private :: ram_limit
-  integer(kind=ikind), private :: pde_component, no_pdes
+  integer(kind=ikind), private ::  no_pdes
   integer, dimension(:), allocatable :: datafiles
   
   
@@ -42,10 +42,13 @@ module objfnc
       
       integer :: fileid, expfile, ierr
       
-      integer(kind=ikind) :: n, i, counter, tmpbound, expcols, i1, j, low, top
+      integer(kind=ikind) :: n, i, counter, tmpbound, expcols, i1, j, low, top, skipcount
       character(len=4096) :: msg
       real(kind=rkind) :: r
       real(kind=rkind), dimension(:), allocatable :: tmpdata
+      real(kind=rkind) :: memsize, corr_memsize
+      logical, dimension(:), allocatable :: skipid
+      logical :: go4skip
       
       open(newunit=fileid, file="drutes.conf/inverse_modeling/objfnc.conf", action="read", status="old", iostat=ierr)
       
@@ -55,9 +58,9 @@ module objfnc
         ERROR STOP
       end if
       
-      write(msg, *) "Set the total number of components you want to model correctly", new_line("a"), &
+      write(msg, *) "Set the total number of components you want to model", new_line("a"), &
                     "    e.g. your objective function consists of concetration and pressure head values",  new_line("a"), &
-                    "    then this numebr is equal 2"
+                    "    then this number is equal 2"
                     
       call fileread(no_pdes, fileid, errmsg=msg, ranges=(/1_ikind, 1_ikind*ubound(pde,1)/))
       
@@ -73,9 +76,16 @@ module objfnc
            new_line("a"), &
            "      Advection-dispersion-reaction equation with advection computed and kinetic sorption - & 
            1 for e.g. pressure head, 2 for &
-           concentration in liquid phase, 3 for concentration in solid phase"
+           concentration in liquid phase, 3 for concentration in solid phase", new_line("a"), new_line("a"), &
+           "I M P O R T A N T !!! the number of lines with pde component ids has to be equal to the number of &
+           components defined above!!"
            
-      call fileread(pde_component, fileid, errmsg=msg, ranges=(/1_ikind, 1_ikind*ubound(pde,1)/))
+      
+      allocate(pde_comp(no_pdes))
+      
+      do i=1, no_pdes 
+        call fileread(pde_comp(i), fileid, errmsg=msg, ranges=(/1_ikind, 1_ikind*ubound(pde,1)/))
+      end do
            
       
       
@@ -101,7 +111,7 @@ module objfnc
         new_line("a"), "See the head of the output file of the observation points!!" 
       do i=1,n        
         call fileread(noprop(i), fileid, ranges=(/1_ikind, 4_ikind/), errmsg=msg)
-      end do  
+      end do 
       
       
       allocate(columns(ubound(noprop,1), (maxval(noprop))))
@@ -112,12 +122,12 @@ module objfnc
       columns = 0
       
       do i=1, ubound(noprop,1)
-!       time, val, massval, advectval(1:D), observation_array(i)%cumflux(proc) - in total 4 properties + time
+!       time, val, massval, advectval(1:D), observation_array(i)%cumflumemsizex(proc) - in total 4 properties + time
         call fileread(columns(i, 1:noprop(i)), fileid, ranges=(/2_ikind, 5_ikind/), errmsg=msg, checklen=.TRUE.)
       end do
       
       
-      call fileread(fileinputs, fileid)
+      call fileread(fileinputs, fileid)  
       
       call write_log("The file with inputs for inverse modeling is: ", text2=adjustl(trim(fileinputs)))
       
@@ -228,10 +238,84 @@ module objfnc
         end if     
       end do
       
-!       memsize = rkind*ubound(datafiles,1
-!       
-!       call write_log("DRUtES will allocate: ", int1=rkind*
+      memsize = rkind*(ubound(datafiles,1)+1)*counter
       
+      select case(ram_limit%units)
+        case("kB")
+          ram_limit%memsize = ram_limit%memsize*1e3
+        
+        case("MB")
+          ram_limit%memsize = ram_limit%memsize*1e6
+        
+        case("GB")
+          ram_limit%memsize = ram_limit%memsize*1e9
+        
+      end select
+      
+      if (ram_limit%set .and. memsize > ram_limit%memsize) then
+      
+        corr_memsize = int(ram_limit%memsize/(rkind*no_pdes*ubound(obs_ids,1)))*(rkind*no_pdes*ubound(obs_ids,1))
+        
+        write(msg, *) "of RAM for objective function computation. The datafiles exceeded your RAM limit, and thus", &
+                    100-int(corr_memsize/memsize*100),"% of your output data will be skipped."
+        go4skip=.true.
+        
+      else
+        corr_memsize = memsize
+        write(msg, *) "of RAM for objective function computation."
+        go4skip=.false.
+      end if
+      
+      
+      if (corr_memsize < 999) then
+        call write_log("DRUtES will allocate: ", int1=1_ikind*nint(corr_memsize), text2="B of RAM", text3=trim(msg))
+      else if (corr_memsize > 999 .and. corr_memsize < 1e6) then
+        call write_log("DRUtES will allocate: ", real1=corr_memsize/1e3, text2="kB", text3=trim(msg))
+      else if (corr_memsize > 1e6 .and. corr_memsize < 1e9 ) then
+        call write_log("DRUtES will allocate: ", real1=corr_memsize/1e6, text2="MB", text3=trim(msg))
+      else 
+        call write_log("DRUtES will allocate: ", real1=corr_memsize/1e9, text2="GB", text3=trim(msg))
+      end if
+      
+      close(datafiles(1))
+      
+      open(newunit=datafiles(1), file=pde(1)%obspt_filename(1), action="read", status="old")
+      
+      if (go4skip) then
+        
+        allocate(skipid(counter))
+        
+        skipid = .false.
+        
+        skipcount =  (int(corr_memsize/memsize*counter)+1)
+        
+        i=0
+        do 
+          call random_seed()
+          n = int(counter*rand(0))
+          if (n>0) then
+            if (.not. skipid(n)) then
+              i = i + 1
+              skipid(n) = .true.
+            end if
+          end if
+            
+          if (i == skipcount) EXIT
+        end do
+
+        datacount = skipcount
+      else
+        datacount = counter
+      end if
+      
+      allocate(model_data(1)%time(datacount))
+      
+      do i=1, ubound(model_data,1)
+        allocate(model_data(i)%data(datacount))
+      end do
+      
+      
+        
     
     end subroutine reader
     

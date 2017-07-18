@@ -44,7 +44,6 @@ program main
   real(kind=rkind) :: r, t
   integer :: fileid, i, j
   
-  print *, rkind ; stop
   call system("rm -rf out/*")
   
   
