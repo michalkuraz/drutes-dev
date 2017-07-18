@@ -42,13 +42,13 @@ module objfnc
       
       integer :: fileid, expfile, ierr
       
-      integer(kind=ikind) :: n, i, counter, tmpbound, expcols, i1, j, low, top, skipcount
+      integer(kind=ikind) :: n, i, counter, tmpbound, expcols, i1, j, low, top, skipcount, datacount, l
       character(len=4096) :: msg
-      real(kind=rkind) :: r
+      real(kind=rkind) :: r, memsize4col
       real(kind=rkind), dimension(:), allocatable :: tmpdata
       real(kind=rkind) :: memsize, corr_memsize
       logical, dimension(:), allocatable :: skipid
-      logical :: go4skip
+      logical :: go4skip, processed
       
       open(newunit=fileid, file="drutes.conf/inverse_modeling/objfnc.conf", action="read", status="old", iostat=ierr)
       
@@ -95,7 +95,7 @@ module objfnc
       
       call fileread(n, fileid, ranges=(/1_ikind, 1_ikind*ubound(observation_array,1)/), errmsg=msg)
       
-      allocate(obs_ids(n))
+      allocate(obs_ids(n*no_pdes))
       
       msg="Are the numbers of observation points for evaluating your objective function correct?"
       
@@ -103,7 +103,7 @@ module objfnc
         call fileread(obs_ids(i), fileid, ranges=(/1_ikind, 1_ikind*ubound(observation_array,1)/), errmsg=msg)
       end do
 
-      allocate(noprop(n))
+      allocate(noprop(n*no_pdes))
       
       write(msg, *) "   For each observation point you must specify number of properties you want to check, &
           the range is 1 till 4", &
@@ -255,6 +255,7 @@ module objfnc
       if (ram_limit%set .and. memsize > ram_limit%memsize) then
       
         corr_memsize = int(ram_limit%memsize/(rkind*no_pdes*ubound(obs_ids,1)))*(rkind*no_pdes*ubound(obs_ids,1))
+        memsize4col = corr_memsize! /(ubound(obs_ids,1)*no_pdes+1)
         
         write(msg, *) "of RAM for objective function computation. The datafiles exceeded your RAM limit, and thus", &
                     100-int(corr_memsize/memsize*100),"% of your output data will be skipped."
@@ -287,7 +288,7 @@ module objfnc
         
         skipid = .false.
         
-        skipcount =  (int(corr_memsize/memsize*counter)+1)
+        skipcount =  (int((memsize-memsize4col)/memsize*counter)+1)
         
         i=0
         do 
@@ -303,7 +304,7 @@ module objfnc
           if (i == skipcount) EXIT
         end do
 
-        datacount = skipcount
+        datacount = counter-skipcount
       else
         datacount = counter
       end if
@@ -311,10 +312,53 @@ module objfnc
       allocate(model_data(1)%time(datacount))
       
       do i=1, ubound(model_data,1)
-        allocate(model_data(i)%data(datacount))
+        allocate(model_data(i)%data(noprop(i), datacount))
       end do
       
       
+      allocate(tmpdata(4+drutes_config%dimen))
+      n=0
+      do i=1, ubound(skipid,1)
+        if (.not. skipid(i)) n = n+1
+      end do
+      
+ 
+
+      do i=1, ubound(model_data,1)
+        n=0
+        do l=1, counter
+          processed=.false.
+          call fileread(tmpdata, datafiles(i))
+
+          if (allocated(skipid)) then
+            if (.not. skipid(l)) then
+              processed = .true.
+              n=n+1
+            end if
+          else
+            call fileread(tmpdata, datafiles(i))
+            processed = .true.
+            n=n+1
+          end if
+          
+          if (i==1 .and. processed) then
+            model_data(i)%time(n) = tmpdata(1)
+          end if
+        
+          if (processed) then
+            do j=1, noprop(i)
+              model_data(i)%data(j, n) = tmpdata(columns(i,j))
+            end do
+          end if
+        end do
+      end do
+      
+      do i=1, datacount
+        print *, i,  model_data(1)%time(i), model_data(1)%data(1,i)
+      end do
+      
+      call printmtx(skipid) ; stop
+          
         
     
     end subroutine reader
