@@ -64,8 +64,10 @@ module fem
       open(unit=file_dt, file="out/dt", action="write", status="replace")
       
      call make_print("separately")
+     call write_obs()
      
-      call write_log("go 4 solving")
+
+     call write_log("go 4 solving")
       
       do
 
@@ -308,7 +310,7 @@ module fem
 	print *, "                     3 - update Picard iteration threshold"
 	print *, "                     4 - exit the code and write your solution into file"
 	print *, "                     5 - exit the code don't save anything"
-! 	read(*,iostat=i) selection
+
 	i = 0
 	read(*,*) selection
 	if (i == 0) then
@@ -317,7 +319,7 @@ module fem
 	      print *, "the number of maximal number of iterations is:", max_itcount, "type new value now"
 	      itold = max_itcount
 	      do
-! 		read(*, iostat=ii) max_itcount
+
 		ii = 0
 		read(*, *) max_itcount
 		if (ii /= 0) then
@@ -335,7 +337,7 @@ module fem
 	      print *, "the minimal time step is:", dtmin, "type new value now"
 	      valold = dtmin
 	      do
-! 		read(*, iostat=ii) dtmin
+
 		ii = 0
 		read(*, *) dtmin
 		if (ii /= 0) then
@@ -352,7 +354,7 @@ module fem
 	      print *, "the Picard iteration criterion is:", iter_criterion, "type new value now"
 	      valold = iter_criterion
 	      do
-! 		read(*, iostat=ii) iter_criterion
+
 		ii = 0
 		read(*, *) iter_criterion
 		if (ii /= 0) then

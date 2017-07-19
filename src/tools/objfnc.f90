@@ -44,7 +44,7 @@ module objfnc
       
       integer(kind=ikind) :: n, i, counter, tmpbound, expcols, i1, j, low, top, skipcount, datacount, l
       character(len=4096) :: msg
-      real(kind=rkind) :: r, memsize4col
+      real(kind=rkind) :: r
       real(kind=rkind), dimension(:), allocatable :: tmpdata
       real(kind=rkind) :: memsize, corr_memsize
       logical, dimension(:), allocatable :: skipid
@@ -255,7 +255,6 @@ module objfnc
       if (ram_limit%set .and. memsize > ram_limit%memsize) then
       
         corr_memsize = int(ram_limit%memsize/(rkind*no_pdes*ubound(obs_ids,1)))*(rkind*no_pdes*ubound(obs_ids,1))
-        memsize4col = corr_memsize! /(ubound(obs_ids,1)*no_pdes+1)
         
         write(msg, *) "of RAM for objective function computation. The datafiles exceeded your RAM limit, and thus", &
                     100-int(corr_memsize/memsize*100),"% of your output data will be skipped."
@@ -288,7 +287,7 @@ module objfnc
         
         skipid = .false.
         
-        skipcount =  (int((memsize-memsize4col)/memsize*counter)+1)
+        skipcount =  (int((memsize-corr_memsize)/memsize*counter)+1)
         
         i=0
         do 
@@ -312,17 +311,10 @@ module objfnc
       allocate(model_data(1)%time(datacount))
       
       do i=1, ubound(model_data,1)
-        allocate(model_data(i)%data(noprop(i), datacount))
+        allocate(model_data(i)%data(datacount, noprop(i)))
       end do
-      
       
       allocate(tmpdata(4+drutes_config%dimen))
-      n=0
-      do i=1, ubound(skipid,1)
-        if (.not. skipid(i)) n = n+1
-      end do
-      
- 
 
       do i=1, ubound(model_data,1)
         n=0
@@ -336,7 +328,6 @@ module objfnc
               n=n+1
             end if
           else
-            call fileread(tmpdata, datafiles(i))
             processed = .true.
             n=n+1
           end if
@@ -347,27 +338,92 @@ module objfnc
         
           if (processed) then
             do j=1, noprop(i)
-              model_data(i)%data(j, n) = tmpdata(columns(i,j))
+              model_data(i)%data(n,j) = tmpdata(columns(i,j))
             end do
           end if
         end do
-      end do
-      
-      do i=1, datacount
-        print *, i,  model_data(1)%time(i), model_data(1)%data(1,i)
-      end do
-      
-      call printmtx(skipid) ; stop
-          
-        
+      end do  
     
     end subroutine reader
     
     subroutine get_objval()
       use typy
+      use debug_tools
+      integer(kind=ikind) :: i,j, pos, k, n, l
+      type :: errors_str
+        real(kind=rkind), dimension(:), allocatable :: val
+      end type
+      type(errors_str), dimension(:), allocatable :: errors
+      logical :: inlast 
+      integer :: outfile
+      real(kind=rkind) :: dt, slope, modval, suma
+      
       
       call reader()
-    
+
+      allocate(errors(ubound(model_data,1)))
+      
+      do i=1, ubound(errors,1)
+        allocate(errors(i)%val(noprop(i)))
+        errors(i)%val = 0
+      end do
+      
+      
+      pos = 1
+      do j=1, ubound(exp_data(1)%time,1) 
+        do k=pos, ubound(model_data(1)%time,1)-1
+          if (exp_data(1)%time(j) >=  model_data(1)%time(k) .and. exp_data(1)%time(j) < model_data(1)%time(k+1)) then
+            dt = model_data(1)%time(k+1) - exp_data(1)%time(j)
+            if (dt < model_data(1)%time(k+1)*epsilon(dt)) then
+              inlast = .true.
+            else
+              inlast = .false.
+            end if
+            
+            pos = k
+            
+            n=0
+            do i=1, ubound(errors,1)
+              do l=1, ubound(errors(i)%val,1)
+                n=n+1
+                if (.not. inlast) then
+                  slope = (model_data(n)%data(pos+1,l) - model_data(n)%data(pos,l))/ &
+                          (model_data(1)%time(pos+1) - model_data(1)%time(pos))
+                  modval = model_data(n)%data(pos+1,l) - slope*dt
+                else
+                  modval = model_data(n)%data(pos+1,l)
+                end if
+                
+                errors(i)%val(l) = errors(i)%val(l) + (modval - exp_data(n)%data(j,l))*(modval - exp_data(n)%data(j,l))
+
+              end do
+            end do
+           
+            EXIT
+          end if
+        end do
+      
+      end do
+        
+      do i=1, ubound(errors,1)  
+        errors(i)%val = sqrt(errors(i)%val)
+      end do
+      
+      open(newunit=outfile, file="out/objfnc.val", status="new", action="write")
+      
+      write(outfile, *) "# values of objective functions"
+      
+      suma=0
+      do i=1, ubound(errors,1)
+        do j=1, ubound(errors(i)%val,1)
+         suma = suma + errors(i)%val(j)
+        end do
+      end do
+      write(outfile, *) suma
+      
+      
+      close(outfile)
+                                
     end subroutine get_objval
   
 

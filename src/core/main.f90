@@ -109,7 +109,7 @@ program main
   
   call write_log("DRUtES solves ", text2=adjustl(trim(drutes_config%fullname)))
 
-  call solve_pde(success)      
+  call solve_pde(success)     
   
   if (drutes_config%compute_objfnc) call get_objval()
   
