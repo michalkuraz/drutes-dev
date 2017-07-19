@@ -64,8 +64,10 @@ module fem
       open(unit=file_dt, file="out/dt", action="write", status="replace")
       
      call make_print("separately")
+     call write_obs()
      
-      call write_log("go 4 solving")
+
+     call write_log("go 4 solving")
       
       do
 
@@ -295,7 +297,7 @@ module fem
       integer(kind=ikind) :: selection, i, ii, itold
       real(kind=rkind) :: valold
     
-      call make_print("separately")
+      
       if (www) then
 	call write_log("failed to converge, you can run the code again with different setup, &
 	the last output file can be used to relaunch your computation")
@@ -306,8 +308,9 @@ module fem
 	print *, "                     1 - update number of iterations"
 	print *, "                     2 - update minimal time step"
 	print *, "                     3 - update Picard iteration threshold"
-	print *, "                     4 - exit the code"
-! 	read(*,iostat=i) selection
+	print *, "                     4 - exit the code and write your solution into file"
+	print *, "                     5 - exit the code don't save anything"
+
 	i = 0
 	read(*,*) selection
 	if (i == 0) then
@@ -316,7 +319,7 @@ module fem
 	      print *, "the number of maximal number of iterations is:", max_itcount, "type new value now"
 	      itold = max_itcount
 	      do
-! 		read(*, iostat=ii) max_itcount
+
 		ii = 0
 		read(*, *) max_itcount
 		if (ii /= 0) then
@@ -334,7 +337,7 @@ module fem
 	      print *, "the minimal time step is:", dtmin, "type new value now"
 	      valold = dtmin
 	      do
-! 		read(*, iostat=ii) dtmin
+
 		ii = 0
 		read(*, *) dtmin
 		if (ii /= 0) then
@@ -351,7 +354,7 @@ module fem
 	      print *, "the Picard iteration criterion is:", iter_criterion, "type new value now"
 	      valold = iter_criterion
 	      do
-! 		read(*, iostat=ii) iter_criterion
+
 		ii = 0
 		read(*, *) iter_criterion
 		if (ii /= 0) then
@@ -365,8 +368,15 @@ module fem
 	      text2="the previous value was", real2 = valold)
 	    case(4)
 	    
-	      call write_log("You have decided to EXIT this unstable and tormented computation. BYE!")
+              call make_print("separately")
+              
+	      call write_log("You have decided to EXIT this unstable and tormented computation. BYE!, Your last solution values saved.")
 	      STOP
+	    
+	    case(5)
+              call write_log("You have decided to EXIT this unstable and tormented computation. BYE!")
+	      STOP
+              
 	    
 	    case default
 	      print *, "You have typed an unsupported keyword here, I'll see you here probably over again :)"

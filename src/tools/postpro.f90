@@ -257,12 +257,12 @@ module postpro
 
 	  quadpnt%order = i
 	  
+          quadpnt%element = observation_array(i)%element
+	  
 	  quadpnt%preproc=.true.
 	  
 	  call pde(proc)%flux(layer=layer, quadpnt=quadpnt,  vector_out=advectval(1:D))
-	  !if(i==1)then
-	  !  print*, advectval(1:D)
-	  !end if
+
 	  val = pde(proc)%getval(quadpnt)
 
           massval = pde(proc)%mass(layer, quadpnt)

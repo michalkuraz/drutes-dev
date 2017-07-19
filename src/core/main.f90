@@ -35,14 +35,14 @@ program main
   use pde_objs
   use debug_tools
   use re_analytical
-
+  use objfnc
+  
   character(len=256) :: writer
   character(len=2)   :: ch
   logical :: success
   real ::  stop_time
   real(kind=rkind) :: r, t
   integer :: fileid, i, j
-  
   
   call system("rm -rf out/*")
   
@@ -109,9 +109,10 @@ program main
   
   call write_log("DRUtES solves ", text2=adjustl(trim(drutes_config%fullname)))
 
-  call solve_pde(success)      
+  call solve_pde(success)     
   
-
+  if (drutes_config%compute_objfnc) call get_objval()
+  
   sync all
   
   if (this_image() == 1) then
