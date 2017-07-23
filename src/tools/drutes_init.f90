@@ -227,9 +227,15 @@ module drutes_init
 	  select case(trim(arg))
 	    case("-o")
 		    call getarg(i+1,oarg)
-		    if (trim(oarg) == "www") then
-		      www = .true.
-		    end if
+		    select case(trim(oarg))
+                      case("www")
+                        www=.true.
+                      case("optim")
+                        optim=.true.
+                      case default
+                        print *, "unrecognized option after -o , exiting...."
+                    end select
+
 		    skip = 1
 		    
 	    case("--print-level")
