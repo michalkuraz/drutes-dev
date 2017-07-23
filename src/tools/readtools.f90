@@ -683,6 +683,7 @@ module readtools
           counter = 0
           do 
             counter = counter + 1
+            call comment(fileid)
             read(unit=fileid, fmt=*, iostat=ierr) tmp
             if (ierr /= 0) then
               EXIT
@@ -693,47 +694,14 @@ module readtools
           close(fileid)
 
           counter = counter - 1
-          
-          tmp=-1.0
-          
-          counter2=0
-          
-          n=2
-          do 
-            open(unit=fileid, file=trim(filename), action="read", status="old",  iostat=ierr)
-            allocate(tester(n))
-            tester = sqrt(tmp)
-            read(unit=fileid, fmt=*, iostat=ierr) tester
-            if (isnan(tester(ubound(tester,1))) ) then
-              close(fileid)
-              EXIT
-            else
-              deallocate(tester)
-              n=n*2
-              close(fileid)
-            end if
-          end do
-           
+ 
           open(unit=fileid, file=trim(filename), action="read", status="old",  iostat=ierr)
    
-          
-          
-          do j=1, ubound(tester,1)
-            if (isnan(tester(j))) then
-              EXIT
-            else
-              counter2=counter2+1
-            end if
-          end do
-          
-          allocate(struct(i)%series(counter,counter2/counter))
+          allocate(struct(i)%series(counter,2))
 
           do j=1, counter
-            read(unit=fileid, fmt=*, iostat=ierr) struct(i)%series(j,:)
-            if (ierr /= 0) then
-              write(unit=msg, fmt="(a,a,a,i4)") "incorrect data in file:  ", trim(filename), "    at line:", j
-              call file_error(fileid, msg)
-            end if
+            write(msg, *) "Incorrect data in file:  ", trim(filename), "    at line:", j
+            call fileread(struct(i)%series(j,:), fileid, checklen=.true., errmsg=msg)
           end do
 
           struct(i)%series_pos = 1
