@@ -302,6 +302,10 @@ module fem
 	call write_log("failed to converge, you can run the code again with different setup, &
 	the last output file can be used to relaunch your computation")
 	ERROR STOP
+      else if (optim) then
+        call write_log("failed to converged, changing to semiexplicit scheme, results are unreliable since now")
+        iter_criterion = huge(iter_criterion)
+        time_step = dtmax
       else
 	call write_log("failed to converge, user can change some values now")
 	print *, "select the following:"
