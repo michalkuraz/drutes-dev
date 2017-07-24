@@ -32,8 +32,41 @@ module geom_tools
   private :: shoot
   public :: map1d2d,map1d2dJ !later modified by J due to laziness
   public :: getnormal
+  public :: get_layer
   
   contains
+  
+  function get_layer(quadpnt) result(layer)
+    use typy
+    use globals
+    use global_objs
+    
+    type(integpnt_str), intent(in) :: quadpnt
+    integer(kind=ikind) :: layer
+    integer(kind=ikind) :: el
+    
+    select case(quadpnt%type_pnt)
+      case("ndpt")
+        el = nodes%element(quadpnt%order)%data(1)
+        layer=elements%material(el,1)
+      case("obpt", "gqnd")
+        el = quadpnt%element
+        if (.not. (el >= 1 .and. el<=elements%kolik)) then
+          print *, "error in quadpnt data", el, quadpnt%type_pnt
+          print *, "called from geom_tools::get_layer"
+          print *, "contact Michal -> michalkuraz@gmail.com"
+          ERROR STOP
+        end if
+        layer = elements%material(el,1)
+      case default
+          print *, "err or in quadpnt data"
+          print *, "called from geom_tools::get_layer"
+          print *, "contact Michal -> michalkuraz@gmail.com"
+          ERROR STOP
+    end select
+  
+  end function get_layer
+  
   
   subroutine getcoor(quadpnt, array)
     use typy

@@ -88,6 +88,8 @@ module pde_objs
     real(kind=rkind), dimension(:), allocatable      :: solution
     !> contains units of files opened for particular observation points
     integer, dimension(:), allocatable               :: obspt_unit
+    !>filename of the observation files
+    character(len=256), dimension(:), allocatable    :: obspt_filename
     !> procnodes(1) = lower id of the process base function
     !! procnodes(2) = upper id of the process base function
     integer, dimension(2) :: procbase_fnc

@@ -54,7 +54,7 @@ module femmat
 
 	
 	call assemble_mat(ierr)
-	      
+
 	
 	if (drutes_config%dimen >  1) then
 	  call diag_precond(a=spmatrix, x=pde_common%xvect(1:fin,3), mode=1)

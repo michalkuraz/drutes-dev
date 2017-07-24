@@ -33,19 +33,36 @@ module global_objs
     logical :: preproc=.false.
   end type integpnt_str
   
+  !> smart array, you don't need to allocate -- usefull if you don't know how many data you will write in, 
+  !! it is simply smart enough, it does all allocations automatically. By default the array data allocates on dimension 2, if the data 
+  !! doesn't fit into this array, then the array is reallocated for a double of its original size
+  !<
   type, public :: smartarray_int
+    !> array with data
     integer(kind=ikind), dimension(:), allocatable :: data
+    !> put there what ever you like, sometimes it can be usefull if you have this array
     integer(kind=ikind), dimension(:), allocatable :: info
+    !> current dimension of your data, e.g. your smart array is declared as smart, then don't try ubound(smart%%data) NEVER!!
+    !! for the array dimension see the value smart%pos
+    !<
     integer(kind=ikind) :: pos=0, infopos=0
     contains
       !> fills value into array, its dimension is automaticaly allocated
       procedure :: fill => ismartfill
+      !> clear the smart array, input parameter is logical FULL, this parameter is optional
+      !! by default if FULL not passed or FULL is .false., then only the value smart%pos is set to zero
+      !! if FULL .true., the also the array data is deallocated
+      !! it turns out that FULL .false. is faster, but less memory efficient
+      !<
       procedure :: clear => ismartclear
-      !> disjoint fill -- it fills value into array, only if the same value does not exist in the array
+      !> disjoint fill -- it fills value into array, only if the same value does not already exist in the array
       procedure :: nrfill => ismartfill_norepeat
+      !> return value is logical, if the value already exist in the array, then the reutrn value is .true. otherwise .false.
       procedure :: exist => ismartexist
   end type smartarray_int
   
+  
+  !> For comments and description see smartarray_int. 
   type, public ::  smartarray_real
     real(kind=rkind), dimension(:), allocatable :: data
     integer(kind=ikind), dimension(:), allocatable :: info
@@ -54,7 +71,10 @@ module global_objs
       !> fills value into array, its dimension is automaticaly allocated
       procedure :: fill => rsmartfill
       procedure :: clear => rsmartclear
-      !> disjoint fill -- it fills value into array, only if the same value does not exist in the array
+      !> disjoint fill -- it fills value into array, only if the same value does not exist in the array. Since we deal with real numbers in this structure, then the real number is checked for absolute value of differece between two real numbers
+      !! the value is checked as 
+      !!  abs(array%data(i) - input) < max(abs(array%data(i)), abs(input))*(epsilon(input)
+      !<
       procedure :: nrfill => rsmartfill_norepeat
   end type smartarray_real  
   
@@ -108,15 +128,19 @@ module global_objs
     !!2 - no iterations
     !<
     integer(kind=ikind) :: it_method
-    !> descriptor of the problem type (RE_std = standard Richards equation, RE_mod = modified Richards eq. (Noborio)
+    !> descriptor of the problem type (REstdH = standard Richards equation in total hydraulic head form 
     character(len=256) :: name
+    !> full name of the partial differential equation problem -- e.g. dual permeability Richards equation in total hydraulic head form
     character(len=4096) :: fullname
+    !> when performing inverse analyses, by setting this value .true., drutes can compute value(s) of objective function(s)
+    logical :: compute_objfnc
   end type configuration
 
 
     
   !> structure to define observation points
   type, public :: observation
+    
     real(kind=rkind), dimension(:), allocatable :: xyz
     integer(kind=ikind) :: element
     real(kind=rkind), dimension(:), allocatable :: cumflux
@@ -141,7 +165,8 @@ module global_objs
     character(len=4) :: fmt
     logical :: anime
     integer(kind=ikind) :: nframes
-    !> format of output files for observation
+    !> format of output files for observation  real(kind=rkind), dimension(:,:), allocatable, private :: exp_data
+  real(kind=rkind), dimension(:,:), allocatable, private :: model_data
     character(len=4) :: output_fmt
   end type observe_info_str
 
@@ -271,6 +296,8 @@ module global_objs
         if (array%pos /= array%infopos) then
 	    print *, "this is a bug in the code"
 	    print *, "smartarray%data and smartarray%info has different amount of data written"
+            print *, "called from global_objs::rsmartfill"
+	    print *, "contact Michal -> michalkuraz@gmail.com"
 	    ERROR STOP
 	end if
       end if
@@ -394,6 +421,8 @@ module global_objs
         if (array%pos /= array%infopos) then
 	    print *, "this is a bug in the code"
 	    print *, "smartarray%data and smartarray%info has different amount of data written"
+	    print *, "called from global_objs::rsmartfill"
+	    print *, "contact Michal -> michalkuraz@gmail.com"
 	    ERROR STOP
 	end if
       end if
@@ -440,7 +469,7 @@ module global_objs
       exist = .false.
       if (allocated(array%data)) then
 	do i=1, array%pos
-	  if (abs(array%data(i) - input) < epsilon(input)) then
+	  if (abs(array%data(i) - input) < max(abs(array%data(i)), abs(input))*(epsilon(input))) then
 	    exist = .true.
 	    EXIT
 	  end if

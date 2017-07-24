@@ -1,5 +1,5 @@
 module re_reader
-  public :: res_read, red_read
+  public :: res_read
 
   contains
 
@@ -19,6 +19,7 @@ module re_reader
       integer(kind=ikind) :: n
       character(len=1) :: yn
       character(len=4096) :: msg
+      real(kind=rkind), dimension(:), allocatable :: tmpdata
 
       pde_loc%problem_name(1) = "RE_matrix"
       pde_loc%problem_name(2) = "Richards' equation"
@@ -83,38 +84,59 @@ module re_reader
 	end do
       end if
 
-
+      write(msg, *) "HINT 1 : check number of layers in matrix", new_line("a"), &
+         "   HINT 2 : have you specified all values in the following order: ", new_line("a"), &
+         "         alpha   n   m   theta_r   theta_s   S_s "
+      allocate(tmpdata(6))
       do i = 1, ubound(vgmatrix,1)
-        !nacteni pole pudnich charakteristik, podle schemat v deklaracich
-
-        call comment(file_waterm)
-        read(unit=file_waterm, fmt= *, iostat=ierr) vgmatrix(i)%alpha, vgmatrix(i)%n, vgmatrix(i)%m, &
-                            vgmatrix(i)%Thr, vgmatrix(i)%Ths, vgmatrix(i)%Ss
-        
-        if (ierr /= 0) then
-          print *, "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-          print *, "HINT: check number of layers in matrix!"
-          print *, "----------------------------------------"
-          call file_error(file_waterm)
-        end if
+        call fileread(tmpdata, errmsg=msg, fileid=file_waterm, checklen=.true.)
+        vgmatrix(i)%alpha=tmpdata(1)
+        vgmatrix(i)%n=tmpdata(2)
+        vgmatrix(i)%m=tmpdata(3)
+        vgmatrix(i)%thr=tmpdata(4)
+        vgmatrix(i)%ths=tmpdata(5)
+        vgmatrix(i)%Ss=tmpdata(6)
       end do
+      
+     
 
 
-
-
+      write(msg, *) "HINT: check number of records of anisothropy description in water.conf/matrix.conf!!", &
+        new_line("a") ,  &
+        "      for 3D problem you must specify exactly Kxx, Kyy and Kzz values.", new_line("a"), &
+        "       Obviously for 2D problem there must be exactly only Kxx and Kzz value, analogicaly for 1D problem", &
+        new_line("a") , &
+        "       for 2D problem supply only 1 angle, for 3D problem supply 2 angles, and", new_line("a"), &
+        "       for 1D problem the angle value defines the angle between the VERTICAL and the flow trajectory", new_line("a"), &
+        "       (carefull some other softwares consider HORIZONTAL!!)"
+        
+      deallocate(tmpdata)
+      
+      select case(drutes_config%dimen)
+        case(1,2)
+          allocate(tmpdata(drutes_config%dimen+1))
+        case(3)
+          allocate(tmpdata(drutes_config%dimen+2))
+      end select
+      
       do i = 1, ubound(vgmatrix,1)
-          !nacteni pole pudnich charakteristik, podle schemat v deklaracich
-          call comment(file_waterm)
-          read(unit=file_waterm, fmt= *, iostat=ierr) vgmatrix(i)%anisoangle(:), vgmatrix(i)%Ks_local(:)
-          if (ierr /= 0) then
-            print *, "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-            print *, "1st HINT: check number of records of anisothropy description in water.conf/matrix.conf!!"
-            print *, "2nd HINT: for 3D problem you must specify exactly Kxx, Kyy and Kzz values."
-            print *, "          Obviously for 2D problem there must be exactly only Kxx and Kzz value, analogicaly for 1D problem"
-            print *, "3rd HINT: for 1D and 2D problem supply only 1 angle, for 3D problem supply 2 angles"
-            print *, "----------------------------------------"
-            call file_error(file_waterm)
-          end if
+        call fileread(tmpdata, file_waterm, errmsg=msg, checklen=.TRUE.)
+        
+        if (drutes_config%dimen > 1) then
+          vgmatrix(i)%anisoangle(:) = tmpdata(1:drutes_config%dimen-1)
+        else
+          vgmatrix(i)%anisoangle(:) = tmpdata(1)
+        end if
+        
+        select case(drutes_config%dimen)
+          case(1)
+            vgmatrix(i)%Ks_local(:) = tmpdata(2)
+          case(2)
+            vgmatrix(i)%Ks_local(:) = tmpdata(2:3)
+          case(3)
+            vgmatrix(i)%Ks_local(:) = tmpdata(3:5)
+        end select
+
         call set_tensor(vgmatrix(i)%Ks_local(:), vgmatrix(i)%anisoangle(:),  vgmatrix(i)%Ks)
       end do
 
@@ -191,15 +213,6 @@ module re_reader
 
       call readbcvals(unitW=file_waterm, struct=pde_loc%bc, dimen=n, &
 		      dirname="drutes.conf/water.conf/")
-		      
-       !!debuging
-!        if (ubound(pde,1) == 3 .and. .not. allocated(pde(2)%bc)) then
-! 	  allocate(pde(2)%bc(lbound(pde(1)%bc,1) : ubound(pde(1)%bc,1)))
-! 	  allocate(pde(3)%bc(lbound(pde(1)%bc,1) : ubound(pde(1)%bc,1)))
-! 	  pde(2)%bc = pde(1)%bc
-! 	  pde(3)%bc = pde(1)%bc
-! 	end if
-	!!end debugging
 
 		      
 	close(file_waterm)	      
@@ -207,112 +220,6 @@ module re_reader
     end subroutine res_read
 
 
-    subroutine red_read()
-      use typy
-      use global_objs
-      use globals
-      use core_tools
-
-      integer :: ierr
-
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      !water.conf/fractures.conf
-!       call find_unit(file_waterf, 200)
-!       open(unit=file_waterf, file="drutes.conf/water.conf/fractures.conf", action="read", status="old", iostat = ierr)
-!       if (ierr /= 0) then
-!                 print *, "missing drutes.conf/water.conf/fractures.conf file"
-!                 ERROR STOP
-!       end if
-
-
-
-!       call comment(file_waterf)
-!       read(unit=file_waterf, fmt= *, iostat=ierr) retc_method_f ; if (ierr /= 0) call file_error(file_waterf)
-! 
-! 
-!       call comment(file_waterf) 
-!       read(unit=file_waterf, fmt = *,  iostat=ierr) n; if (ierr /= 0) call file_error(file_waterf)
-!  
-!       allocate (vgfractures(n))
-!       do i=1, ubound(vgfractures,1)
-!       allocate(vgfractures(i)%Ks_local(drutes_config%dimen))
-!       allocate(vgfractures(i)%Ks(drutes_config%dimen, drutes_config%dimen))
-!       j = max(1,drutes_config%dimen-1)
-!       allocate(vgfractures(i)%anisoangle(j))
-!       end do
-! 
-!       do i = 1, ubound(vgfractures,1)
-!         !nacteni pole pudnich charakteristik, podle schemat v deklaracich
-!         call comment(file_waterf)
-!         read(unit=file_waterf, fmt= *, iostat=ierr) vgfractures(i)%alpha, vgfractures(i)%n, vgfractures(i)%m, vgfractures(i)%Thr, &
-!                                                     vgfractures(i)%Ths, vgfractures(i)%Ss
-!        
-!         if (ierr /= 0) then
-!           print *, "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-!           print *, "HINT: check number of layers in fractures!"
-!           print *, "----------------------------------------"
-!           call file_error(file_waterf)
-!         end if
-!         call set_tensor(vgfractures(i)%Ks_local(:), vgfractures(i)%anisoangle(:),  vgfractures(i)%Ks)
-!       end do
-!      
-! 
-!       do i = 1, ubound(vgfractures,1)
-!         !nacteni pole pudnich charakteristik, podle schemat v deklaracich
-!         call comment(file_waterf)
-!         read(unit=file_waterf, fmt= *, iostat=ierr) vgfractures(i)%anisoangle, vgfractures(i)%Ks_local(:)
-!         if (ierr /= 0) then
-!           print *, "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-!           print *, "1st HINT: check number of records of anisothropy description in water.conf/fractures.conf!!"
-!           print *, "2nd HINT: for 3D problem you must specify exactly Kxx, Kyy and Kzz values."
-!           print *, "          Obviously for 2D problem there must be exactly only Kxx and Kzz value, analogicaly for 1D problem"
-!           print *, "3rd HINT: for 1D and 2D problem supply only 1 angle, for 3D problem supply 2 angles"
-!           print *, "  "
-!           print *, "----------------------------------------"
-!           call file_error(file_waterf)
-!         end if
-!       call set_tensor(vgfractures(i)%Ks_local(:), vgfractures(i)%anisoangle(:),  vgfractures(i)%Ks)
-!       end do
-! 
-!       do i = 1, ubound(vgfractures,1)
-!       call comment(file_waterf)
-!       read(unit=file_waterf, fmt= *, iostat=ierr) vgfractures(i)%initcond, yn, vgfractures(i)%rcza_set%val
-!       select case(yn)
-!         case("y")
-!           vgfractures(i)%rcza_set%use = .true.
-!         case("n")
-!           vgfractures(i)%rcza_set%use = .false.
-!         case default
-!           print *, "type [y/n] value for using the retention curve zone approach at layer:", i
-!           call file_error(file_waterf)
-!       end select
-! 
-!       if (ierr /= 0) then
-!         print *, "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-!         print *, "HINT: check number of line records of initial conditions in water.conf/fractures.conf!"
-!         print *, "----------------------------------------"
-!         call file_error(file_waterf)
-!       end if
-!       end do
-! 
-!       allocate(dual_prop(ubound(vgfractures,1),2))
-! 
-!       do i = 1, ubound(dual_prop,1)
-!       call comment(file_waterf)
-!       read(unit=file_waterf, fmt= *, iostat=ierr) dual_prop(i,:)
-!       if (ierr /= 0) then
-!         print *, "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-!         print *, "HINT: check number of line records of dual permeability properties in matrix.conf/fractures.conf!"
-!         print *, "----------------------------------------"
-!         call file_error(file_waterf)
-!       end if  
-!       end do
-! 
-! 
-!       call readbcvals(file_waterf, RICHARDS_dual%bc_sys2, dimen=(ubound(RICHARDS_dual%bc_sys1,1)-101),  &
-!                         dirname="drutes.conf/water.conf/")
-
-
-    end subroutine red_read
+   
 
 end module re_reader
