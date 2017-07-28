@@ -1,8 +1,9 @@
+!> This module contains the pointers used for dual permeability model
 module Re_dual_pointers
   public :: RE_fracture
   public :: RE_matrix
   contains
-
+!> Links to releveant subroutines for matrix domain 
     subroutine RE_matrix()
       use typy
       use globals
@@ -78,6 +79,7 @@ module Re_dual_pointers
    
     end subroutine RE_matrix
     
+!> Links to releveant subroutines for fracture domain 
     subroutine RE_fracture()
       use typy
       use globals

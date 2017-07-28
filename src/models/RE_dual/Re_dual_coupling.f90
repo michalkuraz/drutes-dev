@@ -1,6 +1,14 @@
+!> This module contains variants of coupling terms of the dual permeability model.
+!! Boundary gets assigned mualem parameters in case(2) and (3).
+!! Case(1) The exchange term is calculated based on arithmetic mean of \f$Ka=\frac{Ka(hm)+Ka(hf)}{2}\f$. <br>
+!! Case(2) The exchange term is calculated based on geometric mean of \f$Ka=\sqrt{Ka(hm)*Ka(hf)}\f$. <br>
+!! Case(3) The exchange boundary term is constant.<br>
+!! Case (4) and (5) don't require further parameters. <br>
+!! Case(4) The exchange term is the minimum of \f$Ka=min(Km(hm),Kf(hf),Km(hf),Kf(hf))\f$ <br>
+!! Case(5) The exchange term is the minimum of \f$Ka=min(Km(hm*weight_m+hf*weight_f),Kf(hm*weight_m+hf*weight_f))\f$.
+!<
 module dual_coup
-! This module contains variants of coupling terms of the dual permeability model
-! Testing if I only update dual branch from local
+
   use typy
   use global_objs
   use dual_globals
@@ -12,10 +20,11 @@ module dual_coup
   public:: dual_coupling_K
   contains 
 
-!> Boundary gets assigned mualem parameters
-! Case(1) The exchange term is calculated based on arithmetic mean of $\Ka=\frac{Ka(hm)+Ka(hf)}{2}$
-! Case(2) The exchange term is calculated based on geometric mean of $\Gamma=(Ka(hm)*Ka(hf))^0.5$
 
+!> Coupling defined for case(1), case (2) and case (3)
+!! Case(1) The exchange term is calculated based on arithmetic mean of \f$Ka=\frac{Ka(hm)+Ka(hf)}{2}\f$. <br>
+!! Case(2) The exchange term is calculated based on geometric mean of \f$Ka=\sqrt{Ka(hm)*Ka(hf)}\f$. <br>
+!! Case(3) The exchange boundary term is constant.<br>
   function dual_coupling(pde_loc, layer, quadpnt, x) result(ex_term)
       use typy
       use global_objs
@@ -95,7 +104,7 @@ module dual_coup
      end if
 
   end function dual_coupling
-  
+  !> neg coupling defined for case(1), case (2) and case (3) for coupled matrix, i.e. matrix part in fracture and fracture part in matrix. 
   function dual_coupling_neg(pde_loc, layer, quadpnt, x) result(ex_term)
       use typy
       use global_objs
@@ -123,16 +132,11 @@ module dual_coup
      
   end function dual_coupling_neg
 
-  !> case(3)The following coupling scheme chooses the minimum value of $min(K_f(hf),Kf(hm),K_m(hf),Km(h_m))$
-  ! This has the advantage that no extra parameters need to be defined describing the hydraulic properties at the boundary
-  ! this reduces the number of parameters to be estimated by 3: Kas, a, n
-  ! This also assures that the exchange term is always smaller than the fracture and matrix conductivity
-  !> case(4) The following coupling scheme chooses the minimum value of $min(K_f(hf,hm),K_m(hf,h_m))$
-  ! This has the advantage that no extra parameters need to be defined describing the hydraulic properties at the boundary
-  ! this reduces the number of parameters to be estimated by 3: Kas, a, n
-  ! The difference to dual_coup_min is that weighted pressure head values are used to relate the exchange term to the matrix/fracture ratio
-  ! However, when the fracture is dry, the minimum value of the above could be greater than the fracture conductivity
-  
+  !> The following coupling schemes use the minimum value of case(4) \f$Ka=min(Km(hm),Kf(hf),Km(hf),Kf(hf))\f$ and case(5) \f$Ka=min(Km(hm*weight_m+hf*weight_f),Kf(hm*weight_m+hf*weight_f))\f$. <br>
+  !! This has the advantage that no extra parameters need to be defined describing the hydraulic properties at the boundary<br>
+  !! This reduces the number of parameters to be estimated by 3: Kas, a, n <br>
+  !! This also assures that the exchange term is always smaller than or equal the fracture and matrix conductivity.
+  !<
     function dual_coup_min(pde_loc, layer, quadpnt, x) result(ex_term)
       use typy
       use global_objs
@@ -212,6 +216,7 @@ module dual_coup
 
   end function dual_coup_min
   
+  !> neg coupling defined for case(4) and case (5) for coupled matrix, i.e. matrix part in fracture and fracture part in matrix. 
   function dual_coup_min_neg(pde_loc, layer, quadpnt, x) result(ex_term)
       use typy
       use global_objs
@@ -225,7 +230,7 @@ module dual_coup
       type(integpnt_str), intent(in), optional :: quadpnt
       !> material ID
       integer(kind=ikind), intent(in) :: layer
-      !> vg and ex parameters, later from conf file
+      !> vg and ex parameters
 
       real(kind=rkind)   ::ex_term
           
@@ -241,8 +246,7 @@ module dual_coup
   end function dual_coup_min_neg
   
 
-  
- ! coupling conductivity function for tab values with own parameters
+ !> coupling conductivity function for tab values 
   function dual_coupling_K(pde_loc,layer, quadpnt, x) result(Ka_c)
     use typy
     use global_objs
@@ -251,10 +255,12 @@ module dual_coup
     use Re_dual_reader
     
     class(pde_str), intent(in) :: pde_loc
-    integer(kind=ikind), intent(in) :: layer
-    real(kind=rkind), dimension(:),intent(in), optional    :: x
+    !> value of the nonlinear function
+    real(kind=rkind), dimension(:), intent(in), optional    :: x
     !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
     type(integpnt_str), intent(in), optional :: quadpnt
+    !> material ID
+    integer(kind=ikind), intent(in) :: layer
     real(kind=rkind)::Ka_c
     real(kind=rkind)::n,m,alpha
     real(kind=rkind):: one,h

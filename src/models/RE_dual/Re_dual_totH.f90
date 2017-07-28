@@ -1,5 +1,6 @@
+!> This module contains governing functions of the dual permeability model and main functions and subroutines.
 module dual_por
-! This module contains governing functions of the dual permeability model
+
   use typy
   use global_objs
   use dual_globals
@@ -43,7 +44,7 @@ module dual_por
       
 	
     end function getval_retot_dual
-
+    !>assigns initial condition
    subroutine dual_inicond(pde_loc) 
       	use typy
        	use globals
@@ -116,7 +117,7 @@ module dual_por
 		ERROR stop
         end select
       end subroutine dual_inicond
-        
+     !> defines dispersion according to van Genuchten Mualem model (1980)
    subroutine dual_mualem(pde_loc, layer, quadpnt, x, tensor, scalar)
       use typy
       use global_objs
@@ -195,7 +196,7 @@ module dual_por
 	  scalar=Kr*weight
 	end if
       end subroutine dual_mualem
-      
+    !> defines elasticity or retention function according to van Genuchten Mualem model (1980)  
    function dual_ret_cap(pde_loc,layer,quadpnt,x) result(E)
       use typy
       use pde_objs
@@ -275,8 +276,9 @@ module dual_por
      E=C*weight
 
   end function dual_ret_cap
-  
+  !> defines mass function according to van Genuchten Mualem model (1980)
   function vangen_d(pde_loc,layer,quadpnt,x) result(theta)
+  
         use typy
         use dual_globals
         use pde_objs
@@ -342,7 +344,7 @@ module dual_por
                 theta = theta_e*(thetaS- thetaR)+ thetaR
         end if
   end function vangen_d
- 
+ !> defines flux function according to Darcy Law (valid for laminar flow)
   subroutine darcy_law_d(pde_loc, layer, quadpnt, x, grad,  flux, flux_length)
       use typy
       use pde_objs

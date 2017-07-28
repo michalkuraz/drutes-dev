@@ -1,3 +1,5 @@
+!> This module writes tabular versions of main functions to enhance computation. <br>
+!! Tabular versions dispersion: mualem_tab; elastisticty: dual_ret; mass= vangen_tab 
 module dual_tab
   use typy
   use global_objs
@@ -16,9 +18,8 @@ module dual_tab
   real(kind=rkind), dimension(:,:), allocatable, public :: Ktab_df,watcontab_df,warecatab_df
   
   contains 
-
- ! Tabular versions dispersion: mualem_tab; elastisticty: dual_ret; mass= vangen_tab 
   
+!> Tabular versions of dispersion
   subroutine dual_mualem_tab(pde_loc, layer, quadpnt,  x, tensor, scalar)
       use typy
       use dual_globals
@@ -108,7 +109,7 @@ module dual_tab
 	scalar = tmp
       end if
   end subroutine dual_mualem_tab
-
+!> Tabular versions of mass
   function vangen_d_tab(pde_loc, layer, quadpnt, x) result(theta)
       use typy
       use dual_globals
@@ -189,7 +190,7 @@ module dual_tab
       
 
     end function vangen_d_tab
-
+!> Tabular versions of elastiocity
   function dual_ret_cap_tab(pde_loc, layer, quadpnt, x) result(E)
       use typy
       use dual_globals
@@ -274,7 +275,7 @@ module dual_tab
 
 
   end function dual_ret_cap_tab
-    
+!> Tabular versions of coupling term for case(1) and case(2) 
   function dual_coupling_tab(pde_loc, layer, quadpnt, x) result(ex_term)
       use typy
       use dual_globals

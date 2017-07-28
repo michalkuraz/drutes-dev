@@ -1,31 +1,67 @@
 module dual_globals
     use typy
-
+    
+!> defining soil parameters
   type, public :: soilpar
-    real(kind=rkind) :: alpha, n, m, Thr, Ths, Ss
+    !> inverse to air entry value or inverse to capillary rise [L^{-1}]
+    real(kind=rkind) :: alpha
+    !> shape parameter n
+    real(kind=rkind) :: n
+    !> shape parameter m
+    real(kind=rkind) :: m
+    !> residual water content 
+    real(kind=rkind) :: Thr
+    !> saturated water content 
+    real(kind=rkind) :: Ths
+    !> specific storage
+    real(kind=rkind) :: Ss
     !> hydraulic conductivity tensor of second order
     real(kind=rkind), dimension(:,:), allocatable :: Ks
+    !> hydraulic conductivity 
     real(kind=rkind), dimension(:), allocatable   :: Ks_local
+    !> angle for anistropy of flow
     real(kind=rkind), dimension(:), allocatable   :: anisoangle
+    !> initial condition
     real(kind=rkind) :: initcond
-    
+    !> type of initial condition: pressure head, water content or input read from file (also pressure head)
     character(len=5) :: icondtype
   end type soilpar
   
+  !> exchange parameters 
   type, public :: exch_K
-    real(kind=rkind) :: alpha, n, m
+    !> inverse to air entry value or inverse to capillary rise [L^{-1}]
+    real(kind=rkind) :: alpha
+    !> shape parameter n
+    real(kind=rkind) :: n
+    !> shape parameter m
+    real(kind=rkind) :: m
+    !> hydraulic conductivity tensor of second order
     real(kind=rkind), dimension(:,:), allocatable :: Ks
+    !> hydraulic conductivity 
     real(kind=rkind), dimension(:), allocatable   :: Ks_local
-    real(kind=rkind), dimension(:), allocatable   :: anisoangle
   end type exch_K
 
- integer(kind=ikind), public :: coup_model
- real(kind=rkind),public :: disttozero
- real(kind=rkind),public ::infweight
- character(len=50) :: fracfile, matfile
+!> coupling model type
+  integer(kind=ikind), public :: coup_model
+!> distance of top boundary to zero z-coordinate
+  real(kind=rkind),public :: disttozero
+!> Use-defined infiltration weight for boundary condition
+  real(kind=rkind),public ::infweight
+!> in progress: switching for different input files for fractrue and matrix (not implemented yet) 
+  character(len=50) :: fracfile, matfile
  
+!> exchange parameters according to Gerke and van Genuchten (1993)
  type,public :: expar
-  real(kind=rkind)::beta,a,gam_par,weightm,weightf
+ !> soil geometry parameter 
+  real(kind=rkind)::beta
+  !> distance from fracture to center of agglomerate
+  real(kind=rkind)::a
+  !>geometry parameter, ususally 0.4
+  real(kind=rkind)::gam_par
+  !> matrix area weight
+  real(kind=rkind)::weightm
+  !> fracture area weight
+  real(kind=rkind)::weightf
  end type expar
   
   !> soil and layer parameters

@@ -1,20 +1,26 @@
+!> This module contains different boundary definitions for the fracture and matrix domains in the dual permeability model
 module Re_dual_bc
   public :: dual_neumann_bc
   public :: dual_freedrainage
   public :: dual_atmospheric
   public :: inf_neumann_bc
   contains
- 
+  
+   !> Defines Neumann (flux) boundary condition for the dual permeability model
+   !< The Neumann boundary condition is assigned weighted according to area weights.
   subroutine dual_neumann_bc(pde_loc, el_id, node_order, value, code) 
       use typy
       use globals
       use global_objs
       use pde_objs
       use dual_globals
-
-      class(pde_str), intent(in) :: pde_loc
+      !> takes the global pde_loc structure
+      class(pde_str), intent(in) :: pde_loc 
+      !> takes the element id and node order
       integer(kind=ikind), intent(in)  :: el_id, node_order
+      !> optional value output of the assigned boundary 
       real(kind=rkind), intent(out), optional    :: value
+      !> optional code output. Different codes for different boundaries. Code = 2 
       integer(kind=ikind), intent(out), optional :: code
      
 
@@ -72,6 +78,7 @@ module Re_dual_bc
 
     end subroutine dual_neumann_bc
     
+   !> Also defines Neumann type boundary. The weighting for matrix and fracture domains is user defined. 
   subroutine inf_neumann_bc(pde_loc, el_id, node_order, value, code) 
       use typy
       use globals
@@ -79,11 +86,14 @@ module Re_dual_bc
       use pde_objs
       use dual_globals
 
-      class(pde_str), intent(in) :: pde_loc
+      !> takes the global pde_loc structure
+      class(pde_str), intent(in) :: pde_loc 
+      !> takes the element id and node order
       integer(kind=ikind), intent(in)  :: el_id, node_order
+      !> optional value output of the assigned boundary 
       real(kind=rkind), intent(out), optional    :: value
+      !> optional code output. Different codes for different boundaries. Code = 2 
       integer(kind=ikind), intent(out), optional :: code
-     
 
       integer(kind=ikind) :: i, edge_id, j,layer
       real(kind=rkind), dimension(3) :: gravflux, bcflux
@@ -132,7 +142,7 @@ module Re_dual_bc
 
     end subroutine inf_neumann_bc
     
- 
+  !> Assigns free drainage boundary (unit gradient) for dual permeability model
   subroutine dual_freedrainage(pde_loc, el_id, node_order, value, code) 
       use typy
       use globals
@@ -141,9 +151,13 @@ module Re_dual_bc
       use dual_globals
       use dual_por
       
-      class(pde_str), intent(in) :: pde_loc
+      !> takes the global pde_loc structure
+      class(pde_str), intent(in) :: pde_loc 
+      !> takes the element id and node order
       integer(kind=ikind), intent(in)  :: el_id, node_order
+      !> optional value output of the assigned boundary 
       real(kind=rkind), intent(out), optional    :: value
+      !> optional code output. Different codes for different boundaries. Code = 2 
       integer(kind=ikind), intent(out), optional :: code
       real(kind=rkind), dimension(3,3) :: K
       type(integpnt_str) :: quadpnt
@@ -187,6 +201,8 @@ module Re_dual_bc
       
     end subroutine dual_freedrainage
      
+  !> Assigns a simple atmospheric boundary based on water content in the soil and potential evaporation and rain for dual permeability model
+  !!  \f$rain - evap*\theta(h)^{\frac{2}{3}}\f$.
   subroutine dual_atmospheric(pde_loc, el_id, node_order, value, code) 
       use typy
       use globals
@@ -194,9 +210,13 @@ module Re_dual_bc
       use pde_objs
       use dual_globals
 
-      class(pde_str), intent(in) :: pde_loc
+      !> takes the global pde_loc structure
+      class(pde_str), intent(in) :: pde_loc 
+      !> takes the element id and node order
       integer(kind=ikind), intent(in)  :: el_id, node_order
+      !> optional value output of the assigned boundary 
       real(kind=rkind), intent(out), optional    :: value
+      !> optional code output. Different codes for different boundaries. Code = 2 
       integer(kind=ikind), intent(out), optional :: code
       
       
