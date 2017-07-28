@@ -39,6 +39,8 @@ module dual_globals
     real(kind=rkind), dimension(:,:), allocatable :: Ks
     !> hydraulic conductivity 
     real(kind=rkind), dimension(:), allocatable   :: Ks_local
+    !> angle for anistropy of flow
+    real(kind=rkind), dimension(:), allocatable   :: anisoangle
   end type exch_K
 
 !> coupling model type
