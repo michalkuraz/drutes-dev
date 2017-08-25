@@ -674,7 +674,8 @@ module readtools
         if (struct(i)%file) then
           call find_unit(fileid)
           write(unit=filename, fmt="(a, I3, a)") trim(dirname), i, ".bc"
-          open(unit=fileid, file=trim(filename), action="read", status="old",  iostat=ierr)
+          open(unit=fileid, file=adjustl(trim(filename)), action="read", status="old",  iostat=ierr)
+          print *, adjustl(trim(filename))
           if (ierr /= 0) then
             write(unit=msg, fmt=*) "ERROR: if using unsteady boundary value data, you must supply the file with data!", &
             "ERROR: file required:", trim(filename)
@@ -683,6 +684,7 @@ module readtools
           counter = 0
           do 
             counter = counter + 1
+            call comment(fileid)
             read(unit=fileid, fmt=*, iostat=ierr) tmp
             if (ierr /= 0) then
               EXIT
@@ -703,6 +705,7 @@ module readtools
             open(unit=fileid, file=trim(filename), action="read", status="old",  iostat=ierr)
             allocate(tester(n))
             tester = sqrt(tmp)
+            call comment(fileid)
             read(unit=fileid, fmt=*, iostat=ierr) tester
             if (isnan(tester(ubound(tester,1))) ) then
               close(fileid)
@@ -726,9 +729,11 @@ module readtools
             end if
           end do
           
+          print *, counter, counter2
           allocate(struct(i)%series(counter,counter2/counter))
 
           do j=1, counter
+            call comment(fileid)
             read(unit=fileid, fmt=*, iostat=ierr) struct(i)%series(j,:)
             if (ierr /= 0) then
               write(unit=msg, fmt="(a,a,a,i4)") "incorrect data in file:  ", trim(filename), "    at line:", j

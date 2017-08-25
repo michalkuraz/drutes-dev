@@ -31,12 +31,6 @@ module typy
     !> unicode char type
     integer, parameter, public :: chkind=selected_char_kind("default")!"ASCII")!"ISO_10646")
 
-    !> 4byte real
-    integer, parameter :: r4  = selected_real_kind(5,10)
-    !> 8byte real
-    integer, parameter :: r8  = selected_real_kind(12,20)
-    !> 16byte real
-    integer, parameter :: r16 = selected_real_kind(30)
 
     !---------petr mayer's definitions----------
     integer, parameter, public :: maxlen = 200

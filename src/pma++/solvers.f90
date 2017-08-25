@@ -11,13 +11,8 @@
 !<
 
 !> \page iterace "Iteracni metody"
-!! Zakladem iteracnich metod je postupne zpresnovani aktualni aproximace.
-!! Vyhodou je obvykle vyrazne mensi pametova narocnost. Nevyhodou je
-!! obtizne predvidatelny pocet iteraci. Nejcastejsi pouziti je pri reseni
-!! rozsahlych soustav s ridkou matici. Prvni dve jsou stacionarni maticove
-!! metody.
-!! - \subpage Jacobi
-!! - \subpage gs
+!! - \subpage Jacobi "Jacobiova meoda"
+!! - \subpage gs "Gauss-Seidelova metoda"
 !! - \subpage sd "Metoda nejvetsiho spadu"
 !! - \subpage cg "Metoda sdruzenych gradientu"
 !! - \subpage cgn "Metoda sdruzenych gradientu pro normalni rovnice"
@@ -32,15 +27,7 @@
 
 !> resice soustav
 module solvers
-    use typy
     implicit none
-
-    type :: vrstvy
-        integer(kind=ikind), dimension(:), allocatable, private :: levlist
-        integer(kind=ikind), dimension(:), allocatable, private :: levstart
-        integer(kind=ikind), private :: nlev
-    end type vrstvy
-
     public :: LDU
     public :: LDUd
     public :: Split
@@ -55,7 +42,7 @@ module solvers
     public :: PCGnormal
     private :: vycdet
     private :: esteig
-    contains
+contains
     !> \page Jacobi Jacobiova metoda
     !!
     !! Jde o iteracni postup
@@ -63,19 +50,12 @@ module solvers
     !! kde \f$ M \f$ je diagonala matice \f$ A \f$ . \n
     !! Oznacime-li residuum jako \f$ r_i = b-A*x_i \f$, pak \f$
     !! reps = || r_i || / || r_0 || \f$ .
-    !! O konvergenci rozhoduje spektralni polomer matice
-    !! \f$ T=I-M^{-1}A \f$
-    !!
-    !! Implementace je v jacobi() .
     !<
 
     !> Jacobiova metoda
-    !!
-    !! podrobnejsi popis viz \subpage Jacobi
-    !<
     subroutine jacobi(a,b,x,maxit1,reps1, it, repsfin, l1, l2, countop,&
-        ilev1)
-        use typy, r4x=>r4
+                      ilev1)
+        use typy
         use mtx
         implicit none
         !> matice soustavy
@@ -115,17 +95,17 @@ module solvers
         !! vyresime nepovinne parametry
         n = a%getn()
         if (present(maxit1)) then
-        maxit = maxit1
+            maxit = maxit1
         else
             maxit = n
         end if
         if (present(reps1)) then
-        reps = reps1
+            reps = reps1
         else
             reps = 1.0e-6
         end if
         if (present(ilev1)) then
-        ilev = ilev1
+            ilev = ilev1
         else
             ilev = 0
         end if
@@ -149,7 +129,7 @@ module solvers
                 ll1 = r1/r2
                 ll2 = repsfin1**(1.0_rkind/it1)
             end if
-            if ( ilev > 0 )  print"(i16,4ES18.10)", it1, r0,r1,ll1,ll2
+            if ( ilev > 0 )  print"(i16,4ES38.30)", it1, r0,r1,ll1,ll2
             if ( repsfin1 < reps) exit
             do i=1, a%getn()
                 x(i) = x(i) + r(i)/diag(i)
@@ -213,7 +193,7 @@ module solvers
         !> podrobnost informaci
         integer, intent(in), optional :: ilev
 
-        real(kind=rkind) :: r0,r1,r2, wrk
+        real(kind=rkind) :: r0,r1,r2
         real(kind=rkind), dimension(:), allocatable :: r,diag
         integer(kind=ikind) :: i,j,k
         type(tcount) :: countop1
@@ -229,29 +209,25 @@ module solvers
             diag(i) = a%get(i,i)
         end do
         it = 0
-        r1 = r0
-        r2 = r0
         do
-            !!!!!!!! predelet -
+            !!!!!!!! predelet - tohle je Jacobiovka
             if ( it > maxit ) exit
+            r1 = norm2(r)
             repsfin = r1/r0
             if (r1 /= 0) then
                 l1 = r1/r2
                 l2 = repsfin**(1.0_rkind/it)
             end if
-            if ( ilev > 0 )  print"(i16,4ES18.10)", it, r0,r1,l1,l2
+            if ( ilev > 0 )  print"(i16,4ES38.30)", it, r0,r1,l1,l2
             if ( repsfin < reps) exit
-            r2 = r1
-            r1 = 0
             do i=1, a%getn()
-                wrk =b(i) - A%mulrow(x,i,countop1)
-                r1 = r1 + wrk*wrk
-                x(i) =x(i) + wrk/diag(i)
+                x(i) = x(i) + r(i)/diag(i)
             end do
-            r1 = sqrt(r1)
-            countop1%ad  = countop1%ad  + a%getn()*2
-            countop1%div = countop1%div + a%getn()
+            r=b-a%mul(x,countop1)
+            countop1%ad  = countop1%ad  + 2*a%getn()
+            countop1%div = countop1%div +   a%getn()
             it = it + 1
+            r2 = r1
         end do
         deallocate(r,diag)
         call cpu_time(t2)
@@ -303,45 +279,44 @@ module solvers
         integer, intent(in), optional :: ilev
         !> permutace pro i
         integer(kind=ikind), dimension(:), allocatable, &
-        intent(inout), optional :: perm1
+            intent(inout), optional :: perm1
         !> permutace pro j
         integer(kind=ikind), dimension(:), allocatable,&
-        intent(inout), optional :: perm2
+            intent(inout), optional :: perm2
 
         integer :: pt1,il1
         integer(kind=ikind),dimension(:),allocatable :: p1,p2
         type(tcount) :: inf1
 
         if (present(pivtype)) then
-        pt1 = pivtype
+            pt1 = pivtype
         else
             pt1 = 0
         end if
         if (present(ilev)) then
-        il1 = ilev
+            il1 = ilev
         else
             il1 = 0
         end if
         allocate(p1(1:A%getn()))
         allocate(p2(1:A%getm()))
         select case(pt1)
-                case (0)
+            case (0)
                 print *, "nula"
-                case (1)
-                case (2)
-                case (3)
-                case (4)
-                case (5)
-                case (6)
-                    if (present(perm1)) then
-                    else
-                    end if
-                case default
-                    print *,"chybna volba"
-                end select
+            case (1)
+            case (2)
+            case (3)
+            case (4)
+            case (5)
+            case (6)
+                if (present(perm1)) then
+                else
+                end if
+            case default
+                print *,"chybna volba"
+        end select
 
         call LU%copy(A)
-        print *,"zkopirovano"
         call LDUd(LU,inf1,pt1,il1,p1,p2)
         if ( present(perm1) ) perm1 = p1
         if ( present(perm2) ) perm2 = p2
@@ -388,10 +363,10 @@ module solvers
         integer, intent(in), optional :: ilev
         !> permutace pro i
         integer(kind=ikind), dimension(:), allocatable, &
-        intent(inout), optional :: perm1
+            intent(inout), optional :: perm1
         !> permutace pro j
         integer(kind=ikind), dimension(:), allocatable,&
-        intent(inout), optional :: perm2
+            intent(inout), optional :: perm2
 
 
         real(kind=rkind) :: t1,t2 !meze pro cas
@@ -416,11 +391,10 @@ module solvers
         integer(kind=ikind),dimension(:), allocatable :: pivjj
         real(kind=rkind), dimension(:), allocatable :: pivval
         integer(kind=ikind), dimension(:), allocatable :: degs, &
-        dstart, dnext, dprev, dstartnext
-        integer(kind=ikind) :: ip1,ip2,ip3,ip4, degsmin, lastmin
+           dstart, dnext, dprev, dstartnext
+        integer(kind=ikind) :: ip1,ip2,ip3,ip4, degsmin
 
         call cpu_time(t1)
-        lastmin = 0
         allocate(p1(1:A%getn()))
         allocate(p2(1:A%getm()))
         allocate(pp1(1:A%getn()))
@@ -443,82 +417,81 @@ module solvers
         mp1 = .true.
         mp2 = .true.
         if ( present(pivtype)) then
-        pt1 = pivtype
+            pt1 = pivtype
         else
             pt1 = 0
         end if
         if (present(ilev)) then
-        il1 = ilev
+            il1 = ilev
         else
             il1 = 0
         end if
-
         select case(pt1)
-                case(0)
-                    ! nic resit nemusim
+            case(0)
+                ! nic resit nemusim
                 if (il1>0) print *,"bez vyberu hlavniho prvku"
-                case (1)
-                    if (present(perm1)) then
-                        if (present(perm2)) then
-                            ! tak tohle je ok
-                        if (il1>0) print *,"s uplnym vyberem hlavniho prvku"
-                        else
-                            ! mam k dispozici je radkove permutace
-                            ! menim na sloupcovy vyber
-                            pt1 = 2
-                            if (il1>0) print *,&
-                            "menim uplnym vyber hlavniho prvku na sloupcovy"
-                        end if
-                    else
-                        if (present(perm2)) then
-                            ! mam jen sloupcove permuatace
-                            ! menim na radkovy vyber
-                            pt1 = 3
-                            if (il1>0) print *,&
-                        "menim uplnym vyber hlavniho prvku na radkovy"
-                        else
-                            ! nemam zadne permutace
-                            ! menim na zadny vyber
-                            pt1 = 0
-                            if (il1>0) print *,&
-                            "menim uplnym vyber hlavniho prvku na bez vyberu"
-                        end if
-                    end if
-                case (2)
-                    if (present(perm1)) then
-                    ! OK
-                    else
-                        ! menim na bez vyberu
-                        pt1 = 0
-                    end if
-                case (3)
+            case (1)
+                if (present(perm1)) then
                     if (present(perm2)) then
-                    ! OK
+                        ! tak tohle je ok
+                        if (il1>0) print *,"s uplnym vyberem hlavniho prvku"
                     else
-                        ! menim na bez vyberu
-                        pt1 = 0
+                        ! mam k dispozici je radkove permutace
+                        ! menim na sloupcovy vyber
+                        pt1 = 2
+                        if (il1>0) print *,&
+                            "menim uplnym vyber hlavniho prvku na sloupcovy"
                     end if
-                case (4)
-                    if (present(perm1) .or. present(perm2)) then
-                    ! OK
+                else
+                    if (present(perm2)) then
+                        ! mam jen sloupcove permuatace
+                        ! menim na radkovy vyber
+                        pt1 = 3
+                        if (il1>0) print *,&
+                            "menim uplnym vyber hlavniho prvku na radkovy"
                     else
-                        ! menim na bez vyberu
+                        ! nemam zadne permutace
+                        ! menim na zadny vyber
                         pt1 = 0
+                        if (il1>0) print *,&
+                            "menim uplnym vyber hlavniho prvku na bez vyberu"
                     end if
-                case (5)
-                    if (present(perm1) .or. present(perm2)) then
+                end if
+            case (2)
+                if (present(perm1)) then
                     ! OK
-                    else
-                        ! menim na bez vyberu
-                        pt1 = 0
-                    end if
-                case (6)
-                    if (present(perm1)) p1=perm1
-                if (present(perm2)) p2=perm2
-                case default
-                    print *, "chybna volba pivota, menim na zadna pivotaz"
+                else
+                    ! menim na bez vyberu
                     pt1 = 0
-                end select
+                end if
+            case (3)
+                if (present(perm2)) then
+                    ! OK
+                else
+                    ! menim na bez vyberu
+                    pt1 = 0
+                end if
+            case (4)
+                if (present(perm1) .or. present(perm2)) then
+                    ! OK
+                else
+                    ! menim na bez vyberu
+                    pt1 = 0
+                end if
+            case (5)
+                if (present(perm1) .or. present(perm2)) then
+                    ! OK
+                else
+                    ! menim na bez vyberu
+                    pt1 = 0
+                end if
+            case (6)
+                if (present(perm1)) p1=perm1
+                if (present(perm2)) p2=perm2
+            case default
+                print *, "chybna volba pivota, menim na zadna pivotaz"
+                pt1 = 0
+        end select
         i = A%getn()
         q = A%getm()
         if (i < q) q = i
@@ -534,16 +507,11 @@ module solvers
         dprev  = -1
         dstartnext = -1
         degsmin = 0
-        print *,"step2.1"
         do i=1, A%getn()
-            !print *,"i=",i
             call A%getrow(i,r1,ri1,sr1,mp1)
-            !print *,"pred adddegree", sr1
-            if (sr1 == 0) sr1 = sr1 + 1
             call adddegree(i,sr1)
-            !print *, "sr1=", sr1
         end do
-        !print *,"step3"
+
         do i=1,q-1
             if (il1 > 10) print *, "step=",i
             ! napred najdi pivota
@@ -570,27 +538,25 @@ module solvers
             pp2(piv2) = i
             if (il1>10) print *,"LDUd jdu pro radek "
             call a%getrow(piv1,r1,ri1,sr1,mp2)
-            ! v r1 jsou cisla z piv. radku, v ri1 jsou sloupcove indexy
             if (il1 > 0 ) print *,"step=",i," pivi=",piv1, " pivj=", &
-            piv2, "stupen=",sr1
+              piv2, "stupen=",sr1
             if (il1>10) print *,"LDUd jdu pro sloupec"
             call a%getcol(piv2,r2,ri2,sr2,mp1)
-            ! v r2 jsou cisla z piv. sloupce v ri2 jsou radkove indexy
             wrk = a%get(piv1,piv2)
             wrk1 = wrk
-            if (wrk==0) STOP "Problem - nulovy pivot"
+            if (wrk==0) STOP "Pruser"
             if (il1 > 1) print *, "mam data",sr1,sr2,wrk
             do j=1,sr1
                 r1(j) = r1(j)/wrk
             end do
             inf1%div = inf1%div+sr1
             if (il1 > 10) print *,"jdu eliminovat"
-            do j=1,sr1 ! jdi pres sloupce
-                do k=1,sr2 ! jdi pres radky
-                    if (il1 > 10) print *,j,k,sr1,sr2  !!
-                    wrk = a%get(ri2(k),ri1(j))         !! prezkoumat
-                    wrk = wrk - r1(j)*r2(k)            !!
-                    call a%set(wrk,ri2(k),ri1(j))      !!
+            do j=1,sr1
+                do k=1,sr2
+                    if (il1 > 10) print *,j,k,sr1,sr2
+                    wrk = a%get(ri2(k),ri1(j))
+                    wrk = wrk - r1(j)*r2(k)
+                    call a%set(wrk,ri2(k),ri1(j))
                 end do
             end do
             if (il1 > 10) print *, "krok hotov"
@@ -635,7 +601,7 @@ module solvers
         if ( present(perm1) ) perm1 = p1
         if ( present(perm2) ) perm2 = p2
         if (il1 > 10) print *,"LDUd konci"
-        contains
+    contains
         !> vlozi informaci o stupni do seznamu
         subroutine adddegree(row,deg)
             implicit none
@@ -647,7 +613,7 @@ module solvers
                 dnext(row) = dstart(deg)
                 dprev(row) = -1
                 dprev(dstart(deg)) = row
-            dstart(deg) = row
+                dstart(deg) = row
             else
                 ! pokud ne, vytvor novy seznam a uprav ukazatel
                 ! na nejnizsi stupen
@@ -664,17 +630,17 @@ module solvers
             integer(kind=ikind) :: row
 
             if (dprev(row) == -1 ) then
-                ! pokud jsi na zacatku seznamu
+            ! pokud jsi na zacatku seznamu
                 if (dnext(row) == -1) then
-                    ! pokud jsi jediny, tak se odstran a ukld v seznamech
+                ! pokud jsi jediny, tak se odstran a ukld v seznamech
                     if ( degs(row) == degsmin) then
-                    ! uvolnuje se nejnizi stupen
+                        ! uvolnuje se nejnizi stupen
                     else
                         ! uvolnuje se uprostred
                     end if
                 else
-                    ! jinak se jen odeber, nic pred, neco za
-                    ! nutno upravit zacatk stupne
+                ! jinak se jen odeber, nic pred, neco za
+                ! nutno upravit zacatk stupne
                     dstart(degs(row)) = dnext(row)
                     degs(row) = -1
                     dprev(dnext(row)) = -1
@@ -682,7 +648,7 @@ module solvers
                     dprev(row) = -1
                 end if
             else
-                ! pokud ne, jen se odeber, neco je pred, mozna neco za
+            ! pokud ne, jen se odeber, neco je pred, mozna neco za
                 dnext(dprev(row)) = dnext(row)
                 if (dnext(row) > 0 ) then
                     ! neco ja za tebou
@@ -705,102 +671,100 @@ module solvers
             integer(kind=ikind) :: wrk, i1, j1, mi, mj,i2,i3,md
             real(kind=rkind) :: w1, mx
             select case(pt1)
-                    case (0)
-                        piv1 = i
+                case (0)
+                    piv1 = i
                     piv2 = i
-                    case (1)
-                        if (il1 > 10) print *, "piv1 i=",i
-                        mx = 0
-                        mi = 0
-                        mj = 0
-                        !do i1 = i, a%getn()
-                        do i3 = i, a%getn()
-                            i1 = p1(i3)
-                            i2 = i1
-                            if ( .not. mp1(i2) ) stop "probem v uv"
-                            call a%getrow(i2,pivval,pivjj,&
-                            pivnelem,mp2)
-                            do j1=1,pivnelem
-                                w1 = abs(pivval(j1))
-                                if (w1 > mx) then
-                                    if (il1>10) print *, "menim"
-                                    mx = w1
-                                    mi = i2
-                                    mj = pivjj(j1)
-                                end if
-                            end do
-                        end do
-                        piv1 = mi
-                    piv2 = mj
-                    case (2)
-                        ! sloupcovy vyber
-                        piv2 = i
-                        call a%getcol(i,pivval,pivjj, &
-                        pivnelem,mp1)
-                        mx = 0
-                        mi = 0
-                        mj = i
-                        do i1=1,pivnelem
-                            w1 = abs(pivval(i1))
-                            if ( w1 > mx ) then
+                case (1)
+                    if (il1 > 10) print *, "piv1 i=",i
+                    mx = 0
+                    mi = 0
+                    mj = 0
+                    !do i1 = i, a%getn()
+                    do i3 = i, a%getn()
+                        i1 = p1(i3)
+                        i2 = i1
+                        if ( .not. mp1(i2) ) stop "probem v uv"
+                        call a%getrow(i2,pivval,pivjj,&
+                                      pivnelem,mp2)
+                        do j1=1,pivnelem
+                            w1 = abs(pivval(j1))
+                            if (w1 > mx) then
+                                if (il1>10) print *, "menim"
                                 mx = w1
-                                mi = pivjj(i1)
+                                mi = i2
+                                mj = pivjj(j1)
                             end if
                         end do
+                    end do
                     piv1 = mi
-                    case (3)
-                        piv1 = i
-                        call a%getrow(i,pivval,pivjj, &
-                        pivnelem,mp2)
-                        mx = 0
-                        mi = i
-                        mj = 0
-                        do i1=1,pivnelem
-                            w1 = abs(pivval(i1))
-                            if ( w1 > mx ) then
-                                mx = w1
-                                mj = pivjj(i1)
-                            end if
-                        end do
                     piv2 = mj
-                    case (4)
+                case (2)
+                    ! sloupcovy vyber
+                    piv2 = i
+                    call a%getcol(i,pivval,pivjj, &
+                                  pivnelem,mp1)
+                    mx = 0
+                    mi = 0
+                    mj = i
+                    do i1=1,pivnelem
+                        w1 = abs(pivval(i1))
+                        if ( w1 > mx ) then
+                            mx = w1
+                            mi = pivjj(i1)
+                        end if
+                    end do
+                    piv1 = mi
+                case (3)
+                    piv1 = i
+                    call a%getrow(i,pivval,pivjj, &
+                                  pivnelem,mp2)
+                    mx = 0
+                    mi = i
+                    mj = 0
+                    do i1=1,pivnelem
+                        w1 = abs(pivval(i1))
+                        if ( w1 > mx ) then
+                            mx = w1
+                            mj = pivjj(i1)
+                        end if
+                    end do
+                    piv2 = mj
+                case (4)
                     continue
-                    case (5)
-                        ! symetricke minimal degree
-                        !! napred jem primitivne
-                        md = a%getn() + 1
-                        mi = 0
-                        mj = 0
-                        !                    do i1 = 1,a%getn()
-                        !                        if (.not. mp1(i1)) cycle
-                        !                        call a%getrow(i1,pivval,pivjj,&
-                        !                                      pivnelem,mp2)
-                        !                        if (pivnelem < md) then
-                        !                            md = pivnelem
-                        !                            mi = i1
-                        !                            mj = i1
-                        !                        end if
-                        !                    end do
-                        ! ted trochu lepe
-                        do j1=i, A%getn()
-                            i1 = p1(j1)
-                            if (.not. mp1(i1)) STOP "potiz v MD"
-                            if (degs(i1) < md) then
-                                md = degs(i1)
-                                mi = i1
-                                mj = i1
-                                if (md <= lastmin) exit
-                            end if
-                        end do
-                        piv1 = mi
-                        piv2 = mj
-                    lastmin = md
-                    case (6)
-                        piv1 = p1(i)
+                case (5)
+                    ! symetricke minimal degree
+                    !! napred jem primitivne
+                    md = a%getn() + 1
+                    mi = 0
+                    mj = 0
+!                    do i1 = 1,a%getn()
+!                        if (.not. mp1(i1)) cycle
+!                        call a%getrow(i1,pivval,pivjj,&
+!                                      pivnelem,mp2)
+!                        if (pivnelem < md) then
+!                            md = pivnelem
+!                            mi = i1
+!                            mj = i1
+!                        end if
+!                    end do
+                    ! ted trochu lepe
+                    do j1=i, A%getn()
+                        i1 = p1(j1)
+                        if (.not. mp1(i1)) STOP "potiz v MD"
+                        if (degs(i1) < md) then
+                            md = degs(i1)
+                            mi = i1
+                            mj = i1
+                        end if
+                    end do
+                    piv1 = mi
+                    piv2 = mj
+                case (6)
+                    piv1 = p1(i)
                     piv2 = p2(i)
-                    case default
-                        stop "chybna volba pivotaze - tady bych nemel nikdy byt"
-                    end select
+                case default
+                    stop "chybna volba pivotaze - tady bych nemel nikdy byt"
+            end select
         end subroutine findpivot
     end subroutine LDUd
 
@@ -835,7 +799,7 @@ module solvers
         do i=1,min(n,m)
             call L%set(1.0_rkind,p1(i),p2(i))
             call U%set(1.0_rkind,p1(i),p2(i))
-            call D%set(LDU%get(p1(i),p2(i)),p2(i),p1(i))
+            call D%set(LDU%get(p1(i),p2(i)),p1(i),p2(i))
             do j=i+1,m
                 i1 = p1(i)
                 j1 = p2(j)
@@ -851,55 +815,30 @@ module solvers
 
     !> Zpetny chod po LDU dekompozici.
     !! Predpoklada se, ze matice je ctvercova.
-    !<
-    subroutine LDUback(LDU,b,x,p1,p2,oc1,ilevel,errcode)
+    subroutine LDUback(LDU,b,x,p1,p2,oc1)
         use typy
         use mtx
         implicit none
-        !> rozlozena matice
         class(matrix), intent(in) :: LDU
-        !> prava strana
         real(kind=rkind), dimension(:), intent(in)  :: b
         real(kind=rkind), dimension(:), intent(out) :: x
         integer(kind=ikind), dimension(:), intent(in), optional :: p1
         integer(kind=ikind), dimension(:), intent(in), optional :: p2
         type(tcount), intent(out), optional :: oc1
-        !> info level, nepovinny parametr, default = 0
-        !! - 0 ... pracuj tise
-        !! - 1 ... vse reportuj
-        integer, intent(in), optional :: ilevel
-        !> chybovy status, nepovinny. Pokud neni  pritomen,tak chyba
-        !! zpusobi konec programu
-        !! - 0 ... vse OK
-        !! - 1 ... chyba - blize neurcena
-        !! - 2 ... lisi se delka b a pocet radku matice
-        !! - 3 ... lisi se delka x a pocet sloupcu matice
-        !! - 4 ... matice je singularni a soustava je konzistentni
-        !! - 5 ... matice je singularni a soustava nekonzistentni
-        integer, intent(out), optional :: errcode
         type(tcount) :: oc
         integer(kind=ikind), dimension(:), allocatable :: perm1, perm2
-        integer(kind=ikind), dimension(:), allocatable :: iperm1, iperm2
-        integer(kind=ikind) :: n,m,i,j, ip, ip2
+        integer(kind=ikind) :: n,m,i,j, ip
         real(kind=rkind), dimension(1:LDU%getn()) :: diag
         real(kind=rkind), dimension(:), allocatable :: v
         integer(kind=ikind), dimension(:), allocatable :: ii
         integer(kind=ikind) :: nelem
         logical, dimension(1:LDU%getn()) :: mask
-        integer :: ilv
-
-        if ( present(ilevel)) then
-        ilv = ilevel
-        else
-            ilv = 0
-        end if
 
         n = LDU%getn()
         m = LDU%getm()
         ! vyresit optionaly
         if (present(p1)) then
-            allocate(perm1(1:n))
-        perm1 = p1
+            perm1 = p1
         else
             allocate(perm1(1:n))
             do i=1,n
@@ -907,118 +846,37 @@ module solvers
             end do
         end if
         if (present(p2)) then
-            allocate(perm2(1:m))
-        perm2 = p2
+            perm2 = p2
         else
             allocate(perm2(1:m))
             do i=1,m
                 perm2(i) = i
             end do
         end if
-        ! konstrukce inverznich permutaci
-        allocate(iperm1(1:n),iperm2(1:m))
-        do i=1,n
-            iperm1(perm1(i))=i
-        end do
-        do i=1,m
-            iperm2(perm2(i))=i
-        end do
-
-        if (ubound(b,1) /= n) then
-            if ( present(errcode) ) then
-            else
-                errcode = 2
-                stop "LDUback: Pocet radku matice a prave strany se lisi"
-            end if
-        end if
-
-        if (ubound(x,1) /= n) then
-            if ( present(errcode) ) then
-            else
-                errcode = 3
-                stop "LDUback: Pocet sloupcu matice a neznamych se lisi"
-            end if
-        end if
 
         ! 1. L y = b
         x = b
-        if ( ilv==1) then
-            print *, "LDUback: zacatek"
-            print *, "ridici permutace"
-            print *, perm1
-            print *, perm2
-            print *, "Prava strana"
-            print *,x
-        end if
-        diag(perm2(1))=LDU%get(perm1(1),perm2(1))
+        diag(perm1(1))=LDU%get(perm1(1),perm1(1))
         mask = .false.
-        mask(perm2(1)) = .true.
+        mask(perm1(1)) = .true.
         do i = 2,n
             ip = perm1(i)
-            ip2 = perm2(i)
-            diag(ip2)= LDU%get(ip,ip2)
-            call LDU%getrow(ip,v,ii,nelem,mask)
-            if (ilv==1) then
-                print *, "i=",i, ip, nelem, mask
-                print *, ii(1:nelem)
-                print *, v(1:nelem)
-            end if
+            call LDU%getrow(ip,v,ii,nelem)
             do j=1,nelem
-                if ((ii(j)) == ip) then
+                if (ii(j) == ip) then
                     ! jsem na diagonale
-                diag(ip2) = v(j)
+                    diag(ip) = v(j)
                 else
-                    if (ilv == 1) then
-                        print *, j, x(ip), v(j), x(ii(j)), ii(j)
-                    end if
                     x(ip) = x(ip) - v(j)*x(ii(j))
-                    if (ilv == 1) then
-                        print *, j, x(ip), v(j), x(ii(j)), ii(j)
-                    end if
                 end if
             end do
-            if (ilv == 1) then
-                print *,perm1
-                print *, perm2
-                print *,ip,mask
-                print *,ii
-                print *,x
-            end if
-            mask(ip2) = .true.
+            mask(ip) = .true.
         end do
-        if (ilv == 1) then
-            print *, "po primem chodu -------------------------------------"
-            print *,x
-        end if
         ! 2. D z = y
-        x = x/diag  ! tady zalezi na poradi, potreba prezkoumat
-        if (ilv==1) then
-            print *, "po deleni diagonalou --------------------------------"
-            print *,x
-            print *, diag
-        end if
+        x = x/diag  ! tady nezalezi na poradi
         ! 3. U x = z
-        mask = .false.
-        mask(perm2(n)) = .true.
         do i=n-1,1,-1
             ip = perm1(i)
-            ip2 =perm2(i)
-            call LDU%getrow(ip,v,ii,nelem,mask)
-            do j=1,nelem
-                if (ii(j) == ip2) then
-                    ! jsem na diagonale
-                diag(ip) = v(j)
-                else
-                    x(ip) = x(ip) - v(j)*x(ii(j))
-                end if
-            end do
-            if (ilv==1) then
-                print *,perm1
-                print *,ip,mask
-                print *,ii
-                print *,x
-            end if
-            mask(ip2) = .true.
         end do
 
     end subroutine LDUback
@@ -1033,7 +891,7 @@ module solvers
 
     !> metoda nejvetsiho spadu ( Steepest descent) podrobnosti viz \ref sd
     subroutine SD(A,b,x,itmax1,reps1,ilev1,itfin1,repsfin1,&
-        ll1,ll2,cond1,opcnt1, errcode1)
+                  ll1,ll2,cond1,opcnt1, errcode1)
         use mtx
         use typy
         implicit none
@@ -1090,24 +948,23 @@ module solvers
         l1 = 1
         l2 = 1
         if (present(ilev1)) then
-        ilev = ilev1
+            ilev = ilev1
         else
             ilev = 0
         end if
 
-        if ( present(errcode1)) errcode1 = 0
         if (present(itmax1)) then
-        itmax = itmax1
+            itmax = itmax1
         else
             itmax = A%getn()
             if (ilev==10) print *,&
-            "nastavuji default hodnotu pro itmax na",itmax
+                           "nastavuji default hodnotu pro itmax na",itmax
         end if
         if (A%getn() /= A%getm()) then
             if (present(errcode1)) then
                 errcode1 = 1
                 if (ilev>0) print *,"SD: Matice neni ctvercova"
-            return
+                return
             else
                 Stop "SD: Matice neni ctvercova"
             end if
@@ -1115,7 +972,7 @@ module solvers
         if (A%getn() /= ubound(b,1)) then
             if (present(errcode1)) then
                 errcode1 = 2
-            if (ilev>0) print *,"SD : nesouhlasi delka prave strany"
+                if (ilev>0) print *,"SD : nesouhlasi delka prave strany"
             else
                 Stop "SD: Nesouhlasi delka prave strany"
             end if
@@ -1124,7 +981,7 @@ module solvers
             if (present(errcode1)) then
                 if (errcode1==0) then
                     errcode1 = 3
-                if (ilev>0) print *,"SD: nesouhlasi delka reseni"
+                    if (ilev>0) print *,"SD: nesouhlasi delka reseni"
                 else
                     errcode1 = 4
                     if (ilev>0) print *,"SD: nesouhlasi delky obou vektoru"
@@ -1137,16 +994,15 @@ module solvers
             if (errcode1>0) return
         end if
         if (present(reps1) ) then
-        reps = reps1
+            reps = reps1
         else
             reps = 1.0e-6
             if (ilev==10) print *,"nastavuji reps na defaultni hodnotu "&
-            , reps
+                                   , reps
         end if
         ! ted uz je snad vyrizeno vsechno ze vstupu
         ! jdu pocitat
         cnt = 0
-        if (ilev >0) print *,"SD zacina"
         do
             res = b - A%mul(x,opcnt)
             r1 = dot_product(res,A%mul(res,opcnt))
@@ -1172,13 +1028,13 @@ module solvers
             end if
             if (en < enmin) then
                 rcount = 0
-            enmin = en
+                enmin = en
             else
                 rcount = rcount+1
             end if
             if (r2 < res2min) then
                 res2min = r2
-            rcount1 = 0
+                rcount1 = 0
             else
                 rcount1 = rcount1+1
             end if
@@ -1205,7 +1061,6 @@ module solvers
         if (present(ll1)) ll1 = l1  ! tohle zatim nepocita
         if (present(ll2)) ll2 = l2
         if (present(cond1)) cond1 = l1/l2
-        if (ilev>0) print *,"SD konci"
     end subroutine SD
 
     subroutine SDnormal
@@ -1241,7 +1096,7 @@ module solvers
 
     !> metoda sdruzenych gradientu \ref cg
     subroutine CG(A,b,x,itmax1,reps1,ilev1,itfin1,repsfin1,&
-        ll1,ll2,cond1,opcnt1,errcode1)
+                  ll1,ll2,cond1,opcnt1,errcode1)
         use mtx
         use typy
         implicit none
@@ -1273,7 +1128,7 @@ module solvers
         real(kind=rkind), intent(out), optional :: cond1
         !> celkovy pocet provedenych operaci a cas behu
         type(tcount), intent(out), optional :: opcnt1
-        !> kod pripadne chyby
+        !> kod pripadnr chyby
         !! - 0 ... OK
         !! - 1 ... matice neni ctvercova
         !! - 2 ... nesouhlasi b
@@ -1287,7 +1142,7 @@ module solvers
         real(kind=rkind) :: reps, repsfin, r0, r1, r2,r3,l1,l2,t1,t2
         real(kind=rkind) :: wrk, en, enmin, res2min
         real(kind=rkind), dimension(:), allocatable :: res,p,Ap,&
-        alfa, beta
+                                                       alfa, beta
         type(tcount) :: opcnt
 
         call cpu_time(t1)
@@ -1297,26 +1152,25 @@ module solvers
         rcount1 = 0
         l1 = 1
         l2 = 1
-        if ( present(errcode1)) errcode1 = 0
         if (present(ilev1)) then
-        ilev = ilev1
+            ilev = ilev1
         else
             ilev = 0
         end if
 
         if (present(itmax1)) then
-        itmax = itmax1
+            itmax = itmax1
         else
             itmax = A%getn()
             if (ilev==10) print *,&
-            "nastavuji default hodnotu pro itmax na",itmax
+                           "nastavuji default hodnotu pro itmax na",itmax
         end if
         allocate(alfa(0:itmax), beta(0:itmax))
         if (A%getn() /= A%getm()) then
             if (present(errcode1)) then
                 errcode1 = 1
                 if (ilev>0) print *,"CG: Matice neni ctvercova"
-            return
+                return
             else
                 Stop "CG: Matice neni ctvercova"
             end if
@@ -1324,7 +1178,7 @@ module solvers
         if (A%getn() /= ubound(b,1)) then
             if (present(errcode1)) then
                 errcode1 = 2
-            if (ilev>0) print *,"CG : nesouhlasi delka prave strany"
+                if (ilev>0) print *,"CG : nesouhlasi delka prave strany"
             else
                 Stop "CG: Nesouhlasi delka prave strany"
             end if
@@ -1333,7 +1187,7 @@ module solvers
             if (present(errcode1)) then
                 if (errcode1==0) then
                     errcode1 = 3
-                if (ilev>0) print *,"CG: nesouhlasi delka reseni"
+                    if (ilev>0) print *,"CG: nesouhlasi delka reseni"
                 else
                     errcode1 = 4
                     if (ilev>0) print *,"CG: nesouhlasi delky obou vektoru"
@@ -1346,11 +1200,11 @@ module solvers
             if (errcode1>0) return
         end if
         if (present(reps1) ) then
-        reps = reps1
+            reps = reps1
         else
             reps = 1.0e-6
             if (ilev==10) print *,"nastavuji reps na defaultni hodnotu "&
-            , reps
+                                   , reps
         end if
         ! ted uz je snad vyrizeno vsechno ze vstupu
         ! jdu pocitat
@@ -1405,13 +1259,13 @@ module solvers
             end if
             if (en < enmin) then
                 rcount = 0
-            enmin = en
+                enmin = en
             else
                 rcount = rcount+1
             end if
             if (r2 < res2min) then
                 res2min = r2
-            rcount1 = 0
+                rcount1 = 0
             else
                 rcount1 = rcount1+1
             end if
@@ -1472,7 +1326,7 @@ module solvers
 
     !> metoda sdruzenych gradientu pro normalni rovnice \ref cgn
     subroutine CGnormal(A,b,x,itmax1,reps1,ilev1,itfin1,repsfin1,&
-        ll1,ll2,cond1,opcnt1,errcode1)
+                  ll1,ll2,cond1,opcnt1,errcode1)
         use mtx
         use typy
         implicit none
@@ -1518,12 +1372,11 @@ module solvers
         real(kind=rkind) :: reps, repsfin, r0, r1, r2,r3,l1,l2,t1,t2
         real(kind=rkind) :: wrk, en, enmin, res2min
         real(kind=rkind), dimension(:), allocatable :: res,p,Ap,&
-        alfa, beta,&
-        res1, b1
+                                                       alfa, beta,&
+                                                       res1, b1
         type(tcount) :: opcnt
 
         call cpu_time(t1)
-        if ( present(errcode1)) errcode1 = 0
         errcode = 0
         n = A%getn()
         rcount = 0
@@ -1531,23 +1384,23 @@ module solvers
         l1 = 1
         l2 = 1
         if (present(ilev1)) then
-        ilev = ilev1
+            ilev = ilev1
         else
             ilev = 0
         end if
 
         if (present(itmax1)) then
-        itmax = itmax1
+            itmax = itmax1
         else
             itmax = A%getn()
             if (ilev==10) print *,&
-            "nastavuji default hodnotu pro itmax na",itmax
+                           "nastavuji default hodnotu pro itmax na",itmax
         end if
         allocate(alfa(0:itmax), beta(0:itmax))
         if (A%getn() /= ubound(b,1)) then
             if (present(errcode1)) then
                 errcode1 = 2
-            if (ilev>0) print *,"CGnormal : nesouhlasi delka prave strany"
+                if (ilev>0) print *,"CGnormal : nesouhlasi delka prave strany"
             else
                 Stop "CGnormal: Nesouhlasi delka prave strany"
             end if
@@ -1556,7 +1409,7 @@ module solvers
             if (present(errcode1)) then
                 if (errcode1==0) then
                     errcode1 = 3
-                if (ilev>0) print *,"CGnormal: nesouhlasi delka reseni"
+                    if (ilev>0) print *,"CGnormal: nesouhlasi delka reseni"
                 else
                     errcode1 = 4
                     if (ilev>0) print *,"CGnormal: nesouhlasi delky obou vektoru"
@@ -1569,11 +1422,11 @@ module solvers
             if (errcode1>0) return
         end if
         if (present(reps1) ) then
-        reps = reps1
+            reps = reps1
         else
             reps = 1.0e-6
             if (ilev==10) print *,"nastavuji reps na defaultni hodnotu "&
-            , reps
+                                   , reps
         end if
         ! ted uz je snad vyrizeno vsechno ze vstupu
         ! jdu pocitat
@@ -1615,8 +1468,8 @@ module solvers
             opcnt%div = opcnt%div + 1
 
             !! odhadnout vlastni cisla
-!             call esteig(l1,l2,cnt,alfa,beta)
-!             print *, "odhad vl. cisel:",l1,l2
+            call esteig(l1,l2,cnt,alfa,beta)
+            print *, "odhad vl. cisel:",l1,l2
             !! hotovo
 
             cnt = cnt + 1
@@ -1630,13 +1483,13 @@ module solvers
             end if
             if (en < enmin) then
                 rcount = 0
-            enmin = en
+                enmin = en
             else
                 rcount = rcount+1
             end if
             if (r2 < res2min) then
                 res2min = r2
-            rcount1 = 0
+                rcount1 = 0
             else
                 rcount1 = rcount1+1
             end if
@@ -1700,9 +1553,9 @@ module solvers
 
     !> metoda sdruzenych gradientu \ref pcg
     subroutine PCG(A,Minv,b,x,itmax1,reps1,ilev1,itfin1,repsfin1,&
-        ll1,ll2,cond1,opcnt1,errcode1)
+                  ll1,ll2,cond1,opcnt1,errcode1)
         use mtx
-        use typy, r4type=>r4
+        use typy
         implicit none
         !> matice soustavy\n
         !! musi poskytovat getn, getm, mul (nasobeni vektorem)
@@ -1749,36 +1602,35 @@ module solvers
         real(kind=rkind) :: reps, repsfin, r0, r1, r2,r3,r4,l1,l2,t1,t2
         real(kind=rkind) :: wrk, en, enmin, res2min
         real(kind=rkind), dimension(:), allocatable :: res,p,Ap,&
-        alfa, beta, z
+                                                       alfa, beta, z
         type(tcount) :: opcnt
 
         call cpu_time(t1)
         errcode = 0
-        if ( present(errcode1)) errcode1 = 0
         n = A%getn()
         rcount = 0
         rcount1 = 0
         l1 = 1
         l2 = 1
         if (present(ilev1)) then
-        ilev = ilev1
+            ilev = ilev1
         else
             ilev = 0
         end if
 
         if (present(itmax1)) then
-        itmax = itmax1
+            itmax = itmax1
         else
             itmax = A%getn()
             if (ilev==10) print *,&
-            "nastavuji default hodnotu pro itmax na",itmax
+                           "nastavuji default hodnotu pro itmax na",itmax
         end if
         allocate(alfa(0:itmax), beta(0:itmax))
         if (A%getn() /= A%getm()) then
             if (present(errcode1)) then
                 errcode1 = 1
                 if (ilev>0) print *,"CG: Matice neni ctvercova"
-            return
+                return
             else
                 Stop "CG: Matice neni ctvercova"
             end if
@@ -1786,7 +1638,7 @@ module solvers
         if (A%getn() /= ubound(b,1)) then
             if (present(errcode1)) then
                 errcode1 = 2
-            if (ilev>0) print *,"CG : nesouhlasi delka prave strany"
+                if (ilev>0) print *,"CG : nesouhlasi delka prave strany"
             else
                 Stop "CG: Nesouhlasi delka prave strany"
             end if
@@ -1795,7 +1647,7 @@ module solvers
             if (present(errcode1)) then
                 if (errcode1==0) then
                     errcode1 = 3
-                if (ilev>0) print *,"CG: nesouhlasi delka reseni"
+                    if (ilev>0) print *,"CG: nesouhlasi delka reseni"
                 else
                     errcode1 = 4
                     if (ilev>0) print *,"CG: nesouhlasi delky obou vektoru"
@@ -1808,11 +1660,11 @@ module solvers
             if (errcode1>0) return
         end if
         if (present(reps1) ) then
-        reps = reps1
+            reps = reps1
         else
             reps = 1.0e-6
             if (ilev==10) print *,"nastavuji reps na defaultni hodnotu "&
-            , reps
+                                   , reps
         end if
         ! ted uz je snad vyrizeno vsechno ze vstupu
         ! jdu pocitat
@@ -1831,13 +1683,6 @@ module solvers
             !! Step 3
             Ap =A%mul(p,opcnt)
             r1 = dot_product(p,Ap)
-            !!! tady zkontrolovat nulu
-            if ( r1 == 0.0) then
-                ! nasypat vysledky
-                ! zatim stopka
-                repsfin = 0
-                exit
-            end if
             wrk = r2/r1
             if (ilev>0) print *,"alfa=",wrk
             alfa(cnt) = wrk
@@ -1878,13 +1723,13 @@ module solvers
             end if
             if (en < enmin) then
                 rcount = 0
-            enmin = en
+                enmin = en
             else
                 rcount = rcount+1
             end if
             if (r2 < res2min) then
                 res2min = r2
-            rcount1 = 0
+                rcount1 = 0
             else
                 rcount1 = rcount1+1
             end if
@@ -1961,7 +1806,7 @@ module solvers
 
         if (n==0) then
             l1 = 1/alfa(0)
-        l2 = l1
+            l2 = l1
         else
             !odhadneme nejmensi
             x1 = 0
@@ -1977,7 +1822,7 @@ module solvers
                 y3 = vycdet(x3,alfa,beta,n)
                 if (y3*y1 > 0) then
                     x1 = x3
-                y1 = y3
+                    y1 = y3
                 else
                     x2 = x3
                     y2 = y3
@@ -2006,7 +1851,7 @@ module solvers
                 y3 = vycdet(x3,alfa,beta,n)
                 if (y3*y1 > 0) then
                     x1 = x3
-                y1 = y3
+                    y1 = y3
                 else
                     x2 = x3
                     y2 = y3
@@ -2017,49 +1862,6 @@ module solvers
         end if
 
     end subroutine esteig
-
-    !> inicializuje vrstvy
-    subroutine inivrstvy(levelset, A)
-        use mtx
-        implicit none
-        type(vrstvy), intent(in out) :: levelset
-        class(matrix), intent(in) :: A
-        integer(kind=ikind) :: n
-
-        n = A%getn()
-        ! jen pridelim pamet, neinicializuji
-        allocate(levelset%levlist(1:n))
-        allocate(levelset%levstart(1:n+1))
-        ! pocet urovni je nula
-        levelset%nlev = 0
-    end subroutine inivrstvy
-
-    !> vlozi prvni vrchol, v tomto pripade nepotrebuje matici
-    subroutine firstpoint(levelset, point)
-        implicit none
-        type(vrstvy), intent(in out) :: levelset
-        integer(kind=ikind) :: point !> vychozi vrchol
-        levelset%nlev = 1
-        levelset%levstart(1) = 1
-        levelset%levstart(2) = 2
-        levelset%levlist(1) = point
-    end subroutine firstpoint
-
-    !> prida vrstvu, predpoklada se, ze aspon jedna tam uz je
-    subroutine addlevel(A,mapa,levelset)
-        use mtx
-        !> matice definujici graf
-        class(matrix), intent(in) :: A
-        !> mapa povolujici jdnotlive vrcholy
-        integer(kind=ikind),dimension(:),intent(inout) :: mapa
-        !> uktualni sada vrstev
-        type(vrstvy), intent(inout) :: levelset
-
-        if (levelset%nlev == 0) Stop "Chybna pouziti addlevel"
-        ! posledni vrstva je v od levelset%levstart(nlev) do
-        ! levelset%lesvstart(nlev+1)-1
-
-    end subroutine addlevel
 
 
 end module solvers
