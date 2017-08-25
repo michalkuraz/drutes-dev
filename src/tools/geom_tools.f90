@@ -1130,11 +1130,13 @@ module geom_tools
       character(len=*), intent(in) :: filename
       class(pde_str), intent(in out) :: pde_loc
       integer :: fileid, ierr
-      integer(kind=ikind) :: i, counter, k, l, m, proc, j, ii
+      integer(kind=ikind) :: i, counter, k, l, m, proc, j, ii, D
       real(kind=rkind), dimension(:,:), allocatable :: input
       real(kind=rkind) :: tmp, value, grad
       logical :: val_defined
       
+      
+      D = drutes_config%dimen
       call find_unit(fileid)
       
       
@@ -1167,6 +1169,7 @@ module geom_tools
       do i=1, counter
         call fileread(input(i,:), fileid)
       end do
+
       do i=1, elements%kolik
         do j=1, ubound(elements%data,2)
           k = elements%data(i,j)
@@ -1175,9 +1178,10 @@ module geom_tools
             if (m == 0) then
               if (l>100) then
                 do ii=1, ubound(input,1)-1
-                  if (nodes%data(k,2) >= input(ii,2) .and. nodes%data(k,2) <= input(ii+1,2)) then
+    
+                  if (nodes%data(k,D) >= input(ii,2) .and. nodes%data(k,D) <= input(ii+1,2)) then
                     grad = (input(ii+1,3) - input(ii,3))/(input(ii+1,2) - input(ii,2))
-                    value =  input(ii,3) + grad*(nodes%data(k,2) - input(ii,2))
+                    value =  input(ii,3) + grad*(nodes%data(k,D) - input(ii,2))
                     val_defined=.true.
                     if (isnan(value)) then
                       call file_error(fileid, "bad input file with initial conditions")
@@ -1196,10 +1200,10 @@ module geom_tools
             else
               val_defined=.false.
               do ii=1, ubound(input,1)-1
-                if (nodes%data(k,2) >= input(ii,2) .and. nodes%data(k,2) <= input(ii+1,2)) then
+                if (nodes%data(k,D) >= input(ii,2) .and. nodes%data(k,D) <= input(ii+1,2)) then
                   
                   grad = (input(ii+1,3) - input(ii,3))/(input(ii+1,2) - input(ii,2))
-                  value =  input(ii,3) + grad*(nodes%data(k,2) - input(ii,2))
+                  value =  input(ii,3) + grad*(nodes%data(k,D) - input(ii,2))
                   val_defined=.true.
                   if (isnan(value)) then
                     call file_error(fileid, "bad input file with initial conditions")
@@ -1208,21 +1212,21 @@ module geom_tools
                 end if
               end do
               if (.not. val_defined) then
-                if (nodes%data(k,2) < minval(input(:,2))) then
+                if (nodes%data(k,D) < minval(input(:,2))) then
                   value = input(minloc(input(:,2),1),3)
                   val_defined=.true.
                 end if
-                if (nodes%data(k,2) > maxval(input(:,2))) then
+                if (nodes%data(k,D) > maxval(input(:,2))) then
                   value = input(maxloc(input(:,2),1), 3)
                   val_defined=.true.
                 end if
                 if (.not. val_defined) then
-                  print *, nodes%data(k,2) ; stop
+                  print *, nodes%data(k,D) ; stop
                   call file_error(fileid, "Have you covered the entire vertical profile with data for the initial condition?")
                 end if
               end if
             end if
-            pde_loc%solution(k) =  value+nodes%data(k,2) 
+            pde_loc%solution(k) =  value+nodes%data(k,D) 
         end do
       end do
         

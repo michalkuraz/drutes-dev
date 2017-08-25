@@ -681,7 +681,11 @@ module re_total
       class(pde_str), intent(in out) :: pde_loc
       integer(kind=ikind) :: i, j, k,l, m, layer, D
       real(kind=rkind) :: value
-      
+              D = drutes_config%dimen
+      select case (vgset(1_ikind)%icondtype)
+        case("input")
+          call map1d2dJ(pde_loc,"drutes.conf/water.conf/hini.in")
+      end select
       
       D = drutes_config%dimen
       do i=1, elements%kolik

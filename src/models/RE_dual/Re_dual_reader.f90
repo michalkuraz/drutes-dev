@@ -1,3 +1,4 @@
+!> This module contains subroutines that read input information from config files and additional input files
 module Re_dual_reader
   public :: Re_dual_readm,Re_dual_readf, Re_dual_var
   

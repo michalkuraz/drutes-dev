@@ -739,6 +739,7 @@ module readtools
               write(unit=msg, fmt="(a,a,a,i4)") "incorrect data in file:  ", trim(filename), "    at line:", j
               call file_error(fileid, msg)
             end if
+
           end do
 
           struct(i)%series_pos = 1

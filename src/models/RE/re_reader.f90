@@ -160,7 +160,7 @@ module re_reader
 	      call file_error(file_waterm, msg)
 	  end select
 	  select case(vgmatrix(i)%icondtype)
-	    case("H_tot", "hpres", "theta")
+	    case("H_tot", "hpres", "theta","input")
 	      CONTINUE
 	    case default
 	      print *, "you have specified wrong initial condition type keyword"
@@ -168,6 +168,7 @@ module re_reader
 	      print *, "                        H_tot = total hydraulic head"
 	      print *, "                        hpres = pressure head"
 	      print *, "                        theta = water content"
+              print *, "                        input = read from input file (drutes output file)"
 	      call file_error(file_waterm)
 	  end select
 	  if (ierr /= 0) then
@@ -183,7 +184,7 @@ module re_reader
 	  read(unit=file_waterm, fmt= *, iostat=ierr) vgmatrix(i)%initcond, vgmatrix(i)%icondtype
           vgmatrix(i)%rcza_set%use = .false.
 	  select case(vgmatrix(i)%icondtype)
-	    case("H_tot", "hpres", "theta")
+	    case("H_tot", "hpres", "theta","input")
 	      CONTINUE
 	    case default
 	      print *, "you have specified wrong initial condition type keyword"
@@ -191,6 +192,7 @@ module re_reader
 	      print *, "                        H_tot = total hydraulic head"
 	      print *, "                        hpres = pressure head"
 	      print *, "                        theta = water content"
+              print *, "                        input = read from input file (drutes output file)"
 	      call file_error(file_waterm)
 	  end select
 	  if (ierr /= 0) then
