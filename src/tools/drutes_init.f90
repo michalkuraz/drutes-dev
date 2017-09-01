@@ -19,8 +19,9 @@ module drutes_init
 
 
   contains
-
-    !> routine to open all files to read and write
+    !> 2nd procedure from main
+    !! Procedure reading drutes.conf/global.conf file, opens out/DRUtES.log, out/cgit.count
+    !<
     subroutine parse_globals()
       use typy
       use globals
@@ -42,12 +43,12 @@ module drutes_init
       open(unit=logfile, file="out/DRUtES.log", action="write", status="replace", iostat=i_err)
       
       if (i_err /= 0) then
-	i_err=system("mkdir out")
+        i_err=system("mkdir out")
         open(unit=logfile, file="out/DRUtES.log", action="write", status="replace", iostat=i_err)
-	if (i_err /= 0) then
-	  print *, "unable to open and create directory out (is it UN*X type os?), called  from drutes_init::parse_globals"
-	  ERROR STOP
-	end if
+        if (i_err /= 0) then
+          print *, "unable to open and create directory out (is it UN*X type os?), called  from drutes_init::parse_globals"
+          ERROR STOP
+        end if
 	  
       end if
       
@@ -79,26 +80,26 @@ module drutes_init
 
 
       if (i_err /= 0) then
-	print *, "missing drutes.conf/global.conf file"
-	ERROR STOP
+        print *, "missing drutes.conf/global.conf file"
+        ERROR STOP
       end if
       
       
       if (www) then
-	if (.not. dirglob%valid) then
-	  print *, "if you have specified option www you MUST specify location with global settings"
-	  print *, "specify option --dir-global path/to/your/global/settings"
-	  ERROR STOP
-	end if
-	call find_unit(file_wwwglob, 200)
-	write(dirname, fmt=*) trim(dirglob%dir), "drutes_global.conf/global.conf" 
-	open(unit=file_wwwglob,file=trim(adjustl(dirname)), action="read", status="old", iostat = i_err)
-	if (i_err /= 0) then
-	  print *, "incorrect definition of global configuration file"
-	  print *, "your definition was: ", trim(dirglob%dir)
-	  print *, "the constructed path was: ", trim(adjustl(dirname))
-	  ERROR stop
-	end if
+        if (.not. dirglob%valid) then
+          print *, "if you have specified option www you MUST specify location with global settings"
+          print *, "specify option --dir-global path/to/your/global/settings"
+          ERROR STOP
+        end if
+        call find_unit(file_wwwglob, 200)
+        write(dirname, fmt=*) trim(dirglob%dir), "drutes_global.conf/global.conf" 
+        open(unit=file_wwwglob,file=trim(adjustl(dirname)), action="read", status="old", iostat = i_err)
+        if (i_err /= 0) then
+          print *, "incorrect definition of global configuration file"
+          print *, "your definition was: ", trim(dirglob%dir)
+          print *, "the constructed path was: ", trim(adjustl(dirname))
+          ERROR stop
+        end if
 
       end if
      
@@ -121,38 +122,38 @@ module drutes_init
           call read_1dmesh_int()
 
         case(2)
-	  select case(drutes_config%mesh_type)
-	    case(1)
-	      open(unit=file_mesh, file="drutes.conf/mesh/drumesh2d.conf", action="read", status="old", iostat=i_err)
-	      if (i_err /= 0) then
-		print *, "missing drutes.conf/mesh/drumesh2d.conf file"
-		ERROR STOP
-	      end if
-	      call read_2dmesh_int()
-	    case(2)
-	      open(unit=file_mesh, file="drutes.conf/mesh/mesh.t3d", action="read", status="old", iostat=i_err)
-	      if (i_err /= 0) then
-		print *, "missing drutes.conf/mesh/mesh.t3d file"
-		ERROR STOP
-	      end if
-	      call read_2dmesh_t3d()
-	    case(3)
-	      open(unit=file_mesh, file="drutes.conf/mesh/mesh.msh", action="read", status="old", iostat=i_err)
-	      if (i_err /= 0) then
-		print *, "missing drutes.conf/mesh/mesh.msh file"
-		ERROR STOP
-	      end if
-	      call read_2dmesh_gmsh()
-	    case default
-	      write(unit=terminal, fmt=*) "INCORRECT mesh type definition"
-	      write(unit=terminal, fmt=*)"you have defined value:", drutes_config%mesh_type
-	      write(unit=terminal, fmt=*) "the available options are: 1 - internal mesh generator" 
-	      write(unit=terminal, fmt=*) "   (very simple uniform meshes, for debuging only"
-	      write(unit=terminal, fmt=*)"                           2 - t3d mesh generator"
-	      write(unit=terminal, fmt=*)"                           3 - gmsh mesh generator"
-	      write(unit=terminal, fmt=*)"exiting, called from drutes_init::parse_globals"
-	      error STOP
-	   end select
+          select case(drutes_config%mesh_type)
+            case(1)
+              open(unit=file_mesh, file="drutes.conf/mesh/drumesh2d.conf", action="read", status="old", iostat=i_err)
+              if (i_err /= 0) then
+                print *, "missing drutes.conf/mesh/drumesh2d.conf file"
+                ERROR STOP
+              end if
+              call read_2dmesh_int()
+            case(2)
+              open(unit=file_mesh, file="drutes.conf/mesh/mesh.t3d", action="read", status="old", iostat=i_err)
+              if (i_err /= 0) then
+                print *, "missing drutes.conf/mesh/mesh.t3d file"
+                ERROR STOP
+              end if
+              call read_2dmesh_t3d()
+            case(3)
+              open(unit=file_mesh, file="drutes.conf/mesh/mesh.msh", action="read", status="old", iostat=i_err)
+              if (i_err /= 0) then
+                print *, "missing drutes.conf/mesh/mesh.msh file"
+                ERROR STOP
+              end if
+              call read_2dmesh_gmsh()
+            case default
+              write(unit=terminal, fmt=*) "INCORRECT mesh type definition"
+              write(unit=terminal, fmt=*)"you have defined value:", drutes_config%mesh_type
+              write(unit=terminal, fmt=*) "the available options are: 1 - internal mesh generator" 
+              write(unit=terminal, fmt=*) "   (very simple uniform meshes, for debuging only"
+              write(unit=terminal, fmt=*)"                           2 - t3d mesh generator"
+              write(unit=terminal, fmt=*)"                           3 - gmsh mesh generator"
+              write(unit=terminal, fmt=*)"exiting, called from drutes_init::parse_globals"
+              error STOP
+          end select
         case default
           write(unit=terminal, fmt=*)"ERROR: unsupported problem dimension, the specified dimension was: ", drutes_config%dimen
           write(unit=terminal, fmt=*)"currently only 1D and 2D is supported"
@@ -161,10 +162,9 @@ module drutes_init
 
       call pde_constructor(pde_common%processes)
       
-      if (debugmode) then
-	call find_unit(debugfile)
-	open(unit=debugfile, file="out/debug.infos", action="write", status="replace")
-      end if
+      call init_measured()
+
+      call init_observe()
 
       
 
@@ -208,6 +208,17 @@ module drutes_init
 
     end subroutine pde_constructor
     
+    !> 1st procedure in main
+    !! analyzes options passed to drutes executable
+    !! the following options are available
+    !! -o optim : batch executions of drutes, in case of divergence of Picard method the Picard criterion is increased to "huge" value, so that it becomes semi explicit method
+    !! --print-level 0 : default option everything prints to terminal, so output is not saved
+    !! --print-level 1 : all terminal ouputs are saved in out/screen.logfile
+    !! --print-level 2 : all terminal ouputs go to /dev/null 
+    !! -v : only prints drutes version
+    !! --tmax : user can specify maximal CPU time for code execution e.g. --tmax 5 min , available units are: s , min , hrs , day 
+    !! --dir-local and --dir-global and www was supposed to be used for online preprocessor and postprocessor, but it hasn't been fully implemented yet, ignore it for now
+    !<
     subroutine get_cmd_options()
       use globals
       use core_tools
@@ -239,7 +250,7 @@ module drutes_init
 		    skip = 1
 		    
 	    case("--print-level")
-	            call getarg(i+1,oarg)
+        call getarg(i+1,oarg)
 		    if (trim(oarg) == "1") then
 		      call find_unit(terminal, 2000)
 		      open(unit=terminal, file="out/screen.log", action="write", status="replace", iostat=ierr)

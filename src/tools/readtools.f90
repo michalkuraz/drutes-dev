@@ -729,7 +729,6 @@ module readtools
             end if
           end do
           
-          print *, counter, counter2
           allocate(struct(i)%series(counter,counter2/counter))
 
           do j=1, counter

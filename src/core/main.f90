@@ -44,6 +44,7 @@ program main
   real(kind=rkind) :: r, t
   integer :: fileid, i, j
   
+  
   call system("rm -rf out/*")
   
   
@@ -55,7 +56,7 @@ program main
 
 
 
-    version_id%number = "1.201601/"
+    version_id%number = "1.201708/"
     version_id%reliability = "beta "
     
     call get_cmd_options()
@@ -88,14 +89,10 @@ program main
              " version: " //achar(27)//'[92m', version_id, " " //achar(27)//'[0m'
       
     call parse_globals() 
-    
-    call init_measured()
-        
+            
     call write_log("number of nodes:", int1=nodes%kolik, text2="number of elements:", int2=elements%kolik)
         
     call set_pointers()
-    
-    call init_observe()
         
     call feminit()
     
