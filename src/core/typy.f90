@@ -21,6 +21,8 @@ module typy
     integer, parameter, public :: dprec=selected_real_kind(15,99) 
     
     integer, parameter, public :: sprec=selected_real_kind(8,9)
+    
+    
 
     !> real number specification
     integer, parameter, public :: rkind = selected_real_kind(15,99)
@@ -44,7 +46,12 @@ module typy
         integer :: pocet = 0
     end type StringList
 
-
+    !> 4byte real
+    integer, parameter :: r4  = selected_real_kind(5,10)
+    !> 8byte real
+    integer, parameter :: r8  = selected_real_kind(12,20)
+    !> 16byte real
+    integer, parameter :: r16 = selected_real_kind(30)
 
     !> pocitadlo operaci
     type, public :: tcount

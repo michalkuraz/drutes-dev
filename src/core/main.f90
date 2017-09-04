@@ -88,11 +88,16 @@ program main
     print *, " " //achar(27)//'[94m', "DRUtES" //achar(27)//'[0m', &
              " version: " //achar(27)//'[92m', version_id, " " //achar(27)//'[0m'
       
+       
     call parse_globals() 
-            
+    
+    call init_measured()
+        
     call write_log("number of nodes:", int1=nodes%kolik, text2="number of elements:", int2=elements%kolik)
         
     call set_pointers()
+    
+    call init_observe()
         
     call feminit()
     
@@ -108,7 +113,7 @@ program main
 
   call solve_pde(success)     
   
-  if (drutes_config%compute_objfnc) call get_objval()
+  if (drutes_config%compute_objfnc) call objval%getval()
   
   sync all
   

@@ -1,7 +1,7 @@
 #compiler options
 # c=/opt/gcc-trunk/bin/gfortran -fimplicit-none -fbounds-check
 # c=gfortran -fimplicit-none  -fcoarray=single -fbounds-check -g3 -fdefault-real-8 -Wextra -Wunused
-c=gfortran -fimplicit-none  -fcoarray=single -fbounds-check -fbacktrace -g -g3 -fdefault-real-8 -O0 -finit-real=nan
+c=gfortran-6 -fimplicit-none  -fcoarray=single -fbounds-check -fbacktrace -g -g3 -fdefault-real-8 -O0 -finit-real=nan
 # c=gfortran-5 -fimplicit-none  -fcoarray=single -fbounds-check -g3 -fdefault-real-8 -O0 -finit-real=nan
 # c=gfortran-5 -fimplicit-none  -fcoarray=single -fbounds-check -g3 -fdefault-real-8 -O0 -finit-real=nan
 #     c=gfortran -fimplicit-none  -fcoarray=single -fbounds-check -g -fbacktrace
@@ -20,7 +20,7 @@ c=gfortran -fimplicit-none  -fcoarray=single -fbounds-check -fbacktrace -g -g3 -
 d=drutes_obj-`date -I`
 
 all : main.o $(ALL_objs)
-	[ -d bin ] || mkdir bin &&  $c -g -o bin/drutes main.o $(ALL_objs)
+	[ -d bin ] || mkdir bin && $c -g -o bin/drutes main.o $(ALL_objs)
 dir="obj"
 
 servers="miguel@neptun01.fsv.cvut.cz:~  miguel@matsrv-lin01.fsv.cvut.cz:~ miguel@cml.fsv.cvut.cz:~"

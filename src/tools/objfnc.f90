@@ -2,7 +2,16 @@ module objfnc
   use typy
   
   private :: reader
-  public :: get_objval
+  private :: get_objval_standard
+  private :: read_model
+  
+  type, public :: objval_obj
+    contains 
+      procedure, nopass :: read_config=>reader
+      procedure, nopass :: getval=>get_objval_standard   
+  end type objval_obj  
+  
+  type(objval_obj), public :: objval
   
   integer, private :: exp_file
   
@@ -346,13 +355,21 @@ module objfnc
     
     end subroutine reader
     
-    subroutine get_objval()
+    
+    subroutine read_model()
+    
+    end subroutine read_model
+    
+    subroutine get_objval_standard()
       use typy
       use debug_tools
+      
       integer(kind=ikind) :: i,j, pos, k, n, l
+      
       type :: errors_str
         real(kind=rkind), dimension(:), allocatable :: val
       end type
+      
       type(errors_str), dimension(:), allocatable :: errors
       logical :: inlast 
       integer :: outfile
@@ -360,6 +377,7 @@ module objfnc
       
       
       call reader()
+      
 
       allocate(errors(ubound(model_data,1)))
       
@@ -395,6 +413,7 @@ module objfnc
                 end if
                 
                 errors(i)%val(l) = errors(i)%val(l) + (modval - exp_data(n)%data(j,l))*(modval - exp_data(n)%data(j,l))
+                
 
               end do
             end do
@@ -413,18 +432,16 @@ module objfnc
       
       write(outfile, *) "# values of objective functions"
       
-      suma=0
       do i=1, ubound(errors,1)
         do j=1, ubound(errors(i)%val,1)
-         suma = suma + errors(i)%val(j)
+          write(outfile, *) errors(i)%val(j)
         end do
       end do
-      write(outfile, *) suma
       
       
       close(outfile)
                                 
-    end subroutine get_objval
+    end subroutine get_objval_standard
   
 
 

@@ -162,11 +162,6 @@ module drutes_init
 
       call pde_constructor(pde_common%processes)
       
-      call init_measured()
-
-      call init_observe()
-
-      
 
     end subroutine parse_globals
 
