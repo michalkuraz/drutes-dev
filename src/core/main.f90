@@ -105,6 +105,8 @@ program main
     if (drutes_config%it_method == 1 .or. drutes_config%it_method == 2) then
       call init_decomp()
     end if
+    
+     if (objval%compute) call objval%read_config()
 
   end if
   
@@ -113,7 +115,7 @@ program main
 
   call solve_pde(success)     
   
-  if (drutes_config%compute_objfnc) call objval%getval()
+  if (objval%compute) call objval%getval()
   
   sync all
   
@@ -122,13 +124,13 @@ program main
     
     
     select case (int(stop_time - start_time))
-            case (0:60)	
-                    call write_log(text="# real elapsed CPU time =", real1=1.0_rkind*(stop_time - start_time), text2="s")
-            case (61:3600)
+      case (0:60)	
+        call write_log(text="# real elapsed CPU time =", real1=1.0_rkind*(stop_time - start_time), text2="s")
+      case (61:3600)
 		    call write_log(text="# real elapsed CPU time =", real1=(stop_time - start_time)/60.0_rkind, text2="min")
-            case (3601:86400)
+      case (3601:86400)
 		    call write_log(text="# real elapsed CPU time =", real1=(stop_time - start_time)/3600.0_rkind, text2="hrs")
-            case default
+      case default
 		    call write_log(text="# real elapsed CPU time =", real1=(stop_time - start_time)/86400.0_rkind, text2="days") 
    end select
    

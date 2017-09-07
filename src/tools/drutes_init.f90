@@ -180,15 +180,15 @@ module drutes_init
       allocate(pde(processes))
 
       do i=1, processes
-	allocate(pde(i)%pde_fnc(processes))
-	do j=1, processes
-	  pde(i)%pde_fnc(j)%dispersion => dummy_tensor
-	  pde(i)%pde_fnc(j)%convection => dummy_vector
-	  pde(i)%pde_fnc(j)%der_convect => dummy_vector
-	  pde(i)%pde_fnc(j)%reaction => dummy_scalar
-	  pde(i)%pde_fnc(j)%zerord => dummy_scalar
-	  pde(i)%pde_fnc(j)%elasticity => dummy_scalar
-	end do  
+      allocate(pde(i)%pde_fnc(processes))
+      do j=1, processes
+        pde(i)%pde_fnc(j)%dispersion => dummy_tensor
+        pde(i)%pde_fnc(j)%convection => dummy_vector
+        pde(i)%pde_fnc(j)%der_convect => dummy_vector
+        pde(i)%pde_fnc(j)%reaction => dummy_scalar
+        pde(i)%pde_fnc(j)%zerord => dummy_scalar
+        pde(i)%pde_fnc(j)%elasticity => dummy_scalar
+      end do  
         allocate(pde(i)%solution(nodes%kolik))
         allocate(pde(i)%obspt_unit(ubound(observation_array,1)))
         allocate(pde(i)%permut(nodes%kolik))
@@ -227,125 +227,123 @@ module drutes_init
       skip = 0
       
       do i = 1, iargc()
-	call getarg(i, arg)
+	      call getarg(i, arg)
       
         if (maxval(skip) == 0) then
-	  select case(trim(arg))
-	    case("-o")
-		    call getarg(i+1,oarg)
-		    select case(trim(oarg))
-                      case("www")
-                        www=.true.
-                      case("optim")
-                        optim=.true.
-                      case default
-                        print *, "unrecognized option after -o , exiting...."
-                    end select
+	        select case(trim(arg))
+            case("-o")
+              call getarg(i+1,oarg)
+              select case(trim(oarg))
+                case("www")
+                  www=.true.
+                case("optim")
+                  optim=.true.
+                case default
+                  print *, "unrecognized option after -o , exiting...."
+              end select
 
-		    skip = 1
+              skip = 1
 		    
-	    case("--print-level")
-        call getarg(i+1,oarg)
-		    if (trim(oarg) == "1") then
-		      call find_unit(terminal, 2000)
-		      open(unit=terminal, file="out/screen.log", action="write", status="replace", iostat=ierr)
-		      if (ierr /=0) then
-			call system("mkdir out")
-			open(unit=terminal, file="out/screen.log", action="write", status="replace", iostat=ierr)
-		      end if
-		      if (ierr /=0) then
-			print *, "ERROR: directory out cannot be created"
-			ERROR STOP
-		      end if
-		    else if (trim(oarg) == "0") then
-		      CONTINUE
-		    else if (trim(oarg) == "2") then
-			call find_unit(terminal, 2000)
-			open(unit=terminal, file="/dev/null", action="write", status="replace", iostat=ierr)
-		        if (ierr /=0) then
-			  print *, "ERROR: file /dev/null does not exist, are you running GNU/Linux based os?"
-			  print *, "       if not do not set --print-level 2 in your command line option"
-			  ERROR STOP
-			end if
-		      else
-			print *, "incorrect argument after --print-level, exiting..."
-			ERROR STOP
-		      end if
-		    skip = 1
-		    terminal_assigned = .true.
-				    
-	    case("-v")
-		print *, " " //achar(27)//'[94m', "DRUtES" //achar(27)//'[0m', &
-		" version: " //achar(27)//'[92m', version_id, " " //achar(27)//'[0m'
-    ! 		print *, "compiled with:", compiler_version()
-    ! 		print *, "with options:", compiler_options()
-		    STOP
-	    case("--tmax")
-		  call getarg(i+1, oarg)
-		  read(unit=oarg, fmt=*, iostat=ierr) cpu_max_time
-		  if (ierr /= 0 .or. cpu_max_time <= 0) then
-		   print *, "incorrect maximal cpu time value (the value after --tmax option)"
-		   ERROR STOP
-		  end if
-		  call getarg(i+2, oarg)
-		  select case(trim(oarg))
-		    case("s")
-		      CONTINUE
-		    case("min")
-		      cpu_max_time = cpu_max_time * 60
-		    case("hrs")
-		      cpu_max_time = cpu_max_time * 3600
-		    case("day")
-		      cpu_max_time = cpu_max_time * 86400
-		    case default
-		      print *, "you have specified incorrect time units for maximal CPU time (--tmax option)"
-		      print *, "the available units are [s, min, hrs, day]"
-		      ERROR STOP
-		  end select
-		  cpu_time_limit = .true.
-		  deallocate(skip)
-		  allocate(skip(2))
-		  skip = 1
-	    case("--dir-local")
-		  call getarg(i+1, dir)
-		  call chdir(trim(dir))
-! 		  if (.not. www) then
-		  print *, "actual directory is:", trim(dir)
-! 		  end if
-		  dir_name=dir
-		  skip = 1
-	    case("--dir-global")
-		  call getarg(i+1, dirglob%dir)
-		  dirglob%valid = .true.
-		  skip = 1            
-	    case("")
-		    CONTINUE
-	    case default
-		    print *, "incorrect command line options, your option was:"
-		    print *, trim(arg)
-		    ERROR STOP
-	  end select
-	else
-	  do j=1, ubound(skip,1)
-	    if (skip(j) == 1) then
-	      skip(j) = 0
-	      EXIT  
-	    end if
-	  end do
-	  if (ubound(skip,1) > 1 .and. maxval(skip) == 0) then
-	    deallocate(skip)
-	    allocate(skip(1))
-	  end if
-	end if
-      end do
+              case("--print-level")
+                call getarg(i+1,oarg)
+                if (trim(oarg) == "1") then
+                  call find_unit(terminal, 2000)
+                  open(unit=terminal, file="out/screen.log", action="write", status="replace", iostat=ierr)
+                  if (ierr /=0) then
+                    call system("mkdir out")
+                    open(unit=terminal, file="out/screen.log", action="write", status="replace", iostat=ierr)
+                  end if
+                  if (ierr /=0) then
+                    print *, "ERROR: directory out cannot be created"
+                    ERROR STOP
+                  end if
+                else if (trim(oarg) == "0") then
+                  CONTINUE
+                else if (trim(oarg) == "2") then
+                  call find_unit(terminal, 2000)
+                  open(unit=terminal, file="/dev/null", action="write", status="replace", iostat=ierr)
+                  if (ierr /=0) then
+                    print *, "ERROR: file /dev/null does not exist, are you running GNU/Linux based os?"
+                    print *, "       if not do not set --print-level 2 in your command line option"
+                    ERROR STOP
+                  end if
+                else
+                  print *, "incorrect argument after --print-level, exiting..."
+                  ERROR STOP
+                end if
+                skip = 1
+                terminal_assigned = .true.
+              
+              case("-v")
+                print *, " " //achar(27)//'[94m', "DRUtES" //achar(27)//'[0m', &
+                " version: " //achar(27)//'[92m', version_id, " " //achar(27)//'[0m'
+                STOP
+	            case("--tmax")
+		            call getarg(i+1, oarg)
+		            read(unit=oarg, fmt=*, iostat=ierr) cpu_max_time
+                if (ierr /= 0 .or. cpu_max_time <= 0) then
+                 print *, "incorrect maximal cpu time value (the value after --tmax option)"
+                 ERROR STOP
+                end if
+                call getarg(i+2, oarg)
+                select case(trim(oarg))
+                  case("s")
+                    CONTINUE
+                  case("min")
+                    cpu_max_time = cpu_max_time * 60
+                  case("hrs")
+                    cpu_max_time = cpu_max_time * 3600
+                  case("day")
+                    cpu_max_time = cpu_max_time * 86400
+                  case default
+                    print *, "you have specified incorrect time units for maximal CPU time (--tmax option)"
+                    print *, "the available units are [s, min, hrs, day]"
+                    ERROR STOP
+                end select
+                cpu_time_limit = .true.
+                deallocate(skip)
+                allocate(skip(2))
+                skip = 1
+                case("--dir-local")
+                call getarg(i+1, dir)
+                call chdir(trim(dir))
+          ! 		  if (.not. www) then
+                print *, "actual directory is:", trim(dir)
+          ! 		  end if
+                dir_name=dir
+                skip = 1
+                case("--dir-global")
+                call getarg(i+1, dirglob%dir)
+                dirglob%valid = .true.
+                skip = 1            
+                case("")
+                  CONTINUE
+                case default
+                  print *, "incorrect command line options, your option was:"
+                  print *, trim(arg)
+                  ERROR STOP
+              end select
+            else
+              do j=1, ubound(skip,1)
+                if (skip(j) == 1) then
+                  skip(j) = 0
+                  EXIT  
+                end if
+              end do
+              if (ubound(skip,1) > 1 .and. maxval(skip) == 0) then
+                deallocate(skip)
+                allocate(skip(1))
+              end if
+            end if
+        end do
       
       if (www) then
-	call find_unit(fileid,1000)
-	call system("rm -rf 4www")
-	call system("mkdir 4www")
-	open(unit=fileid, file="4www/mypid", action="write", status="replace")
-	write(unit=fileid, fmt=*) getpid()
-	close(fileid)
+        call find_unit(fileid,1000)
+        call system("rm -rf 4www")
+        call system("mkdir 4www")
+        open(unit=fileid, file="4www/mypid", action="write", status="replace")
+        write(unit=fileid, fmt=*) getpid()
+        close(fileid)
       end if
     
     end subroutine get_cmd_options

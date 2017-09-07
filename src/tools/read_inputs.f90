@@ -15,6 +15,7 @@ module read_inputs
       use core_tools
       use readtools
       use pde_objs
+      use objfnc
 
       integer(kind=ikind) :: i, j, n, ierr
       real(kind=rkind), dimension(3) :: tmp
@@ -24,96 +25,100 @@ module read_inputs
       character(len=256), dimension(19) :: probnames
       
       if (.not. www) then
-	local = file_global
-	global = file_global
+        local = file_global
+        global = file_global
       else
-	local = file_global
-	global = file_wwwglob
+        local = file_global
+        global = file_wwwglob
       end if
 
       
       write(msg, *) "Incorrect option for problem type, the available options are:", new_line("a"),  new_line("a"), new_line("a"),&
-	"   RE_std = standard Richards equation, primary solution is capillary pressure head h, matrix is nonsymmetric" , &
-	 new_line("a"), new_line("a"),  &
-	"   RE_rot = Richards equation in cylindric coordinates, primary solution is capillary pressure head h, matrix is nonsymmetric",& 
-	new_line("a") ,  new_line("a"), &
-	"   REstdH = Richards equation, primary solution is total hydraulic head H, matrix is symmetric",&
-	new_line("a"), new_line("a"),  &
-	"   RErotH =  Richards equation in cylindric coordinates,  primary solution is total hydraulic head H, matrix is symmetric", &
-	new_line("a"),  new_line("a"), &
-	"   RE_mod = modified Richards equation, see Noborio, et al. (1996)", &
-	new_line("a"),  new_line("a"), &
-	"   boussi = Boussinesq equation for sloping land (1877)", &
-	new_line("a"),  new_line("a"), &
-	"   ADE_wR = advection dispersion reaction equation (transport of solutes), convection is computed from the Richards equation, ", &
-	"equilibrium sorption", &
-	new_line("a"),  new_line("a"), &
-	"   ADEstd = advection dispersion reaction equation (transport of solutes),  convection is specified in config files,", &
-	" equilibrium sorption", &
-	new_line("a"),  new_line("a"), &
-        "   ADEstd_kinsorb = advection dispersion reaction equation (transport of solutes),",&
-        " convection is specified in config files,", &
-	" kinetic sorption", &
+       "   RE_std = standard Richards equation, primary solution is capillary pressure head h, matrix is nonsymmetric" , &
+         new_line("a"), new_line("a"),  &
+        "   RE_rot = Richards equation in cylindric coordinates, primary solution is capillary pressure head h, &
+                 matrix is nonsymmetric",& 
+        new_line("a") ,  new_line("a"), &
+        "   REstdH = Richards equation, primary solution is total hydraulic head H, matrix is symmetric",&
+        new_line("a"), new_line("a"),  &
+        "   RErotH =  Richards equation in cylindric coordinates,  primary solution is total hydraulic head H, &
+                 matrix is symmetric", &
         new_line("a"),  new_line("a"), &
-	"   ADE_RE_std = advection dispersion reaction equation (transport of solutes), convection is computed from", &
-	" the Richards equation in pressure head form, equilibrium sorption ", &
-	new_line("a"),  new_line("a"), &
-	"   ADE_REstdH = advection dispersion reaction equation (transport of solutes), convection is computed from", &
-	" the Richards equation in total hydraulic head form, equilibrium sorption ", &
-		new_line("a"),  new_line("a"), &
-	"   ADE_RE_rot = advection dispersion reaction equation (transport of solutes), convection is computed from", &
-	" the Richards equation in pressure hydraulic head form, cylindric coordinates (axisymmetric flow), equilibrium sorption ", &
-		new_line("a"),  new_line("a"), &
-	"   ADE_RErotH = advection dispersion reaction equation (transport of solutes), convection is computed from", &
-	" the Richards equation in total hydraulic head form, cylindric coordinates (axisymmetric flow), equilibrium sorption ", &
-		"   ADE_RE_std_kinsorb = advection dispersion reaction equation (transport of solutes), convection is computed from", &
-	" the Richards equation in pressure head form, kinetic sorption ", &
-	new_line("a"),  new_line("a"), &
-	"   ADE_REstdH_kinsorb = advection dispersion reaction equation (transport of solutes), convection is computed from", &
-	" the Richards equation in total hydraulic head form, kinetic sorption ", &
-		new_line("a"),  new_line("a"), &
-	"   ADE_RE_rot_kinsorb = advection dispersion reaction equation (transport of solutes), convection is computed from", &
-	" the Richards equation in pressure hydraulic head form, cylindric coordinates (axisymmetric flow), kinetic sorption ", &
-		new_line("a"),  new_line("a"), &
-	"   ADE_RErotH_kinsorb = advection dispersion reaction equation (transport of solutes), convection is computed from", &
-	" the Richards equation in total hydraulic head form, cylindric coordinates (axisymmetric flow), kinetic sorption ", &
-	new_line("a"),  new_line("a"), &
-	"   Re_dual_totH = Richards equation dual porosity with total hydraulic head", &
-	" the Richards equation in total hydraulic head form ", &
-	new_line("a"),  new_line("a"), &
-	"   heat = Heat conduction equation (Sophoclea, 1979)", &
-	new_line("a"),  new_line("a"), &
-	new_line("a"),  new_line("a"), new_line("a")
+        "   RE_mod = modified Richards equation, see Noborio, et al. (1996)", &
+        new_line("a"),  new_line("a"), &
+        "   boussi = Boussinesq equation for sloping land (1877)", &
+        new_line("a"),  new_line("a"), &
+        "   ADE_wR = advection dispersion reaction equation (transport of solutes), & 
+            convection is computed from the Richards equation, ", &
+        "equilibrium sorption", &
+        new_line("a"),  new_line("a"), &
+        "   ADEstd = advection dispersion reaction equation (transport of solutes),  convection is specified in config files,", &
+        " equilibrium sorption", &
+        new_line("a"),  new_line("a"), &
+              "   ADEstd_kinsorb = advection dispersion reaction equation (transport of solutes),",&
+              " convection is specified in config files,", &
+        " kinetic sorption", &
+              new_line("a"),  new_line("a"), &
+        "   ADE_RE_std = advection dispersion reaction equation (transport of solutes), convection is computed from", &
+        " the Richards equation in pressure head form, equilibrium sorption ", &
+        new_line("a"),  new_line("a"), &
+        "   ADE_REstdH = advection dispersion reaction equation (transport of solutes), convection is computed from", &
+        " the Richards equation in total hydraulic head form, equilibrium sorption ", &
+          new_line("a"),  new_line("a"), &
+        "   ADE_RE_rot = advection dispersion reaction equation (transport of solutes), convection is computed from", &
+        " the Richards equation in pressure hydraulic head form, cylindric coordinates (axisymmetric flow), & 
+            equilibrium sorption ", &
+          new_line("a"),  new_line("a"), &
+        "   ADE_RErotH = advection dispersion reaction equation (transport of solutes), convection is computed from", &
+        " the Richards equation in total hydraulic head form, cylindric coordinates (axisymmetric flow), equilibrium sorption ", &
+          "   ADE_RE_std_kinsorb = advection dispersion reaction equation (transport of solutes), convection is computed from", &
+        " the Richards equation in pressure head form, kinetic sorption ", &
+        new_line("a"),  new_line("a"), &
+        "   ADE_REstdH_kinsorb = advection dispersion reaction equation (transport of solutes), convection is computed from", &
+        " the Richards equation in total hydraulic head form, kinetic sorption ", &
+          new_line("a"),  new_line("a"), &
+        "   ADE_RE_rot_kinsorb = advection dispersion reaction equation (transport of solutes), convection is computed from", &
+        " the Richards equation in pressure hydraulic head form, cylindric coordinates (axisymmetric flow), kinetic sorption ", &
+          new_line("a"),  new_line("a"), &
+        "   ADE_RErotH_kinsorb = advection dispersion reaction equation (transport of solutes), convection is computed from", &
+        " the Richards equation in total hydraulic head form, cylindric coordinates (axisymmetric flow), kinetic sorption ", &
+        new_line("a"),  new_line("a"), &
+        "   Re_dual_totH = Richards equation dual porosity with total hydraulic head", &
+        " the Richards equation in total hydraulic head form ", &
+        new_line("a"),  new_line("a"), &
+        "   heat = Heat conduction equation (Sophoclea, 1979)", &
+        new_line("a"),  new_line("a"), &
+        new_line("a"),  new_line("a"), new_line("a")
 	
-	probnames(1) = "RE_std"
-	probnames(2) = "RE_mod"
-	probnames(3) = "REtest"
-	probnames(4) = "RE_rot"
-	probnames(5) = "REstdH"
-	probnames(6) = "RErotH"
-	probnames(7) = "boussi"
-	probnames(8) = "ADEstd"
-	probnames(9) = "ADEstd_kinsorb"
-	probnames(10) = "ADE_RE_std"
-	probnames(11) = "ADE_REstdH"
-	probnames(12) = "ADE_RE_rot"
-	probnames(13) = "ADE_RErotH"
-	probnames(14) = "ADE_RE_std_kinsorb"
-	probnames(15) = "ADE_REstdH_kinsorb"
-	probnames(16) = "ADE_RE_rot_kinsorb"
-	probnames(17) = "ADE_RErotH_kinsorb"
-	probnames(18) = "Re_dual_totH" 
-	probnames(19) = "heat"
+      probnames(1) = "RE_std"
+      probnames(2) = "RE_mod"
+      probnames(3) = "REtest"
+      probnames(4) = "RE_rot"
+      probnames(5) = "REstdH"
+      probnames(6) = "RErotH"
+      probnames(7) = "boussi"
+      probnames(8) = "ADEstd"
+      probnames(9) = "ADEstd_kinsorb"
+      probnames(10) = "ADE_RE_std"
+      probnames(11) = "ADE_REstdH"
+      probnames(12) = "ADE_RE_rot"
+      probnames(13) = "ADE_RErotH"
+      probnames(14) = "ADE_RE_std_kinsorb"
+      probnames(15) = "ADE_REstdH_kinsorb"
+      probnames(16) = "ADE_RE_rot_kinsorb"
+      probnames(17) = "ADE_RErotH_kinsorb"
+      probnames(18) = "Re_dual_totH" 
+      probnames(19) = "heat"
 	
       call fileread(drutes_config%name, local, trim(msg), options=probnames)
 
       call fileread(drutes_config%dimen, local, ranges=(/1_ikind,2_ikind/))
       
       if (drutes_config%name == "boussi" .and. drutes_config%dimen > 1) then
-	write(msg, fmt=*) 'You have selected Boussinesq equation, Boussinesq equation originates from Dupuit &
+        write(msg, fmt=*) 'You have selected Boussinesq equation, Boussinesq equation originates from Dupuit &
 		   approximation, and so it is assumed for 1D only!!! &
 		   '//NEW_LINE('A')//'    But your domain was specified for: ', drutes_config%dimen, "D"
-	call file_error(local, msg)
+        call file_error(local, msg)
       end if
 
       call fileread(drutes_config%mesh_type, local, ranges=(/1_ikind,3_ikind/))
@@ -128,11 +133,12 @@ module read_inputs
       call fileread(integ_method, global)
       
       if (integ_method/10 < 1 .or. integ_method/10 > 12 .or. modulo(integ_method,10_ikind)/=0  &
-	  .or. integ_method == 100 .or. integ_method == 110) then
-	  write(msg, *)  '!!!!!!!!!!!!!!!!!-------------------------------!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! &
-	'//NEW_LINE('A')// 'the proper integration method code names are : 10, 20, 30, 40, 50, 60, 70, 80, 90, 120'//NEW_LINE('A')//&
-	 'your incorrect definition was:', integ_method
-	call file_error(global, msg)
+          .or. integ_method == 100 .or. integ_method == 110) then
+        write(msg, *)  '!!!!!!!!!!!!!!!!!-------------------------------!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! &
+        '//NEW_LINE('A')// 'the proper integration method code names are : & 
+          10, 20, 30, 40, 50, 60, 70, 80, 90, 120'//NEW_LINE('A')//&
+         'your incorrect definition was:', integ_method
+        call file_error(global, msg)
       end if
       
       call fileread(time_units, local)
@@ -148,24 +154,24 @@ module read_inputs
       errmsg="minimal time step must be positive, and smaller than the initial time step")
       
       call fileread(dtmax, local, ranges=(/dtmin, huge(tmp(1))/), &
-      errmsg="maximal time step must be greater than the minimal time step, &
-		and smaller than the maximal number your computer can handle :)")
+       errmsg="maximal time step must be greater than the minimal time step, &
+		  and smaller than the maximal number your computer can handle :)")
       
       write(msg, *) "set correct value for the terminal outputs", new_line('a'), "     0 - standard output", &
-	new_line('a'),  "     1 - everything goes to out/screen.log", new_line('a'), &
-	"    -1 - everything goes to /dev/null (use only on Linux based systems (I have no idea about MAC OS))"
+    	new_line('a'),  "     1 - everything goes to out/screen.log", new_line('a'), &
+  	"    -1 - everything goes to /dev/null (use only on Linux based systems (I have no idea about MAC OS))"
       call fileread(print_level, global, ranges=(/-1_ikind, 1_ikind/), errmsg=msg)
       
       write(msg, fmt=*) "methods for observation time print could be only", new_line('a'), &
-	"	1 - adjust time stepping to observation time values",  new_line('a'), &
-	"	2 - linearly interpolate solution between two consecutive solutions (recommended)"
+	     "	1 - adjust time stepping to observation time values",  new_line('a'), &
+	     "	2 - linearly interpolate solution between two consecutive solutions (recommended)"
       
       call fileread(observe_info%method, local, ranges=(/1_ikind, 2_ikind/), errmsg=msg)
       
       write(msg, fmt=*) "set correct name for the observation time outputs format", new_line('a'), &
-	"	scil - scilab output files",  new_line('a'), &
-	"	pure - just raw data with nodes IDs and FEM coefficients", new_line('a'), &  
-	"       gmsh - gmsh output files"
+      	"	scil - scilab output files",  new_line('a'), &
+      	"	pure - just raw data with nodes IDs and FEM coefficients", new_line('a'), &  
+      	"       gmsh - gmsh output files"
       
       call fileread(observe_info%fmt, global, options=(/"scil", "pure", "gmsh"/))
       
@@ -173,11 +179,11 @@ module read_inputs
       call fileread(observe_info%anime, global)
       
       if (observe_info%anime) then
-	call fileread(observe_info%nframes, global, ranges=(/1_ikind, huge(1_ikind)/), &
-	errmsg="number of frames for animation must be greater than zero &
-	and smaller than the maximal number your computer can handle :)")
+        call fileread(observe_info%nframes, global, ranges=(/1_ikind, huge(1_ikind)/), &
+        errmsg="number of frames for animation must be greater than zero &
+        and smaller than the maximal number your computer can handle :)")
       else
-	observe_info%nframes = 0
+	     observe_info%nframes = 0
       end if
       
       call fileread(n, local)
@@ -186,42 +192,43 @@ module read_inputs
       
       if (.not. observe_info%anime) then
 	
-       write(msg, *) "HINT 1: check number of the observation time values", new_line('a'), &
-	"HINT 2: You have selected [n] (not) to create animation frames, have you commented out the required number of frames?" , & 
-	  new_line('a')
+        write(msg, *) "HINT 1: check number of the observation time values", new_line('a'), &
+	       "HINT 2: You have selected [n] (not) to create animation frames, have you commented out the required number of frames?" , & 
+	         new_line('a')
       else
-	write(msg, *) "HINT: check number of the observation time values"
+        write(msg, *) "HINT: check number of the observation time values"
       end if
       
       
       do i=1, n
-	call fileread(observe_time(i)%value, local, errmsg=msg)
+      	call fileread(observe_time(i)%value, local, errmsg=msg)
       end do
       
 
       ! reads the observation points number
       call fileread(n, local,ranges=(/0_ikind, huge(1_ikind)/), &
-	errmsg="number of observation times cannot be negative :)")
+	     errmsg="number of observation times cannot be negative :)")
       
       allocate(observation_array(n))   
       
        if (.not. observe_info%anime) then
 	
-	 write(msg, *) "HINT 1: check number of the observation point values", new_line('a'), &
-	     "  HINT 2: check number of the observation points coordinates" , new_line('a'), &
-	     "  HINT 3: You have selected [n] (not) to create animation frames, have you commented out the required number of frames?" , &
-		new_line('a')
+	        write(msg, *) "HINT 1: check number of the observation point values", new_line('a'), &
+             "  HINT 2: check number of the observation points coordinates" , new_line('a'), &
+             "  HINT 3: You have selected [n] (not) to create animation frames, have you commented out the &
+                required number of frames?" , &
+		          new_line('a')
       else
-	write(msg, *)  "HINT 1: check number of the observation point values", new_line('a'), &
-	 "HINT 2: check number of the observation points coordinates" , new_line('a')
+        write(msg, *)  "HINT 1: check number of the observation point values", new_line('a'), &
+         "HINT 2: check number of the observation points coordinates" , new_line('a')
       end if     
       
       do i=1,n
-	allocate(observation_array(i)%xyz(drutes_config%dimen))
+      	allocate(observation_array(i)%xyz(drutes_config%dimen))
       end do
       
       do i=1,n
-	call fileread(observation_array(i)%xyz(:), local, errmsg=msg)
+	     call fileread(observation_array(i)%xyz(:), local, errmsg=msg)
       end do  
       !----
       
@@ -230,32 +237,32 @@ module read_inputs
 
       allocate(measured_pts(n))
       do i=1, n
-	allocate(measured_pts(i)%xyz(drutes_config%dimen))
+	       allocate(measured_pts(i)%xyz(drutes_config%dimen))
       end do
       
       do i=1, n
-	call fileread(measured_pts(i)%xyz(:), global, errmsg="HINT: check coordinates of the points with measurement data")
+	       call fileread(measured_pts(i)%xyz(:), global, errmsg="HINT: check coordinates of the points with measurement data")
       end do  
 
       call fileread(i=drutes_config%it_method, fileid=local, ranges=(/0_ikind,2_ikind/),&
-	errmsg="you have selected an improper iteration method")
+	       errmsg="you have selected an improper iteration method")
       
       write(msg, *) "Define method of time integration", new_line("a"), &
       "   0 - steady state problem", &
-      new_line("a"), &
+           new_line("a"), &
       "   1 - unsteady problem with lumped (diagonal) capacity matrix (recommended)", new_line("a"), &
       "   2 - unsteady problem with consistent capacity matrix"
       
       
       call fileread(pde_common%timeint_method, global, ranges=(/0_ikind,2_ikind/), errmsg=msg)
       
-      call fileread(drutes_config%compute_objfnc, global)
+      call fileread(objval%compute, global)
       
       call fileread(drutes_config%run_from_backup, global, errmsg="specify [y/n] if you want to relaunch your computation")
       
       
       if (drutes_config%run_from_backup) then
-	call fileread(backup_file, global, errmsg="backup file not specified")
+      	call fileread(backup_file, global, errmsg="backup file not specified")
       end if
       
       call fileread(debugmode, global,"specify [y/n] for debugging (development option, not recommended)" )

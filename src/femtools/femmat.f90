@@ -23,6 +23,7 @@ module femmat
       use simplelinalg
       use debug_tools
       use mtxiotools
+
 !       use decomposer
 
 
@@ -46,77 +47,76 @@ module femmat
 
       do
 
-	do proc=1, ubound(pde,1)
-	  call icond4neumann(proc)
-	end do
+        do proc=1, ubound(pde,1)
+          call icond4neumann(proc)
+        end do
 
-	itcount = itcount + 1
+        itcount = itcount + 1
 
-	
-	call assemble_mat(ierr)
+        
+        call assemble_mat(ierr)
 
-	
-	if (drutes_config%dimen >  1) then
-	  call diag_precond(a=spmatrix, x=pde_common%xvect(1:fin,3), mode=1)
-	end if
+        
+        if (drutes_config%dimen >  1) then
+          call diag_precond(a=spmatrix, x=pde_common%xvect(1:fin,3), mode=1)
+        end if
 
-	call solve_matrix(spmatrix, pde_common%bvect(1:fin), pde_common%xvect(1:fin,3),  itmax1=fin, &
-		  reps1=1e-15_rkind, itfin1=pcg_it, repsfin1=reps_err)
-		  
-		  
-	if (pcg_it > 0.35*fin) then 
+        call solve_matrix(spmatrix, pde_common%bvect(1:fin), pde_common%xvect(1:fin,3),  itmax1=fin, &
+            reps1=1e-15_rkind, itfin1=pcg_it, repsfin1=reps_err)
+            
+            
+        if (pcg_it > 0.35*fin) then 
           ierr=-1
         else
           ierr=0
         end if
 		  
 
-	if (drutes_config%dimen >  1) then
-	  write(unit=file_itcg, fmt = *) time, pcg_it, reps_err
-	  call flush(file_itcg)
-	  call diag_precond(a=spmatrix, x=pde_common%xvect(1:fin,3), mode=-1)
-	end if	
+        if (drutes_config%dimen >  1) then
+          write(unit=file_itcg, fmt = *) time, pcg_it, reps_err
+          call flush(file_itcg)
+          call diag_precond(a=spmatrix, x=pde_common%xvect(1:fin,3), mode=-1)
+        end if	
 
         error = norm2(pde_common%xvect(1:fin,2)-pde_common%xvect(1:fin,3))/ubound(pde_common%xvect,1)
         
          
-	if (itcount == 1 .or. error <= iter_criterion) then
-	  do proc=1, ubound(pde,1)
-	    top = pde(proc)%permut(1)
-	    bot = pde(proc)%permut(ubound(pde(proc)%permut,1))
-	    dt_fine = pde(proc)%dt_check()
-	  end do
+        if (itcount == 1 .or. error <= iter_criterion) then
+          do proc=1, ubound(pde,1)
+            top = pde(proc)%permut(1)
+            bot = pde(proc)%permut(ubound(pde(proc)%permut,1))
+            dt_fine = pde(proc)%dt_check()
+          end do
         else
           dt_fine = .true.
         end if
 
 
-	if (.not.(dt_fine)) then
-	  ierr = 2
-	  success = .false.
-	  RETURN
-	end if
+        if (.not.(dt_fine)) then
+          ierr = 2
+          success = .false.
+          RETURN
+        end if
 
 
 
-	if (error <= iter_criterion) then
-	
-	  if (ierr /= -1) ierr = 0
-	  
-	  call results_extractor()
-	  
+        if (error <= iter_criterion) then
+        
+          if (ierr /= -1) ierr = 0
+          
+          call results_extractor()
+          
+          success = .true.
+          RETURN
+        else
+          pde_common%xvect(:,2) = pde_common%xvect(:,3)
+        end if
 
-	  success = .true.
-	  RETURN
-	else
-	  pde_common%xvect(:,2) = pde_common%xvect(:,3)
-	end if
-
-	if (itcount >= max_itcount) then
-	  ierr = 1
-	  success = .false.
-	  EXIT
-	end if
+        if (itcount >= max_itcount) then
+          ierr = 1
+          success = .false.
+          EXIT
+        end if
       end do
 
     end subroutine solve_picard
@@ -151,32 +151,32 @@ module femmat
 
 
       do i=1, elements%kolik
-	pde_common%current_el = i
-	processes: do proc=1, ubound(pde,1)
+        pde_common%current_el = i
+        processes: do proc=1, ubound(pde,1)
 		    do j=1+(proc-1)*limits, ubound(elements%data,2) + (proc-1)*limits
 		      ll = j - (proc-1)*ubound(stiff_mat,1)/ubound(pde,1)
 		      k = pde(proc)%permut(elements%data(i,ll))
 		      if (k > 0) then
-			elnode_prev(j) = pde_common%xvect(k,1)
+            elnode_prev(j) = pde_common%xvect(k,1)
 		      else
-			k = nodes%edge(elements%data(i,ll))
-			call pde(proc)%bc(k)%value_fnc(pde(proc), i, ll, value)
-			elnode_prev(j) = value
+            k = nodes%edge(elements%data(i,ll))
+            call pde(proc)%bc(k)%value_fnc(pde(proc), i, ll, value)
+            elnode_prev(j) = value
 		      end if
 		    end do
-	end do processes
+       end do processes
 	
 
-	call build_bvect(i, time_step)
-	
-	call build_stiff_np(i, time_step)
-	
-	call pde_common%time_integ(i)
-		
-	stiff_mat = stiff_mat + cap_mat
+       call build_bvect(i, time_step)
+        
+       call build_stiff_np(i, time_step)
+        
+       call pde_common%time_integ(i)
+          
+       stiff_mat = stiff_mat + cap_mat
 
-	
-	call in2global(i,spmatrix, pde_common%bvect)
+        
+       call in2global(i,spmatrix, pde_common%bvect)
 
       end do
 
@@ -195,18 +195,18 @@ module femmat
 
       
       do proc=1, ubound(pde,1)
-	do i=1, elements%kolik
-	  do j=1, ubound(elements%data,2)
-	    nd = elements%data(i,j)
-	    if (pde(proc)%permut(nd) > 0) then
-	      pde(proc)%solution(nd) = pde_common%xvect(pde(proc)%permut(nd),3)
-	    else
-	      edge = nodes%edge(nd)
-	      call pde(proc)%bc(edge)%value_fnc(pde(proc), i, j, value)
-	      pde(proc)%solution(nd) = value
-	    end if
-	  end do
-	end do
+        do i=1, elements%kolik
+          do j=1, ubound(elements%data,2)
+            nd = elements%data(i,j)
+            if (pde(proc)%permut(nd) > 0) then
+              pde(proc)%solution(nd) = pde_common%xvect(pde(proc)%permut(nd),3)
+            else
+              edge = nodes%edge(nd)
+              call pde(proc)%bc(edge)%value_fnc(pde(proc), i, j, value)
+              pde(proc)%solution(nd) = value
+            end if
+          end do
+        end do
       end do
 
       pde_common%xvect(:,4) = pde_common%xvect(:,1)

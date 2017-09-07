@@ -4,16 +4,31 @@ module objfnc
   private :: reader
   private :: get_objval_standard
   private :: read_model
+  private :: time_exceeded
   
+  !> object with a method definition for objective function computation
   type, public :: objval_obj
+    !> when performing inverse analyses, by setting this value .true., drutes can compute value(s) of objective function(s)
+    logical :: compute
+    !> by setting this value if some defined code runtime exceeded, then drutes can take different actions according to CPUlim_method
+    logical :: limit_CPU=.false.
+    !> if CPUlim_method == E DRUtES exits computation, objective value is computed
+    !! if CPUlim_method == P Picard criterion is updated to the value Picard_new
+    !<
+    character(len=1) :: CPUlim_method
+    !> updated value of the Picard criterion, typically some huge number, so that the Picard process degenerates into semi-explicit method
+    real(kind=rkind) :: Picard_new
+    !> time in seconds of the limitting CPU time
+    real(kind=rkind) :: CPUtime_max
     contains 
       procedure, nopass :: read_config=>reader
       procedure, nopass :: getval=>get_objval_standard   
+      procedure, nopass :: toolong=>time_exceeded
   end type objval_obj  
   
   type(objval_obj), public :: objval
   
-  integer, private :: exp_file
+  integer, private, save :: exp_file
   
   type, private :: point_str
     real(kind=rkind), dimension(:), allocatable :: time
@@ -26,20 +41,74 @@ module objfnc
     character(len=2) :: units
   end type ram_limit_str
 
-  type(point_str), dimension(:), allocatable, private :: exp_data
-  type(point_str), dimension(:), allocatable, private :: model_data
-  integer(kind=ikind), dimension(:), allocatable, private :: obs_ids
-  integer(kind=ikind), dimension(:), allocatable, private :: noprop, pde_comp
-  integer(kind=ikind), dimension(:,:), allocatable, private :: columns
-  character(len=4096), private :: fileinputs
-  type(ram_limit_str), private :: ram_limit
-  integer(kind=ikind), private ::  no_pdes
-  integer, dimension(:), allocatable :: datafiles
+  type(point_str), dimension(:), allocatable, private, save :: exp_data
+  type(point_str), dimension(:), allocatable, private, save :: model_data
+  integer(kind=ikind), dimension(:), allocatable, private, save :: obs_ids
+  integer(kind=ikind), dimension(:), allocatable, private, save :: noprop, pde_comp
+  integer(kind=ikind), dimension(:,:), allocatable, private, save :: columns
+  character(len=4096), private, save :: fileinputs
+  type(ram_limit_str), private, save :: ram_limit
+  integer(kind=ikind), private, save ::  no_pdes
+  integer, dimension(:), allocatable, private, save :: datafiles
+  
+  integer, private, save :: fileid, expfile, ierr
+  integer(kind=ikind), private :: n, i, counter, tmpbound, expcols, i1, j, low, top, skipcount, datacount, l
+  character(len=4096), private :: msg
+  character(len=4), private :: units
+  real(kind=rkind), private :: r
+  real(kind=rkind), dimension(:), allocatable, private :: tmpdata
+  real(kind=rkind), private, save :: memsize, corr_memsize
+  logical, dimension(:), allocatable, private, save :: skipid
+  logical, private :: go4skip, processed
+  
+  integer(kind=ikind), private :: pos, k
+      
+  type, private :: errors_str
+    real(kind=rkind), dimension(:), allocatable :: val
+  end type
+      
+  type(errors_str), dimension(:), allocatable, private, save :: errors
+  logical, private :: inlast 
+  integer, private :: outfile
+  real(kind=rkind), private :: dt, slope, modval, suma
   
   
   
   
   contains
+    
+    !>action to be taken if the CPU run time is longer than the allowed maximal time
+    !! this function is linked to objval%toolong, replace with something more elegant if you like.
+    !<
+    subroutine time_exceeded(cpu_time)
+      use typy
+      use globals
+      use core_tools
+      
+      !> current CPU time, must be real(4) because of old etime function definitions
+      real(4) :: cpu_time
+      logical :: written=.false.
+      
+      select case(objval%CPUlim_method)
+        case("E")
+          call write_log("Maximal CPU time for evaluating your objective function has exceeded, &
+           DRUtES will stop, your objective function will be still evaluated, but some part of your &
+            simulation will be missing")
+          cpu_time_limit=.true.
+          cpu_max_time = cpu_time - epsilon(cpu_time)
+        case("P")
+          if (.not. written) then
+            call write_log("Maximal CPU time for evaluating your objective function has exceeded, &
+            DRUtES will now increase the Picard criterion from the previous value:", real1=iter_criterion, &
+            text2="for the new value", real2=objval%Picard_new)
+            written=.true.
+          end if
+          
+          iter_criterion=objval%Picard_new
+      end select
+      
+    end subroutine time_exceeded
+      
     
     subroutine reader()
       use typy
@@ -49,15 +118,7 @@ module objfnc
       use debug_tools
       use pde_objs
       
-      integer :: fileid, expfile, ierr
-      
-      integer(kind=ikind) :: n, i, counter, tmpbound, expcols, i1, j, low, top, skipcount, datacount, l
-      character(len=4096) :: msg
-      real(kind=rkind) :: r
-      real(kind=rkind), dimension(:), allocatable :: tmpdata
-      real(kind=rkind) :: memsize, corr_memsize
-      logical, dimension(:), allocatable :: skipid
-      logical :: go4skip, processed
+
       
       open(newunit=fileid, file="drutes.conf/inverse_modeling/objfnc.conf", action="read", status="old", iostat=ierr)
       
@@ -138,7 +199,7 @@ module objfnc
       
       call fileread(fileinputs, fileid)  
       
-      call write_log("The file with inputs for inverse modeling is: ", text2=adjustl(trim(fileinputs)))
+      call write_log("The file with inputs for inverse modeling is: ", text2=cut(fileinputs))
       
       expcols=0
       
@@ -147,7 +208,7 @@ module objfnc
       end do
       
             
-      open(newunit=expfile, file=adjustl(trim(fileinputs)), status="old", action="read", iostat=ierr)
+      open(newunit=expfile, file=cut(fileinputs), status="old", action="read", iostat=ierr)
       
       if (ierr /= 0) then
         print *, "the file with your inputs doesn't exist"
@@ -163,12 +224,59 @@ module objfnc
       if (ierr /= 0) then
         write(msg, *) "ERROR!, You have specified bad path for input file with experimental data for inverse modeling.", & 
         new_line("a"), &
-        " The path you have spefied is: ", adjustl(trim(fileinputs)), new_line("a"), &
+        " The path you have specified is: ", cut(fileinputs), new_line("a"), &
         " The path should start with your DRUtES root directory", new_line("a"), &
         " e.g. drutes.conf/inverse_modeling/inputs.dat"
         call file_error(fileid, msg)
       end if
       
+      call fileread(objval%limit_CPU, fileid)
+      
+      
+      if (objval%limit_CPU) then
+        
+        call comment(fileid)
+
+        read(unit=fileid, fmt=*, iostat=ierr) objval%CPUtime_max , units, objval%CPUlim_method
+        
+        if (ierr /= 0) then
+          write(msg, fmt=*) "You have incorrect setup for limitting the CPU run time", new_line("a"), &
+            "Set the following values:", new_line("a"), &
+            "max. run time  |  unit (s , min, hrs, day) | action (E=exit the code, P=update & 
+              Picard criterion)", new_line("a"), "See this example:", new_line("a"), &
+              "100             min                      P"
+          call file_error(fileid, message=msg)
+        end if
+             
+        
+        select case(cut(units))
+          case("s")
+            CONTINUE
+          case("min")
+            objval%CPUtime_max = objval%CPUtime_max*60
+          case("hrs")
+            objval%CPUtime_max = objval%CPUtime_max*3600
+          case("day")
+            objval%CPUtime_max = objval%CPUtime_max*86400
+          case default
+            write(msg, *) "You have defined unsupported units for CPU time limit. the supported units are: s, min, hrs, day", &
+              new_line("a"), "You have specified: ", cut(units), " , correct it!!"
+            call file_error(fileid, message=msg)
+        end select
+        
+        if (objval%CPUlim_method=="P") then
+          msg="The new update for the Picard criterion defined in drutes.conf/inverse_modeling/objfnc.conf &
+                must be greater than the current Picard criterion defined in drutes.conf/global.conf &
+                otherwise it is useless"
+                
+          call fileread(objval%Picard_new, fileid, &
+          ranges=(/iter_criterion+epsilon(iter_criterion), huge(iter_criterion)/), errmsg=msg)
+        end if
+        
+      end if 
+      
+      
+      close(fileid)
       
       counter=0
       do 
@@ -192,7 +300,7 @@ module objfnc
       
       close(expfile)
        
-      open(newunit=expfile, file=adjustl(trim(fileinputs)))
+      open(newunit=expfile, file=cut(fileinputs))
       
       write(msg, *) "ERROR! You have either wrong definition in drutes.conf/inverse_modeling/objfnc.conf ", new_line("a") , &
         "or wrong number of columns in", trim(fileinputs), new_line("a"), &
@@ -215,7 +323,19 @@ module objfnc
   
       deallocate(tmpdata)
       
-      
+    
+    end subroutine reader
+    
+    
+    subroutine read_model()
+      use typy
+      use readtools
+      use core_tools
+      use globals
+      use debug_tools
+      use pde_objs
+    
+    
       allocate(model_data(ubound(obs_ids,1)*no_pdes))
       
       allocate(datafiles(ubound(obs_ids,1)*no_pdes))
@@ -278,12 +398,12 @@ module objfnc
       
       if (corr_memsize < 999) then
         call write_log("DRUtES will allocate: ", int1=1_ikind*nint(corr_memsize), text2="B of RAM", text3=trim(msg))
-      else if (corr_memsize > 999 .and. corr_memsize < 1e6) then
-        call write_log("DRUtES will allocate: ", real1=corr_memsize/1e3, text2="kB", text3=trim(msg))
-      else if (corr_memsize > 1e6 .and. corr_memsize < 1e9 ) then
-        call write_log("DRUtES will allocate: ", real1=corr_memsize/1e6, text2="MB", text3=trim(msg))
-      else 
-        call write_log("DRUtES will allocate: ", real1=corr_memsize/1e9, text2="GB", text3=trim(msg))
+        else if (corr_memsize > 999 .and. corr_memsize < 1e6) then
+          call write_log("DRUtES will allocate: ", real1=corr_memsize/1e3, text2="kB", text3=trim(msg))
+        else if (corr_memsize > 1e6 .and. corr_memsize < 1e9 ) then
+          call write_log("DRUtES will allocate: ", real1=corr_memsize/1e6, text2="MB", text3=trim(msg))
+        else 
+          call write_log("DRUtES will allocate: ", real1=corr_memsize/1e9, text2="GB", text3=trim(msg))
       end if
       
       close(datafiles(1))
@@ -353,31 +473,14 @@ module objfnc
         end do
       end do  
     
-    end subroutine reader
-    
-    
-    subroutine read_model()
-    
     end subroutine read_model
     
     subroutine get_objval_standard()
       use typy
       use debug_tools
       
-      integer(kind=ikind) :: i,j, pos, k, n, l
       
-      type :: errors_str
-        real(kind=rkind), dimension(:), allocatable :: val
-      end type
-      
-      type(errors_str), dimension(:), allocatable :: errors
-      logical :: inlast 
-      integer :: outfile
-      real(kind=rkind) :: dt, slope, modval, suma
-      
-      
-      call reader()
-      
+      call read_model()
 
       allocate(errors(ubound(model_data,1)))
       

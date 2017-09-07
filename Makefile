@@ -1,22 +1,11 @@
 #compiler options
-# c=/opt/gcc-trunk/bin/gfortran -fimplicit-none -fbounds-check
-# c=gfortran -fimplicit-none  -fcoarray=single -fbounds-check -g3 -fdefault-real-8 -Wextra -Wunused
-c=gfortran-6 -fimplicit-none  -fcoarray=single -fbounds-check -fbacktrace -g -g3 -fdefault-real-8 -O0 -finit-real=nan
-# c=gfortran-5 -fimplicit-none  -fcoarray=single -fbounds-check -g3 -fdefault-real-8 -O0 -finit-real=nan
-# c=gfortran-5 -fimplicit-none  -fcoarray=single -fbounds-check -g3 -fdefault-real-8 -O0 -finit-real=nan
-#     c=gfortran -fimplicit-none  -fcoarray=single -fbounds-check -g -fbacktrace
-# c=gfortran-5 -fimplicit-none  -fcoarray=single -O3
-# c=g95 -g -fbounds-check  -O0 -fimplicit-none  -fintrinsic-extensions -ftr15581 -ftrace=full
-#   c=g95  -ftrace=full  -g -fbounds-check  -O3 -funroll-loops -ftr15581 -fimplicit-none
-# c=g95   -O3 -ftr15581 -fintrinsic-extensions -fimplicit-none
-#     c=g95  -O3 -funroll-loops -fimplicit-none  -ftr15581
-#  c=ifort -O3 -fp-model precise -ftz -funroll-loops -coarray -coarray-num-images=1 -implicitnone -debug full
-#   c=ifort -O0 -coarray -coarray-num-images=1 -implicitnone -CB -g
-#   c=ifort -O0  -implicitnone -CB -g
-# c=g95 -std=F -O3 -funroll-loops -ftr15581
-# c=/opt/intel/fc/10.1.018/bin/ifort  -O3
-#  c=ifort -O3
-#c=gfortran -g
+
+#options for debugging, use for development  
+c=gfortran -fimplicit-none  -fcoarray=single -fbounds-check -fbacktrace -g -g3 -fdefault-real-8 -O0 -finit-real=nan 
+
+#options for fast execution, use for production purposes on well debugged versions
+# c=gfortran -fimplicit-none  -fcoarray=single -fdefault-real-8 -O3 -finit-real=nan -ffpe-summary=none
+
 d=drutes_obj-`date -I`
 
 all : main.o $(ALL_objs)
@@ -105,7 +94,7 @@ geom_tools.o: $(CORE_obj) $(MATHTOOLS_obj) core_tools.o readtools.o src/tools/ge
 	$c -c src/tools/geom_tools.f90
 simegen.o:  $(CORE_obj) core_tools.o geom_tools.o src/tools/simegen.f90
 	$c -c src/tools/simegen.f90
-read_inputs.o:  simegen.o $(CORE_obj) readtools.o src/tools/read_inputs.f90
+read_inputs.o:  simegen.o objfnc.o $(CORE_obj) readtools.o src/tools/read_inputs.f90
 	$c -c src/tools/read_inputs.f90
 drutes_init.o: read_inputs.o readtools.o core_tools.o $(CORE_obj) src/tools/drutes_init.f90
 	$c -c src/tools/drutes_init.f90
@@ -196,7 +185,7 @@ stiffmat.o: $(CORE_obj) $(LINALG_obj) fem_tools.o src/femtools/stiffmat.f90
 	$c -c src/femtools/stiffmat.f90
 femmat.o: $(CORE_obj) $(PMA++_obj) fem_tools.o stiffmat.o capmat.o decomp_vars.o src/femtools/femmat.f90
 	$c -c src/femtools/femmat.f90
-fem.o: $(CORE_obj) $(LINALG_obj) $(DECOMPO_obj)  femmat.o  src/femtools/fem.f90
+fem.o: $(CORE_obj) $(LINALG_obj) $(DECOMPO_obj) $(TOOLS_obj) femmat.o src/femtools/fem.f90
 	$c -c src/femtools/fem.f90
 #------end FEMTOOLS_obj------------------------------
 
@@ -230,6 +219,9 @@ main.o:  $(ALL_objs) src/core/main.f90
 
 clean:
 	rm -rf *.o *.mod bin/*
+	
+cleanobj:
+	rm -rf *.o *.mod
 	
 git:
 	cat /etc/hostname > sync.stamp && date >> sync.stamp & rm -rf *.o *.mod bin/* && git commit -a

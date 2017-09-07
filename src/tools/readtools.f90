@@ -507,13 +507,13 @@ module readtools
       
 
 !       if (i_err == 0) then 
-	if (err_read == 0) write(unit=terminal, fmt=*) "the value you have typed is: ", trim(string)
-	write(unit=terminal, fmt=*) "--------------------------------"
+     if (err_read == 0) write(unit=terminal, fmt=*) "the value you have typed is: ", trim(string)
+	   write(unit=terminal, fmt=*) "--------------------------------"
 !       end if
       
       
       if (present(message)) then
-	write(unit=terminal, fmt=*) " " //achar(27)//'[91m', trim(message) //achar(27)//'[0m'
+        	write(unit=terminal, fmt=*) " " //achar(27)//'[91m', trim(message) //achar(27)//'[0m'
       end if
 	
       
