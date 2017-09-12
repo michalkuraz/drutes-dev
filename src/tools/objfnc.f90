@@ -343,8 +343,8 @@ module objfnc
       
       do i=1, no_pdes
         do j=1, ubound(obs_ids,1)
-          open(newunit=datafiles((i-1)*ubound(obs_ids,1)+j), file=pde(i)%obspt_filename(j), action="read", status="old", & 
-               iostat=ierr)
+          open(newunit=datafiles((i-1)*ubound(obs_ids,1)+j), file=pde(i)%obspt_filename(obs_ids(j)), action="read", &
+                 status="old", iostat=ierr)
           if (ierr/=0) then
             print *, "error opening files with observation points"
             print *, "this is a bug"
@@ -408,7 +408,7 @@ module objfnc
       
       close(datafiles(1))
       
-      open(newunit=datafiles(1), file=pde(1)%obspt_filename(1), action="read", status="old")
+      open(newunit=datafiles(1), file=pde(1)%obspt_filename(obs_ids(1)), action="read", status="old")
       
       if (go4skip) then
         
