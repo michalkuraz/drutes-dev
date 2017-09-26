@@ -22,7 +22,8 @@ module read_inputs
       character(len=4096) :: filename
       character(len=8192) :: msg
       integer :: local, global
-      character(len=256), dimension(19) :: probnames
+      character(len=256), dimension(6) :: probnames
+      character(len=2) :: dimensions
       
       if (.not. www) then
         local = file_global
@@ -34,85 +35,40 @@ module read_inputs
 
       
       write(msg, *) "Incorrect option for problem type, the available options are:", new_line("a"),  new_line("a"), new_line("a"),&
-       "   RE_std = standard Richards equation, primary solution is capillary pressure head h, matrix is nonsymmetric" , &
-         new_line("a"), new_line("a"),  &
-        "   RE_rot = Richards equation in cylindric coordinates, primary solution is capillary pressure head h, &
-                 matrix is nonsymmetric",& 
-        new_line("a") ,  new_line("a"), &
-        "   REstdH = Richards equation, primary solution is total hydraulic head H, matrix is symmetric",&
+        "   REstdH = Richards equation, primary solution is total hydraulic head H",&
         new_line("a"), new_line("a"),  &
-        "   RErotH =  Richards equation in cylindric coordinates,  primary solution is total hydraulic head H, &
-                 matrix is symmetric", &
-        new_line("a"),  new_line("a"), &
-        "   RE_mod = modified Richards equation, see Noborio, et al. (1996)", &
-        new_line("a"),  new_line("a"), &
         "   boussi = Boussinesq equation for sloping land (1877)", &
         new_line("a"),  new_line("a"), &
-        "   ADE_wR = advection dispersion reaction equation (transport of solutes), & 
-            convection is computed from the Richards equation, ", &
-        "equilibrium sorption", &
-        new_line("a"),  new_line("a"), &
-        "   ADEstd = advection dispersion reaction equation (transport of solutes),  convection is specified in config files,", &
-        " equilibrium sorption", &
-        new_line("a"),  new_line("a"), &
-              "   ADEstd_kinsorb = advection dispersion reaction equation (transport of solutes),",&
-              " convection is specified in config files,", &
-        " kinetic sorption", &
-              new_line("a"),  new_line("a"), &
-        "   ADE_RE_std = advection dispersion reaction equation (transport of solutes), convection is computed from", &
-        " the Richards equation in pressure head form, equilibrium sorption ", &
-        new_line("a"),  new_line("a"), &
-        "   ADE_REstdH = advection dispersion reaction equation (transport of solutes), convection is computed from", &
-        " the Richards equation in total hydraulic head form, equilibrium sorption ", &
-          new_line("a"),  new_line("a"), &
-        "   ADE_RE_rot = advection dispersion reaction equation (transport of solutes), convection is computed from", &
-        " the Richards equation in pressure hydraulic head form, cylindric coordinates (axisymmetric flow), & 
-            equilibrium sorption ", &
-          new_line("a"),  new_line("a"), &
-        "   ADE_RErotH = advection dispersion reaction equation (transport of solutes), convection is computed from", &
-        " the Richards equation in total hydraulic head form, cylindric coordinates (axisymmetric flow), equilibrium sorption ", &
-          "   ADE_RE_std_kinsorb = advection dispersion reaction equation (transport of solutes), convection is computed from", &
-        " the Richards equation in pressure head form, kinetic sorption ", &
-        new_line("a"),  new_line("a"), &
-        "   ADE_REstdH_kinsorb = advection dispersion reaction equation (transport of solutes), convection is computed from", &
-        " the Richards equation in total hydraulic head form, kinetic sorption ", &
-          new_line("a"),  new_line("a"), &
-        "   ADE_RE_rot_kinsorb = advection dispersion reaction equation (transport of solutes), convection is computed from", &
-        " the Richards equation in pressure hydraulic head form, cylindric coordinates (axisymmetric flow), kinetic sorption ", &
-          new_line("a"),  new_line("a"), &
-        "   ADE_RErotH_kinsorb = advection dispersion reaction equation (transport of solutes), convection is computed from", &
-        " the Richards equation in total hydraulic head form, cylindric coordinates (axisymmetric flow), kinetic sorption ", &
+        "   ADEstd = advection dispersion reaction equation (transport of solutes)",   &
         new_line("a"),  new_line("a"), &
         "   Re_dual_totH = Richards equation dual porosity with total hydraulic head", &
-        " the Richards equation in total hydraulic head form ", &
         new_line("a"),  new_line("a"), &
         "   heat = Heat conduction equation (Sophoclea, 1979)", &
         new_line("a"),  new_line("a"), &
         new_line("a"),  new_line("a"), new_line("a")
 	
-      probnames(1) = "RE_std"
-      probnames(2) = "RE_mod"
-      probnames(3) = "REtest"
-      probnames(4) = "RE_rot"
-      probnames(5) = "REstdH"
-      probnames(6) = "RErotH"
-      probnames(7) = "boussi"
-      probnames(8) = "ADEstd"
-      probnames(9) = "ADEstd_kinsorb"
-      probnames(10) = "ADE_RE_std"
-      probnames(11) = "ADE_REstdH"
-      probnames(12) = "ADE_RE_rot"
-      probnames(13) = "ADE_RErotH"
-      probnames(14) = "ADE_RE_std_kinsorb"
-      probnames(15) = "ADE_REstdH_kinsorb"
-      probnames(16) = "ADE_RE_rot_kinsorb"
-      probnames(17) = "ADE_RErotH_kinsorb"
-      probnames(18) = "Re_dual_totH" 
-      probnames(19) = "heat"
+
+      probnames(1) = "REtest"
+      probnames(2) = "REstdH"
+      probnames(3) = "boussi"
+      probnames(4) = "ADEstd"
+      probnames(5) = "Re_dual_totH" 
+      probnames(6) = "heat"
 	
       call fileread(drutes_config%name, local, trim(msg), options=probnames)
 
-      call fileread(drutes_config%dimen, local, ranges=(/1_ikind,2_ikind/))
+      call fileread(dimensions, local, options=(/"1 ","2 ","2r","3 "/))
+      
+      select case(cut(dimensions))
+        case("1","2")
+          drutes_config%dimen=ichar(cut(dimensions))
+        case("2r")
+          drutes_config%dimen=2
+          drutes_config%rotsym=.true.
+        case("3")
+          msg="3D no yet implemented, you can use only 1D, 2D and 2D for rotational symmetric flow (pseudo 3D)."
+          call file_error(file_global, msg)
+      end select
       
       if (drutes_config%name == "boussi" .and. drutes_config%dimen > 1) then
         write(msg, fmt=*) 'You have selected Boussinesq equation, Boussinesq equation originates from Dupuit &

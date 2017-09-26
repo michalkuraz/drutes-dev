@@ -132,6 +132,8 @@ module global_objs
     character(len=256) :: name
     !> full name of the partial differential equation problem -- e.g. dual permeability Richards equation in total hydraulic head form
     character(len=4096) :: fullname
+    !> if .true. then DRUtES solves rotational symmetric flow
+    logical :: rotsym=.false.
   end type configuration
 
 
