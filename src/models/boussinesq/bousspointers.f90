@@ -1,7 +1,16 @@
 module bousspointers
-  public :: boussi
+  public :: boussi, bouss_processes
   
   contains
+  
+   subroutine bouss_processes(processes)
+      use typy
+      
+      integer(kind=ikind), intent(out) :: processes
+      
+      processes = 1
+      
+    end subroutine bouss_processes
   
     subroutine boussi(pde_loc)
       use typy
@@ -24,10 +33,10 @@ module bousspointers
       pde_loc%pde_fnc(pde_loc%order)%zerord => boussreact
 	  
       do i=lbound(pde(1)%bc,1), ubound(pde(1)%bc,1)
-	select case(pde_loc%bc(i)%code)
-	  case(1,2)
-	    pde_loc%bc(i)%value_fnc => bouss_bc
-	end select
+        select case(pde_loc%bc(i)%code)
+          case(1,2)
+            pde_loc%bc(i)%value_fnc => bouss_bc
+        end select
       end do
 	      
 	

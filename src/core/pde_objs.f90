@@ -10,6 +10,7 @@ module pde_objs
   type, public :: pde_fnc
     procedure(tensor_fnc), nopass, pointer           :: dispersion
     procedure(vector_fnc), nopass, pointer           :: convection
+    procedure(vector_fnc), nopass, pointer           :: hidden_convect
     !> derivative of the convection function, because \f[ \nabla .(a u) = (\nabla . a) u + a (\nabla . u) \f]
     procedure(vector_fnc), nopass, pointer           :: der_convect
     !> reaction

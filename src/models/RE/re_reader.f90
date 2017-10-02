@@ -46,42 +46,42 @@ module re_reader
       end if
       
       write(msg, *) "define method of evaluation of constitutive functions for the Richards equation", new_line("a"), &
-	"   0 - direct evaluation (not recommended, extremely resources consuming due to complicated exponential functions)", &
-	new_line("a"), &
-	"   1 - function values are precalculated in program initialization and values between are linearly approximated"
+        "   0 - direct evaluation (not recommended, extremely resources consuming due to complicated exponential functions)", &
+        new_line("a"), &
+        "   1 - function values are precalculated in program initialization and values between are linearly approximated"
       
       call fileread(drutes_config%fnc_method, file_waterm, ranges=(/0_ikind,1_ikind/),errmsg=msg)
       
       call fileread(maxpress, file_waterm, ranges=(/-huge(0.0_rkind), huge(0.0_rkind)/), &
-	errmsg="set some positive nonzero limit for maximal suction pressure (think in absolute values) ")
-	maxpress = abs(maxpress)
+        errmsg="set some positive nonzero limit for maximal suction pressure (think in absolute values) ")
+        maxpress = abs(maxpress)
       
       call fileread(drutes_config%fnc_discr_length, file_waterm, ranges=(/tiny(0.0_rkind), maxpress/),  &
-	errmsg="the discretization step for precalculating constitutive functions must be positive and smaller &
-	then the bc")
+        errmsg="the discretization step for precalculating constitutive functions must be positive and smaller &
+        then the bc")
 
       
       call fileread(n, file_waterm)
       
       write(msg, fmt=*) "ERROR!! incorrect number of materials in drutes.conf/water.conf/matrix.conf  &
-	the mesh defines", maxval(elements%material)  , "materials, and your input file defines", n, "material(s)."
+        the mesh defines", maxval(elements%material)  , "materials, and your input file defines", n, "material(s)."
 	
       backspace(file_waterm)
      
       call fileread(n, file_waterm, ranges=(/1_ikind*maxval(elements%material),1_ikind*maxval(elements%material)/),&
-	errmsg=trim(msg))
+        errmsg=trim(msg))
 
 
 
  
       if (.not. allocated(vgmatrix)) then
-	allocate (vgmatrix(n))
-	do i=1, ubound(vgmatrix,1)
-	  allocate(vgmatrix(i)%Ks_local(drutes_config%dimen))
-	  allocate(vgmatrix(i)%Ks(drutes_config%dimen, drutes_config%dimen))
-	  j = max(1,drutes_config%dimen-1)
-	  allocate(vgmatrix(i)%anisoangle(j))
-	end do
+        allocate (vgmatrix(n))
+        do i=1, ubound(vgmatrix,1)
+          allocate(vgmatrix(i)%Ks_local(drutes_config%dimen))
+          allocate(vgmatrix(i)%Ks(drutes_config%dimen, drutes_config%dimen))
+          j = max(1,drutes_config%dimen-1)
+          allocate(vgmatrix(i)%anisoangle(j))
+        end do
       end if
 
       write(msg, *) "HINT 1 : check number of layers in matrix", new_line("a"), &
@@ -142,80 +142,80 @@ module re_reader
 
       
       do i=1, ubound(vgmatrix,1)
-	call fileread(vgmatrix(i)%sinkterm, file_waterm,  errmsg="Have you defined sink term for each layer?")
+        call fileread(vgmatrix(i)%sinkterm, file_waterm,  errmsg="Have you defined sink term for each layer?")
       end do
       
       if (.not. www) then
-	do i=1, ubound(vgmatrix,1)
-	  call comment(file_waterm)
-	  read(unit=file_waterm, fmt= *, iostat=ierr) vgmatrix(i)%initcond, vgmatrix(i)%icondtype, &
-							yn, vgmatrix(i)%rcza_set%val
-	  select case(yn)
-	    case("y")
-	      vgmatrix(i)%rcza_set%use = .true.
-	    case("n")
-	      vgmatrix(i)%rcza_set%use = .false.
-	    case default
-	      write(msg, fmt=*) "type [y/n] value for using the retention curve zone approach at layer:", i
-	      call file_error(file_waterm, msg)
-	  end select
-	  select case(vgmatrix(i)%icondtype)
-	    case("H_tot", "hpres", "theta","input")
-	      CONTINUE
-	    case default
-	      print *, "you have specified wrong initial condition type keyword"
-	      print *, "the allowed options are:"
-	      print *, "                        H_tot = total hydraulic head"
-	      print *, "                        hpres = pressure head"
-	      print *, "                        theta = water content"
-              print *, "                        input = read from input file (drutes output file)"
-	      call file_error(file_waterm)
-	  end select
-	  if (ierr /= 0) then
-	    print *, "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-	    print *, "HINT: check number of line records of initial conditions in water.conf/matrix.conf!"
-	    print *, "----------------------------------------"
-	    call file_error(file_waterm)
-	  end if
-	end do
-      else
-	do i=1, ubound(vgmatrix,1)
-	  call comment(file_waterm)
-	  read(unit=file_waterm, fmt= *, iostat=ierr) vgmatrix(i)%initcond, vgmatrix(i)%icondtype
-          vgmatrix(i)%rcza_set%use = .false.
-	  select case(vgmatrix(i)%icondtype)
-	    case("H_tot", "hpres", "theta","input")
-	      CONTINUE
-	    case default
-	      print *, "you have specified wrong initial condition type keyword"
-	      print *, "the allowed options are:"
-	      print *, "                        H_tot = total hydraulic head"
-	      print *, "                        hpres = pressure head"
-	      print *, "                        theta = water content"
-              print *, "                        input = read from input file (drutes output file)"
-	      call file_error(file_waterm)
-	  end select
-	  if (ierr /= 0) then
-	    print *, "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-	    print *, "HINT: check number of line records of initial conditions in water.conf/matrix.conf!"
-	    print *, "----------------------------------------"
-	    call file_error(file_waterm)
-	  end if
-	end do
+        do i=1, ubound(vgmatrix,1)
+          call comment(file_waterm)
+          read(unit=file_waterm, fmt= *, iostat=ierr) vgmatrix(i)%initcond, vgmatrix(i)%icondtype, &
+                    yn, vgmatrix(i)%rcza_set%val
+          select case(yn)
+            case("y")
+              vgmatrix(i)%rcza_set%use = .true.
+            case("n")
+              vgmatrix(i)%rcza_set%use = .false.
+            case default
+              write(msg, fmt=*) "type [y/n] value for using the retention curve zone approach at layer:", i
+              call file_error(file_waterm, msg)
+          end select
+          select case(vgmatrix(i)%icondtype)
+            case("H_tot", "hpres", "theta","input")
+              CONTINUE
+            case default
+              print *, "you have specified wrong initial condition type keyword"
+              print *, "the allowed options are:"
+              print *, "                        H_tot = total hydraulic head"
+              print *, "                        hpres = pressure head"
+              print *, "                        theta = water content"
+                    print *, "                        input = read from input file (drutes output file)"
+              call file_error(file_waterm)
+          end select
+          if (ierr /= 0) then
+            print *, "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+            print *, "HINT: check number of line records of initial conditions in water.conf/matrix.conf!"
+            print *, "----------------------------------------"
+            call file_error(file_waterm)
+          end if
+        end do
+            else
+        do i=1, ubound(vgmatrix,1)
+          call comment(file_waterm)
+          read(unit=file_waterm, fmt= *, iostat=ierr) vgmatrix(i)%initcond, vgmatrix(i)%icondtype
+                vgmatrix(i)%rcza_set%use = .false.
+          select case(vgmatrix(i)%icondtype)
+            case("H_tot", "hpres", "theta","input")
+              CONTINUE
+            case default
+              print *, "you have specified wrong initial condition type keyword"
+              print *, "the allowed options are:"
+              print *, "                        H_tot = total hydraulic head"
+              print *, "                        hpres = pressure head"
+              print *, "                        theta = water content"
+                    print *, "                        input = read from input file (drutes output file)"
+              call file_error(file_waterm)
+          end select
+          if (ierr /= 0) then
+            print *, "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+            print *, "HINT: check number of line records of initial conditions in water.conf/matrix.conf!"
+            print *, "----------------------------------------"
+            call file_error(file_waterm)
+          end if
+        end do
       end if
 
    
 	
 	
       call fileread(n, file_waterm, ranges=(/1_ikind, huge(1_ikind)/), &
-	errmsg="at least one boundary must be specified (and no negative values here)")
+      errmsg="at least one boundary must be specified (and no negative values here)")
       
 
       call readbcvals(unitW=file_waterm, struct=pde_loc%bc, dimen=n, &
 		      dirname="drutes.conf/water.conf/")
 
 		      
-	close(file_waterm)	      
+      close(file_waterm)	      
 
     end subroutine res_read
 

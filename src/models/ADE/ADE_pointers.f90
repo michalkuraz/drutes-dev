@@ -2,7 +2,39 @@ module ADE_pointers
   public :: ADE
   public :: ADEkinsorb
   
+  public :: ADE_processes
+  
   contains
+  
+    subroutine ADE_processes(processes)
+      use typy
+      use readtools
+      use ADE_globals
+      use core_tools
+      
+      integer(kind=ikind) :: processes
+      integer :: adeconf, ierr
+      
+      open(newunit=adeconf, file="drutes.conf/ADE/ADE.conf", status="old", action="read", iostat=ierr)
+      
+      if (ierr /= 0) then
+        call write_log("Unable to open drutes.conf/ADE/ADE.conf, exiting....")
+        ERROR STOP
+      end if
+      
+      call fileread(no_solutes, adeconf, ranges=(/1_ikind, huge(1_ikind)/))
+      
+      call fileread(with_richards, adeconf)
+      
+      call fileread(no_solids, adeconf)
+      
+      processes = no_solutes + no_solids
+      
+      if (with_richards) processes = processes + 1
+      
+    end subroutine ADE_processes
+    
+    
   
     subroutine ADE(pde_loc)
       use typy
@@ -30,12 +62,12 @@ module ADE_pointers
       pde_loc%pde_fnc(pde_loc%order)%zerord => ADE_zerorder
 	  
       do i=lbound(pde_loc%bc,1), ubound(pde_loc%bc,1)
-	select case(pde_loc%bc(i)%code)
-	  case(1)
-	    pde_loc%bc(i)%value_fnc => ADE_dirichlet
-	  case(2)
-	    pde_loc%bc(i)%value_fnc => ADE_neumann
-	end select
+        select case(pde_loc%bc(i)%code)
+          case(1)
+            pde_loc%bc(i)%value_fnc => ADE_dirichlet
+          case(2)
+            pde_loc%bc(i)%value_fnc => ADE_neumann
+        end select
       end do    
 	
       pde_loc%flux => ADE_flux
@@ -69,8 +101,8 @@ module ADE_pointers
       allocate(pde_loc%bc(lbound(pde(pde_loc%order-1)%bc,1) : (ubound(pde(pde_loc%order-1)%bc,1) )  ))
       
       do i=lbound(pde_loc%bc,1), ubound(pde_loc%bc,1)
-	pde_loc%bc(i)%code = 2
-	pde_loc%bc(i)%value_fnc => ADE_null_bc
+        pde_loc%bc(i)%code = 2
+        pde_loc%bc(i)%value_fnc => ADE_null_bc
       end do 
       
       pde_loc%initcond => ADEcs_icond

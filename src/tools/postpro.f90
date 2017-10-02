@@ -54,34 +54,34 @@ module postpro
       integer                                               :: ierr
 
       if (present(name)) then
-	select case(name)
-	  case("obs")
-	    anime = .false.
-	    mode = 0
-	  case("avi")
-	    anime = .true.
-	    mode = -1
-	  case default
-	    print *, "this is a BUG, contact developer, called from postpro::make_print()"
-            error STOP
-        end select
-      else
-	anime = .false.
-	mode = 0
+        select case(name)
+          case("obs")
+            anime = .false.
+            mode = 0
+          case("avi")
+            anime = .true.
+            mode = -1
+          case default
+            print *, "this is a BUG, contact developer, called from postpro::make_print()"
+                  error STOP
+              end select
+            else
+        anime = .false.
+        mode = 0
       end if
       
 
       if (drutes_config%dimen < 2  .or. www) then
-	extension = ".dat"
-      else 
-	select case(observe_info%fmt)
-	  case("pure")
-	    extension = ".dat"
-	  case("scil")
-	    extension = ".sci"
-	  case("gmsh")
-	    extension = ".msh"
-	end select
+        extension = ".dat"
+            else 
+        select case(observe_info%fmt)
+          case("pure")
+            extension = ".dat"
+          case("scil")
+            extension = ".sci"
+          case("gmsh")
+            extension = ".msh"
+        end select
       end if
 	  
   
@@ -90,35 +90,35 @@ module postpro
 
       
       if (.not. anime) then
-	postpro_run = postpro_run + 1
-      else
-        if (first_run) then
-	  anime_run = 0
-	end if
-	anime_run = anime_run + 1
+        postpro_run = postpro_run + 1
+            else
+              if (first_run) then
+          anime_run = 0
+        end if
+        anime_run = anime_run + 1
       end if
 
       
       if (.not. anime) then
-	do 
-	  if (postpro_run/(10**postpro_dec) < 1) then
-	    EXIT
-	  else
-	    postpro_dec = postpro_dec + 1
-	  end if
-	end do
+        do 
+          if (postpro_run/(10**postpro_dec) < 1) then
+            EXIT
+          else
+            postpro_dec = postpro_dec + 1
+          end if
+        end do
       end if
   
       if (.not. allocated(ids_obs)) then
-	allocate(ids(ubound(pde,1), 4))
-	allocate(ids_obs(ubound(pde,1), 4))
-	allocate(ids_anime(ubound(pde,1), 4))
+        allocate(ids(ubound(pde,1), 4))
+        allocate(ids_obs(ubound(pde,1), 4))
+        allocate(ids_anime(ubound(pde,1), 4))
       end if
       
       if (anime) then
-	ids => ids_anime
-      else
-	ids => ids_obs
+        ids => ids_anime
+            else
+        ids => ids_obs
       end if
 	
 
@@ -126,99 +126,102 @@ module postpro
  
       
       if (anime) then
-	prefix = "out/anime/"
-	write(unit=forma, fmt="(a, I7, a)") "(a, a, a, a, a, I", 1," a)"
-	run = anime_run
+        prefix = "out/anime/"
+        write(unit=forma, fmt="(a, I7, a)") "(a, a, a, a, a, I", 1," a)"
+        run = anime_run
       else
-	prefix = "out/"
-	write(unit=forma, fmt="(a, I7, a)") "(a, a, a, a, a, I", postpro_dec," a)"
-	run = postpro_run
+        prefix = "out/"
+        write(unit=forma, fmt="(a, I7, a)") "(a, a, a, a, a, I", postpro_dec," a)"
+        run = postpro_run
       end if
 
       do proc=1, ubound(pde,1)
 
-	write(unit=filenames(proc,1), fmt=forma) trim(prefix), trim(pde(proc)%problem_name(1)), "_", &
-	trim(pde(proc)%solution_name(1)), "-",  run, trim(extension)
+        write(unit=filenames(proc,1), fmt=forma) trim(prefix), trim(pde(proc)%problem_name(1)), "_", &
+        trim(pde(proc)%solution_name(1)), "-",  run, trim(extension)
 
 
-	write(unit=filenames(proc,2), fmt=forma) trim(prefix), trim(pde(proc)%problem_name(1)), "_", trim(pde(proc)%solution_name(1)), &
-						  "-el_avg-",  run,  trim(extension)
+        write(unit=filenames(proc,2), fmt=forma) trim(prefix), trim(pde(proc)%problem_name(1)), "_", & 
+                    trim(pde(proc)%solution_name(1)), &
+                    "-el_avg-",  run,  trim(extension)
 
-	write(unit=filenames(proc,3), fmt=forma) trim(prefix), trim(pde(proc)%problem_name(1)), "_",  trim(pde(proc)%mass_name(1)), "-", & 
-					     run,  trim(extension)
+        write(unit=filenames(proc,3), fmt=forma) trim(prefix), trim(pde(proc)%problem_name(1)), "_",  &
+                      trim(pde(proc)%mass_name(1)), "-", & 
+                     run,  trim(extension)
 
-	write(unit=filenames(proc,4), fmt=forma) trim(prefix), trim(pde(proc)%problem_name(1)), "_", trim(pde(proc)%flux_name(1)), "-", &
-						  run,  trim(extension)
-! 	
-	if ( (.not. anime .and. mode == 0)  .or. &
-	  (anime_run == 1 .and. anime) .or. & 
-	 ( .not. anime .and. (mode == -1 .and. postpro_run == 0 ) ) ) then
+        write(unit=filenames(proc,4), fmt=forma) trim(prefix), trim(pde(proc)%problem_name(1)), "_", &
+                     trim(pde(proc)%flux_name(1)), "-", &
+                    run,  trim(extension)
+      ! 	
+        if ( (.not. anime .and. mode == 0)  .or. &
+          (anime_run == 1 .and. anime) .or. & 
+         ( .not. anime .and. (mode == -1 .and. postpro_run == 0 ) ) ) then
 
-	  do i=1, ubound(filenames,2)
-	    call find_unit(ids(proc, i), 6000)
-	    open(unit=ids(proc, i), file=trim(filenames(proc,i)), action="write", status="replace", iostat=ierr)
-	    if (ierr /= 0) then
-	      call system("mkdir out/anime")
-	      open(unit=ids(proc, i), file=trim(filenames(proc,i)), action="write", status="replace", iostat=ierr)
-	      if (ierr /= 0) then
-		print *, "unexpected system error, called from postpro::make_print()"
-		error stop
-	      end if
-	    end if
-	  end do  
-	end if
+          do i=1, ubound(filenames,2)
+            call find_unit(ids(proc, i), 6000)
+            open(unit=ids(proc, i), file=trim(filenames(proc,i)), action="write", status="replace", iostat=ierr)
+            if (ierr /= 0) then
+              call system("mkdir out/anime")
+              open(unit=ids(proc, i), file=trim(filenames(proc,i)), action="write", status="replace", iostat=ierr)
+              if (ierr /= 0) then
+          print *, "unexpected system error, called from postpro::make_print()"
+          error stop
+              end if
+            end if
+          end do  
+        end if
 
 
-	quadpnt%type_pnt = "ndpt"
-	
+        quadpnt%type_pnt = "ndpt"
+        
         if (time > epsilon(time) ) then
           quadpnt%column = 3
-	else
+        else
           quadpnt%column = 1
         end if
-        
+              
         if (present(curtime)) then
           quadpnt%globtime = .false.
           quadpnt%time4eval = curtime
         end if
 
-	
-	if (drutes_config%dimen == 1 .or. www) then
-  
-	  call print_pure(ids(proc,:), proc, quadpnt)
-	  
-	else
-	  select case(observe_info%fmt)
-	    case("pure")
-	      call print_pure(ids(proc,:), proc, quadpnt)
-	    case("scil")
-	      call print_scilab(ids(proc,:), proc, quadpnt)
-	    case("gmsh")
-	      call print_gmsh(ids(proc,:), proc, quadpnt)
-	  end select
-	end if
+        
+        if (drutes_config%dimen == 1 .or. www) then
+        
+          call print_pure(ids(proc,:), proc, quadpnt)
+          
+        else
+          select case(observe_info%fmt)
+            case("pure")
+              call print_pure(ids(proc,:), proc, quadpnt)
+            case("scil")
+              call print_scilab(ids(proc,:), proc, quadpnt)
+            case("gmsh")
+              call print_gmsh(ids(proc,:), proc, quadpnt)
+          end select
+        end if
       end do
 
 
       if (.not. anime) then
-   	do proc=1, ubound(pde,1)
-	  do i=1,ubound(ids,2)
-	    if (mode == 0) then
-              close(ids(proc,i))
-	    else
-              call flush(ids(proc,i))
-	    end if
-	  end do
-	end do	
+        do proc=1, ubound(pde,1)
+          do i=1,ubound(ids,2)
+            if (mode == 0) then
+                    close(ids(proc,i))
+            else
+                    call flush(ids(proc,i))
+            end if
+          end do
+        end do	
       else      
-	do proc=1, ubound(pde,1)
-	  do i=1,ubound(ids,2)
-	    write(unit=ids(proc,i), fmt="(a,I6.6,a)" ) "xs2png(0, 'K-", anime_run , ".png');"
-	    write(unit=ids(proc,i), fmt=*) "clear"
-	    write(unit=ids(proc,i), fmt=*) "   "
-	    call flush(ids(proc,i))
-	  end do
-	end do
+        do proc=1, ubound(pde,1)
+          do i=1,ubound(ids,2)
+            write(unit=ids(proc,i), fmt="(a,I6.6,a)" ) "xs2png(0, 'K-", anime_run , ".png');"
+            write(unit=ids(proc,i), fmt=*) "clear"
+            write(unit=ids(proc,i), fmt=*) "   "
+            call flush(ids(proc,i))
+          end do
+        end do
 	
       end if
       
@@ -252,30 +255,31 @@ module postpro
       
 
       do proc=1, ubound(pde,1)
-	do i =1, ubound(observation_array,1)
-	  layer = elements%material(observation_array(i)%element, proc)
+        do i =1, ubound(observation_array,1)
+          layer = elements%material(observation_array(i)%element, proc)
 
-	  quadpnt%order = i
-	  
-          quadpnt%element = observation_array(i)%element
-	  
-	  quadpnt%preproc=.true.
-	  
-	  call pde(proc)%flux(layer=layer, quadpnt=quadpnt,  vector_out=advectval(1:D))
+          quadpnt%order = i
+          
+                quadpnt%element = observation_array(i)%element
+          
+          quadpnt%preproc=.true.
+          
+          call pde(proc)%flux(layer=layer, quadpnt=quadpnt,  vector_out=advectval(1:D))
 
-	  val = pde(proc)%getval(quadpnt)
+          val = pde(proc)%getval(quadpnt)
 
-          massval = pde(proc)%mass(layer, quadpnt)
-	  
-	  observation_array(i)%cumflux(proc) = observation_array(i)%cumflux(proc) + &
-		    sqrt(dot_product(advectval(1:D), advectval(1:D)))*time_step
-                    
+                massval = pde(proc)%mass(layer, quadpnt)
+          
+          observation_array(i)%cumflux(proc) = observation_array(i)%cumflux(proc) + &
+              sqrt(dot_product(advectval(1:D), advectval(1:D)))*time_step
+                          
 
-	  write(unit=pde(proc)%obspt_unit(i), fmt="(50E24.12E3)") time, val, massval, advectval(1:D), observation_array(i)%cumflux(proc)
+          write(unit=pde(proc)%obspt_unit(i), fmt="(50E24.12E3)") time, val, massval, advectval(1:D), &
+                observation_array(i)%cumflux(proc)
 
-	  call flush(pde(proc)%obspt_unit(i))
-	  
-	end do
+          call flush(pde(proc)%obspt_unit(i))
+          
+        end do
       end do
     end subroutine write_obs
  
@@ -300,7 +304,7 @@ module postpro
     do
       i = i + 1
       if ((1.0*PID)/(10**i) < 1) then
-	EXIT
+      EXIT
       end if
     end do
 
@@ -320,13 +324,13 @@ module postpro
     do 
       read(unit=fileid, fmt=*, iostat=ierr) ch
       if (ch == "VmPeak:") then
-	backspace fileid
-	EXIT
+      backspace fileid
+      EXIT
       end if
 
       if (ierr /=0) then
-	print *, "unable to fetch memory consumption from system files"
-	RETURN
+        print *, "unable to fetch memory consumption from system files"
+        RETURN
       end if
     end do
 
@@ -337,13 +341,13 @@ module postpro
     do 
       read(unit=fileid, fmt=*) ch
       if (ch == "VmSwap:") then
-	backspace fileid
-	EXIT
+        backspace fileid
+        EXIT
       end if
 
       if (ierr /=0) then
-	print *, "unable to fetch swap consumption from system files"
-	RETURN
+        print *, "unable to fetch swap consumption from system files"
+        RETURN
       end if
     end do
 
@@ -397,9 +401,9 @@ module postpro
     quadpnt%preproc=.true.
     do i=1, elements%kolik
       do j=1,ubound(elements%data,2)
-	body(j,1:2) = nodes%data(elements%data(i,j),:)
-	quadpnt%order = elements%data(i,j)
-	body(j,3) = pde(proc)%getval(quadpnt)
+        body(j,1:2) = nodes%data(elements%data(i,j),:)
+        quadpnt%order = elements%data(i,j)
+        body(j,3) = pde(proc)%getval(quadpnt)
       end do
     
       ! mass (constant over element)
@@ -429,25 +433,25 @@ module postpro
       vct2 = body(3, 1:2) - body(2, 1:2)
       
       if ( (vct1(1)*vct2(2)-vct1(2)*vct2(1)) > 0.0_rkind) then
-	vct_tmp = body(3,:)
-	body(3,:) = body(2,:)
-	body(2,:) = vct_tmp
+        vct_tmp = body(3,:)
+        body(3,:) = body(2,:)
+        body(2,:) = vct_tmp
       else
-	CONTINUE
+        CONTINUE
       end if
 
       do j=1, ubound(ids,1)
-	write(unit=ids(j), fmt=*) "x(", i, ",1) =", body(1,1), ";"
-	write(unit=ids(j), fmt=*) "x(", i, ",2) =", body(2,1), ";"
-	write(unit=ids(j), fmt=*) "x(", i, ",3) =", body(3,1), ";"
-	
-	write(unit=ids(j), fmt=*) "y(", i, ",1) =", body(1,2), ";"
-	write(unit=ids(j), fmt=*) "y(", i, ",2) =", body(2,2), ";"
-	write(unit=ids(j), fmt=*) "y(", i, ",3) =", body(3,2), ";"
+        write(unit=ids(j), fmt=*) "x(", i, ",1) =", body(1,1), ";"
+        write(unit=ids(j), fmt=*) "x(", i, ",2) =", body(2,1), ";"
+        write(unit=ids(j), fmt=*) "x(", i, ",3) =", body(3,1), ";"
+        
+        write(unit=ids(j), fmt=*) "y(", i, ",1) =", body(1,2), ";"
+        write(unit=ids(j), fmt=*) "y(", i, ",2) =", body(2,2), ";"
+        write(unit=ids(j), fmt=*) "y(", i, ",3) =", body(3,2), ";"
 
-	write(unit=ids(j), fmt=*) "z(", i, ",1) =", body(1,2+j), ";"
-	write(unit=ids(j), fmt=*) "z(", i, ",2) =", body(2,2+j), ";"
-	write(unit=ids(j), fmt=*) "z(", i, ",3) =", body(3,2+j), ";"
+        write(unit=ids(j), fmt=*) "z(", i, ",1) =", body(1,2+j), ";"
+        write(unit=ids(j), fmt=*) "z(", i, ",2) =", body(2,2+j), ";"
+        write(unit=ids(j), fmt=*) "z(", i, ",3) =", body(3,2+j), ";"
       end do
 
     end do
@@ -455,11 +459,11 @@ module postpro
     time_dec = 0
     if (curtime>epsilon(curtime)) then
       do
-	if (curtime*10.0_rkind**time_dec > 1) then
-	  EXIT 
-	else
-	  time_dec = time_dec + 1
-	end if
+        if (curtime*10.0_rkind**time_dec > 1) then
+          EXIT 
+        else
+          time_dec = time_dec + 1
+        end if
       end do
     end if
     
@@ -471,11 +475,10 @@ module postpro
       write(unit=ids(i), fmt=*) "f.color_map=jetcolormap(256);"
       write(unit=ids(i), fmt=*) "colorbar(min(z),max(z));"
       if (time_dec < 2) then
-	write(unit=ids(i), fmt="(a,F10.2,a,a,a,a)")  "xtitle('$\mathbf{\LARGE t= ", curtime,"  ",&
+        write(unit=ids(i), fmt="(a,F10.2,a,a,a,a)")  "xtitle('$\mathbf{\LARGE t= ", curtime,"  ",&
 	      "} \quad \mbox{\Large ",   trim(time_units), "}$')"
       else
-							    
-!                                                                  a	                 F10.2        a
+ !                                                             a	                 F10.2        a
        write(unit=ids(i), fmt="(a,F10.2,a,a,I16,a,a,a)")  "xtitle('$\mathbf{\LARGE t= ", curtime*10**time_dec,"  ",&
 !                    a            I16         a                         a                a
 	      "\times 10^{-", time_dec,"}} \quad \mbox{\Large ",   trim(time_units), "}$')"

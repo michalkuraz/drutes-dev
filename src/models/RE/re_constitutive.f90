@@ -77,27 +77,27 @@ module RE_constitutive
       
 
       if (present(quadpnt) .and. present(x)) then
-	print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
-	print *, "exited from re_constitutive::vangen"
-	ERROR stop
-      else if (.not. present(quadpnt) .and. .not. present(x)) then
-	print *, "ERROR: you have not specified either integ point or x value"
+        print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
         print *, "exited from re_constitutive::vangen"
-	ERROR stop
+        ERROR stop
+      else if (.not. present(quadpnt) .and. .not. present(x)) then
+        print *, "ERROR: you have not specified either integ point or x value"
+              print *, "exited from re_constitutive::vangen"
+        ERROR stop
       end if
       
       if (present(quadpnt)) then
-	quadpnt_loc=quadpnt
-	quadpnt_loc%preproc=.true.
-	h = pde_loc%getval(quadpnt_loc)
+        quadpnt_loc=quadpnt
+        quadpnt_loc%preproc=.true.
+        h = pde_loc%getval(quadpnt_loc)
       else
-	if (ubound(x,1) /=1) then
-	  print *, "ERROR: van Genuchten function is a function of a single variable h"
-	  print *, "       your input data has:", ubound(x,1), "variables"
-	  print *, "exited from re_constitutive::vangen"
-	  ERROR STOP
-	end if
-	h = x(1)
+        if (ubound(x,1) /=1) then
+          print *, "ERROR: van Genuchten function is a function of a single variable h"
+          print *, "       your input data has:", ubound(x,1), "variables"
+          print *, "exited from re_constitutive::vangen"
+          ERROR STOP
+        end if
+        h = x(1)
       end if
       
       
@@ -108,11 +108,11 @@ module RE_constitutive
       
 
       if (h >=0.0_rkind) then
-	  theta = vgset(layer)%Ths
-	  RETURN
+        theta = vgset(layer)%Ths
+        RETURN
       else
-	  theta_e = 1/(1+(a*(abs(h)))**n)**m
-	  theta = theta_e*(vgset(layer)%Ths-vgset(layer)%Thr)+vgset(layer)%Thr
+        theta_e = 1/(1+(a*(abs(h)))**n)**m
+        theta = theta_e*(vgset(layer)%Ths-vgset(layer)%Thr)+vgset(layer)%Thr
       end if
 
     end function vangen
@@ -140,27 +140,27 @@ module RE_constitutive
       
 
       if (present(quadpnt) .and. present(x)) then
-	print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
-	print *, "exited from re_constitutive::gardner_wc"
-	ERROR stop
-      else if (.not. present(quadpnt) .and. .not. present(x)) then
-	print *, "ERROR: you have not specified either integ point or x value"
+        print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
         print *, "exited from re_constitutive::gardner_wc"
-	ERROR stop
+        ERROR stop
+      else if (.not. present(quadpnt) .and. .not. present(x)) then
+        print *, "ERROR: you have not specified either integ point or x value"
+        print *, "exited from re_constitutive::gardner_wc"
+        ERROR stop
       end if
       
       if (present(quadpnt)) then
-	quadpnt_loc=quadpnt
-	quadpnt_loc%preproc=.true.
-	h = pde_loc%getval(quadpnt_loc)
+        quadpnt_loc=quadpnt
+        quadpnt_loc%preproc=.true.
+        h = pde_loc%getval(quadpnt_loc)
       else
-	if (ubound(x,1) /=1) then
-	  print *, "ERROR: van Genuchten function is a function of a single variable h"
-	  print *, "       your input data has:", ubound(x,1), "variables"
-	  print *, "exited from re_constitutive::gardner_wc"
-	  ERROR STOP
-	end if
-	h = x(1)
+        if (ubound(x,1) /=1) then
+          print *, "ERROR: van Genuchten function is a function of a single variable h"
+          print *, "       your input data has:", ubound(x,1), "variables"
+          print *, "exited from re_constitutive::gardner_wc"
+          ERROR STOP
+        end if
+        h = x(1)
       end if
       
       
@@ -168,10 +168,10 @@ module RE_constitutive
 
 
       if (h >=0.0_rkind) then
-	  theta = vgset(layer)%Ths
-	  RETURN
+        theta = vgset(layer)%Ths
+        RETURN
       else
-	  theta = vgset(layer)%Thr+(vgset(layer)%Ths - vgset(layer)%Thr)*exp(vgset(layer)%alpha*h)
+        theta = vgset(layer)%Thr+(vgset(layer)%Ths - vgset(layer)%Thr)*exp(vgset(layer)%alpha*h)
       end if
 
     end function gardner_wc
@@ -200,27 +200,27 @@ module RE_constitutive
  
 
       if (present(quadpnt) .and. present(x)) then
-	print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
-	print *, "exited from re_constitutive::vangen"
-	ERROR stop
-      else if (.not. present(quadpnt) .and. .not. present(x)) then
-	print *, "ERROR: you have not specified either integ point or x value"
+        print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
         print *, "exited from re_constitutive::vangen"
-	ERROR stop
+        ERROR stop
+      else if (.not. present(quadpnt) .and. .not. present(x)) then
+        print *, "ERROR: you have not specified either integ point or x value"
+        print *, "exited from re_constitutive::vangen"
+        ERROR stop
       end if
       
       if (present(quadpnt)) then
-      	quadpnt_loc=quadpnt
-	quadpnt_loc%preproc=.true.
-	theta = pde_loc%getval(quadpnt_loc)
+        quadpnt_loc=quadpnt
+        quadpnt_loc%preproc=.true.
+        theta = pde_loc%getval(quadpnt_loc)
       else
-	if (ubound(x,1) /=1) then
-	  print *, "ERROR: van Genuchten function is a function of a single variable h"
-	  print *, "       your input data has:", ubound(x,1), "variables"
-	  print *, "exited from re_constitutive::vangen"
-	  ERROR STOP
-	end if
-	theta = x(1)
+        if (ubound(x,1) /=1) then
+          print *, "ERROR: van Genuchten function is a function of a single variable h"
+          print *, "       your input data has:", ubound(x,1), "variables"
+          print *, "exited from re_constitutive::vangen"
+          ERROR STOP
+        end if
+        theta = x(1)
       end if
       
       
@@ -230,19 +230,19 @@ module RE_constitutive
       m = vgset(layer)%m
       
       if (abs(theta - vgset(layer)%Ths) < epsilon(theta)) then
-	hpress = 0
+        hpress = 0
       else
-	if (theta >  vgset(layer)%Ths + 10*epsilon(theta)) then
-	  call write_log("theta is greater then theta_s, exiting")
-	  print *, "called from re_constitutive::inverse_vangen"
-	  error stop
-	else if (theta < 0) then
-	  call write_log("theta is negative strange, exiting")
-	  print *, "called from re_constitutive::inverse_vangen"
-	  error stop 
-	end if
-	hpress = ((((vgset(layer)%Ths - vgset(layer)%Thr)/(theta-vgset(layer)%Thr))**(1.0_rkind/m)-1) &  
-	**(1.0_rkind/n))/(-a)
+        if (theta >  vgset(layer)%Ths + 10*epsilon(theta)) then
+          call write_log("theta is greater then theta_s, exiting")
+          print *, "called from re_constitutive::inverse_vangen"
+          error stop
+        else if (theta < 0) then
+          call write_log("theta is negative strange, exiting")
+          print *, "called from re_constitutive::inverse_vangen"
+          error stop 
+        end if
+        hpress = ((((vgset(layer)%Ths - vgset(layer)%Thr)/(theta-vgset(layer)%Thr))**(1.0_rkind/m)-1) &  
+        **(1.0_rkind/n))/(-a)
       end if
       
     end function inverse_vangen
@@ -268,58 +268,58 @@ module RE_constitutive
       type(integpnt_str) :: quadpnt_loc      
 
       if (present(quadpnt) .and. present(x)) then
-	print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
-	print *, "exited from re_constitutive::vangen_tab"
-	ERROR stop
-      else if (.not. present(quadpnt) .and. .not. present(x)) then
-	print *, "ERROR: you have not specified either integ point or x value"
+        print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
         print *, "exited from re_constitutive::vangen_tab"
-	ERROR stop
+        ERROR stop
+      else if (.not. present(quadpnt) .and. .not. present(x)) then
+        print *, "ERROR: you have not specified either integ point or x value"
+        print *, "exited from re_constitutive::vangen_tab"
+        ERROR stop
       end if
       
       if (present(quadpnt)) then
       	quadpnt_loc=quadpnt
-	quadpnt_loc%preproc=.true.
-	h = pde_loc%getval(quadpnt_loc)
+        quadpnt_loc%preproc=.true.
+        h = pde_loc%getval(quadpnt_loc)
       else
       	if (ubound(x,1) /=1) then
-	  print *, "ERROR: van Genuchten function is a function of a single variable h"
-	  print *, "       your input data has:", ubound(x,1), "variables"
-	  print *, "exited from re_constitutive::vangen_tab"
-	  ERROR STOP
-	end if
-	h = x(1)
+          print *, "ERROR: van Genuchten function is a function of a single variable h"
+          print *, "       your input data has:", ubound(x,1), "variables"
+          print *, "exited from re_constitutive::vangen_tab"
+          ERROR STOP
+        end if
+        h = x(1)
       end if
 
       if (h<0) then
-	if ( h/drutes_config%fnc_discr_length < 0.1*huge(1)) then
-	  
-	  pos = int(-h/drutes_config%fnc_discr_length)+1
-	  if (pos <= ubound(watcontab,2)-1) then
-	    dist = -h - (pos - 1)*drutes_config%fnc_discr_length
-	    theta = (watcontab(layer,pos+1)-watcontab(layer,pos))/drutes_config%fnc_discr_length*dist + watcontab(layer,pos)
-	  else
-	    if (present(quadpnt)) theta = vangen(pde_loc, layer, quadpnt)
-	    if (present(x)) theta = vangen(pde_loc, layer, x=x)
-	    if (.not. tabwarning) then
-	      call write_log(trim(tabmsg))
-	      tabwarning = .true.
-	    end if
-	  end if
-	else
+        if ( h/drutes_config%fnc_discr_length < 0.1*huge(1)) then
+          
+          pos = int(-h/drutes_config%fnc_discr_length)+1
+          if (pos <= ubound(watcontab,2)-1) then
+            dist = -h - (pos - 1)*drutes_config%fnc_discr_length
+            theta = (watcontab(layer,pos+1)-watcontab(layer,pos))/drutes_config%fnc_discr_length*dist + watcontab(layer,pos)
+          else
+            if (present(quadpnt)) theta = vangen(pde_loc, layer, quadpnt)
+            if (present(x)) theta = vangen(pde_loc, layer, x=x)
+            if (.not. tabwarning) then
+              call write_log(trim(tabmsg))
+              tabwarning = .true.
+            end if
+          end if
+        else
 	
-	  if (.not. intwarning) then
-	    call intoverflow()
-	    intwarning = .true.
-	  end if
-	
-	  if (present(quadpnt)) theta = vangen(pde_loc, layer, quadpnt)
-	  if (present(x)) theta = vangen(pde_loc, layer, x=x)
-	  
-	end if
+        if (.not. intwarning) then
+          call intoverflow()
+          intwarning = .true.
+        end if
+      
+        if (present(quadpnt)) theta = vangen(pde_loc, layer, quadpnt)
+        if (present(x)) theta = vangen(pde_loc, layer, x=x)
+        
+      end if
 	
       else
-	theta = vgset(layer)%Ths	
+        theta = vgset(layer)%Ths	
       end if
       
       
@@ -355,44 +355,44 @@ module RE_constitutive
           
       
       if (present(quadpnt) .and. present(x)) then
-	print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
-	print *, "exited from re_constitutive::vangen_elast"
-	ERROR stop
-      else if (.not. present(quadpnt) .and. .not. present(x)) then
-	print *, "ERROR: you have not specified either integ point or x value"
+        print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
         print *, "exited from re_constitutive::vangen_elast"
-	ERROR stop
+        ERROR stop
+      else if (.not. present(quadpnt) .and. .not. present(x)) then
+        print *, "ERROR: you have not specified either integ point or x value"
+        print *, "exited from re_constitutive::vangen_elast"
+        ERROR stop
       end if
       
       if (present(quadpnt)) then
         quadpnt_loc=quadpnt
-	quadpnt_loc%preproc=.true.
-	h = pde_loc%getval(quadpnt_loc)
+        quadpnt_loc%preproc=.true.
+        h = pde_loc%getval(quadpnt_loc)
       else
-	if (ubound(x,1) /=1) then
-	  print *, "ERROR: van Genuchten function is a function of a single variable h"
-	  print *, "       your input data has:", ubound(x,1), "variables"
-	  ERROR STOP
-	end if
-      	if (ubound(x,1) /=1) then
-	  print *, "ERROR: van Genuchten function is a function of a single variable h"
-	  print *, "       your input data has:", ubound(x,1), "variables"
-	  print *, "exited from re_constitutive::vangen_elast"
-	  ERROR STOP
-	end if
-	h = x(1)
+      if (ubound(x,1) /=1) then
+        print *, "ERROR: van Genuchten function is a function of a single variable h"
+        print *, "       your input data has:", ubound(x,1), "variables"
+        ERROR STOP
+      end if
+      if (ubound(x,1) /=1) then
+        print *, "ERROR: van Genuchten function is a function of a single variable h"
+        print *, "       your input data has:", ubound(x,1), "variables"
+        print *, "exited from re_constitutive::vangen_elast"
+        ERROR STOP
+      end if
+        h = x(1)
       end if
 
       if (h < 0) then
-	a = vgset(layer)%alpha
-	n = vgset(layer)%n
-	m = vgset(layer)%m
-	tr = vgset(layer)%Thr
-	ts = vgset(layer)%Ths
-	C = a*m*n*(-tr + ts)*(-(a*h))**(-1 + n)*(1 + (-(a*h))**n)**(-1 - m)
+        a = vgset(layer)%alpha
+        n = vgset(layer)%n
+        m = vgset(layer)%m
+        tr = vgset(layer)%Thr
+        ts = vgset(layer)%Ths
+        C = a*m*n*(-tr + ts)*(-(a*h))**(-1 + n)*(1 + (-(a*h))**n)**(-1 - m)
       else
-	E = vgset(layer)%Ss
-	RETURN
+        E = vgset(layer)%Ss
+        RETURN
       end if
 
       E = C + vangen(pde_loc, layer, x=(/h/))/vgset(layer)%Ths*vgset(layer)%Ss
@@ -425,42 +425,42 @@ module RE_constitutive
           
       
       if (present(quadpnt) .and. present(x)) then
-	print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
-	print *, "exited from re_constitutive::vangen_elast"
-	ERROR stop
+        print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
+        print *, "exited from re_constitutive::vangen_elast"
+        ERROR stop
       else if (.not. present(quadpnt) .and. .not. present(x)) then
-	print *, "ERROR: you have not specified either integ point or x value"
+        print *, "ERROR: you have not specified either integ point or x value"
         print *, "exited from re_constitutive::gardner_elast"
-	ERROR stop
+        ERROR stop
       end if
       
       if (present(quadpnt)) then
         quadpnt_loc=quadpnt
-	quadpnt_loc%preproc=.true.
-	h = pde_loc%getval(quadpnt_loc)
+        quadpnt_loc%preproc=.true.
+        h = pde_loc%getval(quadpnt_loc)
       else
-	if (ubound(x,1) /=1) then
-	  print *, "ERROR: Gardner function is a function of a single variable h"
-	  print *, "       your input data has:", ubound(x,1), "variables"
-	  ERROR STOP
-	end if
-      	if (ubound(x,1) /=1) then
-	  print *, "ERROR: Gardner function is a function of a single variable h"
-	  print *, "       your input data has:", ubound(x,1), "variables"
-	  print *, "exited from re_constitutive::gardner_elast"
-	  ERROR STOP
-	end if
-	h = x(1)
+      if (ubound(x,1) /=1) then
+        print *, "ERROR: Gardner function is a function of a single variable h"
+        print *, "       your input data has:", ubound(x,1), "variables"
+        ERROR STOP
+      end if
+      if (ubound(x,1) /=1) then
+        print *, "ERROR: Gardner function is a function of a single variable h"
+        print *, "       your input data has:", ubound(x,1), "variables"
+        print *, "exited from re_constitutive::gardner_elast"
+        ERROR STOP
+      end if
+        h = x(1)
       end if
 
       if (h < 0) then
-	a = vgset(layer)%alpha
-	tr = vgset(layer)%Thr
-	ts = vgset(layer)%Ths
-	E = a*(-tr + ts)*exp(a*h)
+        a = vgset(layer)%alpha
+        tr = vgset(layer)%Thr
+        ts = vgset(layer)%Ths
+        E = a*(-tr + ts)*exp(a*h)
       else
-	E = 0
-	RETURN
+        E = 0
+        RETURN
       end if
 
 
@@ -489,55 +489,55 @@ module RE_constitutive
          
       
       if (present(quadpnt) .and. present(x)) then
-	print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
-	print *, "exited from re_constitutive::vangen_elast_tab"
-	ERROR stop
-      else if (.not. present(quadpnt) .and. .not. present(x)) then
-	print *, "ERROR: you have not specified either integ point or x value"
+        print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
         print *, "exited from re_constitutive::vangen_elast_tab"
-	ERROR stop
+        ERROR stop
+      else if (.not. present(quadpnt) .and. .not. present(x)) then
+        print *, "ERROR: you have not specified either integ point or x value"
+        print *, "exited from re_constitutive::vangen_elast_tab"
+        ERROR stop
       end if
       
       if (present(quadpnt)) then
         quadpnt_loc=quadpnt
-	quadpnt_loc%preproc=.true.
-	h = pde_loc%getval(quadpnt_loc)
+        quadpnt_loc%preproc=.true.
+        h = pde_loc%getval(quadpnt_loc)
       else
       	if (ubound(x,1) /=1) then
-	  print *, "ERROR: van Genuchten function is a function of a single variable h"
-	  print *, "       your input data has:", ubound(x,1), "variables"
-	  print *, "exited from re_constitutive::vangen_elast_tab"
-	  ERROR STOP
+        print *, "ERROR: van Genuchten function is a function of a single variable h"
+        print *, "       your input data has:", ubound(x,1), "variables"
+        print *, "exited from re_constitutive::vangen_elast_tab"
+        ERROR STOP
 	end if
 	h = x(1)
       end if
 
       if (h<0) then
-	if ( h/drutes_config%fnc_discr_length < 0.1*huge(1)) then
-	  pos = int(-h/drutes_config%fnc_discr_length)+1
-	  if (pos <= ubound(warecatab,2)-1) then
-	    dist = -h - (pos - 1)*drutes_config%fnc_discr_length
-	    E = (warecatab(layer,pos+1)-warecatab(layer,pos))/drutes_config%fnc_discr_length*dist + warecatab(layer,pos)
-	  else
-	    if (present(quadpnt)) E = vangen_elast(pde_loc, layer, quadpnt)
-	    if (present(x)) E = vangen_elast(pde_loc, layer, x=x)
-	    if (.not. tabwarning) then
-	      call write_log(trim(tabmsg))
-	      tabwarning = .true.
-	    end if
-	  end if
-	else
+        if ( h/drutes_config%fnc_discr_length < 0.1*huge(1)) then
+          pos = int(-h/drutes_config%fnc_discr_length)+1
+          if (pos <= ubound(warecatab,2)-1) then
+            dist = -h - (pos - 1)*drutes_config%fnc_discr_length
+            E = (warecatab(layer,pos+1)-warecatab(layer,pos))/drutes_config%fnc_discr_length*dist + warecatab(layer,pos)
+          else
+            if (present(quadpnt)) E = vangen_elast(pde_loc, layer, quadpnt)
+            if (present(x)) E = vangen_elast(pde_loc, layer, x=x)
+            if (.not. tabwarning) then
+              call write_log(trim(tabmsg))
+              tabwarning = .true.
+            end if
+          end if
+        else
 	 
-	  if (.not. intwarning) then
-	    call intoverflow()
-	    intwarning = .true.
-	  end if
-	  if (present(quadpnt)) E = vangen_elast(pde_loc, layer, quadpnt_loc)
-	  if (present(x)) E = vangen_elast(pde_loc, layer, x=x)	  
-	
-	end if 
+          if (.not. intwarning) then
+            call intoverflow()
+            intwarning = .true.
+          end if
+          if (present(quadpnt)) E = vangen_elast(pde_loc, layer, quadpnt_loc)
+          if (present(x)) E = vangen_elast(pde_loc, layer, x=x)	  
+        
+        end if 
       else
-	E = vgset(layer)%Ss	
+        E = vgset(layer)%Ss	
       end if
 
 
@@ -571,46 +571,46 @@ module RE_constitutive
   
 
       if (present(quadpnt) .and. present(x)) then
-	print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
-	print *, "exited from re_constitutive::mualem"
-	ERROR stop
-      else if (.not. present(quadpnt) .and. .not. present(x)) then
-	print *, "ERROR: you have not specified either integ point or x value"
+        print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
         print *, "exited from re_constitutive::mualem"
-	ERROR stop
+        ERROR stop
+      else if (.not. present(quadpnt) .and. .not. present(x)) then
+        print *, "ERROR: you have not specified either integ point or x value"
+        print *, "exited from re_constitutive::mualem"
+        ERROR stop
       end if
       
       if (present(quadpnt)) then
         quadpnt_loc=quadpnt
-	quadpnt_loc%preproc=.true.
-	h = pde_loc%getval(quadpnt_loc)
+        quadpnt_loc%preproc=.true.
+        h = pde_loc%getval(quadpnt_loc)
       else
       	if (ubound(x,1) /=1) then
-	  print *, "ERROR: van Genuchten function is a function of a single variable h"
-	  print *, "       your input data has:", ubound(x,1), "variables"
-	  print *, "exited from re_constitutive::mualem"
-	  ERROR STOP
-	end if
-	h = x(1)
+          print *, "ERROR: van Genuchten function is a function of a single variable h"
+          print *, "       your input data has:", ubound(x,1), "variables"
+          print *, "exited from re_constitutive::mualem"
+          ERROR STOP
+        end if
+        h = x(1)
       end if
       
       
       if (h >= 0) then
-	tmp = 1
+        tmp = 1
       else
-	a = vgset(layer)%alpha
-	n = vgset(layer)%n
-	m = vgset(layer)%m
+        a = vgset(layer)%alpha
+        n = vgset(layer)%n
+        m = vgset(layer)%m
 
-	tmp =  (1 - (-(a*h))**(m*n)/(1 + (-(a*h))**n)**m)**2/(1 + (-(a*h))**n)**(m/2.0_rkind)
+        tmp =  (1 - (-(a*h))**(m*n)/(1 + (-(a*h))**n)**m)**2/(1 + (-(a*h))**n)**(m/2.0_rkind)
       end if
 	
       if (present(tensor)) then
-	tensor = tmp* vgset(layer)%Ks
+        tensor = tmp* vgset(layer)%Ks
       end if
 
       if (present(scalar)) then
-	scalar = tmp
+        scalar = tmp
       end if
     end subroutine mualem
     
@@ -642,43 +642,43 @@ module RE_constitutive
   
 
       if (present(quadpnt) .and. present(x)) then
-	print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
-	print *, "exited from re_constitutive::gardner_ks"
-	ERROR stop
-      else if (.not. present(quadpnt) .and. .not. present(x)) then
-	print *, "ERROR: you have not specified either integ point or x value"
+        print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
         print *, "exited from re_constitutive::gardner_ks"
-	ERROR stop
+        ERROR stop
+      else if (.not. present(quadpnt) .and. .not. present(x)) then
+        print *, "ERROR: you have not specified either integ point or x value"
+        print *, "exited from re_constitutive::gardner_ks"
+        ERROR stop
       end if
       
       if (present(quadpnt)) then
         quadpnt_loc=quadpnt
-	quadpnt_loc%preproc=.true.
-	h = pde_loc%getval(quadpnt_loc)
+        quadpnt_loc%preproc=.true.
+        h = pde_loc%getval(quadpnt_loc)
       else
       	if (ubound(x,1) /=1) then
-	  print *, "ERROR: van Genuchten function is a function of a single variable h"
-	  print *, "       your input data has:", ubound(x,1), "variables"
-	  print *, "exited from re_constitutive::gardner_ks"
-	  ERROR STOP
-	end if
-	h = x(1)
+          print *, "ERROR: van Genuchten function is a function of a single variable h"
+          print *, "       your input data has:", ubound(x,1), "variables"
+          print *, "exited from re_constitutive::gardner_ks"
+          ERROR STOP
+        end if
+        h = x(1)
       end if
       
       
       if (h >= 0) then
-	tmp = 1
+        tmp = 1
       else
 
-	tmp = exp(vgset(layer)%alpha*h)
+        tmp = exp(vgset(layer)%alpha*h)
       end if
 	
       if (present(tensor)) then
-	tensor = tmp* vgset(layer)%Ks
+        tensor = tmp* vgset(layer)%Ks
       end if
 
       if (present(scalar)) then
-	scalar = tmp
+        scalar = tmp
       end if
     end subroutine gardner_ks
 
@@ -709,13 +709,13 @@ module RE_constitutive
    
       
       if (present(quadpnt) .and. present(x)) then
-	print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
-	print *, "exited from re_constitutive::mualem_tab"
-	ERROR stop
-      else if (.not. present(quadpnt) .and. .not. present(x)) then
-	print *, "ERROR: you have not specified either integ point or x value"
+        print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
         print *, "exited from re_constitutive::mualem_tab"
-	ERROR stop
+        ERROR stop
+      else if (.not. present(quadpnt) .and. .not. present(x)) then
+        print *, "ERROR: you have not specified either integ point or x value"
+        print *, "exited from re_constitutive::mualem_tab"
+        ERROR stop
       end if
       
       
@@ -723,16 +723,16 @@ module RE_constitutive
       
       if (present(quadpnt)) then
         quadpnt_loc=quadpnt
-	quadpnt_loc%preproc=.true.
-	h = pde_loc%getval(quadpnt_loc)
+        quadpnt_loc%preproc=.true.
+        h = pde_loc%getval(quadpnt_loc)
       else
       	if (ubound(x,1) /=1) then
-	  print *, "ERROR: van Genuchten function is a function of a single variable h"
-	  print *, "       your input data has:", ubound(x,1), "variables"
-	  print *, "exited from re_constitutive::mualem_tab"
-	  ERROR STOP
-	end if
-	h = x(1)
+          print *, "ERROR: van Genuchten function is a function of a single variable h"
+          print *, "       your input data has:", ubound(x,1), "variables"
+          print *, "exited from re_constitutive::mualem_tab"
+          ERROR STOP
+        end if
+        h = x(1)
       end if
       
       
@@ -740,38 +740,38 @@ module RE_constitutive
 
       
       if (h<0) then
-	if (-h/drutes_config%fnc_discr_length < 0.1*huge(1) ) then
-	  pos = int(-h/drutes_config%fnc_discr_length)+1
-	  if (pos <= ubound(Ktab,2)-1) then
-	    dist = -h - (pos - 1)*drutes_config%fnc_discr_length
-	    tmp = (Ktab(layer,pos+1)-Ktab(layer,pos))/drutes_config%fnc_discr_length*dist + Ktab(layer,pos)
-	  else
-	    if (present(quadpnt)) call mualem(pde_loc, layer, quadpnt, scalar = tmp)
-	    if (present(x)) call mualem(pde_loc, layer, x=x, scalar = tmp)
-	    if (.not. tabwarning) then
-	      call write_log(trim(tabmsg))
-	      tabwarning = .true.
-	    end if
-	  end if
-	else
-	  if (.not. intwarning) then
-	    call intoverflow()
-	    intwarning = .true.
-	  end if
-	  if (present(quadpnt)) call mualem(pde_loc, layer, quadpnt_loc, scalar = tmp)
-	  if (present(x)) call mualem(pde_loc, layer, x=x, scalar = tmp)
-	end if 
+        if (-h/drutes_config%fnc_discr_length < 0.1*huge(1) ) then
+          pos = int(-h/drutes_config%fnc_discr_length)+1
+          if (pos <= ubound(Ktab,2)-1) then
+            dist = -h - (pos - 1)*drutes_config%fnc_discr_length
+            tmp = (Ktab(layer,pos+1)-Ktab(layer,pos))/drutes_config%fnc_discr_length*dist + Ktab(layer,pos)
+          else
+            if (present(quadpnt)) call mualem(pde_loc, layer, quadpnt, scalar = tmp)
+            if (present(x)) call mualem(pde_loc, layer, x=x, scalar = tmp)
+            if (.not. tabwarning) then
+              call write_log(trim(tabmsg))
+              tabwarning = .true.
+            end if
+          end if
+        else
+          if (.not. intwarning) then
+            call intoverflow()
+            intwarning = .true.
+          end if
+          if (present(quadpnt)) call mualem(pde_loc, layer, quadpnt_loc, scalar = tmp)
+          if (present(x)) call mualem(pde_loc, layer, x=x, scalar = tmp)
+        end if 
 	 
       else
-	tmp = 1
+        tmp = 1
       end if
 
       if (present(tensor)) then
-	tensor = tmp* vgset(layer)%Ks
+        tensor = tmp* vgset(layer)%Ks
       end if
 
       if (present(scalar)) then
-	scalar = tmp
+        scalar = tmp
       end if
     end subroutine mualem_tab
 
@@ -805,51 +805,51 @@ module RE_constitutive
          
       
       if (present(quadpnt) .and. present(x)) then
-	print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
-	print *, "exited from re_constitutive::dmualem_dh"
-	ERROR stop
-      else if (.not. present(quadpnt) .and. .not. present(x)) then
-	print *, "ERROR: you have not specified either integ point or x value"
+        print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
         print *, "exited from re_constitutive::dmualem_dh"
-	ERROR stop
+        ERROR stop
+      else if (.not. present(quadpnt) .and. .not. present(x)) then
+        print *, "ERROR: you have not specified either integ point or x value"
+        print *, "exited from re_constitutive::dmualem_dh"
+        ERROR stop
       end if
       
       if (present(quadpnt)) then
         quadpnt_loc=quadpnt
-	quadpnt_loc%preproc=.true.
-	h = pde_loc%getval(quadpnt_loc)
+        quadpnt_loc%preproc=.true.
+        h = pde_loc%getval(quadpnt_loc)
       else
       	if (ubound(x,1) /=1) then
-	  print *, "ERROR: van Genuchten function is a function of a single variable h"
-	  print *, "       your input data has:", ubound(x,1), "variables"
-	  print *, "exited from re_constitutive::dmualem_dh"
-	  ERROR STOP
-	end if
-	h = x(1)
+          print *, "ERROR: van Genuchten function is a function of a single variable h"
+          print *, "       your input data has:", ubound(x,1), "variables"
+          print *, "exited from re_constitutive::dmualem_dh"
+          ERROR STOP
+        end if
+        h = x(1)
       end if
       
 
       if (h < 0) then
-	a = vgset(layer)%alpha
-	n = vgset(layer)%n
-	m = vgset(layer)%m
-	tmp = (    (a*(-(a*h))**(-1 + n)*(1 + (-(a*h))**n)**(-1 - m/2.0)* &
-	    (1 - (-(a*h))**(m*n)/(1 + (-(a*h))**n)**m)**2*m*n)/2.0 + &
-	 (2*(1 - (-(a*h))**(m*n)/(1 + (-(a*h))**n)**m)* &
-	    (-(a*(-(a*h))**(-1 + n + m*n)*(1 + (-(a*h))**n)**(-1 - m)*m*n) + &
-	      (a*(-(a*h))**(-1 + m*n)*m*n)/(1 + (-(a*h))**n)**m))/ &
-	  (1 + (-(a*h))**n)**(m/2.0))
+        a = vgset(layer)%alpha
+        n = vgset(layer)%n
+        m = vgset(layer)%m
+        tmp = (    (a*(-(a*h))**(-1 + n)*(1 + (-(a*h))**n)**(-1 - m/2.0)* &
+            (1 - (-(a*h))**(m*n)/(1 + (-(a*h))**n)**m)**2*m*n)/2.0 + &
+         (2*(1 - (-(a*h))**(m*n)/(1 + (-(a*h))**n)**m)* &
+            (-(a*(-(a*h))**(-1 + n + m*n)*(1 + (-(a*h))**n)**(-1 - m)*m*n) + &
+              (a*(-(a*h))**(-1 + m*n)*m*n)/(1 + (-(a*h))**n)**m))/ &
+          (1 + (-(a*h))**n)**(m/2.0))
       else
-	tmp = 0
+        tmp = 0
       end if
 
       if (present(vector_out)) then
 	! must be negative, because the commnon scheme of the CDE problem has negative convection, but RE has positive convection
-	vector_out = -vgset(layer)%Ks(drutes_config%dimen,:) * tmp
+        vector_out = -vgset(layer)%Ks(drutes_config%dimen,:) * tmp
       end if
 
       if (present(scalar)) then
-	scalar = tmp
+        scalar = tmp
       end if
 
     end subroutine dmualem_dh
@@ -882,37 +882,37 @@ module RE_constitutive
 
       
       if (present(quadpnt) .and. present(x)) then
-	print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
-	print *, "exited from re_constitutive::vangen_elast"
-	ERROR stop
-      else if (.not. present(quadpnt) .and. .not. present(x)) then
-	print *, "ERROR: you have not specified either integ point or x value"
+        print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
         print *, "exited from re_constitutive::vangen_elast"
-	ERROR stop
+        ERROR stop
+      else if (.not. present(quadpnt) .and. .not. present(x)) then
+        print *, "ERROR: you have not specified either integ point or x value"
+        print *, "exited from re_constitutive::vangen_elast"
+        ERROR stop
       end if
       
       if (present(quadpnt)) then
         quadpnt_loc=quadpnt
-	quadpnt_loc%preproc=.true.
-	h = pde_loc%getval(quadpnt_loc)
+        quadpnt_loc%preproc=.true.
+        h = pde_loc%getval(quadpnt_loc)
       else
-	if (ubound(x,1) /=1) then
-	  print *, "ERROR: van Genuchten function is a function of a single variable h"
-	  print *, "       your input data has:", ubound(x,1), "variables"
-	  ERROR STOP
-	end if
+      if (ubound(x,1) /=1) then
+        print *, "ERROR: van Genuchten function is a function of a single variable h"
+        print *, "       your input data has:", ubound(x,1), "variables"
+        ERROR STOP
+      end if
       	if (ubound(x,1) /=1) then
-	  print *, "ERROR: van Genuchten function is a function of a single variable h"
-	  print *, "       your input data has:", ubound(x,1), "variables"
-	  print *, "exited from re_constitutive::vangen_elast"
-	  ERROR STOP
-	end if
-	h = x(1)
+          print *, "ERROR: van Genuchten function is a function of a single variable h"
+          print *, "       your input data has:", ubound(x,1), "variables"
+          print *, "exited from re_constitutive::vangen_elast"
+          ERROR STOP
+        end if
+        h = x(1)
       end if
       
       
       if (.not. allocated(pts) ) then
-	allocate(pts(drutes_config%dimen+1, ubound(elements%data,2)))
+        allocate(pts(drutes_config%dimen+1, ubound(elements%data,2)))
       end if
       
       quadpnt_loc%type_pnt = "ndpt"
@@ -921,30 +921,30 @@ module RE_constitutive
       D = drutes_config%dimen
      
       do i=1, ubound(elements%data,2)
-	quadpnt_loc%order = elements%data(quadpnt%element,i)
-	vecino = elements%neighbours(quadpnt%element,i)
-	if (vecino > 0) then
-	  layer_loc = elements%material(vecino,1)
-	else
-	  layer_loc = elements%material(quadpnt%element,1)
-	end if 
-	quadpnt_loc%order = elements%data(quadpnt%element, i)
-	call pde_loc%pde_fnc(1)%dispersion(pde_loc, layer_loc, quadpnt_loc, tensor=Ktmp(1:D, 1:D))
-	pts(D+1, i) = Ktmp(D,D)
-	pts(1:D,i) = nodes%data(elements%data(quadpnt%element,i),1:D)
+        quadpnt_loc%order = elements%data(quadpnt%element,i)
+        vecino = elements%neighbours(quadpnt%element,i)
+        if (vecino > 0) then
+          layer_loc = elements%material(vecino,1)
+        else
+          layer_loc = elements%material(quadpnt%element,1)
+        end if 
+        quadpnt_loc%order = elements%data(quadpnt%element, i)
+        call pde_loc%pde_fnc(1)%dispersion(pde_loc, layer_loc, quadpnt_loc, tensor=Ktmp(1:D, 1:D))
+        pts(D+1, i) = Ktmp(D,D)
+        pts(1:D,i) = nodes%data(elements%data(quadpnt%element,i),1:D)
       end do
       
       
       
       select case(drutes_config%dimen)
-	case(1)
-	  if (pts(1,2)-pts(1,1) > 0) then
-	    dKdz = (pts(2,2)-pts(2,1))/(pts(1,2)-pts(1,1))
-	  else
-	    dKdz = (pts(2,1)-pts(2,2))/(pts(1,1)-pts(1,2))
-	  end if
-	case(2)
-	  call plane_derivative(pts(1,:), pts(2,:), pts(3,:), dKdx, dKdz)
+        case(1)
+          if (pts(1,2)-pts(1,1) > 0) then
+            dKdz = (pts(2,2)-pts(2,1))/(pts(1,2)-pts(1,1))
+          else
+            dKdz = (pts(2,1)-pts(2,2))/(pts(1,1)-pts(1,2))
+          end if
+        case(2)
+          call plane_derivative(pts(1,:), pts(2,:), pts(3,:), dKdx, dKdz)
       end select
       
       dKdz = -dKdz
@@ -955,7 +955,7 @@ module RE_constitutive
 
 
     !> \brief convection term for the Richards equation for axisymmetric problems
-    !! the vertical convection is equal as for the Richards equatio in standard coordinates, the horizontal
+    !! the vertical convection is equal as for the Richards equation in standard coordinates, the horizontal
     !! convection equals
     !! [\ \frac{1}{r}K(h)
     !<
@@ -984,60 +984,58 @@ module RE_constitutive
       
       real(kind=rkind), dimension(2) :: coord
 
-      real(kind=rkind) :: a,n,m, tmp, h, K, flux
-      integer :: proc
+      real(kind=rkind) :: a,n,m, tmp, h
+      real(kind=rkind), dimension(3,3) :: K
+      integer :: proc, D
       type(integpnt_str) :: quadpnt_loc    
       
+      D = drutes_config%dimen
 
       if (present(quadpnt) .and. present(x)) then
-	print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
-	print *, "exited from re_constitutive::dmualem_dh"
-	ERROR stop
-      else if (.not. present(quadpnt) .and. .not. present(x)) then
-	print *, "ERROR: you have not specified either integ point or x value"
+        print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
         print *, "exited from re_constitutive::dmualem_dh"
-	ERROR stop
+        ERROR stop
+      else if (.not. present(quadpnt) .and. .not. present(x)) then
+        print *, "ERROR: you have not specified either integ point or x value"
+              print *, "exited from re_constitutive::dmualem_dh"
+        ERROR stop
       end if
       
       if (present(quadpnt)) then
         quadpnt_loc=quadpnt
-	quadpnt_loc%preproc=.true.
-	h = pde_loc%getval(quadpnt_loc)
+        quadpnt_loc%preproc=.true.
+        h = pde_loc%getval(quadpnt_loc)
       else
       	if (ubound(x,1) /=1) then
-	  print *, "ERROR: van Genuchten function is a function of a single variable h"
-	  print *, "       your input data has:", ubound(x,1), "variables"
-	  print *, "exited from re_constitutive::dmualem_dh"
-	  ERROR STOP
-	end if
-	h = x(1)
+          print *, "ERROR: van Genuchten function is a function of a single variable h"
+          print *, "       your input data has:", ubound(x,1), "variables"
+          print *, "exited from re_constitutive::dmualem_dh"
+          ERROR STOP
+        end if
+        h = x(1)
       end if
       
 
       select case (drutes_config%name)
-	case("RE_rot")
-	  if (drutes_config%fnc_method == 0) then
-	    call dmualem_dh(pde_loc, layer, x=(/h/), vector_out = vector_out)
-	  else
-	    call dmualem_dh_tab(pde_loc, layer, x=(/h/), vector_out = vector_out)
-	  end if
-	case("RErotH")
-	  vector_out = 0
+        case("REstd")
+          if (drutes_config%fnc_method == 0) then
+            call dmualem_dh(pde_loc, layer, x=(/h/), vector_out = vector_out)
+          else
+            call dmualem_dh_tab(pde_loc, layer, x=(/h/), vector_out = vector_out)
+          end if
+        case("RE")
+          vector_out = 0
       end select
       
       tmp = vector_out(2)
       
       call getcoor(quadpnt, coord)
       
-      call pde_loc%flux(layer, quadpnt, vector_out=vector_out)
+      call pde_loc%pde_fnc(pde_loc%order)%dispersion(pde_loc, layer, quadpnt, tensor=K(1:D, 1:D))
       
       vector_out(2) = tmp
-      
-!       if (abs(coord(2)) < -12.5 ) then
-	vector_out(1) =  1.0_rkind/coord(1)*vector_out(1)	
-!       else
-! 	vector_out(1) = 0
-!       end if
+
+      vector_out(1) =  1.0_rkind/coord(1)*K(1,1)
 
     end subroutine convection_rerot
     

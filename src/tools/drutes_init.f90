@@ -14,8 +14,8 @@
 ! along with DRUtES. If not, see <http://www.gnu.org/licenses/>.
 
 module drutes_init
-  public  :: parse_globals, init_observe, init_measured, get_cmd_options
-  private :: set_global_vars,  open_obs_unit, pde_constructor, init_obstimes
+  public  :: parse_globals, init_observe, init_measured, get_cmd_options, pde_constructor
+  private :: set_global_vars,  open_obs_unit, init_obstimes
 
 
   contains
@@ -30,6 +30,7 @@ module drutes_init
       use read_inputs
       use readtools
       use debug_tools
+      use printtools
 
 
       integer :: i_err, i
@@ -52,18 +53,9 @@ module drutes_init
 	  
       end if
       
-      write(unit=logfile, fmt=*)  "  _____  _____  _    _ _   ______  _____ "
-      write(unit=logfile, fmt=*)  " |  __ \|  __ \| |  | | | |  ____|/ ____|"
-      write(unit=logfile, fmt=*)  " | |  | | |__) | |  | | |_| |__  | (___  "
-      write(unit=logfile, fmt=*)  " | |  | |  _  /| |  | | __|  __|  \___ \ "
-      write(unit=logfile, fmt=*)  " | |__| | | \ \| |__| | |_| |____ ____) | "
-      write(unit=logfile, fmt=*)  " |_____/|_|  \_\\____/ \__|______|_____/ "
-      
-      write(unit=logfile, fmt=*)  " "
-      write(unit=logfile, fmt=*)  " "
-      write(unit=logfile, fmt=*)  " "
+      call print_logo(logfile)
     
-      write(unit=logfile, fmt=*, iostat = i_err) "DRUtES is initialising, reading input files"
+      write(unit=logfile, fmt=*, iostat = i_err) "DRUtES is initializing, reading input files"
 
       call find_unit(file_itcg, 2000)
 
@@ -144,23 +136,12 @@ module drutes_init
                 ERROR STOP
               end if
               call read_2dmesh_gmsh()
-            case default
-              write(unit=terminal, fmt=*) "INCORRECT mesh type definition"
-              write(unit=terminal, fmt=*)"you have defined value:", drutes_config%mesh_type
-              write(unit=terminal, fmt=*) "the available options are: 1 - internal mesh generator" 
-              write(unit=terminal, fmt=*) "   (very simple uniform meshes, for debuging only"
-              write(unit=terminal, fmt=*)"                           2 - t3d mesh generator"
-              write(unit=terminal, fmt=*)"                           3 - gmsh mesh generator"
-              write(unit=terminal, fmt=*)"exiting, called from drutes_init::parse_globals"
-              error STOP
           end select
         case default
           write(unit=terminal, fmt=*)"ERROR: unsupported problem dimension, the specified dimension was: ", drutes_config%dimen
           write(unit=terminal, fmt=*)"currently only 1D and 2D is supported"
           ERROR STOP 
       end select
-
-      call pde_constructor(pde_common%processes)
       
 
     end subroutine parse_globals
@@ -355,45 +336,31 @@ module drutes_init
 
       integer :: i_err
       
-      
-      select case (adjustl(trim(drutes_config%name)))
-	case("RE_std", "RE_rot", "REstdH", "RErotH", "boussi", "ADEstd", "heat")
-	  pde_common%processes = 1
-	case("ADE_RE_std", "ADE_REstdH", "ADE_RE_rot", "ADE_RErotH", "ADEstd_kinsorb", "Re_dual_totH")
-	  pde_common%processes = 2
-	case("RE_mod", "REtest", "ADE_RE_std_kinsorb", "ADE_REstdH_kinsorb", "ADE_RE_rot_kinsorb", &
-	     "ADE_RErotH_kinsorb")
-	  pde_common%processes = 3
-	case default
-          print *, "your new model: ", trim(drutes_config%name), " requires definition of the number of the coupled processes"
-          print *, "exited from drutes_init::set_global_vars"
-          ERROR stop
-      end select
 
       backup_runs = 0
 
       !set the terminal output unit ID
       if (.not. (terminal_assigned)) then
-	select case(print_level)
-	  case(0)
-	    terminal = 6
-	  case(1,-1)
-	    call find_unit(terminal, 2000)
-	    if (print_level == 1) then
-	      open(unit=terminal, file="out/screen.log", action="write", status="replace", iostat=i_err)
-	      if (i_err /=0) then
-		print *, "ERROR: check if directory out/ exist!"
-		ERROR STOP
-	      end if
-	    else
-	      open(unit=terminal, file="/dev/null", action="write", status="replace", iostat=i_err)
-	      if (i_err /=0) then
-		print *, "ERROR: file /dev/null does not exist, are you running GNU/Linux based os?"
-		print *, "       if not do not set print level -1 in drutes.conf/global.conf"
-		ERROR STOP
-	      end if
-	    end if
-	end select
+        select case(print_level)
+          case(0)
+            terminal = 6
+          case(1,-1)
+            call find_unit(terminal, 2000)
+            if (print_level == 1) then
+              open(unit=terminal, file="out/screen.log", action="write", status="replace", iostat=i_err)
+              if (i_err /=0) then
+                print *, "ERROR: check if directory out/ exist!"
+                ERROR STOP
+              end if
+            else
+              open(unit=terminal, file="/dev/null", action="write", status="replace", iostat=i_err)
+              if (i_err /=0) then
+                print *, "ERROR: file /dev/null does not exist, are you running GNU/Linux based os?"
+                print *, "       if not do not set print level -1 in drutes.conf/global.conf"
+                ERROR STOP
+              end if
+            end if
+        end select
       end if
 
       solver_call = 0
@@ -423,34 +390,34 @@ module drutes_init
       observation_array(:)%element = 0
       
       do i=1, ubound(observation_array,1)
-	allocate(observation_array(i)%cumflux(ubound(pde,1)))
-	observation_array(i)%cumflux = 0.0_rkind
+        allocate(observation_array(i)%cumflux(ubound(pde,1)))
+        observation_array(i)%cumflux = 0.0_rkind
       end do
       
 
       do i = 1, ubound(observation_array,1)
-	do j=1, elements%kolik
-	  do k=1, ubound(elements%data,2)
-	    domain(k,:) = nodes%data(elements%data(j,k),:)
-	  end do
-	  if (inside(domain, observation_array(i)%xyz)) then
-	    observation_array(i)%element = j
-	    EXIT
-	  else
-	    CONTINUE
-	  end if
-	end do
+        do j=1, elements%kolik
+          do k=1, ubound(elements%data,2)
+            domain(k,:) = nodes%data(elements%data(j,k),:)
+          end do
+          if (inside(domain, observation_array(i)%xyz)) then
+            observation_array(i)%element = j
+            EXIT
+          else
+            CONTINUE
+          end if
+        end do
       end do
 
       do i=1, ubound(observation_array,1)
-	if (observation_array(i)%element == 0) then
-	  print *, "ERROR: observation point: ", i, "with coordinates: ", observation_array(i)%xyz, "lies out of domain"
-	  error_stop = .true.
-	end if
+        if (observation_array(i)%element == 0) then
+          print *, "ERROR: observation point: ", i, "with coordinates: ", observation_array(i)%xyz, "lies out of domain"
+          error_stop = .true.
+        end if
       end do
 
       if (error_stop) then
-	ERROR STOP "error in observation points definition, check drutes.conf/global.conf"
+        ERROR STOP "error in observation points definition, check drutes.conf/global.conf"
       end if
 
       
@@ -460,17 +427,17 @@ module drutes_init
 
 
       do point=1, ubound(observation_array,1)
-	do i=1, ubound(pde,1)
-	  call find_unit(pde(i)%obspt_unit(point),5000)
-	  dec = 0
-	  do 
-	    dec = dec+1
-	    if (point/(10**dec) < 1) then
-	      EXIT
-	    end if
-	  end do
-	  call open_obs_unit(pde(i), point, dec)
-	end do
+        do i=1, ubound(pde,1)
+          call find_unit(pde(i)%obspt_unit(point),5000)
+          dec = 0
+          do 
+            dec = dec+1
+            if (point/(10**dec) < 1) then
+              EXIT
+            end if
+          end do
+          call open_obs_unit(pde(i), point, dec)
+        end do
       end do
 
       deallocate(domain)
@@ -493,13 +460,13 @@ module drutes_init
       
       act_dist = huge(act_dist)
       do i=1, ubound(measured_pts,1)
-	do j=1, nodes%kolik
-	  if (dist(measured_pts(i)%xyz, nodes%data(j,:)) < act_dist) then
-	    measured_pts(i)%node = j
-	    act_dist = dist(measured_pts(i)%xyz, nodes%data(j,:))
-	    if (act_dist <= epsilon(act_dist)) EXIT
-	  end if
-	end do
+        do j=1, nodes%kolik
+          if (dist(measured_pts(i)%xyz, nodes%data(j,:)) < act_dist) then
+            measured_pts(i)%node = j
+            act_dist = dist(measured_pts(i)%xyz, nodes%data(j,:))
+            if (act_dist <= epsilon(act_dist)) EXIT
+          end if
+        end do
       end do
       
       outer_boundaries = maxval(nodes%edge)
@@ -520,6 +487,7 @@ module drutes_init
       use globals
       use global_objs
       use pde_objs
+      use printtools
 
       class(pde_str), intent(in out) :: pde_loc
       integer(kind=ikind), intent(in) :: name
@@ -536,21 +504,23 @@ module drutes_init
       write(unit=pde_loc%obspt_filename(name), fmt=forma) "out/obspt_", adjustl(trim(pde_loc%problem_name(1))), "-", name, ".out"
      
       if (.not. drutes_config%run_from_backup) then
-	open(unit=pde_loc%obspt_unit(name), file=adjustl(trim(pde_loc%obspt_filename(name))), action="write", status="replace")
-	
-	write(unit=pde_loc%obspt_unit(name), fmt=*) "#        time                      ", &
-	  trim(pde_loc%solution_name(2)), "            ", &
-	!  trim(pde_loc%solution_name(2)), " (avg over el.)", &
-	 "       ", trim(pde_loc%mass_name(2)), "       ",&
-	  trim(pde_loc%flux_name(2)), "   in    ", xyz(1:drutes_config%dimen), "     directions", "   cumulative flux"
-	write(unit=pde_loc%obspt_unit(name), fmt=*) &
-	  "#-----------------------------------------------------------------------------------------------"
-	write(unit=pde_loc%obspt_unit(name), fmt=*)
-	!J added 
-! 	close(unit=pde_loc%obspt_unit(name))
-      else
-	open(unit=pde_loc%obspt_unit(name), file=adjustl(trim(pde_loc%obspt_filename(name))), &
-              action="write", access="append", status="old")
+        open(unit=pde_loc%obspt_unit(name), file=adjustl(trim(pde_loc%obspt_filename(name))), action="write", status="replace")
+        
+        call print_logo(pde_loc%obspt_unit(name))
+        
+        write(unit=pde_loc%obspt_unit(name), fmt=*) "#        time                      ", &
+          trim(pde_loc%solution_name(2)), "            ", &
+        !  trim(pde_loc%solution_name(2)), " (avg over el.)", &
+         "       ", trim(pde_loc%mass_name(2)), "       ",&
+          trim(pde_loc%flux_name(2)), "   in    ", xyz(1:drutes_config%dimen), "     directions", "   cumulative flux"
+        write(unit=pde_loc%obspt_unit(name), fmt=*) &
+          "#-----------------------------------------------------------------------------------------------"
+        write(unit=pde_loc%obspt_unit(name), fmt=*)
+        !J added 
+      ! 	close(unit=pde_loc%obspt_unit(name))
+            else
+        open(unit=pde_loc%obspt_unit(name), file=adjustl(trim(pde_loc%obspt_filename(name))), &
+                    action="write", access="append", status="old")
       end if
 
 	  
@@ -572,10 +542,10 @@ module drutes_init
       tables(:,1) = observe_time(1:ubound(tables,1))%value
       
       if (observe_info%anime) then
-	dt = end_time/observe_info%nframes
-	do i=1, observe_info%nframes
-	  tables(i + ubound(observe_time,1) - observe_info%nframes,1) = i*dt
-	end do	
+        dt = end_time/observe_info%nframes
+        do i=1, observe_info%nframes
+          tables(i + ubound(observe_time,1) - observe_info%nframes,1) = i*dt
+        end do	
       end if
  
       curtime = 0.0
@@ -583,44 +553,44 @@ module drutes_init
       
       i=0
       do
-	where (tables(:,1) - curtime > epsilon(curtime))
-	  tables(:,2) = tables(:,1) - curtime
-	else where
-	  tables(:,2) = huge(dt)
-	end where
-	
-	call loc%nrfill(1_ikind*minloc((tables(:,2)),1))
-	
-	do j=1, ubound(observe_time,1)
-	  if (abs(tables(j,1) - tables(loc%data(1),1)) < epsilon(dt) .and. j/=loc%data(1)) then
-	    call loc%nrfill(j)
-	  end if
-	end do
-	
-	do j=1, loc%pos
-	  insert = loc%data(j)
-	  i=min(i+1, ubound(observe_time,1))
-	  
-	  if (i == 0) then
-	    RETURN
-	  end if
-	  
-	  if (insert >  ubound(observe_time,1) - observe_info%nframes .and. observe_info%anime) then
-	    observe_time(i)%name = "avi"
-	  else
-	    observe_time(i)%name = "obs"
-	  end if
-	  
-	  observe_time(i)%value = tables(insert,1)
-	  curtime = observe_time(i)%value
-	end do
+        where (tables(:,1) - curtime > epsilon(curtime))
+          tables(:,2) = tables(:,1) - curtime
+        else where
+          tables(:,2) = huge(dt)
+        end where
+        
+        call loc%nrfill(1_ikind*minloc((tables(:,2)),1))
+        
+        do j=1, ubound(observe_time,1)
+          if (abs(tables(j,1) - tables(loc%data(1),1)) < epsilon(dt) .and. j/=loc%data(1)) then
+            call loc%nrfill(j)
+          end if
+        end do
+        
+        do j=1, loc%pos
+          insert = loc%data(j)
+          i=min(i+1, ubound(observe_time,1))
+          
+          if (i == 0) then
+            RETURN
+          end if
+          
+          if (insert >  ubound(observe_time,1) - observe_info%nframes .and. observe_info%anime) then
+            observe_time(i)%name = "avi"
+          else
+            observe_time(i)%name = "obs"
+          end if
+          
+          observe_time(i)%value = tables(insert,1)
+          curtime = observe_time(i)%value
+        end do
 
-	call loc%clear()
-	
-	if (i==ubound(observe_time,1)) then
-	  EXIT
-	end if
-	
+        call loc%clear()
+        
+        if (i==ubound(observe_time,1)) then
+          EXIT
+        end if
+    
       end do
       
     end subroutine init_obstimes

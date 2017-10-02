@@ -33,7 +33,7 @@ module ade_globals
 
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  !!!!!!!!!!!!!--contaminant.conf/matrix.conf variables--!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !!!!!!!!!!!!!--contaminant.conf variables--!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !> structure of solute parameters
   type(soluteXsoil), dimension(:), allocatable, public :: adepar
@@ -47,6 +47,8 @@ module ade_globals
   integer(kind=ikind), public :: isotherm
   
   logical, public :: with_richards
+  
+  integer(kind=ikind) :: no_solutes, no_solids
   
   
   integer, public :: file_contaminant

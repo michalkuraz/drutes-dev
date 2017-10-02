@@ -39,10 +39,11 @@ module heat_reader
       call find_unit(file_heat, 200)
       open(unit = file_heat, file="drutes.conf/heat/heat.conf", action="read", status="old", iostat=i_err)
       if (i_err /= 0) then
-	print *, "missing drutes.conf/heat/heat.conf file"
-	ERROR STOP
+        print *, "missing drutes.conf/heat/heat.conf file"
+        ERROR STOP
       end if
      
+      call fileread(with_richards, file_heat)
 
       allocate(heatpar(maxval(elements%material)))
       

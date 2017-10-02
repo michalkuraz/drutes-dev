@@ -36,6 +36,7 @@ program main
   use debug_tools
   use re_analytical
   use objfnc
+  use printtools
   
   character(len=256) :: writer
   character(len=2)   :: ch
@@ -62,6 +63,8 @@ program main
     call get_cmd_options()
     
     terminal = 6
+    
+    call print_logo()
     
     write(unit=terminal, fmt=*)"---------------------------------------------------------------------------"
     write(unit=terminal, fmt=*)"This program is free software: you can redistribute it and/or modify"

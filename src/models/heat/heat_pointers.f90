@@ -2,10 +2,38 @@
 !! \f[ C\frac{\partial T}{\partial t} = \mathbf{\lambda} \Delta T - C_w \nabla \cdot \vec{q} T  \f]
 !<
 module heat_pointers
-  public :: heat
+  public :: heat, heat_processes
 
   
   contains
+  
+    subroutine heat_processes(processes)
+      use typy
+      use readtools
+      use heat_globals
+      use core_tools
+      
+      integer(kind=ikind) processes
+      integer :: heatconf, ierr
+      
+      open(newunit=heatconf, file="drutes.conf/heat/heat.conf", action="read", status="old", iostat=ierr)
+      
+      if (ierr /= 0) then
+        call write_log("Unable to open drutes.conf/heat/heat.conf, exiting....")
+        ERROR STOP
+      end if
+      
+      call fileread(with_richards, heatconf)
+      
+      close(heatconf)
+      
+      if (with_richards) then
+        processes = 2
+      else
+        processes = 1
+      end if
+      
+    end subroutine heat_processes
   
     subroutine heat(pde_loc)
       use typy
@@ -32,12 +60,12 @@ module heat_pointers
       
 	  
       do i=lbound(pde_loc%bc,1), ubound(pde_loc%bc,1)
-	select case(pde_loc%bc(i)%code)
-	  case(1)
-	    pde_loc%bc(i)%value_fnc => heat_dirichlet
-	  case(2)
-	    pde_loc%bc(i)%value_fnc => heat_neumann
-	end select
+        select case(pde_loc%bc(i)%code)
+          case(1)
+            pde_loc%bc(i)%value_fnc => heat_dirichlet
+          case(2)
+            pde_loc%bc(i)%value_fnc => heat_neumann
+        end select
       end do    
 	
       pde_loc%flux => heat_flux

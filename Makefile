@@ -3,7 +3,7 @@
 #options for debugging, use for development  
 c=gfortran -fimplicit-none  -fcoarray=single -fbounds-check -fbacktrace -g -g3 -fdefault-real-8 -O0 -finit-real=nan 
 
-#options for fast execution, use for production purposes on well debugged versions
+#options for optimized compilation, use for production purposes on well debugged versions
 # c=gfortran -fimplicit-none  -fcoarray=single -fdefault-real-8 -O3 -finit-real=nan -ffpe-summary=none
 
 d=drutes_obj-`date -I`
@@ -233,7 +233,7 @@ syncup:
 	cat /etc/hostname > sync.stamp && date >> sync.stamp && rsync -avztu -e ssh --delete --exclude 'out' --exclude '*.o' --exclude '*.mod' --exclude 'bin'  --exclude '*~' --exclude '*attr' --exclude '.git' ./ miguel@cml.fsv.cvut.cz:~/drutes-obj/
 
 syncdown:
-	tar -czf /tmp/git.tgz .git && rsync -avztu -e ssh --delete --exclude 'out/*' miguel@cml.fsv.cvut.cz:~/drutes-obj/ ./ && echo "last sync:" && cat sync.stamp && tar -xzf /tmp/git.tgz
+	tar -czf /tmp/git.tgz .git && rsync -avztu -e ssh --delete --exclude 'out/*' miguel@cml.fsv.cvut.cz:~/drutes-obj/ ./ && echo "last sync:" && cat sync.stamp && rm -rf .git && tar -xzf /tmp/git.tgz
 		
 pull-dd:
 	git checkout dev-dd && git pull https://www.github.com/michalkuraz/drutes-dev dev-dd

@@ -22,7 +22,7 @@ module read_inputs
       character(len=4096) :: filename
       character(len=8192) :: msg
       integer :: local, global
-      character(len=256), dimension(6) :: probnames
+      character(len=256), dimension(7) :: probnames
       character(len=2) :: dimensions
       
       if (.not. www) then
@@ -35,13 +35,16 @@ module read_inputs
 
       
       write(msg, *) "Incorrect option for problem type, the available options are:", new_line("a"),  new_line("a"), new_line("a"),&
-        "   REstdH = Richards equation, primary solution is total hydraulic head H",&
+        "   RE = Richards equation, primary solution is total hydraulic head H",&
+        new_line("a"), new_line("a"),  &
+        "   REstd = Richards equation, primary solution is pressure head h, use for homogeneous porous media only, & 
+            and for EXPERIMENTAL purposes ONLY! , otherwise set RE", &
         new_line("a"), new_line("a"),  &
         "   boussi = Boussinesq equation for sloping land (1877)", &
         new_line("a"),  new_line("a"), &
-        "   ADEstd = advection dispersion reaction equation (transport of solutes)",   &
+        "   ADE = advection dispersion reaction equation (transport of solutes)",   &
         new_line("a"),  new_line("a"), &
-        "   Re_dual_totH = Richards equation dual porosity with total hydraulic head", &
+        "   Re_dual = Richards equation dual porosity with total hydraulic head", &
         new_line("a"),  new_line("a"), &
         "   heat = Heat conduction equation (Sophoclea, 1979)", &
         new_line("a"),  new_line("a"), &
@@ -49,11 +52,12 @@ module read_inputs
 	
 
       probnames(1) = "REtest"
-      probnames(2) = "REstdH"
+      probnames(2) = "RE"
       probnames(3) = "boussi"
-      probnames(4) = "ADEstd"
-      probnames(5) = "Re_dual_totH" 
+      probnames(4) = "ADE"
+      probnames(5) = "Re_dual" 
       probnames(6) = "heat"
+      probnames(7) = "REstd" 
 	
       call fileread(drutes_config%name, local, trim(msg), options=probnames)
 
@@ -76,8 +80,16 @@ module read_inputs
 		   '//NEW_LINE('A')//'    But your domain was specified for: ', drutes_config%dimen, "D"
         call file_error(local, msg)
       end if
+      
 
-      call fileread(drutes_config%mesh_type, local, ranges=(/1_ikind,3_ikind/))
+      write(unit=msg, fmt=*) "INCORRECT mesh type definition", new_line("a"), &
+       "the available options are: 1 - internal mesh generator" , new_line("a"), &
+       "   (very simple uniform meshes, for debuging only", new_line("a"), &
+       "                           2 - t3d mesh generator", new_line("a"), &
+       "                           3 - gmsh mesh generator"
+
+
+      call fileread(drutes_config%mesh_type, local,msg,ranges=(/1_ikind,3_ikind/))
       
       call fileread(max_itcount, local, ranges=(/1_ikind, huge(1_ikind)/), &
       errmsg="maximal number of iterations must be positive, greater than 1, &
@@ -256,9 +268,9 @@ module read_inputs
       allocate(deltax_1D(0:n, 3))
 
       do i=1, n
-	call comment(file_mesh)
-	read(unit=file_mesh, fmt=*, iostat = ierr) deltax_1D(i,1), deltax_1D(i,2), deltax_1D(i,3)
-	  if (ierr /= 0) call file_error(file_mesh)
+        call comment(file_mesh)
+        read(unit=file_mesh, fmt=*, iostat = ierr) deltax_1D(i,1), deltax_1D(i,2), deltax_1D(i,3)
+        if (ierr /= 0) call file_error(file_mesh)
       end do
       
       
@@ -283,8 +295,8 @@ module read_inputs
       allocate(materials_1D(n,3))
 
       do i=1,n
-	 call comment(file_mesh)
-	 read(unit=file_mesh, fmt=* , iostat=ierr)  materials_1D(i,:) ; if (ierr /= 0) call file_error(file_mesh)
+       call comment(file_mesh)
+       read(unit=file_mesh, fmt=* , iostat=ierr)  materials_1D(i,:) ; if (ierr /= 0) call file_error(file_mesh)
       end do
       
 
@@ -297,8 +309,8 @@ module read_inputs
       
       
       if (maxval(abs(materials_1D)) < length_1D) then
-	msg = "ERROR! material description does not cover the entire domain, check 1D domain length value"
-	call file_error(file_mesh, msg)
+        msg = "ERROR! material description does not cover the entire domain, check 1D domain length value"
+        call file_error(file_mesh, msg)
       end if
 	
       call simegen1D()
@@ -343,9 +355,9 @@ module read_inputs
       
 
       do i=1, edges
-	call comment(file_mesh)
-	read(unit=file_mesh, fmt=*, iostat = ierr) xy(i,1,:); if(ierr /= 0) call file_error(file_mesh)
-	read(unit=file_mesh, fmt=*, iostat = ierr) xy(i,2,:); if(ierr /= 0) call file_error(file_mesh)
+        call comment(file_mesh)
+        read(unit=file_mesh, fmt=*, iostat = ierr) xy(i,1,:); if(ierr /= 0) call file_error(file_mesh)
+        read(unit=file_mesh, fmt=*, iostat = ierr) xy(i,2,:); if(ierr /= 0) call file_error(file_mesh)
       end do
 	
       call simegen2d(width, length, density, xy, center_coor)
@@ -378,21 +390,21 @@ module read_inputs
       call mesh_allocater()
 
       do i=1, nodes%kolik
-	call comment(file_mesh)
-	read(unit=file_mesh, fmt=*) nodes%id(i), nodes%data(i,:), ch, ch, ch, nodes%edge(i) 
-	if (nodes%edge(i) > 100) then
-	  CONTINUE
-	else
-	  nodes%edge(i) = 0
-	end if
+        call comment(file_mesh)
+        read(unit=file_mesh, fmt=*) nodes%id(i), nodes%data(i,:), ch, ch, ch, nodes%edge(i) 
+        if (nodes%edge(i) > 100) then
+          CONTINUE
+        else
+          nodes%edge(i) = 0
+        end if
       end do
       
    
     
       do i=1, elements%kolik
-	call comment(file_mesh)
-	read(unit=file_mesh, fmt=*) elements%id(i), elements%data(i,:), ch, ch, elements%material(i,1)
-	elements%material(i,1) = elements%material(i,1) ! - 10000
+        call comment(file_mesh)
+        read(unit=file_mesh, fmt=*) elements%id(i), elements%data(i,:), ch, ch, elements%material(i,1)
+        elements%material(i,1) = elements%material(i,1) ! - 10000
       end do
      
 
@@ -424,21 +436,21 @@ module read_inputs
       read(unit=file_mesh, fmt=*, iostat=i_err) ch
 !       
       if (i_err == 0) then
-	if (adjustl(trim(ch)) == "materials.conf") then
-	  use_filemat=.true.
-	end if
+        if (adjustl(trim(ch)) == "materials.conf") then
+          use_filemat=.true.
+        end if
       end if
       
       do
-	read(unit=file_mesh, fmt=*) ch
-	if (trim(ch) == "$Nodes") EXIT
+        read(unit=file_mesh, fmt=*) ch
+        if (trim(ch) == "$Nodes") EXIT
       end do
       
       read(unit=file_mesh, fmt=*) nodes%kolik
 
       do 
-	read(unit=file_mesh, fmt=*) ch
-	if (trim(ch) == "$Elements") EXIT
+        read(unit=file_mesh, fmt=*) ch
+        if (trim(ch) == "$Elements") EXIT
       end do
 
       read(unit=file_mesh, fmt=*) itmp
@@ -446,41 +458,41 @@ module read_inputs
       elements%kolik = 0
       
       do i=1, itmp
-	read(unit=file_mesh, fmt=*) ch, itmp2
-	if (itmp2 == 2) then
-	  elements%kolik = elements%kolik + 1
-	end if
+        read(unit=file_mesh, fmt=*) ch, itmp2
+        if (itmp2 == 2) then
+          elements%kolik = elements%kolik + 1
+        end if
       end do
       
       call mesh_allocater()
 
             
       do 
-	itmp = ftell(file_mesh)
-	backspace(unit=file_mesh, iostat=i_err)
-	jtmp = ftell(file_mesh)
-	if(itmp == jtmp) EXIT
+        itmp = ftell(file_mesh)
+        backspace(unit=file_mesh, iostat=i_err)
+        jtmp = ftell(file_mesh)
+        if(itmp == jtmp) EXIT
       end do
   
   
       do
-	read(unit=file_mesh, fmt=*) ch
-	if (trim(ch) == "$Nodes") then
-	  read(unit=file_mesh, fmt=*) ch
-	  EXIT
-	end if
+        read(unit=file_mesh, fmt=*) ch
+        if (trim(ch) == "$Nodes") then
+          read(unit=file_mesh, fmt=*) ch
+          EXIT
+        end if
       end do
       
       do i=1, nodes%kolik
-	read(unit=file_mesh, fmt=*) itmp,  nodes%data(i,:)
+        read(unit=file_mesh, fmt=*) itmp,  nodes%data(i,:)
       end do
       
       do 
-	read(unit=file_mesh, fmt=*) ch
-	if (trim(ch) == "$Elements") then
-	  read(unit=file_mesh, fmt=*) ch
-	  EXIT
-	end if
+        read(unit=file_mesh, fmt=*) ch
+        if (trim(ch) == "$Elements") then
+          read(unit=file_mesh, fmt=*) ch
+          EXIT
+        end if
       end do
       
       jtmp = 0
@@ -488,137 +500,132 @@ module read_inputs
       nodes%edge = 0
       
       do 
-	read(unit=file_mesh, fmt=*, iostat=i_err) ch, itmp
-	if (ch == "$EndElements") then
-	  EXIT
-	end if
-	backspace(file_mesh, iostat = i_err)
-	if (i_err /= 0) then
-	  print *, "Something wrong with your GMSH input file"
-	  print *, "called from read_inputs::read_2dmesh_gmsh"
-	  STOP
-	end if
+        read(unit=file_mesh, fmt=*, iostat=i_err) ch, itmp
+        if (ch == "$EndElements") then
+          EXIT
+        end if
+        backspace(file_mesh, iostat = i_err)
+        if (i_err /= 0) then
+          print *, "Something wrong with your GMSH input file"
+          print *, "called from read_inputs::read_2dmesh_gmsh"
+          STOP
+        end if
 
-	
-	select case(itmp)
-	  case(1)
-	    read(unit=file_mesh, fmt=*) k, l, i, edge, j,  nd1, nd2
-	    if (i > 2) then
-	      call write_log("number of tags for edge must be equal 1, in mesh file it equals", int1=i)
-	      call write_log("update your GMSH input file!")
-	      allocate(tmp_array(i-1))
-	      backspace(file_mesh)
-	      read(unit=file_mesh, fmt=*) k, l, i, edge,  tmp_array,  nd1, nd2
-	      edge = tmp_array(1)
-	      call write_log(text="tags with positions greater than 1 were ignored")
-	      deallocate(tmp_array)
-	    end if
-	    
-! 	    print *, tmp_array, nd1, nd2 ; stop
-! 	    print *, itmp, jtmp, i, tmp_array,  nd1, nd2
-	    
-	    nodes%edge(nd1) = edge 
-	    nodes%edge(nd2) = edge 
-	    
-	  case(2)
-	    jtmp = jtmp + 1
-	    read(unit=file_mesh, fmt=*) k, l, i, elements%material(jtmp,1), j,  elements%data(jtmp,:)
-	    if (i /= 2) then
-	      call write_log("number of tags for element must be equal 2")
-	      call write_log("update your GMSH input file!")
-	      if (i > pde_common%processes + 1) then
-		
-		call write_log("the number of tags is greater than the number of solution components")
-		
-		if (allocated(tmp_array)) deallocate(tmp_array)
-		
-		allocate(tmp_array(i-1))
-		
-		backspace(file_mesh)
-		read(unit=file_mesh, fmt=*) k, l, i, elements%material(jtmp,:), tmp_array, elements%data(jtmp,:)
-		elements%material(jtmp,:) = tmp_array(1:ubound(elements%material,2))
-		call write_log(text="tags with position", int1=1_ikind*(ubound(elements%material,2)+1), &
-		    text2="were ignored")
-		deallocate(tmp_array)
-	      else
-		call write_log("the number of tags is lower than the number of solution components, I don't know what to do :(")
-	        print *, "called from read_inputs::read_2dmesh_gmsh"
-	        error STOP
-	      end if
-	    end if
-	      
-	  case default
-	    print *, "your GMSH input file contains unsupported element type"
-	    print *, "called from read_inputs::read_2dmesh_gmsh"
-	    STOP
-	 end select
+        
+        select case(itmp)
+          case(1)
+            read(unit=file_mesh, fmt=*) k, l, i, edge, j,  nd1, nd2
+            if (i > 2) then
+              call write_log("number of tags for edge must be equal 1, in mesh file it equals", int1=i)
+              call write_log("update your GMSH input file!")
+              allocate(tmp_array(i-1))
+              backspace(file_mesh)
+              read(unit=file_mesh, fmt=*) k, l, i, edge,  tmp_array,  nd1, nd2
+              edge = tmp_array(1)
+              call write_log(text="tags with positions greater than 1 were ignored")
+              deallocate(tmp_array)
+            end if
+
+            nodes%edge(nd1) = edge 
+            nodes%edge(nd2) = edge 
+            
+          case(2)
+            jtmp = jtmp + 1
+            read(unit=file_mesh, fmt=*) k, l, i, elements%material(jtmp,1), j,  elements%data(jtmp,:)
+            if (i /= 2) then
+              call write_log("number of tags for element must be equal 2")
+              call write_log("update your GMSH input file!")
+              if (i > pde_common%processes + 1) then
+          
+              call write_log("the number of tags is greater than the number of solution components")
+              
+              if (allocated(tmp_array)) deallocate(tmp_array)
+              
+                allocate(tmp_array(i-1))
+                
+                backspace(file_mesh)
+                read(unit=file_mesh, fmt=*) k, l, i, elements%material(jtmp,:), tmp_array, elements%data(jtmp,:)
+                elements%material(jtmp,:) = tmp_array(1:ubound(elements%material,2))
+                call write_log(text="tags with position", int1=1_ikind*(ubound(elements%material,2)+1), &
+                    text2="were ignored")
+                deallocate(tmp_array)
+              else
+                call write_log("the number of tags is lower than the number of solution components, I don't know what to do :(")
+                      print *, "called from read_inputs::read_2dmesh_gmsh"
+                error STOP
+              end if
+              end if
+                  
+            case default
+              print *, "your GMSH input file contains unsupported element type"
+              print *, "called from read_inputs::read_2dmesh_gmsh"
+              STOP
+         end select
 	 
       end do
       
       if (pde_common%processes > 1) then
-	do i=2, pde_common%processes
-	  elements%material(:,i) = elements%material(:,1)
-	end do
+        do i=2, pde_common%processes
+          elements%material(:,i) = elements%material(:,1)
+        end do
       end if
 
       
       if (use_filemat) then
-	allocate(smalldom(3,2))
-	call find_unit(file_mat)
-	open(unit=file_mat, file="drutes.conf/mesh/materials.conf", action="read", iostat=i_err)
-	if (i_err /= 0) then
-	  print *, "unable to open drutes.conf/mesh/materials.conf"
-	  print *, "exited from read_inputs::read_2dmesh_gmsh"
-	  ERROR STOP
-	end if
-	call fileread(n, file_mat)
-	allocate(excl_ids(n))
-	do i=1, n
+        allocate(smalldom(3,2))
+        call find_unit(file_mat)
+        open(unit=file_mat, file="drutes.conf/mesh/materials.conf", action="read", iostat=i_err)
+        if (i_err /= 0) then
+          print *, "unable to open drutes.conf/mesh/materials.conf"
+          print *, "exited from read_inputs::read_2dmesh_gmsh"
+          ERROR STOP
+        end if
+        call fileread(n, file_mat)
+        allocate(excl_ids(n))
+        do i=1, n
           call fileread(excl_ids(i), file_mat)
         end do
+          
+        call fileread(n, file_mat)
+        do i=1, n
+          call fileread(id, file_mat)
+          call fileread(j, file_mat)
+          
+          if (allocated(domain)) then
+            deallocate(domain)
+          end if
+          
+          allocate(domain(j,2))
+          do k=1,j
+            call fileread(domain(k,:), file_mat)
+          end do
+          
+          
+          do el=1, elements%kolik
+
+            do l=1, ubound(elements%data,2)
+              smalldom(l,:)=nodes%data(elements%data(el,l),:)
+            end do
+
+            point=gravity_center(smalldom(1,:), smalldom(2,:), smalldom(3,:))
+
         
-	call fileread(n, file_mat)
-	do i=1, n
-	  call fileread(id, file_mat)
-	  call fileread(j, file_mat)
-	  
-	  if (allocated(domain)) then
-	    deallocate(domain)
-	  end if
-	  
-	  allocate(domain(j,2))
-	  do k=1,j
-	    call fileread(domain(k,:), file_mat)
-	  end do
-	  
-	  
-	  do el=1, elements%kolik
-
-	    do l=1, ubound(elements%data,2)
-	      smalldom(l,:)=nodes%data(elements%data(el,l),:)
-	    end do
-
-	    point=gravity_center(smalldom(1,:), smalldom(2,:), smalldom(3,:))
-
-	    
-	    if (inside(domain, point)) then
-              update=.true.
-              do l=1, ubound(excl_ids,1)
-                if (elements%material(el,1) == excl_ids(l)) then
-                  update=.false.
-                  exit
+            if (inside(domain, point)) then
+                update=.true.
+                do l=1, ubound(excl_ids,1)
+                  if (elements%material(el,1) == excl_ids(l)) then
+                    update=.false.
+                    exit
+                  end if
+                end do
+                if (update) then
+                  elements%material(el,:) = id
                 end if
-              end do
-              if (update) then
-                elements%material(el,:) = id
               end if
-	    end if
-	  end do
-	end do
+            end do
+        end do
       end if
-	
-	
-     
+ 
     end subroutine read_2dmesh_gmsh
     
     subroutine read_scilab(name, proc)
@@ -645,9 +652,9 @@ module read_inputs
       open(unit=fileid, file=trim(name), action="read", status="old", iostat=ierr)
       
       if (ierr /=0) then
-	print *, "unable to open input file with scilab data, called from read_inputs::read_scilab"
-	print *, "the specified location was:", trim(name)
-	error stop
+        print *, "unable to open input file with scilab data, called from read_inputs::read_scilab"
+        print *, "the specified location was:", trim(name)
+        error stop
       end if
       
       read(unit=fileid, fmt=*) ch, time
@@ -655,11 +662,11 @@ module read_inputs
       read(unit=fileid, fmt=*) ch, ch, i
       
       if (i/=elements%kolik) then
-	print *, "the mesh in the scilab file has different number of elements then the mesh "
-	print *, i, "/=", elements%kolik
-	print *, "that is loaded or gerenerated from drutes config files"
-	print *, "called from read_inputs::read_scilab"
-	error stop
+        print *, "the mesh in the scilab file has different number of elements then the mesh "
+        print *, i, "/=", elements%kolik
+        print *, "that is loaded or gerenerated from drutes config files"
+        print *, "called from read_inputs::read_scilab"
+        error stop
       end if
       
 
@@ -669,46 +676,44 @@ module read_inputs
       read(unit=fileid, fmt=*) ch
       
       do i=1,elements%kolik
-	do j=1,3
-	  read(unit=fileid, fmt=*) ch, ch, ch, ch, elloc(j,1)
-	end do
-	
-	do j=1,3
-	  read(unit=fileid, fmt=*) ch, ch, ch, ch, elloc(j,2)
-	end do
-	
-	do j=1,3
-	  read(unit=fileid, fmt=*) ch, ch, ch, ch, elloc(j,3)
-	end do
-	
-	pmt = 0
-	do j=1,3
-	  l=elements%data(i,j)
-	  do k=1,3
-	    if (norm2(nodes%data(l,:)-elloc(k,1:2)) < 10*epsilon(tmp) ) then
-	      pmt(k) = j
-	    end if
-	  end do
-	end do
-	
-	if (minval(pmt) == 0) then
-	  print *, "the scilab file has a different mesh (probably boundary conditions)"
-	  print *, "than the one defined from drutes config files"
-	  print *, "called from read_inputs::read_scilab"
-	  ERROR STOP
-	end if
+        do j=1,3
+          read(unit=fileid, fmt=*) ch, ch, ch, ch, elloc(j,1)
+        end do
+        
+        do j=1,3
+          read(unit=fileid, fmt=*) ch, ch, ch, ch, elloc(j,2)
+        end do
+        
+        do j=1,3
+          read(unit=fileid, fmt=*) ch, ch, ch, ch, elloc(j,3)
+        end do
+        
+        pmt = 0
+        do j=1,3
+          l=elements%data(i,j)
+          do k=1,3
+            if (norm2(nodes%data(l,:)-elloc(k,1:2)) < 10*epsilon(tmp) ) then
+              pmt(k) = j
+            end if
+          end do
+        end do
+        
+        if (minval(pmt) == 0) then
+          print *, "the scilab file has a different mesh (probably boundary conditions)"
+          print *, "than the one defined from drutes config files"
+          print *, "called from read_inputs::read_scilab"
+          ERROR STOP
+        end if
 	  
         pde(proc)%solution(elements%data(i,:)) = elloc(pmt,3)  
-! 	  print *, pmt ; stop
 	  
 
       end do
       
       do i=1,4
-	read(unit=fileid, fmt=*) ch
+        read(unit=fileid, fmt=*) ch
       end do
-      
-!       read(unit=fileid, fmt=*) ch, ch, time
+
 
       close(fileid)    
       
@@ -722,6 +727,3 @@ module read_inputs
 
 end module read_inputs
 
-! 	   if (r /= nodes%data(elements%data(i,j),2)) then
-
-! 	   end if
