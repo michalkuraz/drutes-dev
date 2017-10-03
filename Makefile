@@ -9,7 +9,7 @@ c=gfortran -fimplicit-none  -fcoarray=single -fbounds-check -fbacktrace -g -g3 -
 d=drutes_obj-`date -I`
 
 all : main.o $(ALL_objs)
-	[ -d bin ] || mkdir bin && $c -g -o bin/drutes main.o $(ALL_objs)
+	   [ -d bin ] || mkdir bin && $c -g -o bin/drutes main.o $(ALL_objs) 
 dir="obj"
 
 servers="miguel@neptun01.fsv.cvut.cz:~  miguel@matsrv-lin01.fsv.cvut.cz:~ miguel@cml.fsv.cvut.cz:~"
@@ -126,7 +126,7 @@ heat_fnc.o: $(CORE_obj) heat_globals.o src/models/heat/heat_fnc.f90
 	$c -c src/models/heat/heat_fnc.f90
 heat_reader.o: $(CORE_obj) heat_globals.o heat_fnc.o src/models/heat/heat_reader.f90
 	$c -c src/models/heat/heat_reader.f90
-heat_pointers.o: $(CORE_obj) heat_globals.o heat_fnc.o heat_reader.o src/models/heat/heat_pointers.f90
+heat_pointers.o: $(CORE_obj) heat_globals.o heat_fnc.o heat_reader.o $(RE_obj)  src/models/heat/heat_pointers.f90
 	$c -c src/models/heat/heat_pointers.f90
 #------end HEAT_obj-------------------------------------
 

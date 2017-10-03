@@ -46,12 +46,12 @@ module readtools
         if (i<ranges(1) .or. i> ranges(2)) then
           write(unit=terminal, fmt=*) " " //achar(27)//'[91m', "incorrect ranges of input parameter(s)" //achar(27)//'[0m'
           if (.not. present(noexit) .or. .not. noexit) then
-	    if (present(errmsg)) then
-	      call file_error(fileid,errmsg)
-	    else
-	      call file_error(fileid)
-	    end if
-	  end if
+            if (present(errmsg)) then
+              call file_error(fileid,errmsg)
+            else
+              call file_error(fileid)
+            end if
+          end if
         end if
       end if
 
@@ -80,12 +80,12 @@ module readtools
           call file_error(fileid,errmsg)
         end if
         if (.not. present(noexit) .or. .not. noexit) then
-	  if (present(errmsg)) then
-	    call file_error(fileid,errmsg)
-	  else
-	    call file_error(fileid)
-	  end if
-	end if
+          if (present(errmsg)) then
+            call file_error(fileid,errmsg)
+          else
+            call file_error(fileid)
+          end if
+        end if
       end if
       
       
@@ -93,12 +93,12 @@ module readtools
         if (i<ranges(1) .or. i> ranges(2)) then
           write(unit=terminal, fmt=*) " " //achar(27)//'[91m', "incorrect ranges of input parameter(s)" //achar(27)//'[0m'
           if (.not. present(noexit) .or. .not. noexit) then
-	    if (present(errmsg)) then
-	      call file_error(fileid,errmsg)
-	    else
-	      call file_error(fileid)
-	    end if
-	  end if
+            if (present(errmsg)) then
+              call file_error(fileid,errmsg)
+            else
+              call file_error(fileid)
+            end if
+          end if
         end if
       end if
 
@@ -193,21 +193,21 @@ module readtools
           call file_error(fileid,errmsg)
         end if
         if (.not. present(noexit) .or. .not. noexit) then
-	  if (present(errmsg)) then
-	    call file_error(fileid,errmsg)
-	  else
-	    call file_error(fileid)
-	  end if
-	end if
+          if (present(errmsg)) then
+            call file_error(fileid,errmsg)
+          else
+            call file_error(fileid)
+          end if
+        end if
       end if
       
       if (present(ranges)) then
-	do i=1, ubound(r,1)
-	  if (r(i) < ranges(1) .or. r(i) > ranges(2)) then
-	    write(unit=terminal, fmt=*) " " //achar(27)//'[91m', "incorrect ranges of input parameter(s)" //achar(27)//'[0m'
-	    call file_error(fileid, errmsg)
-	  end if
-	end do
+        do i=1, ubound(r,1)
+          if (r(i) < ranges(1) .or. r(i) > ranges(2)) then
+            write(unit=terminal, fmt=*) " " //achar(27)//'[91m', "incorrect ranges of input parameter(s)" //achar(27)//'[0m'
+            call file_error(fileid, errmsg)
+          end if
+        end do
       end if
       
       
@@ -232,10 +232,10 @@ module readtools
       read(unit=fileid, fmt=*, iostat=ierr) r
       
       if (present(ranges)) then
-	if (r < ranges(1) .or. r > ranges(2)) then
-	  write(unit=terminal, fmt=*) " " //achar(27)//'[91m', "incorrect ranges of input parameter(s)" //achar(27)//'[0m'
-	  ierr = -1
-	end if
+        if (r < ranges(1) .or. r > ranges(2)) then
+          write(unit=terminal, fmt=*) " " //achar(27)//'[91m', "incorrect ranges of input parameter(s)" //achar(27)//'[0m'
+          ierr = -1
+        end if
       end if
       
       if (ierr /= 0) then
@@ -243,12 +243,12 @@ module readtools
           call file_error(fileid,errmsg)
         end if
         if (.not. present(noexit) .or. .not. noexit) then
-	  if (present(errmsg)) then
-	    call file_error(fileid,errmsg)
-	  else
-	    call file_error(fileid)
-	  end if
-	end if
+          if (present(errmsg)) then
+            call file_error(fileid,errmsg)
+          else
+            call file_error(fileid)
+          end if
+        end if
       end if
 
     end subroutine read_real
@@ -343,21 +343,21 @@ module readtools
           call file_error(fileid,errmsg)
         end if
         if (.not. present(noexit) .or. .not. noexit) then
-	  if (present(errmsg)) then
-	    call file_error(fileid,errmsg)
-	  else
-	    call file_error(fileid)
-	  end if
-	end if
+          if (present(errmsg)) then
+            call file_error(fileid,errmsg)
+          else
+            call file_error(fileid)
+          end if
+        end if
       end if
       
       if (present(ranges)) then
-	do i=1, ubound(r,1)
-	  if (r(i) < ranges(1) .or. r(i) > ranges(2)) then
-	    write(unit=terminal, fmt=*) " " //achar(27)//'[91m', "incorrect ranges of input parameter(s)" //achar(27)//'[0m'
-	    call file_error(fileid, errmsg)
-	  end if
-	end do
+        do i=1, ubound(r,1)
+          if (r(i) < ranges(1) .or. r(i) > ranges(2)) then
+            write(unit=terminal, fmt=*) " " //achar(27)//'[91m', "incorrect ranges of input parameter(s)" //achar(27)//'[0m'
+            call file_error(fileid, errmsg)
+          end if
+        end do
       end if
       
       
@@ -380,15 +380,15 @@ module readtools
       read(unit=fileid, fmt="(a)", iostat=ierr) ch
       
       if (present(options)) then
-	ok = .false.
-	do i=1, ubound(options, 1)
-	  if (adjustl(trim(ch)) == adjustl(trim(options(i)))) then
-	    ok = .true.
-	    EXIT
-	  end if
-	end do
-      else
-	ok = .true.	
+        ok = .false.
+        do i=1, ubound(options, 1)
+          if (adjustl(trim(ch)) == adjustl(trim(options(i)))) then
+            ok = .true.
+            EXIT
+          end if
+        end do
+            else
+        ok = .true.	
       end if
       
       if (ierr /= 0 .or. .not.(ok) .and. (.not. present(noexit) .or. .not. noexit)) then
@@ -402,11 +402,11 @@ module readtools
         if (present(errmsg)) then
           call file_error(fileid,errmsg)
         end if
-	if (present(errmsg)) then
-	  call file_error(fileid,errmsg)
-	else
-	  call file_error(fileid)
-	end if
+        if (present(errmsg)) then
+          call file_error(fileid,errmsg)
+        else
+          call file_error(fileid)
+        end if
       end if
       
       
@@ -429,27 +429,27 @@ module readtools
       read(unit=fileid, fmt=*, iostat=ierr) ch
 
       if (ierr == 0) then 
-	select case(ch)
-	  case("y")
-	    l = .true.
-	  case("n")
-	    l = .false.
-	  case default
-	    ierr = -1
-	    write(unit=terminal, fmt=*) " " //achar(27)//'[91m', "You have defined incorrect value for logical parameter)" &
-	     //achar(27)//'[0m'
-	 end select
+        select case(ch)
+          case("y")
+            l = .true.
+          case("n")
+            l = .false.
+          case default
+            ierr = -1
+            write(unit=terminal, fmt=*) " " //achar(27)//'[91m', "You have defined incorrect value for logical parameter)" &
+             //achar(27)//'[0m'
+         end select
        end if
       
       if (ierr /= 0 .and. (.not. present(noexit) .or. .not. noexit)) then
         if (present(errmsg)) then
           call file_error(fileid,errmsg)
         end if
-	if (present(errmsg)) then
-	  call file_error(fileid,errmsg)
-	else
-	  call file_error(fileid)
-	end if
+        if (present(errmsg)) then
+          call file_error(fileid,errmsg)
+        else
+          call file_error(fileid)
+        end if
       end if
       
       
@@ -625,28 +625,28 @@ module readtools
       
       
       if (.not. allocated(struct)) then
-	allocate(struct(101:101+dimen-1))
+        allocate(struct(101:101+dimen-1))
       else
-	print *, "W: strange bc struct already allocated with bounds:", lbound(struct,1), ":", ubound(struct,1)
+	     print *, "W: strange bc struct already allocated with bounds:", lbound(struct,1), ":", ubound(struct,1)
       end if
       
       if (maxval(nodes%edge) /= ubound(struct,1)) then
-	inquire(unit=unitW, name=filename)
-	if (maxval(nodes%edge)-100 - dimen == ubound(measured_pts,1) ) then
-	  write(unit=msg, fmt="(a)") "There is an inconsistent boundary description, it seems like you have forgot & 
-	       to include the points with measurement into boundary definition"
-	else if (maxval(nodes%edge) < 100) then
-	  write(unit=msg, fmt=*) "Your mesh does not define any boundaries, you are completely wrong!!"
-	else 			!a,I3,a,I3,a,I3,a,I3,a,I3,a
-	  write(unit=msg, fmt="(a,I3,a,I3,a,I3,a,a,a,I3,a)")  "There is an inconsistent boundary description, &
-								  the mesh configuration defines "& 
-	  , maxval(nodes%edge)-100 - ubound(measured_pts,1) , " boundary(ies), your measurement points define an extra", &
-	  ubound(measured_pts,1), " boundary(ies), thus in total you need:", &
-	  maxval(nodes%edge)-100, " boundary(ies), however the input model file: ", &
-	  trim(filename), " defines ", dimen, " boundary(ies)."
+       inquire(unit=unitW, name=filename)
+        if (maxval(nodes%edge)-100 - dimen == ubound(measured_pts,1) ) then
+          write(unit=msg, fmt="(a)") "There is an inconsistent boundary description, it seems like you have forgot & 
+               to include the points with measurement into boundary definition"
+        else if (maxval(nodes%edge) < 100) then
+          write(unit=msg, fmt=*) "Your mesh does not define any boundaries, you are completely wrong!!"
+        else 			!a,I3,a,I3,a,I3,a,I3,a,I3,a
+          write(unit=msg, fmt="(a,I3,a,I3,a,I3,a,a,a,I3,a)")  "There is an inconsistent boundary description, &
+                        the mesh configuration defines "& 
+          , maxval(nodes%edge)-100 - ubound(measured_pts,1) , " boundary(ies), your measurement points define an extra", &
+          ubound(measured_pts,1), " boundary(ies), thus in total you need:", &
+          maxval(nodes%edge)-100, " boundary(ies), however the input model file: ", &
+          trim(filename), " defines ", dimen, " boundary(ies)."
 
-	end if
-	call file_error(unitW, trim(msg))
+        end if
+        call file_error(unitW, trim(msg))
       end if
 
 

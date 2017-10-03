@@ -3,6 +3,7 @@
 !<
 module heat_pointers
   public :: heat, heat_processes
+  private :: heatlinker
 
   
   contains
@@ -42,14 +43,38 @@ module heat_pointers
       use pde_objs
       use heat_fnc
       use heat_reader
+      use re_pointers
       
-      class(pde_str), intent(in out) :: pde_loc
+      class(pde_str), dimension(:), intent(in out) :: pde_loc
+      integer(kind=ikind) :: i, pos
+      
+      if (ubound(pde,1) == 1) then
+	     call heatlinker(pde_loc(1))
+	    else
+	     call REstdH(pde_loc(1))
+	     call heatlinker(pde_loc(2))
+      end if
+            
+    
+    end subroutine heat
+    
+    
+    subroutine heatlinker(pde_loc)
+      use typy
+      use globals
+      use global_objs
+      use pde_objs
+      use heat_fnc
+      use heat_reader
+      
+      
+      class(pde_str),  intent(in out) :: pde_loc
       integer(kind=ikind) :: i
       
       call heat_read(pde_loc)
       
       pde_common%nonlinear = .false. 
-	    
+      
       pde_loc%pde_fnc(pde_loc%order)%dispersion => heat_conduct
       
       pde_loc%pde_fnc(pde_loc%order)%convection => heat_convect
@@ -71,9 +96,9 @@ module heat_pointers
       pde_loc%flux => heat_flux
       
       pde_loc%initcond => heat_icond  
-      
+
     
-    end subroutine heat
+    end subroutine heatlinker
     
     function heat_source(pde_loc, layer, quadpnt, x) result(val)
       use typy

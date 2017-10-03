@@ -65,7 +65,7 @@ module read_inputs
       
       select case(cut(dimensions))
         case("1","2")
-          drutes_config%dimen=ichar(cut(dimensions))
+          read(dimensions,'(I10)') drutes_config%dimen
         case("2r")
           drutes_config%dimen=2
           drutes_config%rotsym=.true.
@@ -182,8 +182,8 @@ module read_inputs
        if (.not. observe_info%anime) then
 	
 	        write(msg, *) "HINT 1: check number of the observation point values", new_line('a'), &
-             "  HINT 2: check number of the observation points coordinates" , new_line('a'), &
-             "  HINT 3: You have selected [n] (not) to create animation frames, have you commented out the &
+             "   HINT 2: check number of the observation points coordinates" , new_line('a'), &
+             "   HINT 3: You have selected [n] (not) to create animation frames, have you commented out the &
                 required number of frames?" , &
 		          new_line('a')
       else
@@ -195,13 +195,14 @@ module read_inputs
       	allocate(observation_array(i)%xyz(drutes_config%dimen))
       end do
       
+      
       do i=1,n
-	     call fileread(observation_array(i)%xyz(:), local, errmsg=msg)
+	     call fileread(observation_array(i)%xyz(:), local, errmsg=msg, checklen=.true.)
       end do  
       !----
       
       ! reads coordinates with measured points
-      call fileread(n, global, errmsg="strange number of observation points")
+      call fileread(n, global, errmsg="Incorrect number of points with measurement data.")
 
       allocate(measured_pts(n))
       do i=1, n
@@ -309,7 +310,9 @@ module read_inputs
       
       
       if (maxval(abs(materials_1D)) < length_1D) then
-        msg = "ERROR! material description does not cover the entire domain, check 1D domain length value"
+        write(msg, fmt=*) "ERROR! material description does not cover the entire domain", new_line("a"), new_line("a"), &
+        "1. Check 1D domain length value",  new_line("a"), &
+        "2. Check your number of materials, maybe it's wrong"
         call file_error(file_mesh, msg)
       end if
 	

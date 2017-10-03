@@ -149,7 +149,7 @@ module printtools
       write(unit=iunit, fmt=*) "#                             _  /_/ /_  _, _// /_/ / / /_ _  /___  ____/ / "
       write(unit=iunit, fmt=*) "#                             /_____/ /_/ |_| \____/  \__/ /_____/  /____/  "
       write(unit=iunit, fmt=*) "# "
-      write(unit=iunit, fmt=*) new_line("a"), new_line("a")
+      write(unit=iunit, fmt=*) " "
       
   end subroutine print_logo
       

@@ -86,8 +86,9 @@ module manage_pointers
         case("heat")
         
           call heat_processes(processes)
+          call pde_constructor(processes)
           write(unit=drutes_config%fullname, fmt=*) "DRUtES solves heat conduction with convection"
-          call heat(pde(1))
+          call heat(pde(:))
 	  
         case default
           print *, "your new model: ", trim(drutes_config%name), " requires pointer linking"

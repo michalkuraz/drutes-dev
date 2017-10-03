@@ -51,6 +51,7 @@ module simegen
       nodes%kolik=pocet1
       elements%kolik = nodes%kolik - 1
       call mesh_allocater()
+      
       sumy(0) = 0
       deltax_1d(0,:) = 0
       deltax_1d(0,3) = deltax_1d(1,2)

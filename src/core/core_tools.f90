@@ -145,7 +145,6 @@ module core_tools
       use pde_objs
       use globals
 
-      integer :: n
 
       allocate(nodes%id(nodes%kolik))
       allocate(nodes%edge(nodes%kolik))
@@ -161,8 +160,7 @@ module core_tools
       allocate(elements%ders(elements%kolik, drutes_config%dimen+1, drutes_config%dimen))
       allocate(elements%border(elements%kolik))
       
-      n = pde_common%processes
-      allocate(elements%material(elements%kolik, n))
+      allocate(elements%material(elements%kolik, 1))
       
       allocate(elements%neighbours(elements%kolik, ubound(elements%data,2)))
       
