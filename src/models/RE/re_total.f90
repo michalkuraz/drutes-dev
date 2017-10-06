@@ -102,10 +102,12 @@ module re_total
 	gradH(1:D) = grad
       end if
       
-      call pde_loc%pde_fnc(1)%dispersion(pde_loc, layer, x=(/h/), tensor=K(1:D, 1:D))
+      call pde_loc%pde_fnc(pde_loc%order)%dispersion(pde_loc, layer, x=(/h/), tensor=K(1:D, 1:D))
      
       
       vct(1:D) = matmul(-K(1:D,1:D), gradH(1:D))
+      
+      print *, layer, vct(1:D) , K(1:D,1:D) ,  gradH(1:D)
 
 
       if (present(flux_length)) then
@@ -576,7 +578,7 @@ module re_total
 	
         quadpnt%type_pnt = "ndpt"
         quadpnt%order = elements%data(el_id,node_order)
-        layer = elements%material(el_id,1)
+        layer = elements%material(el_id)
         theta =  pde_loc%mass(layer, quadpnt)
         value = rain - evap*theta**(2.0_rkind/3.0_rkind)
 
@@ -608,7 +610,7 @@ module re_total
 	quadpnt%type_pnt = "ndpt"
 	quadpnt%column = 2
 	quadpnt%order = elements%data(el_id, node_order)
-	layer = elements%material(el_id,1)
+	layer = elements%material(el_id)
 	D = drutes_config%dimen
 	call pde_loc%pde_fnc(1)%dispersion(pde_loc, layer, quadpnt, tensor=K(1:D,1:D))
 	
@@ -689,7 +691,7 @@ module re_total
       
       D = drutes_config%dimen
       do i=1, elements%kolik
-	layer = elements%material(i,1)
+	layer = elements%material(i)
 	do j=1, ubound(elements%data,2)
 	  k = elements%data(i,j)
 	  l = nodes%edge(k)

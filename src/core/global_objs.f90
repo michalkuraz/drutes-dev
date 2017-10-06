@@ -251,7 +251,7 @@ module global_objs
     !> vertical component of the boundary normal vector
     real(kind=rkind), dimension(:,:), allocatable   :: nvect_z
     !> material = id number of material at current element, a constant material properties are required for each element
-    integer(kind=ikind), dimension(:,:), allocatable   :: material
+    integer(kind=ikind), dimension(:), allocatable   :: material
     !> domain id -- array, type smartarray_int, carries id number of subdomain, the subdomain split is of an overlap type
     type(smartarray_int), dimension(:), allocatable :: subdom
     !> if element lies at domain boundary, then this array contains list of nodes at boundary

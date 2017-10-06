@@ -160,7 +160,7 @@ module core_tools
       allocate(elements%ders(elements%kolik, drutes_config%dimen+1, drutes_config%dimen))
       allocate(elements%border(elements%kolik))
       
-      allocate(elements%material(elements%kolik, 1))
+      allocate(elements%material(elements%kolik))
       
       allocate(elements%neighbours(elements%kolik, ubound(elements%data,2)))
       

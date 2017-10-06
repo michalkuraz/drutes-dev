@@ -256,7 +256,7 @@ module postpro
 
       do proc=1, ubound(pde,1)
         do i =1, ubound(observation_array,1)
-          layer = elements%material(observation_array(i)%element, proc)
+          layer = elements%material(observation_array(i)%element)
 
           quadpnt%order = i
           
@@ -407,7 +407,7 @@ module postpro
       end do
     
       ! mass (constant over element)
-      layer = elements%material(i, proc)
+      layer = elements%material(i)
       qpntloc%element = i
       qpntloc%column = 2
       qpntloc%type_pnt = "gqnd"
@@ -512,7 +512,7 @@ module postpro
       quadpnt%preproc=.true.
       write(unit=ids(1), fmt=*) i,  nodes%data(i,:), pde(proc)%getval(quadpnt) 
       
-      layer = elements%material(nodes%element(i)%data(1), proc)
+      layer = elements%material(nodes%element(i)%data(1))
 
       call pde(proc)%flux(layer, quadpnt, scalar=flux)
       

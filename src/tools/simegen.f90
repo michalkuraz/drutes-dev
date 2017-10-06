@@ -82,7 +82,7 @@ module simegen
           if (avg(nodes%data(elements%data(i,1),1), nodes%data(elements%data(i,2),1)) > materials_1D(j,2) .and. &
               avg(nodes%data(elements%data(i,1),1), nodes%data(elements%data(i,2),1)) <= materials_1D(j,3)) then
               
-              elements%material(i, :) =  nint(materials_1D(j,1))
+              elements%material(i) =  nint(materials_1D(j,1))
               EXIT
           end if
         end do
@@ -98,7 +98,7 @@ module simegen
       testmat = .false.
       
       do i=1, ubound(elements%material,1)
-        testmat(elements%material(i,1)) = .true.
+        testmat(elements%material(i)) = .true.
       end do
       
       do i=1, ubound(testmat,1)

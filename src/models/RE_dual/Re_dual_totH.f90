@@ -66,7 +66,7 @@ module dual_por
                 call map1d2dJ(pde_loc,"drutes.conf/REdual/hinim.in")
           end select
           do i=1, elements%kolik
-            layer = elements%material(i,1)
+            layer = elements%material(i)
 
             do j=1, ubound(elements%data,2)
               k = elements%data(i,j)
@@ -92,7 +92,7 @@ module dual_por
             end select
 
           do i=1, elements%kolik
-            layer = elements%material(i,1)
+            layer = elements%material(i)
 
             do j=1, ubound(elements%data,2)
               k = elements%data(i,j)

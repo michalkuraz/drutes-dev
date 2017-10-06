@@ -124,19 +124,19 @@ module decomposer
       ddcoarse_mesh(:)%prevsub = 0
       
       do i=1, coarse_elements%kolik
-        k = elements%material(ddcoarse_mesh(i)%elements(1),1)
+        k = elements%material(ddcoarse_mesh(i)%elements(1))
         exited = .false.
 	fine:  do j=1, ubound(ddcoarse_mesh(i)%elements,1)
 	    l = ddcoarse_mesh(i)%elements(j)
-	    if (k /= elements%material(l,1)) then
-	      coarse_elements%material(i,1) = 0
+	    if (k /= elements%material(l)) then
+	      coarse_elements%material(i) = 0
 	      exited = .true.
 	      EXIT fine
 	    end if
 	end do fine
 	 
 	if (.not.exited) then
-	  coarse_elements%material(i,1) = k
+	  coarse_elements%material(i) = k
 	end if
       end do
  
@@ -247,7 +247,7 @@ module decomposer
 	if (.not.exited) then
 	  ddcoarse_mesh(i)%treat_alone = .false.
 	end if
-	if (coarse_elements%material(i,1) == 0) then
+	if (coarse_elements%material(i) == 0) then
 	  ddcoarse_mesh(i)%treat_alone = .true.
 	end if
       end do
@@ -271,7 +271,7 @@ module decomposer
 	    do j=1, ubound(coarse_elements%neighbours,2)
               k = coarse_elements%neighbours(i,j) 
               if (k > 0) then 
-		if (coarse_elements%material(i,1) == coarse_elements%material(k,1)) then
+		if (coarse_elements%material(i) == coarse_elements%material(k)) then
 		  if (.not. ddcoarse_mesh(k)%treat_alone .and. ddcoarse_mesh(k)%subdomain == 0) then
 		    ddcoarse_mesh(k)%subdomain= ddcoarse_mesh(i)%subdomain
 		  end if
@@ -690,7 +690,7 @@ module decomposer
     
       allocate(coarse_elements%data(coarse_elements%kolik, 3))
       
-      allocate(coarse_elements%material(coarse_elements%kolik,1))
+      allocate(coarse_elements%material(coarse_elements%kolik))
       
 
       do i=1, coarse_nodes%kolik
@@ -759,7 +759,7 @@ module decomposer
 
       allocate(ddcoarse_mesh(coarse_elements%kolik))
       
-      allocate(coarse_elements%material(coarse_elements%kolik,1))
+      allocate(coarse_elements%material(coarse_elements%kolik))
       
       allocate(coarse_elements%neighbours(coarse_elements%kolik, ubound(coarse_elements%data,2)))
 

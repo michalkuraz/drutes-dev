@@ -216,7 +216,7 @@ module fem_tools
 		kk = pde(proc)%permut(k)
 
                 call pde(proc)%pde_fnc(proc)%dispersion(pde(proc), &
-                elements%material(i,proc),x=(/pde_common%xvect(kk,1)/), & 
+                elements%material(i),x=(/pde_common%xvect(kk,1)/), & 
                                                           tensor=disp(1:D, 1:D))
 
 		do z=1, D

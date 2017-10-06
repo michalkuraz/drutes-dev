@@ -45,7 +45,7 @@ module stiffmat
 
       do iproc=1,ubound(pde,1)
         do jproc=1,ubound(pde,1)
-            layer(iproc, jproc) = elements%material(el_id, jproc)
+            layer(iproc, jproc) = elements%material(el_id)
         end do
       end do
       
@@ -171,7 +171,7 @@ module stiffmat
 	  
 	  do l=1, ubound(gauss_points%weight,1)
            quadpnt%order = l	  
-	   suma = suma - pde(iproc)%pde_fnc(iproc)%zerord(pde(iproc), layer=elements%material(el_id, iproc), quadpnt=quadpnt) &
+	   suma = suma - pde(iproc)%pde_fnc(iproc)%zerord(pde(iproc), layer=elements%material(el_id), quadpnt=quadpnt) &
 	   *gauss_points%weight(l)
 	  end do
 	  

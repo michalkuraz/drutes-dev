@@ -170,7 +170,7 @@ module Re_dual_bc
 	quadpnt%type_pnt = "ndpt"
 	quadpnt%column = 2
 	quadpnt%order = elements%data(el_id, node_order)
-	layer = elements%material(el_id,1)
+	layer = elements%material(el_id)
 	D = drutes_config%dimen
         select case (pde_loc%mfswitch)
           case("m")
@@ -259,7 +259,7 @@ module Re_dual_bc
         quadpnt%type_pnt = "ndpt"
         quadpnt%column = 2
         quadpnt%order = elements%data(el_id,node_order)
-        layer = elements%material(el_id,1)
+        layer = elements%material(el_id)
         theta =  pde_loc%mass(layer, quadpnt)
         select case (pde_loc%mfswitch)
           case("m")

@@ -406,8 +406,8 @@ module read_inputs
     
       do i=1, elements%kolik
         call comment(file_mesh)
-        read(unit=file_mesh, fmt=*) elements%id(i), elements%data(i,:), ch, ch, elements%material(i,1)
-        elements%material(i,1) = elements%material(i,1) ! - 10000
+        read(unit=file_mesh, fmt=*) elements%id(i), elements%data(i,:), ch, ch, elements%material(i)
+        elements%material(i) = elements%material(i) ! - 10000
       end do
      
 
@@ -534,7 +534,7 @@ module read_inputs
             
           case(2)
             jtmp = jtmp + 1
-            read(unit=file_mesh, fmt=*) k, l, i, elements%material(jtmp,1), j,  elements%data(jtmp,:)
+            read(unit=file_mesh, fmt=*) k, l, i, elements%material(jtmp), j,  elements%data(jtmp,:)
             if (i /= 2) then
               call write_log("number of tags for element must be equal 2")
               call write_log("update your GMSH input file!")
@@ -547,10 +547,9 @@ module read_inputs
                 allocate(tmp_array(i-1))
                 
                 backspace(file_mesh)
-                read(unit=file_mesh, fmt=*) k, l, i, elements%material(jtmp,:), tmp_array, elements%data(jtmp,:)
-                elements%material(jtmp,:) = tmp_array(1:ubound(elements%material,2))
-                call write_log(text="tags with position", int1=1_ikind*(ubound(elements%material,2)+1), &
-                    text2="were ignored")
+                read(unit=file_mesh, fmt=*) k, l, i, elements%material(jtmp), tmp_array, elements%data(jtmp,:)
+                elements%material(jtmp) = tmp_array(1)
+                call write_log(text="tags with position greater than 2 were ignored")
                 deallocate(tmp_array)
               else
                 call write_log("the number of tags is lower than the number of solution components, I don't know what to do :(")
@@ -567,12 +566,6 @@ module read_inputs
 	 
       end do
       
-      if (pde_common%processes > 1) then
-        do i=2, pde_common%processes
-          elements%material(:,i) = elements%material(:,1)
-        end do
-      end if
-
       
       if (use_filemat) then
         allocate(smalldom(3,2))
@@ -616,13 +609,13 @@ module read_inputs
             if (inside(domain, point)) then
                 update=.true.
                 do l=1, ubound(excl_ids,1)
-                  if (elements%material(el,1) == excl_ids(l)) then
+                  if (elements%material(el) == excl_ids(l)) then
                     update=.false.
                     exit
                   end if
                 end do
                 if (update) then
-                  elements%material(el,:) = id
+                  elements%material(el) = id
                 end if
               end if
             end do

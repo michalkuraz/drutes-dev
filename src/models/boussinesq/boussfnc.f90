@@ -389,7 +389,7 @@ module boussfnc
               real(kind=rkind) :: value
         
              do i=1, elements%kolik
-                layer = elements%material(i,1)
+                layer = elements%material(i)
                 do j=1, ubound(elements%data,2)
                   k = elements%data(i,j)
                   l = nodes%edge(k)

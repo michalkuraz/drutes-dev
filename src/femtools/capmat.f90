@@ -44,7 +44,7 @@ module capmat
 
       do iproc=1,ubound(pde,1)
         do jproc=1,ubound(pde,1)
-            layer(iproc, jproc) = elements%material(el_id, jproc)
+            layer(iproc, jproc) = elements%material(el_id)
         end do
       end do
 
@@ -123,7 +123,7 @@ module capmat
 
       do iproc=1,ubound(pde,1)
         do jproc=1,ubound(pde,1)
-            layer(iproc, jproc) = elements%material(el_id, jproc)
+            layer(iproc, jproc) = elements%material(el_id)
         end do
       end do
 

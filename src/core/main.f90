@@ -57,7 +57,7 @@ program main
 
 
 
-    version_id%number = "1.201708/"
+    version_id%number = "2.0/2017"
     version_id%reliability = "beta "
     
     call get_cmd_options()
@@ -88,8 +88,6 @@ program main
     write(unit=terminal, fmt=*)" "
     write(unit=terminal, fmt=*)" " 
     
-    print *, " " //achar(27)//'[94m', "DRUtES" //achar(27)//'[0m', &
-             " version: " //achar(27)//'[92m', version_id, " " //achar(27)//'[0m'
       
        
     call parse_globals() 

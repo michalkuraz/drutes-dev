@@ -48,7 +48,7 @@ module geom_tools
     select case(quadpnt%type_pnt)
       case("ndpt")
         el = nodes%element(quadpnt%order)%data(1)
-        layer=elements%material(el,1)
+        layer=elements%material(el)
       case("obpt", "gqnd")
         el = quadpnt%element
         if (.not. (el >= 1 .and. el<=elements%kolik)) then
@@ -57,7 +57,7 @@ module geom_tools
           print *, "contact Michal -> michalkuraz@gmail.com"
           ERROR STOP
         end if
-        layer = elements%material(el,1)
+        layer = elements%material(el)
       case default
           print *, "err or in quadpnt data"
           print *, "called from geom_tools::get_layer"

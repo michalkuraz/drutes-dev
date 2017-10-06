@@ -924,9 +924,9 @@ module RE_constitutive
         quadpnt_loc%order = elements%data(quadpnt%element,i)
         vecino = elements%neighbours(quadpnt%element,i)
         if (vecino > 0) then
-          layer_loc = elements%material(vecino,1)
+          layer_loc = elements%material(vecino)
         else
-          layer_loc = elements%material(quadpnt%element,1)
+          layer_loc = elements%material(quadpnt%element)
         end if 
         quadpnt_loc%order = elements%data(quadpnt%element, i)
         call pde_loc%pde_fnc(1)%dispersion(pde_loc, layer_loc, quadpnt_loc, tensor=Ktmp(1:D, 1:D))
@@ -1679,7 +1679,7 @@ module RE_constitutive
 
 	do i=1, ubound(pde_loc%solution,1)
 	  el = nodes%element(i)%data(1)
-	  mat = elements%material(el,1)
+	  mat = elements%material(el)
 	    
 	  quadpnt%order = i
 	  quadpnt%column = 1
@@ -1845,7 +1845,7 @@ module RE_constitutive
 
 	  i = pde_loc%permut(elements%data(el_id, node_order))
 
-	  call pde_loc%pde_fnc(1)%dispersion(pde_loc, elements%material(el_id,1), x=(/pde_common%xvect(i,2)/), &
+	  call pde_loc%pde_fnc(1)%dispersion(pde_loc, elements%material(el_id), x=(/pde_common%xvect(i,2)/), &
 			      tensor=K(1:drutes_config%dimen, 1:drutes_config%dimen))
 
 	  gravflux(1:drutes_config%dimen) = K(drutes_config%dimen, 1:drutes_config%dimen)*elements%nvect_z(el_id, node_order)
@@ -1920,7 +1920,7 @@ module RE_constitutive
 
 	i = pde_loc%permut(elements%data(el_id, node_order))
 
-	call pde_loc%pde_fnc(1)%dispersion(pde_loc, elements%material(el_id,1), x=(/pde_common%xvect(i,2)/), &
+	call pde_loc%pde_fnc(1)%dispersion(pde_loc, elements%material(el_id), x=(/pde_common%xvect(i,2)/), &
 			      tensor=K(1:drutes_config%dimen, 1:drutes_config%dimen))
 
         gravflux(1:drutes_config%dimen) = K(drutes_config%dimen, 1:drutes_config%dimen)*elements%nvect_z(el_id, node_order)
@@ -1945,7 +1945,7 @@ module RE_constitutive
 	if (bcval < 0) then
 	  quadpnt%type_pnt = "ndpt"
 	  quadpnt%order = elements%data(el_id,node_order)
-	  layer = elements%material(el_id,1)
+	  layer = elements%material(el_id)
 	  theta =  pde_loc%mass(layer, quadpnt)
 	  bcval = bcval*(theta*theta)**(1.0_rkind/3.0_rkind)
 	end if
@@ -1989,7 +1989,7 @@ module RE_constitutive
         end select
         
         do i=1, elements%kolik
-          layer = elements%material(i,1)
+          layer = elements%material(i)
           do j=1, ubound(elements%data,2)
             k = elements%data(i,j)
             l = nodes%edge(k)
@@ -2031,7 +2031,7 @@ module RE_constitutive
 	  do j=1, ubound(elements%neighbours,2)
 	    vecino = elements%neighbours(i,j)
 	    if (vecino /= 0) then
-	      if (elements%material(i,1) /= elements%material(vecino,1)) then
+	      if (elements%material(i) /= elements%material(vecino)) then
 		do k=1, ubound(elements%data,2)
 		  nd = elements%data(i, k)
 		  do l=1, ubound(elements%data,2)
