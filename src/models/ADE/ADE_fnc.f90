@@ -39,31 +39,31 @@ module ADE_fnc
       D = drutes_config%dimen
       identity = 0.0
       do i=1, D
-	identity(i,i) = 1.0
+        identity(i,i) = 1.0
       end do
       
       select case(drutes_config%name)
-	case("ADEstd", "ADEstd_kinsorb")
-	  q_w = ADEpar(layer)%convection
-	  theta = adepar(layer)%water_cont
-	  ths = adepar(layer)%water_cont
-	case default
-	  theta = pde(1)%mass(layer, quadpnt)
-	  call pde(1)%flux(layer, quadpnt, vector_out = q_w(1:D))
-	  ths = vgset(layer)%ths
+        case("ADEstd", "ADEstd_kinsorb")
+          q_w = ADEpar(layer)%convection
+          theta = adepar(layer)%water_cont
+          ths = adepar(layer)%water_cont
+        case default
+          theta = pde(1)%mass(layer, quadpnt)
+          call pde(1)%flux(layer, quadpnt, vector_out = q_w(1:D))
+          ths = vgset(layer)%ths
       end select
       
 
       q_abs = 0.0
       do i=1, D
-	q_abs =q_abs + q_w(i)*q_w(i)
+        q_abs =q_abs + q_w(i)*q_w(i)
       end do
       q_abs = sqrt(q_abs)
       tortuo = theta**(10.0/3.0)/(ths*ths)
       
       
       if (present(tensor)) then
-	tensor = theta * (adepar(layer)%diff*q_abs + adepar(layer)%difmol*identity(1:D, 1:D))	
+        tensor = theta * (adepar(layer)%diff*q_abs + adepar(layer)%difmol*identity(1:D, 1:D))	
       end if
       
 
@@ -94,22 +94,22 @@ module ADE_fnc
       
       
       if (pde_loc%order == 1) then
-	if (present(vector_out)) then
-	  vector_out = adepar(layer)%convection
-	end if
-	
-	
-	if (present(scalar)) then
-	  scalar = abs(adepar(layer)%convection)
-	end if
-      else
-	if (present(vector_out)) then
-	  call pde(1)%flux(layer, quadpnt, vector_out=vector_out)
-	end if
-	
+        if (present(vector_out)) then
+          vector_out = adepar(layer)%convection
+        end if
+        
+        
         if (present(scalar)) then
-	  call pde(1)%flux(layer, quadpnt, scalar=scalar)
-	end if
+          scalar = abs(adepar(layer)%convection)
+        end if
+      else
+        if (present(vector_out)) then
+          call pde(1)%flux(layer, quadpnt, vector_out=vector_out)
+        end if
+        
+        if (present(scalar)) then
+          call pde(1)%flux(layer, quadpnt, scalar=scalar)
+        end if
 	
       end if
       
@@ -137,41 +137,41 @@ module ADE_fnc
       
       
       if (pde_loc%order == 2) then
-	theta = pde(1)%mass(layer, quadpnt)
+        theta = pde(1)%mass(layer, quadpnt)
       else
-	theta = adepar(layer)%water_cont
+        theta = adepar(layer)%water_cont
       end if
       
       
       if (.not. adepar(layer)%sorption%kinetic) then
-	ka = adepar(layer)%sorption%adsorb
-	kd = adepar(layer)%sorption%desorb
-	if (ka > 10*epsilon(ka) .and. kd > 10*epsilon(kd)) then 
-	  select case(adepar(layer)%sorption%name)
-	    case("freund")
-	      n = adepar(layer)%sorption%third
-	      if (abs(n-1.0_rkind)>10*epsilon(n)) then
-		cl = pde_loc%getval(quadpnt)
-		val = theta+(1-theta)*ka/kd*adepar(layer)%bd*cl**(n-1)
-	      else
-		val = theta+(1-theta)*ka/kd*adepar(layer)%bd
-	      end if
-	    
-	    case("langmu")
-	      cl = pde_loc%getval(quadpnt)
-	      csmax = adepar(layer)%sorption%third
-	      val = theta + (1-theta)*adepar(layer)%bd*(ka*csmax)/(kd+ka*cl)
-	    case default
-	      print *, "unsupported sorption type, runtime error, called from ADE_fnc::ADE_tder_coef"
-	      ERROR STOP
-	    
-	  end select
-	else
-	  val = theta
-	end if
-	
-      else
-	val = theta
+        ka = adepar(layer)%sorption%adsorb
+        kd = adepar(layer)%sorption%desorb
+        if (ka > 10*epsilon(ka) .and. kd > 10*epsilon(kd)) then 
+          select case(adepar(layer)%sorption%name)
+            case("freund")
+              n = adepar(layer)%sorption%third
+              if (abs(n-1.0_rkind)>10*epsilon(n)) then
+          cl = pde_loc%getval(quadpnt)
+          val = theta+(1-theta)*ka/kd*adepar(layer)%bd*cl**(n-1)
+              else
+          val = theta+(1-theta)*ka/kd*adepar(layer)%bd
+              end if
+            
+            case("langmu")
+              cl = pde_loc%getval(quadpnt)
+              csmax = adepar(layer)%sorption%third
+              val = theta + (1-theta)*adepar(layer)%bd*(ka*csmax)/(kd+ka*cl)
+            case default
+              print *, "unsupported sorption type, runtime error, called from ADE_fnc::ADE_tder_coef"
+              ERROR STOP
+            
+          end select
+        else
+          val = theta
+        end if
+        
+            else
+        val = theta
       end if
      
       
@@ -198,9 +198,9 @@ module ADE_fnc
       real(kind=rkind) :: theta
       
       if (pde_loc%order == 2) then
-	theta = pde(1)%mass(layer, quadpnt)
+        theta = pde(1)%mass(layer, quadpnt)
       else
-	theta = adepar(layer)%water_cont
+        theta = adepar(layer)%water_cont
       end if
       
       val = 1.0_rkind-theta
@@ -247,13 +247,13 @@ module ADE_fnc
       real(kind=rkind)                :: theta
       
       if (pde_loc%order == 1) then
-	theta = adepar(layer)%water_cont
+        theta = adepar(layer)%water_cont
       else
-	theta = pde(1)%mass(layer, quadpnt)
+        theta = pde(1)%mass(layer, quadpnt)
       end if
       
       if (present(quadpnt)) then
-	val = theta*pde_loc%getval(quadpnt)
+        val = theta*pde_loc%getval(quadpnt)
       else
         val = theta * x(1)
       end if
@@ -281,26 +281,26 @@ module ADE_fnc
       
      
       if (pde_loc%order == 2) then
-	theta = pde(1)%mass(layer, quadpnt)
+        theta = pde(1)%mass(layer, quadpnt)
       else
-	theta = adepar(layer)%water_cont
+        theta = adepar(layer)%water_cont
       end if
       
       val = 0.0_rkind
       
       do i=1, ubound(adepar(layer)%orders,1)
-	n = 10
-	if (abs(adepar(layer)%orders(i) - 1.0_rkind) < 100*epsilon(1.0_rkind)) n = 1
-	if (abs(adepar(layer)%orders(i)) < 100*epsilon(1.0_rkind)) n = 0
-	select case(n)
-	  case(0)
-	    CONTINUE
-	  case(1)
-	    val = val + theta*adepar(layer)%lambda(i)
-	  case default
-	    cl = pde_loc%getval(quadpnt)
-	    val = theta*adepar(layer)%lambda(i)*cl**(adepar(layer)%orders(i)-1)
-	end select
+        n = 10
+        if (abs(adepar(layer)%orders(i) - 1.0_rkind) < 100*epsilon(1.0_rkind)) n = 1
+        if (abs(adepar(layer)%orders(i)) < 100*epsilon(1.0_rkind)) n = 0
+        select case(n)
+          case(0)
+            CONTINUE
+          case(1)
+            val = val + theta*adepar(layer)%lambda(i)
+          case default
+            cl = pde_loc%getval(quadpnt)
+            val = theta*adepar(layer)%lambda(i)*cl**(adepar(layer)%orders(i)-1)
+        end select
       end do
 	
 	  
@@ -328,16 +328,16 @@ module ADE_fnc
       real(kind=rkind) :: theta
       
       if (pde_loc%order == 2) then
-	theta = pde(1)%mass(layer, quadpnt)
+        theta = pde(1)%mass(layer, quadpnt)
       else
-	theta = adepar(layer)%water_cont
+        theta = adepar(layer)%water_cont
       end if
       
        val = 0.0_rkind
        do i=1, ubound(adepar(layer)%orders,1)
-	if (abs(adepar(layer)%orders(i)) < 100*epsilon(1.0_rkind)) then
-	  val =  val + theta*adepar(layer)%lambda(i)
-	end if
+        if (abs(adepar(layer)%orders(i)) < 100*epsilon(1.0_rkind)) then
+          val =  val + theta*adepar(layer)%lambda(i)
+        end if
       end do
       
       
@@ -361,28 +361,28 @@ module ADE_fnc
       edge_id = nodes%edge(elements%data(el_id, node_order))
       
       if (present(value)) then
-	if (pde_loc%bc(edge_id)%file) then
-	  do i=1, ubound(pde_loc%bc(edge_id)%series,1)
-	    if (pde_loc%bc(edge_id)%series(i,1) > time) then
-	      if (i > 1) then
-		j = i-1
-	      else
-		j = i
-	      end if
-	      tempval = pde_loc%bc(edge_id)%series(j,2)
-	      EXIT
-	    end if
-	  end do
-	else
-	  tempval =  pde_loc%bc(edge_id)%value
-	end if
-	value = tempval 
+        if (pde_loc%bc(edge_id)%file) then
+          do i=1, ubound(pde_loc%bc(edge_id)%series,1)
+            if (pde_loc%bc(edge_id)%series(i,1) > time) then
+              if (i > 1) then
+          j = i-1
+              else
+          j = i
+              end if
+              tempval = pde_loc%bc(edge_id)%series(j,2)
+              EXIT
+            end if
+          end do
+        else
+          tempval =  pde_loc%bc(edge_id)%value
+        end if
+        value = tempval 
       end if
 
 
       
       if (present(code)) then
-	code = 1
+        code = 1
       end if
       
 
@@ -407,28 +407,28 @@ module ADE_fnc
       edge_id = nodes%edge(elements%data(el_id, node_order))
       
       if (present(value)) then
-	if (pde_loc%bc(edge_id)%file) then
-	  do i=1, ubound(pde_loc%bc(edge_id)%series,1)
-	    if (pde_loc%bc(edge_id)%series(i,1) > time) then
-	      if (i > 1) then
-		j = i-1
-	      else
-		j = i
-	      end if
-	      tempval = pde_loc%bc(edge_id)%series(j,2)
-	      EXIT
-	    end if
-	  end do
-	else
-	  tempval =  pde_loc%bc(edge_id)%value
-	end if
-	value = tempval 
+        if (pde_loc%bc(edge_id)%file) then
+          do i=1, ubound(pde_loc%bc(edge_id)%series,1)
+            if (pde_loc%bc(edge_id)%series(i,1) > time) then
+              if (i > 1) then
+          j = i-1
+              else
+          j = i
+              end if
+              tempval = pde_loc%bc(edge_id)%series(j,2)
+              EXIT
+            end if
+          end do
+        else
+          tempval =  pde_loc%bc(edge_id)%value
+        end if
+        value = tempval 
       end if
 
 
       
       if (present(code)) then
-	code = 2
+        code = 2
       end if
       
 
@@ -447,11 +447,11 @@ module ADE_fnc
       integer(kind=ikind), intent(out), optional :: code
 
       if (present(value)) then
-	value = 0.0_rkind
+        value = 0.0_rkind
       end if
 
       if (present(code)) then
-	code = 2
+        code = 2
       end if
 	
     end subroutine ADE_null_bc
@@ -479,13 +479,13 @@ module ADE_fnc
       
       
       if (present(quadpnt) .and. (present(grad) .or. present(x))) then
-	print *, "ERROR: the function can be called either with integ point or x value definition and gradient, not both of them"
-	print *, "exited from ADE_fnc::ADE_flux"
-	ERROR stop
-      else if ((.not. present(grad) .or. .not. present(x)) .and. .not. present(quadpnt)) then
-	print *, "ERROR: you have not specified either integ point or x value"
+        print *, "ERROR: the function can be called either with integ point or x value definition and gradient, not both of them"
         print *, "exited from ADE_fnc::ADE_flux"
-	ERROR stop
+        ERROR stop
+      else if ((.not. present(grad) .or. .not. present(x)) .and. .not. present(quadpnt)) then
+        print *, "ERROR: you have not specified either integ point or x value"
+        print *, "exited from ADE_fnc::ADE_flux"
+        ERROR stop
       end if
       
       if (.not. allocated(q_w)) allocate(q_w(drutes_config%dimen))
@@ -495,39 +495,39 @@ module ADE_fnc
       if (.not. allocated(Dhm)) allocate(Dhm(drutes_config%dimen, drutes_config%dimen))
       
       if (present(quadpnt)) then
-	c = pde_loc%getval(quadpnt)
-	call pde_loc%getgrad(quadpnt, gradC)
+        c = pde_loc%getval(quadpnt)
+        call pde_loc%getgrad(quadpnt, gradC)
       else
         if (ubound(x,1) /=1) then
-	  print *, "ERROR: van Genuchten function is a function of a single variable h"
-	  print *, "       your input data has:", ubound(x,1), "variables"
-	  print *, "exited from ADE_fnc::ADE_flux"
-	  ERROR STOP
-	end if
-	c = x(1)
-	gradC = grad
+          print *, "ERROR: van Genuchten function is a function of a single variable h"
+          print *, "       your input data has:", ubound(x,1), "variables"
+          print *, "exited from ADE_fnc::ADE_flux"
+          ERROR STOP
+        end if
+        c = x(1)
+        gradC = grad
       end if
       
       
       call pde_loc%pde_fnc(1)%dispersion(pde_loc, layer, quadpnt, tensor=Dhm)
       
       select case(pde_loc%order)
-	case(1)
-	  q_w = adepar(layer)%convection
-	case(2)
-	  call pde(1)%flux(layer, quadpnt, vector_out=q_w)
+        case(1)
+          q_w = adepar(layer)%convection
+        case(2)
+          call pde(1)%flux(layer, quadpnt, vector_out=q_w)
       end select
       
       select case(adepar(layer)%icondtype)
-	case("ca")
-	  cmax = 1.0_rkind
-	 case("cr")
-	  cmax = adepar(layer)%cmax
+        case("ca")
+          cmax = 1.0_rkind
+         case("cr")
+          cmax = adepar(layer)%cmax
       end select
       
       
       if (present(flux)) then
-	flux = cmax*matmul(Dhm, gradC) + cmax*q_w*c
+        flux = cmax*matmul(Dhm, gradC) + cmax*q_w*c
       end if
     
     end subroutine ADE_flux
@@ -547,23 +547,23 @@ module ADE_fnc
    
       D = drutes_config%dimen
       do i=1, elements%kolik
-	layer = elements%material(i)
-	do j=1, ubound(elements%data,2)
-	  k = elements%data(i,j)
-	  l = nodes%edge(k)
-	  m = pde_loc%permut(k)
-	  if (m == 0) then
-	    call pde_loc%bc(l)%value_fnc(pde_loc, i, j, value)
-	    pde_loc%solution(k) =  value 
-	  else
-	    select case (adepar(layer)%icondtype)
-	      case("ca")
-		pde_loc%solution(k) = adepar(layer)%cinit
-	      case("cr")
-		pde_loc%solution(k) = adepar(layer)%cinit * adepar(layer)%cmax
-	    end select
-	  end if
-	end do   
+        layer = elements%material(i)
+        do j=1, ubound(elements%data,2)
+          k = elements%data(i,j)
+          l = nodes%edge(k)
+          m = pde_loc%permut(k)
+          if (m == 0) then
+            call pde_loc%bc(l)%value_fnc(pde_loc, i, j, value)
+            pde_loc%solution(k) =  value 
+          else
+            select case (adepar(layer)%icondtype)
+              case("ca")
+          pde_loc%solution(k) = adepar(layer)%cinit
+              case("cr")
+          pde_loc%solution(k) = adepar(layer)%cinit * adepar(layer)%cmax
+            end select
+          end if
+        end do   
       end do
 
     
@@ -593,12 +593,12 @@ module ADE_fnc
       
       
       select case(adepar(layer)%sorption%name)
-	case("langmu")
-	  cs = pde_loc%getval(quadpnt) 
-          cl = pde(proc_cl)%getval(quadpnt)
-          val = -adepar(layer)%sorption%adsorb*cl - adepar(layer)%sorption%desorb
-	case("freund")
-	  val = -adepar(layer)%sorption%desorb
+        case("langmu")
+          cs = pde_loc%getval(quadpnt) 
+                cl = pde(proc_cl)%getval(quadpnt)
+                val = -adepar(layer)%sorption%adsorb*cl - adepar(layer)%sorption%desorb
+        case("freund")
+          val = -adepar(layer)%sorption%desorb
       end select
       
       
@@ -626,16 +626,16 @@ module ADE_fnc
 
       
       select case(adepar(layer)%sorption%name)
-	case("langmu")
-	  val = adepar(layer)%sorption%adsorb*adepar(layer)%sorption%third
-	case("freund")
-	  if (abs(adepar(layer)%sorption%third - 1.0_rkind ) > 10*epsilon(1.0_rkind)) then
-	    proc_cl = pde_loc%order - 1
-	    cl = pde(proc_cl)%getval(quadpnt)
-	    val = adepar(layer)%sorption%adsorb*cl**(1-adepar(layer)%sorption%third)
-	  else
-	    val = adepar(layer)%sorption%adsorb
-	  end if
+        case("langmu")
+          val = adepar(layer)%sorption%adsorb*adepar(layer)%sorption%third
+        case("freund")
+          if (abs(adepar(layer)%sorption%third - 1.0_rkind ) > 10*epsilon(1.0_rkind)) then
+            proc_cl = pde_loc%order - 1
+            cl = pde(proc_cl)%getval(quadpnt)
+            val = adepar(layer)%sorption%adsorb*cl**(1-adepar(layer)%sorption%third)
+          else
+            val = adepar(layer)%sorption%adsorb
+          end if
       end select
       
    end function ADE_cscl_react
@@ -659,13 +659,13 @@ module ADE_fnc
      
       
       if (present(value)) then
-	value = 0.0
+        value = 0.0
       end if
 
 
       
       if (present(code)) then
-	code = 0
+        code = 0
       end if
       
 
@@ -701,16 +701,16 @@ module ADE_fnc
       real(kind=rkind)                :: theta
       
       if (pde_loc%order == 2) then
-	theta = adepar(layer)%water_cont
+        theta = adepar(layer)%water_cont
       else 
-	theta = pde(1)%mass(layer, quadpnt)
+        theta = pde(1)%mass(layer, quadpnt)
       end if
       
       if (present(quadpnt)) then
-	val = pde_loc%getval(quadpnt)*(1-theta)
+        val = pde_loc%getval(quadpnt)*(1-theta)
       else
-	print *, "exited from ADE_fnc::ADEcs_mass"
-	ERROR STOP
+        print *, "exited from ADE_fnc::ADEcs_mass"
+        ERROR STOP
       end if
     
     end function ADEcs_mass

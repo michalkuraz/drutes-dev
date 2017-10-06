@@ -63,9 +63,9 @@ module postpro
             mode = -1
           case default
             print *, "this is a BUG, contact developer, called from postpro::make_print()"
-                  error STOP
-              end select
-            else
+            error STOP
+        end select
+      else
         anime = .false.
         mode = 0
       end if
@@ -73,7 +73,7 @@ module postpro
 
       if (drutes_config%dimen < 2  .or. www) then
         extension = ".dat"
-            else 
+      else 
         select case(observe_info%fmt)
           case("pure")
             extension = ".dat"
@@ -91,8 +91,8 @@ module postpro
       
       if (.not. anime) then
         postpro_run = postpro_run + 1
-            else
-              if (first_run) then
+      else
+        if (first_run) then
           anime_run = 0
         end if
         anime_run = anime_run + 1
@@ -117,7 +117,7 @@ module postpro
       
       if (anime) then
         ids => ids_anime
-            else
+      else
         ids => ids_obs
       end if
 	
@@ -164,8 +164,8 @@ module postpro
               call system("mkdir out/anime")
               open(unit=ids(proc, i), file=trim(filenames(proc,i)), action="write", status="replace", iostat=ierr)
               if (ierr /= 0) then
-          print *, "unexpected system error, called from postpro::make_print()"
-          error stop
+                print *, "unexpected system error, called from postpro::make_print()"
+                error stop
               end if
             end if
           end do  
@@ -207,9 +207,9 @@ module postpro
         do proc=1, ubound(pde,1)
           do i=1,ubound(ids,2)
             if (mode == 0) then
-                    close(ids(proc,i))
+              close(ids(proc,i))
             else
-                    call flush(ids(proc,i))
+              call flush(ids(proc,i))
             end if
           end do
         end do	
@@ -260,7 +260,7 @@ module postpro
 
           quadpnt%order = i
           
-                quadpnt%element = observation_array(i)%element
+          quadpnt%element = observation_array(i)%element
           
           quadpnt%preproc=.true.
           
@@ -268,7 +268,7 @@ module postpro
 
           val = pde(proc)%getval(quadpnt)
 
-                massval = pde(proc)%mass(layer, quadpnt)
+          massval = pde(proc)%mass(layer, quadpnt)
           
           observation_array(i)%cumflux(proc) = observation_array(i)%cumflux(proc) + &
               sqrt(dot_product(advectval(1:D), advectval(1:D)))*time_step

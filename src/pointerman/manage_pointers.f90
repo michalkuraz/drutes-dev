@@ -36,15 +36,15 @@ module manage_pointers
             "D, in pressure head form."
         
         
-          call RE_processes(processes)
-          call pde_constructor(processes)
+          call RE_processes(pde_common%processes)
+          call pde_constructor(pde_common%processes)
           
           call RE_std(pde(1))
         case("RE")
           write(unit=drutes_config%fullname, fmt=*) "Richards' equation, in", drutes_config%dimen, &
             "D, in total hydraulic head form."
-          call RE_processes(processes)
-          call pde_constructor(processes)
+          call RE_processes(pde_common%processes)
+          call pde_constructor(pde_common%processes)
 
           call REstdH(pde(1))
         
@@ -53,31 +53,32 @@ module manage_pointers
            write(unit=drutes_config%fullname, fmt=*) " Boussinesq equation for hillslope runoff", &
                  "(1D approximation of groundwater flow)."
             
-           call bouss_processes(processes)
-           call pde_constructor(processes)      
+           call bouss_processes(pde_common%processes)
+           call pde_constructor(pde_common%processes)      
            call boussi(pde(1))
                  
               
         case("ADE") 
         
-          call ade_processes(processes)
-          call pde_constructor(processes)
+          call ade_processes(pde_common%processes)
+          call pde_constructor(pde_common%processes)
           write(unit=drutes_config%fullname, fmt=*) " advection-dispersion-reaction equation in", &
                  drutes_config%dimen, "D"
-           call ade(pde(1))
+          call ade(pde(:))
       
 
         case("Re_dual")
             write(unit=drutes_config%fullname, fmt=*) " Richards equation ", &
               "in total hydraulic head form for dual (fracture and matrix) medium"	
-             
+             pde_common%processes = 2
+             call pde_constructor(pde_common%processes)
              call RE_matrix()
              call RE_fracture()  
       
     
         case("REtest")
           write(unit=drutes_config%fullname, fmt=*) "DRUtES debugs itself"
-          
+          pde_common%processes = 3
           call pde_constructor(3_ikind)
           do i=1, 3
             call RE_std(pde(i))
@@ -85,8 +86,8 @@ module manage_pointers
 	  
         case("heat")
         
-          call heat_processes(processes)
-          call pde_constructor(processes)
+          call heat_processes(pde_common%processes)
+          call pde_constructor(pde_common%processes)
           write(unit=drutes_config%fullname, fmt=*) "DRUtES solves heat conduction with convection"
           call heat(pde(:))
 	  
@@ -108,17 +109,18 @@ module manage_pointers
             solve_matrix => CG_normal_face
       ! 	    solve_matrix => sparse_gem_pig_AtA
       ! 	    solve_matrix => jacobi_face
-            end select
-            select case (drutes_config%it_method)
+      end select
+      
+      select case (drutes_config%it_method)
         case(0) 
           pde_common%treat_pde => solve_picard
         case(1)
           pde_common%treat_pde => schwarz_picard
         case(2)
           pde_common%treat_pde => schwarz_subcyc
-            end select
+      end select
           
-            select case(pde_common%timeint_method)
+      select case(pde_common%timeint_method)
         case(0)
           pde_common%time_integ => steady_state_int
         case(1)
