@@ -21,14 +21,13 @@ module ADE_pointers
         call write_log("Unable to open drutes.conf/ADE/ADE.conf, exiting....")
         ERROR STOP
       end if
-      
-      call fileread(no_solutes, adeconf, ranges=(/1_ikind, huge(1_ikind)/))
+
       
       call fileread(with_richards, adeconf)
       
-      call fileread(no_solids, adeconf)
+      call fileread(no_solids, adeconf, ranges=(/1_ikind, huge(1_ikind)/))
       
-      processes = no_solutes + no_solids
+      processes =  no_solids
       
       if (with_richards) processes = processes + 1
       
@@ -84,6 +83,8 @@ module ADE_pointers
       
       if (with_richards) call REstdH(pde_loc(1))
       
+      call ADEkinsorb(pde_loc(adepos+1:pde_common%processes))
+      
     
     end subroutine ADE
     
@@ -95,27 +96,27 @@ module ADE_pointers
       use ADE_fnc
       use ADE_reader
       
-      class(pde_str), intent(in out) :: pde_loc  
+      class(pde_str), intent(in out), dimension(:) :: pde_loc  
       integer(kind=ikind) :: i
       
       call ADEcs_read(pde_loc)
       
-      pde_loc%pde_fnc(pde_loc%order)%elasticity => ADE_tder_cscs
-      
-      pde(pde_loc%order-1)%pde_fnc(pde_loc%order)%elasticity => ADE_tder_cscl
-      
-      pde_loc%pde_fnc(pde_loc%order-1)%reaction => ADE_cscl_react
-      
-      pde_loc%pde_fnc(pde_loc%order)%reaction => ADE_cscs_react
-      
-      allocate(pde_loc%bc(lbound(pde(pde_loc%order-1)%bc,1) : (ubound(pde(pde_loc%order-1)%bc,1) )  ))
-      
-      do i=lbound(pde_loc%bc,1), ubound(pde_loc%bc,1)
-        pde_loc%bc(i)%code = 2
-        pde_loc%bc(i)%value_fnc => ADE_null_bc
-      end do 
-      
-      pde_loc%initcond => ADEcs_icond
+!       pde_loc%pde_fnc(pde_loc%order)%elasticity => ADE_tder_cscs
+!       
+!       pde(pde_loc%order-1)%pde_fnc(pde_loc%order)%elasticity => ADE_tder_cscl
+!       
+!       pde_loc%pde_fnc(pde_loc%order-1)%reaction => ADE_cscl_react
+!       
+!       pde_loc%pde_fnc(pde_loc%order)%reaction => ADE_cscs_react
+!       
+!       allocate(pde_loc%bc(lbound(pde(pde_loc%order-1)%bc,1) : (ubound(pde(pde_loc%order-1)%bc,1) )  ))
+!       
+!       do i=lbound(pde_loc%bc,1), ubound(pde_loc%bc,1)
+!         pde_loc%bc(i)%code = 2
+!         pde_loc%bc(i)%value_fnc => ADE_null_bc
+!       end do 
+!       
+!       pde_loc%initcond => ADEcs_icond
       
     
     end subroutine ADEkinsorb

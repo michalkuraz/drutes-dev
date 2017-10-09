@@ -35,7 +35,7 @@ module heat_fnc
 
       
       if (present(tensor)) then
-	tensor =  heatpar(layer)%lambda
+        tensor =  heatpar(layer)%lambda
       end if
       
     
@@ -47,6 +47,8 @@ module heat_fnc
       use global_objs
       use pde_objs
       use heat_globals
+      use re_total
+      
       class(pde_str), intent(in) :: pde_loc
       !> value of the nonlinear function
       real(kind=rkind), dimension(:), intent(in), optional    :: x
@@ -60,17 +62,32 @@ module heat_fnc
       real(kind=rkind), dimension(:), intent(out), optional :: vector_out
       !> relative scalar value of the nonlinear function 
       real(kind=rkind), intent(out), optional               :: scalar
+ 
       
+      if (with_richards) then
+        if (present(vector_out)) then
+          call pde(1)%flux(layer, quadpnt, vector_out=vector_out)
+          vector_out=heatpar(layer)%C_w*vector_out
+        end if
+        
+        if (present(scalar)) then
+           call pde(1)%flux(layer, quadpnt, scalar=scalar)
+           scalar=heatpar(layer)%C_w*scalar
+        end if
+        
+      else
+        
+        if (present(vector_out)) then
+          vector_out = heatpar(layer)%C_w*heatpar(layer)%convection
+        end if
       
-	if (present(vector_out)) then
-	  vector_out = heatpar(layer)%C_w*heatpar(layer)%convection
-	end if
-	
-	
-	if (present(scalar)) then
-	  scalar = norm2(heatpar(layer)%C_w*heatpar(layer)%convection)
-	end if
-   
+        
+        if (present(scalar)) then
+          scalar = norm2(heatpar(layer)%C_w*heatpar(layer)%convection)
+        end if
+      end if
+     
+     
       
     end subroutine heat_convect
     
@@ -148,28 +165,28 @@ module heat_fnc
       edge_id = nodes%edge(elements%data(el_id, node_order))
       
       if (present(value)) then
-	if (pde_loc%bc(edge_id)%file) then
-	  do i=1, ubound(pde_loc%bc(edge_id)%series,1)
-	    if (pde_loc%bc(edge_id)%series(i,1) > time) then
-	      if (i > 1) then
-		j = i-1
-	      else
-		j = i
-	      end if
-	      tempval = pde_loc%bc(edge_id)%series(j,2)
-	      EXIT
-	    end if
-	  end do
-	else
-	  tempval =  pde_loc%bc(edge_id)%value
-	end if
-	value = tempval 
+        if (pde_loc%bc(edge_id)%file) then
+          do i=1, ubound(pde_loc%bc(edge_id)%series,1)
+            if (pde_loc%bc(edge_id)%series(i,1) > time) then
+              if (i > 1) then
+          j = i-1
+              else
+          j = i
+              end if
+              tempval = pde_loc%bc(edge_id)%series(j,2)
+              EXIT
+            end if
+          end do
+        else
+          tempval =  pde_loc%bc(edge_id)%value
+        end if
+        value = tempval 
       end if
 
 
       
       if (present(code)) then
-	code = 1
+        code = 1
       end if
       
 
@@ -194,28 +211,28 @@ module heat_fnc
       edge_id = nodes%edge(elements%data(el_id, node_order))
       
       if (present(value)) then
-	if (pde_loc%bc(edge_id)%file) then
-	  do i=1, ubound(pde_loc%bc(edge_id)%series,1)
-	    if (pde_loc%bc(edge_id)%series(i,1) > time) then
-	      if (i > 1) then
-		j = i-1
-	      else
-		j = i
-	      end if
-	      tempval = pde_loc%bc(edge_id)%series(j,2)
-	      EXIT
-	    end if
-	  end do
-	else
-	  tempval =  pde_loc%bc(edge_id)%value
-	end if
-	value = tempval 
+        if (pde_loc%bc(edge_id)%file) then
+          do i=1, ubound(pde_loc%bc(edge_id)%series,1)
+            if (pde_loc%bc(edge_id)%series(i,1) > time) then
+              if (i > 1) then
+          j = i-1
+              else
+          j = i
+              end if
+              tempval = pde_loc%bc(edge_id)%series(j,2)
+              EXIT
+            end if
+          end do
+        else
+          tempval =  pde_loc%bc(edge_id)%value
+        end if
+        value = tempval 
       end if
 
 
       
       if (present(code)) then
-	code = 2
+        code = 2
       end if
       
 
@@ -246,26 +263,26 @@ module heat_fnc
       
       
       if (present(quadpnt) .and. (present(grad) .or. present(x))) then
-	print *, "ERROR: the function can be called either with integ point or x value definition and gradient, not both of them"
-	print *, "exited from heat_fnc::heat_flux"
-	ERROR stop
-      else if ((.not. present(grad) .or. .not. present(x)) .and. .not. present(quadpnt)) then
-	print *, "ERROR: you have not specified either integ point or x value"
+        print *, "ERROR: the function can be called either with integ point or x value definition and gradient, not both of them"
         print *, "exited from heat_fnc::heat_flux"
-	ERROR stop
+        ERROR stop
+      else if ((.not. present(grad) .or. .not. present(x)) .and. .not. present(quadpnt)) then
+        print *, "ERROR: you have not specified either integ point or x value"
+        print *, "exited from heat_fnc::heat_flux"
+        ERROR stop
       end if   
 
       if (.not. allocated(gradT)) allocate(gradT(drutes_config%dimen))
 
       if (present(quadpnt)) then
-	call pde_loc%getgrad(quadpnt, gradT)
+        call pde_loc%getgrad(quadpnt, gradT)
       else
-	gradT = grad
+        gradT = grad
       end if
       
       
       if (present(flux)) then
-	flux = matmul(heatpar(layer)%lambda, gradT) 
+        flux = matmul(heatpar(layer)%lambda, gradT) 
       end if
       
       if (present(flux_length)) then
@@ -288,18 +305,18 @@ module heat_fnc
       
    
       do i=1, elements%kolik
-	layer = elements%material(i)
-	do j=1, ubound(elements%data,2)
-	  k = elements%data(i,j)
-	  l = nodes%edge(k)
-	  m = pde_loc%permut(k)
-	  if (m == 0) then
-	    call pde_loc%bc(l)%value_fnc(pde_loc, i, j, value)
-	    pde_loc%solution(k) =  value 
-	  else
-	    pde_loc%solution(k) = heatpar(layer)%Tinit
-	  end if
-	end do   
+        layer = elements%material(i)
+        do j=1, ubound(elements%data,2)
+          k = elements%data(i,j)
+          l = nodes%edge(k)
+          m = pde_loc%permut(k)
+          if (m == 0) then
+            call pde_loc%bc(l)%value_fnc(pde_loc, i, j, value)
+            pde_loc%solution(k) =  value 
+          else
+            pde_loc%solution(k) = heatpar(layer)%Tinit
+          end if
+        end do   
       end do
 
     

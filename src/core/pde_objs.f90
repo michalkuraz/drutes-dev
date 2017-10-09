@@ -321,73 +321,73 @@ module pde_objs
 
       
       if (.not. allocated(grad)) then
-	allocate(grad(drutes_config%dimen))
+        allocate(grad(drutes_config%dimen))
       else if (ubound(grad,1) /= drutes_config%dimen ) then
-	deallocate(grad)
-	allocate(grad(drutes_config%dimen))
+        deallocate(grad)
+        allocate(grad(drutes_config%dimen))
       end if
       
       if (.not. allocated(pts)) then
-	allocate(pts(ubound(elements%data,2)))
-	allocate(quadpntloc(ubound(elements%data,2)))
+        allocate(pts(ubound(elements%data,2)))
+        allocate(quadpntloc(ubound(elements%data,2)))
       end if
       
       select case(quadpnt%type_pnt)
-	case("gqnd", "obpt")
-	  top = 1
-	case("ndpt")
+        case("gqnd", "obpt")
+          top = 1
+        case("ndpt")
           !in case of ndpt the gradient is assumed as an average value of gradients at neighbourhood points
-	  top = nodes%element(quadpnt%order)%pos
-	case default
-	  print *, "RUNTIME ERROR: incorrect quadpnt type definition (value quadpnt%type_pnt)"
-	  print *, "the value specified in code was:", quadpnt%type_pnt
-	  print *, "exited from pde_objs::getgradp1"
-	  ERROR STOP
-	  
-	  
+          top = nodes%element(quadpnt%order)%pos
+        case default
+          print *, "RUNTIME ERROR: incorrect quadpnt type definition (value quadpnt%type_pnt)"
+          print *, "the value specified in code was:", quadpnt%type_pnt
+          print *, "exited from pde_objs::getgradp1"
+          ERROR STOP
+          
+      
       end select
       
       gradloc = 0
       do i=1, top  
-	select case(quadpnt%type_pnt)
-	  case("gqnd")
-	    el = quadpnt%element
-	  case("obpt")
-	    el = observation_array(quadpnt%order)%element
-	  case("ndpt")
-	    el = nodes%element(quadpnt%order)%data(i)
-	end select
-	
-	pts = elements%data(el,:)
-	
-	quadpntloc(:) = quadpnt
-	quadpntloc(:)%type_pnt = "ndpt"
-	select case(drutes_config%dimen)
-	  case(1)
-	    dx = nodes%data(pts(2),1) - nodes%data(pts(1),1)
-	    quadpntloc(1)%order = pts(1)
-	    quadpntloc(2)%order = pts(2)
-	    gradloc(1) = gradloc(1) + (getvalp1(pde_loc,quadpntloc(2)) - getvalp1(pde_loc, quadpntloc(1)))/dx
-	  case(2)
-	    a(1:2) = nodes%data(pts(1),:)
-	    b(1:2) = nodes%data(pts(2),:)
-	    c(1:2) = nodes%data(pts(3),:)
-	    
-	    
-	    quadpntloc(1)%order = pts(1)
-	    quadpntloc(2)%order = pts(2)
-	    quadpntloc(3)%order = pts(3)
-	    
-	    
-	    
-	    a(3) = getvalp1(pde_loc, quadpntloc(1))
-	    b(3) = getvalp1(pde_loc, quadpntloc(2))
-	    c(3) = getvalp1(pde_loc, quadpntloc(3))
-	    call get2dderivative(a,b,c,grad(1), grad(2))
+        select case(quadpnt%type_pnt)
+          case("gqnd")
+            el = quadpnt%element
+          case("obpt")
+            el = observation_array(quadpnt%order)%element
+          case("ndpt")
+            el = nodes%element(quadpnt%order)%data(i)
+        end select
+      
+      pts = elements%data(el,:)
+      
+      quadpntloc(:) = quadpnt
+      quadpntloc(:)%type_pnt = "ndpt"
+      select case(drutes_config%dimen)
+        case(1)
+          dx = nodes%data(pts(2),1) - nodes%data(pts(1),1)
+          quadpntloc(1)%order = pts(1)
+          quadpntloc(2)%order = pts(2)
+          gradloc(1) = gradloc(1) + (getvalp1(pde_loc,quadpntloc(2)) - getvalp1(pde_loc, quadpntloc(1)))/dx
+        case(2)
+          a(1:2) = nodes%data(pts(1),:)
+          b(1:2) = nodes%data(pts(2),:)
+          c(1:2) = nodes%data(pts(3),:)
+          
+          
+          quadpntloc(1)%order = pts(1)
+          quadpntloc(2)%order = pts(2)
+          quadpntloc(3)%order = pts(3)
+        
+          
+          
+          a(3) = getvalp1(pde_loc, quadpntloc(1))
+          b(3) = getvalp1(pde_loc, quadpntloc(2))
+          c(3) = getvalp1(pde_loc, quadpntloc(3))
+          call get2dderivative(a,b,c,grad(1), grad(2))
 
-	    gradloc(1:2) = gradloc(1:2) + grad
-	  case(3)
-	end select
+          gradloc(1:2) = gradloc(1:2) + grad
+        case(3)
+      end select
       end do
       
       grad = gradloc(1:drutes_config%dimen)/top
@@ -413,21 +413,21 @@ module pde_objs
 
 
       if (quadpnt%globtime .or. quadpnt%column==1) then
-	RETURN
+        RETURN
       else
-	quadpntloc = quadpnt
-	quadpntloc%column = 4
-	if (quadpnt%ddlocal) then
-	  timeglob = subdomain(quadpnt%subdom)%time
-	  timeprev = subdomain(quadpnt%subdom)%time - subdomain(quadpnt%subdom)%time_step
-	else
-	  timeglob = time
-	  timeprev = time-time_step
-	end if
+        quadpntloc = quadpnt
+        quadpntloc%column = 4
+      if (quadpnt%ddlocal) then
+        timeglob = subdomain(quadpnt%subdom)%time
+        timeprev = subdomain(quadpnt%subdom)%time - subdomain(quadpnt%subdom)%time_step
+      else
+        timeglob = time
+        timeprev = time-time_step
+      end if
 
-	valprev = getvalp1loc(pde_loc, quadpntloc)
-        tmp=val
-	val = (val-valprev)/(timeglob-timeprev)*(quadpnt%time4eval-timeprev)+valprev
+        valprev = getvalp1loc(pde_loc, quadpntloc)
+              tmp=val
+        val = (val-valprev)/(timeglob-timeprev)*(quadpnt%time4eval-timeprev)+valprev
 
       end if
 	
@@ -460,130 +460,130 @@ module pde_objs
       
             
       
-     select case(quadpnt%type_pnt)
-	case("gqnd", "obpt")
-	    if (.not. allocated(pts) ) then
-	      allocate(pts(ubound(elements%data,2)))
-	      allocate(ppts(ubound(elements%data,2)))
-	      allocate(ndvals(ubound(elements%data,2)))
-	    end if
-	    
-	    
-	    select case(quadpnt%type_pnt)
-	      case("gqnd")
-		el = quadpnt%element
-	      case("obpt")
-		el = observation_array(quadpnt%order)%element
-	    end select
-	      
-	    pts = elements%data(el,:)
-	    ppts = pde_loc%permut(pts)
-	    
-		
-            if (quadpnt%ddlocal) then
-	      if (.not. quadpnt%extended) then
-		where (ppts /= 0)
-		  ppts = subdomain(quadpnt%subdom)%invpermut(ppts)
-		end where
-	      else 
-		where (ppts /= 0)
-		  ppts = subdomain(quadpnt%subdom)%extinvpermut(ppts)
-		end where
-	      end if
-	    end if
+      select case(quadpnt%type_pnt)
+        case("gqnd", "obpt")
+          if (.not. allocated(pts) ) then
+            allocate(pts(ubound(elements%data,2)))
+            allocate(ppts(ubound(elements%data,2)))
+            allocate(ndvals(ubound(elements%data,2)))
+          end if
+          
+          
+          select case(quadpnt%type_pnt)
+            case("gqnd")
+              el = quadpnt%element
+            case("obpt")
+              el = observation_array(quadpnt%order)%element
+          end select
+            
+          pts = elements%data(el,:)
+          ppts = pde_loc%permut(pts)
+          
+        
+          if (quadpnt%ddlocal) then
+            if (.not. quadpnt%extended) then
+              where (ppts /= 0)
+                ppts = subdomain(quadpnt%subdom)%invpermut(ppts)
+              end where
+            else 
+              where (ppts /= 0)
+                ppts = subdomain(quadpnt%subdom)%extinvpermut(ppts)
+              end where
+            end if
+          end if
 
 
 	    
-	    do i=1, ubound(elements%data,2)
-	
-	      if (ppts(i) > 0) then
+          do i=1, ubound(elements%data,2)
+      
+            if (ppts(i) > 0) then
+              if (.not. quadpnt%ddlocal) then
+                ndvals(i) = pde_common%xvect(ppts(i), quadpnt%column)
+              else
+                if (.not. quadpnt%extended) then
+                  ndvals(i) = subdomain(quadpnt%subdom)%xvect(ppts(i), quadpnt%column)
+                else
+                  ndvals(i) = subdomain(quadpnt%subdom)%extxvect(ppts(i), quadpnt%column)
+                end if
+              end if
+            else
 
-		if (.not. quadpnt%ddlocal) then
-		  ndvals(i) = pde_common%xvect(ppts(i), quadpnt%column)
-		else
-		  if (.not. quadpnt%extended) then
-		    ndvals(i) = subdomain(quadpnt%subdom)%xvect(ppts(i), quadpnt%column)
-		  else
-		    ndvals(i) = subdomain(quadpnt%subdom)%extxvect(ppts(i), quadpnt%column)
-		  end if
-		end if
-	      else
+              edge = nodes%edge(pts(i))
 
-		edge = nodes%edge(pts(i))
-
-                
-		call pde_loc%bc(edge)%value_fnc(pde_loc, el, i, ndvals(i))
-		
-	      end if
-	    end do
+                      
+              call pde_loc%bc(edge)%value_fnc(pde_loc, el, i, ndvals(i))
+      
+            end if
+          end do
 
        
-	    select case(quadpnt%type_pnt)
-	      case("gqnd")
-		select case(drutes_config%dimen)
-		  case(1)
-		    val = (ndvals(2) - ndvals(1))*gauss_points%point(quadpnt%order,1) + ndvals(1)
-		  case(2)
-		    call get2dderivative((/0.0_rkind, 0.0_rkind, ndvals(1)/), (/1.0_rkind, 0.0_rkind, ndvals(2)/), (/0.0_rkind, &
-				   1.0_rkind, ndvals(3)/), xder, yder)
-		    val = ndvals(1) + xder*gauss_points%point(quadpnt%order,1) + yder*gauss_points%point(quadpnt%order,2)
-		end select
-	      case("obpt")
-		select case(drutes_config%dimen)
-		  case(1)
-		     val = (ndvals(2) - ndvals(1))/(nodes%data(pts(2),1) - nodes%data(pts(1),1))*(observation_array(quadpnt%order)%xyz(1) - &
-			   nodes%data(pts(1),1)) + ndvals(1)
-		  case(2)
-		    do i=1,3
-		      do j=1,2
-			a(i,j) = nodes%data(pts(i),j)
-		      end do
-		      a(i,3) = ndvals(i)
-		    end do
-		    	    
-		    call get2dderivative(a(1,:), a(2,:), a(3,:), xder, yder)
-		    
-		    val = ndvals(1) + xder*(observation_array(quadpnt%order)%xyz(1) - a(1,1)) + &
-			  yder * (observation_array(quadpnt%order)%xyz(2) - a(1,2))
-		end select
-	  end select
-		    
-	case("ndpt")
-	    i = pde_loc%permut(quadpnt%order)
+          select case(quadpnt%type_pnt)
+            case("gqnd")
+              select case(drutes_config%dimen)
+                case(1)
+                  val = (ndvals(2) - ndvals(1))*gauss_points%point(quadpnt%order,1) + ndvals(1)
+                case(2)
+                  call get2dderivative((/0.0_rkind, 0.0_rkind, ndvals(1)/), (/1.0_rkind, 0.0_rkind, ndvals(2)/), (/0.0_rkind, &
+                     1.0_rkind, ndvals(3)/), xder, yder)
+                  val = ndvals(1) + xder*gauss_points%point(quadpnt%order,1) + yder*gauss_points%point(quadpnt%order,2)
+              end select
+            case("obpt")
+              select case(drutes_config%dimen)
+                case(1)
+                   val = (ndvals(2) - ndvals(1))/(nodes%data(pts(2),1) - nodes%data(pts(1),1))* & 
+                   (observation_array(quadpnt%order)%xyz(1) - &
+                   nodes%data(pts(1),1)) + ndvals(1)
+                case(2)
+                  do i=1,3
+                    do j=1,2
+                      a(i,j) = nodes%data(pts(i),j)
+                    end do
+                    a(i,3) = ndvals(i)
+                  end do
+        
+                call get2dderivative(a(1,:), a(2,:), a(3,:), xder, yder)
+                
+                val = ndvals(1) + xder*(observation_array(quadpnt%order)%xyz(1) - a(1,1)) + &
+                yder * (observation_array(quadpnt%order)%xyz(2) - a(1,2))
+            end select
+          end select
+            
+        case("ndpt")
+          i = pde_loc%permut(quadpnt%order)
 
-	    if (i > 0) then
-	      if (.not. quadpnt%ddlocal) then
-		val = pde_common%xvect(i, quadpnt%column)
-	      else
-	      
-		if (.not. quadpnt%extended) then
+          if (i > 0) then
+            if (.not. quadpnt%ddlocal) then
+              val = pde_common%xvect(i, quadpnt%column)
+            else
+            
+              if (.not. quadpnt%extended) then
 
-		  i = subdomain(quadpnt%subdom)%invpermut(i)
+                i = subdomain(quadpnt%subdom)%invpermut(i)
 
-		  val = subdomain(quadpnt%subdom)%xvect(i, quadpnt%column)
+                val = subdomain(quadpnt%subdom)%xvect(i, quadpnt%column)
 
-		else
-		  i = subdomain(quadpnt%subdom)%extinvpermut(i)
-		  val = subdomain(quadpnt%subdom)%extxvect(i, quadpnt%column)
-		end if
-	      end if
-	    else
-	      edge = nodes%edge(quadpnt%order)
-	      el = nodes%element(quadpnt%order)%data(1)
-	      do i=1, ubound(elements%data,2)
-		if (elements%data(el,i) == quadpnt%order) then
-		  order = i
-		  EXIT
-		end if
-	      end do
-	      call pde_loc%bc(edge)%value_fnc(pde_loc, el, order, val)
-	    end if
+              else
+                i = subdomain(quadpnt%subdom)%extinvpermut(i)
+                val = subdomain(quadpnt%subdom)%extxvect(i, quadpnt%column)
+              end if
+            end if
+          else
+            edge = nodes%edge(quadpnt%order)
+            el = nodes%element(quadpnt%order)%data(1)
+            do i=1, ubound(elements%data,2)
+              if (elements%data(el,i) == quadpnt%order) then
+                order = i
+                EXIT
+              end if
+            end do
+            call pde_loc%bc(edge)%value_fnc(pde_loc, el, order, val)
+          end if
 
-	case default
-	    print *, "RUNTIME ERROR: incorrect quadpnt type definition (value quadpnt%type_pnt)"
-	    print *, "the value specified in code was:", quadpnt%type_pnt
-	    print *, "exited from pde_objs::getvalp1"
-	    ERROR STOP
+        case default
+          print *, "RUNTIME ERROR: incorrect quadpnt type definition (value quadpnt%type_pnt)"
+          print *, "the value specified in code was:", quadpnt%type_pnt
+          print *, "exited from pde_objs::getvalp1"
+          ERROR STOP
       end select
 	  
 
@@ -615,19 +615,19 @@ module pde_objs
 
       !check if the plane is not horizontal
       if (abs(a(3) - b(3)) < reps*(abs(a(3))-abs(b(3)))  .and.  &
-	  abs(a(3) - c(3)) < reps*(abs(a(3))-abs(c(3)))  .and.  &
-	  abs(b(3) - c(3)) < reps*(abs(b(3))-abs(c(3)))) then
-	xder = 0.0_rkind
-	yder = 0.0_rkind
-	RETURN
+          abs(a(3) - c(3)) < reps*(abs(a(3))-abs(c(3)))  .and.  &
+          abs(b(3) - c(3)) < reps*(abs(b(3))-abs(c(3)))) then
+        xder = 0.0_rkind
+        yder = 0.0_rkind
+        RETURN
       else
-	CONTINUE
+        CONTINUE
       end if
 
       !creates the plane vectors 
       do i=1,3
-	u(i) = a(i) - b(i)
-	v(i) = a(i) - c(i)
+        u(i) = a(i) - b(i)
+        v(i) = a(i) - c(i)
       end do
 
       ! the normal plane vector is defined as
@@ -638,8 +638,8 @@ module pde_objs
       ! finally the derivate is as follows, the horizontality has been already checked
       ! the verticality check
       if (abs(n(3)) < 1e2*reps) then
-	print *, "the mesh is wrong, base function can't be vertical"
-	ERROR STOP
+        print *, "the mesh is wrong, base function can't be vertical"
+        ERROR STOP
       end if 
       xder = -n(1)/n(3)
       yder = -n(2)/n(3)

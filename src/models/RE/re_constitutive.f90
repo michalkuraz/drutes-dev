@@ -439,16 +439,16 @@ module RE_constitutive
         quadpnt_loc%preproc=.true.
         h = pde_loc%getval(quadpnt_loc)
       else
-      if (ubound(x,1) /=1) then
-        print *, "ERROR: Gardner function is a function of a single variable h"
-        print *, "       your input data has:", ubound(x,1), "variables"
-        ERROR STOP
-      end if
-      if (ubound(x,1) /=1) then
-        print *, "ERROR: Gardner function is a function of a single variable h"
-        print *, "       your input data has:", ubound(x,1), "variables"
-        print *, "exited from re_constitutive::gardner_elast"
-        ERROR STOP
+        if (ubound(x,1) /=1) then
+          print *, "ERROR: Gardner function is a function of a single variable h"
+          print *, "       your input data has:", ubound(x,1), "variables"
+          ERROR STOP
+        end if
+        if (ubound(x,1) /=1) then
+          print *, "ERROR: Gardner function is a function of a single variable h"
+          print *, "       your input data has:", ubound(x,1), "variables"
+          print *, "exited from re_constitutive::gardner_elast"
+          ERROR STOP
       end if
         h = x(1)
       end if
@@ -503,13 +503,13 @@ module RE_constitutive
         quadpnt_loc%preproc=.true.
         h = pde_loc%getval(quadpnt_loc)
       else
-      	if (ubound(x,1) /=1) then
-        print *, "ERROR: van Genuchten function is a function of a single variable h"
-        print *, "       your input data has:", ubound(x,1), "variables"
-        print *, "exited from re_constitutive::vangen_elast_tab"
-        ERROR STOP
-	end if
-	h = x(1)
+        if (ubound(x,1) /=1) then
+          print *, "ERROR: van Genuchten function is a function of a single variable h"
+          print *, "       your input data has:", ubound(x,1), "variables"
+          print *, "exited from re_constitutive::vangen_elast_tab"
+          ERROR STOP
+        end if
+        h = x(1)
       end if
 
       if (h<0) then
@@ -537,7 +537,7 @@ module RE_constitutive
         
         end if 
       else
-        E = vgset(layer)%Ss	
+        E = vgset(layer)%Ss
       end if
 
 
@@ -1183,29 +1183,29 @@ module RE_constitutive
       
       
       if (present(quadpnt) .and. (present(grad) .or. present(x))) then
-	print *, "ERROR: the function can be called either with integ point or x value definition and gradient, not both of them"
-	ERROR stop
+        print *, "ERROR: the function can be called either with integ point or x value definition and gradient, not both of them"
+        ERROR stop
       else if ((.not. present(grad) .or. .not. present(x)) .and. .not. present(quadpnt)) then
-	print *, "ERROR: you have not specified either integ point or x value"
+        print *, "ERROR: you have not specified either integ point or x value"
         print *, "exited from re_constitutive::darcy_law"
-	ERROR stop
+        ERROR stop
       end if
       
       if (present(quadpnt)) then
         quadpnt_loc=quadpnt
-	quadpnt_loc%preproc=.true.
-	h = pde_loc%getval(quadpnt_loc)
-	call pde_loc%getgrad(quadpnt, gradient)
+        quadpnt_loc%preproc=.true.
+        h = pde_loc%getval(quadpnt_loc)
+        call pde_loc%getgrad(quadpnt, gradient)
       else
         if (ubound(x,1) /=1) then
-	  print *, "ERROR: van Genuchten function is a function of a single variable h"
-	  print *, "       your input data has:", ubound(x,1), "variables"
-	  print *, "exited from re_constitutive::darcy_law"
-	  ERROR STOP
-	end if
-	h = x(1)
-	allocate(gradient(ubound(grad,1)))
-	gradient = grad
+          print *, "ERROR: van Genuchten function is a function of a single variable h"
+          print *, "       your input data has:", ubound(x,1), "variables"
+          print *, "exited from re_constitutive::darcy_law"
+          ERROR STOP
+        end if
+        h = x(1)
+        allocate(gradient(ubound(grad,1)))
+        gradient = grad
       end if
       
       D = drutes_config%dimen
@@ -1252,59 +1252,59 @@ module RE_constitutive
 
       class(pde_str), intent(in) :: pde_loc
       interface
-	subroutine Kfnc(pde_loc, layer, quadpnt, x, tensor, scalar)	
-	  use typy
-	  use pde_objs
-	  use global_objs
-	  class(pde_str), intent(in) :: pde_loc
-	  integer(kind=ikind), intent(in)                           :: layer
-	  type(integpnt_str), intent(in), optional                   :: quadpnt
-	  real(kind=rkind), dimension(:), intent(in), optional      :: x
-	  real(kind=rkind), intent(out), dimension(:,:), optional   :: tensor
-	  real(kind=rkind), intent(out), optional                   :: scalar 
-	end subroutine Kfnc
+        subroutine Kfnc(pde_loc, layer, quadpnt, x, tensor, scalar)	
+          use typy
+          use pde_objs
+          use global_objs
+          class(pde_str), intent(in) :: pde_loc
+          integer(kind=ikind), intent(in)                           :: layer
+          type(integpnt_str), intent(in), optional                   :: quadpnt
+          real(kind=rkind), dimension(:), intent(in), optional      :: x
+          real(kind=rkind), intent(out), dimension(:,:), optional   :: tensor
+          real(kind=rkind), intent(out), optional                   :: scalar 
+        end subroutine Kfnc
       end interface
 
       interface
-	subroutine dKdhfnc(pde_loc, layer, quadpnt, x, vector_in, vector_out, scalar)
-	  use typy
-	  use pde_objs
-	  use global_objs
-	  class(pde_str), intent(in) :: pde_loc
-	  integer(kind=ikind), intent(in) 		            :: layer
-	  type(integpnt_str), intent(in), optional                  :: quadpnt
-	  real(kind=rkind), dimension(:), intent(in), optional      :: x
-          real(kind=rkind), dimension(:), intent(in), optional      :: vector_in
-          real(kind=rkind), dimension(:), intent(out), optional     :: vector_out
-	  real(kind=rkind), intent(out), optional                   :: scalar 
-	end subroutine dKdhfnc
+        subroutine dKdhfnc(pde_loc, layer, quadpnt, x, vector_in, vector_out, scalar)
+          use typy
+          use pde_objs
+          use global_objs
+          class(pde_str), intent(in) :: pde_loc
+          integer(kind=ikind), intent(in) 		            :: layer
+          type(integpnt_str), intent(in), optional                  :: quadpnt
+          real(kind=rkind), dimension(:), intent(in), optional      :: x
+                real(kind=rkind), dimension(:), intent(in), optional      :: vector_in
+                real(kind=rkind), dimension(:), intent(out), optional     :: vector_out
+          real(kind=rkind), intent(out), optional                   :: scalar 
+        end subroutine dKdhfnc
       end interface
 
       interface
-	function Cfnc(pde_loc, layer, quadpnt,  x) result(val)	
-	  use typy
-	  use pde_objs
-	  use global_objs
-	  class(pde_str), intent(in) :: pde_loc
-	  integer(kind=ikind), intent(in)                      :: layer
-	  type(integpnt_str), intent(in), optional             :: quadpnt
-	  real(kind=rkind), dimension(:), intent(in), optional :: x
-	  real(kind=rkind)                                     :: val
-	end function Cfnc
+        function Cfnc(pde_loc, layer, quadpnt,  x) result(val)	
+          use typy
+          use pde_objs
+          use global_objs
+          class(pde_str), intent(in) :: pde_loc
+          integer(kind=ikind), intent(in)                      :: layer
+          type(integpnt_str), intent(in), optional             :: quadpnt
+          real(kind=rkind), dimension(:), intent(in), optional :: x
+          real(kind=rkind)                                     :: val
+        end function Cfnc
       end interface
 
 
       interface
-	function thetafnc(pde_loc, layer, quadpnt, x) result(val)	
-	  use typy
-	  use pde_objs
-	  use global_objs
-	  class(pde_str), intent(in) :: pde_loc	  
-	  integer(kind=ikind), intent(in)                      :: layer
-	  type(integpnt_str), intent(in), optional             :: quadpnt
-	  real(kind=rkind), dimension(:), intent(in), optional :: x
-	  real(kind=rkind)                                     :: val
-	end function thetafnc
+        function thetafnc(pde_loc, layer, quadpnt, x) result(val)	
+          use typy
+          use pde_objs
+          use global_objs
+          class(pde_str), intent(in) :: pde_loc	  
+          integer(kind=ikind), intent(in)                      :: layer
+          type(integpnt_str), intent(in), optional             :: quadpnt
+          real(kind=rkind), dimension(:), intent(in), optional :: x
+          real(kind=rkind)                                     :: val
+        end function thetafnc
       end interface
 
 
@@ -1335,25 +1335,25 @@ module RE_constitutive
 
 
       do k=1, domain_count
-	call domainswitch(domain(k))
-	maxcalls = ubound(vgset,1)*n
-	counter = maxcalls
-	call write_log(text="creating constitutive function table for domain: ", text2=domain(k))
-	do i=1, ubound(vgset,1)
-	  do j=1, n
-	    if (this_image() == 1) then
-	      counter = counter - 1
-	      l = 100*(maxcalls - counter)/maxcalls
-	      call progressbar(l)
-	    end if
-	    call Kfnc(pde_loc,i, x=(/-(j-1)*dx/), scalar=Ktab(i,j))
-! 	    Ktab(i,j) = Kfnc(i, -(j-1)*dx)
-! 	    dKdhtab(i,j) = dKdhfnc(i, -(j-1)*dx)
-	    call dKdhfnc(pde_loc, i, x=(/-(j-1)*dx/), scalar=dKdhtab(i,j))
-	    warecatab(i,j) = Cfnc(pde_loc, i, x=(/-(j-1)*dx/))
-	    watcontab(i,j) = thetafnc(pde_loc, i, x=(/-(j-1)*dx/))
-	  end do
-	end do
+        call domainswitch(domain(k))
+        maxcalls = ubound(vgset,1)*n
+        counter = maxcalls
+        call write_log(text="creating constitutive function table for domain: ", text2=domain(k))
+        do i=1, ubound(vgset,1)
+          do j=1, n
+            if (this_image() == 1) then
+              counter = counter - 1
+              l = 100*(maxcalls - counter)/maxcalls
+              call progressbar(l)
+            end if
+            call Kfnc(pde_loc,i, x=(/-(j-1)*dx/), scalar=Ktab(i,j))
+      ! 	    Ktab(i,j) = Kfnc(i, -(j-1)*dx)
+      ! 	    dKdhtab(i,j) = dKdhfnc(i, -(j-1)*dx)
+            call dKdhfnc(pde_loc, i, x=(/-(j-1)*dx/), scalar=dKdhtab(i,j))
+            warecatab(i,j) = Cfnc(pde_loc, i, x=(/-(j-1)*dx/))
+            watcontab(i,j) = thetafnc(pde_loc, i, x=(/-(j-1)*dx/))
+          end do
+        end do
       end do
 
 
@@ -1368,19 +1368,19 @@ module RE_constitutive
 
 
       if (domain == "m") then
-	vgset => vgmatrix
-	Ktab => Ktab_all(1,:,:)
-	dKdhtab => dKdhtab_all(1,:,:)
-	warecatab => warecatab_all(1,:,:)
-	watcontab => watcontab_all(1,:,:)
-      else if (domain == "f") then
-	vgset => vgfractures
-	Ktab => Ktab_all(2,:,:)
-	dKdhtab => dKdhtab_all(2,:,:)
-	warecatab => warecatab_all(2,:,:)
-	watcontab => watcontab_all(2,:,:)
-      else
-	ERROR STOP "runtime error, invalid argument in RE_constitutive::domainswitch() procedure"
+        vgset => vgmatrix
+        Ktab => Ktab_all(1,:,:)
+        dKdhtab => dKdhtab_all(1,:,:)
+        warecatab => warecatab_all(1,:,:)
+        watcontab => watcontab_all(1,:,:)
+            else if (domain == "f") then
+        vgset => vgfractures
+        Ktab => Ktab_all(2,:,:)
+        dKdhtab => dKdhtab_all(2,:,:)
+        warecatab => warecatab_all(2,:,:)
+        watcontab => watcontab_all(2,:,:)
+            else
+        ERROR STOP "runtime error, invalid argument in RE_constitutive::domainswitch() procedure"
       end if
 	
 
@@ -1414,10 +1414,10 @@ module RE_constitutive
 
 
       do i=1, ubound(vg,1)
-	if (vg(i)%rcza_set%use) then
-         allocate(vg(i)%rcza_set%tab(n, 3))
-	 vg(i)%rcza_set%tab = 0
-	end if
+        if (vg(i)%rcza_set%use) then
+               allocate(vg(i)%rcza_set%tab(n, 3))
+         vg(i)%rcza_set%tab = 0
+        end if
       end do
 
       i_err = 0
@@ -1445,115 +1445,115 @@ module RE_constitutive
     
 
       layers: do j=images_run(THIS_IMAGE(),1), images_run(THIS_IMAGE(),2)
-		if (vgset(j)%rcza_set%use) then
-		  k = j - images_run(THIS_IMAGE(),1) + 1
-		  !backward
-		  write(unit=terminal, fmt=*) "preparing layer:", j
-		  this_layer = j
-		  call solve_bisect(-epsilon(h), -maxpress, secondder_retc, 0.001_rkind, i_err, inflex_point)
+          if (vgset(j)%rcza_set%use) then
+            k = j - images_run(THIS_IMAGE(),1) + 1
+            !backward
+            write(unit=terminal, fmt=*) "preparing layer:", j
+            this_layer = j
+            call solve_bisect(-epsilon(h), -maxpress, secondder_retc, 0.001_rkind, i_err, inflex_point)
 
-		  print *, "inflex point of the layer:", j, "found at:", inflex_point
-		  
+            print *, "inflex point of the layer:", j, "found at:", inflex_point
+            
 
-		  levels: do i=1, ubound(cotable,2)
-			    if (this_image() == 1) then
-			      call progressbar(int(50*i/ubound(cotable,2)))
-			    end if
-			    h = -drutes_config%fnc_discr_length*i
-			    if (i < 2) then
-			      htest = -drutes_config%fnc_discr_length
-			      hprev = -drutes_config%fnc_discr_length
-			    else
-			      htest = cotable(k,i-1,2)[THIS_IMAGE()]
-			      hprev = htest
-			    end if
-			    rough: do
-				    if (zone_error_val(h, htest, vgset(j)%rcza_set%val) > 0) then
-						  cotable(k,i,1)[THIS_IMAGE()] = h
-						  cotable(k,i,2)[THIS_IMAGE()] = htest
-						  exit rough
-				    else
-				      htest = htest - drutes_config%fnc_discr_length
-				      if (htest < -2*maxpress) then
-					cotable(k,i:ubound(cotable,2),2)[THIS_IMAGE()] = htest
-					do l= i, ubound(cotable,2)
-					  cotable(k,l,1)[THIS_IMAGE()] = -drutes_config%fnc_discr_length*l
-					end do
-					exit levels
-				      end if
-				    end if
-			    end do rough
-		  end do levels
+            levels: do i=1, ubound(cotable,2)
+                if (this_image() == 1) then
+                  call progressbar(int(50*i/ubound(cotable,2)))
+                end if
+                h = -drutes_config%fnc_discr_length*i
+                if (i < 2) then
+                  htest = -drutes_config%fnc_discr_length
+                  hprev = -drutes_config%fnc_discr_length
+                else
+                  htest = cotable(k,i-1,2)[THIS_IMAGE()]
+                  hprev = htest
+                end if
+                rough: do
+                  if (zone_error_val(h, htest, vgset(j)%rcza_set%val) > 0) then
+                    cotable(k,i,1)[THIS_IMAGE()] = h
+                    cotable(k,i,2)[THIS_IMAGE()] = htest
+                    exit rough
+                  else
+                    htest = htest - drutes_config%fnc_discr_length
+                    if (htest < -2*maxpress) then
+                cotable(k,i:ubound(cotable,2),2)[THIS_IMAGE()] = htest
+                do l= i, ubound(cotable,2)
+                  cotable(k,l,1)[THIS_IMAGE()] = -drutes_config%fnc_discr_length*l
+                end do
+                exit levels
+                    end if
+                  end if
+                end do rough
+            end do levels
 
-    ! 		  !forward
-		  levels2: do i=1, ubound(cotable,2)
-			    if (this_image() == 1) then
-			      call progressbar(int(50*i/ubound(cotable,2)+50))
-			    end if
-			    h = -drutes_config%fnc_discr_length*i
-			    if (i < 2) then
-			      htest = -drutes_config%fnc_discr_length
-			      hprev = -drutes_config%fnc_discr_length
-			      backward = .false.
-			    else
-			      if (cotable(k,i-1,3)[THIS_IMAGE()] > inflex_point-5*drutes_config%fnc_discr_length) then
-				htest = h
-				hprev = h
-				backward = .false.
-			      else
-				htest = cotable(k,i-1,3)[THIS_IMAGE()]
-				hprev = htest
-				backward = .true.
-			      end if
-			    end if
-			    rough2: do
-				      if ((zone_error_val(h, htest, vgset(j)%rcza_set%val) > epsilon(0.0_rkind) .and. .not.(backward)) .or. &
-					(zone_error_val(h, htest, vgset(j)%rcza_set%val) < 0 .and. backward))      then
-				      cotable(k,i,3)[THIS_IMAGE()] = htest
-				      exit rough2
-				    else
-					if (htest < 0) then
-					  if (backward) then
-					    l = -1
-					  else 
-					    l = 1
-					  end if
-					  htest = htest + l*drutes_config%fnc_discr_length
-					else
-					  cotable(k,i,3)[THIS_IMAGE()] = huge(1.0_rkind)
-					  exit rough2
-					end if
-				      end if
-				    end do rough2
-		  end do levels2 
-		  if (this_image() == 1) then
-		    print *, " "
-		    call flush(6)
-		  end if
-	  end if
-	end do layers
+          ! 		  !forward
+            levels2: do i=1, ubound(cotable,2)
+                if (this_image() == 1) then
+                  call progressbar(int(50*i/ubound(cotable,2)+50))
+                end if
+                h = -drutes_config%fnc_discr_length*i
+                if (i < 2) then
+                  htest = -drutes_config%fnc_discr_length
+                  hprev = -drutes_config%fnc_discr_length
+                  backward = .false.
+                else
+                  if (cotable(k,i-1,3)[THIS_IMAGE()] > inflex_point-5*drutes_config%fnc_discr_length) then
+              htest = h
+              hprev = h
+              backward = .false.
+                  else
+              htest = cotable(k,i-1,3)[THIS_IMAGE()]
+              hprev = htest
+              backward = .true.
+                  end if
+                end if
+                rough2: do
+                    if ((zone_error_val(h, htest, vgset(j)%rcza_set%val) > epsilon(0.0_rkind) .and. .not.(backward)) .or. &
+                (zone_error_val(h, htest, vgset(j)%rcza_set%val) < 0 .and. backward))      then
+                    cotable(k,i,3)[THIS_IMAGE()] = htest
+                    exit rough2
+                  else
+                if (htest < 0) then
+                  if (backward) then
+                    l = -1
+                  else 
+                    l = 1
+                  end if
+                  htest = htest + l*drutes_config%fnc_discr_length
+                else
+                  cotable(k,i,3)[THIS_IMAGE()] = huge(1.0_rkind)
+                  exit rough2
+                end if
+                    end if
+                  end do rough2
+            end do levels2 
+            if (this_image() == 1) then
+              print *, " "
+              call flush(6)
+            end if
+          end if
+        end do layers
 
-	! sync data
-	sync all
-	
-	  
-	do i=1, ubound(images_run,1)
-	  do j=images_run(i,1), images_run(i,2)
-	    vg(j)%rcza_set%tab = cotable(j,:,:)[i]
-	  end do
-	end do
-
-
-
-	 sync all 
+        ! sync data
+        sync all
+        
+          
+        do i=1, ubound(images_run,1)
+          do j=images_run(i,1), images_run(i,2)
+            vg(j)%rcza_set%tab = cotable(j,:,:)[i]
+          end do
+        end do
 
 
 
+         sync all 
 
-	
 
-	deallocate(images_run)
-	deallocate(cotable)
+
+
+        
+
+        deallocate(images_run)
+        deallocate(cotable)
 
 
 
@@ -1565,20 +1565,20 @@ module RE_constitutive
       
       
       function zone_error_val( h, htest, taylor_max) result(err_val)
-	use typy
-	use pde_objs
+        use typy
+        use pde_objs
 
-	!> starting point
-	real(kind=rkind), intent(in) :: h
-	!> point to be evaluated
-	real(kind=rkind), intent(in) :: htest
-	!> maximal error of taylor series
-	real(kind=rkind), intent(in) :: taylor_max
-	!> error value of first order taylor approximation starting at point h and evaluating at point htest
-	real(kind=rkind) :: err_val
+        !> starting point
+        real(kind=rkind), intent(in) :: h
+        !> point to be evaluated
+        real(kind=rkind), intent(in) :: htest
+        !> maximal error of taylor series
+        real(kind=rkind), intent(in) :: taylor_max
+        !> error value of first order taylor approximation starting at point h and evaluating at point htest
+        real(kind=rkind) :: err_val
 
-	err_val=abs(vangen(pde(1), this_layer, x=(/h/)) + vangen_elast(pde(1), this_layer, x=(/htest/))*(htest-h)- &
-		vangen(pde(1), this_layer, x=(/htest/))) - taylor_max
+        err_val=abs(vangen(pde(1), this_layer, x=(/h/)) + vangen_elast(pde(1), this_layer, x=(/htest/))*(htest-h)- &
+          vangen(pde(1), this_layer, x=(/htest/))) - taylor_max
 
 
 
@@ -1590,31 +1590,31 @@ module RE_constitutive
       !second order derivative of the van Genuchten retention curve function
       pure &
       function secondder_retc(h) result(curvature)
-	use typy
-	use re_globals
+        use typy
+        use re_globals
 
-	!> input pressure head, van genuchten's parameters are obtained from variable van_gen_coeff
-	real(kind=rkind), intent(in) :: h
-	!> resulting curvature
-	real(kind=rkind) :: curvature
+        !> input pressure head, van genuchten's parameters are obtained from variable van_gen_coeff
+        real(kind=rkind), intent(in) :: h
+        !> resulting curvature
+        real(kind=rkind) :: curvature
 
-	!!!!--local variables------
-	real(kind=rkind) :: a, n, m, tr, ts
+        !!!!--local variables------
+        real(kind=rkind) :: a, n, m, tr, ts
 
-	a = vgset(this_layer)%alpha
-	n = vgset(this_layer)%n
-	m = vgset(this_layer)%m
-	tr = vgset(this_layer)%Thr
-	ts = vgset(this_layer)%Ths
+        a = vgset(this_layer)%alpha
+        n = vgset(this_layer)%n
+        m = vgset(this_layer)%m
+        tr = vgset(this_layer)%Thr
+        ts = vgset(this_layer)%Ths
 
 
-	if( h < 0.0_rkind) then
-	  curvature = -(a**2*(-(a*h))**(-2 + n)*(1 + (-(a*h))**n)**(-1 - m)*m*(-1 + n)*n* &
-	      (-tr + ts)) - a**2*(-(a*h))**(-2 + 2*n)*(1 + (-(a*h))**n)**(-2 - m)*(-1 - m)* &
-	    m*n**2*(-tr + ts)
-	else
-	  curvature = 0.0_rkind
-	end if
+        if( h < 0.0_rkind) then
+          curvature = -(a**2*(-(a*h))**(-2 + n)*(1 + (-(a*h))**n)**(-1 - m)*m*(-1 + n)*n* &
+              (-tr + ts)) - a**2*(-(a*h))**(-2 + 2*n)*(1 + (-(a*h))**n)**(-2 - m)*(-1 - m)* &
+            m*n**2*(-tr + ts)
+        else
+          curvature = 0.0_rkind
+        end if
 
 	
 
@@ -1622,16 +1622,16 @@ module RE_constitutive
 
 
       function rcza_check_old() result(passed)
-	use typy
-	use globals
-	use global_objs
+        use typy
+        use globals
+        use global_objs
         use re_globals
         use pde_objs
 
         integer(kind=ikind) :: process
-	logical :: passed
-	integer(kind=ikind) :: i, j, position
-	real(kind=rkind) :: low, high, hprev, h
+        logical :: passed
+        integer(kind=ikind) :: i, j, position
+        real(kind=rkind) :: low, high, hprev, h
 
         process = pde_common%current_proc
 
@@ -1655,166 +1655,166 @@ module RE_constitutive
         end do
 
 
-	passed = .true.
+        passed = .true.
 
 
       end function rcza_check_old
       
       function rcza_check(pde_loc) result(passed)
-	use typy
-	use globals
-	use global_objs
+        use typy
+        use globals
+        use global_objs
         use re_globals
         use pde_objs
 
         class(pde_str),intent(in) :: pde_loc
         integer(kind=ikind) :: el, pos, mat
-	logical :: passed
-	integer(kind=ikind) :: i, position, nd
-	real(kind=rkind) :: low, high, hprev, h
-	type(integpnt_str) :: quadpnt
+        logical :: passed
+        integer(kind=ikind) :: i, position, nd
+        real(kind=rkind) :: low, high, hprev, h
+        type(integpnt_str) :: quadpnt
 	
         quadpnt%type_pnt = "ndpt"
                
 
-	do i=1, ubound(pde_loc%solution,1)
-	  el = nodes%element(i)%data(1)
-	  mat = elements%material(el)
-	    
-	  quadpnt%order = i
-	  quadpnt%column = 1
-	  quadpnt%preproc=.true.
-	  hprev = pde_loc%getval(quadpnt)
-	  quadpnt%column = 2
-	  h = pde_loc%getval(quadpnt)
-	  if (vgset(mat)%rcza_set%use) then
-	    if ( hprev<0 ) then
-	      position = int(-hprev/drutes_config%fnc_discr_length)+1
-	      low = vgset(mat)%rcza_set%tab(position,2)
-	      high = vgset(mat)%rcza_set%tab(position,3)
-	      if (h < low .or. h > high) then
-		passed = .false.
-		RETURN
-	      end if
-	      end if
-	   end if
-	 end do
+        do i=1, ubound(pde_loc%solution,1)
+          el = nodes%element(i)%data(1)
+          mat = elements%material(el)
+            
+          quadpnt%order = i
+          quadpnt%column = 1
+          quadpnt%preproc=.true.
+          hprev = pde_loc%getval(quadpnt)
+          quadpnt%column = 2
+          h = pde_loc%getval(quadpnt)
+          if (vgset(mat)%rcza_set%use) then
+            if ( hprev<0 ) then
+              position = int(-hprev/drutes_config%fnc_discr_length)+1
+              low = vgset(mat)%rcza_set%tab(position,2)
+              high = vgset(mat)%rcza_set%tab(position,3)
+              if (h < low .or. h > high) then
+          passed = .false.
+          RETURN
+              end if
+              end if
+           end if
+         end do
 
- 	passed = .true.
+        passed = .true.
 
 
       end function rcza_check
 
 
       subroutine re_dirichlet_bc(pde_loc, el_id, node_order, value, code) 
-	use typy
-	use globals
-	use global_objs
-	use pde_objs
+        use typy
+        use globals
+        use global_objs
+        use pde_objs
 
-	class(pde_str), intent(in) :: pde_loc
-	integer(kind=ikind), intent(in)  :: el_id, node_order
-	real(kind=rkind), intent(out), optional    :: value
-	integer(kind=ikind), intent(out), optional :: code
+        class(pde_str), intent(in) :: pde_loc
+        integer(kind=ikind), intent(in)  :: el_id, node_order
+        real(kind=rkind), intent(out), optional    :: value
+        integer(kind=ikind), intent(out), optional :: code
 
-	integer(kind=ikind) :: edge_id, i, j
+        integer(kind=ikind) :: edge_id, i, j
 
-	
-	edge_id = nodes%edge(elements%data(el_id, node_order))
+        
+        edge_id = nodes%edge(elements%data(el_id, node_order))
 
-	if (present(value)) then
-	  if (pde_loc%bc(edge_id)%file) then
-	    do i=1, ubound(pde_loc%bc(edge_id)%series,1)
-	      if (pde_loc%bc(edge_id)%series(i,1) > time) then
-		if (i > 1) then
-		  j = i-1
-		else
-		  j = i
-		end if
-		value = pde_loc%bc(edge_id)%series(j,2)
-		EXIT
-	      end if
-	    end do
-	  else
-	    value = pde_loc%bc(edge_id)%value
-	  end if
-	end if
+        if (present(value)) then
+          if (pde_loc%bc(edge_id)%file) then
+            do i=1, ubound(pde_loc%bc(edge_id)%series,1)
+              if (pde_loc%bc(edge_id)%series(i,1) > time) then
+          if (i > 1) then
+            j = i-1
+          else
+            j = i
+          end if
+          value = pde_loc%bc(edge_id)%series(j,2)
+          EXIT
+              end if
+            end do
+          else
+            value = pde_loc%bc(edge_id)%value
+          end if
+        end if
 
-	if (present(code)) then
-	  code = 1
-	end if
+        if (present(code)) then
+          code = 1
+        end if
       end subroutine re_dirichlet_bc
 
 
       subroutine re_null_bc(pde_loc, el_id, node_order, value, code) 
-	use typy
-	use globals
-	use global_objs
-	use pde_objs
-	
-	class(pde_str), intent(in) :: pde_loc
-	integer(kind=ikind), intent(in)  :: el_id, node_order
-	real(kind=rkind), intent(out), optional    :: value
-	integer(kind=ikind), intent(out), optional :: code
+        use typy
+        use globals
+        use global_objs
+        use pde_objs
+        
+        class(pde_str), intent(in) :: pde_loc
+        integer(kind=ikind), intent(in)  :: el_id, node_order
+        real(kind=rkind), intent(out), optional    :: value
+        integer(kind=ikind), intent(out), optional :: code
 
-	if (present(value)) then
-	  value = 0.0_rkind
-	end if
+        if (present(value)) then
+          value = 0.0_rkind
+        end if
 
-	if (present(code)) then
-	  code = 2
-	end if
+        if (present(code)) then
+          code = 2
+        end if
 	
       end subroutine re_null_bc
 
 
 
       subroutine re_dirichlet_height_bc(pde_loc, el_id, node_order, value, code) 
-	use typy
-	use globals
-	use global_objs
-	use pde_objs
-	use debug_tools
-	
-	class(pde_str), intent(in) :: pde_loc
-	integer(kind=ikind), intent(in)  :: el_id, node_order
-	real(kind=rkind), intent(out), optional    :: value
-	integer(kind=ikind), intent(out), optional :: code
+        use typy
+        use globals
+        use global_objs
+        use pde_objs
+        use debug_tools
+        
+        class(pde_str), intent(in) :: pde_loc
+        integer(kind=ikind), intent(in)  :: el_id, node_order
+        real(kind=rkind), intent(out), optional    :: value
+        integer(kind=ikind), intent(out), optional :: code
 
-	
-	integer(kind=ikind) :: edge_id, i, j
-	real(kind=rkind) :: tempval, node_height
-	
+        
+        integer(kind=ikind) :: edge_id, i, j
+        real(kind=rkind) :: tempval, node_height
+        
 
-	if (present(value)) then
-	  edge_id = nodes%edge(elements%data(el_id, node_order))
-	  node_height = nodes%data(elements%data(el_id, node_order), drutes_config%dimen)
+        if (present(value)) then
+          edge_id = nodes%edge(elements%data(el_id, node_order))
+          node_height = nodes%data(elements%data(el_id, node_order), drutes_config%dimen)
 
-	  if (pde_loc%bc(edge_id)%file) then
-	    do i=1, ubound(pde_loc%bc(edge_id)%series,1)
-	      if (pde_loc%bc(edge_id)%series(i,1) > time) then
-		if (i > 1) then
-		  j = i-1
-		else
-		  j = i
-		end if
-		tempval = pde_loc%bc(edge_id)%series(j,2)
-		EXIT
-	      end if
-	    end do
-	  else
-	    tempval =  pde_loc%bc(edge_id)%value
-	  end if
+          if (pde_loc%bc(edge_id)%file) then
+            do i=1, ubound(pde_loc%bc(edge_id)%series,1)
+              if (pde_loc%bc(edge_id)%series(i,1) > time) then
+          if (i > 1) then
+            j = i-1
+          else
+            j = i
+          end if
+          tempval = pde_loc%bc(edge_id)%series(j,2)
+          EXIT
+              end if
+            end do
+          else
+            tempval =  pde_loc%bc(edge_id)%value
+          end if
 
-	  
-	  value = tempval - node_height
-	end if
+          
+          value = tempval - node_height
+        end if
 
-	
-	if (present(code)) then
-	  code = 1
-	end if
-	
+        
+        if (present(code)) then
+          code = 1
+        end if
+    
       end subroutine re_dirichlet_height_bc
 
 
@@ -1822,70 +1822,70 @@ module RE_constitutive
 
 
       subroutine re_neumann_bc(pde_loc, el_id, node_order, value, code) 
-	use typy
-	use globals
-	use global_objs
-	use pde_objs
+        use typy
+        use globals
+        use global_objs
+        use pde_objs
 
-	class(pde_str), intent(in) :: pde_loc
-	integer(kind=ikind), intent(in)  :: el_id, node_order
-	real(kind=rkind), intent(out), optional    :: value
-	integer(kind=ikind), intent(out), optional :: code
-	
-	real(kind=rkind), dimension(3,3) :: K
+        class(pde_str), intent(in) :: pde_loc
+        integer(kind=ikind), intent(in)  :: el_id, node_order
+        real(kind=rkind), intent(out), optional    :: value
+        integer(kind=ikind), intent(out), optional :: code
+        
+        real(kind=rkind), dimension(3,3) :: K
 
-	integer(kind=ikind) :: i, edge_id, j
-	real(kind=rkind), dimension(3) :: gravflux, bcflux
-	real(kind=rkind) :: bcval, gfluxval
-	integer :: i1
+        integer(kind=ikind) :: i, edge_id, j
+        real(kind=rkind), dimension(3) :: gravflux, bcflux
+        real(kind=rkind) :: bcval, gfluxval
+        integer :: i1
 
-      
-	if (present(value)) then
-	  edge_id = nodes%edge(elements%data(el_id, node_order))
+            
+        if (present(value)) then
+          edge_id = nodes%edge(elements%data(el_id, node_order))
 
-	  i = pde_loc%permut(elements%data(el_id, node_order))
+          i = pde_loc%permut(elements%data(el_id, node_order))
 
-	  call pde_loc%pde_fnc(1)%dispersion(pde_loc, elements%material(el_id), x=(/pde_common%xvect(i,2)/), &
-			      tensor=K(1:drutes_config%dimen, 1:drutes_config%dimen))
+          call pde_loc%pde_fnc(1)%dispersion(pde_loc, elements%material(el_id), x=(/pde_common%xvect(i,2)/), &
+                  tensor=K(1:drutes_config%dimen, 1:drutes_config%dimen))
 
-	  gravflux(1:drutes_config%dimen) = K(drutes_config%dimen, 1:drutes_config%dimen)*elements%nvect_z(el_id, node_order)
-	  
+          gravflux(1:drutes_config%dimen) = K(drutes_config%dimen, 1:drutes_config%dimen)*elements%nvect_z(el_id, node_order)
+          
 
-	  if (pde_loc%bc(edge_id)%file) then
-	    do i=1, ubound(pde_loc%bc(edge_id)%series,1)
-	      if (pde_loc%bc(edge_id)%series(i,1) > time) then
-		if (i > 1) then
-		  j = i-1
-		else
-		  j = i
-		end if
-		bcval = pde_loc%bc(edge_id)%series(j,2)
-		EXIT
-	      end if
-	    end do
-	  else
-	    bcval = pde_loc%bc(edge_id)%value
-	  end if
-	  
+          if (pde_loc%bc(edge_id)%file) then
+            do i=1, ubound(pde_loc%bc(edge_id)%series,1)
+              if (pde_loc%bc(edge_id)%series(i,1) > time) then
+          if (i > 1) then
+            j = i-1
+          else
+            j = i
+          end if
+          bcval = pde_loc%bc(edge_id)%series(j,2)
+          EXIT
+              end if
+            end do
+          else
+            bcval = pde_loc%bc(edge_id)%value
+          end if
+          
 
-	  
+          
 
 
-	  select case(drutes_config%dimen)
-	    case(1)
-	      value = bcval - gravflux(1)
-	    case(2)
-	      bcflux(1) = sqrt(1-elements%nvect_z(el_id, node_order)*elements%nvect_z(el_id, node_order))*bcval
-	      bcflux(2) = elements%nvect_z(el_id, node_order)*bcval
-	      bcflux = bcflux + gravflux
-	      value = sqrt(bcflux(1)*bcflux(1) + bcflux(2)*bcflux(2))
-  ! 	    print *, value, gravflux, el_id, elements%data(el_id,:) ; stop 
-	  end select
-	end if
-	
-       if (present(code)) then
-	  code = 2
-	end if
+          select case(drutes_config%dimen)
+            case(1)
+              value = bcval - gravflux(1)
+            case(2)
+              bcflux(1) = sqrt(1-elements%nvect_z(el_id, node_order)*elements%nvect_z(el_id, node_order))*bcval
+              bcflux(2) = elements%nvect_z(el_id, node_order)*bcval
+              bcflux = bcflux + gravflux
+              value = sqrt(bcflux(1)*bcflux(1) + bcflux(2)*bcflux(2))
+        ! 	    print *, value, gravflux, el_id, elements%data(el_id,:) ; stop 
+          end select
+        end if
+        
+             if (present(code)) then
+          code = 2
+        end if
 
       end subroutine re_neumann_bc
       
@@ -1912,57 +1912,57 @@ module RE_constitutive
   
   
       if (present(code)) then
-	code = 2
+        code = 2
       end if
       
       if (present(value)) then
-	edge_id = nodes%edge(elements%data(el_id, node_order))
+        edge_id = nodes%edge(elements%data(el_id, node_order))
 
-	i = pde_loc%permut(elements%data(el_id, node_order))
+        i = pde_loc%permut(elements%data(el_id, node_order))
 
-	call pde_loc%pde_fnc(1)%dispersion(pde_loc, elements%material(el_id), x=(/pde_common%xvect(i,2)/), &
-			      tensor=K(1:drutes_config%dimen, 1:drutes_config%dimen))
+        call pde_loc%pde_fnc(1)%dispersion(pde_loc, elements%material(el_id), x=(/pde_common%xvect(i,2)/), &
+                  tensor=K(1:drutes_config%dimen, 1:drutes_config%dimen))
 
-        gravflux(1:drutes_config%dimen) = K(drutes_config%dimen, 1:drutes_config%dimen)*elements%nvect_z(el_id, node_order)
-	
+              gravflux(1:drutes_config%dimen) = K(drutes_config%dimen, 1:drutes_config%dimen)*elements%nvect_z(el_id, node_order)
+        
 
-	if (pde_loc%bc(edge_id)%file) then
-	  do i=1, ubound(pde_loc%bc(edge_id)%series,1)
-	    if (pde_loc%bc(edge_id)%series(i,1) > time) then
-	      if (i > 1) then
-		j = i-1
-	      else
-		j = i
-	      end if
-	      bcval = pde_loc%bc(edge_id)%series(j,2)
-	      EXIT
-	    end if
-	  end do
-	else
-	  bcval = pde_loc%bc(edge_id)%value
-	end if
-	
-	if (bcval < 0) then
-	  quadpnt%type_pnt = "ndpt"
-	  quadpnt%order = elements%data(el_id,node_order)
-	  layer = elements%material(el_id)
-	  theta =  pde_loc%mass(layer, quadpnt)
-	  bcval = bcval*(theta*theta)**(1.0_rkind/3.0_rkind)
-	end if
-	  
-	  
-	 select case(drutes_config%dimen)
-	    case(1)
-	      value = bcval - gravflux(1)
-	    case(2)
-	      bcflux(1) = sqrt(1-elements%nvect_z(el_id, node_order)*elements%nvect_z(el_id, node_order))*bcval
-	      bcflux(2) = elements%nvect_z(el_id, node_order)*bcval
-	      bcflux = bcflux + gravflux
-	      value = sqrt(bcflux(1)*bcflux(1) + bcflux(2)*bcflux(2))
-  ! 	    print *, value, gravflux, el_id, elements%data(el_id,:) ; stop 
-	  end select 
-	
-	
+        if (pde_loc%bc(edge_id)%file) then
+          do i=1, ubound(pde_loc%bc(edge_id)%series,1)
+            if (pde_loc%bc(edge_id)%series(i,1) > time) then
+              if (i > 1) then
+          j = i-1
+              else
+          j = i
+              end if
+              bcval = pde_loc%bc(edge_id)%series(j,2)
+              EXIT
+            end if
+          end do
+        else
+          bcval = pde_loc%bc(edge_id)%value
+        end if
+        
+        if (bcval < 0) then
+          quadpnt%type_pnt = "ndpt"
+          quadpnt%order = elements%data(el_id,node_order)
+          layer = elements%material(el_id)
+          theta =  pde_loc%mass(layer, quadpnt)
+          bcval = bcval*(theta*theta)**(1.0_rkind/3.0_rkind)
+        end if
+          
+          
+         select case(drutes_config%dimen)
+            case(1)
+              value = bcval - gravflux(1)
+            case(2)
+              bcflux(1) = sqrt(1-elements%nvect_z(el_id, node_order)*elements%nvect_z(el_id, node_order))*bcval
+              bcflux(2) = elements%nvect_z(el_id, node_order)*bcval
+              bcflux = bcflux + gravflux
+              value = sqrt(bcflux(1)*bcflux(1) + bcflux(2)*bcflux(2))
+        ! 	    print *, value, gravflux, el_id, elements%data(el_id,:) ; stop 
+          end select 
+        
+    
 
       end if
       
@@ -1995,18 +1995,18 @@ module RE_constitutive
             l = nodes%edge(k)
             m = pde_loc%permut(k)
             if (m == 0) then
-	      call pde_loc%bc(l)%value_fnc(pde_loc, i, j, value)
+              call pde_loc%bc(l)%value_fnc(pde_loc, i, j, value)
               pde_loc%solution(k) =  value 
             else
               select case (vgset(layer)%icondtype)
-		case("H_tot")
-		  pde_loc%solution(k) = vgset(layer)%initcond - nodes%data(k,D)
-		case("hpres")
-		  pde_loc%solution(k) = vgset(layer)%initcond 
-		case("theta")
-		  value = inverse_vangen(pde_loc, layer, x=(/vgset(layer)%initcond/))
-		  pde_loc%solution(k) = value
-	      end select
+                case("H_tot")
+                  pde_loc%solution(k) = vgset(layer)%initcond - nodes%data(k,D)
+                case("hpres")
+                  pde_loc%solution(k) = vgset(layer)%initcond 
+                case("theta")
+                  value = inverse_vangen(pde_loc, layer, x=(/vgset(layer)%initcond/))
+                  pde_loc%solution(k) = value
+              end select
             end if
           end do   
         end do
@@ -2018,8 +2018,8 @@ module RE_constitutive
       end subroutine re_initcond
       
       subroutine setmatflux()
-	use typy
-	use globals
+        use typy
+        use globals
         use global_objs
         use pde_objs
         use debug_tools
@@ -2028,23 +2028,23 @@ module RE_constitutive
         
         id = maxval(nodes%edge) + 100
         do i=1, elements%kolik
-	  do j=1, ubound(elements%neighbours,2)
-	    vecino = elements%neighbours(i,j)
-	    if (vecino /= 0) then
-	      if (elements%material(i) /= elements%material(vecino)) then
-		do k=1, ubound(elements%data,2)
-		  nd = elements%data(i, k)
-		  do l=1, ubound(elements%data,2)
-		    ndvec = elements%data(vecino, l)
-		    if (nd == ndvec) then
-		      nodes%edge(nd) = -id
-		    end if
-		  end do
-		end do
-	      end if
-	    end if
-	  end do
-	end do
+          do j=1, ubound(elements%neighbours,2)
+            vecino = elements%neighbours(i,j)
+            if (vecino /= 0) then
+              if (elements%material(i) /= elements%material(vecino)) then
+                do k=1, ubound(elements%data,2)
+                  nd = elements%data(i, k)
+                  do l=1, ubound(elements%data,2)
+                    ndvec = elements%data(vecino, l)
+                    if (nd == ndvec) then
+                      nodes%edge(nd) = -id
+                    end if
+                  end do
+                end do
+              end if
+            end if
+          end do
+        end do
 	
 
       

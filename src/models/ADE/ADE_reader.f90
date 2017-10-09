@@ -206,13 +206,64 @@ module ADE_reader
          call fileread(adepar(i)%lambda, file_contaminant, errmsg=trim(msg))
        end do   
 
-       
-       select case(adjustl(trim(drutes_config%name)))
-          case("ADEstd_kinsorb", "ADE_RE_std_kinsorb", "ADE_REstdH_kinsorb", "ADE_RE_rot_kinsorb", "ADE_RErotH_kinsorb")
-            adepar(:)%sorption%kinetic = .true.
-          case default
-            adepar(:)%sorption%kinetic = .false.
-        end select
+      
+      call fileread(n, file_contaminant, ranges=(/1_ikind, huge(n)/), &
+      errmsg=trim(msg))
+      
+      
+      call readbcvals(unitW=file_contaminant, struct=pde_loc%bc, dimen=n, &
+        dirname="drutes.conf/ADE/")
+      
+      
+      
+
+    end subroutine ADE_read		
+    
+    subroutine ADEcs_read(pde_loc)
+      use typy
+      use globals
+      use global_objs
+      use core_tools
+      use ADE_globals
+      use readtools
+      use pde_objs
+          
+      class(pde_str), intent(in out), dimension(:) :: pde_loc
+      real(kind=rkind), dimension(:), allocatable :: tmp_array
+      integer(kind=ikind) :: i
+      character(len=4096) :: msg
+      character(len=4096) :: number
+      integer :: filesorp, ierr
+      
+      open(newunit=filesorp, file="drutes.conf/ADE/sorption.conf", action="read", status="old", iostat=ierr)
+      
+      if (ierr /= 0) then
+        print *, "unable to open drutes.conf/ADE/sorption.conf, exiting......."
+        ERROR STOP
+      end if
+      
+      do i=1, ubound(pde_loc,1)
+        write(number, fmt=*) i
+        write(pde_loc(i)%problem_name(1), fmt="(a)") "ADER_in_solid_", cut(number)
+        write(pde_loc(i)%problem_name(2), fmt="(a)")  "Advection-dispersion-reaction equation (solute concentration adsorbed in &
+              solid phase) ", cut(number)
+
+        write(pde_loc(i)%solution_name(1), fmt="(a)") "solute_concentration_", cut(number) !nazev vystupnich souboru
+        pde_loc(i)%solution_name(2) = "c  [M/M]" !popisek grafu
+
+        pde_loc(i)%flux_name(1) = "zero_flux"  
+        pde_loc(i)%flux_name(2) = "zero flux"
+
+        pde_loc(i)%mass_name(1) = "conc_in_solid_phase"
+        pde_loc(i)%mass_name(2) = "concetration [M/M]"
+      end do
+      
+      
+      if (ubound(pde_loc,1) > 0) then
+        adepar(:)%sorption%kinetic = .true.
+      else
+        adepar(:)%sorption%kinetic = .false.
+      end if
  
       
       write(msg, *) "HINT1: The number of lines for kinetic/equilibrium sorption parameters has to be", &
@@ -220,8 +271,8 @@ module ADE_reader
         new_line("a"), "   HINT2: The bulk density has to be positive value greater than zero."
         
       do i=1, ubound(adepar,1)
-       call fileread(adepar(i)%bd, file_contaminant, errmsg=trim(msg), &
-       ranges=(/epsilon(0.0_rkind), huge(0.0_rkind)/))
+       call fileread(sorption(i,:)%bd, filesorp, errmsg=trim(msg), &
+       ranges=(/epsilon(0.0_rkind), huge(0.0_rkind)/), checklen=.true.)
       end do
       
       
@@ -229,15 +280,15 @@ module ADE_reader
         to the number of materials"&
        , new_line("a"), "   HINT2: Have you specified the sorption model name correctly?"
       
-      do i=1, ubound(adepar,1)
-       call fileread(adepar(i)%sorption%name, file_contaminant, errmsg=trim(msg), options=(/"freund", "langmu"/))
+      do i=1, ubound(sorption,1)
+       call fileread(sorption(i,:)%name, filesorp, errmsg=trim(msg), options=(/"freund", "langmu"/), checklen=.true.)
       end do
       
       if (allocated(tmp_array)) deallocate(tmp_array)
       allocate(tmp_array(3))
       
-      do i=1, ubound(adepar,1)
-        call fileread(tmp_array, file_contaminant, errmsg=trim(msg), ranges=(/0.0_rkind, huge(0.0_rkind)/))
+      do i=1, ubound(sorption,1)
+        call fileread(tmp_array, filesorp, errmsg=trim(msg), ranges=(/0.0_rkind, huge(0.0_rkind)/))
         adepar(i)%sorption%adsorb=tmp_array(1)
         adepar(i)%sorption%desorb=tmp_array(2)
         adepar(i)%sorption%third=tmp_array(3)
@@ -263,37 +314,8 @@ module ADE_reader
         write(msg, *) "HINT 1: You have selected strange number of boundaries for ADE problem.", new_line("a"), &
               "   HINT 2: Since you requested equilibrium sorption, then comment or erase lines with csinit"
       end if
-		    
-      
-      call fileread(n, file_contaminant, ranges=(/1_ikind, huge(n)/), &
-      errmsg=trim(msg))
       
       
-      call readbcvals(unitW=file_contaminant, struct=pde_loc%bc, dimen=n, &
-        dirname="drutes.conf/ADE/")
-      
-      
-      
-
-    end subroutine ADE_read		
-    
-    subroutine ADEcs_read(pde_loc)
-      use typy
-      use pde_objs
-          
-      class(pde_str), intent(in out) :: pde_loc
-      
-      pde_loc%problem_name(1) = "ADER_in_solid"
-      pde_loc%problem_name(2) = "Advection-dispersion-reaction equation (solute concentration adsorbed in solid phase)"
-
-      pde_loc%solution_name(1) = "solute_concentration" !nazev vystupnich souboru
-      pde_loc%solution_name(2) = "c  [M/M]" !popisek grafu
-
-      pde_loc%flux_name(1) = "zero_flux"  
-      pde_loc%flux_name(2) = "zero flux"
-
-      pde_loc%mass_name(1) = "conc_in_solid_phase"
-      pde_loc%mass_name(2) = "concetration [M/M]"
       
     
     end subroutine ADEcs_read

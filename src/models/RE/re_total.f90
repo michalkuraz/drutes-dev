@@ -32,11 +32,12 @@ module re_total
         call getcoor(quadpnt, xyz(1:D))
         
         if (drutes_config%dimen>1) then
-                val = getvalp1(pde_loc, quadpnt) - xyz(D)
-              else
-                layer = get_layer(quadpnt)
+          val = getvalp1(pde_loc, quadpnt) - xyz(D)
+        else
+          layer = get_layer(quadpnt)
           val = getvalp1(pde_loc, quadpnt) - xyz(D)*cos(4*atan(1.0_rkind)/180*vgset(layer)%anisoangle(1))
         end if
+        
       else
         val = getvalp1(pde_loc, quadpnt)
       end if
@@ -158,9 +159,9 @@ module re_total
           do i=1, ubound(pde_loc%bc(edge_id)%series,1)
             if (pde_loc%bc(edge_id)%series(i,1) > time) then
               if (i > 1) then
-          j = i-1
+                j = i-1
               else
-          j = i
+                j = i
               end if
               value = pde_loc%bc(edge_id)%series(j,2) + xyz(D)
               EXIT
@@ -208,9 +209,9 @@ module re_total
           do i=1, ubound(pde_loc%bc(edge_id)%series,1)
             if (pde_loc%bc(edge_id)%series(i,1) > time) then
               if (i > 1) then
-          j = i-1
+                j = i-1
               else
-          j = i
+                j = i
               end if
               tempval = pde_loc%bc(edge_id)%series(j,2)
               EXIT
@@ -700,19 +701,17 @@ module re_total
           else
             select case (vgset(layer)%icondtype)
               case("H_tot")
-          pde_loc%solution(k) = vgset(layer)%initcond !+ nodes%data(k,1)
+                pde_loc%solution(k) = vgset(layer)%initcond !+ nodes%data(k,1)
               case("hpres")
-          
-          pde_loc%solution(k) = vgset(layer)%initcond + nodes%data(k,D)
+                pde_loc%solution(k) = vgset(layer)%initcond + nodes%data(k,D)
               case("theta")
-          value = inverse_vangen(pde_loc, layer, x=(/vgset(layer)%initcond/))
-          pde_loc%solution(k) = value + nodes%data(k,D)
+                value = inverse_vangen(pde_loc, layer, x=(/vgset(layer)%initcond/))
+                pde_loc%solution(k) = value + nodes%data(k,D)
             end select
           end if
         end do   
       end do
       
-!       call map1d2d("data.in")
       
   
 

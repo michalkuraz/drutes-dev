@@ -97,17 +97,6 @@ module read_inputs
       
       call fileread(iter_criterion, local, ranges=(/0.0_rkind, huge(0.0_rkind)/), &
       errmsg="iteration criterion must be positive, and smaller than the maximal number your computer can handle :)")
-
-      call fileread(integ_method, global)
-      
-      if (integ_method/10 < 1 .or. integ_method/10 > 12 .or. modulo(integ_method,10_ikind)/=0  &
-          .or. integ_method == 100 .or. integ_method == 110) then
-        write(msg, *)  '!!!!!!!!!!!!!!!!!-------------------------------!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! &
-        '//NEW_LINE('A')// 'the proper integration method code names are : & 
-          10, 20, 30, 40, 50, 60, 70, 80, 90, 120'//NEW_LINE('A')//&
-         'your incorrect definition was:', integ_method
-        call file_error(global, msg)
-      end if
       
       call fileread(time_units, local)
       
@@ -125,10 +114,6 @@ module read_inputs
        errmsg="maximal time step must be greater than the minimal time step, &
 		  and smaller than the maximal number your computer can handle :)")
       
-      write(msg, *) "set correct value for the terminal outputs", new_line('a'), "     0 - standard output", &
-    	new_line('a'),  "     1 - everything goes to out/screen.log", new_line('a'), &
-  	"    -1 - everything goes to /dev/null (use only on Linux based systems (I have no idea about MAC OS))"
-      call fileread(print_level, global, ranges=(/-1_ikind, 1_ikind/), errmsg=msg)
       
       write(msg, fmt=*) "methods for observation time print could be only", new_line('a'), &
 	     "	1 - adjust time stepping to observation time values",  new_line('a'), &
@@ -212,6 +197,12 @@ module read_inputs
       do i=1, n
 	       call fileread(measured_pts(i)%xyz(:), global, errmsg="HINT: check coordinates of the points with measurement data")
       end do  
+      
+      write(msg, *) "set correct value for the terminal outputs", new_line("a"), "     0 - standard output", &
+    	new_line("a"),  "     1 - everything goes to out/screen.log", new_line("a"), &
+  	"    -1 - everything goes to /dev/null (use only on Linux based systems (I have no idea what will happen in MAC OS X))"
+      call fileread(print_level, global, ranges=(/-1_ikind, 1_ikind/), errmsg=msg)
+      
 
       call fileread(i=drutes_config%it_method, fileid=local, ranges=(/0_ikind,2_ikind/),&
 	       errmsg="you have selected an improper iteration method")
@@ -234,7 +225,18 @@ module read_inputs
       	call fileread(backup_file, global, errmsg="backup file not specified")
       end if
       
-      call fileread(debugmode, global,"specify [y/n] for debugging (development option, not recommended)" )
+      call fileread(integ_method, global)
+      
+      if (integ_method/10 < 1 .or. integ_method/10 > 12 .or. modulo(integ_method,10_ikind)/=0  &
+          .or. integ_method == 100 .or. integ_method == 110) then
+        write(msg, *)  "The recognized integration method code names are : & 
+          10, 20, 30, 40, 50, 60, 70, 80, 90, 120", new_line("a") ,&
+          "10 - for single Gauss quadrature node, 120 - for 12 points Gauss quadrature", new_line("a"), &
+         "Your unrecognized setup was:", integ_method
+        call file_error(global, msg)
+      end if
+      
+!       call fileread(debugmode, global,"specify [y/n] for debugging (development option, not recommended)" )
         
 
     end subroutine read_global
