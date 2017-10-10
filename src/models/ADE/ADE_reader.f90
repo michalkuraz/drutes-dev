@@ -234,6 +234,7 @@ module ADE_reader
       character(len=4096) :: msg
       character(len=4096) :: number
       integer :: filesorp, ierr
+      character(len=6), dimension(:), allocatable :: sorpnames
       
       open(newunit=filesorp, file="drutes.conf/ADE/sorption.conf", action="read", status="old", iostat=ierr)
       
@@ -258,13 +259,9 @@ module ADE_reader
         pde_loc(i)%mass_name(2) = "concetration [M/M]"
       end do
       
-      
-      if (ubound(pde_loc,1) > 0) then
-        adepar(:)%sorption%kinetic = .true.
-      else
-        adepar(:)%sorption%kinetic = .false.
-      end if
- 
+      allocate(sorption(ubound(adepar,1), no_solids))
+
+      adepar(:)%sorption%kinetic = .true.
       
       write(msg, *) "HINT1: The number of lines for kinetic/equilibrium sorption parameters has to be", &
         " equal to the number of materials" , &

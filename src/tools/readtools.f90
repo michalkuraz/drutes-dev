@@ -14,6 +14,8 @@ module readtools
     module procedure read_real_array
     module procedure read_char
     module procedure read_logical
+    module procedure read_char_array
+    module procedure read_logical_array
   end interface fileread
 
   contains
@@ -412,112 +414,53 @@ module readtools
     end subroutine read_char
     
     
-    subroutine read_char_array(r, fileid, options, errmsg, checklen, noexit)
+    subroutine read_char_array(r, fileid, options, errmsg, noexit)
       use typy
       use globals
       character(len=*), dimension(:), intent(out) :: r
       integer, intent(in) :: fileid
       character(len=*), dimension(:), optional :: options
       character(len=*), intent(in), optional :: errmsg
-      !> checks if the array length is equal to the length of line in file
-      logical, intent(in), optional :: checklen
       logical, intent(in), optional :: noexit
       
       !logical vars
       integer :: ierr, ierr2
-      integer(kind=ikind) :: i, i1, i2, arraybound, current_pos, chpos
-      character(len=:), allocatable, dimension(:) :: tmpchar
+      integer(kind=ikind) :: i, j
       real, dimension(:), allocatable :: tmpdata
+      logical :: ok
       
       call comment(fileid)
-    
-      arraybound=1
+ 
+      read(unit=fileid, fmt=*, iostat=ierr) r
+
+      if (ierr /= 0) then
+        if (present(errmsg)) then
+          call file_error(fileid,errmsg)
+        end if
+        if (.not. present(noexit) .or. .not. noexit) then
+          if (present(errmsg)) then
+            call file_error(fileid,errmsg)
+          else
+            call file_error(fileid)
+          end if
+        end if
+      end if
       
-      allocate(tmpchar(arraybound), source=r(1))
-!       
-!       if (present(checklen)) then
-!         if (checklen) then
-!           current_pos = ftell(fileid)
-!           do 
-!             call comment(fileid)
-!             read(unit=fileid, fmt=*, iostat=ierr) tmpdata(1:arraybound-1)
-!             i1=ftell(fileid)
-!             backspace fileid
-!             call comment(fileid)
-!             read(unit=fileid, fmt=*, iostat=ierr) tmpdata(1:arraybound)
-!             i2 = ftell(fileid)
-!             backspace fileid
-!            
-!             if (ierr /= 0) then
-!               arraybound = arraybound - 1
-!               do
-!                 chpos = ftell(fileid)
-!                 if (chpos == current_pos) then
-!                   EXIT
-!                 else
-!                   backspace(unit=fileid, iostat=ierr2)
-!                 end if
-!               end do
-!               deallocate(tmpdata)
-!               EXIT
-!             end if
-!             
-!             if (i1 == i2) then
-!               arraybound = arraybound + 1
-!               if (ubound(tmpdata,1) < arraybound) then
-!                 deallocate(tmpdata)
-!                 allocate(tmpdata(2*arraybound))
-!               end if    
-!             else 
-!               arraybound = arraybound - 1
-!               do
-!                 chpos = ftell(fileid)
-!                 if (chpos == current_pos) then
-!                   EXIT
-!                 else
-!                   backspace(unit=fileid, iostat=ierr2)
-!                 end if
-!               end do
-!               deallocate(tmpdata)
-!               EXIT
-!             end if
-!           end do
-!   
-!           if (arraybound /= ubound(r,1)) then
-!             write(unit=terminal, fmt=*) " " //achar(27)//'[91m', "the line in your input file has &
-!                incorrect number of values, check your inputs" //achar(27)//'[0m'
-!             call file_error(fileid, errmsg)
-!          end if
-!         end if
-!       end if
-!       
-!       call comment(fileid)
-!       read(unit=fileid, fmt=*, iostat=ierr) r
-!     
-!       
-!       
-!       if (ierr /= 0) then
-!         if (present(errmsg)) then
-!           call file_error(fileid,errmsg)
-!         end if
-!         if (.not. present(noexit) .or. .not. noexit) then
-!           if (present(errmsg)) then
-!             call file_error(fileid,errmsg)
-!           else
-!             call file_error(fileid)
-!           end if
-!         end if
-!       end if
-!       
-!       if (present(ranges)) then
-!         do i=1, ubound(r,1)
-!           if (r(i) < ranges(1) .or. r(i) > ranges(2)) then
-!             write(unit=terminal, fmt=*) " " //achar(27)//'[91m', "incorrect ranges of input parameter(s)" //achar(27)//'[0m'
-!             call file_error(fileid, errmsg)
-!           end if
-!         end do
-!       end if
-!       
+      if (present(options)) then
+        do i=1, ubound(r,1)
+          ok = .false.
+          optcheck: do j=1, ubound(options,1)
+            if (r(i) == options(j)) then 
+              ok = .true.
+              EXIT optcheck
+            end if
+          end do optcheck
+          if (.not. ok) then
+            call file_error(fileid, errmsg)
+          end if
+        end do
+      end if
+      
       
     end subroutine read_char_array
     
@@ -561,6 +504,43 @@ module readtools
       
       
     end subroutine read_logical
+    
+    
+    subroutine read_logical_array(yes, fileid,  errmsg, noexit)
+      use typy
+      use globals
+      logical, dimension(:), intent(out) :: yes
+      integer, intent(in) :: fileid
+      character(len=*), intent(in), optional :: errmsg
+      logical, intent(in), optional :: noexit
+      
+      !logical vars
+      integer(kind=ikind) :: i
+      character(len=1), dimension(:), allocatable :: tmpdata
+      
+      
+      allocate(tmpdata(ubound(yes,1)))
+      
+      call read_char_array(tmpdata, fileid, NOEXIT=.true.)
+      
+      do i=1, ubound(tmpdata,1)
+        if (tmpdata(i) /= "y" .or. tmpdata(i) /= "n") then
+          if (.not. NOEXIT .or. .not. present(NOEXIT)) then
+            if (present(errmsg)) then
+              call file_error(fileid, errmsg)
+            else
+              call file_error(fileid, errmsg="Incorrect inputs, have you set all required [y/n] values?")
+            end if
+          end if
+        else
+          if (tmpdata(i) == "y") yes(i)=.true.
+          if (tmpdata(i) == "n") yes(i)=.false.
+        end if
+      end do
+        
+
+      
+    end subroutine read_logical_array
       
       
 

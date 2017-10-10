@@ -27,7 +27,7 @@ module ADE_pointers
       
       call fileread(no_solids, adeconf, ranges=(/1_ikind, huge(1_ikind)/))
       
-      processes =  no_solids
+      processes =  no_solids + 1
       
       if (with_richards) processes = processes + 1
       
@@ -83,7 +83,9 @@ module ADE_pointers
       
       if (with_richards) call REstdH(pde_loc(1))
       
-      call ADEkinsorb(pde_loc(adepos+1:pde_common%processes))
+      if (no_solids > 0) then 
+        call ADEkinsorb(pde_loc(adepos+1:pde_common%processes))
+      end if 
       
     
     end subroutine ADE

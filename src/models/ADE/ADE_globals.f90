@@ -3,7 +3,7 @@ module ade_globals
   
   !> parameters of sorption model
   type, public :: sorption_str
-    logical :: kinetic
+    logical :: kinetic=.false.
     !> name="freu" - Freundlich isoterm, "langmu" - Langmuir isoterm
     character(len=6) :: name
     real(kind=rkind) :: adsorb
@@ -53,6 +53,8 @@ module ade_globals
   
   integer(kind=ikind) :: no_solids
   
+  logical, public :: kinsorb
   
   integer, public :: file_contaminant
+  
 end module ade_globals
