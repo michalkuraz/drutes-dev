@@ -432,6 +432,7 @@ module readtools
       call comment(fileid)
  
       read(unit=fileid, fmt=*, iostat=ierr) r
+      
 
       if (ierr /= 0) then
         if (present(errmsg)) then
@@ -517,19 +518,27 @@ module readtools
       !logical vars
       integer(kind=ikind) :: i
       character(len=1), dimension(:), allocatable :: tmpdata
+      logical :: noexit_loc
       
+      if (present(noexit)) then
+        noexit_loc = noexit
+      else
+        noexit_loc = .false.
+      end if
       
       allocate(tmpdata(ubound(yes,1)))
       
       call read_char_array(tmpdata, fileid, NOEXIT=.true.)
       
+    
+      
       do i=1, ubound(tmpdata,1)
-        if (tmpdata(i) /= "y" .or. tmpdata(i) /= "n") then
-          if (.not. NOEXIT .or. .not. present(NOEXIT)) then
+        if (tmpdata(i) /= "y" .and. tmpdata(i) /= "n") then
+          if (.not. noexit_loc) then
             if (present(errmsg)) then
               call file_error(fileid, errmsg)
             else
-              call file_error(fileid, errmsg="Incorrect inputs, have you set all required [y/n] values?")
+              call file_error(fileid, message="Incorrect inputs, have you set all required [y/n] values?")
             end if
           end if
         else
@@ -593,14 +602,12 @@ module readtools
       print *, "  "
       
 
-!       if (i_err == 0) then 
-     if (err_read == 0) write(unit=terminal, fmt=*) "the value you have typed is: ", trim(string)
-	   write(unit=terminal, fmt=*) "--------------------------------"
-!       end if
-      
+      if (err_read == 0) write(unit=terminal, fmt=*) "the value you have typed is: ", trim(string)
+	    write(unit=terminal, fmt=*) "--------------------------------"
+
       
       if (present(message)) then
-        	write(unit=terminal, fmt=*) " " //achar(27)//'[91m', trim(message) //achar(27)//'[0m'
+        write(unit=terminal, fmt=*) " " //achar(27)//'[91m', trim(message) //achar(27)//'[0m'
       end if
 	
       
@@ -609,20 +616,20 @@ module readtools
 
     end subroutine file_error
 
-    subroutine comment(Unit)
+    subroutine comment(Unit, mark)
           
       integer, intent(in) :: Unit
-      !character(len=1), intent(in), optional :: mark
+      character(len=1), intent(in), optional :: mark
       character(len=1) :: symbol
       character(len=1) :: String
       integer :: i_err
       
           
-      !if (present(mark)) then
-      !   symbol = mark
-      !else
+      if (present(mark)) then
+        symbol = mark
+      else
         symbol = "#"
-    ! end if
+      end if
         
       do
         read(unit=Unit,fmt = *, iostat = i_err ) String

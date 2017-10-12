@@ -14,7 +14,7 @@ module ADE_reader
 
       class(pde_str), intent(in out) :: pde_loc
       integer :: i_err
-      integer(kind=ikind) :: i, n
+      integer(kind=ikind) :: i, n, equipos
       real(kind=rkind) :: tmp
       real(kind=rkind), dimension(:), allocatable :: tmp_array
       character(len=4096) :: msg
@@ -229,12 +229,14 @@ module ADE_reader
       use pde_objs
           
       class(pde_str), intent(in out), dimension(:) :: pde_loc
-      real(kind=rkind), dimension(:), allocatable :: tmp_array
-      integer(kind=ikind) :: i
+      real(kind=rkind), dimension(:), allocatable :: tmp_array, tmp_array2
+      integer(kind=ikind) :: i, j, D
+      real(kind=rkind) :: tmp
       character(len=4096) :: msg
       character(len=4096) :: number
       integer :: filesorp, ierr
-      character(len=6), dimension(:), allocatable :: sorpnames
+      character(len=3) :: breaker
+   
       
       open(newunit=filesorp, file="drutes.conf/ADE/sorption.conf", action="read", status="old", iostat=ierr)
       
@@ -245,11 +247,14 @@ module ADE_reader
       
       do i=1, ubound(pde_loc,1)
         write(number, fmt=*) i
-        write(pde_loc(i)%problem_name(1), fmt="(a)") "ADER_in_solid_", cut(number)
-        write(pde_loc(i)%problem_name(2), fmt="(a)")  "Advection-dispersion-reaction equation (solute concentration adsorbed in &
+        write(pde_loc(i)%problem_name(1), fmt=*) "ADER_in_solid_", cut(number)
+        pde_loc(i)%problem_name(1) = cut(pde_loc(i)%problem_name(1))
+        write(pde_loc(i)%problem_name(2), fmt=*)  "Advection-dispersion-reaction equation (solute concentration adsorbed in &
               solid phase) ", cut(number)
+        pde_loc(i)%problem_name(2) = cut(pde_loc(i)%problem_name(2))
 
-        write(pde_loc(i)%solution_name(1), fmt="(a)") "solute_concentration_", cut(number) !nazev vystupnich souboru
+        write(pde_loc(i)%solution_name(1), fmt=*) "solute_concentration_", cut(number) !nazev vystupnich souboru
+        pde_loc(i)%solution_name(1) = cut(pde_loc(i)%solution_name(1))
         pde_loc(i)%solution_name(2) = "c  [M/M]" !popisek grafu
 
         pde_loc(i)%flux_name(1) = "zero_flux"  
@@ -260,58 +265,124 @@ module ADE_reader
       end do
       
       allocate(sorption(ubound(adepar,1), no_solids))
-
-      adepar(:)%sorption%kinetic = .true.
       
-      write(msg, *) "HINT1: The number of lines for kinetic/equilibrium sorption parameters has to be", &
-        " equal to the number of materials" , &
-        new_line("a"), "   HINT2: The bulk density has to be positive value greater than zero."
-        
+      write(msg, *) "The number of lines for kinetic/equilibrium sorption parameters has to be", &
+         " equal to the number of materials and the number of columns has to be equal to the number", & 
+         " of solid media.", new_line("a"), &
+         "   e.g. 2 layers, 3 solid media with different sorption properties", & 
+         " (2 with kinetic and 1 with equilibrium at each layer the same):", new_line("a"), &
+         "   y y n ", new_line("a"), &
+         "   y y n ", new_line("a"), & 
+         "   y y n "
+       
       do i=1, ubound(adepar,1)
-       call fileread(sorption(i,:)%bd, filesorp, errmsg=trim(msg), &
-       ranges=(/epsilon(0.0_rkind), huge(0.0_rkind)/), checklen=.true.)
+        call fileread(sorption(i,:)%kinetic, filesorp, errmsg=msg)
       end do
-      
-      
-      write(msg, *) "HINT1: The number of lines for kinetic/equilibrium sorption parameters has to be equal &
-        to the number of materials"&
-       , new_line("a"), "   HINT2: Have you specified the sorption model name correctly?"
-      
-      do i=1, ubound(sorption,1)
-       call fileread(sorption(i,:)%name, filesorp, errmsg=trim(msg), options=(/"freund", "langmu"/), checklen=.true.)
-      end do
-      
-      if (allocated(tmp_array)) deallocate(tmp_array)
-      allocate(tmp_array(3))
-      
-      do i=1, ubound(sorption,1)
-        call fileread(tmp_array, filesorp, errmsg=trim(msg), ranges=(/0.0_rkind, huge(0.0_rkind)/))
-        adepar(i)%sorption%adsorb=tmp_array(1)
-        adepar(i)%sorption%desorb=tmp_array(2)
-        adepar(i)%sorption%third=tmp_array(3)
-        if (.not. adepar(i)%sorption%kinetic .and. adepar(i)%sorption%desorb < 100*epsilon(1.0_rkind) .and. &
-        abs(adepar(i)%sorption%adsorb) > 100*epsilon(1.0_rkind)) then
-          write(msg, *) "This is non-sence!! You have defined zero desorption rate but you want to use equilibrium sorption.", &
-          new_line("a"), &
-          "Divisions by zero are in general not accepted in a good society."
-          call file_error(file_contaminant, message=trim(msg))
+
+      write(msg, fmt=*) "   Set ratio  of solid media, if single solid medium ratio=1,",  & 
+          " if more solid media the sum of all ratios per line has to be equal 1.0.", new_line("a"), &
+          " The ratio must be defined for each scattered solid medium, in your case", &
+          " the number of the scattered solid medium counts:", ubound(sorption,2) 
+      do i=1, ubound(adepar,1)
+        call fileread(sorption(i,:)%ratio, filesorp, errmsg=msg, checklen=.true.)
+        tmp = 0
+        do j=1, ubound(sorption,2)
+          tmp = tmp + sorption(i,j)%ratio
+        end do 
+        
+        if (abs(tmp - 1.0) > 100*epsilon(tmp)) then
+          call file_error(filesorp, msg)
         end if
       end do
       
-      if (drutes_config%name == "ADEwrk" .or. drutes_config%name=="ADEstk") then
-        do i=1, ubound(adepar,1)
-          call fileread(adepar(i)%csinit, file_contaminant, errmsg="Have you defined value for c_s_init")
+
+    
+       msg = "Set bulk density (for each material) if your medium scattered into more media provide bulk densities in columns"
+       do i=1, ubound(adepar,1)
+         call fileread(sorption(i,:)%bd, filesorp, errmsg=msg, &
+               ranges=(/epsilon(0.0_rkind), huge(0.0_rkind)/), checklen=.true.)
+       end do
+       
+  
+      write(msg, fmt=*) "Set sorption model name", new_line("a"), &
+      "-   langmu for Langmuir model", new_line("a"), &
+      "-   freund for Freundlich model."
+      do i=1, ubound(sorption,1)
+       call fileread(sorption(i,:)%name, filesorp, errmsg=msg, options=(/"freund", "langmu"/))
+      end do
+  
+
+      
+      allocate(tmp_array(3))  
+      
+      write(msg, fmt=*) "If kinetic Freundlich type (both k_adsorb and k_desorb is supplied here as a positive value)", &
+      " and n (for nonlinear Freundlich model, for linear set n=1). For Langmuir model set ka, kd and csmax.", &
+      " If equilibrium Freundlich model specify just k_D and n value, for equilibrium Langmuir model specify ", &
+      " k_D and csmax only.", &
+      "If your solid medium is scattered into more media, then  provide the data per layer and ", &
+       "per medium always on separate lines, layers are always separated by ---"
+      do i=1, ubound(sorption,1)
+        do j=1, ubound(sorption,2)
+          if (sorption(i,j)%kinetic) then
+            D = 3
+          else
+            D = 2
+          end if
+          call fileread(tmp_array(1:D), filesorp, errmsg=trim(msg), ranges=(/0.0_rkind, huge(0.0_rkind)/), checklen=.TRUE.)
+          sorption(i,j)%adsorb=tmp_array(1)
+          sorption(i,j)%desorb=tmp_array(2)
+          if (sorption(i,j)%kinetic) then
+            sorption(i,j)%desorb=tmp_array(2)
+            sorption(i,j)%third=tmp_array(3)
+          else
+            sorption(i,j)%third=tmp_array(2)
+          end if
         end do
-      end if
+        if (i<ubound(sorption,1)) call fileread(breaker, filesorp, errmsg="Each layer data must be separated by --- ", &
+        options=(/"---"/))
+      end do
       
-      if (drutes_config%name == "ADEwrk" .or. drutes_config%name=="ADEstk") then
-        write(msg, *) "HINT 1: You have selected strange number of boundaries for ADE problem.", new_line("a"), &
-              "  HINT 2: Since you requested nonequilibrium sorption, then you should provide csinit for each material."
-            else
-        write(msg, *) "HINT 1: You have selected strange number of boundaries for ADE problem.", new_line("a"), &
-              "   HINT 2: Since you requested equilibrium sorption, then comment or erase lines with csinit"
-      end if
-      
+
+      write(msg, *) "Initial concentration at solid phase (supply value for each layer and each medium)", &
+    " use lines for layers and columns for media. if equilibrium model used provide value 0 otherwise an error will be generated."
+      do i=1, ubound(sorption,1)
+        call fileread(sorption(i,:)%csinit, filesorp, errmsg=msg, checklen=.true.)
+        do j=1, ubound(sorption,2)
+           if (.not. sorption(i,j)%kinetic .and. abs(sorption(i,j)%csinit) > epsilon(tmp)) then
+             write(msg, *) "Incorrect definition of csinit. Layer:", i, "solid medium:", j, new_line("a"), &
+               "   is equilibrium sorption, so set 0 for initial concentration on solid and define only initial", &
+               " concentration for liquid in file drutes.conf/ADE/contaminant.conf"
+               call file_error(filesorp, msg)
+           end if
+         end do
+       end do
+        
+!         adepar(i)%sorption%adsorb=tmp_array(1)
+!         adepar(i)%sorption%desorb=tmp_array(2)
+!         adepar(i)%sorption%third=tmp_array(3)
+!         if (.not. adepar(i)%sorption%kinetic .and. adepar(i)%sorption%desorb < 100*epsilon(1.0_rkind) .and. &
+!         abs(adepar(i)%sorption%adsorb) > 100*epsilon(1.0_rkind)) then
+!           write(msg, *) "This is non-sence!! You have defined zero desorption rate but you want to use equilibrium sorption.", &
+!           new_line("a"), &
+!           "Divisions by zero are in general not accepted in a good society."
+!           call file_error(file_contaminant, message=trim(msg))
+!         end if
+!       end do
+!       
+!       if (drutes_config%name == "ADEwrk" .or. drutes_config%name=="ADEstk") then
+!         do i=1, ubound(adepar,1)
+!           call fileread(adepar(i)%csinit, file_contaminant, errmsg="Have you defined value for c_s_init")
+!         end do
+!       end if
+!       
+!       if (drutes_config%name == "ADEwrk" .or. drutes_config%name=="ADEstk") then
+!         write(msg, *) "HINT 1: You have selected strange number of boundaries for ADE problem.", new_line("a"), &
+!               "  HINT 2: Since you requested nonequilibrium sorption, then you should provide csinit for each material."
+!             else
+!         write(msg, *) "HINT 1: You have selected strange number of boundaries for ADE problem.", new_line("a"), &
+!               "   HINT 2: Since you requested equilibrium sorption, then comment or erase lines with csinit"
+!       end if
+!       
       
       
     

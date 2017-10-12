@@ -70,7 +70,7 @@ module pde_objs
     !> the first item is used for filename 
     !! the second item is printed inside the text files
     !>
-    character(len=256), dimension(2)                 :: problem_name
+    character(len=512), dimension(2)                 :: problem_name
     character(len=64), dimension(2)                  :: solution_name
     character(len=64), dimension(2)                  :: flux_name
     character(len=64), dimension(2)                  :: mass_name

@@ -109,7 +109,7 @@ module printtools
         call find_unit(fileid,1000)
         open(unit=fileid, file="4www/progress", status="replace", action="write")
         write(unit=fileid, fmt=*) tmp1
-        select case (int(tmp))
+        select case (nint(tmp))
           case (0:60)   
             write(unit=fileid, fmt="(a, F10.2, a)") " #time to finish =", tmp, " s"
           case (61:3600)
@@ -143,11 +143,11 @@ module printtools
         iunit=terminal
       end if
       
-      write(unit=iunit, fmt=*) "#                             _____________________  _______________________"
-      write(unit=iunit, fmt=*) "#                             ___  __ \__  __ \_  / / /_  /___  ____/_  ___/"
-      write(unit=iunit, fmt=*) "#                             __  / / /_  /_/ /  / / /_  __/_  __/  _____ \ "
-      write(unit=iunit, fmt=*) "#                             _  /_/ /_  _, _// /_/ / / /_ _  /___  ____/ / "
-      write(unit=iunit, fmt=*) "#                             /_____/ /_/ |_| \____/  \__/ /_____/  /____/  "
+      write(unit=iunit, fmt=*) "#              _____________________  _______________________"
+      write(unit=iunit, fmt=*) "#              ___  __ \__  __ \_  / / /_  /___  ____/_  ___/"
+      write(unit=iunit, fmt=*) "#              __  / / /_  /_/ /  / / /_  __/_  __/  _____ \ "
+      write(unit=iunit, fmt=*) "#              _  /_/ /_  _, _// /_/ / / /_ _  /___  ____/ / "
+      write(unit=iunit, fmt=*) "#              /_____/ /_/ |_| \____/  \__/ /_____/  /____/  "
       write(unit=iunit, fmt=*) "# "
       write(unit=iunit, fmt=*) " "
       

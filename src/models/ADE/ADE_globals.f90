@@ -12,6 +12,9 @@ module ade_globals
     real(kind=rkind) :: third
     !> bulk density
     real(kind=rkind) :: bd
+    !> ratio  of solid media, if single solid medium ratio=1, if more solid media the sum between sorption(:)%ratio has to be equal 1.0
+    real(kind=rkind) :: ratio 
+    real(kind=rkind) :: csinit
   end type sorption_str
 
 
