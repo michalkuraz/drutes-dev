@@ -32,20 +32,20 @@ module Re_dual_bc
       
 
       if (present(value)) then
-	edge_id = nodes%edge(elements%data(el_id, node_order))
+        edge_id = nodes%edge(elements%data(el_id, node_order))
 
-	i = pde_loc%permut(elements%data(el_id, node_order))
-	
+        i = pde_loc%permut(elements%data(el_id, node_order))
+        
 
-	if (pde_loc%bc(edge_id)%file) then
-	  do i=1, ubound(pde_loc%bc(edge_id)%series,1)
-	    if (pde_loc%bc(edge_id)%series(i,1) > time) then
-	      if (i > 1) then
-		j = i-1
-	      else
-		j = i
-	      end if
-	      layer=pde_loc%bc(edge_id)%layer
+        if (pde_loc%bc(edge_id)%file) then
+          do i=1, ubound(pde_loc%bc(edge_id)%series,1)
+            if (pde_loc%bc(edge_id)%series(i,1) > time) then
+              if (i > 1) then
+                j = i-1
+              else
+                j = i
+              end if
+              layer=elements%material(el_id)
 	       
               select case (pde_loc%mfswitch)
                 case("m")
@@ -53,26 +53,26 @@ module Re_dual_bc
                 case("f")
                   bcval = pde_loc%bc(edge_id)%series(j,2)*exchange(layer)%weightf
               end select
-	      EXIT
-	    end if
-	  end do
-	else
-	  layer=pde_loc%bc(edge_id)%layer
+              EXIT
+            end if
+          end do
+        else
+          layer=elements%material(el_id)
           select case (pde_loc%mfswitch)
             case("m")
               bcval = pde_loc%bc(edge_id)%value*exchange(layer)%weightm
             case("f")
               bcval = pde_loc%bc(edge_id)%value*exchange(layer)%weightf
           end select
-	end if
+        end if
     
 
-	value = bcval
+        value = bcval
 
       end if
       
       if (present(code)) then
-	code = 2
+        code = 2
       end if
 
 
@@ -108,35 +108,35 @@ module Re_dual_bc
       end select
 
       if (present(value)) then
-	edge_id = nodes%edge(elements%data(el_id, node_order))
+        edge_id = nodes%edge(elements%data(el_id, node_order))
 
-	i = pde_loc%permut(elements%data(el_id, node_order))
-	
+        i = pde_loc%permut(elements%data(el_id, node_order))
+        
 
-	if (pde_loc%bc(edge_id)%file) then
-	  do i=1, ubound(pde_loc%bc(edge_id)%series,1)
-	    if (pde_loc%bc(edge_id)%series(i,1) > time) then
-	      if (i > 1) then
-		j = i-1
-	      else
-		j = i
-	      end if
-	      layer=pde_loc%bc(edge_id)%layer
+        if (pde_loc%bc(edge_id)%file) then
+          do i=1, ubound(pde_loc%bc(edge_id)%series,1)
+            if (pde_loc%bc(edge_id)%series(i,1) > time) then
+              if (i > 1) then
+                j = i-1
+              else
+                j = i
+              end if
+              layer=elements%material(el_id)
               bcval = pde_loc%bc(edge_id)%series(j,2)*weight
-	      EXIT
-	    end if
-	  end do
-	else
-	  layer=pde_loc%bc(edge_id)%layer
+              EXIT
+            end if
+          end do
+        else
+          layer=elements%material(el_id)
           bcval = pde_loc%bc(edge_id)%value*weight
-	end if
+        end if
 
-	value = bcval
+        value = bcval
 
       end if
       
       if (present(code)) then
-	code = 2
+        code = 2
       end if
 
 
@@ -167,11 +167,11 @@ module Re_dual_bc
       
       if (present(value)) then
 
-	quadpnt%type_pnt = "ndpt"
-	quadpnt%column = 2
-	quadpnt%order = elements%data(el_id, node_order)
-	layer = elements%material(el_id)
-	D = drutes_config%dimen
+        quadpnt%type_pnt = "ndpt"
+        quadpnt%column = 2
+        quadpnt%order = elements%data(el_id, node_order)
+        layer = elements%material(el_id)
+        D = drutes_config%dimen
         select case (pde_loc%mfswitch)
           case("m")
             call pde(1)%pde_fnc(1)%dispersion(pde_loc, layer, quadpnt, tensor=K(1:D,1:D))          
@@ -181,22 +181,22 @@ module Re_dual_bc
 	
 	
       	select case(D)
-	  case(1)
+          case(1)
 	  
-	    value = K(1,1) * elements%nvect_z(el_id, node_order)
-	  
-	  case(2)	  
-	    gravflux(1) = sqrt(1-elements%nvect_z(el_id, node_order)*elements%nvect_z(el_id, node_order))*K(1,2)
-	    
-	    gravflux(2) = elements%nvect_z(el_id, node_order)*K(2,2)
+            value = K(1,1) * elements%nvect_z(el_id, node_order)
+          
+          case(2)	  
+            gravflux(1) = sqrt(1-elements%nvect_z(el_id, node_order)*elements%nvect_z(el_id, node_order))*K(1,2)
+            
+            gravflux(2) = elements%nvect_z(el_id, node_order)*K(2,2)
 
-	    value = sqrt(gravflux(1)*gravflux(1) + gravflux(2)*gravflux(2))
+            value = sqrt(gravflux(1)*gravflux(1) + gravflux(2)*gravflux(2))
 
-	end select
+        end select
       end if
       
       if (present(code)) then
-	code = 2
+        code = 2
       end if
       
     end subroutine dual_freedrainage
@@ -233,28 +233,28 @@ module Re_dual_bc
       end if
       
       if (present(value)) then
-	edge_id = nodes%edge(elements%data(el_id, node_order))
+        edge_id = nodes%edge(elements%data(el_id, node_order))
 
-	i = pde_loc%permut(elements%data(el_id, node_order))
+        i = pde_loc%permut(elements%data(el_id, node_order))
 
 
-	if (pde_loc%bc(edge_id)%file) then
-	  do i=1, ubound(pde_loc%bc(edge_id)%series,1)
-	    if (pde_loc%bc(edge_id)%series(i,1) > time) then
-	      if (i > 1) then
-		j = i-1
-	      else
-		j = i
-	      end if
-	      rain = pde_loc%bc(edge_id)%series(j,2)
-	      evap = pde_loc%bc(edge_id)%series(j,3)
-	      EXIT
-	    end if
-	  end do
-	else
-	  print *, "atmospheric boundary must be time dependent, check record for the boundary", edge_id
-	  ERROR STOP
-	end if
+        if (pde_loc%bc(edge_id)%file) then
+          do i=1, ubound(pde_loc%bc(edge_id)%series,1)
+            if (pde_loc%bc(edge_id)%series(i,1) > time) then
+              if (i > 1) then
+          j = i-1
+              else
+          j = i
+              end if
+              rain = pde_loc%bc(edge_id)%series(j,2)
+              evap = pde_loc%bc(edge_id)%series(j,3)
+              EXIT
+            end if
+          end do
+        else
+          print *, "atmospheric boundary must be time dependent, check record for the boundary", edge_id
+          ERROR STOP
+        end if
 
         quadpnt%type_pnt = "ndpt"
         quadpnt%column = 2

@@ -264,7 +264,11 @@ module ADE_reader
         pde_loc(i)%mass_name(2) = "concetration [M/M]"
       end do
       
-      allocate(sorption(ubound(adepar,1), no_solids))
+      if (no_solids > 0) then
+        allocate(sorption(ubound(adepar,1), no_solids))
+      else
+        allocate(sorption(ubound(adepar,1), 1))
+      end if
       
       write(msg, *) "The number of lines for kinetic/equilibrium sorption parameters has to be", &
          " equal to the number of materials and the number of columns has to be equal to the number", & 
@@ -278,6 +282,18 @@ module ADE_reader
       do i=1, ubound(adepar,1)
         call fileread(sorption(i,:)%kinetic, filesorp, errmsg=msg)
       end do
+      
+      if (no_solids == 0) then
+        do i=1, ubound(sorption,1)
+          if (sorption(i,1)%kinetic) then
+            write(msg, *)  "You have specified in drutes.conf/ADE/ADE.conf zero number of soild media", new_line("a"), &
+            " to gether with [y] for use soprtion. It means you want to use equilibrium sorption only.", new_line("a"),  &
+            " But further in your file drutes.conf/ADE/sorption.conf , you requsted kinetic sorption", new_line("a"), & 
+            " You should know what you want in your life, I'm not a crystal ball." 
+            call file_error(filesorp, msg)
+          end if
+        end do
+      end if
 
       write(msg, fmt=*) "   Set ratio  of solid media, if single solid medium ratio=1,",  & 
           " if more solid media the sum of all ratios per line has to be equal 1.0.", new_line("a"), &

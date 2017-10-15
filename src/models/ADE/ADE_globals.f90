@@ -58,6 +58,8 @@ module ade_globals
   
   logical, public :: kinsorb
   
+  logical, public :: use_sorption
+  
   integer, public :: file_contaminant
   
 end module ade_globals

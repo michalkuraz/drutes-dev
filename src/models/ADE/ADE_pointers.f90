@@ -22,10 +22,15 @@ module ADE_pointers
         ERROR STOP
       end if
 
-      
       call fileread(with_richards, adeconf)
       
-      call fileread(no_solids, adeconf, ranges=(/1_ikind, huge(1_ikind)/))
+      call fileread(use_sorption, adeconf)
+      
+      if (use_sorption) then
+        call fileread(no_solids, adeconf, ranges=(/1_ikind, huge(1_ikind)/))
+      else
+        no_solids = 0
+      end if
       
       processes =  no_solids + 1
       
@@ -83,7 +88,7 @@ module ADE_pointers
       
       if (with_richards) call REstdH(pde_loc(1))
       
-      if (no_solids > 0) then 
+      if (use_sorption) then 
         call ADEkinsorb(pde_loc(adepos+1:pde_common%processes))
       end if 
       

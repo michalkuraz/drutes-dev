@@ -284,22 +284,22 @@ module global_objs
         array%pos = 0
         allocate(array%data(1))
         if (present(info)) then
-	  array%infopos = 0
-	  allocate(array%info(1))
-	end if
+          array%infopos = 0
+          allocate(array%info(1))
+        end if
       end if
       
       array%pos = array%pos+1
       
       if (present(info)) then
-	array%infopos = array%infopos + 1
+        array%infopos = array%infopos + 1
         if (array%pos /= array%infopos) then
-	    print *, "this is a bug in the code"
-	    print *, "smartarray%data and smartarray%info has different amount of data written"
+            print *, "this is a bug in the code"
+            print *, "smartarray%data and smartarray%info has different amount of data written"
             print *, "called from global_objs::rsmartfill"
-	    print *, "contact Michal -> michalkuraz@gmail.com"
-	    ERROR STOP
-	end if
+            print *, "contact Michal -> michalkuraz@gmail.com"
+            ERROR STOP
+        end if
       end if
       
       if (ubound(array%data,1) < array%pos) then
@@ -311,19 +311,19 @@ module global_objs
         array%data(1:l) = itmp
         deallocate(itmp)
         if (present(info)) then
-	  allocate (logtmp(l))
-	  logtmp = array%info
-	  deallocate(array%info)
-	  allocate(array%info(2*l))
-	  array%info(1:l) = logtmp
-	  deallocate(logtmp)
-	end if	  
+          allocate (logtmp(l))
+          logtmp = array%info
+          deallocate(array%info)
+          allocate(array%info(2*l))
+          array%info(1:l) = logtmp
+          deallocate(logtmp)
+        end if	  
       end if
       
       array%data(array%pos) = input
       
       if (present(info)) then
-	array%info = info
+        array%info = info
       end if
       
       
@@ -343,20 +343,20 @@ module global_objs
       
       exist = .false.
       if (allocated(array%data)) then
-	do i=1, array%pos
-	  if (array%data(i) == input) then
-	    exist = .true.
-	    EXIT
-	  end if
-	end do
+        do i=1, array%pos
+          if (array%data(i) == input) then
+            exist = .true.
+            EXIT
+          end if
+        end do
        end if
       
       if (.not. exist) then
-	if (present(info)) then
-	  call ismartfill(array, input, info)
-	else
-	  call ismartfill(array, input)
-	end if
+        if (present(info)) then
+          call ismartfill(array, input, info)
+        else
+          call ismartfill(array, input)
+        end if
       end if
     
     
@@ -385,10 +385,10 @@ module global_objs
       exist = .false.
       
       do i=1, array%pos
-	if (array%data(i) == value) then
-	  exist = .true.
-	  RETURN
-	end if
+        if (array%data(i) == value) then
+          exist = .true.
+          RETURN
+        end if
       end do
       
     end function ismartexist
@@ -409,22 +409,22 @@ module global_objs
         array%pos = 0
         allocate(array%data(1))
         if (present(info)) then
-	  array%infopos = 0
-	  allocate(array%info(1))
-	end if
+          array%infopos = 0
+          allocate(array%info(1))
+        end if
       end if
       
       array%pos = array%pos+1
       
       if (present(info)) then
-	array%infopos = array%infopos + 1
+        array%infopos = array%infopos + 1
         if (array%pos /= array%infopos) then
-	    print *, "this is a bug in the code"
-	    print *, "smartarray%data and smartarray%info has different amount of data written"
-	    print *, "called from global_objs::rsmartfill"
-	    print *, "contact Michal -> michalkuraz@gmail.com"
-	    ERROR STOP
-	end if
+            print *, "this is a bug in the code"
+            print *, "smartarray%data and smartarray%info has different amount of data written"
+            print *, "called from global_objs::rsmartfill"
+            print *, "contact Michal -> michalkuraz@gmail.com"
+            ERROR STOP
+        end if
       end if
       
       if (ubound(array%data,1) < array%pos) then
@@ -436,19 +436,19 @@ module global_objs
         array%data(1:l) = rtmp
         deallocate(rtmp)
         if (present(info)) then
-	  allocate (logtmp(l))
-	  logtmp = array%info
-	  deallocate(array%info)
-	  allocate(array%info(2*l))
-	  array%info(1:l) = logtmp
-	  deallocate(logtmp)
-	end if	  
+          allocate (logtmp(l))
+          logtmp = array%info
+          deallocate(array%info)
+          allocate(array%info(2*l))
+          array%info(1:l) = logtmp
+          deallocate(logtmp)
+        end if	  
       end if
       
       array%data(array%pos) = input
       
       if (present(info)) then
-	array%info = info
+        array%info = info
       end if
       
       
@@ -468,20 +468,20 @@ module global_objs
       
       exist = .false.
       if (allocated(array%data)) then
-	do i=1, array%pos
-	  if (abs(array%data(i) - input) < max(abs(array%data(i)), abs(input))*(epsilon(input))) then
-	    exist = .true.
-	    EXIT
-	  end if
-	end do
+        do i=1, array%pos
+          if (abs(array%data(i) - input) < max(abs(array%data(i)), abs(input))*(epsilon(input))) then
+            exist = .true.
+            EXIT
+          end if
+        end do
        end if
       
       if (.not. exist) then
-	if (present(info)) then
-	  call rsmartfill(array, input, info)
-	else
-	  call rsmartfill(array, input)
-	end if
+        if (present(info)) then
+          call rsmartfill(array, input, info)
+        else
+          call rsmartfill(array, input)
+        end if
       end if
     
     

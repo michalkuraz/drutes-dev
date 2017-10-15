@@ -220,10 +220,10 @@ main.o:  $(ALL_objs) src/core/main.f90
 #-----------------------
 
 
-clean:
+cleanall:
 	rm -rf *.o *.mod bin/*
 	
-cleanobj:
+clean:
 	rm -rf *.o *.mod
 	
 git:

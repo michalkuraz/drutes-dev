@@ -844,7 +844,7 @@ module RE_constitutive
       end if
 
       if (present(vector_out)) then
-	! must be negative, because the commnon scheme of the CDE problem has negative convection, but RE has positive convection
+        ! must be negative, because the commnon scheme of the CDE problem has negative convection, but RE has positive convection
         vector_out = -vgset(layer)%Ks(drutes_config%dimen,:) * tmp
       end if
 
@@ -1091,65 +1091,65 @@ module RE_constitutive
     
       
       if (present(quadpnt) .and. present(x)) then
-	print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
-	print *, "exited from re_constitutive::vangen_tab"
-	ERROR stop
+        print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
+        print *, "exited from re_constitutive::vangen_tab"
+        ERROR stop
       else if (.not. present(quadpnt) .and. .not. present(x)) then
-	print *, "ERROR: you have not specified either integ point or x value"
+        print *, "ERROR: you have not specified either integ point or x value"
         print *, "exited from re_constitutive::dmualem_dh_tab"
-	ERROR stop
+        ERROR stop
       end if
       
       if (present(quadpnt)) then
         quadpnt_loc=quadpnt
-	quadpnt_loc%preproc=.true.
-	h = pde_loc%getval(quadpnt_loc)
+        quadpnt_loc%preproc=.true.
+        h = pde_loc%getval(quadpnt_loc)
       else
       	if (ubound(x,1) /=1) then
-	  print *, "ERROR: van Genuchten function is a function of a single variable h"
-	  print *, "       your input data has:", ubound(x,1), "variables"
-	  print *, "exited from re_constitutive::dmualem_dh_tab"
-	  ERROR STOP
-	end if
-	h = x(1)
+        print *, "ERROR: van Genuchten function is a function of a single variable h"
+        print *, "       your input data has:", ubound(x,1), "variables"
+        print *, "exited from re_constitutive::dmualem_dh_tab"
+        ERROR STOP
+      end if
+        h = x(1)
       end if      
       
       if (h<0) then
-	if (h/drutes_config%fnc_discr_length < 0.1*huge(1) ) then
-	
-	  pos = int(-h/drutes_config%fnc_discr_length)+1
-	  if (pos <= ubound(dKdhtab,2)-1) then
-	    dist = -h - (pos - 1)*drutes_config%fnc_discr_length
-	    tmp = (dKdhtab(layer,pos+1)-dKdhtab(layer,pos))/drutes_config%fnc_discr_length*dist + dKdhtab(layer,pos)
-	  else
-	    if (present(quadpnt)) call dmualem_dh(pde_loc, layer, quadpnt, scalar=tmp)
-	    if (present(x)) call dmualem_dh(pde_loc, layer, x=x, scalar=tmp)
-	    if (.not. tabwarning) then
-	      call write_log(trim(tabmsg))
-	      tabwarning = .true.
-	    end if
-	  end if
-	else
+        if (h/drutes_config%fnc_discr_length < 0.1*huge(1) ) then
+        
+          pos = int(-h/drutes_config%fnc_discr_length)+1
+          if (pos <= ubound(dKdhtab,2)-1) then
+            dist = -h - (pos - 1)*drutes_config%fnc_discr_length
+            tmp = (dKdhtab(layer,pos+1)-dKdhtab(layer,pos))/drutes_config%fnc_discr_length*dist + dKdhtab(layer,pos)
+          else
+            if (present(quadpnt)) call dmualem_dh(pde_loc, layer, quadpnt, scalar=tmp)
+            if (present(x)) call dmualem_dh(pde_loc, layer, x=x, scalar=tmp)
+            if (.not. tabwarning) then
+              call write_log(trim(tabmsg))
+              tabwarning = .true.
+            end if
+          end if
+        else
           if (.not. intwarning) then
-	    call intoverflow()
-	    intwarning = .true.
-	  end if
-	  if (present(quadpnt))call dmualem_dh(pde_loc, layer, quadpnt_loc, scalar=tmp)
-	  if (present(x))call dmualem_dh(pde_loc, layer, x=x, scalar=tmp)
-	end if
+            call intoverflow()
+            intwarning = .true.
+          end if
+          if (present(quadpnt))call dmualem_dh(pde_loc, layer, quadpnt_loc, scalar=tmp)
+          if (present(x))call dmualem_dh(pde_loc, layer, x=x, scalar=tmp)
+        end if
 	  
       else
-	tmp = 0
+        tmp = 0
       end if
       
 
       if (present(vector_out)) then
-	! must be negative, because the commnon scheme of the CDE problem has negative convection, but RE has positive convection
-	vector_out = -vgset(layer)%Ks(drutes_config%dimen,:) * tmp
+        ! must be negative, because the commnon scheme of the CDE problem has negative convection, but RE has positive convection
+        vector_out = -vgset(layer)%Ks(drutes_config%dimen,:) * tmp
       end if
 
       if (present(scalar)) then
-	scalar = tmp
+        scalar = tmp
       end if
 
     end subroutine dmualem_dh_tab
@@ -1325,7 +1325,7 @@ module RE_constitutive
       domain(2) = "f"
 
 
-     domain_count = 1
+      domain_count = 1
 
 
       allocate(Ktab_all(domain_count, ubound(vgmatrix,1), n))
@@ -1497,13 +1497,13 @@ module RE_constitutive
                   backward = .false.
                 else
                   if (cotable(k,i-1,3)[THIS_IMAGE()] > inflex_point-5*drutes_config%fnc_discr_length) then
-              htest = h
-              hprev = h
-              backward = .false.
+                    htest = h
+                    hprev = h
+                    backward = .false.
                   else
-              htest = cotable(k,i-1,3)[THIS_IMAGE()]
-              hprev = htest
-              backward = .true.
+                    htest = cotable(k,i-1,3)[THIS_IMAGE()]
+                    hprev = htest
+                    backward = .true.
                   end if
                 end if
                 rough2: do
@@ -1693,8 +1693,8 @@ module RE_constitutive
               low = vgset(mat)%rcza_set%tab(position,2)
               high = vgset(mat)%rcza_set%tab(position,3)
               if (h < low .or. h > high) then
-          passed = .false.
-          RETURN
+                passed = .false.
+                RETURN
               end if
               end if
            end if
@@ -1854,13 +1854,13 @@ module RE_constitutive
           if (pde_loc%bc(edge_id)%file) then
             do i=1, ubound(pde_loc%bc(edge_id)%series,1)
               if (pde_loc%bc(edge_id)%series(i,1) > time) then
-          if (i > 1) then
-            j = i-1
-          else
-            j = i
-          end if
-          bcval = pde_loc%bc(edge_id)%series(j,2)
-          EXIT
+                if (i > 1) then
+                  j = i-1
+                else
+                  j = i
+                end if
+                bcval = pde_loc%bc(edge_id)%series(j,2)
+                EXIT
               end if
             end do
           else

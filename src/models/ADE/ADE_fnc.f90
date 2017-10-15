@@ -42,22 +42,22 @@ module ADE_fnc
         identity(i,i) = 1.0
       end do
       
-      select case(drutes_config%name)
-        case("ADEstd", "ADEstd_kinsorb")
-          q_w = ADEpar(layer)%convection
-          theta = adepar(layer)%water_cont
-          ths = adepar(layer)%water_cont
-        case default
-          theta = pde(1)%mass(layer, quadpnt)
-          call pde(1)%flux(layer, quadpnt, vector_out = q_w(1:D))
-          ths = vgset(layer)%ths
-      end select
+      if (with_richards) then
+        q_w = ADEpar(layer)%convection
+        theta = adepar(layer)%water_cont
+        ths = adepar(layer)%water_cont
+      else
+        theta = pde(1)%mass(layer, quadpnt)
+        call pde(1)%flux(layer, quadpnt, vector_out = q_w(1:D))
+        ths = vgset(layer)%ths
+      end if
       
 
       q_abs = 0.0
       do i=1, D
         q_abs =q_abs + q_w(i)*q_w(i)
       end do
+      
       q_abs = sqrt(q_abs)
       tortuo = theta**(10.0/3.0)/(ths*ths)
       
@@ -302,9 +302,7 @@ module ADE_fnc
             val = theta*adepar(layer)%lambda(i)*cl**(adepar(layer)%orders(i)-1)
         end select
       end do
-	
-	  
-      
+ 
       
     end function ADE_reaction
     
@@ -586,20 +584,38 @@ module ADE_fnc
       !> return value
       real(kind=rkind)                :: val 
       
-      integer(kind=ikind) :: proc_cl
+      integer(kind=ikind) :: proc_cl, media_id
       real(kind=rkind) :: cs, cl
       
-      proc_cl = pde_loc%order - 1
+      proc_cl = pde_loc%order - no_solids
+      
+      media_id = no_solids - (ubound(pde,1) - pde_loc%order)
       
       
-      select case(adepar(layer)%sorption%name)
-        case("langmu")
-          cs = pde_loc%getval(quadpnt) 
-                cl = pde(proc_cl)%getval(quadpnt)
-                val = -adepar(layer)%sorption%adsorb*cl - adepar(layer)%sorption%desorb
-        case("freund")
-          val = -adepar(layer)%sorption%desorb
-      end select
+
+      if (sorption(layer, media_id)%kinetic) then
+        select case(sorption(layer, media_id)%name)
+          case("langmu")
+            cs = pde_loc%getval(quadpnt) 
+            cl = pde(proc_cl)%getval(quadpnt)
+            val = -sorption(layer, media_id)%adsorb*cl - sorption(layer, media_id)%desorb
+          case("freund")
+            val = -sorption(layer, media_id)%desorb
+        end select
+      else
+        select case(sorption(layer, media_id)%name)
+          case ("langmu")
+            cl = pde(proc_cl)%getval(quadpnt)
+            val = (1+ sorption(layer, media_id)%adsorb*cl)/&
+            ( sorption(layer, media_id)%adsorb * cl * sorption(layer, media_id)%third )
+          case("freund")
+            val = 1.0
+        end select
+        
+          
+      end if
+        
+
       
       
   end function ADE_cscs_react
@@ -620,23 +636,38 @@ module ADE_fnc
       !> return value
       real(kind=rkind)                :: val 
       
-      integer(kind=ikind) :: proc_cl
+      integer(kind=ikind) :: proc_cl, media_id
       real(kind=rkind) :: cl 
       
 
+      media_id = no_solids - (ubound(pde,1) - pde_loc%order)
       
-      select case(adepar(layer)%sorption%name)
-        case("langmu")
-          val = adepar(layer)%sorption%adsorb*adepar(layer)%sorption%third
-        case("freund")
-          if (abs(adepar(layer)%sorption%third - 1.0_rkind ) > 10*epsilon(1.0_rkind)) then
-            proc_cl = pde_loc%order - 1
+      if (sorption(layer, media_id)%kinetic) then
+        select case(sorption(layer, media_id)%name)
+          case("langmu")
+            val = sorption(layer, media_id)%adsorb*sorption(layer, media_id)%third
+          case("freund")
+            if (abs(sorption(layer, media_id)%third - 1.0_rkind ) > 10*epsilon(1.0_rkind)) then
+              proc_cl = pde_loc%order - no_solids
+              cl = pde(proc_cl)%getval(quadpnt)
+              val = sorption(layer, media_id)%adsorb*cl**(1-sorption(layer, media_id)%third)
+            else
+              val = sorption(layer, media_id)%adsorb
+            end if
+        end select
+      else
+        select case(sorption(layer, media_id)%name)
+          case ("freund")
             cl = pde(proc_cl)%getval(quadpnt)
-            val = adepar(layer)%sorption%adsorb*cl**(1-adepar(layer)%sorption%third)
-          else
-            val = adepar(layer)%sorption%adsorb
-          end if
-      end select
+            if (abs(1.0-sorption(layer, media_id)%third) < 10*epsilon(1.0_rkind)) then
+              val = sorption(layer, media_id)%adsorb*cl
+            else
+              val = sorption(layer, media_id)%adsorb*cl**sorption(layer, media_id)%third 
+            end if
+          case("langmu")
+            val = 1.0
+        end select
+      end if
       
    end function ADE_cscl_react
   

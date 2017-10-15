@@ -47,9 +47,6 @@ module femmat
 
       do
 
-        do proc=1, ubound(pde,1)
-          call icond4neumann(proc)
-        end do
 
         itcount = itcount + 1
 

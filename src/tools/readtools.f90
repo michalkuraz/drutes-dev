@@ -746,7 +746,7 @@ module readtools
 
       do i = lbound(struct,1), ubound(struct,1)
         call comment(unitW)
-        read(unit=unitW, fmt=*, iostat=ierr) struct(i)%ID, struct(i)%code, y_file, struct(i)%value, struct(i)%layer
+        read(unit=unitW, fmt=*, iostat=ierr) struct(i)%ID, struct(i)%code, y_file, struct(i)%value
         select case(y_file)
           case("y")
             struct(i)%file = .true.
@@ -756,8 +756,6 @@ module readtools
             call file_error(unitW, &
             "set [y/n] value for file in boundary condition description, see file info bellow")
         end select
-
-        struct(i)%icond4neumann = .false.
 
         if (ierr /= 0) then
           inquire(unit=unitW, name=filename)

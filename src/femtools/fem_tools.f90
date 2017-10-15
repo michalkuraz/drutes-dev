@@ -15,7 +15,6 @@
 
 module fem_tools
   public :: in2global
-  public :: icond4neumann
 
 
   contains
@@ -66,7 +65,7 @@ module fem_tools
 
     do iproc=0, ubound(pde,1)-1
       do i=1, ubound(elements%data, 2) 	
-	surface(i+iproc*limits) = elements%length(el_id,i)
+        surface(i+iproc*limits) = elements%length(el_id,i)
       end do
     end do
     
@@ -103,54 +102,55 @@ module fem_tools
     do i=1, ubound(stiff_mat,1)
       ! fill bside
       if (bc(i) /= 1) then
-	select case(bc(i))
-	  case(0,3)
-              if (m_col(i) > 0) then
-                bvect(m_col(i)) = bvect(m_col(i)) + bside(i)
+      select case(bc(i))
+        case(0,3)
+          if (m_col(i) > 0) then
+            bvect(m_col(i)) = bvect(m_col(i)) + bside(i)
+          end if
+        case(2)
+          if (m_col(i) > 0) then
+            bvect(m_col(i)) = bvect(m_col(i)) - bcval(i)*surface(i)*time_step + bside(i)
+          end if
+        case(4)
+          bvect(m_col(i)) = bcval(i)
+      end select
+      
+      ! fill stiffness matrix
+      do m=1, ubound(stiff_mat,1)
+        select case(bc(m))
+          case(1)
+            if (m_col(i) > 0) then
+              bvect(m_col(i)) = bvect(m_col(i)) - stiff_mat(i,m)*bcval(m)
+            end if
+                    
+          case(4)
+            if (i == m) then
+              call locmatrix%set(1.0_rkind, n_row(i), m_col(i))
+              if (drutes_config%it_method == 2 .or. drutes_config%it_method == 1) then
+                call locmatrix%rowsfilled%nrfill(n_row(i))
               end if
-	  case(2)
-              if (m_col(i) > 0) then
-                bvect(m_col(i)) = bvect(m_col(i)) - bcval(i)*surface(i)*time_step + bside(i)
+            end if
+        case default
+                    
+          if (bc(i) /= 4 ) then 
+            if (n_row(i) > 0 .and. m_col(m) > 0) then
+              call locmatrix%add(stiff_mat(i,m), n_row(i), m_col(m))
+              if (drutes_config%it_method == 2 .or. drutes_config%it_method == 1) then
+                call locmatrix%rowsfilled%nrfill(n_row(i))
               end if
-	  case(4)
-              bvect(m_col(i)) = bcval(i)
-	end select
-	! fill stiffness matrix
-	do m=1, ubound(stiff_mat,1)
-	  select case(bc(m))
-	    case(1)
-                if (m_col(i) > 0) then
-                  bvect(m_col(i)) = bvect(m_col(i)) - stiff_mat(i,m)*bcval(m)
-                end if
-                
-            case(4)
-                if (i == m) then
-                  call locmatrix%set(1.0_rkind, n_row(i), m_col(i))
-                  if (drutes_config%it_method == 2 .or. drutes_config%it_method == 1) then
-                    call locmatrix%rowsfilled%nrfill(n_row(i))
-                  end if
-                end if
-	    case default
-                
-                if (bc(i) /= 4 ) then 
-                  if (n_row(i) > 0 .and. m_col(m) > 0) then
-                    call locmatrix%add(stiff_mat(i,m), n_row(i), m_col(m))
-                    if (drutes_config%it_method == 2 .or. drutes_config%it_method == 1) then
-                      call locmatrix%rowsfilled%nrfill(n_row(i))
-                    end if
-                  end if
-                end if
-                
+            end if
+          end if
+                    
 
-              !**!
-! 	      spmatrix%vals(g_row) = stiff_mat(i,m)
-! 	      spmatrix%ii(g_row) = n(i)
-! 	      spmatrix%jj(g_row) = n(m)
-! 	      g_row = g_row + 1
-	  end select
-	end do
+                  !**!
+    ! 	      spmatrix%vals(g_row) = stiff_mat(i,m)
+    ! 	      spmatrix%ii(g_row) = n(i)
+    ! 	      spmatrix%jj(g_row) = n(m)
+    ! 	      g_row = g_row + 1
+        end select
+      end do
       else
-	CONTINUE
+        CONTINUE
       end if
     end do
 	  
@@ -161,99 +161,6 @@ module fem_tools
 
 
 
-  subroutine icond4neumann(proc)
-    use typy
-    use globals
-    use global_objs
-    use pde_objs
-    use core_tools
-    use simplelinalg
-
-    integer(kind=ikind), intent(in) :: proc
-    integer(kind=ikind) :: i,j,k,l,m,n,D, o, kk, nn, code, z
-   
-    logical, dimension(:), allocatable, save :: evaluated
-    real(kind=rkind) :: tmp, length, der
-    real(kind=rkind), dimension(3) :: gradh, velocity
-    real(kind=rkind), dimension(3,3) :: disp
-    logical :: gofurther
-
-    if (.not. allocated(evaluated)) then
-      allocate(evaluated(nodes%kolik))
-    end if
-
-    evaluated = .false.
-
-    D = drutes_config%dimen
-
-    do i=1, elements%kolik
-      do j=1, ubound(elements%data,2)
-        k = elements%data(i,j)
-        l = nodes%edge(k)
-        if (.not.evaluated(k) .and. elements%length(i,j) > epsilon(tmp) .and. l >= lbound(pde(proc)%bc,1)) then
-          if (pde(proc)%bc(l)%code == 2 .and. pde(proc)%bc(l)%icond4neumann) then
-            do m=1, ubound(elements%data,2)
-              o = nodes%edge(elements%data(i,m))
-              if (o >= lbound(pde(proc)%bc,1)) then
-                if (pde(proc)%bc(o)%code /= 2) then
-                  gofurther = .true.
-                else
-                  gofurther = .false.
-                end if
-              else
-                gofurther = .true.
-              end if
-              if (gofurther) then
-		call pde(proc)%bc(l)%value_fnc(pde(proc), i, j, tmp, code)
-                select case(drutes_config%dimen)
-                    case(1)
-                      velocity(1) = elements%nvect_z(i,j)*tmp
-                    case(2)
-                      velocity(1) = sqrt(1-elements%nvect_z(i,j)*elements%nvect_z(i,j))*tmp
-                      velocity(2) = elements%nvect_z(i,j)*tmp
-                end select
-
-		kk = pde(proc)%permut(k)
-
-                call pde(proc)%pde_fnc(proc)%dispersion(pde(proc), &
-                elements%material(i),x=(/pde_common%xvect(kk,1)/), & 
-                                                          tensor=disp(1:D, 1:D))
-
-		do z=1, D
-		  if ( disp(z,z) < 10*epsilon(tmp)) then
-		    call write_log("W: dispersion is nearly zero")
-		    RETURN
-		  end if
-		end do
-
-                call invert_matrix(disp(1:D, 1:D))
-
-                gradh(1:D) = matmul(disp(1:D, 1:D), velocity(1:D))
-
-                EXIT
-
-              end if
-            end do
-
-            if (m==4) then
-              print *, "ERROR: possibly strange mesh, contact developer, called from fem_tools::icond4neumann"
-              print *, "element id is: ", i
-              ERROR STOP
-            end if
-            n = elements%data(i,m)
-
-	    nn = pde(proc)%permut(n)
-            pde_common%xvect(kk,1) = pde_common%xvect(nn,1)
-            do o=1,D
-              pde_common%xvect(kk,1) = pde_common%xvect(kk,1) - (nodes%data(k,o)-nodes%data(n,o))*gradh(o)
-            end do
-            evaluated(k) = .true.
-          end if
-        end if
-      end do
-    end do
-
-  end subroutine icond4neumann
   
 
 
