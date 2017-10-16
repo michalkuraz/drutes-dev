@@ -131,9 +131,10 @@ module ADE_fnc
       !> material ID
       integer(kind=ikind), intent(in) :: layer
       !> return value
-      real(kind=rkind)                :: val
+      real(kind=rkind)                :: val, Rd
       
-      real(kind=rkind) :: theta, n, ka, kd, csmax, cl
+      real(kind=rkind) :: theta, n, kd, csmax, cl, bd
+      integer(kind=ikind) :: i 
       
       
       if (pde_loc%order == 2) then
@@ -142,39 +143,38 @@ module ADE_fnc
         theta = adepar(layer)%water_cont
       end if
       
-      
-      if (.not. adepar(layer)%sorption%kinetic) then
-        ka = adepar(layer)%sorption%adsorb
-        kd = adepar(layer)%sorption%desorb
-        if (ka > 10*epsilon(ka) .and. kd > 10*epsilon(kd)) then 
-          select case(adepar(layer)%sorption%name)
+      Rd = 0
+      do i=1, ubound(sorption,2)
+        if (.not. sorption(layer,i)%kinetic) then
+          select case(sorption(layer,i)%name)
             case("freund")
-              n = adepar(layer)%sorption%third
-              if (abs(n-1.0_rkind)>10*epsilon(n)) then
-          cl = pde_loc%getval(quadpnt)
-          val = theta+(1-theta)*ka/kd*adepar(layer)%bd*cl**(n-1)
+              if (abs(1-sorption(layer,i)%third) < 10*epsilon(1.0_rkind)) then
+                kd = sorption(layer,i)%adsorb
+                bd = sorption(layer,i)%bd
+                Rd = Rd + kd*sorption(layer,i)%bd/theta
+                Rd = Rd * (1-theta) * sorption(layer,i)%ratio
               else
-          val = theta+(1-theta)*ka/kd*adepar(layer)%bd
+                cl = pde_loc%getval(quadpnt)
+                n = sorption(layer,i)%third
+                kd = sorption(layer,i)%adsorb
+                bd = sorption(layer,i)%bd
+                stop "ask Michal to read math tables"
               end if
-            
+                
             case("langmu")
               cl = pde_loc%getval(quadpnt)
-              csmax = adepar(layer)%sorption%third
-              val = theta + (1-theta)*adepar(layer)%bd*(ka*csmax)/(kd+ka*cl)
-            case default
-              print *, "unsupported sorption type, runtime error, called from ADE_fnc::ADE_tder_coef"
-              ERROR STOP
-            
+              csmax = sorption(layer,i)%third
+              kd = sorption(layer,i)%adsorb
+              bd = sorption(layer,i)%bd
+              Rd = Rd + kd*csmax*bd/theta/(kd*bd/theta*cl + 1)*(kd*bd/theta*cl + 1)
+              Rd = Rd * (1-theta) * sorption(layer,i)%ratio
           end select
-        else
-          val = theta
         end if
-        
-            else
-        val = theta
-      end if
-     
+      end do
       
+      val = Rd + theta
+              
+    
     
     end function ADE_tder_coef
     
@@ -194,8 +194,11 @@ module ADE_fnc
       integer(kind=ikind), intent(in) :: layer
       !> return value
       real(kind=rkind)                :: val
+      integer(kind=ikind) :: media_id
       
       real(kind=rkind) :: theta
+      
+      media_id = no_solids - (ubound(pde,1) - pde_loc%order)
       
       if (pde_loc%order == 2) then
         theta = pde(1)%mass(layer, quadpnt)
@@ -203,7 +206,7 @@ module ADE_fnc
         theta = adepar(layer)%water_cont
       end if
       
-      val = 1.0_rkind-theta
+      val = (1.0_rkind-theta)*sorption(layer, media_id)%ratio
       
     end function ADE_tder_cscl
     
@@ -363,9 +366,9 @@ module ADE_fnc
           do i=1, ubound(pde_loc%bc(edge_id)%series,1)
             if (pde_loc%bc(edge_id)%series(i,1) > time) then
               if (i > 1) then
-          j = i-1
+                j = i-1
               else
-          j = i
+                j = i
               end if
               tempval = pde_loc%bc(edge_id)%series(j,2)
               EXIT
@@ -556,9 +559,9 @@ module ADE_fnc
           else
             select case (adepar(layer)%icondtype)
               case("ca")
-          pde_loc%solution(k) = adepar(layer)%cinit
+                pde_loc%solution(k) = adepar(layer)%cinit
               case("cr")
-          pde_loc%solution(k) = adepar(layer)%cinit * adepar(layer)%cmax
+                pde_loc%solution(k) = adepar(layer)%cinit * adepar(layer)%cmax
             end select
           end if
         end do   

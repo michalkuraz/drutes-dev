@@ -104,26 +104,28 @@ module ADE_pointers
       use ADE_reader
       
       class(pde_str), intent(in out), dimension(:) :: pde_loc  
-      integer(kind=ikind) :: i
+      integer(kind=ikind) :: i, j
       
       call ADEcs_read(pde_loc)
       
-!       pde_loc%pde_fnc(pde_loc%order)%elasticity => ADE_tder_cscs
-!       
-!       pde(pde_loc%order-1)%pde_fnc(pde_loc%order)%elasticity => ADE_tder_cscl
-!       
-!       pde_loc%pde_fnc(pde_loc%order-1)%reaction => ADE_cscl_react
-!       
-!       pde_loc%pde_fnc(pde_loc%order)%reaction => ADE_cscs_react
-!       
-!       allocate(pde_loc%bc(lbound(pde(pde_loc%order-1)%bc,1) : (ubound(pde(pde_loc%order-1)%bc,1) )  ))
-!       
-!       do i=lbound(pde_loc%bc,1), ubound(pde_loc%bc,1)
-!         pde_loc%bc(i)%code = 2
-!         pde_loc%bc(i)%value_fnc => ADE_null_bc
-!       end do 
-!       
-!       pde_loc%initcond => ADEcs_icond
+      do i=1, ubound(pde_loc,1)
+        pde_loc(i)%pde_fnc(pde_loc(i)%order)%elasticity => ADE_tder_cscs
+      
+        pde_loc(i)%pde_fnc(pde_loc(i)%order - i)%elasticity => ADE_tder_cscl
+      
+        pde_loc(i)%pde_fnc(pde_loc(i)%order - i)%reaction => ADE_cscl_react
+      
+        pde_loc(i)%pde_fnc(pde_loc(i)%order)%reaction => ADE_cscs_react
+      
+        allocate(pde_loc(i)%bc(lbound(pde(pde_loc(i)%order-1)%bc,1) : (ubound(pde(pde_loc(i)%order-1)%bc,1) )  ))
+        
+        do j=lbound(pde_loc(i)%bc,1), ubound(pde_loc(i)%bc,1)
+          pde_loc(i)%bc(j)%code = 2
+          pde_loc(i)%bc(j)%value_fnc => ADE_null_bc
+        end do 
+      
+        pde_loc(i)%initcond => ADEcs_icond
+      end do
       
     
     end subroutine ADEkinsorb
