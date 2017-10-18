@@ -133,14 +133,16 @@ module ADE_fnc
       !> return value
       real(kind=rkind)                :: val, Rd
       
-      real(kind=rkind) :: theta, n, kd, csmax, cl, bd
+      real(kind=rkind) :: theta, thetas, n, kd, csmax, cl, bd
       integer(kind=ikind) :: i 
       
       
       if (pde_loc%order == 2) then
         theta = pde(1)%mass(layer, quadpnt)
+        thetas = pde(1)%mass(layer, x=(/0.0_rkind/)) 
       else
         theta = adepar(layer)%water_cont
+        thetas = theta
       end if
       
       Rd = 0
@@ -152,13 +154,14 @@ module ADE_fnc
                 kd = sorption(layer,i)%adsorb
                 bd = sorption(layer,i)%bd
                 Rd = Rd + kd*sorption(layer,i)%bd/theta
-                Rd = Rd * (1-theta) * sorption(layer,i)%ratio
+                Rd = Rd * (1-thetas) * sorption(layer,i)%ratio
               else
                 cl = pde_loc%getval(quadpnt)
                 n = sorption(layer,i)%third
                 kd = sorption(layer,i)%adsorb
                 bd = sorption(layer,i)%bd
-                stop "ask Michal to read math tables"
+                Rd = Rd + kd*sorption(layer,i)%bd/theta*n*cl**(n-1)
+                Rd = Rd * (1-thetas) * sorption(layer,i)%ratio             
               end if
                 
             case("langmu")
@@ -708,11 +711,26 @@ module ADE_fnc
     subroutine ADEcs_icond(pde_loc) 
       use typy
       use pde_objs
+      use ade_globals
 
       
       class(pde_str), intent(in out) :: pde_loc
+      integer(kind=ikind) :: i, el_id, mat, adepos
       
-      pde_loc%solution = 0.0_rkind
+      if (with_richards) then
+        adepos = 2
+      else
+        adepos = 1
+      end if
+
+      
+      do i=1, ubound(pde_loc%solution,1)
+        el_id = nodes%element(i)%data(1)
+        mat = elements%material(el_id)
+        print *, mat, pde_loc%order-adepos, pde_loc%order, adepos
+        pde_loc%solution(i) = sorption(mat, pde_loc%order-adepos)%csinit
+      end do
+        
     
     end subroutine ADEcs_icond
     

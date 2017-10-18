@@ -11,9 +11,13 @@ module ADE_pointers
       use readtools
       use ADE_globals
       use core_tools
+      use globals
       
-      integer(kind=ikind) :: processes
+      integer(kind=ikind), intent(out) :: processes
       integer :: adeconf, ierr
+      real(kind=rkind), dimension(:), allocatable :: tmp_array
+      integer(kind=ikind) :: i
+      character(len=4096) :: msg
       
       open(newunit=adeconf, file="drutes.conf/ADE/ADE.conf", status="old", action="read", iostat=ierr)
       
@@ -24,7 +28,26 @@ module ADE_pointers
 
       call fileread(with_richards, adeconf)
       
-      call fileread(use_sorption, adeconf)
+      allocate(adepar(maxval(elements%material)))
+      
+      if (.not. with_richards) then
+         allocate(tmp_array(2))
+         do i=1, maxval(elements%material)
+           call fileread(tmp_array, adeconf, errmsg="Convection has to be defined for each layer.", checklen=.true.)
+           adepar(i)%convection = tmp_array(1)
+           adepar(i)%water_cont = tmp_array(2)
+         end do
+      end if
+      
+      if (with_richards) then
+        write(unit=msg, fmt=*) "HINT1: Have you commented out all lines with convection values? ", &
+        "Since the convection is computed from the Richards equation."
+      else
+        write(unit=msg, fmt=*) "Is the number of lines with convection definition corresponding & 
+          with the number of layers?"
+      end if
+      
+      call fileread(use_sorption, adeconf, errmsg=msg)
       
       if (use_sorption) then
         call fileread(no_solids, adeconf, ranges=(/1_ikind, huge(1_ikind)/))
@@ -109,6 +132,7 @@ module ADE_pointers
       call ADEcs_read(pde_loc)
       
       do i=1, ubound(pde_loc,1)
+      
         pde_loc(i)%pde_fnc(pde_loc(i)%order)%elasticity => ADE_tder_cscs
       
         pde_loc(i)%pde_fnc(pde_loc(i)%order - i)%elasticity => ADE_tder_cscl
@@ -126,7 +150,7 @@ module ADE_pointers
       
         pde_loc(i)%initcond => ADEcs_icond
       end do
-      
+
     
     end subroutine ADEkinsorb
     
