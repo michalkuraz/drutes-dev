@@ -36,13 +36,25 @@ module ADE_fnc
       integer(kind=ikind) :: D, i
       
      
+      if (present(quadpnt) .and. present(x)) then
+        print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
+        print *, "exited from ADE_fnc::ADEdispersion"
+        ERROR stop
+      else if (.not. present(quadpnt) .and. .not. present(x)) then
+        print *, "ERROR: you have not specified either integ point or x value"
+        print *, "exited from ADE_fnc::ADEdispersion"
+        ERROR stop
+      end if
+     
       D = drutes_config%dimen
       identity = 0.0
       do i=1, D
         identity(i,i) = 1.0
       end do
       
-      if (with_richards) then
+
+      
+      if (.not. use_richards) then
         q_w = ADEpar(layer)%convection
         theta = adepar(layer)%water_cont
         ths = adepar(layer)%water_cont
@@ -480,7 +492,10 @@ module ADE_fnc
       real(kind=rkind), dimension(:,:), allocatable, save  :: Dhm
       real(kind=rkind), dimension(:), allocatable, save :: q_w, gradC
       real(kind=rkind) :: c, cmax
-      
+!       integer, save :: countme=0
+!       
+!       countme=countme+1
+!       print *, "haha", countme, pde_loc%order, layer
       
       if (present(quadpnt) .and. (present(grad) .or. present(x))) then
         print *, "ERROR: the function can be called either with integ point or x value definition and gradient, not both of them"
@@ -491,6 +506,7 @@ module ADE_fnc
         print *, "exited from ADE_fnc::ADE_flux"
         ERROR stop
       end if
+      
       
       if (.not. allocated(q_w)) allocate(q_w(drutes_config%dimen))
 
@@ -512,8 +528,7 @@ module ADE_fnc
         gradC = grad
       end if
       
-      
-      call pde_loc%pde_fnc(1)%dispersion(pde_loc, layer, quadpnt, tensor=Dhm)
+      call pde_loc%pde_fnc(pde_loc%order)%dispersion(pde_loc, layer, quadpnt, tensor=Dhm)
       
       select case(pde_loc%order)
         case(1)
@@ -654,7 +669,7 @@ module ADE_fnc
             val = sorption(layer, media_id)%adsorb*sorption(layer, media_id)%third
           case("freund")
             if (abs(sorption(layer, media_id)%third - 1.0_rkind ) > 10*epsilon(1.0_rkind)) then
-              proc_cl = pde_loc%order - no_solids
+              proc_cl = pde_loc%order - media_id
               cl = pde(proc_cl)%getval(quadpnt)
               val = sorption(layer, media_id)%adsorb*cl**(1-sorption(layer, media_id)%third)
             else
@@ -717,7 +732,7 @@ module ADE_fnc
       class(pde_str), intent(in out) :: pde_loc
       integer(kind=ikind) :: i, el_id, mat, adepos
       
-      if (with_richards) then
+      if (use_richards) then
         adepos = 2
       else
         adepos = 1
@@ -727,7 +742,6 @@ module ADE_fnc
       do i=1, ubound(pde_loc%solution,1)
         el_id = nodes%element(i)%data(1)
         mat = elements%material(el_id)
-        print *, mat, pde_loc%order-adepos, pde_loc%order, adepos
         pde_loc%solution(i) = sorption(mat, pde_loc%order-adepos)%csinit
       end do
         

@@ -87,7 +87,6 @@ module postpro
   
       call write_log("making output files for observation time")
       
-
       
       if (.not. anime) then
         postpro_run = postpro_run + 1
@@ -152,7 +151,8 @@ module postpro
         write(unit=filenames(proc,4), fmt=forma) trim(prefix), trim(pde(proc)%problem_name(1)), "_", &
                      trim(pde(proc)%flux_name(1)), "-", &
                     run,  trim(extension)
-      ! 	
+      
+
         if ( (.not. anime .and. mode == 0)  .or. &
           (anime_run == 1 .and. anime) .or. & 
          ( .not. anime .and. (mode == -1 .and. postpro_run == 0 ) ) ) then
@@ -172,6 +172,7 @@ module postpro
         end if
 
 
+
         quadpnt%type_pnt = "ndpt"
         
         if (time > epsilon(time) ) then
@@ -187,7 +188,7 @@ module postpro
 
         
         if (drutes_config%dimen == 1 .or. www) then
-        
+ 
           call print_pure(ids(proc,:), proc, quadpnt)
           
         else
@@ -497,6 +498,7 @@ module postpro
     use globals
     use global_objs
     use pde_objs
+    use debug_tools
     
     integer, dimension(:), intent(in) :: ids
     integer(kind=ikind), intent(in) :: proc
@@ -506,16 +508,18 @@ module postpro
     real(kind=rkind) ::  distance, flux, avgval
     type(integpnt_str) :: qpntloc
 
+
   
     do i=1, nodes%kolik
       quadpnt%order = i
       quadpnt%preproc=.true.
+
       write(unit=ids(1), fmt=*) i,  nodes%data(i,:), pde(proc)%getval(quadpnt) 
       
       layer = elements%material(nodes%element(i)%data(1))
 
       call pde(proc)%flux(layer, quadpnt, scalar=flux)
-      
+
       write(unit=ids(3), fmt=*)  i, nodes%data(i,:), pde(proc)%mass(layer, quadpnt)
 
       write(unit=ids(4), fmt=*) i, nodes%data(i,:), flux
@@ -523,7 +527,7 @@ module postpro
     
     close(ids(1))
 
-  
+
   end subroutine print_pure
   
   subroutine print_gmsh(ids, proc, quadpnt)

@@ -125,7 +125,6 @@ module stiffmat
       
      stiff_mat = stiff_mat/gauss_points%area*elements%areas(el_id)*dt
      
-     call printmtx(stiff_mat) ; stop
      
      
     end subroutine build_stiff_np

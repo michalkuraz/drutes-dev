@@ -26,11 +26,11 @@ module ADE_pointers
         ERROR STOP
       end if
 
-      call fileread(with_richards, adeconf)
+      call fileread(use_richards, adeconf)
       
       allocate(adepar(maxval(elements%material)))
       
-      if (.not. with_richards) then
+      if (.not. use_richards) then
          allocate(tmp_array(2))
          do i=1, maxval(elements%material)
            call fileread(tmp_array, adeconf, errmsg="Convection has to be defined for each layer.", checklen=.true.)
@@ -39,7 +39,7 @@ module ADE_pointers
          end do
       end if
       
-      if (with_richards) then
+      if (use_richards) then
         write(unit=msg, fmt=*) "HINT1: Have you commented out all lines with convection values? ", &
         "Since the convection is computed from the Richards equation."
       else
@@ -57,7 +57,7 @@ module ADE_pointers
       
       processes =  no_solids + 1
       
-      if (with_richards) processes = processes + 1
+      if (use_richards) processes = processes + 1
       
     end subroutine ADE_processes
     
@@ -75,8 +75,9 @@ module ADE_pointers
       
       class(pde_str), intent(in out), dimension(:) :: pde_loc
       integer(kind=ikind) :: i, adepos
+      real(kind=rkind) :: r
       
-      if (with_richards) then
+      if (use_richards) then
         adepos = 2
       else
         adepos = 1
@@ -109,12 +110,13 @@ module ADE_pointers
       
       pde_loc(adepos)%initcond => ADE_icond
       
-      if (with_richards) call REstdH(pde_loc(1))
+      if (use_richards) call REstdH(pde_loc(1))
       
       if (use_sorption) then 
         call ADEkinsorb(pde_loc(adepos+1:pde_common%processes))
       end if 
       
+
     
     end subroutine ADE
     

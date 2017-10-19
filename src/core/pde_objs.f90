@@ -436,6 +436,7 @@ module pde_objs
     function getvalp1loc(pde_loc, quadpnt, stopme) result(val)
       use typy
       use decomp_vars
+      use debug_tools
 
       
       class(pde_str), intent(in) :: pde_loc
@@ -455,7 +456,6 @@ module pde_objs
         ERROR STOP
       end if
       
-            
       
       select case(quadpnt%type_pnt)
         case("gqnd", "obpt")

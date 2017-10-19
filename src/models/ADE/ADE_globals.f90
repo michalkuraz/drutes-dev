@@ -50,7 +50,7 @@ module ade_globals
   !<
   integer(kind=ikind), public :: isotherm
   
-  logical, public :: with_richards
+  logical, public :: use_richards
   
   integer(kind=ikind) :: no_solids
   

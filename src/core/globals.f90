@@ -181,7 +181,7 @@ module globals
   !cummulative iteration count
   integer(kind=ikind), public :: itcum
 
-  
+
 
 
 
