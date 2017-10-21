@@ -113,7 +113,7 @@ module ADE_pointers
       if (use_richards) call REstdH(pde_loc(1))
       
       if (use_sorption) then 
-        call ADEkinsorb(pde_loc(adepos+1:pde_common%processes))
+        call ADEkinsorb(pde_loc(adepos:no_solids+adepos))
       end if 
       
 
@@ -127,26 +127,28 @@ module ADE_pointers
       use pde_objs
       use ADE_fnc
       use ADE_reader
+      use debug_tools
       
       class(pde_str), intent(in out), dimension(:) :: pde_loc  
       integer(kind=ikind) :: i, j
       
       call ADEcs_read(pde_loc)
       
-      do i=1, ubound(pde_loc,1)
+      do i=2, ubound(pde_loc,1)
       
         pde_loc(i)%pde_fnc(pde_loc(i)%order)%elasticity => ADE_tder_cscs
       
-        pde_loc(i)%pde_fnc(pde_loc(i)%order - i)%elasticity => ADE_tder_cscl
+        pde_loc(i)%pde_fnc(1)%elasticity => ADE_tder_cscl
       
-        pde_loc(i)%pde_fnc(pde_loc(i)%order - i)%reaction => ADE_cscl_react
+        pde_loc(i)%pde_fnc(1)%reaction => ADE_cscl_react
       
         pde_loc(i)%pde_fnc(pde_loc(i)%order)%reaction => ADE_cscs_react
       
-        allocate(pde_loc(i)%bc(lbound(pde(pde_loc(i)%order-1)%bc,1) : (ubound(pde(pde_loc(i)%order-1)%bc,1) )  ))
+        allocate(pde_loc(i)%bc(lbound(pde_loc(1)%bc,1) : (ubound(pde_loc(1)%bc,1) )  ))
+        
         
         do j=lbound(pde_loc(i)%bc,1), ubound(pde_loc(i)%bc,1)
-          pde_loc(i)%bc(j)%code = 2
+          pde_loc(i)%bc(j)%code = 0
           pde_loc(i)%bc(j)%value_fnc => ADE_null_bc
         end do 
       

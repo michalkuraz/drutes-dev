@@ -492,10 +492,7 @@ module ADE_fnc
       real(kind=rkind), dimension(:,:), allocatable, save  :: Dhm
       real(kind=rkind), dimension(:), allocatable, save :: q_w, gradC
       real(kind=rkind) :: c, cmax
-!       integer, save :: countme=0
-!       
-!       countme=countme+1
-!       print *, "haha", countme, pde_loc%order, layer
+
       
       if (present(quadpnt) .and. (present(grad) .or. present(x))) then
         print *, "ERROR: the function can be called either with integ point or x value definition and gradient, not both of them"
@@ -608,21 +605,11 @@ module ADE_fnc
       integer(kind=ikind) :: proc_cl, media_id
       real(kind=rkind) :: cs, cl
       
-      proc_cl = pde_loc%order - no_solids
       
       media_id = no_solids - (ubound(pde,1) - pde_loc%order)
-      
-      
 
       if (sorption(layer, media_id)%kinetic) then
-        select case(sorption(layer, media_id)%name)
-          case("langmu")
-            cs = pde_loc%getval(quadpnt) 
-            cl = pde(proc_cl)%getval(quadpnt)
-            val = -sorption(layer, media_id)%adsorb*cl - sorption(layer, media_id)%desorb
-          case("freund")
-            val = -sorption(layer, media_id)%desorb
-        end select
+        val = -sorption(layer, media_id)%desorb
       else
         select case(sorption(layer, media_id)%name)
           case ("langmu")
@@ -646,6 +633,7 @@ module ADE_fnc
       use global_objs
       use pde_objs
       use ADE_globals
+      use debug_tools
       
       class(pde_str), intent(in) :: pde_loc
       !> value of the nonlinear function
@@ -658,15 +646,18 @@ module ADE_fnc
       real(kind=rkind)                :: val 
       
       integer(kind=ikind) :: proc_cl, media_id
-      real(kind=rkind) :: cl 
+      real(kind=rkind) :: cs, csmax, ad, cl
       
-
+      proc_cl = pde_loc%order - no_solids
       media_id = no_solids - (ubound(pde,1) - pde_loc%order)
       
       if (sorption(layer, media_id)%kinetic) then
         select case(sorption(layer, media_id)%name)
           case("langmu")
-            val = sorption(layer, media_id)%adsorb*sorption(layer, media_id)%third
+            cs = pde_loc%getval(quadpnt)
+            csmax = sorption(layer, media_id)%third
+            ad = sorption(layer, media_id)%adsorb
+            val = max(0.0_rkind, csmax - cs)*ad
           case("freund")
             if (abs(sorption(layer, media_id)%third - 1.0_rkind ) > 10*epsilon(1.0_rkind)) then
               proc_cl = pde_loc%order - media_id
