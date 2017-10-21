@@ -519,6 +519,7 @@ module postpro
       layer = elements%material(nodes%element(i)%data(1))
 
       call pde(proc)%flux(layer, quadpnt, scalar=flux)
+      stop
 
       write(unit=ids(3), fmt=*)  i, nodes%data(i,:), pde(proc)%mass(layer, quadpnt)
 

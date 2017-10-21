@@ -40,7 +40,9 @@ typy.o: src/core/typy.f90
 	$c -c src/core/typy.f90 
 global_objs.o: typy.o $(PMAoo_obj) src/core/global_objs.f90
 	$c -c src/core/global_objs.f90
-pde_objs.o: typy.o global_objs.o $(PMAoo_obj) globals.o decomp_vars.o src/core/pde_objs.f90
+debug_tools.o: typy.o core_tools.o src/core/debug_tools.f90
+	$c -c src/core/debug_tools.f90
+pde_objs.o: typy.o global_objs.o $(PMAoo_obj) debug_tools.o globals.o decomp_vars.o src/core/pde_objs.f90
 	$c -c src/core/pde_objs.f90
 globals.o: typy.o global_objs.o src/core/globals.f90
 	$c -c src/core/globals.f90
@@ -52,8 +54,6 @@ core_tools.o: typy.o global_objs.o globals.o pde_objs.o  src/core/core_tools.f90
 	$c -c src/core/core_tools.f90
 dummy_procs.o: typy.o global_objs.o globals.o pde_objs.o src/core/dummy_procs.f90
 	$c -c src/core/dummy_procs.f90
-debug_tools.o: typy.o core_tools.o src/core/debug_tools.f90
-	$c -c src/core/debug_tools.f90
 #---------end CORE_obj------------------------------
 
 

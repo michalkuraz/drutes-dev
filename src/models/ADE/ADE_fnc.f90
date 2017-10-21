@@ -54,7 +54,7 @@ module ADE_fnc
       
 
       
-      if (.not. use_richards) then
+      if (use_richards) then
         q_w = ADEpar(layer)%convection
         theta = adepar(layer)%water_cont
         ths = adepar(layer)%water_cont
@@ -492,10 +492,10 @@ module ADE_fnc
       real(kind=rkind), dimension(:,:), allocatable, save  :: Dhm
       real(kind=rkind), dimension(:), allocatable, save :: q_w, gradC
       real(kind=rkind) :: c, cmax
-!       integer, save :: countme=0
-!       
-!       countme=countme+1
-!       print *, "haha", countme, pde_loc%order, layer
+      integer, save :: countme=0
+      
+      countme=countme+1
+      print *, "haha", countme, pde_loc%order, layer
       
       if (present(quadpnt) .and. (present(grad) .or. present(x))) then
         print *, "ERROR: the function can be called either with integ point or x value definition and gradient, not both of them"
