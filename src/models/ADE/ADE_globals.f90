@@ -31,8 +31,6 @@ module ade_globals
     character(len=2) :: icondtype
     real(kind=rkind) :: cmax
     real(kind=rkind) :: cinit
-    real(kind=rkind) :: csinit, bd
-    type(sorption_str) :: sorption
   end type soluteXsoil
 
 
@@ -52,7 +50,7 @@ module ade_globals
   !<
   integer(kind=ikind), public :: isotherm
   
-  logical, public :: with_richards
+  logical, public :: use_richards
   
   integer(kind=ikind) :: no_solids
   

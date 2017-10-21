@@ -45,8 +45,6 @@ module ADE_reader
         ERROR STOP
       end if
      
-
-      allocate(adepar(maxval(elements%material)))
       
       call fileread(n, file_contaminant)
       
@@ -128,50 +126,14 @@ module ADE_reader
          specify the convection directly here."
        end if
        
-       call fileread(with_richards, file_contaminant, errmsg=trim(msg))
        
-       select case(adjustl(trim(drutes_config%name)))
-       case("ADEstd", "ADEstd_kinsorb")
-         with_richards_def = .false.
-       case default
-         with_richards_def = .true.
-      end select
        
-       if (.not. with_richards .and. with_richards_def) then
-         write(unit=msg, fmt=*) "You have specified" , &
-              " convection to be  computed from the Richards equation, but you want to specify the convection here." ,&
-              new_line("a"), "   Solution: change model type setup in global.conf or comment out the convection values here."
-         call file_error(file_contaminant, msg)
-        else if (with_richards .and. .not. with_richards_def) then
-          write(unit=msg, fmt=*) "You have specified here to compute the convection fromt the Richards equation, ",  &
-          " but in your global config you have requested solving ADE equation only, and so convection has to be specified here.", &
-           new_line("a"),  "   Solution:  change model type setup in global.conf or supply the convection here."
-          call file_error(file_contaminant, msg)
-       end if
+ 
+       
+       write(unit=msg, fmt=*) " The number of orders of reactions has to be positive or zero."
          
        
-       if (.not. with_richards) then
-         if (allocated(tmp_array)) deallocate(tmp_array)
-         allocate(tmp_array(2))
-         do i=1, maxval(elements%material)
-           call fileread(tmp_array, file_contaminant, errmsg="convection has to be defined for each layer")
-           adepar(i)%convection = tmp_array(1)
-           adepar(i)%water_cont = tmp_array(2)
-         end do
-      end if
-      
-      if (with_richards) then
-        write(unit=msg, fmt=*) "HINT1: Have you commented out all lines with convection values? ", &
-        "Since the convection is computed from the Richards equation.", new_line("a"), &
-        "   HINT2: The number of orders of reactions has to be positive or zero."
-      else
-        write(unit=msg, fmt=*) "HINT1: Is your number of lines with convection definition corresponding & 
-          with the number of layers?",&
-          new_line("a"), &
-          "   HINT2: The number of orders of reactions has to be positive or zero."
-      end if
-       
-       call fileread(n, file_contaminant, ranges=(/0_ikind, 1_ikind*huge(n)/), & 
+      call fileread(n, file_contaminant, ranges=(/0_ikind, 1_ikind*huge(n)/), & 
          errmsg=trim(msg))
        
        

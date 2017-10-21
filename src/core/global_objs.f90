@@ -106,7 +106,7 @@ module global_objs
     !> use damped newton for the modified pickard iteration y/n
     character(len=1)    :: damped_newton
     !> problem dimension 1 = 1D / 2 = 2D / 3 = 3D
-    integer(kind=ikind) :: dimen
+    integer(1) :: dimen
     !> mesh_type = 1 internal mesh generator (simple)
     !! mesh_type = 2 t3d mesh generator
     !< mesh type = 3 gmsh mesh generator

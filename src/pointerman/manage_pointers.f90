@@ -29,6 +29,7 @@ module manage_pointers
 
       integer(kind=ikind) :: i, processes
       
+      
 
       select case(cut(drutes_config%name))
         case("REstd")
@@ -65,7 +66,6 @@ module manage_pointers
           write(unit=drutes_config%fullname, fmt=*) " advection-dispersion-reaction equation in", &
                  drutes_config%dimen, "D"
           call ade(pde(:))
-      
 
         case("Re_dual")
             write(unit=drutes_config%fullname, fmt=*) " Richards equation ", &

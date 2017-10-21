@@ -63,10 +63,12 @@ module fem
 
       call find_unit(file_dt)
       open(unit=file_dt, file="out/dt", action="write", status="replace")
-      
+
+
      call make_print("separately")
+
      call write_obs()
-     
+
 
      call write_log("go 4 solving")
       
