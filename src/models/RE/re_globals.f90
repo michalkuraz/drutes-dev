@@ -29,31 +29,14 @@ module re_globals
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !!!!!!!!!!!!!--material parameters and methods for matrix--!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  !> soil and layer parameters
+
   type(soilpar), dimension(:), allocatable, target, public :: vgmatrix
   !> formula of the retention curve
   integer(kind=ikind), public :: retc_method
 
+  !> soil properties defined for each layer
+  type(soilpar), dimension(:), allocatable, public :: vgset
 
-
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  !!!!!!!!!!!!!--material parameters and init conditions for fractures--!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  !> an array with values of dual richards equation coupling term and the fast domain ratio
-  !! dual_prop(i,1) = layer i, parameter: omega_f \n
-  !! dual_prop(i,2) = layer i, parameter: \f[ \frac{\beta}{\alpha_{DP}^2} \gamma_w ]\f
-  !<
-  real(kind=rkind), dimension(:,:), allocatable, public :: dual_prop
-  !> soil and layer parameters
-  type(soilpar), dimension(:), allocatable, target, public :: vgfractures
-  !> formula of the retention curve
-  integer(kind=ikind), public :: retc_method_f
-  !> depending on current domain, this pointer is pointed to current parameters as
-  !! if (domain == matrix) vgset => vgmatrix
-  !! if (domain == fractures) vgset => vgfractures
-  !<
-   type(soilpar), dimension(:), pointer, public :: vgset
-   
-   integer, public :: file_waterm
+  integer, public :: file_waterm
    
 end module re_globals

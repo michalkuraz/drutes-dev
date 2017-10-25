@@ -172,8 +172,7 @@ module RE_pointers
         read = .true.
       end if
       
-      
-      call domainswitch("m")
+
       pde_common%nonlinear = .true.
       if (drutes_config%fnc_method == 0) then
         pde_loc%pde_fnc(pde_loc%order)%dispersion => mualem
