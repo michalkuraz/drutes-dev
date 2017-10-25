@@ -83,8 +83,8 @@ module stiffmat
 
               do l=1, ubound(gauss_points%weight,1)
                 quadpnt%order = l
-                      call pde(iproc)%pde_fnc(jproc)%dispersion(pde(iproc), layer(iproc, jproc), &
-                quadpnt, tensor=disp(1:top,1:top))
+                call pde(iproc)%pde_fnc(jproc)%dispersion(pde(iproc), layer(iproc, jproc), &
+                   quadpnt, tensor=disp(1:top,1:top))
                 w(:,1:top) =  matmul(u(:,1:top),disp(1:top,1:top))
                 dsum = dsum - matmul(w(:,1:top) ,v(1:top,:))*gauss_points%weight(l)
               end do
@@ -94,18 +94,18 @@ module stiffmat
                 quadpnt%order = l
                 call pde(iproc)%pde_fnc(jproc)%convection(pde(iproc), layer(iproc, jproc), quadpnt, &
                   vector_out=conv(1:top))
-                  csum = csum - dot_product(u(1,1:top),conv(1:top))*base_fnc(i,l)*gauss_points%weight(l)
-                  call pde(iproc)%pde_fnc(jproc)%der_convect(pde(iproc), layer(iproc, jproc), quadpnt, 	&
-                  vector_out=conv(1:top))
+                csum = csum - dot_product(u(1,1:top),conv(1:top))*base_fnc(i,l)*gauss_points%weight(l)
+                call pde(iproc)%pde_fnc(jproc)%der_convect(pde(iproc), layer(iproc, jproc), quadpnt, 	&
+                   vector_out=conv(1:top))
                   w = base_fnc(i,l)*base_fnc(j,l)
-                  csum = csum - dot_product(w(1,1:top), conv(1:top))*gauss_points%weight(l)
+                csum = csum - dot_product(w(1,1:top), conv(1:top))*gauss_points%weight(l)
               end do
 	      
 
               do l=1, ubound(gauss_points%weight,1)
                 quadpnt%order = l
                 rsum = rsum + pde(iproc)%pde_fnc(jproc)%reaction(pde(iproc),layer(iproc, jproc), &
-                quadpnt)*base_fnc(i,l)*base_fnc(j,l)*gauss_points%weight(l)
+                  quadpnt)*base_fnc(i,l)*base_fnc(j,l)*gauss_points%weight(l)
               end do
 	     
 	      

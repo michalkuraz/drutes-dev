@@ -74,13 +74,13 @@ module re_reader
 
 
  
-      if (.not. allocated(vgmatrix)) then
-        allocate (vgmatrix(n))
-        do i=1, ubound(vgmatrix,1)
-          allocate(vgmatrix(i)%Ks_local(drutes_config%dimen))
-          allocate(vgmatrix(i)%Ks(drutes_config%dimen, drutes_config%dimen))
+      if (.not. allocated(vgset)) then
+        allocate (vgset(n))
+        do i=1, ubound(vgset,1)
+          allocate(vgset(i)%Ks_local(drutes_config%dimen))
+          allocate(vgset(i)%Ks(drutes_config%dimen, drutes_config%dimen))
           j = max(1,drutes_config%dimen-1)
-          allocate(vgmatrix(i)%anisoangle(j))
+          allocate(vgset(i)%anisoangle(j))
         end do
       end if
 
@@ -88,14 +88,14 @@ module re_reader
          "   HINT 2 : have you specified all values in the following order: ", new_line("a"), &
          "         alpha   n   m   theta_r   theta_s   S_s "
       allocate(tmpdata(6))
-      do i = 1, ubound(vgmatrix,1)
+      do i = 1, ubound(vgset,1)
         call fileread(tmpdata, errmsg=msg, fileid=file_waterm, checklen=.true.)
-        vgmatrix(i)%alpha=tmpdata(1)
-        vgmatrix(i)%n=tmpdata(2)
-        vgmatrix(i)%m=tmpdata(3)
-        vgmatrix(i)%thr=tmpdata(4)
-        vgmatrix(i)%ths=tmpdata(5)
-        vgmatrix(i)%Ss=tmpdata(6)
+        vgset(i)%alpha=tmpdata(1)
+        vgset(i)%n=tmpdata(2)
+        vgset(i)%m=tmpdata(3)
+        vgset(i)%thr=tmpdata(4)
+        vgset(i)%ths=tmpdata(5)
+        vgset(i)%Ss=tmpdata(6)
       end do
       
      
@@ -119,47 +119,47 @@ module re_reader
           allocate(tmpdata(drutes_config%dimen+2))
       end select
       
-      do i = 1, ubound(vgmatrix,1)
+      do i = 1, ubound(vgset,1)
         call fileread(tmpdata, file_waterm, errmsg=msg, checklen=.TRUE.)
         
         if (drutes_config%dimen > 1) then
-          vgmatrix(i)%anisoangle(:) = tmpdata(1:drutes_config%dimen-1)
+          vgset(i)%anisoangle(:) = tmpdata(1:drutes_config%dimen-1)
         else
-          vgmatrix(i)%anisoangle(:) = tmpdata(1)
+          vgset(i)%anisoangle(:) = tmpdata(1)
         end if
         
         select case(drutes_config%dimen)
           case(1)
-            vgmatrix(i)%Ks_local(:) = tmpdata(2)
+            vgset(i)%Ks_local(:) = tmpdata(2)
           case(2)
-            vgmatrix(i)%Ks_local(:) = tmpdata(2:3)
+            vgset(i)%Ks_local(:) = tmpdata(2:3)
           case(3)
-            vgmatrix(i)%Ks_local(:) = tmpdata(3:5)
+            vgset(i)%Ks_local(:) = tmpdata(3:5)
         end select
 
-        call set_tensor(vgmatrix(i)%Ks_local(:), vgmatrix(i)%anisoangle(:),  vgmatrix(i)%Ks)
+        call set_tensor(vgset(i)%Ks_local(:), vgset(i)%anisoangle(:),  vgset(i)%Ks)
       end do
 
       
-      do i=1, ubound(vgmatrix,1)
-        call fileread(vgmatrix(i)%sinkterm, file_waterm,  errmsg="Have you defined sink term for each layer?")
+      do i=1, ubound(vgset,1)
+        call fileread(vgset(i)%sinkterm, file_waterm,  errmsg="Have you defined sink term for each layer?")
       end do
       
       if (.not. www) then
-        do i=1, ubound(vgmatrix,1)
+        do i=1, ubound(vgset,1)
           call comment(file_waterm)
-          read(unit=file_waterm, fmt= *, iostat=ierr) vgmatrix(i)%initcond, vgmatrix(i)%icondtype, &
-                    yn, vgmatrix(i)%rcza_set%val
+          read(unit=file_waterm, fmt= *, iostat=ierr) vgset(i)%initcond, vgset(i)%icondtype, &
+                    yn, vgset(i)%rcza_set%val
           select case(yn)
             case("y")
-              vgmatrix(i)%rcza_set%use = .true.
+              vgset(i)%rcza_set%use = .true.
             case("n")
-              vgmatrix(i)%rcza_set%use = .false.
+              vgset(i)%rcza_set%use = .false.
             case default
               write(msg, fmt=*) "type [y/n] value for using the retention curve zone approach at layer:", i
               call file_error(file_waterm, msg)
           end select
-          select case(vgmatrix(i)%icondtype)
+          select case(vgset(i)%icondtype)
             case("H_tot", "hpres", "theta","input")
               CONTINUE
             case default
@@ -179,11 +179,11 @@ module re_reader
           end if
         end do
             else
-        do i=1, ubound(vgmatrix,1)
+        do i=1, ubound(vgset,1)
           call comment(file_waterm)
-          read(unit=file_waterm, fmt= *, iostat=ierr) vgmatrix(i)%initcond, vgmatrix(i)%icondtype
-                vgmatrix(i)%rcza_set%use = .false.
-          select case(vgmatrix(i)%icondtype)
+          read(unit=file_waterm, fmt= *, iostat=ierr) vgset(i)%initcond, vgset(i)%icondtype
+                vgset(i)%rcza_set%use = .false.
+          select case(vgset(i)%icondtype)
             case("H_tot", "hpres", "theta","input")
               CONTINUE
             case default

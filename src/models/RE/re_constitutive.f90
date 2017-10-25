@@ -9,7 +9,6 @@ module RE_constitutive
   public :: dmualem_dh, dmualem_dh_tab
   public :: convection_rerot
   public :: darcy_law
-  public :: domainswitch
   public :: init_zones
   public :: rcza_check
   public :: derKz
@@ -18,8 +17,8 @@ module RE_constitutive
   private :: zone_error_val, secondder_retc,  rcza_check_old, setmatflux, intoverflow
 
  
-  real(kind=rkind), dimension(:,:), pointer, public :: Ktab, dKdhtab, warecatab, watcontab
-  real(kind=rkind), dimension(:,:,:), allocatable, target, public :: Ktab_all, dKdhtab_all, warecatab_all, watcontab_all
+  real(kind=rkind), dimension(:,:), allocatable, public :: Ktab, dKdhtab, warecatab, watcontab
+
   type(soilpar), private :: van_gen_coeff
   integer(kind=ikind), private :: this_layer
   
@@ -1308,10 +1307,9 @@ module RE_constitutive
       end interface
 
 
-      integer(kind=ikind) :: i,j, n, k, domain_count	
+      integer(kind=ikind) :: i,j, n
       integer :: l
       integer(kind=ikind) :: maxcalls, counter
-      character(len=1), dimension(2) :: domain
       real(kind=rkind) :: dx
 
       n = int(maxpress/drutes_config%fnc_discr_length)+1
@@ -1320,72 +1318,38 @@ module RE_constitutive
 
       dx = drutes_config%fnc_discr_length
 
-      domain(1) = "m"
 
-      domain(2) = "f"
-
-
-      domain_count = 1
-
-
-      allocate(Ktab_all(domain_count, ubound(vgmatrix,1), n))
-      allocate(warecatab_all(domain_count, ubound(vgmatrix,1),n))
-      allocate(watcontab_all(domain_count, ubound(vgmatrix,1), n))
-      allocate(dKdhtab_all(domain_count, ubound(vgmatrix,1), n))
+      allocate(Ktab(ubound(vgset,1), n))
+      allocate(warecatab(ubound(vgset,1),n))
+      allocate(watcontab(ubound(vgset,1), n))
+      allocate(dKdhtab(ubound(vgset,1), n))
 
 
-      do k=1, domain_count
-        call domainswitch(domain(k))
-        maxcalls = ubound(vgset,1)*n
-        counter = maxcalls
-        call write_log(text="creating constitutive function table for domain: ", text2=domain(k))
-        do i=1, ubound(vgset,1)
-          do j=1, n
-            if (this_image() == 1) then
-              counter = counter - 1
-              l = 100*(maxcalls - counter)/maxcalls
-              call progressbar(l)
-            end if
-            call Kfnc(pde_loc,i, x=(/-(j-1)*dx/), scalar=Ktab(i,j))
-      ! 	    Ktab(i,j) = Kfnc(i, -(j-1)*dx)
-      ! 	    dKdhtab(i,j) = dKdhfnc(i, -(j-1)*dx)
-            call dKdhfnc(pde_loc, i, x=(/-(j-1)*dx/), scalar=dKdhtab(i,j))
-            warecatab(i,j) = Cfnc(pde_loc, i, x=(/-(j-1)*dx/))
-            watcontab(i,j) = thetafnc(pde_loc, i, x=(/-(j-1)*dx/))
-          end do
+      maxcalls = ubound(vgset,1)*n
+      counter = maxcalls
+      call write_log(text="Creating constitutive function table for Richards equation ")
+      do i=1, ubound(vgset,1)
+        do j=1, n
+          if (this_image() == 1) then
+            counter = counter - 1
+            l = 100*(maxcalls - counter)/maxcalls
+            call progressbar(l)
+          end if
+          call Kfnc(pde_loc,i, x=(/-(j-1)*dx/), scalar=Ktab(i,j))
+
+          call dKdhfnc(pde_loc, i, x=(/-(j-1)*dx/), scalar=dKdhtab(i,j))
+          warecatab(i,j) = Cfnc(pde_loc, i, x=(/-(j-1)*dx/))
+          watcontab(i,j) = thetafnc(pde_loc, i, x=(/-(j-1)*dx/))
         end do
       end do
+
 
 
 
     end subroutine tabvalues
 
 
-    subroutine domainswitch(domain)
-      use re_globals
- 
-      character(len=1), intent(in) :: domain
 
-
-      if (domain == "m") then
-        vgset => vgmatrix
-        Ktab => Ktab_all(1,:,:)
-        dKdhtab => dKdhtab_all(1,:,:)
-        warecatab => warecatab_all(1,:,:)
-        watcontab => watcontab_all(1,:,:)
-            else if (domain == "f") then
-        vgset => vgfractures
-        Ktab => Ktab_all(2,:,:)
-        dKdhtab => dKdhtab_all(2,:,:)
-        warecatab => warecatab_all(2,:,:)
-        watcontab => watcontab_all(2,:,:)
-            else
-        ERROR STOP "runtime error, invalid argument in RE_constitutive::domainswitch() procedure"
-      end if
-	
-
-
-    end subroutine domainswitch
 
 
     subroutine init_zones(vg)
