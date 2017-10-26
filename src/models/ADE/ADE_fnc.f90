@@ -545,7 +545,13 @@ module ADE_fnc
       if (present(flux)) then
         flux = cmax*matmul(Dhm, gradC) + cmax*q_w*c
       end if
+      
+      if (present(flux_length)) then
+        flux_length = dot_product(cmax*matmul(Dhm, gradC) + cmax*q_w*c, cmax*matmul(Dhm, gradC) + cmax*q_w*c)
+      end if
     
+
+     
     end subroutine ADE_flux
     
     subroutine ADE_icond(pde_loc) 
@@ -718,6 +724,7 @@ module ADE_fnc
       use typy
       use pde_objs
       use ade_globals
+      use debug_tools
 
       
       class(pde_str), intent(in out) :: pde_loc
@@ -735,7 +742,7 @@ module ADE_fnc
         mat = elements%material(el_id)
         pde_loc%solution(i) = sorption(mat, pde_loc%order-adepos)%csinit
       end do
-        
+
     
     end subroutine ADEcs_icond
     

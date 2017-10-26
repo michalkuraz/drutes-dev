@@ -207,8 +207,8 @@ module ADE_reader
         ERROR STOP
       end if
       
-      do i=1, ubound(pde_loc,1)
-        write(number, fmt=*) i
+      do i=2, ubound(pde_loc,1)
+        write(number, fmt=*) i-1
         write(pde_loc(i)%problem_name(1), fmt=*) "ADER_in_solid_", cut(number)
         pde_loc(i)%problem_name(1) = cut(pde_loc(i)%problem_name(1))
         write(pde_loc(i)%problem_name(2), fmt=*)  "Advection-dispersion-reaction equation (solute concentration adsorbed in &
@@ -324,6 +324,7 @@ module ADE_reader
       write(msg, *) "Initial concentration at solid phase (supply value for each layer and each medium)", &
     " use lines for layers and columns for media. if equilibrium model used provide value 0 otherwise an error will be generated."
       do i=1, ubound(sorption,1)
+        call comment(filesorp)
         call fileread(sorption(i,:)%csinit, filesorp, errmsg=msg, checklen=.true.)
         do j=1, ubound(sorption,2)
            if (.not. sorption(i,j)%kinetic .and. abs(sorption(i,j)%csinit) > epsilon(tmp)) then
