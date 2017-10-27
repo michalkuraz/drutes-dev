@@ -1,0 +1,248 @@
+\section{manage\+\_\+pointers Module Reference}
+\label{namespacemanage__pointers}\index{manage\+\_\+pointers@{manage\+\_\+pointers}}
+\subsection*{Functions/\+Subroutines}
+\begin{DoxyCompactItemize}
+\item 
+subroutine, public {\bf set\+\_\+pointers} ()
+\begin{DoxyCompactList}\small\item\em set pointers for the entire problem, except the file read pointers \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Function/\+Subroutine Documentation}
+\index{manage\+\_\+pointers@{manage\+\_\+pointers}!set\+\_\+pointers@{set\+\_\+pointers}}
+\index{set\+\_\+pointers@{set\+\_\+pointers}!manage\+\_\+pointers@{manage\+\_\+pointers}}
+\subsubsection[{set\+\_\+pointers()}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, public manage\+\_\+pointers\+::set\+\_\+pointers (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}\label{namespacemanage__pointers_a8275d1f0bd8032fa68b910b70058a4cf}
+
+
+set pointers for the entire problem, except the file read pointers 
+
+
+
+Definition at line 9 of file manage\+\_\+pointers.\+f90.
+
+
+
+References ade\+\_\+pointers\+::ade(), ade\+\_\+pointers\+::adekinsorb(), bousspointers\+::boussi(), solver\+\_\+interfaces\+::cg\+\_\+normal\+\_\+face(), globals\+::drutes\+\_\+config, heat\+\_\+pointers\+::heat(), capmat\+::impl\+\_\+euler\+\_\+np\+\_\+diag(), capmat\+::impl\+\_\+euler\+\_\+np\+\_\+nondiag(), solver\+\_\+interfaces\+::ldu\+\_\+face(), pde\+\_\+objs\+::pde, pde\+\_\+objs\+::pde\+\_\+common, re\+\_\+dual\+\_\+pointers\+::re\+\_\+fracture(), re\+\_\+dual\+\_\+pointers\+::re\+\_\+matrix(), re\+\_\+pointers\+::re\+\_\+rot(), re\+\_\+pointers\+::re\+\_\+std(), re\+\_\+pointers\+::reroth(), re\+\_\+pointers\+::restdh(), schwarz\+\_\+dd\+::schwarz\+\_\+picard(), schwarz\+\_\+dd2subcyc\+::schwarz\+\_\+subcyc(), pde\+\_\+objs\+::solve\+\_\+matrix, femmat\+::solve\+\_\+picard(), and capmat\+::steady\+\_\+state\+\_\+int().
+
+
+
+Referenced by main().
+
+
+\begin{DoxyCode}
+9       \textcolor{keywordtype}{use }typy
+10       \textcolor{keywordtype}{use }global_objs
+11       \textcolor{keywordtype}{use }pde_objs
+12       \textcolor{keywordtype}{use }globals
+13       \textcolor{keywordtype}{use }core_tools
+14       \textcolor{keywordtype}{use }capmat
+15       \textcolor{keywordtype}{use }fem_tools
+16       \textcolor{keywordtype}{use }feminittools
+17       \textcolor{keywordtype}{use }fem
+18       \textcolor{keywordtype}{use }femmat
+19       \textcolor{keywordtype}{use }schwarz_dd
+20       \textcolor{keywordtype}{use }schwarz_dd2subcyc
+21       \textcolor{keywordtype}{use }solver_interfaces
+22       \textcolor{keywordtype}{use }debug_tools
+23       \textcolor{keywordtype}{use }bousspointers
+24       \textcolor{keywordtype}{use }re_pointers
+25       \textcolor{keywordtype}{use }ade_pointers
+26       \textcolor{keywordtype}{use }re_dual_pointers
+27       \textcolor{keywordtype}{use }heat_pointers
+28 
+29       \textcolor{keywordtype}{integer(kind=ikind)} :: i
+30 
+31       \textcolor{keywordflow}{select case}(adjustl(trim(drutes_config%name)))
+32         \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"RE\_std"})
+33           \textcolor{keyword}{write}(unit=drutes_config%fullname, fmt=*) \textcolor{stringliteral}{"Richards' equation, in"}, 
+      drutes_config%dimen\textcolor{comment}{, &}
+34 \textcolor{comment}{          }\textcolor{stringliteral}{"D, in pressure head form."}
+35           \textcolor{keyword}{call }re_std(pde(1))
+36         \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"REstdH"})
+37           \textcolor{keyword}{write}(unit=drutes_config%fullname, fmt=*) \textcolor{stringliteral}{"Richards' equation, in"}, 
+      drutes_config%dimen\textcolor{comment}{, &}
+38 \textcolor{comment}{          }\textcolor{stringliteral}{"D, in total hydraulic head form."}
+39           \textcolor{keyword}{call }restdh(pde(1))
+40         \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"RE\_rot"})
+41           \textcolor{keyword}{write}(unit=drutes_config%fullname, fmt=*) \textcolor{stringliteral}{"Richards' equation, in"}, 
+      drutes_config%dimen\textcolor{comment}{, &}
+42 \textcolor{comment}{          }\textcolor{stringliteral}{"D, in cylindric coordinates and axysimmetric flow, in pressure head form."}
+43           \textcolor{keyword}{call }re_rot(pde(1))
+44         \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"RErotH"})
+45           \textcolor{keyword}{write}(unit=drutes_config%fullname, fmt=*) \textcolor{stringliteral}{"Richards' equation, in"}, 
+      drutes_config%dimen\textcolor{comment}{, &}
+46 \textcolor{comment}{          }\textcolor{stringliteral}{"D, in cylindric coordinates and axysimmetric flow, in total hydraulic head form."}
+47           \textcolor{keyword}{call }reroth(pde(1))
+48         
+49               
+50         \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"boussi"})   
+51            \textcolor{keyword}{write}(unit=drutes_config%fullname, fmt=*) \textcolor{stringliteral}{" Boussinesq equation for hillslope runoff"}\textcolor{comment}{, &}
+52 \textcolor{comment}{           }\textcolor{stringliteral}{"(1D approximation of groundwater flow)."}
+53            \textcolor{keyword}{call }boussi(pde(1))
+54            
+55         
+56         \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"ADEstd"}) 
+57           \textcolor{keyword}{write}(unit=drutes_config%fullname, fmt=*) \textcolor{stringliteral}{" advection-dispersion-reaction equation in"}\textcolor{comment}{, &}
+58 \textcolor{comment}{           drutes_config%dimen, }\textcolor{stringliteral}{"D, convection is specified in input files, equilibrium sorption"}
+59            \textcolor{keyword}{call }ade(pde(1))
+60 
+61       \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"ADEstd\_kinsorb"})
+62       
+63           \textcolor{keyword}{write}(unit=drutes_config%fullname, fmt=*) \textcolor{stringliteral}{" advection-dispersion-reaction equation in"}\textcolor{comment}{, &}
+64 \textcolor{comment}{           drutes_config%dimen, }\textcolor{stringliteral}{"D, convection is specified in input files, kinetic sorption"}
+65            \textcolor{keyword}{call }ade(pde(1))
+66            \textcolor{keyword}{call }adekinsorb(pde(2))
+67            
+68       \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"ADE\_RE\_std"})
+69           \textcolor{keyword}{write}(unit=drutes_config%fullname, fmt=*) \textcolor{stringliteral}{" advection-dispersion-reaction equation"}\textcolor{comment}{, &}
+70 \textcolor{comment}{          }\textcolor{stringliteral}{"  Richards equation in pressure head form in"}, &
+71            drutes_config%dimen, \textcolor{stringliteral}{"D, convection is computed, equilibrium sorption"}\textcolor{comment}{       }
+72 \textcolor{comment}{           }
+73 \textcolor{comment}{           }\textcolor{keyword}{call }re_std(pde(1))
+74            \textcolor{keyword}{call }ade(pde(2))
+75         
+76       \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"ADE\_REstdH"})
+77           \textcolor{keyword}{write}(unit=drutes_config%fullname, fmt=*) \textcolor{stringliteral}{" advection-dispersion-reaction equation"}\textcolor{comment}{, &}
+78 \textcolor{comment}{          }\textcolor{stringliteral}{" and Richards equation in total hydraulic head form in"}, &
+79            drutes_config%dimen, \textcolor{stringliteral}{"D, convection is computed, equilibrium sorption"}\textcolor{comment}{       }
+80 \textcolor{comment}{           }
+81 \textcolor{comment}{           }\textcolor{keyword}{call }restdh(pde(1))
+82            \textcolor{keyword}{call }ade(pde(2))
+83 
+84 
+85       \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"ADE\_RE\_rot"})
+86           \textcolor{keyword}{write}(unit=drutes_config%fullname, fmt=*) \textcolor{stringliteral}{" advection-dispersion-reaction equation"}\textcolor{comment}{, &}
+87 \textcolor{comment}{          }\textcolor{stringliteral}{" and Richards equation in pressure head form"}, &
+88            \textcolor{stringliteral}{"flow is axisymmetric, convection is computed, equilibrium sorption"}\textcolor{comment}{ }
+89 \textcolor{comment}{           }
+90 \textcolor{comment}{           }\textcolor{keyword}{call }re_rot(pde(1))
+91            \textcolor{keyword}{call }ade(pde(2))
+92            
+93       \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"ADE\_RErotH"})
+94           \textcolor{keyword}{write}(unit=drutes_config%fullname, fmt=*) \textcolor{stringliteral}{" advection-dispersion-reaction equation"}\textcolor{comment}{, &}
+95 \textcolor{comment}{          }\textcolor{stringliteral}{" and Richards equation in total hydraulic head form"}, &
+96            \textcolor{stringliteral}{"flow is axisymmetric, convection is computed, equilibrium sorption"}\textcolor{comment}{ }
+97 \textcolor{comment}{           }
+98 \textcolor{comment}{           }\textcolor{keyword}{call }re_rot(pde(1))
+99            \textcolor{keyword}{call }ade(pde(2))           
+100           
+101 
+102       \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"Re\_dual\_totH"})
+103                         \textcolor{keyword}{write}(unit=drutes_config%fullname, fmt=*) \textcolor{stringliteral}{" Richards equation "}, &
+104           \textcolor{stringliteral}{"in total hydraulic head form for dual (fracture and matrix) medium"}\textcolor{comment}{  }
+105 \textcolor{comment}{           }
+106 \textcolor{comment}{           }\textcolor{keyword}{call }re_matrix()
+107            \textcolor{keyword}{call }re_fracture()  
+108 
+109 
+110       \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"ADE\_RE\_std\_kinsorb"})
+111           \textcolor{keyword}{write}(unit=drutes_config%fullname, fmt=*) \textcolor{stringliteral}{" advection-dispersion-reaction equation"}\textcolor{comment}{, &}
+112 \textcolor{comment}{          }\textcolor{stringliteral}{" and Richards equation in pressure head form in"}, &
+113            drutes_config%dimen, \textcolor{stringliteral}{"D, convection is computed, kinetic sorption"}\textcolor{comment}{   }
+114 \textcolor{comment}{           }
+115 \textcolor{comment}{           }\textcolor{keyword}{call }re_std(pde(1))
+116            \textcolor{keyword}{call }ade(pde(2))
+117            \textcolor{keyword}{call }adekinsorb(pde(3))
+118         
+119       \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"ADE\_REstdH\_kinsorb"})
+120           \textcolor{keyword}{write}(unit=drutes_config%fullname, fmt=*) \textcolor{stringliteral}{" advection-dispersion-reaction equation"}\textcolor{comment}{, &}
+121 \textcolor{comment}{          }\textcolor{stringliteral}{" and Richards equation in total hydraulic head form in"}, &
+122            drutes_config%dimen, \textcolor{stringliteral}{"D, convection is computed, kinetic sorption"}\textcolor{comment}{   }
+123 \textcolor{comment}{           }
+124 \textcolor{comment}{           }\textcolor{keyword}{call }restdh(pde(1))
+125            \textcolor{keyword}{call }ade(pde(2))
+126            \textcolor{keyword}{call }adekinsorb(pde(3))
+127 
+128       \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"ADE\_RE\_rot\_kinsorb"})
+129           \textcolor{keyword}{write}(unit=drutes_config%fullname, fmt=*) \textcolor{stringliteral}{" advection-dispersion-reaction equation"}\textcolor{comment}{, &}
+130 \textcolor{comment}{          }\textcolor{stringliteral}{" and Richards equation in pressure head form"}, &
+131            \textcolor{stringliteral}{" flow is axisymmetric, convection is computed, kinetic sorption"}\textcolor{comment}{    }
+132 \textcolor{comment}{           }
+133 \textcolor{comment}{           }\textcolor{keyword}{call }re_rot(pde(1))
+134            \textcolor{keyword}{call }ade(pde(2))
+135            \textcolor{keyword}{call }adekinsorb(pde(3))
+136            
+137       \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"ADE\_RErotH\_kinsorb"})
+138           \textcolor{keyword}{write}(unit=drutes_config%fullname, fmt=*) \textcolor{stringliteral}{" advection-dispersion-reaction equation"}\textcolor{comment}{, &}
+139 \textcolor{comment}{          }\textcolor{stringliteral}{" and Richards equation in total hydraulic head form"}, &
+140            \textcolor{stringliteral}{" flow is axisymmetric, convection is computed, kinetic sorption"}\textcolor{comment}{    }
+141 \textcolor{comment}{           }
+142 \textcolor{comment}{           }\textcolor{keyword}{call }re_rot(pde(1))
+143            \textcolor{keyword}{call }ade(pde(2))
+144            \textcolor{keyword}{call }adekinsorb(pde(3))
+145                 
+146         
+147        \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"REtest"})
+148           \textcolor{keyword}{write}(unit=drutes_config%fullname, fmt=*) \textcolor{stringliteral}{"DRUtES debugs itself"}
+149           \textcolor{keywordflow}{do} i=1, 3
+150             \textcolor{keyword}{call }re_std(pde(i))
+151 \textcolor{keywordflow}{          end do}
+152           
+153        \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"heat"})
+154          \textcolor{keyword}{write}(unit=drutes_config%fullname, fmt=*) \textcolor{stringliteral}{"DRUtES solves heat conduction with convection"}
+155          \textcolor{keyword}{call }heat(pde(1))
+156           
+157 \textcolor{keywordflow}{       case default}
+158           print *, \textcolor{stringliteral}{"your new model: "}, trim(drutes_config%name), \textcolor{stringliteral}{" requires pointer linking"}
+159           print *, \textcolor{stringliteral}{"exited from manage\_pointers::set\_pointers"}
+160           error stop
+161 
+162           
+163 \textcolor{keywordflow}{    end select}
+164 
+165       \textcolor{keywordflow}{select case}(drutes_config%dimen)
+166         \textcolor{keywordflow}{case}(1)
+167             solve_matrix => ldu_face
+168 \textcolor{comment}{!           solve\_matrix => CG\_normal\_face}
+169         \textcolor{keywordflow}{case}(2)
+170 \textcolor{comment}{!           solve\_matrix => pcg}
+171 \textcolor{comment}{!           solve\_matrix => LDU\_face}
+172             solve_matrix => cg_normal_face
+173 \textcolor{comment}{!           solve\_matrix => sparse\_gem\_pig\_AtA}
+174 \textcolor{comment}{!           solve\_matrix => jacobi\_face}
+175 \textcolor{keywordflow}{      end select}
+176       \textcolor{keywordflow}{select case} (drutes_config%it\_method)
+177         \textcolor{keywordflow}{case}(0) 
+178           pde_common%treat\_pde => solve_picard
+179         \textcolor{keywordflow}{case}(1)
+180           pde_common%treat\_pde => schwarz_picard
+181         \textcolor{keywordflow}{case}(2)
+182           pde_common%treat\_pde => schwarz_subcyc
+183 \textcolor{keywordflow}{      end select}
+184     
+185       \textcolor{keywordflow}{select case}(pde_common%timeint\_method)
+186         \textcolor{keywordflow}{case}(0)
+187           pde_common%time\_integ => steady_state_int
+188         \textcolor{keywordflow}{case}(1)
+189           pde_common%time\_integ => impl_euler_np_diag
+190         \textcolor{keywordflow}{case}(2)
+191           pde_common%time\_integ => impl_euler_np_nondiag
+192 \textcolor{keywordflow}{      end select}
+193 
+194 
+\end{DoxyCode}
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=550pt]{namespacemanage__pointers_a8275d1f0bd8032fa68b910b70058a4cf_cgraph}
+\end{center}
+\end{figure}
+
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=228pt]{namespacemanage__pointers_a8275d1f0bd8032fa68b910b70058a4cf_icgraph}
+\end{center}
+\end{figure}
+
+

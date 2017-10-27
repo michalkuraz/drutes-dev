@@ -1,0 +1,9 @@
+<map id="decomposer::init_subdomain" name="decomposer::init_subdomain">
+<area shape="rect" id="node2" href="$namespacedecomposer.html#abbcc7a95b77ad1dbec2b528470df7daf" title="the subdomains are combined based on the gradients of the solution and the Picard iterations ..." alt="" coords="241,111,437,138"/>
+<area shape="rect" id="node3" href="$namespaceschwarz__dd__time__test.html#a28474cc01fb4558d0a875080f5a52724" title="solves the problem using Picard method with Schwarz multiplicative domain decomposition reflecting th..." alt="" coords="485,5,639,47"/>
+<area shape="rect" id="node4" href="$namespaceschwarz__dd.html#a5e1abf918f5afac4e96fa81e0cfa5f7a" title="solves the problem using Picard method with Schwarz multiplicative domain decomposition reflecting th..." alt="" coords="487,71,637,112"/>
+<area shape="rect" id="node7" href="$namespaceschwarz__dd2subcyc.html#a1172bd9a4c93b3862894cf530bff7fea" title="solves the problem using Picard method with Schwarz multiplicative domain decomposition reflecting th..." alt="" coords="487,136,637,177"/>
+<area shape="rect" id="node8" href="$namespacesubcycling.html#a676c0ac81f3576e037f6f49c0001ce78" title="solves the problem using Picard method with Schwarz multiplicative domain decomposition reflecting th..." alt="" coords="495,201,629,243"/>
+<area shape="rect" id="node5" href="$namespacemanage__pointers.html#a8275d1f0bd8032fa68b910b70058a4cf" title="set pointers for the entire problem, except the file read pointers " alt="" coords="687,104,833,145"/>
+<area shape="rect" id="node6" href="$main_8f90.html#a8ec2266d83cd6c0b762cbcbc92c0af3d" title="main" alt="" coords="881,111,932,138"/>
+</map>

@@ -1,0 +1,343 @@
+\section{decomp\+\_\+vars Module Reference}
+\label{namespacedecomp__vars}\index{decomp\+\_\+vars@{decomp\+\_\+vars}}
+\subsection*{Data Types}
+\begin{DoxyCompactItemize}
+\item 
+type {\bf cluster}
+\item 
+type {\bf ddinfo\+\_\+str}
+\item 
+type {\bf disjoint\+\_\+nd\+\_\+str}
+\begin{DoxyCompactList}\small\item\em array map with a disjoint map of subdomains, \end{DoxyCompactList}\item 
+type {\bf resvct\+\_\+str}
+\item 
+type {\bf subdomain\+\_\+str}
+\end{DoxyCompactItemize}
+\subsection*{Functions/\+Subroutines}
+\begin{DoxyCompactItemize}
+\item 
+real(kind=rkind) function, private {\bf returnval} (subdom, i, subtime)
+\end{DoxyCompactItemize}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+type({\bf cluster}), dimension(\+:), allocatable {\bf ddcoarse\+\_\+mesh}
+\item 
+type({\bf node}), public {\bf coarse\+\_\+nodes}
+\item 
+type({\bf element}), public {\bf coarse\+\_\+elements}
+\item 
+type({\bf subdomain\+\_\+str}), dimension(\+:), allocatable {\bf subdomain}
+\item 
+type({\bf ddinfo\+\_\+str}), public {\bf ddinfo}
+\item 
+type({\bf extsmtx}), public {\bf prolong\+\_\+mtx}
+\item 
+type({\bf extsmtx}), public {\bf coarse\+\_\+mtx}
+\item 
+type({\bf extsmtx}), public {\bf coarse2}
+\item 
+type({\bf extsmtx}), public {\bf prolongt}
+\item 
+type({\bf extsmtx}), public {\bf tmpmat}
+\item 
+real(kind=rkind), dimension(\+:), allocatable, public {\bf bcoarse}
+\item 
+real(kind=rkind), dimension(\+:), allocatable, public {\bf xcoarse}
+\item 
+real(kind=rkind), public {\bf inner\+\_\+criterion}
+\begin{DoxyCompactList}\small\item\em inner Ax=b criterion \end{DoxyCompactList}\item 
+logical, public {\bf use\+\_\+coarselev}
+\item 
+integer, public {\bf file\+\_\+decomp}
+\item 
+integer, public {\bf file\+\_\+ddinfo}
+\item 
+integer, public {\bf file\+\_\+dt}
+\end{DoxyCompactItemize}
+
+
+\subsection{Function/\+Subroutine Documentation}
+\index{decomp\+\_\+vars@{decomp\+\_\+vars}!returnval@{returnval}}
+\index{returnval@{returnval}!decomp\+\_\+vars@{decomp\+\_\+vars}}
+\subsubsection[{returnval(subdom, i, subtime)}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind) function, private decomp\+\_\+vars\+::returnval (
+\begin{DoxyParamCaption}
+\item[{class({\bf subdomain\+\_\+str}), intent(in)}]{subdom, }
+\item[{integer(kind=ikind), intent(in)}]{i, }
+\item[{real(kind=rkind), intent(in)}]{subtime}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [private]}}\label{namespacedecomp__vars_a7290ee319d574a800b4be3f5fff4e7a2}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em i} & local index \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 172 of file decomp\+\_\+vars.\+f90.
+
+
+\begin{DoxyCode}
+172         \textcolor{keywordtype}{use }typy
+173         \textcolor{keywordtype}{use }globals
+174         
+175         \textcolor{keywordtype}{class}(subdomain_str), \textcolor{keywordtype}{intent(in)} :: subdom
+177         \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(in)} :: i
+178         \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{intent(in)} :: subtime
+179         \textcolor{keywordtype}{real(kind=rkind)} :: value
+180         
+181         \textcolor{keywordflow}{if} (abs(subtime-subdom%time)  < epsilon(subtime)) \textcolor{keywordflow}{then}
+182           \textcolor{keywordtype}{value} = subdom%xvect(i,2)
+183         \textcolor{keywordflow}{else}
+184           \textcolor{keywordtype}{value} = (subdom%xvect(i,2) - subdom%xvect(i,1))/subdom%time\_step*(subtime-subdom%time)+subdom
+      %xvect(i,2)
+185 \textcolor{keywordflow}{        end if}
+186         
+187 
+\end{DoxyCode}
+
+
+\subsection{Variable Documentation}
+\index{decomp\+\_\+vars@{decomp\+\_\+vars}!bcoarse@{bcoarse}}
+\index{bcoarse@{bcoarse}!decomp\+\_\+vars@{decomp\+\_\+vars}}
+\subsubsection[{bcoarse}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind), dimension(\+:), allocatable, public decomp\+\_\+vars\+::bcoarse}\label{namespacedecomp__vars_affd9d31213fdce426b976b72de5f73df}
+
+
+Definition at line 156 of file decomp\+\_\+vars.\+f90.
+
+
+
+Referenced by decomp\+\_\+tools\+::build\+\_\+coarsemtx(), and schwarz\+\_\+dd\+::schwarz\+\_\+picard().
+
+
+\begin{DoxyCode}
+156   \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable}, \textcolor{keywordtype}{public} :: bcoarse
+\end{DoxyCode}
+\index{decomp\+\_\+vars@{decomp\+\_\+vars}!coarse2@{coarse2}}
+\index{coarse2@{coarse2}!decomp\+\_\+vars@{decomp\+\_\+vars}}
+\subsubsection[{coarse2}]{\setlength{\rightskip}{0pt plus 5cm}type({\bf extsmtx}), public decomp\+\_\+vars\+::coarse2}\label{namespacedecomp__vars_aaad4631c6f6021c5ce8f06996b77f14d}
+
+
+Definition at line 152 of file decomp\+\_\+vars.\+f90.
+
+
+\begin{DoxyCode}
+152   \textcolor{keywordtype}{type}(extsmtx), \textcolor{keywordtype}{public} :: coarse2
+\end{DoxyCode}
+\index{decomp\+\_\+vars@{decomp\+\_\+vars}!coarse\+\_\+elements@{coarse\+\_\+elements}}
+\index{coarse\+\_\+elements@{coarse\+\_\+elements}!decomp\+\_\+vars@{decomp\+\_\+vars}}
+\subsubsection[{coarse\+\_\+elements}]{\setlength{\rightskip}{0pt plus 5cm}type({\bf element}), public decomp\+\_\+vars\+::coarse\+\_\+elements}\label{namespacedecomp__vars_a53341b6c5e98f0fe3828cb220a4ff2b6}
+
+
+Definition at line 145 of file decomp\+\_\+vars.\+f90.
+
+
+
+Referenced by decomp\+\_\+tools\+::addlevel(), decomp\+\_\+tools\+::init\+\_\+addlevel(), decomposer\+::init\+\_\+decomp(), decomposer\+::make\+\_\+quadmesh(), decomp\+\_\+tools\+::print\+\_\+domains(), decomp\+\_\+tools\+::print\+\_\+elements\+\_\+dd(), decomposer\+::read\+\_\+coarse\+\_\+mesh(), schwarz\+\_\+dd\+\_\+time\+\_\+test\+::schwarz\+\_\+picard\+\_\+tt(), and decomposer\+::set\+\_\+subdomains().
+
+
+\begin{DoxyCode}
+145   \textcolor{keywordtype}{type}(element), \textcolor{keywordtype}{public}  :: coarse_elements
+\end{DoxyCode}
+\index{decomp\+\_\+vars@{decomp\+\_\+vars}!coarse\+\_\+mtx@{coarse\+\_\+mtx}}
+\index{coarse\+\_\+mtx@{coarse\+\_\+mtx}!decomp\+\_\+vars@{decomp\+\_\+vars}}
+\subsubsection[{coarse\+\_\+mtx}]{\setlength{\rightskip}{0pt plus 5cm}type({\bf extsmtx}), public decomp\+\_\+vars\+::coarse\+\_\+mtx}\label{namespacedecomp__vars_aec54e28f08c81a19841a20ea57e09d0b}
+
+
+Definition at line 150 of file decomp\+\_\+vars.\+f90.
+
+
+
+Referenced by decomp\+\_\+tools\+::build\+\_\+coarsemtx(), and schwarz\+\_\+dd\+::schwarz\+\_\+picard().
+
+
+\begin{DoxyCode}
+150   \textcolor{keywordtype}{type}(extsmtx), \textcolor{keywordtype}{public} :: coarse_mtx
+\end{DoxyCode}
+\index{decomp\+\_\+vars@{decomp\+\_\+vars}!coarse\+\_\+nodes@{coarse\+\_\+nodes}}
+\index{coarse\+\_\+nodes@{coarse\+\_\+nodes}!decomp\+\_\+vars@{decomp\+\_\+vars}}
+\subsubsection[{coarse\+\_\+nodes}]{\setlength{\rightskip}{0pt plus 5cm}type({\bf node}), public decomp\+\_\+vars\+::coarse\+\_\+nodes}\label{namespacedecomp__vars_a3d16852eebecdbaeeb609df974770f3d}
+
+
+Definition at line 144 of file decomp\+\_\+vars.\+f90.
+
+
+
+Referenced by decomposer\+::init\+\_\+decomp(), decomposer\+::make\+\_\+quadmesh(), decomp\+\_\+tools\+::print\+\_\+domains(), and decomposer\+::read\+\_\+coarse\+\_\+mesh().
+
+
+\begin{DoxyCode}
+144   \textcolor{keywordtype}{type}(node), \textcolor{keywordtype}{public}     :: coarse_nodes
+\end{DoxyCode}
+\index{decomp\+\_\+vars@{decomp\+\_\+vars}!ddcoarse\+\_\+mesh@{ddcoarse\+\_\+mesh}}
+\index{ddcoarse\+\_\+mesh@{ddcoarse\+\_\+mesh}!decomp\+\_\+vars@{decomp\+\_\+vars}}
+\subsubsection[{ddcoarse\+\_\+mesh}]{\setlength{\rightskip}{0pt plus 5cm}type({\bf cluster}), dimension(\+:), allocatable decomp\+\_\+vars\+::ddcoarse\+\_\+mesh\hspace{0.3cm}{\ttfamily [private]}}\label{namespacedecomp__vars_ab48cc3be4c0f2222d0e396b66af626fb}
+
+
+Definition at line 142 of file decomp\+\_\+vars.\+f90.
+
+
+
+Referenced by decomp\+\_\+tools\+::add\+\_\+el(), decomp\+\_\+tools\+::addlevel(), decomp\+\_\+tools\+::init\+\_\+addlevel(), decomposer\+::init\+\_\+decomp(), decomposer\+::make\+\_\+quadmesh(), decomp\+\_\+tools\+::print\+\_\+domains(), decomp\+\_\+tools\+::print\+\_\+elements\+\_\+dd(), decomposer\+::read\+\_\+coarse\+\_\+mesh(), schwarz\+\_\+dd\+::schwarz\+\_\+picard(), schwarz\+\_\+dd\+\_\+time\+\_\+test\+::schwarz\+\_\+picard\+\_\+tt(), schwarz\+\_\+dd2subcyc\+::schwarz\+\_\+subcyc(), subcycling\+::search\+\_\+error\+\_\+cluster(), schwarz\+\_\+dd\+::search\+\_\+error\+\_\+cluster(), schwarz\+\_\+dd2subcyc\+::search\+\_\+error\+\_\+cluster(), schwarz\+\_\+dd\+\_\+time\+\_\+test\+::search\+\_\+error\+\_\+cluster\+\_\+tt(), decomposer\+::set\+\_\+subdomains(), and subcycling\+::subcyc\+\_\+schwarz().
+
+
+\begin{DoxyCode}
+142   \textcolor{keywordtype}{type}(cluster), \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable} :: ddcoarse_mesh
+\end{DoxyCode}
+\index{decomp\+\_\+vars@{decomp\+\_\+vars}!ddinfo@{ddinfo}}
+\index{ddinfo@{ddinfo}!decomp\+\_\+vars@{decomp\+\_\+vars}}
+\subsubsection[{ddinfo}]{\setlength{\rightskip}{0pt plus 5cm}type({\bf ddinfo\+\_\+str}), public decomp\+\_\+vars\+::ddinfo}\label{namespacedecomp__vars_acc535d987c862a824b1bd1509abbb09c}
+
+
+Definition at line 147 of file decomp\+\_\+vars.\+f90.
+
+
+
+Referenced by decomp\+\_\+tools\+::addlevel(), schwarz\+\_\+dd2subcyc\+::combinevals(), decomp\+\_\+tools\+::init\+\_\+addlevel(), decomposer\+::init\+\_\+decomp(), schwarz\+\_\+dd2subcyc\+::locmat\+\_\+assembler(), decomp\+\_\+tools\+::print\+\_\+domains(), schwarz\+\_\+dd\+::schwarz\+\_\+picard(), schwarz\+\_\+dd\+\_\+time\+\_\+test\+::schwarzloc(), decomposer\+::set\+\_\+subdomains(), and schwarz\+\_\+dd2subcyc\+::solve\+\_\+subdomain().
+
+
+\begin{DoxyCode}
+147   \textcolor{keywordtype}{type}(ddinfo_str), \textcolor{keywordtype}{public} :: ddinfo
+\end{DoxyCode}
+\index{decomp\+\_\+vars@{decomp\+\_\+vars}!file\+\_\+ddinfo@{file\+\_\+ddinfo}}
+\index{file\+\_\+ddinfo@{file\+\_\+ddinfo}!decomp\+\_\+vars@{decomp\+\_\+vars}}
+\subsubsection[{file\+\_\+ddinfo}]{\setlength{\rightskip}{0pt plus 5cm}integer, public decomp\+\_\+vars\+::file\+\_\+ddinfo}\label{namespacedecomp__vars_ad752cd366331c88994f3f0c4e1eca3d1}
+
+
+Definition at line 166 of file decomp\+\_\+vars.\+f90.
+
+
+
+Referenced by decomposer\+::init\+\_\+decomp(), schwarz\+\_\+dd\+::schwarz\+\_\+picard(), schwarz\+\_\+dd\+\_\+time\+\_\+test\+::schwarzloc(), and subcycling\+::subcyc\+\_\+schwarz().
+
+
+\begin{DoxyCode}
+166   \textcolor{keywordtype}{integer}, \textcolor{keywordtype}{public} :: file_ddinfo, file_dt
+\end{DoxyCode}
+\index{decomp\+\_\+vars@{decomp\+\_\+vars}!file\+\_\+decomp@{file\+\_\+decomp}}
+\index{file\+\_\+decomp@{file\+\_\+decomp}!decomp\+\_\+vars@{decomp\+\_\+vars}}
+\subsubsection[{file\+\_\+decomp}]{\setlength{\rightskip}{0pt plus 5cm}integer, public decomp\+\_\+vars\+::file\+\_\+decomp}\label{namespacedecomp__vars_a3753dbd1677d3829c5a79c81b7e71478}
+
+
+Definition at line 165 of file decomp\+\_\+vars.\+f90.
+
+
+
+Referenced by decomposer\+::init\+\_\+decomp(), and decomposer\+::set\+\_\+subdomains().
+
+
+\begin{DoxyCode}
+165   \textcolor{keywordtype}{integer}, \textcolor{keywordtype}{public} :: file_decomp
+\end{DoxyCode}
+\index{decomp\+\_\+vars@{decomp\+\_\+vars}!file\+\_\+dt@{file\+\_\+dt}}
+\index{file\+\_\+dt@{file\+\_\+dt}!decomp\+\_\+vars@{decomp\+\_\+vars}}
+\subsubsection[{file\+\_\+dt}]{\setlength{\rightskip}{0pt plus 5cm}integer, public decomp\+\_\+vars\+::file\+\_\+dt}\label{namespacedecomp__vars_ac54947c2bf51285c6b56d7717a96aa97}
+
+
+Definition at line 166 of file decomp\+\_\+vars.\+f90.
+
+
+
+Referenced by schwarz\+\_\+dd\+\_\+time\+\_\+test\+::schwarz\+\_\+picard\+\_\+tt(), and fem\+::solve\+\_\+pde().
+
+\index{decomp\+\_\+vars@{decomp\+\_\+vars}!inner\+\_\+criterion@{inner\+\_\+criterion}}
+\index{inner\+\_\+criterion@{inner\+\_\+criterion}!decomp\+\_\+vars@{decomp\+\_\+vars}}
+\subsubsection[{inner\+\_\+criterion}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind), public decomp\+\_\+vars\+::inner\+\_\+criterion}\label{namespacedecomp__vars_afd6f18db0b5e75ec3a151b7b5f9c2e9a}
+
+
+inner Ax=b criterion 
+
+
+
+Definition at line 160 of file decomp\+\_\+vars.\+f90.
+
+
+
+Referenced by schwarz\+\_\+dd\+::schwarz\+\_\+picard(), schwarz\+\_\+dd2subcyc\+::schwarz\+\_\+subcyc(), schwarz\+\_\+dd\+\_\+time\+\_\+test\+::schwarzloc(), and subcycling\+::subcyc\+\_\+schwarz().
+
+
+\begin{DoxyCode}
+160   \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{public} :: inner_criterion
+\end{DoxyCode}
+\index{decomp\+\_\+vars@{decomp\+\_\+vars}!prolong\+\_\+mtx@{prolong\+\_\+mtx}}
+\index{prolong\+\_\+mtx@{prolong\+\_\+mtx}!decomp\+\_\+vars@{decomp\+\_\+vars}}
+\subsubsection[{prolong\+\_\+mtx}]{\setlength{\rightskip}{0pt plus 5cm}type({\bf extsmtx}), public decomp\+\_\+vars\+::prolong\+\_\+mtx}\label{namespacedecomp__vars_a8fc2fa7837c8939c71338278f25c250e}
+
+
+Definition at line 149 of file decomp\+\_\+vars.\+f90.
+
+
+
+Referenced by decomp\+\_\+tools\+::addlevel(), decomp\+\_\+tools\+::build\+\_\+coarsemtx(), subcycling\+::build\+\_\+xvect(), schwarz\+\_\+dd\+::build\+\_\+xvect(), schwarz\+\_\+dd\+\_\+time\+\_\+test\+::build\+\_\+xvect(), schwarz\+\_\+dd2subcyc\+::build\+\_\+xvect\+\_\+loc(), schwarz\+\_\+dd2subcyc\+::combinevals(), schwarz\+\_\+dd\+::schwarz\+\_\+picard(), and subcycling\+::update\+\_\+domain().
+
+
+\begin{DoxyCode}
+149   \textcolor{keywordtype}{type}(extsmtx), \textcolor{keywordtype}{public} :: prolong_mtx
+\end{DoxyCode}
+\index{decomp\+\_\+vars@{decomp\+\_\+vars}!prolongt@{prolongt}}
+\index{prolongt@{prolongt}!decomp\+\_\+vars@{decomp\+\_\+vars}}
+\subsubsection[{prolongt}]{\setlength{\rightskip}{0pt plus 5cm}type({\bf extsmtx}), public decomp\+\_\+vars\+::prolongt}\label{namespacedecomp__vars_a13985a0b03c1bdc8a95f3d38a650cc53}
+
+
+Definition at line 153 of file decomp\+\_\+vars.\+f90.
+
+
+\begin{DoxyCode}
+153   \textcolor{keywordtype}{type}(extsmtx), \textcolor{keywordtype}{public} :: prolongt
+\end{DoxyCode}
+\index{decomp\+\_\+vars@{decomp\+\_\+vars}!subdomain@{subdomain}}
+\index{subdomain@{subdomain}!decomp\+\_\+vars@{decomp\+\_\+vars}}
+\subsubsection[{subdomain}]{\setlength{\rightskip}{0pt plus 5cm}type({\bf subdomain\+\_\+str}), dimension(\+:), allocatable decomp\+\_\+vars\+::subdomain}\label{namespacedecomp__vars_a197464956dc4c702935cf963d48a4edf}
+
+
+Definition at line 146 of file decomp\+\_\+vars.\+f90.
+
+
+
+Referenced by decomp\+\_\+tools\+::addlevel(), decomp\+\_\+tools\+::build\+\_\+coarsemtx(), subcycling\+::build\+\_\+xvect(), schwarz\+\_\+dd\+::build\+\_\+xvect(), schwarz\+\_\+dd\+\_\+time\+\_\+test\+::build\+\_\+xvect(), schwarz\+\_\+dd2subcyc\+::build\+\_\+xvect\+\_\+loc(), decomp\+\_\+tools\+::collect\+\_\+matrices(), schwarz\+\_\+dd2subcyc\+::combinevals(), subcycling\+::domains\+\_\+solved(), schwarz\+\_\+dd\+::domains\+\_\+solved(), schwarz\+\_\+dd2subcyc\+::domains\+\_\+solved(), schwarz\+\_\+dd\+\_\+time\+\_\+test\+::domains\+\_\+solved(), decomp\+\_\+tools\+::get\+\_\+residual(), decomp\+\_\+tools\+::get\+\_\+residual\+\_\+old(), pde\+\_\+objs\+::getvalp1(), pde\+\_\+objs\+::getvalp1loc(), schwarz\+\_\+dd2subcyc\+::locmat\+\_\+assembler(), decomp\+\_\+tools\+::mulax\+\_\+dd(), subcycling\+::ndofs\+\_\+solved(), schwarz\+\_\+dd\+::ndofs\+\_\+solved(), schwarz\+\_\+dd2subcyc\+::ndofs\+\_\+solved(), schwarz\+\_\+dd\+\_\+time\+\_\+test\+::ndofs\+\_\+solved(), decomp\+\_\+tools\+::print\+\_\+domains(), schwarz\+\_\+dd\+::schwarz\+\_\+picard(), schwarz\+\_\+dd\+\_\+time\+\_\+test\+::schwarz\+\_\+picard\+\_\+tt(), schwarz\+\_\+dd2subcyc\+::schwarz\+\_\+subcyc(), schwarz\+\_\+dd\+\_\+time\+\_\+test\+::schwarzloc(), decomposer\+::set\+\_\+subdomains(), schwarz\+\_\+dd2subcyc\+::solve\+\_\+subdomain(), subcycling\+::subcyc\+\_\+schwarz(), subcycling\+::update\+\_\+domain(), and schwarz\+\_\+dd\+\_\+time\+\_\+test\+::vyreseno().
+
+
+\begin{DoxyCode}
+146   \textcolor{keywordtype}{type}(subdomain_str), \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable} :: subdomain
+\end{DoxyCode}
+\index{decomp\+\_\+vars@{decomp\+\_\+vars}!tmpmat@{tmpmat}}
+\index{tmpmat@{tmpmat}!decomp\+\_\+vars@{decomp\+\_\+vars}}
+\subsubsection[{tmpmat}]{\setlength{\rightskip}{0pt plus 5cm}type({\bf extsmtx}), public decomp\+\_\+vars\+::tmpmat}\label{namespacedecomp__vars_a2017e4787b58f14fa9d8b0b529d1d907}
+
+
+Definition at line 154 of file decomp\+\_\+vars.\+f90.
+
+
+\begin{DoxyCode}
+154   \textcolor{keywordtype}{type}(extsmtx), \textcolor{keywordtype}{public} :: tmpmat
+\end{DoxyCode}
+\index{decomp\+\_\+vars@{decomp\+\_\+vars}!use\+\_\+coarselev@{use\+\_\+coarselev}}
+\index{use\+\_\+coarselev@{use\+\_\+coarselev}!decomp\+\_\+vars@{decomp\+\_\+vars}}
+\subsubsection[{use\+\_\+coarselev}]{\setlength{\rightskip}{0pt plus 5cm}logical, public decomp\+\_\+vars\+::use\+\_\+coarselev}\label{namespacedecomp__vars_ab7ad7b8db38e128e8d898cab899463b3}
+
+
+Definition at line 163 of file decomp\+\_\+vars.\+f90.
+
+
+
+Referenced by decomposer\+::init\+\_\+decomp(), and schwarz\+\_\+dd\+::schwarz\+\_\+picard().
+
+
+\begin{DoxyCode}
+163   \textcolor{keywordtype}{logical}, \textcolor{keywordtype}{public} :: use_coarselev
+\end{DoxyCode}
+\index{decomp\+\_\+vars@{decomp\+\_\+vars}!xcoarse@{xcoarse}}
+\index{xcoarse@{xcoarse}!decomp\+\_\+vars@{decomp\+\_\+vars}}
+\subsubsection[{xcoarse}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind), dimension(\+:), allocatable, public decomp\+\_\+vars\+::xcoarse}\label{namespacedecomp__vars_a4a1cbb5683777801ae03b0ed5ccd8b36}
+
+
+Definition at line 157 of file decomp\+\_\+vars.\+f90.
+
+
+
+Referenced by decomp\+\_\+tools\+::build\+\_\+coarsemtx(), and schwarz\+\_\+dd\+::schwarz\+\_\+picard().
+
+
+\begin{DoxyCode}
+157   \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable}, \textcolor{keywordtype}{public} :: xcoarse
+\end{DoxyCode}

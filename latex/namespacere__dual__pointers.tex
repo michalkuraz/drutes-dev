@@ -1,0 +1,262 @@
+\section{re\+\_\+dual\+\_\+pointers Module Reference}
+\label{namespacere__dual__pointers}\index{re\+\_\+dual\+\_\+pointers@{re\+\_\+dual\+\_\+pointers}}
+
+
+This module contains the pointers used for dual permeability model.  
+
+
+\subsection*{Functions/\+Subroutines}
+\begin{DoxyCompactItemize}
+\item 
+subroutine, public {\bf re\+\_\+matrix} ()
+\begin{DoxyCompactList}\small\item\em Links to releveant subroutines for matrix domain. \end{DoxyCompactList}\item 
+subroutine, public {\bf re\+\_\+fracture} ()
+\begin{DoxyCompactList}\small\item\em Links to releveant subroutines for fracture domain. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+This module contains the pointers used for dual permeability model. 
+
+\subsection{Function/\+Subroutine Documentation}
+\index{re\+\_\+dual\+\_\+pointers@{re\+\_\+dual\+\_\+pointers}!re\+\_\+fracture@{re\+\_\+fracture}}
+\index{re\+\_\+fracture@{re\+\_\+fracture}!re\+\_\+dual\+\_\+pointers@{re\+\_\+dual\+\_\+pointers}}
+\subsubsection[{re\+\_\+fracture()}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, public re\+\_\+dual\+\_\+pointers\+::re\+\_\+fracture (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}\label{namespacere__dual__pointers_a7c3a2d7fee47e270402505ab315ca55d}
+
+
+Links to releveant subroutines for fracture domain. 
+
+
+
+Definition at line 84 of file Re\+\_\+dual\+\_\+pointers.\+f90.
+
+
+
+References dual\+\_\+por\+::darcy\+\_\+law\+\_\+d(), globals\+::drutes\+\_\+config, re\+\_\+dual\+\_\+bc\+::dual\+\_\+atmospheric(), dual\+\_\+coup\+::dual\+\_\+coup\+\_\+min(), dual\+\_\+coup\+::dual\+\_\+coup\+\_\+min\+\_\+neg(), dual\+\_\+coup\+::dual\+\_\+coupling(), dual\+\_\+coup\+::dual\+\_\+coupling\+\_\+k(), dual\+\_\+coup\+::dual\+\_\+coupling\+\_\+neg(), dual\+\_\+tab\+::dual\+\_\+coupling\+\_\+neg\+\_\+tab(), dual\+\_\+tab\+::dual\+\_\+coupling\+\_\+tab(), re\+\_\+dual\+\_\+bc\+::dual\+\_\+freedrainage(), dual\+\_\+por\+::dual\+\_\+inicond(), dual\+\_\+por\+::dual\+\_\+mualem(), dual\+\_\+tab\+::dual\+\_\+mualem\+\_\+tab(), re\+\_\+dual\+\_\+bc\+::dual\+\_\+neumann\+\_\+bc(), dual\+\_\+por\+::dual\+\_\+ret\+\_\+cap(), dual\+\_\+tab\+::dual\+\_\+ret\+\_\+cap\+\_\+tab(), dual\+\_\+tab\+::dual\+\_\+tabvalues(), dual\+\_\+por\+::getval\+\_\+retot\+\_\+dual(), re\+\_\+dual\+\_\+bc\+::inf\+\_\+neumann\+\_\+bc(), pde\+\_\+objs\+::pde, re\+\_\+dual\+\_\+reader\+::re\+\_\+dual\+\_\+readf(), re\+\_\+constitutive\+::re\+\_\+null\+\_\+bc(), re\+\_\+total\+::retot\+\_\+dirichlet\+\_\+bc(), re\+\_\+total\+::retot\+\_\+dirichlet\+\_\+height\+\_\+bc(), dual\+\_\+por\+::vangen\+\_\+d(), and dual\+\_\+tab\+::vangen\+\_\+d\+\_\+tab().
+
+
+
+Referenced by manage\+\_\+pointers\+::set\+\_\+pointers().
+
+
+\begin{DoxyCode}
+84       \textcolor{keywordtype}{use }typy
+85       \textcolor{keywordtype}{use }globals
+86       \textcolor{keywordtype}{use }global_objs
+87       \textcolor{keywordtype}{use }pde_objs
+88       \textcolor{keywordtype}{use }dual_por
+89       \textcolor{keywordtype}{use }re_dual_reader
+90       \textcolor{keywordtype}{use }re_constitutive
+91       \textcolor{keywordtype}{use }debug_tools
+92       \textcolor{keywordtype}{use }dual_tab
+93       \textcolor{keywordtype}{use }dual_coup
+94       \textcolor{keywordtype}{use }re_total
+95       \textcolor{keywordtype}{use }re_dual_bc
+96 
+97       \textcolor{keywordtype}{integer(kind=ikind)} :: i
+98       
+99       pde(2)%getval => getval_retot_dual
+100       \textcolor{keyword}{call }re_dual_readf(pde(2))
+101       pde(2)%initcond => dual_inicond
+102 
+103       
+104      \textcolor{keywordflow}{if} (drutes_config%fnc\_method == 0) \textcolor{keywordflow}{then}
+105             pde(2)%pde\_fnc(2)%dispersion => dual_mualem
+106             \textcolor{keywordflow}{select case}(coup_model)
+107              \textcolor{keywordflow}{case}(1:3)
+108                pde(2)%pde\_fnc(2)%reaction => dual_coupling_neg
+109                pde(2)%pde\_fnc(1)%reaction => dual_coupling
+110              \textcolor{keywordflow}{case}(4:5)
+111                pde(2)%pde\_fnc(2)%reaction =>dual_coup_min_neg
+112                pde(2)%pde\_fnc(1)%reaction =>dual_coup_min
+113 \textcolor{keywordflow}{             case default}
+114              stop
+115 \textcolor{keywordflow}{            end select}
+116             pde(2)%pde\_fnc(2)%elasticity => dual_ret_cap
+117             pde(2)%mass => vangen_d
+118       \textcolor{keywordflow}{else}
+119             \textcolor{keyword}{call }dual_tabvalues(pde(2), kfnc=dual_mualem, cfnc=dual_ret_cap\textcolor{comment}{,&}
+120 \textcolor{comment}{            thetafnc=vangen_d,ex\_k\_fnc=dual_coupling_k)}
+121 \textcolor{comment}{            pde(2)%pde\_fnc(2)%dispersion  => dual_mualem_tab            }
+122 \textcolor{comment}{            pde(2)%pde\_fnc(2)%reaction => dual_coupling_neg_tab}
+123 \textcolor{comment}{            pde(2)%pde\_fnc(1)%reaction => dual_coupling_tab}
+124 \textcolor{comment}{            pde(2)%pde\_fnc(2)%elasticity => dual_ret_cap_tab}
+125 \textcolor{comment}{            pde(2)%mass => vangen_d_tab}
+126 \textcolor{comment}{}\textcolor{keywordflow}{      end if}
+127       
+128       pde(2)%flux => darcy_law_d
+129       
+130       \textcolor{keywordflow}{do} i=lbound(pde(2)%bc,1), ubound(pde(2)%bc,1)
+131         \textcolor{keywordflow}{select case}(pde(2)%bc(i)%code)
+132           \textcolor{keywordflow}{case}(-1)
+133             pde(2)%bc(i)%value\_fnc => retot_dirichlet_height_bc
+134           \textcolor{keywordflow}{case}(0)
+135             pde(2)%bc(i)%value\_fnc => re_null_bc
+136           \textcolor{keywordflow}{case}(1)
+137             pde(2)%bc(i)%value\_fnc => retot_dirichlet_bc
+138           \textcolor{keywordflow}{case}(2)
+139             pde(2)%bc(i)%value\_fnc => dual_neumann_bc
+140           \textcolor{keywordflow}{case}(3)
+141             pde(2)%bc(i)%value\_fnc => dual_freedrainage
+142           \textcolor{keywordflow}{case}(4)
+143             pde(2)%bc(i)%value\_fnc => dual_atmospheric
+144           \textcolor{keywordflow}{case}(5)
+145             pde(2)%bc(i)%value\_fnc => inf_neumann_bc
+146 \textcolor{keywordflow}{          case default}
+147                 print *, \textcolor{stringliteral}{"ERROR! You have specified an unsupported boundary type definition for the
+       Richards equation"}
+148                 print *, \textcolor{stringliteral}{"the incorrect boundary code specified is:"}, pde(2)%bc(i)%code
+149                 error stop
+150 \textcolor{keywordflow}{        end select}
+151 \textcolor{keywordflow}{      end do} 
+152      
+153 
+\end{DoxyCode}
+
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacere__dual__pointers_a7c3a2d7fee47e270402505ab315ca55d_cgraph}
+\end{center}
+\end{figure}
+
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacere__dual__pointers_a7c3a2d7fee47e270402505ab315ca55d_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{re\+\_\+dual\+\_\+pointers@{re\+\_\+dual\+\_\+pointers}!re\+\_\+matrix@{re\+\_\+matrix}}
+\index{re\+\_\+matrix@{re\+\_\+matrix}!re\+\_\+dual\+\_\+pointers@{re\+\_\+dual\+\_\+pointers}}
+\subsubsection[{re\+\_\+matrix()}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, public re\+\_\+dual\+\_\+pointers\+::re\+\_\+matrix (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}\label{namespacere__dual__pointers_aa76c31f626d7323a2032a80d6cac5ff6}
+
+
+Links to releveant subroutines for matrix domain. 
+
+
+
+Definition at line 8 of file Re\+\_\+dual\+\_\+pointers.\+f90.
+
+
+
+References dual\+\_\+por\+::darcy\+\_\+law\+\_\+d(), globals\+::drutes\+\_\+config, re\+\_\+dual\+\_\+bc\+::dual\+\_\+atmospheric(), dual\+\_\+coup\+::dual\+\_\+coup\+\_\+min(), dual\+\_\+coup\+::dual\+\_\+coup\+\_\+min\+\_\+neg(), dual\+\_\+coup\+::dual\+\_\+coupling(), dual\+\_\+coup\+::dual\+\_\+coupling\+\_\+k(), dual\+\_\+coup\+::dual\+\_\+coupling\+\_\+neg(), dual\+\_\+tab\+::dual\+\_\+coupling\+\_\+neg\+\_\+tab(), dual\+\_\+tab\+::dual\+\_\+coupling\+\_\+tab(), re\+\_\+dual\+\_\+bc\+::dual\+\_\+freedrainage(), dual\+\_\+por\+::dual\+\_\+inicond(), dual\+\_\+por\+::dual\+\_\+mualem(), dual\+\_\+tab\+::dual\+\_\+mualem\+\_\+tab(), re\+\_\+dual\+\_\+bc\+::dual\+\_\+neumann\+\_\+bc(), dual\+\_\+por\+::dual\+\_\+ret\+\_\+cap(), dual\+\_\+tab\+::dual\+\_\+ret\+\_\+cap\+\_\+tab(), dual\+\_\+tab\+::dual\+\_\+tabvalues(), dual\+\_\+por\+::getval\+\_\+retot\+\_\+dual(), re\+\_\+dual\+\_\+bc\+::inf\+\_\+neumann\+\_\+bc(), pde\+\_\+objs\+::pde, re\+\_\+dual\+\_\+reader\+::re\+\_\+dual\+\_\+readm(), re\+\_\+dual\+\_\+reader\+::re\+\_\+dual\+\_\+var(), re\+\_\+constitutive\+::re\+\_\+null\+\_\+bc(), re\+\_\+total\+::retot\+\_\+dirichlet\+\_\+bc(), re\+\_\+total\+::retot\+\_\+dirichlet\+\_\+height\+\_\+bc(), dual\+\_\+por\+::vangen\+\_\+d(), and dual\+\_\+tab\+::vangen\+\_\+d\+\_\+tab().
+
+
+
+Referenced by manage\+\_\+pointers\+::set\+\_\+pointers().
+
+
+\begin{DoxyCode}
+8       \textcolor{keywordtype}{use }typy
+9       \textcolor{keywordtype}{use }globals
+10       \textcolor{keywordtype}{use }global_objs
+11       \textcolor{keywordtype}{use }pde_objs
+12       \textcolor{keywordtype}{use }dual_por
+13       \textcolor{keywordtype}{use }re_dual_reader
+14       \textcolor{keywordtype}{use }re_constitutive
+15       \textcolor{keywordtype}{use }debug_tools
+16       \textcolor{keywordtype}{use }dual_tab
+17       \textcolor{keywordtype}{use }dual_coup
+18       \textcolor{keywordtype}{use }re_total
+19       \textcolor{keywordtype}{use }re_dual_bc
+20 
+21       \textcolor{keywordtype}{integer(kind=ikind)} :: i
+22 
+23            
+24       pde(1)%getval => getval_retot_dual
+25       \textcolor{keyword}{call }re_dual_readm(pde(1))
+26       \textcolor{keyword}{call }re_dual_var() 
+27       pde(1)%initcond => dual_inicond
+28 
+29       pde(1)%flux => darcy_law_d
+30       \textcolor{keywordflow}{if} (drutes_config%fnc\_method == 0) \textcolor{keywordflow}{then}
+31             pde(1)%pde\_fnc(1)%dispersion => dual_mualem
+32             \textcolor{keywordflow}{select case}(coup_model)
+33              \textcolor{keywordflow}{case}(1:3)
+34                pde(1)%pde\_fnc(1)%reaction => dual_coupling_neg
+35                pde(1)%pde\_fnc(2)%reaction => dual_coupling
+36              \textcolor{keywordflow}{case}(4:5)
+37                pde(1)%pde\_fnc(1)%reaction => dual_coup_min_neg
+38                pde(1)%pde\_fnc(2)%reaction => dual_coup_min
+39 \textcolor{keywordflow}{             case default}
+40              stop
+41 \textcolor{keywordflow}{            end select}
+42             
+43             pde(1)%pde\_fnc(1)%elasticity => dual_ret_cap
+44             pde(1)%mass => vangen_d
+45       \textcolor{keywordflow}{else}
+46             \textcolor{keyword}{call }dual_tabvalues(pde(1), kfnc=dual_mualem, cfnc=dual_ret_cap,&
+47             thetafnc=vangen_d,ex\_k\_fnc=dual_coupling_k)
+48             pde(1)%pde\_fnc(1)%dispersion  => dual_mualem_tab            
+49             pde(1)%pde\_fnc(1)%reaction => dual_coupling_neg_tab
+50             pde(1)%pde\_fnc(2)%reaction => dual_coupling_tab
+51             pde(1)%pde\_fnc(1)%elasticity => dual_ret_cap_tab
+52             pde(1)%mass => vangen_d_tab
+53 \textcolor{keywordflow}{      end if}
+54       
+55       \textcolor{comment}{! boundary condition defined as different type boundary\_vals}
+56       \textcolor{keywordflow}{do} i=lbound(pde(1)%bc,1), ubound(pde(1)%bc,1)
+57         \textcolor{keywordflow}{select case}(pde(1)%bc(i)%code)
+58           \textcolor{keywordflow}{case}(-1)
+59               pde(1)%bc(i)%value\_fnc => retot_dirichlet_height_bc
+60           \textcolor{keywordflow}{case}(0)
+61             pde(1)%bc(i)%value\_fnc => re_null_bc
+62           \textcolor{keywordflow}{case}(1)
+63             pde(1)%bc(i)%value\_fnc => retot_dirichlet_bc
+64           \textcolor{keywordflow}{case}(2)
+65             pde(1)%bc(i)%value\_fnc => dual_neumann_bc
+66           \textcolor{keywordflow}{case}(3)
+67             pde(1)%bc(i)%value\_fnc => dual_freedrainage
+68           \textcolor{keywordflow}{case}(4)
+69             pde(1)%bc(i)%value\_fnc => dual_atmospheric
+70           \textcolor{keywordflow}{case}(5)
+71             pde(1)%bc(i)%value\_fnc => inf_neumann_bc
+72 \textcolor{keywordflow}{          case default}
+73                 print *, \textcolor{stringliteral}{"ERROR! You have specified an unsupported boundary type definition for the
+       Richards equation"}
+74                 print *, \textcolor{stringliteral}{"the incorrect boundary code specified is:"}, pde(1)%bc(i)%code
+75                 error stop
+76 \textcolor{keywordflow}{        end select}
+77 \textcolor{keywordflow}{      end do} 
+78 
+79    
+\end{DoxyCode}
+
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacere__dual__pointers_aa76c31f626d7323a2032a80d6cac5ff6_cgraph}
+\end{center}
+\end{figure}
+
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacere__dual__pointers_aa76c31f626d7323a2032a80d6cac5ff6_icgraph}
+\end{center}
+\end{figure}
+
+

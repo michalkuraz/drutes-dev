@@ -1,0 +1,171 @@
+\section{pde\+\_\+objs\+:\+:pde\+\_\+common\+\_\+str Type Reference}
+\label{structpde__objs_1_1pde__common__str}\index{pde\+\_\+objs\+::pde\+\_\+common\+\_\+str@{pde\+\_\+objs\+::pde\+\_\+common\+\_\+str}}
+\subsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+real(kind=rkind), dimension(\+:), allocatable {\bf bvect}
+\item 
+real(kind=rkind), dimension(\+:,\+:), allocatable {\bf xvect}
+\item 
+integer(kind=ikind), dimension(\+:), allocatable {\bf invpermut}
+\item 
+logical {\bf nonlinear}
+\item 
+procedure({\bf timeint\+\_\+fnc}), pointer, nopass {\bf time\+\_\+integ}
+\item 
+integer {\bf timeint\+\_\+method}
+\item 
+integer(kind=ikind) {\bf processes}
+\item 
+integer(kind=ikind) {\bf current\+\_\+proc}
+\item 
+logical, dimension(\+:,\+:), allocatable {\bf coupling}
+\item 
+integer(kind=ikind) {\bf current\+\_\+el}
+\begin{DoxyCompactList}\small\item\em id number of the current element (triangle), that is currently integrated \end{DoxyCompactList}\item 
+procedure({\bf treat\+\_\+pde\+\_\+subrt}), pointer, nopass {\bf treat\+\_\+pde}
+\begin{DoxyCompactList}\small\item\em nonlinear solver method (standard Picard, Schwarz Picard, etc...) \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+
+
+Definition at line 24 of file pde\+\_\+objs.\+f90.
+
+
+
+\subsection{Member Data Documentation}
+\index{pde\+\_\+objs\+::pde\+\_\+common\+\_\+str@{pde\+\_\+objs\+::pde\+\_\+common\+\_\+str}!bvect@{bvect}}
+\index{bvect@{bvect}!pde\+\_\+objs\+::pde\+\_\+common\+\_\+str@{pde\+\_\+objs\+::pde\+\_\+common\+\_\+str}}
+\subsubsection[{bvect}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind), dimension(\+:), allocatable pde\+\_\+objs\+::pde\+\_\+common\+\_\+str\+::bvect}\label{structpde__objs_1_1pde__common__str_a0959af029d205f1b4157faae194cde7a}
+
+
+Definition at line 25 of file pde\+\_\+objs.\+f90.
+
+
+\begin{DoxyCode}
+25     \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable} :: bvect
+\end{DoxyCode}
+\index{pde\+\_\+objs\+::pde\+\_\+common\+\_\+str@{pde\+\_\+objs\+::pde\+\_\+common\+\_\+str}!coupling@{coupling}}
+\index{coupling@{coupling}!pde\+\_\+objs\+::pde\+\_\+common\+\_\+str@{pde\+\_\+objs\+::pde\+\_\+common\+\_\+str}}
+\subsubsection[{coupling}]{\setlength{\rightskip}{0pt plus 5cm}logical, dimension(\+:,\+:), allocatable pde\+\_\+objs\+::pde\+\_\+common\+\_\+str\+::coupling}\label{structpde__objs_1_1pde__common__str_a68b6390e1b40b2d24099cfadb4b4b11c}
+
+
+Definition at line 33 of file pde\+\_\+objs.\+f90.
+
+
+\begin{DoxyCode}
+33     \textcolor{keywordtype}{logical}, \textcolor{keywordtype}{dimension(:,:)}, \textcolor{keywordtype}{allocatable}             :: coupling
+\end{DoxyCode}
+\index{pde\+\_\+objs\+::pde\+\_\+common\+\_\+str@{pde\+\_\+objs\+::pde\+\_\+common\+\_\+str}!current\+\_\+el@{current\+\_\+el}}
+\index{current\+\_\+el@{current\+\_\+el}!pde\+\_\+objs\+::pde\+\_\+common\+\_\+str@{pde\+\_\+objs\+::pde\+\_\+common\+\_\+str}}
+\subsubsection[{current\+\_\+el}]{\setlength{\rightskip}{0pt plus 5cm}integer(kind=ikind) pde\+\_\+objs\+::pde\+\_\+common\+\_\+str\+::current\+\_\+el}\label{structpde__objs_1_1pde__common__str_a79aada1d8e437cf965cc0ce48d19a9c3}
+
+
+id number of the current element (triangle), that is currently integrated 
+
+
+
+Definition at line 35 of file pde\+\_\+objs.\+f90.
+
+
+\begin{DoxyCode}
+35     \textcolor{keywordtype}{integer(kind=ikind)} :: current\_el
+\end{DoxyCode}
+\index{pde\+\_\+objs\+::pde\+\_\+common\+\_\+str@{pde\+\_\+objs\+::pde\+\_\+common\+\_\+str}!current\+\_\+proc@{current\+\_\+proc}}
+\index{current\+\_\+proc@{current\+\_\+proc}!pde\+\_\+objs\+::pde\+\_\+common\+\_\+str@{pde\+\_\+objs\+::pde\+\_\+common\+\_\+str}}
+\subsubsection[{current\+\_\+proc}]{\setlength{\rightskip}{0pt plus 5cm}integer(kind=ikind) pde\+\_\+objs\+::pde\+\_\+common\+\_\+str\+::current\+\_\+proc}\label{structpde__objs_1_1pde__common__str_aba4935275976f5f085576120a51673e4}
+
+
+Definition at line 32 of file pde\+\_\+objs.\+f90.
+
+
+\begin{DoxyCode}
+32     \textcolor{keywordtype}{integer(kind=ikind)}                              :: current\_proc
+\end{DoxyCode}
+\index{pde\+\_\+objs\+::pde\+\_\+common\+\_\+str@{pde\+\_\+objs\+::pde\+\_\+common\+\_\+str}!invpermut@{invpermut}}
+\index{invpermut@{invpermut}!pde\+\_\+objs\+::pde\+\_\+common\+\_\+str@{pde\+\_\+objs\+::pde\+\_\+common\+\_\+str}}
+\subsubsection[{invpermut}]{\setlength{\rightskip}{0pt plus 5cm}integer(kind=ikind), dimension(\+:), allocatable pde\+\_\+objs\+::pde\+\_\+common\+\_\+str\+::invpermut}\label{structpde__objs_1_1pde__common__str_abceb8eeeda6abb65e7bae047ac726329}
+
+
+Definition at line 27 of file pde\+\_\+objs.\+f90.
+
+
+\begin{DoxyCode}
+27     \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable} :: invpermut
+\end{DoxyCode}
+\index{pde\+\_\+objs\+::pde\+\_\+common\+\_\+str@{pde\+\_\+objs\+::pde\+\_\+common\+\_\+str}!nonlinear@{nonlinear}}
+\index{nonlinear@{nonlinear}!pde\+\_\+objs\+::pde\+\_\+common\+\_\+str@{pde\+\_\+objs\+::pde\+\_\+common\+\_\+str}}
+\subsubsection[{nonlinear}]{\setlength{\rightskip}{0pt plus 5cm}logical pde\+\_\+objs\+::pde\+\_\+common\+\_\+str\+::nonlinear}\label{structpde__objs_1_1pde__common__str_afeccf9ae4d25ba1e604e9a753a790d28}
+
+
+Definition at line 28 of file pde\+\_\+objs.\+f90.
+
+
+\begin{DoxyCode}
+28     \textcolor{keywordtype}{logical} :: nonlinear
+\end{DoxyCode}
+\index{pde\+\_\+objs\+::pde\+\_\+common\+\_\+str@{pde\+\_\+objs\+::pde\+\_\+common\+\_\+str}!processes@{processes}}
+\index{processes@{processes}!pde\+\_\+objs\+::pde\+\_\+common\+\_\+str@{pde\+\_\+objs\+::pde\+\_\+common\+\_\+str}}
+\subsubsection[{processes}]{\setlength{\rightskip}{0pt plus 5cm}integer(kind=ikind) pde\+\_\+objs\+::pde\+\_\+common\+\_\+str\+::processes}\label{structpde__objs_1_1pde__common__str_a7912e0e8c6d0e6658491584bd1788fa9}
+
+
+Definition at line 31 of file pde\+\_\+objs.\+f90.
+
+
+\begin{DoxyCode}
+31     \textcolor{keywordtype}{integer(kind=ikind)}                              :: processes
+\end{DoxyCode}
+\index{pde\+\_\+objs\+::pde\+\_\+common\+\_\+str@{pde\+\_\+objs\+::pde\+\_\+common\+\_\+str}!time\+\_\+integ@{time\+\_\+integ}}
+\index{time\+\_\+integ@{time\+\_\+integ}!pde\+\_\+objs\+::pde\+\_\+common\+\_\+str@{pde\+\_\+objs\+::pde\+\_\+common\+\_\+str}}
+\subsubsection[{time\+\_\+integ}]{\setlength{\rightskip}{0pt plus 5cm}procedure({\bf timeint\+\_\+fnc}), pointer, nopass pde\+\_\+objs\+::pde\+\_\+common\+\_\+str\+::time\+\_\+integ}\label{structpde__objs_1_1pde__common__str_a24128930e63de4b14481971ba3bad2cc}
+
+
+Definition at line 29 of file pde\+\_\+objs.\+f90.
+
+
+\begin{DoxyCode}
+29     \textcolor{keywordtype}{procedure}(timeint_fnc), \textcolor{keywordtype}{nopass}, \textcolor{keywordtype}{pointer}          :: time\_integ
+\end{DoxyCode}
+\index{pde\+\_\+objs\+::pde\+\_\+common\+\_\+str@{pde\+\_\+objs\+::pde\+\_\+common\+\_\+str}!timeint\+\_\+method@{timeint\+\_\+method}}
+\index{timeint\+\_\+method@{timeint\+\_\+method}!pde\+\_\+objs\+::pde\+\_\+common\+\_\+str@{pde\+\_\+objs\+::pde\+\_\+common\+\_\+str}}
+\subsubsection[{timeint\+\_\+method}]{\setlength{\rightskip}{0pt plus 5cm}integer pde\+\_\+objs\+::pde\+\_\+common\+\_\+str\+::timeint\+\_\+method}\label{structpde__objs_1_1pde__common__str_af3dbf4df5050423b7ccb71354634c3eb}
+
+
+Definition at line 30 of file pde\+\_\+objs.\+f90.
+
+
+\begin{DoxyCode}
+30     \textcolor{keywordtype}{integer} :: timeint\_method
+\end{DoxyCode}
+\index{pde\+\_\+objs\+::pde\+\_\+common\+\_\+str@{pde\+\_\+objs\+::pde\+\_\+common\+\_\+str}!treat\+\_\+pde@{treat\+\_\+pde}}
+\index{treat\+\_\+pde@{treat\+\_\+pde}!pde\+\_\+objs\+::pde\+\_\+common\+\_\+str@{pde\+\_\+objs\+::pde\+\_\+common\+\_\+str}}
+\subsubsection[{treat\+\_\+pde}]{\setlength{\rightskip}{0pt plus 5cm}procedure({\bf treat\+\_\+pde\+\_\+subrt}), pointer, nopass pde\+\_\+objs\+::pde\+\_\+common\+\_\+str\+::treat\+\_\+pde}\label{structpde__objs_1_1pde__common__str_a07a2496e2946d41fa88d9fdc9bbad0c1}
+
+
+nonlinear solver method (standard Picard, Schwarz Picard, etc...) 
+
+
+
+Definition at line 37 of file pde\+\_\+objs.\+f90.
+
+
+\begin{DoxyCode}
+37     \textcolor{keywordtype}{procedure}(treat_pde_subrt), \textcolor{keywordtype}{nopass}, \textcolor{keywordtype}{pointer}       :: treat\_pde
+\end{DoxyCode}
+\index{pde\+\_\+objs\+::pde\+\_\+common\+\_\+str@{pde\+\_\+objs\+::pde\+\_\+common\+\_\+str}!xvect@{xvect}}
+\index{xvect@{xvect}!pde\+\_\+objs\+::pde\+\_\+common\+\_\+str@{pde\+\_\+objs\+::pde\+\_\+common\+\_\+str}}
+\subsubsection[{xvect}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind), dimension(\+:,\+:), allocatable pde\+\_\+objs\+::pde\+\_\+common\+\_\+str\+::xvect}\label{structpde__objs_1_1pde__common__str_a7123fd94a0b378018da9c19ee91a7599}
+
+
+Definition at line 26 of file pde\+\_\+objs.\+f90.
+
+
+\begin{DoxyCode}
+26     \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:,:)}, \textcolor{keywordtype}{allocatable} :: xvect
+\end{DoxyCode}
+
+
+The documentation for this type was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+src/core/{\bf pde\+\_\+objs.\+f90}\end{DoxyCompactItemize}

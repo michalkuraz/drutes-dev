@@ -1,0 +1,1479 @@
+\section{mtx Module Reference}
+\label{namespacemtx}\index{mtx@{mtx}}
+\subsection*{Data Types}
+\begin{DoxyCompactItemize}
+\item 
+interface {\bf geti}
+\begin{DoxyCompactList}\small\item\em interface pro ziskani prvku \end{DoxyCompactList}\item 
+type {\bf matrix}
+\begin{DoxyCompactList}\small\item\em obecna matice \end{DoxyCompactList}\item 
+interface {\bf seti}
+\begin{DoxyCompactList}\small\item\em interface pro nastaveni prvku \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Functions/\+Subroutines}
+\begin{DoxyCompactItemize}
+\item 
+subroutine {\bf setverbosity} (A, level)
+\begin{DoxyCompactList}\small\item\em nastavi podrobnost behovych reportu \end{DoxyCompactList}\item 
+subroutine {\bf addmatrix} (a, r, i, j)
+\begin{DoxyCompactList}\small\item\em pricte k prvku -\/ kandidat reimplementace v potomkovi \end{DoxyCompactList}\item 
+subroutine {\bf initmatrix} (a, n, m)
+\begin{DoxyCompactList}\small\item\em rutina pro inicializaci \end{DoxyCompactList}\item 
+pure integer(kind=ikind) function {\bf getnmatrix} (a)
+\begin{DoxyCompactList}\small\item\em vrati pocet radku \end{DoxyCompactList}\item 
+pure integer(kind=ikind) function {\bf getmmatrix} (a)
+\begin{DoxyCompactList}\small\item\em vrati pocet sloupcu \end{DoxyCompactList}\item 
+subroutine {\bf getrowmatrix} (a, i, v, jj, nelem, mask)
+\begin{DoxyCompactList}\small\item\em ziska radek z matice -\/ univerzal -\/ kandidat reimplementace v potomkovi \end{DoxyCompactList}\item 
+subroutine {\bf getcolmatrix} (a, j, v, ii, nelem, mask)
+\begin{DoxyCompactList}\small\item\em ziska sloupec z matice -\/ kandidat reimplementace v potomkovi \end{DoxyCompactList}\item 
+subroutine {\bf spymatrix} (a)
+\begin{DoxyCompactList}\small\item\em napodoba matlabovske spy \end{DoxyCompactList}\item 
+subroutine {\bf printmatrix} (a, ncol, width, caption)
+\begin{DoxyCompactList}\small\item\em vytiskne matici \end{DoxyCompactList}\item 
+subroutine {\bf dumpmatrix} (a)
+\begin{DoxyCompactList}\small\item\em zakladni dump \end{DoxyCompactList}\item 
+integer(kind=ikind) function {\bf nzmatrix} (a)
+\begin{DoxyCompactList}\small\item\em vrati pocet nenul v matici -\/ tady n$\ast$m \end{DoxyCompactList}\item 
+real(kind=rkind) function, dimension(\+:), allocatable {\bf mulmatrix} (a, x, count)
+\begin{DoxyCompactList}\small\item\em nasobi matici vektorem \end{DoxyCompactList}\item 
+real(kind=rkind) function, dimension(\+:), allocatable {\bf mulmatrixt} (a, x, count)
+\begin{DoxyCompactList}\small\item\em nasobi transponovanou matici vektorem \end{DoxyCompactList}\item 
+subroutine {\bf copymatrix} (A, B)
+\begin{DoxyCompactList}\small\item\em zkopiruje matici -\/ kandidat reimplementace v potomkovi \end{DoxyCompactList}\item 
+subroutine {\bf clonematrix} (A, B)
+\begin{DoxyCompactList}\small\item\em vytvori prazdnou kopii \end{DoxyCompactList}\item 
+subroutine {\bf mulmatrixmatrix} (A, B, C, info)
+\begin{DoxyCompactList}\small\item\em A = B$\ast$C !!!!!prepsat. \end{DoxyCompactList}\item 
+subroutine {\bf addmatrixmatrix} (A, B)
+\item 
+subroutine {\bf submatrixmatrix} (A, B)
+\begin{DoxyCompactList}\small\item\em A = A -\/ B. \end{DoxyCompactList}\item 
+real(kind=rkind) function {\bf normfmatrix} (A)
+\begin{DoxyCompactList}\small\item\em spocte Frobeniovu normu matice \end{DoxyCompactList}\item 
+class({\bf matrix}) function, allocatable {\bf smatrix} (A, ii, jj)
+\begin{DoxyCompactList}\small\item\em vybere submatici \end{DoxyCompactList}\item 
+subroutine {\bf read} (A, name)
+\item 
+subroutine {\bf write} (A, name)
+\item 
+real(kind=rkind) function {\bf mulrow} (A, x, i, count)
+\begin{DoxyCompactList}\small\item\em spocita skalarni soucin i-\/teho radku matice a vektoru \end{DoxyCompactList}\item 
+subroutine, public {\bf mtxtest} (A)
+\begin{DoxyCompactList}\small\item\em testy maticovych operaci vstupni parametr slouzi jen jako sablona pro volbu potomka \end{DoxyCompactList}\item 
+subroutine {\bf transpose} (A, B)
+\begin{DoxyCompactList}\small\item\em v A vrati transpozici matice B \end{DoxyCompactList}\item 
+integer(kind=ikind) function, dimension(\+:), allocatable {\bf nzrowsmatrix} (A)
+\begin{DoxyCompactList}\small\item\em vytvori seznam radku matice obsahujicich aspon jeden prvek \end{DoxyCompactList}\item 
+subroutine, public {\bf estimeigvalues} (A, lmin, lmax)
+\begin{DoxyCompactList}\small\item\em spocita nejvetsi a nejmensi vlastni cislo uziva mocninnou metodu, tedy tichy predpoklad je symetrie \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Function/\+Subroutine Documentation}
+\index{mtx@{mtx}!addmatrix@{addmatrix}}
+\index{addmatrix@{addmatrix}!mtx@{mtx}}
+\subsubsection[{addmatrix(a, r, i, j)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine mtx\+::addmatrix (
+\begin{DoxyParamCaption}
+\item[{class({\bf matrix}), intent(inout)}]{a, }
+\item[{real(kind=rkind), intent(in)}]{r, }
+\item[{integer(kind=ikind), intent(in)}]{i, }
+\item[{integer(kind=ikind), intent(in)}]{j}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [private]}}\label{namespacemtx_ac0c19dcc28169cef9da46e44d2ff21d8}
+
+
+pricte k prvku -\/ kandidat reimplementace v potomkovi 
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in,out}  & {\em a} & matice\\
+\hline
+\mbox{\tt in}  & {\em i} & souradnice\\
+\hline
+\mbox{\tt in}  & {\em j} & souradnice\\
+\hline
+\mbox{\tt in}  & {\em r} & hodnota \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 159 of file mtx.\+f90.
+
+
+\begin{DoxyCode}
+159         \textcolor{keywordtype}{use }typy
+161         \textcolor{keywordtype}{class}(matrix), \textcolor{keywordtype}{intent(in out)} :: a
+163         \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(in)} :: i,j
+165         \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{intent(in)} :: r
+166         \textcolor{keywordtype}{real(kind=rkind)} :: v
+167 
+168         v=a%get(i,j)
+169         v = v + r
+170         \textcolor{keyword}{call }a%set(v,i,j)
+\end{DoxyCode}
+\index{mtx@{mtx}!addmatrixmatrix@{addmatrixmatrix}}
+\index{addmatrixmatrix@{addmatrixmatrix}!mtx@{mtx}}
+\subsubsection[{addmatrixmatrix(\+A, B)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine mtx\+::addmatrixmatrix (
+\begin{DoxyParamCaption}
+\item[{class({\bf matrix}), intent(inout)}]{A, }
+\item[{class({\bf matrix}), intent(in)}]{B}
+\end{DoxyParamCaption}
+)}\label{namespacemtx_a3bcf974494c48cca11b7baf884bfa15d}
+
+
+Definition at line 636 of file mtx.\+f90.
+
+
+\begin{DoxyCode}
+636         \textcolor{keywordtype}{use }typy
+637         \textcolor{keywordtype}{implicit none}
+638         \textcolor{keywordtype}{class}(matrix), \textcolor{keywordtype}{intent(in out)} :: a
+639         \textcolor{keywordtype}{class}(matrix), \textcolor{keywordtype}{intent(in)}      :: b
+640         \textcolor{keywordtype}{integer(kind=ikind)}            :: i,j,n,m
+641         \textcolor{keywordtype}{real(kind=rkind)}               :: w1,w2
+642         \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable} :: rb
+643         \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable} :: rib
+644         \textcolor{keywordtype}{integer(kind=ikind)} :: nrb
+645         \textcolor{keywordtype}{logical}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable} :: mask
+646 
+647         n = a%getn()
+648         m = a%getm()
+649         \textcolor{keyword}{allocate}(mask(1:m))
+650         mask = .true.
+651         \textcolor{keywordflow}{do} i=1,n
+652             \textcolor{keyword}{call }b%getrow(i,rb,rib,nrb,mask)
+653             \textcolor{keywordflow}{do} j=1,nrb
+654                 \textcolor{keyword}{call }a%add(rb(j),i,rib(j))
+655 \textcolor{keyword}{            end }do
+656 \textcolor{keyword}{        end }do
+657 
+\end{DoxyCode}
+\index{mtx@{mtx}!clonematrix@{clonematrix}}
+\index{clonematrix@{clonematrix}!mtx@{mtx}}
+\subsubsection[{clonematrix(\+A, B)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine mtx\+::clonematrix (
+\begin{DoxyParamCaption}
+\item[{class({\bf matrix}), intent(inout)}]{A, }
+\item[{class({\bf matrix}), intent(in)}]{B}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [private]}}\label{namespacemtx_ab4057f37a202e3caa5fb7fac3c6896ce}
+
+
+vytvori prazdnou kopii 
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in,out}  & {\em a} & cil\\
+\hline
+\mbox{\tt in}  & {\em b} & zdroj \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 567 of file mtx.\+f90.
+
+
+\begin{DoxyCode}
+567 
+568         \textcolor{keywordtype}{class}(matrix), \textcolor{keywordtype}{intent(inout)} :: a
+570         \textcolor{keywordtype}{class}(matrix), \textcolor{keywordtype}{intent(in)} :: b
+571         \textcolor{keyword}{call }a%init(b%getn(),b%getm())
+\end{DoxyCode}
+\index{mtx@{mtx}!copymatrix@{copymatrix}}
+\index{copymatrix@{copymatrix}!mtx@{mtx}}
+\subsubsection[{copymatrix(\+A, B)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine mtx\+::copymatrix (
+\begin{DoxyParamCaption}
+\item[{class({\bf matrix}), intent(inout)}]{A, }
+\item[{class({\bf matrix}), intent(in)}]{B}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [private]}}\label{namespacemtx_add2b7c4a3a806aebca088907544db1e0}
+
+
+zkopiruje matici -\/ kandidat reimplementace v potomkovi 
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in,out}  & {\em a} & cil\\
+\hline
+\mbox{\tt in}  & {\em b} & zdroj \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 540 of file mtx.\+f90.
+
+
+\begin{DoxyCode}
+540         \textcolor{comment}{!use pmatools}
+541         \textcolor{keywordtype}{implicit none}
+543         \textcolor{keywordtype}{class}(matrix), \textcolor{keywordtype}{intent(inout)} :: a
+545         \textcolor{keywordtype}{class}(matrix), \textcolor{keywordtype}{intent(in)} :: b
+546 
+547         \textcolor{keywordtype}{integer(kind=ikind)} :: i,j
+548         \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable} :: v
+549         \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable} :: ii
+550         \textcolor{keywordtype}{integer(kind=ikind)} :: nelem
+551 
+552         \textcolor{keyword}{call }a%init(b%getn(),b%getm())
+553         \textcolor{keywordflow}{do} i=1,b%getn()
+554             \textcolor{keyword}{call }b%getrow(i,v,ii,nelem)
+555             \textcolor{keywordflow}{do} j=1,nelem
+556                 \textcolor{keyword}{call }a%set(v(j),i,ii(j))
+557 \textcolor{keyword}{            end }do
+558             \textcolor{comment}{!do j=1,B%getm()}
+559             \textcolor{comment}{!    wrk = B%get(i,j)}
+560             \textcolor{comment}{!    call A%set(wrk,i,j)}
+561             \textcolor{comment}{!end do}
+562 \textcolor{keyword}{        end }do
+\end{DoxyCode}
+\index{mtx@{mtx}!dumpmatrix@{dumpmatrix}}
+\index{dumpmatrix@{dumpmatrix}!mtx@{mtx}}
+\subsubsection[{dumpmatrix(a)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine mtx\+::dumpmatrix (
+\begin{DoxyParamCaption}
+\item[{class({\bf matrix}), intent(in)}]{a}
+\end{DoxyParamCaption}
+)}\label{namespacemtx_ae8163b304193b3e31cc36e31113ec9e9}
+
+
+zakladni dump 
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em a} & dumpovana matice \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 452 of file mtx.\+f90.
+
+
+\begin{DoxyCode}
+452         \textcolor{keywordtype}{implicit none}
+454         \textcolor{keywordtype}{class}(matrix), \textcolor{keywordtype}{intent(in)} :: a
+455         print *, \textcolor{stringliteral}{"dump matice pro matrix - v zasade k nicemu"}
+456         print *, \textcolor{stringliteral}{"n="},a%n,\textcolor{stringliteral}{" m="},a%m
+\end{DoxyCode}
+\index{mtx@{mtx}!estimeigvalues@{estimeigvalues}}
+\index{estimeigvalues@{estimeigvalues}!mtx@{mtx}}
+\subsubsection[{estimeigvalues(\+A, lmin, lmax)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, public mtx\+::estimeigvalues (
+\begin{DoxyParamCaption}
+\item[{class({\bf matrix}), intent(in)}]{A, }
+\item[{real(kind=rkind), intent(out)}]{lmin, }
+\item[{real(kind=rkind), intent(out)}]{lmax}
+\end{DoxyParamCaption}
+)}\label{namespacemtx_a43df21ced040e0209f756267d782b222}
+
+
+spocita nejvetsi a nejmensi vlastni cislo uziva mocninnou metodu, tedy tichy predpoklad je symetrie 
+
+dominantni vlastni vektor
+
+dominantni vlastni vektor, druha kopie
+
+minimalni vlastni vektor
+
+minimalni vlastni vektor, druha kopie 
+
+Definition at line 926 of file mtx.\+f90.
+
+
+
+Referenced by mtx\+::seti\+::seti().
+
+
+\begin{DoxyCode}
+926         \textcolor{keywordtype}{use }typy
+927         \textcolor{keywordtype}{implicit none}
+928         \textcolor{keywordtype}{class}(matrix), \textcolor{keywordtype}{intent(in)} :: a
+929         \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{intent(out)} :: lmin,lmax
+931         \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable} :: v1
+933         \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable} :: v2
+935         \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable} :: v3
+937         \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable} :: v4
+938         \textcolor{keywordtype}{integer(kind=ikind)} :: n, i, cnt, it, rc
+939         \textcolor{keywordtype}{real(kind=rkind)} :: lmax1, lmin1, w, w1, df, df1
+940 
+941         n=a%getn()
+942         \textcolor{keywordflow}{if} (a%getm()/=n) stop \textcolor{stringliteral}{"estimeigvalue: matice neni ctvercova"}
+943         \textcolor{keyword}{allocate}(v1(1:n))
+944         \textcolor{keyword}{allocate}(v2(1:n))
+945         \textcolor{keyword}{allocate}(v3(1:n))
+946         \textcolor{keyword}{allocate}(v4(1:n))
+947 
+948         v1 = 1
+949         v1(1)=3
+950         v3 = v1
+951         lmax = 1
+952         lmin = 1
+953         cnt = 0
+954         it = 0
+955         rc = 0
+956         do
+957             cnt = cnt + 1
+958             it = it + 1
+959             v2 = v1
+960             v1 = a%mul(v2)
+961             v4 = v3
+962             w = 0
+963             w1 = 0
+964             \textcolor{keywordflow}{do} i=1,n
+965                 w = w + v1(i)*v2(i)
+966                 w1 = w1 + v2(i)*v2(i)
+967 \textcolor{keyword}{            end }do
+968             v1 = v1/sqrt(w1)
+969             lmax1 = lmax
+970             lmax = w/w1
+971             v3 = lmax*v4-a%mul(v4)
+972             w = 0
+973             w1 = 0
+974             \textcolor{keywordflow}{do} i=1,n
+975                 w = w + v4(i)*v3(i)
+976                 w1 = w1 + v4(i)*v4(i)
+977 \textcolor{keyword}{            end }do
+978             v3 = v3/sqrt(w1)
+979             lmin1 = lmin
+980             lmin = lmax-w/w1
+981             \textcolor{keywordflow}{if} ( cnt == 10) then
+982                 print *, it, lmin,lmax, rc
+983                 cnt  = 0
+984 \textcolor{keyword}{            end }if
+985             df = (lmax-lmax1)**2+(lmin-lmin1)**2
+986             \textcolor{keywordflow}{if} (it==2) then
+987                 df1 = df
+988             rc = 0
+989             else
+990                 \textcolor{keywordflow}{if} (df<df1) then
+991                     df1 = df
+992                 rc = 0
+993                 else
+994                     rc = rc + 1
+995 \textcolor{keyword}{                end }if
+996 \textcolor{keyword}{            end }if
+997             \textcolor{keywordflow}{if} (rc==20000) exit
+998 \textcolor{keyword}{        end }do
+\end{DoxyCode}
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=261pt]{namespacemtx_a43df21ced040e0209f756267d782b222_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{mtx@{mtx}!getcolmatrix@{getcolmatrix}}
+\index{getcolmatrix@{getcolmatrix}!mtx@{mtx}}
+\subsubsection[{getcolmatrix(a, j, v, ii, nelem, mask)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine mtx\+::getcolmatrix (
+\begin{DoxyParamCaption}
+\item[{class({\bf matrix}), intent(in)}]{a, }
+\item[{integer(kind=ikind), intent(in)}]{j, }
+\item[{real(kind=rkind), dimension(\+:), intent(inout), allocatable}]{v, }
+\item[{integer(kind=ikind), dimension(\+:), intent(inout), allocatable}]{ii, }
+\item[{integer(kind=ikind), intent(out)}]{nelem, }
+\item[{logical, dimension(\+:), intent(in), optional}]{mask}
+\end{DoxyParamCaption}
+)}\label{namespacemtx_a21ada73e1006ade6512ae66fa7b32f48}
+
+
+ziska sloupec z matice -\/ kandidat reimplementace v potomkovi 
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em a} & matice\\
+\hline
+\mbox{\tt in}  & {\em j} & identifikace sloupce\\
+\hline
+\mbox{\tt in,out}  & {\em v} & hodnoty prvku\\
+\hline
+\mbox{\tt in,out}  & {\em ii} & radkove indexy\\
+\hline
+\mbox{\tt out}  & {\em nelem} & pocet prvku vybraneho sloupce\\
+\hline
+\mbox{\tt in}  & {\em mask} & seznam povolenych indexu \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 290 of file mtx.\+f90.
+
+
+\begin{DoxyCode}
+290         \textcolor{keywordtype}{use }typy
+291         \textcolor{keywordtype}{implicit none}
+293         \textcolor{keywordtype}{class}(matrix), \textcolor{keywordtype}{intent(in)} :: a
+295         \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(in)} :: j
+297         \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable}, \textcolor{keywordtype}{intent(inout)} :: v
+299         \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable}, \textcolor{keywordtype}{intent(inout)} :: ii
+301         \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(out)} :: nelem
+303         \textcolor{keywordtype}{logical}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{optional}, \textcolor{keywordtype}{intent(in)} :: mask
+304         \textcolor{keywordtype}{integer(kind=ikind)} :: i
+305         \textcolor{keywordtype}{real(kind=rkind)} :: w
+306         \textcolor{comment}{! dvoufazove}
+307         \textcolor{comment}{! spocitat kolik jich bude}
+308         nelem = 0
+309         \textcolor{keywordflow}{if} ( \textcolor{keyword}{present}(mask)) then
+310             \textcolor{keywordflow}{do} i = 1,a%n
+311                 \textcolor{keywordflow}{if} ( a%get(i,j) /= 0 .and. mask(i)) then
+312                     nelem = nelem + 1
+313 \textcolor{keyword}{                end }if
+314 \textcolor{keyword}{            end }do
+315         else
+316             \textcolor{keywordflow}{do} i = 1,a%n
+317                 \textcolor{keywordflow}{if} ( a%get(i,j) /= 0) then
+318                     nelem = nelem + 1
+319 \textcolor{keyword}{                end }if
+320 \textcolor{keyword}{            end }do
+321 \textcolor{keyword}{        end }if
+322         \textcolor{comment}{! overit misto}
+323         \textcolor{keywordflow}{if} ( .not. \textcolor{keyword}{allocated}(v)) then
+324         \textcolor{keyword}{allocate}(v(1:nelem))
+325         else
+326             \textcolor{keywordflow}{if} (nelem > ubound(v,1)) then
+327                 \textcolor{keyword}{deallocate}(v)
+328                 \textcolor{keyword}{allocate}(v(1:nelem))
+329 \textcolor{keyword}{            end }if
+330 \textcolor{keyword}{        end }if
+331         \textcolor{keywordflow}{if} ( .not. \textcolor{keyword}{allocated}(ii)) then
+332         \textcolor{keyword}{allocate}(ii(1:nelem))
+333         else
+334             \textcolor{keywordflow}{if} (nelem > ubound(ii,1)) then
+335                 \textcolor{keyword}{deallocate}(ii)
+336                 \textcolor{keyword}{allocate}(ii(1:nelem))
+337 \textcolor{keyword}{            end }if
+338 \textcolor{keyword}{        end }if
+339         \textcolor{comment}{! opravdu naplnit}
+340         nelem = 0
+341         \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(mask)) then
+342             \textcolor{keywordflow}{do} i = 1,a%n
+343                 w = a%get(i,j)
+344                 \textcolor{keywordflow}{if} ( w /= 0 .and. mask(i)) then
+345                     nelem = nelem + 1
+346                     v(nelem)  = w
+347                     ii(nelem) = i
+348 \textcolor{keyword}{                end }if
+349 \textcolor{keyword}{            end }do
+350         else
+351             \textcolor{keywordflow}{do} i = 1,a%n
+352                 w = a%get(i,j)
+353                 \textcolor{keywordflow}{if} ( w /= 0 ) then
+354                     nelem = nelem + 1
+355                     v(nelem)  = w
+356                     ii(nelem) = i
+357 \textcolor{keyword}{                end }if
+358 \textcolor{keyword}{            end }do
+359 \textcolor{keyword}{        end }if
+\end{DoxyCode}
+\index{mtx@{mtx}!getmmatrix@{getmmatrix}}
+\index{getmmatrix@{getmmatrix}!mtx@{mtx}}
+\subsubsection[{getmmatrix(a)}]{\setlength{\rightskip}{0pt plus 5cm}pure integer(kind=ikind) function mtx\+::getmmatrix (
+\begin{DoxyParamCaption}
+\item[{class({\bf matrix}), intent(in)}]{a}
+\end{DoxyParamCaption}
+)}\label{namespacemtx_a7bddff867bf23c20c0c1c3203903038a}
+
+
+vrati pocet sloupcu 
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em a} & matice \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 201 of file mtx.\+f90.
+
+
+\begin{DoxyCode}
+201         \textcolor{keywordtype}{use }typy
+202         \textcolor{keywordtype}{implicit none}
+204         \textcolor{keywordtype}{class}(matrix), \textcolor{keywordtype}{intent(in)} :: a
+205         \textcolor{keywordtype}{integer(kind=ikind)} :: res
+206         res = a%m
+\end{DoxyCode}
+\index{mtx@{mtx}!getnmatrix@{getnmatrix}}
+\index{getnmatrix@{getnmatrix}!mtx@{mtx}}
+\subsubsection[{getnmatrix(a)}]{\setlength{\rightskip}{0pt plus 5cm}pure integer(kind=ikind) function mtx\+::getnmatrix (
+\begin{DoxyParamCaption}
+\item[{class({\bf matrix}), intent(in)}]{a}
+\end{DoxyParamCaption}
+)}\label{namespacemtx_add802abd2751b63e43068437ba9a9021}
+
+
+vrati pocet radku 
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em a} & matice \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 190 of file mtx.\+f90.
+
+
+\begin{DoxyCode}
+190         \textcolor{keywordtype}{use }typy
+191         \textcolor{keywordtype}{implicit none}
+193         \textcolor{keywordtype}{class}(matrix), \textcolor{keywordtype}{intent(in)} :: a
+194         \textcolor{keywordtype}{integer(kind=ikind)} :: res
+195         res = a%n
+\end{DoxyCode}
+\index{mtx@{mtx}!getrowmatrix@{getrowmatrix}}
+\index{getrowmatrix@{getrowmatrix}!mtx@{mtx}}
+\subsubsection[{getrowmatrix(a, i, v, jj, nelem, mask)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine mtx\+::getrowmatrix (
+\begin{DoxyParamCaption}
+\item[{class({\bf matrix}), intent(in)}]{a, }
+\item[{integer(kind=ikind), intent(in)}]{i, }
+\item[{real(kind=rkind), dimension(\+:), intent(inout), allocatable}]{v, }
+\item[{integer(kind=ikind), dimension(\+:), intent(inout), allocatable}]{jj, }
+\item[{integer(kind=ikind), intent(out)}]{nelem, }
+\item[{logical, dimension(\+:), intent(in), optional}]{mask}
+\end{DoxyParamCaption}
+)}\label{namespacemtx_ab7d2812d5309c976006cc3ec45df969c}
+
+
+ziska radek z matice -\/ univerzal -\/ kandidat reimplementace v potomkovi 
+
+vrati jen nenulove prvky z radku, v pripade potreby prealokuje prostor
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em a} & matice\\
+\hline
+\mbox{\tt in}  & {\em i} & pozadovany radek\\
+\hline
+\mbox{\tt in,out}  & {\em v} & nenulove hodnoty z radku\\
+\hline
+\mbox{\tt in,out}  & {\em jj} & sloupcove indexy nenulovych prvku radku\\
+\hline
+\mbox{\tt out}  & {\em nelem} & pocet nenulovych prvku v radku\\
+\hline
+\mbox{\tt in}  & {\em mask} & seznam povolenych indexu \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 214 of file mtx.\+f90.
+
+
+\begin{DoxyCode}
+214         \textcolor{keywordtype}{use }typy
+215         \textcolor{keywordtype}{implicit none}
+217         \textcolor{keywordtype}{class}(matrix), \textcolor{keywordtype}{intent(in)} :: a
+219         \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(in)} :: i
+221         \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable}, \textcolor{keywordtype}{intent(inout)} :: v
+223         \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable}, \textcolor{keywordtype}{intent(inout)} :: jj
+225         \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(out)} :: nelem
+227         \textcolor{keywordtype}{logical}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{optional}, \textcolor{keywordtype}{intent(in)} :: mask
+228 
+229         \textcolor{keywordtype}{integer(kind=ikind)} :: j
+230         \textcolor{keywordtype}{real(kind=rkind)} :: w
+231 
+232         \textcolor{comment}{! dvoufazove}
+233         \textcolor{comment}{! spocitat kolik jich bude}
+234         nelem = 0
+235         \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(mask)) then
+236             \textcolor{keywordflow}{do} j = 1,a%m
+237                 \textcolor{keywordflow}{if} ( a%get(i,j) /= 0 .and. mask(j)) then
+238                     nelem = nelem + 1
+239 \textcolor{keyword}{                end }if
+240 \textcolor{keyword}{            end }do
+241         else
+242             \textcolor{keywordflow}{do} j = 1,a%m
+243                 \textcolor{keywordflow}{if} ( a%get(i,j) /= 0 ) then
+244                     nelem = nelem + 1
+245 \textcolor{keyword}{                end }if
+246 \textcolor{keyword}{            end }do
+247 \textcolor{keyword}{        end }if
+248         \textcolor{comment}{! overit misto}
+249         \textcolor{keywordflow}{if} ( .not. \textcolor{keyword}{allocated}(v)) then
+250         \textcolor{keyword}{allocate}(v(1:nelem))
+251         else
+252             \textcolor{keywordflow}{if} (nelem > ubound(v,1)) then
+253                 \textcolor{keyword}{deallocate}(v)
+254                 \textcolor{keyword}{allocate}(v(1:nelem))
+255 \textcolor{keyword}{            end }if
+256 \textcolor{keyword}{        end }if
+257         \textcolor{keywordflow}{if} ( .not. \textcolor{keyword}{allocated}(jj)) then
+258         \textcolor{keyword}{allocate}(jj(1:nelem))
+259         else
+260             \textcolor{keywordflow}{if} (nelem > ubound(jj,1)) then
+261                 \textcolor{keyword}{deallocate}(jj)
+262                 \textcolor{keyword}{allocate}(jj(1:nelem))
+263 \textcolor{keyword}{            end }if
+264 \textcolor{keyword}{        end }if
+265         \textcolor{comment}{! opravdu naplnit}
+266         nelem = 0
+267         \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(mask)) then
+268             \textcolor{keywordflow}{do} j = 1,a%m
+269                 w = a%get(i,j)
+270                 \textcolor{keywordflow}{if} ( w /= 0 .and. mask(j)) then
+271                     nelem = nelem + 1
+272                     v(nelem)  = w
+273                     jj(nelem) = j
+274 \textcolor{keyword}{                end }if
+275 \textcolor{keyword}{            end }do
+276         else
+277             \textcolor{keywordflow}{do} j = 1,a%m
+278                 w = a%get(i,j)
+279                 \textcolor{keywordflow}{if} ( w /= 0) then
+280                     nelem = nelem + 1
+281                     v(nelem)  = w
+282                     jj(nelem) = j
+283 \textcolor{keyword}{                end }if
+284 \textcolor{keyword}{            end }do
+285 \textcolor{keyword}{        end }if
+\end{DoxyCode}
+\index{mtx@{mtx}!initmatrix@{initmatrix}}
+\index{initmatrix@{initmatrix}!mtx@{mtx}}
+\subsubsection[{initmatrix(a, n, m)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine mtx\+::initmatrix (
+\begin{DoxyParamCaption}
+\item[{class({\bf matrix}), intent(inout)}]{a, }
+\item[{integer(kind=ikind), intent(in)}]{n, }
+\item[{integer(kind=ikind), intent(in)}]{m}
+\end{DoxyParamCaption}
+)}\label{namespacemtx_a7d9ca4d786473dbca2548c4c7634270e}
+
+
+rutina pro inicializaci 
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in,out}  & {\em a} & matice\\
+\hline
+\mbox{\tt in}  & {\em n} & rozmery\\
+\hline
+\mbox{\tt in}  & {\em m} & rozmery \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 175 of file mtx.\+f90.
+
+
+\begin{DoxyCode}
+175         \textcolor{keywordtype}{use }typy
+176         \textcolor{keywordtype}{implicit none}
+178         \textcolor{keywordtype}{class}(matrix), \textcolor{keywordtype}{intent(in out)} :: a
+180         \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(in)} :: n,m
+181         a%n = n
+182         a%m = m
+183         \textcolor{comment}{!print *,"initmatrix: konci"}
+\end{DoxyCode}
+\index{mtx@{mtx}!mtxtest@{mtxtest}}
+\index{mtxtest@{mtxtest}!mtx@{mtx}}
+\subsubsection[{mtxtest(\+A)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, public mtx\+::mtxtest (
+\begin{DoxyParamCaption}
+\item[{class({\bf matrix}), intent(in)}]{A}
+\end{DoxyParamCaption}
+)}\label{namespacemtx_a714d8a078adf6cb009a87454b1d82f57}
+
+
+testy maticovych operaci vstupni parametr slouzi jen jako sablona pro volbu potomka 
+
+
+
+Definition at line 820 of file mtx.\+f90.
+
+
+
+Referenced by mtx\+::seti\+::seti().
+
+
+\begin{DoxyCode}
+820         \textcolor{keywordtype}{implicit none}
+821         \textcolor{keywordtype}{class}(matrix), \textcolor{keywordtype}{intent(in)} :: a
+822         \textcolor{keywordtype}{class}(matrix), \textcolor{keywordtype}{allocatable} :: l,d,u,ldu
+823         \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{dimension(3)} :: ii
+824         \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{dimension(2)} :: jj
+825 
+826 
+827         print *,\textcolor{stringliteral}{"zacinaji testy matic"}
+828 
+829         \textcolor{keyword}{allocate}(l,source=a)
+830         \textcolor{keyword}{allocate}(d,source=a)
+831         \textcolor{keyword}{allocate}(u,source=a)
+832         \textcolor{keyword}{allocate}(ldu,source=a)
+833         \textcolor{keyword}{call }l%setverbosity(10)
+834         \textcolor{keyword}{call }d%setverbosity(10)
+835         ii = (/ 1 ,3, 5 /)
+836         jj = (/2,4/)
+837 
+838         \textcolor{keyword}{call }l%init(4\_ikind,4\_ikind)
+839         \textcolor{keyword}{call }d%init(4\_ikind,4\_ikind)
+840         \textcolor{keyword}{call }u%init(4\_ikind,4\_ikind)
+841         \textcolor{keyword}{call }ldu%init(4\_ikind,4\_ikind)
+842 
+843         \textcolor{keyword}{call }u%set(  1.0\_rkind,1\_ikind,1\_ikind)
+844         \textcolor{keyword}{call }u%set(  2.0\_rkind,1\_ikind,2\_ikind)
+845         \textcolor{keyword}{call }u%set( -5.0\_rkind,1\_ikind,3\_ikind)
+846         \textcolor{keyword}{call }u%set(  7.0\_rkind,1\_ikind,4\_ikind)
+847         \textcolor{keyword}{call }u%set(  1.0\_rkind,2\_ikind,2\_ikind)
+848         \textcolor{keyword}{call }u%set(  4.0\_rkind,2\_ikind,3\_ikind)
+849         \textcolor{keyword}{call }u%set(-16.0\_rkind,2\_ikind,4\_ikind)
+850         \textcolor{keyword}{call }u%set(  1.0\_rkind,3\_ikind,3\_ikind)
+851         \textcolor{keyword}{call }u%set( 25.0\_rkind,3\_ikind,4\_ikind)
+852         \textcolor{keyword}{call }u%set(  1.0\_rkind,4\_ikind,4\_ikind)
+853 
+854         \textcolor{keyword}{call }l%set( 1.0\_rkind,1\_ikind,1\_ikind)
+855         \textcolor{keyword}{call }l%set(-1.0\_rkind,2\_ikind,1\_ikind)
+856         \textcolor{keyword}{call }l%set( 1.0\_rkind,2\_ikind,2\_ikind)
+857         \textcolor{keyword}{call }l%set( 2.0\_rkind,3\_ikind,1\_ikind)
+858         \textcolor{keyword}{call }l%set( 7.0\_rkind,3\_ikind,2\_ikind)
+859         \textcolor{keyword}{call }l%set( 1.0\_rkind,3\_ikind,3\_ikind)
+860         \textcolor{keyword}{call }l%set(16.0\_rkind,4\_ikind,1\_ikind)
+861         \textcolor{keyword}{call }l%set(-8.0\_rkind,4\_ikind,2\_ikind)
+862         \textcolor{keyword}{call }l%set(-5.0\_rkind,4\_ikind,3\_ikind)
+863         \textcolor{keyword}{call }l%set( 1.0\_rkind,4\_ikind,4\_ikind)
+864 
+865         \textcolor{keyword}{call }d%set(  2.0\_rkind,1\_ikind,1\_ikind)
+866         \textcolor{keyword}{call }d%set(  3.0\_rkind,2\_ikind,2\_ikind)
+867         \textcolor{keyword}{call }d%set( -1.0\_rkind,3\_ikind,3\_ikind)
+868         \textcolor{keyword}{call }d%set( 17.0\_rkind,4\_ikind,4\_ikind)
+869 
+870         \textcolor{keyword}{call }l%print(caption = \textcolor{stringliteral}{"L"})
+871         \textcolor{keyword}{call }d%print(caption = \textcolor{stringliteral}{"D"})
+872         \textcolor{keyword}{call }u%print(caption = \textcolor{stringliteral}{"U"})
+873 
+874 
+\end{DoxyCode}
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=229pt]{namespacemtx_a714d8a078adf6cb009a87454b1d82f57_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{mtx@{mtx}!mulmatrix@{mulmatrix}}
+\index{mulmatrix@{mulmatrix}!mtx@{mtx}}
+\subsubsection[{mulmatrix(a, x, count)}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind) function, dimension(\+:), allocatable mtx\+::mulmatrix (
+\begin{DoxyParamCaption}
+\item[{class({\bf matrix}), intent(in)}]{a, }
+\item[{real(kind=rkind), dimension(\+:), intent(in)}]{x, }
+\item[{type({\bf tcount}), intent(inout), optional}]{count}
+\end{DoxyParamCaption}
+)}\label{namespacemtx_a11eddbf46455d54b8cca3b20201c0c93}
+
+
+nasobi matici vektorem 
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em a} & matice\\
+\hline
+\mbox{\tt in}  & {\em x} & vektor\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+vysledek
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in,out}  & {\em count} & pocet operaci \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 472 of file mtx.\+f90.
+
+
+\begin{DoxyCode}
+472         \textcolor{keywordtype}{implicit none}
+474         \textcolor{keywordtype}{class}(matrix), \textcolor{keywordtype}{intent(in)} :: a
+476         \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{intent(in)} :: x
+478         \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable} :: y
+480         \textcolor{keywordtype}{type}(tcount), \textcolor{keywordtype}{intent(inout)}, \textcolor{keywordtype}{optional} :: count
+481         \textcolor{keywordtype}{integer(kind=ikind)} :: i,j,nelem
+482         \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable} :: v
+483         \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable} :: ii
+484 
+485 
+486         \textcolor{keyword}{allocate}(y(1:a%n))
+487         y = 0
+488         \textcolor{keywordflow}{do} i=1,a%n
+489             \textcolor{keyword}{call }a%getrow(i,v,ii,nelem)
+490             \textcolor{keywordflow}{do} j=1,nelem
+491                 y(i) = y(i) + v(j)*x(ii(j))
+492 \textcolor{keyword}{            end }do
+493             \textcolor{comment}{!do j=1,a%m}
+494             \textcolor{comment}{!    y(i) = y(i) + a%get(i,j)*x(j)}
+495             \textcolor{comment}{!end do}
+496             \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(count)) then
+497                 count%ad  = count%ad  + nelem
+498                 count%mul = count%mul + nelem
+499 \textcolor{keyword}{            end }if
+500 \textcolor{keyword}{        end }do
+\end{DoxyCode}
+\index{mtx@{mtx}!mulmatrixmatrix@{mulmatrixmatrix}}
+\index{mulmatrixmatrix@{mulmatrixmatrix}!mtx@{mtx}}
+\subsubsection[{mulmatrixmatrix(\+A, B, C, info)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine mtx\+::mulmatrixmatrix (
+\begin{DoxyParamCaption}
+\item[{class({\bf matrix}), intent(inout)}]{A, }
+\item[{class({\bf matrix}), intent(in)}]{B, }
+\item[{class({\bf matrix}), intent(in)}]{C, }
+\item[{type({\bf tcount}), intent(inout), optional}]{info}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [private]}}\label{namespacemtx_a33c6dc2dbb0b97c92f7e479f9e0fa28d}
+
+
+A = B$\ast$C !!!!!prepsat. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em A} & vysledna matice \\
+\hline
+{\em B} & levy operand \\
+\hline
+{\em C} & pravy operand \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 581 of file mtx.\+f90.
+
+
+
+References typy\+::update\+\_\+info().
+
+
+\begin{DoxyCode}
+581         \textcolor{keywordtype}{use }typy
+582         \textcolor{keywordtype}{implicit none}
+583         \textcolor{keywordtype}{class}(matrix), \textcolor{keywordtype}{intent(in out)} :: a
+584         \textcolor{keywordtype}{class}(matrix), \textcolor{keywordtype}{intent(in)}     :: b
+585         \textcolor{keywordtype}{class}(matrix), \textcolor{keywordtype}{intent(in)}     :: c
+586         \textcolor{keywordtype}{type}(tcount),  \textcolor{keywordtype}{intent(in out)}, \textcolor{keywordtype}{optional} :: info
+587 
+588         \textcolor{keywordtype}{integer(kind=ikind)} :: n,m,p,i,j,k
+589         \textcolor{keywordtype}{real(kind=rkind)} :: wrk
+590         \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable} :: rd, sl
+591         \textcolor{keywordtype}{integer(kind=likind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable} :: rdi, sli
+592         \textcolor{keywordtype}{integer(kind=ikind)} :: nrd, nsl
+593         \textcolor{keywordtype}{type}(tcount) :: inf1
+594         \textcolor{keywordtype}{real} :: t1,t2
+595 
+596         n = b%getn()
+597         m = c%getm()
+598         p = b%getm()
+599         i = c%getn()
+600         j = n
+601         k = m
+602         \textcolor{keyword}{call }cpu\_time(t1)
+603         \textcolor{keyword}{call }a%init(j,k)
+604         \textcolor{keywordflow}{if} ((p/=i) .or. (j/=n) .or. (m/=k)) print *,\textcolor{stringliteral}{"nesedi rozmery"}
+605         \textcolor{comment}{!    do i=1,n}
+606         \textcolor{comment}{!        do j=1,m}
+607         \textcolor{comment}{!            call A%set(0.0\_rkind,i,j)}
+608         \textcolor{comment}{!            wrk = 0}
+609         \textcolor{comment}{!            do k=1,p}
+610         \textcolor{comment}{!                w1 = B%get(i,k)}
+611         \textcolor{comment}{!                w2 = C%get(k,j)}
+612         \textcolor{comment}{!                wrk = wrk + w1*w2}
+613         \textcolor{comment}{!            end do}
+614         \textcolor{comment}{!            call A%set(wrk,i,j)}
+615         \textcolor{comment}{!        end do}
+616         \textcolor{comment}{!    end do}
+617         \textcolor{keywordflow}{do} k=1,p
+618             \textcolor{keyword}{call }b%GetCol(k,sl,sli,nsl)
+619             \textcolor{keyword}{call }c%GetRow(k,rd,rdi,nrd)
+620             \textcolor{comment}{!! pricist opravu}
+621             \textcolor{keywordflow}{do} i=1,nrd
+622                 \textcolor{keywordflow}{do} j=1,nsl
+623                     wrk = sl(j)*rd(i)
+624                     \textcolor{keyword}{call }a%add(wrk, sli(j), rdi(i))
+625 \textcolor{keyword}{                end }do
+626 \textcolor{keyword}{            end }do
+627             \textcolor{keyword}{call }cpu\_time(t2)
+628             inf1%ad = inf1%ad + nrd*nsl
+629             inf1%mul = inf1%mul + nrd*nsl
+630             inf1%time = inf1%time + t2 - t1
+631 \textcolor{keyword}{        end }do
+632         \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(info)) \textcolor{keyword}{call }update_info(info,inf1)
+\end{DoxyCode}
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=281pt]{namespacemtx_a33c6dc2dbb0b97c92f7e479f9e0fa28d_cgraph}
+\end{center}
+\end{figure}
+
+
+\index{mtx@{mtx}!mulmatrixt@{mulmatrixt}}
+\index{mulmatrixt@{mulmatrixt}!mtx@{mtx}}
+\subsubsection[{mulmatrixt(a, x, count)}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind) function, dimension(\+:), allocatable mtx\+::mulmatrixt (
+\begin{DoxyParamCaption}
+\item[{class({\bf matrix}), intent(in)}]{a, }
+\item[{real(kind=rkind), dimension(\+:), intent(in)}]{x, }
+\item[{type({\bf tcount}), intent(inout), optional}]{count}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [private]}}\label{namespacemtx_aff80912ab6df4458fcc6aa20138ccdbd}
+
+
+nasobi transponovanou matici vektorem 
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em a} & matice\\
+\hline
+\mbox{\tt in}  & {\em x} & vektor\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+vysledek
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in,out}  & {\em count} & pocet operaci \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 505 of file mtx.\+f90.
+
+
+\begin{DoxyCode}
+505         \textcolor{keywordtype}{implicit none}
+507         \textcolor{keywordtype}{class}(matrix), \textcolor{keywordtype}{intent(in)} :: a
+509         \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{intent(in)} :: x
+511         \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable} :: y
+513         \textcolor{keywordtype}{type}(tcount), \textcolor{keywordtype}{intent(inout)}, \textcolor{keywordtype}{optional} :: count
+514         \textcolor{keywordtype}{integer(kind=ikind)} :: i,j,nelem
+515         \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable} :: v
+516         \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable} :: ii
+517 
+518         \textcolor{keyword}{allocate}(y(1:a%m))
+519         y = 0
+520         \textcolor{keywordflow}{do} i=1,a%n
+521             \textcolor{keyword}{call }a%getrow(i,v,ii,nelem)
+522             \textcolor{keywordflow}{do} j = 1, nelem
+523                 y(ii(j)) = y(ii(j)) + v(j)*x(i)
+524 \textcolor{keyword}{            end }do
+525             \textcolor{comment}{!do j=1,a%m}
+526             \textcolor{comment}{!    y(j) = y(j) + a%get(i,j)*x(i)}
+527             \textcolor{comment}{!end do}
+528             \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(count)) then
+529                 count%ad  = count%ad  + nelem
+530                 count%mul = count%mul + nelem
+531 \textcolor{keyword}{            end }if
+532 \textcolor{keyword}{        end }do
+\end{DoxyCode}
+\index{mtx@{mtx}!mulrow@{mulrow}}
+\index{mulrow@{mulrow}!mtx@{mtx}}
+\subsubsection[{mulrow(\+A, x, i, count)}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind) function mtx\+::mulrow (
+\begin{DoxyParamCaption}
+\item[{class({\bf matrix}), intent(in)}]{A, }
+\item[{real(kind=rkind), dimension(\+:), intent(in)}]{x, }
+\item[{integer(kind=ikind), intent(in)}]{i, }
+\item[{type({\bf tcount}), intent(inout), optional}]{count}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [private]}}\label{namespacemtx_a8e6102d1750106b5924d9bcc615a05bb}
+
+
+spocita skalarni soucin i-\/teho radku matice a vektoru 
+
+
+
+Definition at line 793 of file mtx.\+f90.
+
+
+\begin{DoxyCode}
+793         \textcolor{keywordtype}{implicit none}
+794         \textcolor{keywordtype}{class}(matrix), \textcolor{keywordtype}{intent(in)} :: a
+795         \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{intent(in)} :: x
+796         \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(in)} :: i
+797         \textcolor{keywordtype}{real(kind=rkind)} :: y
+798         \textcolor{keywordtype}{type}(tcount), \textcolor{keywordtype}{intent(inout)}, \textcolor{keywordtype}{optional} :: count
+799         \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable} :: vls
+800         \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable} :: jj
+801         \textcolor{keywordtype}{integer(kind=ikind)} :: nelem, j
+802 
+803 
+804         \textcolor{keyword}{call }a%getrow(i,vls,jj,nelem)
+805         y = 0
+806         \textcolor{keywordflow}{do} j = 1,nelem
+807            y = y + vls(j)*x(jj(j))
+808 \textcolor{keyword}{        end }do
+809         \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(count)) then
+810            count%ad = count%ad + nelem
+811            count%mul = count%mul + nelem
+812 \textcolor{keyword}{        end }if
+\end{DoxyCode}
+\index{mtx@{mtx}!normfmatrix@{normfmatrix}}
+\index{normfmatrix@{normfmatrix}!mtx@{mtx}}
+\subsubsection[{normfmatrix(\+A)}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind) function mtx\+::normfmatrix (
+\begin{DoxyParamCaption}
+\item[{class({\bf matrix}), intent(in)}]{A}
+\end{DoxyParamCaption}
+)}\label{namespacemtx_a64bbd920f57cc2f85819373552c1329a}
+
+
+spocte Frobeniovu normu matice 
+
+
+\begin{DoxyParams}{Parameters}
+{\em A} & zkoumana matice \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+hledana norma 
+\end{DoxyReturn}
+
+
+Definition at line 688 of file mtx.\+f90.
+
+
+\begin{DoxyCode}
+688         \textcolor{keywordtype}{use }typy
+689         \textcolor{keywordtype}{implicit none}
+690         \textcolor{keywordtype}{class}(matrix), \textcolor{keywordtype}{intent(in)} :: a
+691         \textcolor{keywordtype}{real(kind=rkind)} :: y
+692         \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable} :: rb
+693         \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable} :: rib
+694         \textcolor{keywordtype}{integer(kind=ikind)} :: nrb,i,j
+695 
+696         y = 0
+697         print *,\textcolor{stringliteral}{"normF zacina"}
+698         \textcolor{keywordflow}{do} i=1,a%getn()
+699             \textcolor{keyword}{call }a%getrow(i,rb,rib,nrb)
+700             \textcolor{keywordflow}{do} j=1,nrb
+701                 y = y + rb(j)*rb(j)
+702 \textcolor{keyword}{            end }do
+703 \textcolor{keyword}{        end }do
+704         y = sqrt(y)
+705         print *,\textcolor{stringliteral}{"normF konci"}
+\end{DoxyCode}
+\index{mtx@{mtx}!nzmatrix@{nzmatrix}}
+\index{nzmatrix@{nzmatrix}!mtx@{mtx}}
+\subsubsection[{nzmatrix(a)}]{\setlength{\rightskip}{0pt plus 5cm}integer(kind=ikind) function mtx\+::nzmatrix (
+\begin{DoxyParamCaption}
+\item[{class({\bf matrix}), intent(in)}]{a}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [private]}}\label{namespacemtx_aac2e9af9cc01d6d2e4c305eb6ba95b7c}
+
+
+vrati pocet nenul v matici -\/ tady n$\ast$m 
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em a} & matice \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 461 of file mtx.\+f90.
+
+
+\begin{DoxyCode}
+461         \textcolor{keywordtype}{use }typy
+462         \textcolor{keywordtype}{implicit none}
+464         \textcolor{keywordtype}{class}(matrix), \textcolor{keywordtype}{intent(in)} :: a
+465         \textcolor{keywordtype}{integer(kind=ikind)} :: res
+466         res = a%n*a%m
+\end{DoxyCode}
+\index{mtx@{mtx}!nzrowsmatrix@{nzrowsmatrix}}
+\index{nzrowsmatrix@{nzrowsmatrix}!mtx@{mtx}}
+\subsubsection[{nzrowsmatrix(\+A)}]{\setlength{\rightskip}{0pt plus 5cm}integer(kind=ikind) function, dimension(\+:), allocatable mtx\+::nzrowsmatrix (
+\begin{DoxyParamCaption}
+\item[{class({\bf matrix}), intent(in)}]{A}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [private]}}\label{namespacemtx_a0fd4999384941905a0eb91b06551b883}
+
+
+vytvori seznam radku matice obsahujicich aspon jeden prvek 
+
+
+
+Definition at line 900 of file mtx.\+f90.
+
+
+\begin{DoxyCode}
+900         \textcolor{keywordtype}{class}(matrix), \textcolor{keywordtype}{intent(in)} :: a
+901         \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable} :: lst
+902         \textcolor{keywordtype}{integer(kind=ikind)} :: i, cnt, run, nelem
+903         \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable} :: v
+904         \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable} :: jj
+905         \textcolor{comment}{! napred spocitame kolik toho bude run == 1}
+906         \textcolor{comment}{! pak to udelame run == 2}
+907         \textcolor{keywordflow}{do} run = 1,2
+908             cnt = 0
+909             \textcolor{keywordflow}{do} i = 1, a%getn()
+910                 \textcolor{keyword}{call }a%getrow(i,v,jj,nelem)
+911                 \textcolor{keywordflow}{if} (nelem /= 0) then
+912                     cnt = cnt + 1
+913                     \textcolor{keywordflow}{if} (run==2) lst(cnt) = i
+914 \textcolor{keyword}{                end }if
+915 \textcolor{keyword}{            end }do
+916             \textcolor{keywordflow}{if} (run==1) \textcolor{keyword}{allocate}(lst(1:cnt))
+917 \textcolor{keyword}{        end }do
+\end{DoxyCode}
+\index{mtx@{mtx}!printmatrix@{printmatrix}}
+\index{printmatrix@{printmatrix}!mtx@{mtx}}
+\subsubsection[{printmatrix(a, ncol, width, caption)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine mtx\+::printmatrix (
+\begin{DoxyParamCaption}
+\item[{class({\bf matrix}), intent(in)}]{a, }
+\item[{integer(kind=ikind), intent(in), optional}]{ncol, }
+\item[{integer(kind=ikind), intent(in), optional}]{width, }
+\item[{character(len=$\ast$), intent(in), optional}]{caption}
+\end{DoxyParamCaption}
+)}\label{namespacemtx_a9b242fed3892da977edee5be16d85bdf}
+
+
+vytiskne matici 
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em a} & matice\\
+\hline
+\mbox{\tt in}  & {\em ncol} & pozadovany pocet sloupcu tisku, nepovinne\\
+\hline
+\mbox{\tt in}  & {\em width} & pozadovane sirka sloupce, nepovinne\\
+\hline
+\mbox{\tt in}  & {\em caption} & nadpis, nepovinne \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 393 of file mtx.\+f90.
+
+
+\begin{DoxyCode}
+393         \textcolor{keywordtype}{use }typy
+394         \textcolor{keywordtype}{implicit none}
+396         \textcolor{keywordtype}{class}(matrix), \textcolor{keywordtype}{intent(in)} :: a
+398         \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional} :: ncol
+400         \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional} :: width
+402         \textcolor{keywordtype}{character(len=*)}, \textcolor{keywordtype}{intent(in)},    \textcolor{keywordtype}{optional} :: caption
+403         \textcolor{keywordtype}{character(len=100)} :: cpt,fmts
+404         \textcolor{keywordtype}{integer(kind=ikind)} :: nc
+405         \textcolor{keywordtype}{integer(kind=ikind)} :: wd
+406         \textcolor{keywordtype}{integer(kind=ikind)} :: i,j, col1,col2
+407         \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable} :: data
+408 
+409         \textcolor{keywordflow}{if} ( \textcolor{keyword}{present}(ncol) ) then
+410         nc = ncol
+411         else
+412             nc = 5
+413 \textcolor{keyword}{        end }if
+414 
+415         \textcolor{keywordflow}{if} ( \textcolor{keyword}{present}(width) ) then
+416         wd = width
+417         else
+418             wd = 15
+419 \textcolor{keyword}{        end }if
+420 
+421         \textcolor{keywordflow}{if} ( \textcolor{keyword}{present}(caption) ) then
+422         cpt = adjustl(caption)
+423         else
+424             cpt =\textcolor{stringliteral}{"matice"}
+425 \textcolor{keyword}{        end }if
+426 
+427         \textcolor{keyword}{allocate}(\textcolor{keyword}{data}(1:nc))
+428         print *, trim(cpt)
+429         print *, \textcolor{stringliteral}{" pocet radku="},a%n, \textcolor{stringliteral}{" pocet sloupcu="}, a%m
+430         \textcolor{comment}{!write(fmts,fmt="(i3,a2,i3,a2,i3,a2)") ncol,"(es",width,".",width-8,",a)"}
+431         \textcolor{keyword}{write}(unit=fmts,fmt=\textcolor{stringliteral}{"(A1,I0,A2,I0,A1,I0,A1)"})   \textcolor{stringliteral}{"("},nc,\textcolor{stringliteral}{"Es"},wd+8,\textcolor{stringliteral}{"."},wd,\textcolor{stringliteral}{")"}
+432         \textcolor{comment}{!print *,fmts}
+433         col1 = 1
+434         col2 = min(nc,a%getm())
+435         do
+436             print *,\textcolor{stringliteral}{"tisknu sloupce "},col1,\textcolor{stringliteral}{" az "},col2
+437             \textcolor{keywordflow}{do} i=1,a%getn()
+438                 \textcolor{keywordflow}{do} j=col1,col2
+439                     \textcolor{keyword}{data}(j-col1+1) = a%get(i,j)
+440 \textcolor{keyword}{                end }do
+441                 print fmts, \textcolor{keyword}{data}(1:col2-col1+1)
+442 \textcolor{keyword}{            end }do
+443             col1 = col2+1
+444             col2 = min(col2+nc,a%getm())
+445             \textcolor{keywordflow}{if} (col1>a%getm()) exit
+446 \textcolor{keyword}{        end }do
+447 
+\end{DoxyCode}
+\index{mtx@{mtx}!read@{read}}
+\index{read@{read}!mtx@{mtx}}
+\subsubsection[{read(\+A, name)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine mtx\+::read (
+\begin{DoxyParamCaption}
+\item[{class({\bf matrix}), intent(inout)}]{A, }
+\item[{character(len=$\ast$), intent(in)}]{name}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [private]}}\label{namespacemtx_af1fa30c3305621a8b2aba2d710ac8ac4}
+
+
+Definition at line 752 of file mtx.\+f90.
+
+
+\begin{DoxyCode}
+752         \textcolor{keywordtype}{implicit none}
+753         \textcolor{keywordtype}{class}(matrix), \textcolor{keywordtype}{intent(in out)} :: a
+754         \textcolor{keywordtype}{character(len=*)}, \textcolor{keywordtype}{intent(in)} :: name
+755         \textcolor{keywordtype}{integer} :: fil
+756         \textcolor{keywordtype}{integer(kind=ikind)} :: i,n,m,nz
+757         \textcolor{keywordtype}{real(kind=rkind)} :: wrk
+758 
+759         \textcolor{keyword}{open}(newunit=fil,file=name)
+760         \textcolor{keyword}{read}(fil,*) n,m,nz
+761         \textcolor{comment}{!print *, n, m, nz}
+762         \textcolor{keyword}{call }a%init(n,m)
+763         \textcolor{keywordflow}{do} i=1,nz
+764             \textcolor{keyword}{read}(fil,*) n,m,wrk
+765             \textcolor{keyword}{call }a%set(wrk,n,m)
+766 \textcolor{keyword}{        end }do
+767         \textcolor{keyword}{close}(fil)
+768         \textcolor{comment}{!call A%print()}
+\end{DoxyCode}
+\index{mtx@{mtx}!setverbosity@{setverbosity}}
+\index{setverbosity@{setverbosity}!mtx@{mtx}}
+\subsubsection[{setverbosity(\+A, level)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine mtx\+::setverbosity (
+\begin{DoxyParamCaption}
+\item[{class({\bf matrix}), intent(inout)}]{A, }
+\item[{integer, intent(in)}]{level}
+\end{DoxyParamCaption}
+)}\label{namespacemtx_ab2b544f8577d326c6d56cf7b6435446d}
+
+
+nastavi podrobnost behovych reportu 
+
+
+\begin{DoxyParams}{Parameters}
+{\em A} & ovlivnena matice \\
+\hline
+{\em level} & pozadovana uroven podrobnosti
+\begin{DoxyItemize}
+\item 0 .... tise
+\item 10 .... maximalni ukecanost 
+\end{DoxyItemize}\\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 149 of file mtx.\+f90.
+
+
+\begin{DoxyCode}
+149         \textcolor{keywordtype}{class}(matrix), \textcolor{keywordtype}{intent(in out)} :: a
+150         \textcolor{keywordtype}{integer}, \textcolor{keywordtype}{intent(in)} :: level
+151         a%verbosity = max(0,min(level,10))
+\end{DoxyCode}
+\index{mtx@{mtx}!smatrix@{smatrix}}
+\index{smatrix@{smatrix}!mtx@{mtx}}
+\subsubsection[{smatrix(\+A, ii, jj)}]{\setlength{\rightskip}{0pt plus 5cm}class({\bf matrix}) function, allocatable mtx\+::smatrix (
+\begin{DoxyParamCaption}
+\item[{class({\bf matrix}), intent(in)}]{A, }
+\item[{integer(kind=ikind), dimension(\+:), intent(in)}]{ii, }
+\item[{integer(kind=ikind), dimension(\+:), intent(in)}]{jj}
+\end{DoxyParamCaption}
+)}\label{namespacemtx_a177bbc5b014dce175fda27a53f30dc00}
+
+
+vybere submatici 
+
+
+\begin{DoxyParams}{Parameters}
+{\em A} & matice \\
+\hline
+{\em ii} & radkove indexy \\
+\hline
+{\em jj} & sloupcove indexy \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+vybrana submatice 
+\end{DoxyReturn}
+
+
+Definition at line 716 of file mtx.\+f90.
+
+
+\begin{DoxyCode}
+716         \textcolor{keywordtype}{implicit none}
+717         \textcolor{keywordtype}{class}(matrix), \textcolor{keywordtype}{intent(in)} :: a
+718         \textcolor{keywordtype}{class}(matrix), \textcolor{keywordtype}{allocatable} :: b
+719         \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{intent(in)} :: ii
+720         \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{intent(in)} :: jj
+721         \textcolor{keywordtype}{integer(kind=ikind)} :: n,m,i,j
+722         \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable} :: v
+723         \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable} :: is, invi
+724         \textcolor{keywordtype}{integer(kind=ikind)} :: nelem
+725         \textcolor{keywordtype}{logical}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable} :: mask
+726 
+727         print *, \textcolor{stringliteral}{"zacina konstrukce submatice"}
+728         n = \textcolor{keyword}{size}(ii,1)
+729         m = \textcolor{keyword}{size}(jj,1)
+730         \textcolor{keyword}{allocate}(b,source=a)
+731         \textcolor{keyword}{call }b%init(n,m)
+732         \textcolor{keyword}{allocate}(mask(1:a%getm()))
+733         \textcolor{keyword}{allocate}(invi(1:a%getm()))
+734         mask = .false.
+735         mask(jj) = .true.
+736         invi = 0
+737         \textcolor{keywordflow}{do} i = 1,m
+738             invi(jj(i)) = i
+739 \textcolor{keyword}{        end }do
+740         \textcolor{keywordflow}{do} i=1,n
+741             \textcolor{keyword}{call }a%GetRow(ii(i),v,is,nelem)
+742             \textcolor{keywordflow}{do} j = 1,nelem
+743                 \textcolor{keywordflow}{if} ( mask(is(j)) ) then
+744                     \textcolor{keyword}{call }b%set(v(j),i,invi(is(j)))
+745 \textcolor{keyword}{                end }if
+746 \textcolor{keyword}{            end }do
+747 \textcolor{keyword}{        end }do
+\end{DoxyCode}
+\index{mtx@{mtx}!spymatrix@{spymatrix}}
+\index{spymatrix@{spymatrix}!mtx@{mtx}}
+\subsubsection[{spymatrix(a)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine mtx\+::spymatrix (
+\begin{DoxyParamCaption}
+\item[{class({\bf matrix}), intent(in)}]{a}
+\end{DoxyParamCaption}
+)}\label{namespacemtx_afba151bbf31e292a36f36279c0d74cf2}
+
+
+napodoba matlabovske spy 
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em a} & matice \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 365 of file mtx.\+f90.
+
+
+\begin{DoxyCode}
+365         \textcolor{keywordtype}{use }typy
+366         \textcolor{keywordtype}{implicit none}
+368         \textcolor{keywordtype}{class}(matrix), \textcolor{keywordtype}{intent(in)} :: a
+369         \textcolor{keywordtype}{integer(kind=ikind)} :: i,j, nz
+370         \textcolor{keywordtype}{character(len=a%getm())} :: radek
+371         \textcolor{keywordtype}{character(len=8)} :: fmts
+372 
+373         nz = 0
+374         \textcolor{keyword}{write}(fmts,fmt=\textcolor{stringliteral}{"(a2,i5,a1)"}) \textcolor{stringliteral}{"(a"},a%m,\textcolor{stringliteral}{")"}
+375         \textcolor{keywordflow}{do} i=1,a%getn()
+376             \textcolor{keywordflow}{do} j=1,a%getm()
+377                 \textcolor{keywordflow}{if} (a%get(i,j) == 0.0\_rkind) then
+378                 radek(j:j) = \textcolor{stringliteral}{'.'}
+379                 else
+380                     radek(j:j) = \textcolor{stringliteral}{'X'}
+381                     nz = nz + 1
+382 \textcolor{keyword}{                end }if
+383 \textcolor{keyword}{            end }do
+384             print fmts,radek
+385 \textcolor{keyword}{        end }do
+386         print *, \textcolor{stringliteral}{" pocet radek="}, a%getn()
+387         print *, \textcolor{stringliteral}{" pocet sloupcu"},a%getm()
+388         print *,\textcolor{stringliteral}{"celkovy pocet nenul="},nz
+\end{DoxyCode}
+\index{mtx@{mtx}!submatrixmatrix@{submatrixmatrix}}
+\index{submatrixmatrix@{submatrixmatrix}!mtx@{mtx}}
+\subsubsection[{submatrixmatrix(\+A, B)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine mtx\+::submatrixmatrix (
+\begin{DoxyParamCaption}
+\item[{class({\bf matrix}), intent(inout)}]{A, }
+\item[{class({\bf matrix}), intent(in)}]{B}
+\end{DoxyParamCaption}
+)}\label{namespacemtx_aff7f421591a75bc1035ebae019d1d346}
+
+
+A = A -\/ B. 
+
+
+
+Definition at line 662 of file mtx.\+f90.
+
+
+\begin{DoxyCode}
+662         \textcolor{keywordtype}{use }typy
+663         \textcolor{keywordtype}{implicit none}
+664         \textcolor{keywordtype}{class}(matrix), \textcolor{keywordtype}{intent(in out)} :: a
+665         \textcolor{keywordtype}{class}(matrix), \textcolor{keywordtype}{intent(in)} :: b
+666         \textcolor{keywordtype}{integer(kind=ikind)}            :: i,j,n,m
+667         \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable} :: rb
+668         \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable} :: rib
+669         \textcolor{keywordtype}{integer(kind=ikind)} :: nrb
+670         \textcolor{keywordtype}{logical}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable} :: mask
+671 
+672         n = a%getn()
+673         m = a%getm()
+674         \textcolor{keywordflow}{do} i=1,n
+675             \textcolor{keyword}{call }b%getrow(i,rb,rib,nrb)
+676             \textcolor{keywordflow}{do} j=1,nrb
+677                 \textcolor{keyword}{call }a%add(-rb(j),i,rib(j))
+678 \textcolor{keyword}{            end }do
+679 \textcolor{keyword}{        end }do
+\end{DoxyCode}
+\index{mtx@{mtx}!transpose@{transpose}}
+\index{transpose@{transpose}!mtx@{mtx}}
+\subsubsection[{transpose(\+A, B)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine mtx\+::transpose (
+\begin{DoxyParamCaption}
+\item[{class({\bf matrix}), intent(inout)}]{A, }
+\item[{class({\bf matrix}), intent(in)}]{B}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [private]}}\label{namespacemtx_af8b9fdca71b8f8022bd3952fc809df30}
+
+
+v A vrati transpozici matice B 
+
+
+
+Definition at line 879 of file mtx.\+f90.
+
+
+\begin{DoxyCode}
+879         \textcolor{keywordtype}{class}(matrix), \textcolor{keywordtype}{intent(in out)} :: a
+880         \textcolor{keywordtype}{class}(matrix), \textcolor{keywordtype}{intent(in)}     :: b
+881 
+882         \textcolor{keywordtype}{integer(kind=ikind)} :: n,m,i, nelem, j
+883         \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable} :: ii
+884         \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable}    :: v
+885 
+886         n = b%getn()
+887         m = b%getm()
+888         \textcolor{keyword}{call }a%init(m,n)
+889         \textcolor{keywordflow}{do} i=1,n
+890             \textcolor{keyword}{call }b%getrow(i,v,ii,nelem)
+891             \textcolor{keywordflow}{do} j=1, nelem
+892                 \textcolor{keyword}{call }a%set(v(j),ii(j),i)
+893 \textcolor{keyword}{            end }do
+894 \textcolor{keyword}{        end }do
+895 
+\end{DoxyCode}
+\index{mtx@{mtx}!write@{write}}
+\index{write@{write}!mtx@{mtx}}
+\subsubsection[{write(\+A, name)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine mtx\+::write (
+\begin{DoxyParamCaption}
+\item[{class({\bf matrix}), intent(in)}]{A, }
+\item[{character(len=$\ast$), intent(in)}]{name}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [private]}}\label{namespacemtx_a40d5f57fb670aad032c1c5a503f1a4f8}
+
+
+Definition at line 772 of file mtx.\+f90.
+
+
+\begin{DoxyCode}
+772         \textcolor{keywordtype}{implicit none}
+773         \textcolor{keywordtype}{class}(matrix), \textcolor{keywordtype}{intent(in)} :: a
+774         \textcolor{keywordtype}{character(len=*)}, \textcolor{keywordtype}{intent(in)} :: name
+775         \textcolor{keywordtype}{integer} :: fil
+776         \textcolor{keywordtype}{integer(kind=ikind)} :: n,m
+777         \textcolor{keywordtype}{real(kind=rkind)} :: wrk
+778 
+779         \textcolor{keyword}{open}(newunit=fil,file=name)
+780         \textcolor{keyword}{write}(fil,*) a%getn(),a%getm(),a%nonzero()
+781         \textcolor{keywordflow}{do} n=1,a%getn()
+782             \textcolor{keywordflow}{do} m=1,a%getm()
+783                 wrk = a%get(n,m)
+784                 \textcolor{keywordflow}{if} (wrk /= 0.0) \textcolor{keyword}{write}(fil,*) n,m,wrk
+785 \textcolor{keyword}{            end }do
+786 \textcolor{keyword}{        end }do
+787         \textcolor{keyword}{close}(fil)
+788         \textcolor{comment}{!call A%print()}
+\end{DoxyCode}

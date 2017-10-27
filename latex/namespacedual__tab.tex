@@ -1,0 +1,953 @@
+\section{dual\+\_\+tab Module Reference}
+\label{namespacedual__tab}\index{dual\+\_\+tab@{dual\+\_\+tab}}
+
+
+This module writes tabular versions of main functions to enhance computation. ~\newline
+ Tabular versions dispersion\+: mualem\+\_\+tab; elastisticty\+: dual\+\_\+ret; mass= vangen\+\_\+tab.  
+
+
+\subsection*{Functions/\+Subroutines}
+\begin{DoxyCompactItemize}
+\item 
+subroutine, public {\bf dual\+\_\+mualem\+\_\+tab} (pde\+\_\+loc, layer, quadpnt, x, tensor, scalar)
+\begin{DoxyCompactList}\small\item\em Tabular versions of dispersion. \end{DoxyCompactList}\item 
+real(kind=rkind) function, public {\bf vangen\+\_\+d\+\_\+tab} (pde\+\_\+loc, layer, quadpnt, x)
+\begin{DoxyCompactList}\small\item\em Tabular versions of mass. \end{DoxyCompactList}\item 
+real(kind=rkind) function, public {\bf dual\+\_\+ret\+\_\+cap\+\_\+tab} (pde\+\_\+loc, layer, quadpnt, x)
+\begin{DoxyCompactList}\small\item\em Tabular versions of elastiocity. \end{DoxyCompactList}\item 
+real(kind=rkind) function, public {\bf dual\+\_\+coupling\+\_\+tab} (pde\+\_\+loc, layer, quadpnt, x)
+\begin{DoxyCompactList}\small\item\em Tabular versions of coupling term for case(1) and case(2) \end{DoxyCompactList}\item 
+real(kind=rkind) function, public {\bf dual\+\_\+coupling\+\_\+neg\+\_\+tab} (pde\+\_\+loc, layer, quadpnt, x)
+\item 
+subroutine, public {\bf dual\+\_\+tabvalues} (pde\+\_\+loc, Kfnc, Cfnc, thetafnc, ex\+\_\+\+K\+\_\+fnc)
+\begin{DoxyCompactList}\small\item\em creates a table of values of constitutive functions for the Richards equation to be linearly approximated \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+real(kind=rkind), dimension(\+:,\+:), allocatable, public {\bf ktab\+\_\+dm}
+\item 
+real(kind=rkind), dimension(\+:,\+:), allocatable, public {\bf watcontab\+\_\+dm}
+\item 
+real(kind=rkind), dimension(\+:,\+:), allocatable, public {\bf warecatab\+\_\+dm}
+\item 
+real(kind=rkind), dimension(\+:,\+:), allocatable, public {\bf couptab}
+\item 
+real(kind=rkind), dimension(\+:,\+:), allocatable, public {\bf ktab\+\_\+df}
+\item 
+real(kind=rkind), dimension(\+:,\+:), allocatable, public {\bf watcontab\+\_\+df}
+\item 
+real(kind=rkind), dimension(\+:,\+:), allocatable, public {\bf warecatab\+\_\+df}
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+This module writes tabular versions of main functions to enhance computation. ~\newline
+ Tabular versions dispersion\+: mualem\+\_\+tab; elastisticty\+: dual\+\_\+ret; mass= vangen\+\_\+tab. 
+
+\subsection{Function/\+Subroutine Documentation}
+\index{dual\+\_\+tab@{dual\+\_\+tab}!dual\+\_\+coupling\+\_\+neg\+\_\+tab@{dual\+\_\+coupling\+\_\+neg\+\_\+tab}}
+\index{dual\+\_\+coupling\+\_\+neg\+\_\+tab@{dual\+\_\+coupling\+\_\+neg\+\_\+tab}!dual\+\_\+tab@{dual\+\_\+tab}}
+\subsubsection[{dual\+\_\+coupling\+\_\+neg\+\_\+tab(pde\+\_\+loc, layer, quadpnt, x)}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind) function, public dual\+\_\+tab\+::dual\+\_\+coupling\+\_\+neg\+\_\+tab (
+\begin{DoxyParamCaption}
+\item[{class({\bf pde\+\_\+str}), intent(in)}]{pde\+\_\+loc, }
+\item[{integer(kind=ikind), intent(in)}]{layer, }
+\item[{type({\bf integpnt\+\_\+str}), intent(in), optional}]{quadpnt, }
+\item[{real(kind=rkind), dimension(\+:), intent(in), optional}]{x}
+\end{DoxyParamCaption}
+)}\label{namespacedual__tab_afde4065ace745063aac1c62ea6d318f8}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em x} & pressure head\\
+\hline
+\mbox{\tt in}  & {\em quadpnt} & Gauss quadrature point structure (element number and rank of Gauss quadrature point) \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 479 of file Re\+\_\+dual\+\_\+tab.\+f90.
+
+
+
+References dual\+\_\+coupling\+\_\+tab().
+
+
+
+Referenced by re\+\_\+dual\+\_\+pointers\+::re\+\_\+fracture(), and re\+\_\+dual\+\_\+pointers\+::re\+\_\+matrix().
+
+
+\begin{DoxyCode}
+479       \textcolor{keywordtype}{use }typy
+480       \textcolor{keywordtype}{use }dual_globals
+481       \textcolor{keywordtype}{use }pde_objs
+482       \textcolor{keywordtype}{use }core_tools
+483       \textcolor{keywordtype}{use }dual_por
+484       
+485       \textcolor{keywordtype}{class}(pde_str), \textcolor{keywordtype}{intent(in)} :: pde\_loc 
+486       \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(in)} :: layer
+488       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional} :: x
+490       \textcolor{keywordtype}{type}(integpnt_str), \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional} :: quadpnt
+491       \textcolor{keywordtype}{real(kind=rkind)}:: ex\_term
+492       
+493       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(quadpnt)) \textcolor{keywordflow}{then}
+494         ex\_term=-dual\_coupling\_tab(pde\_loc, layer, quadpnt)
+495 \textcolor{keywordflow}{      end if}
+496       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(x)) \textcolor{keywordflow}{then}
+497         ex\_term=-dual\_coupling\_tab(pde\_loc, layer, x=x)
+498 \textcolor{keywordflow}{      end if}
+\end{DoxyCode}
+
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacedual__tab_afde4065ace745063aac1c62ea6d318f8_cgraph}
+\end{center}
+\end{figure}
+
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacedual__tab_afde4065ace745063aac1c62ea6d318f8_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{dual\+\_\+tab@{dual\+\_\+tab}!dual\+\_\+coupling\+\_\+tab@{dual\+\_\+coupling\+\_\+tab}}
+\index{dual\+\_\+coupling\+\_\+tab@{dual\+\_\+coupling\+\_\+tab}!dual\+\_\+tab@{dual\+\_\+tab}}
+\subsubsection[{dual\+\_\+coupling\+\_\+tab(pde\+\_\+loc, layer, quadpnt, x)}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind) function, public dual\+\_\+tab\+::dual\+\_\+coupling\+\_\+tab (
+\begin{DoxyParamCaption}
+\item[{class({\bf pde\+\_\+str}), intent(in)}]{pde\+\_\+loc, }
+\item[{integer(kind=ikind), intent(in)}]{layer, }
+\item[{type({\bf integpnt\+\_\+str}), intent(in), optional}]{quadpnt, }
+\item[{real(kind=rkind), dimension(\+:), intent(in), optional}]{x}
+\end{DoxyParamCaption}
+)}\label{namespacedual__tab_afffe9ba95899c3c5bb0c1d53929c5ed3}
+
+
+Tabular versions of coupling term for case(1) and case(2) 
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em x} & pressure head\\
+\hline
+\mbox{\tt in}  & {\em quadpnt} & Gauss quadrature point structure (element number and rank of Gauss quadrature point) \\
+\hline
+\end{DoxyParams}
+resulting system elasticity 
+
+Definition at line 280 of file Re\+\_\+dual\+\_\+tab.\+f90.
+
+
+
+References dual\+\_\+globals\+::coup\+\_\+model, couptab, dual\+\_\+coup\+::dual\+\_\+coupling\+\_\+k(), dual\+\_\+por\+::dual\+\_\+mualem(), dual\+\_\+globals\+::exchange, ktab\+\_\+df, ktab\+\_\+dm, pde\+\_\+objs\+::pde, dual\+\_\+globals\+::vgexchange, dual\+\_\+globals\+::vgfracture, and dual\+\_\+globals\+::vgmatrix.
+
+
+
+Referenced by dual\+\_\+coupling\+\_\+neg\+\_\+tab(), re\+\_\+dual\+\_\+pointers\+::re\+\_\+fracture(), and re\+\_\+dual\+\_\+pointers\+::re\+\_\+matrix().
+
+
+\begin{DoxyCode}
+280       \textcolor{keywordtype}{use }typy
+281       \textcolor{keywordtype}{use }dual_globals
+282       \textcolor{keywordtype}{use }pde_objs
+283       \textcolor{keywordtype}{use }core_tools
+284       \textcolor{keywordtype}{use }dual_por
+285           
+286       \textcolor{keywordtype}{class}(pde_str), \textcolor{keywordtype}{intent(in)} :: pde\_loc 
+287       \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(in)} :: layer
+289       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional} :: x
+291       \textcolor{keywordtype}{type}(integpnt_str), \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional} :: quadpnt
+293       \textcolor{keywordtype}{real(kind=rkind)}::beta,a,gam\_par
+294       \textcolor{keywordtype}{real(kind=rkind)}::ks,weightf,weightm,ksm,ksf
+295       \textcolor{keywordtype}{real(kind=rkind)}:: ka\_f,ka\_m,ka,ex\_term,ka\_fm,ka\_mf,ka\_mm,ka\_ff,ka\_fw\textcolor{comment}{,ka\_mw}
+296 \textcolor{comment}{      }\textcolor{keywordtype}{real(kind=rkind)}:: hm,hf,one,hw
+297       \textcolor{keywordtype}{integer(kind=ikind)} :: pos
+298       \textcolor{keywordtype}{real(kind=rkind)} :: res, dist
+299       \textcolor{keywordtype}{type}(integpnt_str) :: quadpnt\_loc 
+300 
+301       beta=exchange(layer)%beta
+302       a=exchange(layer)%a
+303       gam\_par=exchange(layer)%gam\_par
+304       weightm=exchange(layer)%weightm
+305       weightf=exchange(layer)%weightf
+306       ksm=vgmatrix(layer)%KS\_local(1)
+307       ksf=vgfracture(layer)%KS\_local(1)     
+308       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(quadpnt) .and. \textcolor{keyword}{present}(x)) \textcolor{keywordflow}{then}
+309         print *, \textcolor{stringliteral}{"ERROR: the function can be called either with integ point or x value definition, not both
+       of them"}
+310         print *, \textcolor{stringliteral}{"exited from RE\_dual: dual\_coupling\_tab"}
+311         error stop
+312       \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (.not. \textcolor{keyword}{present}(quadpnt) .and. .not. \textcolor{keyword}{present}(x)) \textcolor{keywordflow}{then}
+313         print *, \textcolor{stringliteral}{"ERROR: you have not specified either integ point or x value"}
+314         print *, \textcolor{stringliteral}{"exited from RE\_dual: dual\_coupling\_tab"}
+315         error stop
+316 \textcolor{keywordflow}{      end if}
+317       
+318         \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(quadpnt)) \textcolor{keywordflow}{then}
+319           quadpnt\_loc=quadpnt
+320           quadpnt\_loc%preproc=.true.
+321           hm = pde(1)%getval(quadpnt\_loc)
+322           hf = pde(2)%getval(quadpnt\_loc)
+323     \textcolor{keywordflow}{else}
+324         \textcolor{keywordflow}{if} (ubound(x,1) /=2) \textcolor{keywordflow}{then}
+325           print *, \textcolor{stringliteral}{"ERROR: the coupling term is a function of two variables hm and hf"}
+326           print *, \textcolor{stringliteral}{"       your input data has:"}, ubound(x,1), \textcolor{stringliteral}{"variables"}
+327           error stop
+328 \textcolor{keywordflow}{        end if}
+329     \textcolor{keywordflow}{if} (ubound(x,1) /=2) \textcolor{keywordflow}{then}
+330           print *, \textcolor{stringliteral}{"ERROR: the coupling term is a function of two variables hm and hf"}
+331           print *, \textcolor{stringliteral}{"       your input data has:"}, ubound(x,1), \textcolor{stringliteral}{"variables"}
+332           print *, \textcolor{stringliteral}{"exited from RE\_dual::dual\_coupling\_tab"}
+333           error stop
+334 \textcolor{keywordflow}{        end if}
+335            hm = x(1)
+336            hf = x(2)
+337 \textcolor{keywordflow}{    end if}
+338 
+339     hw=hm*weightm+hf*weightf
+340         \textcolor{keywordflow}{select case}(coup_model)
+341                 \textcolor{keywordflow}{case}(1:2)
+342                  ks=vgexchange(layer)%KS\_local(1) 
+343                 \textcolor{keywordflow}{if} (hm<0) \textcolor{keywordflow}{then}
+344                   \textcolor{keywordflow}{if} ( hm/drutes_config%fnc\_discr\_length < 0.1*huge(1)) \textcolor{keywordflow}{then}
+345                         pos = int(-hm/drutes_config%fnc\_discr\_length)+1
+346                         \textcolor{keywordflow}{if} (abs(pos) <= ubound(couptab,2)-1) \textcolor{keywordflow}{then}
+347                           dist = -hm - (pos - 1)*drutes_config%fnc\_discr\_length
+348                           ka\_m = (couptab(layer,pos+1)-couptab(layer,pos))/
+      drutes_config%fnc\_discr\_length\textcolor{comment}{*dist &}
+349 \textcolor{comment}{                          + couptab(layer,pos)}
+350 \textcolor{comment}{                        }\textcolor{keywordflow}{else}
+351                           ka\_m= dual\_coupling\_k(pde\_loc,layer,x=[hm])
+352 \textcolor{keywordflow}{                        end if}
+353                   \textcolor{keywordflow}{else}
+354                         ka\_m= dual\_coupling\_k(pde\_loc,layer,x=[hm])
+355 \textcolor{keywordflow}{                  end if}
+356                 \textcolor{keywordflow}{else}
+357                   ka\_m= dual\_coupling\_k(pde\_loc,layer,x=[hm])
+358 \textcolor{keywordflow}{                end if}
+359         
+360                 \textcolor{keywordflow}{if} (hf<0) \textcolor{keywordflow}{then}
+361                   \textcolor{keywordflow}{if} ( hf/drutes_config%fnc\_discr\_length < 0.1*huge(1)) \textcolor{keywordflow}{then}
+362                         pos = int(-hf/drutes_config%fnc\_discr\_length)+1
+363                         \textcolor{keywordflow}{if} (abs(pos) <= ubound(couptab,2)-1) \textcolor{keywordflow}{then}
+364                           dist = -hf - (pos - 1)*drutes_config%fnc\_discr\_length
+365                           ka\_f = (couptab(layer,pos+1)-couptab(layer,pos))/
+      drutes_config%fnc\_discr\_length\textcolor{comment}{*dist&}
+366 \textcolor{comment}{                           + couptab(layer,pos)}
+367 \textcolor{comment}{                        }\textcolor{keywordflow}{else}
+368                           ka\_f= dual\_coupling\_k(pde\_loc,layer,x=[hf])
+369 \textcolor{keywordflow}{                        end if}
+370                   \textcolor{keywordflow}{else}
+371                         ka\_f= dual\_coupling\_k(pde\_loc,layer,x=[hf])
+372 \textcolor{keywordflow}{                  end if}
+373                 \textcolor{keywordflow}{else}
+374                   ka\_f= dual\_coupling\_k(pde\_loc,layer,x=[hf])
+375 \textcolor{keywordflow}{                end if}
+376     \textcolor{keywordflow}{case}(4)
+377                 \textcolor{keywordflow}{if} (hm<0) \textcolor{keywordflow}{then}
+378                   \textcolor{keywordflow}{if} ( hm/drutes_config%fnc\_discr\_length < 0.1*huge(1)) \textcolor{keywordflow}{then}
+379                         pos = int(-hm/drutes_config%fnc\_discr\_length)+1
+380                         \textcolor{keywordflow}{if} (abs(pos) <= ubound(couptab,2)-1) \textcolor{keywordflow}{then}
+381                           dist = -hm - (pos - 1)*drutes_config%fnc\_discr\_length
+382                           ka\_mm = (ktab\_dm(layer,pos+1)-ktab\_dm(layer,pos))/
+      drutes_config%fnc\_discr\_length\textcolor{comment}{*dist &}
+383 \textcolor{comment}{                          + ktab\_dm(layer,pos)}
+384 \textcolor{comment}{                          ka\_fm= (ktab\_df(layer,pos+1)-ktab\_df(layer,pos))/
+      drutes_config%fnc\_discr\_length*dist &}
+385 \textcolor{comment}{                          + ktab\_df(layer,pos)}
+386 \textcolor{comment}{                        }\textcolor{keywordflow}{else}
+387                           \textcolor{keyword}{call }dual_mualem(pde\_loc,layer,x=[hm],scalar=ka\_mm)
+388                           \textcolor{keyword}{call }dual_mualem(pde\_loc,layer,x=[hm],scalar=ka\_fm)
+389 \textcolor{keywordflow}{                        end if}
+390                   \textcolor{keywordflow}{else}
+391                         \textcolor{keyword}{call  }dual_mualem(pde\_loc,layer,x=[hm],scalar=ka\_mm)
+392                         \textcolor{keyword}{call  }dual_mualem(pde\_loc,layer,x=[hm],scalar=ka\_fm)
+393 \textcolor{keywordflow}{                  end if}
+394                 \textcolor{keywordflow}{else}
+395                         \textcolor{keyword}{call  }dual_mualem(pde\_loc,layer,x=[hm],scalar=ka\_mm)
+396                         \textcolor{keyword}{call  }dual_mualem(pde\_loc,layer,x=[hm],scalar=ka\_fm)
+397 \textcolor{keywordflow}{                end if}
+398     
+399                 \textcolor{keywordflow}{if} (hf<0) \textcolor{keywordflow}{then}
+400                   \textcolor{keywordflow}{if} ( hf/drutes_config%fnc\_discr\_length < 0.1*huge(1)) \textcolor{keywordflow}{then}
+401                         pos = int(-hf/drutes_config%fnc\_discr\_length)+1
+402                         \textcolor{keywordflow}{if} (abs(pos) <= ubound(couptab,2)-1) \textcolor{keywordflow}{then}
+403                           dist = -hf - (pos - 1)*drutes_config%fnc\_discr\_length
+404                           ka\_ff = (ktab\_df(layer,pos+1)-ktab\_df(layer,pos))/
+      drutes_config%fnc\_discr\_length\textcolor{comment}{*dist &}
+405 \textcolor{comment}{                          + ktab\_df(layer,pos)}
+406 \textcolor{comment}{                          ka\_mf = (ktab\_dm(layer,pos+1)-ktab\_dm(layer,pos))/
+      drutes_config%fnc\_discr\_length*dist &}
+407 \textcolor{comment}{                          + ktab\_dm(layer,pos)}
+408 \textcolor{comment}{                        }\textcolor{keywordflow}{else}
+409                           \textcolor{keyword}{call }dual_mualem(pde\_loc,layer,x=[hf],scalar=ka\_mf)
+410                           \textcolor{keyword}{call }dual_mualem(pde\_loc,layer,x=[hf],scalar=ka\_ff)
+411 \textcolor{keywordflow}{                        end if}
+412                   \textcolor{keywordflow}{else}
+413                           \textcolor{keyword}{call }dual_mualem(pde\_loc,layer,x=[hf],scalar=ka\_mf)
+414                           \textcolor{keyword}{call }dual_mualem(pde\_loc,layer,x=[hf],scalar=ka\_ff)
+415 \textcolor{keywordflow}{                  end if}
+416                 \textcolor{keywordflow}{else}
+417                         \textcolor{keyword}{call }dual_mualem(pde\_loc,layer,x=[hf],scalar=ka\_mf)
+418                         \textcolor{keyword}{call }dual_mualem(pde\_loc,layer,x=[hf],scalar=ka\_ff)
+419 \textcolor{keywordflow}{                end if}
+420                 ka\_mm=ka\_mm*ksm
+421                 ka\_fm=ka\_fm*ksf
+422                 ka\_mf=ka\_mf*ksm
+423                 ka\_ff=ka\_ff*ksf
+424         \textcolor{keywordflow}{case}(5)
+425 
+426                 \textcolor{keywordflow}{if} (hw<0) \textcolor{keywordflow}{then}
+427                   \textcolor{keywordflow}{if} ( hw/drutes_config%fnc\_discr\_length < 0.1*huge(1)) \textcolor{keywordflow}{then}
+428                         pos = int(-hw/drutes_config%fnc\_discr\_length)+1
+429                         \textcolor{keywordflow}{if} (abs(pos) <= ubound(couptab,2)-1) \textcolor{keywordflow}{then}
+430                           dist = -hw - (pos - 1)*drutes_config%fnc\_discr\_length
+431                           ka\_fw = (ktab\_df(layer,pos+1)-ktab\_df(layer,pos))/
+      drutes_config%fnc\_discr\_length\textcolor{comment}{*dist &}
+432 \textcolor{comment}{                          + ktab\_df(layer,pos)}
+433 \textcolor{comment}{                          ka\_mw = (ktab\_dm(layer,pos+1)-ktab\_dm(layer,pos))/
+      drutes_config%fnc\_discr\_length*dist &}
+434 \textcolor{comment}{                          + ktab\_dm(layer,pos)}
+435 \textcolor{comment}{                        }\textcolor{keywordflow}{else}
+436                           \textcolor{keyword}{call }dual_mualem(pde\_loc,layer,x=[hw],scalar=ka\_mw)
+437                           \textcolor{keyword}{call }dual_mualem(pde\_loc,layer,x=[hw],scalar=ka\_fw)
+438 \textcolor{keywordflow}{                        end if}
+439                   \textcolor{keywordflow}{else}
+440                           \textcolor{keyword}{call }dual_mualem(pde\_loc,layer,x=[hw],scalar=ka\_mw)
+441                           \textcolor{keyword}{call }dual_mualem(pde\_loc,layer,x=[hw],scalar=ka\_fw)
+442 \textcolor{keywordflow}{                  end if}
+443                 \textcolor{keywordflow}{else}
+444                         \textcolor{keyword}{call }dual_mualem(pde\_loc,layer,x=[hw],scalar=ka\_mw)
+445                         \textcolor{keyword}{call }dual_mualem(pde\_loc,layer,x=[hw],scalar=ka\_fw)
+446 \textcolor{keywordflow}{                end if}
+447                 ka\_fw=ka\_fw*ksf
+448                 ka\_mw=ka\_mw*ksm
+449         \textcolor{keywordflow}{case}(3)
+450         
+451 \textcolor{keywordflow}{        case default}
+452                 print *, \textcolor{stringliteral}{"ERROR! You have specified an unsupported coupling term model in dual.conf file"}
+453                 print *, \textcolor{stringliteral}{"the incorrect value specified is:"}, coup_model
+454                 error stop
+455 \textcolor{keywordflow}{  end select}
+456     
+457     
+458   \textcolor{keywordflow}{select case}(coup_model)
+459          \textcolor{keywordflow}{case}(1)
+460            ka=0.5*(ka\_f+ka\_m)*ks
+461          \textcolor{keywordflow}{case}(2)
+462            ka=(ka\_f*ka\_m)**0.5*ks
+463          \textcolor{keywordflow}{case}(3)
+464            ka=vgexchange(layer)%KS\_local(1)
+465          \textcolor{keywordflow}{case}(4)
+466            ka=minval((/ka\_ff,ka\_fm,ka\_mm,ka\_mf/))
+467          \textcolor{keywordflow}{case}(5)
+468            ka=minval((/ka\_fw,ka\_mw/))
+469 \textcolor{keywordflow}{   end select}
+470     
+471     \textcolor{keywordflow}{if}(abs(hm-hf)>max(hm,hf)*epsilon(hm)) \textcolor{keywordflow}{then}
+472       ex\_term=beta/a**2*gam\_par*ka
+473     \textcolor{keywordflow}{else}
+474       ex\_term=0.0\_rkind
+475 \textcolor{keywordflow}{    end if}
+\end{DoxyCode}
+
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacedual__tab_afffe9ba95899c3c5bb0c1d53929c5ed3_cgraph}
+\end{center}
+\end{figure}
+
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacedual__tab_afffe9ba95899c3c5bb0c1d53929c5ed3_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{dual\+\_\+tab@{dual\+\_\+tab}!dual\+\_\+mualem\+\_\+tab@{dual\+\_\+mualem\+\_\+tab}}
+\index{dual\+\_\+mualem\+\_\+tab@{dual\+\_\+mualem\+\_\+tab}!dual\+\_\+tab@{dual\+\_\+tab}}
+\subsubsection[{dual\+\_\+mualem\+\_\+tab(pde\+\_\+loc, layer, quadpnt, x, tensor, scalar)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, public dual\+\_\+tab\+::dual\+\_\+mualem\+\_\+tab (
+\begin{DoxyParamCaption}
+\item[{class({\bf pde\+\_\+str}), intent(in)}]{pde\+\_\+loc, }
+\item[{integer(kind=ikind), intent(in)}]{layer, }
+\item[{type({\bf integpnt\+\_\+str}), intent(in), optional}]{quadpnt, }
+\item[{real(kind=rkind), dimension(\+:), intent(in), optional}]{x, }
+\item[{real(kind=rkind), dimension(\+:,\+:), intent(out), optional}]{tensor, }
+\item[{real(kind=rkind), intent(out), optional}]{scalar}
+\end{DoxyParamCaption}
+)}\label{namespacedual__tab_a7268f9bd1dd01ea5d2e7799ba210ef81}
+
+
+Tabular versions of dispersion. 
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em x} & pressure head\\
+\hline
+\mbox{\tt in}  & {\em quadpnt} & Gauss quadrature point structure (element number and rank of Gauss quadrature point)\\
+\hline
+\mbox{\tt out}  & {\em tensor} & second order tensor of the unsaturated hydraulic conductivity\\
+\hline
+\mbox{\tt out}  & {\em scalar} & relative hydraulic conductivity, (scalar value) \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 24 of file Re\+\_\+dual\+\_\+tab.\+f90.
+
+
+
+References dual\+\_\+por\+::dual\+\_\+mualem(), ktab\+\_\+df, ktab\+\_\+dm, dual\+\_\+globals\+::vgfracture, and dual\+\_\+globals\+::vgmatrix.
+
+
+
+Referenced by re\+\_\+dual\+\_\+pointers\+::re\+\_\+fracture(), and re\+\_\+dual\+\_\+pointers\+::re\+\_\+matrix().
+
+
+\begin{DoxyCode}
+24       \textcolor{keywordtype}{use }typy
+25       \textcolor{keywordtype}{use }dual_globals
+26       \textcolor{keywordtype}{use }pde_objs
+27       \textcolor{keywordtype}{use }core_tools
+28       \textcolor{keywordtype}{use }debug_tools
+29       \textcolor{keywordtype}{use }dual_por
+30 
+31       \textcolor{keywordtype}{class}(pde_str), \textcolor{keywordtype}{intent(in)} :: pde\_loc
+32       \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(in)} :: layer
+34       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional} :: x
+36       \textcolor{keywordtype}{type}(integpnt_str), \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional} :: quadpnt      
+38       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:,:)}, \textcolor{keywordtype}{intent(out)}, \textcolor{keywordtype}{optional} :: tensor \textcolor{comment}{        }
+40       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{intent(out)}, \textcolor{keywordtype}{optional} :: scalar
+41 
+42       \textcolor{keywordtype}{real(kind=rkind)} :: h
+43       \textcolor{keywordtype}{integer(kind=ikind)} :: pos
+44       \textcolor{keywordtype}{real(kind=rkind)} :: res, dist, tmp
+45       \textcolor{keywordtype}{type}(integpnt_str) :: quadpnt\_loc 
+46       
+47       
+48       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(quadpnt) .and. \textcolor{keyword}{present}(x)) \textcolor{keywordflow}{then}
+49                 print *, \textcolor{stringliteral}{"ERROR: the function can be called either with integ point or x value definition,
+       not both of them"}
+50                 print *, \textcolor{stringliteral}{"exited from Re\_dual::mualem\_m\_tab"}
+51                 error stop
+52       \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (.not. \textcolor{keyword}{present}(quadpnt) .and. .not. \textcolor{keyword}{present}(x)) \textcolor{keywordflow}{then}
+53                 print *, \textcolor{stringliteral}{"ERROR: you have not specified either integ point or x value"}
+54         print *, \textcolor{stringliteral}{"exited from Re\_dual::mualem\_m\_tab"}
+55                 error stop
+56 \textcolor{keywordflow}{      end if}
+57       
+58      
+59       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(quadpnt)) \textcolor{keywordflow}{then}
+60         quadpnt\_loc=quadpnt
+61             quadpnt\_loc%preproc=.true.
+62             h = pde\_loc%getval(quadpnt\_loc)
+63       \textcolor{keywordflow}{else}
+64         \textcolor{keywordflow}{if} (ubound(x,1) /=1) \textcolor{keywordflow}{then}
+65                         print *, \textcolor{stringliteral}{"ERROR: van Genuchten function is a function of a single variable h"}
+66                         print *, \textcolor{stringliteral}{"       your input data has:"}, ubound(x,1), \textcolor{stringliteral}{"variables"}
+67                         print *, \textcolor{stringliteral}{"exited from Re\_dual::mualem\_m\_tab"}
+68                         error stop
+69 \textcolor{keywordflow}{                end if}
+70                 h = x(1)
+71 \textcolor{keywordflow}{      end if}
+72       
+73       \textcolor{keywordflow}{if} (h<0) \textcolor{keywordflow}{then}
+74         \textcolor{keywordflow}{if} (-h/drutes_config%fnc\_discr\_length < 0.1*huge(1) ) \textcolor{keywordflow}{then}
+75           pos = int(-h/drutes_config%fnc\_discr\_length)+1
+76           \textcolor{keywordflow}{if} (abs(pos) <= ubound(ktab\_dm,2)-1) \textcolor{keywordflow}{then}
+77             dist = -h - (pos - 1)*drutes_config%fnc\_discr\_length
+78             \textcolor{keywordflow}{select case} (pde\_loc%mfswitch)
+79               \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"m"})
+80                tmp = (ktab\_dm(layer,pos+1)-ktab\_dm(layer,pos))/drutes_config%fnc\_discr\_length\textcolor{comment}{*
+      dist &}
+81 \textcolor{comment}{            + ktab\_dm(layer,pos)}
+82 \textcolor{comment}{              }\textcolor{keywordflow}{case}(\textcolor{stringliteral}{"f"})
+83             tmp = (ktab\_df(layer,pos+1)-ktab\_df(layer,pos))/drutes_config%fnc\_discr\_length\textcolor{comment}{*
+      dist &}
+84 \textcolor{comment}{            + ktab\_df(layer,pos)}
+85 \textcolor{comment}{}\textcolor{keywordflow}{            end select}
+86           \textcolor{keywordflow}{else}
+87             \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(quadpnt)) \textcolor{keyword}{call }dual_mualem(pde\_loc, layer, quadpnt, scalar\textcolor{comment}{ = tmp)}
+88 \textcolor{comment}{            }\textcolor{keywordflow}{if} (\textcolor{keyword}{present}(x)) \textcolor{keyword}{call }dual_mualem(pde\_loc, layer, x=x, scalar = tmp)
+89 \textcolor{keywordflow}{          end if}
+90         \textcolor{keywordflow}{else}
+91           \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(quadpnt)) \textcolor{keyword}{call }dual_mualem(pde\_loc, layer, quadpnt, scalar\textcolor{comment}{ = tmp)}
+92 \textcolor{comment}{          }\textcolor{keywordflow}{if} (\textcolor{keyword}{present}(x)) \textcolor{keyword}{call }dual_mualem(pde\_loc, layer, x=x, scalar = tmp)
+93 \textcolor{keywordflow}{        end if} 
+94       \textcolor{keywordflow}{else}
+95         \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(quadpnt)) \textcolor{keyword}{call }dual_mualem(pde\_loc, layer, quadpnt, scalar \textcolor{comment}{= tmp)}
+96 \textcolor{comment}{        }\textcolor{keywordflow}{if} (\textcolor{keyword}{present}(x)) \textcolor{keyword}{call }dual_mualem(pde\_loc, layer, x=x, scalar = tmp)
+97 \textcolor{keywordflow}{      end if}
+98 
+99       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(tensor)) \textcolor{keywordflow}{then}
+100         \textcolor{keywordflow}{select case} (pde\_loc%mfswitch)
+101           \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"m"})
+102             tensor = tmp*vgmatrix(layer)%Ks
+103           \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"f"})
+104              tensor = tmp*vgfracture(layer)%Ks
+105 \textcolor{keywordflow}{        end select}
+106 \textcolor{keywordflow}{      end if}
+107 
+108       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(scalar)) \textcolor{keywordflow}{then}
+109         scalar = tmp
+110 \textcolor{keywordflow}{      end if}
+\end{DoxyCode}
+
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=333pt]{namespacedual__tab_a7268f9bd1dd01ea5d2e7799ba210ef81_cgraph}
+\end{center}
+\end{figure}
+
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacedual__tab_a7268f9bd1dd01ea5d2e7799ba210ef81_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{dual\+\_\+tab@{dual\+\_\+tab}!dual\+\_\+ret\+\_\+cap\+\_\+tab@{dual\+\_\+ret\+\_\+cap\+\_\+tab}}
+\index{dual\+\_\+ret\+\_\+cap\+\_\+tab@{dual\+\_\+ret\+\_\+cap\+\_\+tab}!dual\+\_\+tab@{dual\+\_\+tab}}
+\subsubsection[{dual\+\_\+ret\+\_\+cap\+\_\+tab(pde\+\_\+loc, layer, quadpnt, x)}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind) function, public dual\+\_\+tab\+::dual\+\_\+ret\+\_\+cap\+\_\+tab (
+\begin{DoxyParamCaption}
+\item[{class({\bf pde\+\_\+str}), intent(in)}]{pde\+\_\+loc, }
+\item[{integer(kind=ikind), intent(in)}]{layer, }
+\item[{type({\bf integpnt\+\_\+str}), intent(in), optional}]{quadpnt, }
+\item[{real(kind=rkind), dimension(\+:), intent(in), optional}]{x}
+\end{DoxyParamCaption}
+)}\label{namespacedual__tab_a07ff8aefff61c7abeb3c09949a5cc5e0}
+
+
+Tabular versions of elastiocity. 
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em x} & pressure head\\
+\hline
+\mbox{\tt in}  & {\em quadpnt} & Gauss quadrature point structure (element number and rank of Gauss quadrature point)\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+resulting system elasticity 
+\end{DoxyReturn}
+
+
+Definition at line 195 of file Re\+\_\+dual\+\_\+tab.\+f90.
+
+
+
+References dual\+\_\+por\+::dual\+\_\+ret\+\_\+cap(), dual\+\_\+globals\+::exchange, dual\+\_\+globals\+::vgfracture, dual\+\_\+globals\+::vgmatrix, warecatab\+\_\+df, and warecatab\+\_\+dm.
+
+
+
+Referenced by re\+\_\+dual\+\_\+pointers\+::re\+\_\+fracture(), and re\+\_\+dual\+\_\+pointers\+::re\+\_\+matrix().
+
+
+\begin{DoxyCode}
+195       \textcolor{keywordtype}{use }typy
+196       \textcolor{keywordtype}{use }dual_globals
+197       \textcolor{keywordtype}{use }pde_objs
+198       \textcolor{keywordtype}{use }core_tools
+199       \textcolor{keywordtype}{use }debug_tools
+200       \textcolor{keywordtype}{use }dual_por
+201 
+202       \textcolor{keywordtype}{class}(pde_str), \textcolor{keywordtype}{intent(in)} :: pde\_loc 
+203       \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(in)} :: layer
+205       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional} :: x
+207       \textcolor{keywordtype}{type}(integpnt_str), \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional} :: quadpnt
+208       \textcolor{keywordtype}{real(kind=rkind)} :: h
+210       \textcolor{keywordtype}{real(kind=rkind)} :: e
+211 
+212       \textcolor{keywordtype}{integer(kind=ikind)} :: pos
+213       \textcolor{keywordtype}{real(kind=rkind)} :: res, dist
+214       \textcolor{keywordtype}{type}(integpnt_str) :: quadpnt\_loc      
+215       
+216    
+217       
+218       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(quadpnt) .and. \textcolor{keyword}{present}(x)) \textcolor{keywordflow}{then}
+219         print *, \textcolor{stringliteral}{"ERROR: the function can be called either with integ point or x value definition, not both
+       of them"}
+220         print *, \textcolor{stringliteral}{"exited from re\_constitutive::vangen\_elast\_tab"}
+221         error stop
+222       \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (.not. \textcolor{keyword}{present}(quadpnt) .and. .not. \textcolor{keyword}{present}(x)) \textcolor{keywordflow}{then}
+223         print *, \textcolor{stringliteral}{"ERROR: you have not specified either integ point or x value"}
+224         print *, \textcolor{stringliteral}{"exited from re\_constitutive::vangen\_elast\_tab"}
+225         error stop
+226 \textcolor{keywordflow}{      end if}
+227       
+228       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(quadpnt)) \textcolor{keywordflow}{then}
+229         quadpnt\_loc=quadpnt
+230         quadpnt\_loc%preproc=.true.
+231         h = pde\_loc%getval(quadpnt\_loc)
+232       \textcolor{keywordflow}{else}
+233         \textcolor{keywordflow}{if} (ubound(x,1) /=1) \textcolor{keywordflow}{then}
+234           print *, \textcolor{stringliteral}{"ERROR: van Genuchten function is a function of a single variable h"}
+235           print *, \textcolor{stringliteral}{"       your input data has:"}, ubound(x,1), \textcolor{stringliteral}{"variables"}
+236           print *, \textcolor{stringliteral}{"exited from re\_constitutive::vangen\_elast\_tab"}
+237           error stop
+238 \textcolor{keywordflow}{        end if}
+239         h = x(1)
+240 \textcolor{keywordflow}{      end if}
+241 
+242 
+243      
+244       \textcolor{keywordflow}{if} (h<0) \textcolor{keywordflow}{then} \textcolor{comment}{!same as 1104}
+245         \textcolor{keywordflow}{if} ( h/drutes_config%fnc\_discr\_length < 0.1*huge(1)) \textcolor{keywordflow}{then}
+246           pos = int(-h/drutes_config%fnc\_discr\_length)+1
+247           \textcolor{keywordflow}{if} (abs(pos) <= ubound(warecatab\_dm,2)-1) \textcolor{keywordflow}{then}
+248             dist = -h - (pos - 1)*drutes_config%fnc\_discr\_length
+249             \textcolor{keywordflow}{select case} (pde\_loc%mfswitch)
+250               \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"m"})
+251                 e = (warecatab\_dm(layer,pos+1)-warecatab\_dm(layer,pos))/
+      drutes_config%fnc\_discr\_length\textcolor{comment}{*dist &}
+252 \textcolor{comment}{                 + warecatab\_dm(layer,pos)}
+253 \textcolor{comment}{              }\textcolor{keywordflow}{case}(\textcolor{stringliteral}{"f"})
+254                 e = (warecatab\_df(layer,pos+1)-warecatab\_df(layer,pos))/
+      drutes_config%fnc\_discr\_length\textcolor{comment}{*dist &}
+255 \textcolor{comment}{              + warecatab\_df(layer,pos)}
+256 \textcolor{comment}{}\textcolor{keywordflow}{            end select}
+257           \textcolor{keywordflow}{else}
+258             \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(quadpnt)) e = dual_ret_cap(pde\_loc, layer, quadpnt)
+259             \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(x)) e = dual_ret_cap(pde\_loc, layer, x=x)
+260 \textcolor{keywordflow}{          end if}
+261         \textcolor{keywordflow}{else}
+262           \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(quadpnt)) e = dual_ret_cap(pde\_loc, layer, quadpnt)
+263           \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(x)) e = dual_ret_cap(pde\_loc, layer, x=x)   
+264 \textcolor{keywordflow}{        end if}
+265         
+266       \textcolor{keywordflow}{else}
+267         \textcolor{keywordflow}{select case} (pde\_loc%mfswitch)
+268           \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"m"})
+269             e = vgmatrix(layer)%Ss*exchange(layer)%weightm
+270           \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"f"})
+271             e = vgfracture(layer)%Ss*exchange(layer)%weightf
+272 \textcolor{keywordflow}{        end select}
+273         
+274 \textcolor{keywordflow}{      end if}
+275 
+276 
+\end{DoxyCode}
+
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=289pt]{namespacedual__tab_a07ff8aefff61c7abeb3c09949a5cc5e0_cgraph}
+\end{center}
+\end{figure}
+
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacedual__tab_a07ff8aefff61c7abeb3c09949a5cc5e0_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{dual\+\_\+tab@{dual\+\_\+tab}!dual\+\_\+tabvalues@{dual\+\_\+tabvalues}}
+\index{dual\+\_\+tabvalues@{dual\+\_\+tabvalues}!dual\+\_\+tab@{dual\+\_\+tab}}
+\subsubsection[{dual\+\_\+tabvalues(pde\+\_\+loc, Kfnc, Cfnc, thetafnc, ex\+\_\+\+K\+\_\+fnc)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, public dual\+\_\+tab\+::dual\+\_\+tabvalues (
+\begin{DoxyParamCaption}
+\item[{class({\bf pde\+\_\+str}), intent(in)}]{pde\+\_\+loc, }
+\item[{}]{Kfnc, }
+\item[{}]{Cfnc, }
+\item[{}]{thetafnc, }
+\item[{}]{ex\+\_\+\+K\+\_\+fnc}
+\end{DoxyParamCaption}
+)}\label{namespacedual__tab_aad3dbc3def209ecebf2c7059fd42fff3}
+
+
+creates a table of values of constitutive functions for the Richards equation to be linearly approximated 
+
+
+
+Definition at line 504 of file Re\+\_\+dual\+\_\+tab.\+f90.
+
+
+
+References couptab, globals\+::drutes\+\_\+config, ktab\+\_\+df, ktab\+\_\+dm, globals\+::maxpress, printtools\+::progressbar(), dual\+\_\+globals\+::vgfracture, dual\+\_\+globals\+::vgmatrix, warecatab\+\_\+df, warecatab\+\_\+dm, watcontab\+\_\+df, watcontab\+\_\+dm, and core\+\_\+tools\+::write\+\_\+log().
+
+
+
+Referenced by re\+\_\+dual\+\_\+pointers\+::re\+\_\+fracture(), and re\+\_\+dual\+\_\+pointers\+::re\+\_\+matrix().
+
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=318pt]{namespacedual__tab_aad3dbc3def209ecebf2c7059fd42fff3_cgraph}
+\end{center}
+\end{figure}
+
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacedual__tab_aad3dbc3def209ecebf2c7059fd42fff3_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{dual\+\_\+tab@{dual\+\_\+tab}!vangen\+\_\+d\+\_\+tab@{vangen\+\_\+d\+\_\+tab}}
+\index{vangen\+\_\+d\+\_\+tab@{vangen\+\_\+d\+\_\+tab}!dual\+\_\+tab@{dual\+\_\+tab}}
+\subsubsection[{vangen\+\_\+d\+\_\+tab(pde\+\_\+loc, layer, quadpnt, x)}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind) function, public dual\+\_\+tab\+::vangen\+\_\+d\+\_\+tab (
+\begin{DoxyParamCaption}
+\item[{class({\bf pde\+\_\+str}), intent(in)}]{pde\+\_\+loc, }
+\item[{integer(kind=ikind), intent(in)}]{layer, }
+\item[{type({\bf integpnt\+\_\+str}), intent(in), optional}]{quadpnt, }
+\item[{real(kind=rkind), dimension(\+:), intent(in), optional}]{x}
+\end{DoxyParamCaption}
+)}\label{namespacedual__tab_a4c7205301837b0f1b9b645d4cbb4b6ea}
+
+
+Tabular versions of mass. 
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em x} & pressure head\\
+\hline
+\mbox{\tt in}  & {\em quadpnt} & Gauss quadrature point structure (element number and rank of Gauss quadrature point)\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+resulting water content 
+\end{DoxyReturn}
+
+
+Definition at line 114 of file Re\+\_\+dual\+\_\+tab.\+f90.
+
+
+
+References dual\+\_\+por\+::vangen\+\_\+d(), dual\+\_\+globals\+::vgfracture, dual\+\_\+globals\+::vgmatrix, watcontab\+\_\+df, and watcontab\+\_\+dm.
+
+
+
+Referenced by re\+\_\+dual\+\_\+pointers\+::re\+\_\+fracture(), and re\+\_\+dual\+\_\+pointers\+::re\+\_\+matrix().
+
+
+\begin{DoxyCode}
+114       \textcolor{keywordtype}{use }typy
+115       \textcolor{keywordtype}{use }dual_globals
+116       \textcolor{keywordtype}{use }pde_objs
+117       \textcolor{keywordtype}{use }core_tools
+118       \textcolor{keywordtype}{use }dual_por
+119       
+120       \textcolor{keywordtype}{class}(pde_str), \textcolor{keywordtype}{intent(in)} :: pde\_loc
+121       \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(in)} :: layer
+123       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{optional} :: x
+125       \textcolor{keywordtype}{type}(integpnt_str), \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional} :: quadpnt
+126       \textcolor{keywordtype}{real(kind=rkind)} :: h
+128       \textcolor{keywordtype}{real(kind=rkind)} :: theta
+129 
+130       \textcolor{keywordtype}{integer(kind=ikind)} :: pos
+131       \textcolor{keywordtype}{real(kind=rkind)} :: res, dist
+132       \textcolor{keywordtype}{type}(integpnt_str) :: quadpnt\_loc
+133 
+134       
+135       
+136       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(quadpnt) .and. \textcolor{keyword}{present}(x)) \textcolor{keywordflow}{then}
+137         print *, \textcolor{stringliteral}{"ERROR: the function can be called either with integ point or x value definition, not both
+       of them"}
+138         print *, \textcolor{stringliteral}{"exited from RE\_dual::vangen\_tab"}
+139         error stop
+140       \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (.not. \textcolor{keyword}{present}(quadpnt) .and. .not. \textcolor{keyword}{present}(x)) \textcolor{keywordflow}{then}
+141         print *, \textcolor{stringliteral}{"ERROR: you have not specified either integ point or x value"}
+142         print *, \textcolor{stringliteral}{"exited from RE\_dual::vangen\_tab"}
+143         error stop
+144 \textcolor{keywordflow}{      end if}
+145       
+146       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(quadpnt)) \textcolor{keywordflow}{then}
+147         quadpnt\_loc=quadpnt
+148         quadpnt\_loc%preproc=.true.
+149         h = pde\_loc%getval(quadpnt\_loc)
+150       \textcolor{keywordflow}{else}
+151         \textcolor{keywordflow}{if} (ubound(x,1) /=1) \textcolor{keywordflow}{then}
+152           print *, \textcolor{stringliteral}{"ERROR: van Genuchten function is a function of a single variable h"}
+153           print *, \textcolor{stringliteral}{"       your input data has:"}, ubound(x,1), \textcolor{stringliteral}{"variables"}
+154           print *, \textcolor{stringliteral}{"exited from re\_constitutive::vangen\_tab"}
+155           error stop
+156 \textcolor{keywordflow}{        end if}
+157         h = x(1)
+158 \textcolor{keywordflow}{      end if}
+159 
+160      \textcolor{keywordflow}{if} (h<0) \textcolor{keywordflow}{then}
+161         \textcolor{keywordflow}{if} ( h/drutes_config%fnc\_discr\_length < 0.1*huge(1)) \textcolor{keywordflow}{then}
+162           pos = int(-h/drutes_config%fnc\_discr\_length)+1
+163           \textcolor{keywordflow}{if} (abs(pos) <= ubound(watcontab\_dm,2)-1) \textcolor{keywordflow}{then}
+164             dist = -h - (pos - 1)*drutes_config%fnc\_discr\_length
+165             \textcolor{keywordflow}{select case} (pde\_loc%mfswitch)
+166               \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"m"})
+167                 theta = (watcontab\_dm(layer,pos+1)-watcontab\_dm(layer,pos))/
+      drutes_config%fnc\_discr\_length\textcolor{comment}{*dist &}
+168 \textcolor{comment}{            + watcontab\_dm(layer,pos)}
+169 \textcolor{comment}{              }\textcolor{keywordflow}{case}(\textcolor{stringliteral}{"f"})
+170                 theta = (watcontab\_df(layer,pos+1)-watcontab\_df(layer,pos))/
+      drutes_config%fnc\_discr\_length\textcolor{comment}{*dist&}
+171 \textcolor{comment}{             + watcontab\_df(layer,pos)}
+172 \textcolor{comment}{}\textcolor{keywordflow}{            end select}
+173 
+174           \textcolor{keywordflow}{else}
+175             \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(quadpnt)) theta = vangen_d(pde\_loc, layer, quadpnt\textcolor{comment}{)}
+176 \textcolor{comment}{            }\textcolor{keywordflow}{if} (\textcolor{keyword}{present}(x)) theta = vangen_d(pde\_loc, layer, x=x)
+177 \textcolor{keywordflow}{          end if}
+178         \textcolor{keywordflow}{else}
+179           \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(quadpnt)) theta = vangen_d(pde\_loc, layer, quadpnt\textcolor{comment}{)}
+180 \textcolor{comment}{          }\textcolor{keywordflow}{if} (\textcolor{keyword}{present}(x)) theta = vangen_d(pde\_loc, layer, x=x)
+181 \textcolor{keywordflow}{        end if}
+182     \textcolor{keywordflow}{else}
+183       \textcolor{keywordflow}{select case} (pde\_loc%mfswitch)
+184         \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"m"})
+185            theta = vgmatrix(layer)%Ths
+186         \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"f"})
+187            theta = vgfracture(layer)%Ths
+188 \textcolor{keywordflow}{        end select}
+189 \textcolor{keywordflow}{    end if}
+190       
+191 
+\end{DoxyCode}
+
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=301pt]{namespacedual__tab_a4c7205301837b0f1b9b645d4cbb4b6ea_cgraph}
+\end{center}
+\end{figure}
+
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacedual__tab_a4c7205301837b0f1b9b645d4cbb4b6ea_icgraph}
+\end{center}
+\end{figure}
+
+
+
+
+\subsection{Variable Documentation}
+\index{dual\+\_\+tab@{dual\+\_\+tab}!couptab@{couptab}}
+\index{couptab@{couptab}!dual\+\_\+tab@{dual\+\_\+tab}}
+\subsubsection[{couptab}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind), dimension(\+:,\+:), allocatable, public dual\+\_\+tab\+::couptab}\label{namespacedual__tab_ab21a774ac1679a77924cbef41f3af99e}
+
+
+Definition at line 17 of file Re\+\_\+dual\+\_\+tab.\+f90.
+
+
+
+Referenced by dual\+\_\+coupling\+\_\+tab(), and dual\+\_\+tabvalues().
+
+\index{dual\+\_\+tab@{dual\+\_\+tab}!ktab\+\_\+df@{ktab\+\_\+df}}
+\index{ktab\+\_\+df@{ktab\+\_\+df}!dual\+\_\+tab@{dual\+\_\+tab}}
+\subsubsection[{ktab\+\_\+df}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind), dimension(\+:,\+:), allocatable, public dual\+\_\+tab\+::ktab\+\_\+df}\label{namespacedual__tab_a5f6d5fd4c1d4fd4cd39e1a12c2cfbb8e}
+
+
+Definition at line 18 of file Re\+\_\+dual\+\_\+tab.\+f90.
+
+
+
+Referenced by dual\+\_\+coupling\+\_\+tab(), dual\+\_\+mualem\+\_\+tab(), and dual\+\_\+tabvalues().
+
+
+\begin{DoxyCode}
+18   \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:,:)}, \textcolor{keywordtype}{allocatable}, \textcolor{keywordtype}{public} :: ktab\_df,watcontab\_df,warecatab\_df
+\end{DoxyCode}
+\index{dual\+\_\+tab@{dual\+\_\+tab}!ktab\+\_\+dm@{ktab\+\_\+dm}}
+\index{ktab\+\_\+dm@{ktab\+\_\+dm}!dual\+\_\+tab@{dual\+\_\+tab}}
+\subsubsection[{ktab\+\_\+dm}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind), dimension(\+:,\+:), allocatable, public dual\+\_\+tab\+::ktab\+\_\+dm}\label{namespacedual__tab_aa07602c537fa03fd8a91e830394f416a}
+
+
+Definition at line 17 of file Re\+\_\+dual\+\_\+tab.\+f90.
+
+
+
+Referenced by dual\+\_\+coupling\+\_\+tab(), dual\+\_\+mualem\+\_\+tab(), and dual\+\_\+tabvalues().
+
+
+\begin{DoxyCode}
+17   \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:,:)}, \textcolor{keywordtype}{allocatable}, \textcolor{keywordtype}{public} :: ktab\_dm,watcontab\_dm,warecatab\_dm,couptab
+\end{DoxyCode}
+\index{dual\+\_\+tab@{dual\+\_\+tab}!warecatab\+\_\+df@{warecatab\+\_\+df}}
+\index{warecatab\+\_\+df@{warecatab\+\_\+df}!dual\+\_\+tab@{dual\+\_\+tab}}
+\subsubsection[{warecatab\+\_\+df}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind), dimension(\+:,\+:), allocatable, public dual\+\_\+tab\+::warecatab\+\_\+df}\label{namespacedual__tab_aa1dda6698faf68c50532b69a9179d724}
+
+
+Definition at line 18 of file Re\+\_\+dual\+\_\+tab.\+f90.
+
+
+
+Referenced by dual\+\_\+ret\+\_\+cap\+\_\+tab(), and dual\+\_\+tabvalues().
+
+\index{dual\+\_\+tab@{dual\+\_\+tab}!warecatab\+\_\+dm@{warecatab\+\_\+dm}}
+\index{warecatab\+\_\+dm@{warecatab\+\_\+dm}!dual\+\_\+tab@{dual\+\_\+tab}}
+\subsubsection[{warecatab\+\_\+dm}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind), dimension(\+:,\+:), allocatable, public dual\+\_\+tab\+::warecatab\+\_\+dm}\label{namespacedual__tab_aa43892fad79b72c68bc0f68cc21f3a82}
+
+
+Definition at line 17 of file Re\+\_\+dual\+\_\+tab.\+f90.
+
+
+
+Referenced by dual\+\_\+ret\+\_\+cap\+\_\+tab(), and dual\+\_\+tabvalues().
+
+\index{dual\+\_\+tab@{dual\+\_\+tab}!watcontab\+\_\+df@{watcontab\+\_\+df}}
+\index{watcontab\+\_\+df@{watcontab\+\_\+df}!dual\+\_\+tab@{dual\+\_\+tab}}
+\subsubsection[{watcontab\+\_\+df}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind), dimension(\+:,\+:), allocatable, public dual\+\_\+tab\+::watcontab\+\_\+df}\label{namespacedual__tab_a3d17fdbb05fbefcc1382976ebdd89dcc}
+
+
+Definition at line 18 of file Re\+\_\+dual\+\_\+tab.\+f90.
+
+
+
+Referenced by dual\+\_\+tabvalues(), and vangen\+\_\+d\+\_\+tab().
+
+\index{dual\+\_\+tab@{dual\+\_\+tab}!watcontab\+\_\+dm@{watcontab\+\_\+dm}}
+\index{watcontab\+\_\+dm@{watcontab\+\_\+dm}!dual\+\_\+tab@{dual\+\_\+tab}}
+\subsubsection[{watcontab\+\_\+dm}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind), dimension(\+:,\+:), allocatable, public dual\+\_\+tab\+::watcontab\+\_\+dm}\label{namespacedual__tab_a516b6e32f177df7902a952361b8a7fbe}
+
+
+Definition at line 17 of file Re\+\_\+dual\+\_\+tab.\+f90.
+
+
+
+Referenced by dual\+\_\+tabvalues(), and vangen\+\_\+d\+\_\+tab().
+

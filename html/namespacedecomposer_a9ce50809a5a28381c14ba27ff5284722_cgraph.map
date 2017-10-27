@@ -1,0 +1,7 @@
+<map id="decomposer::read_coarse_mesh" name="decomposer::read_coarse_mesh">
+<area shape="rect" id="node2" href="$namespacereadtools.html#ab8bc95060d3f5e8bfb8d4e4519c3568a" title="readtools::comment" alt="" coords="289,5,427,32"/>
+<area shape="rect" id="node3" href="$namespacegeom__tools.html#a28a5bc6f02c538f8998441d9a251a8d0" title="geom_tools::find_neighbours" alt="" coords="264,56,452,83"/>
+<area shape="rect" id="node5" href="$namespacecore__tools.html#a01c1527fcc56448471e2b349571e51ee" title="core_tools::find_unit" alt="" coords="289,107,427,133"/>
+<area shape="rect" id="node6" href="$namespacecore__tools.html#abe09f9b4dc2abc5384a24020c5031e95" title="core_tools::write_log" alt="" coords="287,157,429,184"/>
+<area shape="rect" id="node4" href="$namespaceprinttools.html#ac71e43f1627ed0239558720411181068" title="if default output is stdout, then this procedure prints nice progress bar " alt="" coords="500,56,651,83"/>
+</map>

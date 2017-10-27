@@ -1,0 +1,21 @@
+<map id="subcycling::subcyc_schwarz" name="subcycling::subcyc_schwarz">
+<area shape="rect" id="node2" href="$namespaceschwarz__dd.html#a88d6b767a669a2fefeed3e3409c4a861" title="schwarz_dd::build_xvect" alt="" coords="203,5,369,32"/>
+<area shape="rect" id="node3" href="$namespacesubcycling.html#a4642714542012f4fb2dac7e615bb1239" title="subcycling::correctdoms" alt="" coords="204,56,368,83"/>
+<area shape="rect" id="node4" href="$namespacesimplelinalg.html#a991176c9132fd1f9a1e494dfe43be159" title="right hand side diagonal preconditioner &#45; preprocessor and postprocesor preforms the diagonal matrix ..." alt="" coords="225,107,347,149"/>
+<area shape="rect" id="node5" href="$namespaceschwarz__dd.html#a474f0f5db10187f0762f91d2afbcf5da" title="counts number of solved subdomains " alt="" coords="211,173,361,214"/>
+<area shape="rect" id="node6" href="$namespacesubcycling.html#aa80e4454e7ca1b326c3dad56440ec2d1" title="subcycling::getlocres" alt="" coords="213,239,359,265"/>
+<area shape="rect" id="node7" href="$namespaceschwarz__dd.html#a153ede1ee63fff0d346fe7699b46f76a" title="schwarz_dd::locmat\l_assembler" alt="" coords="217,290,355,331"/>
+<area shape="rect" id="node12" href="$namespaceprinttools.html#a7f7f505eb110ff0f4d983bb8f0f968b2" title="printtools::printtime" alt="" coords="219,356,353,383"/>
+<area shape="rect" id="node13" href="$namespaceschwarz__dd.html#a61d339e34b15f9787c35b202ad97ae71" title="schwarz_dd::search\l_error_cluster" alt="" coords="217,407,355,449"/>
+<area shape="rect" id="node14" href="$namespacedecomposer.html#abbcc7a95b77ad1dbec2b528470df7daf" title="the subdomains are combined based on the gradients of the solution and the Picard iterations ..." alt="" coords="188,473,384,500"/>
+<area shape="rect" id="node20" href="$namespacesubcycling.html#abc2715f7cd421516a7858fd44bb02424" title="subcycling::update\l_domain" alt="" coords="221,525,351,566"/>
+<area shape="rect" id="node8" href="$namespacestiffmat.html#a31243094e6fbabfb25e1e1939b133899" title="stiffmat::build_bvect" alt="" coords="461,196,601,223"/>
+<area shape="rect" id="node9" href="$namespacestiffmat.html#ae46961e6784b8661f5fa07d7b6bed25a" title="build local stifness matrix for nonlinear problems and Picard method " alt="" coords="456,247,607,273"/>
+<area shape="rect" id="node10" href="$namespacefem__tools.html#a70a2c3916a63fabc299dbbb53741e122" title="procedure to put local stiffness matrix into the global stiffness matrix " alt="" coords="462,297,601,324"/>
+<area shape="rect" id="node11" href="$namespacesolver__interfaces.html#abd70a6e039e5f2f62c473d9afbe90cc2" title="solver_interfaces::\lnull_problem" alt="" coords="685,375,815,417"/>
+<area shape="rect" id="node15" href="$namespacedecomp__tools.html#a3f8c4deab864942b308de6e8ddc31849" title="decomp_tools::addlevel" alt="" coords="452,399,611,425"/>
+<area shape="rect" id="node16" href="$namespacedecomposer.html#a87f6f57c647e1ad908958389ba844b86" title="decomposer::clear_subdomain" alt="" coords="432,449,631,476"/>
+<area shape="rect" id="node17" href="$namespacecore__tools.html#abe09f9b4dc2abc5384a24020c5031e95" title="core_tools::write_log" alt="" coords="679,475,821,501"/>
+<area shape="rect" id="node18" href="$namespacedecomposer.html#ab3c22185fa432d9d3ca309ce5042f9b9" title="decomposer::init_subdomain" alt="" coords="437,551,625,577"/>
+<area shape="rect" id="node19" href="$namespacegeom__tools.html#a1e93d0ec91a9f2fcc7573e6347a9f9ef" title="specify the x and y derivates of a plane defined by three points " alt="" coords="436,601,627,628"/>
+</map>

@@ -1,0 +1,406 @@
+\section{ade\+\_\+reader Module Reference}
+\label{namespaceade__reader}\index{ade\+\_\+reader@{ade\+\_\+reader}}
+\subsection*{Functions/\+Subroutines}
+\begin{DoxyCompactItemize}
+\item 
+subroutine, public {\bf ade\+\_\+read} (pde\+\_\+loc)
+\item 
+subroutine {\bf adecs\+\_\+read} (pde\+\_\+loc)
+\end{DoxyCompactItemize}
+
+
+\subsection{Function/\+Subroutine Documentation}
+\index{ade\+\_\+reader@{ade\+\_\+reader}!ade\+\_\+read@{ade\+\_\+read}}
+\index{ade\+\_\+read@{ade\+\_\+read}!ade\+\_\+reader@{ade\+\_\+reader}}
+\subsubsection[{ade\+\_\+read(pde\+\_\+loc)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, public ade\+\_\+reader\+::ade\+\_\+read (
+\begin{DoxyParamCaption}
+\item[{class({\bf pde\+\_\+str}), intent(inout)}]{pde\+\_\+loc}
+\end{DoxyParamCaption}
+)}\label{namespaceade__reader_ab579f926de43ae5ba712d144494109fb}
+
+
+Definition at line 7 of file A\+D\+E\+\_\+reader.\+f90.
+
+
+
+References ade\+\_\+globals\+::adepar, readtools\+::comment(), globals\+::drutes\+\_\+config, globals\+::elements, ade\+\_\+globals\+::file\+\_\+contaminant, readtools\+::file\+\_\+error(), core\+\_\+tools\+::find\+\_\+unit(), readtools\+::readbcvals(), readtools\+::set\+\_\+tensor(), globals\+::terminal, and ade\+\_\+globals\+::with\+\_\+richards.
+
+
+
+Referenced by ade\+\_\+pointers\+::ade().
+
+
+\begin{DoxyCode}
+7       \textcolor{keywordtype}{use }typy
+8       \textcolor{keywordtype}{use }globals
+9       \textcolor{keywordtype}{use }global_objs
+10       \textcolor{keywordtype}{use }core_tools
+11       \textcolor{keywordtype}{use }ade_globals
+12       \textcolor{keywordtype}{use }readtools
+13       \textcolor{keywordtype}{use }pde_objs
+14 
+15       \textcolor{keywordtype}{class}(pde_str), \textcolor{keywordtype}{intent(in out)} :: pde\_loc
+16       \textcolor{keywordtype}{integer} :: i\_err
+17       \textcolor{keywordtype}{integer(kind=ikind)} :: i, n
+18       \textcolor{keywordtype}{real(kind=rkind)} :: tmp
+19       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable} :: tmp\_array
+20       \textcolor{keywordtype}{character(len=4096)} :: msg
+21       \textcolor{keywordtype}{character(len=256)} :: linetext
+22       \textcolor{keywordtype}{logical} :: crelative = .false.
+23       \textcolor{keywordtype}{logical} :: with\_richards\_def
+24       
+25       
+26 
+27       pde\_loc%problem\_name(1) = \textcolor{stringliteral}{"ADER\_in\_liquid"}
+28       pde\_loc%problem\_name(2) = \textcolor{stringliteral}{"Advection-dispersion-reaction equation (solute concentration in liquid
+       phase)"}
+29 
+30       pde\_loc%solution\_name(1) = \textcolor{stringliteral}{"solute\_concentration"} \textcolor{comment}{!nazev vystupnich souboru}
+31       pde\_loc%solution\_name(2) = \textcolor{stringliteral}{"c  [M/L^3]"} \textcolor{comment}{!popisek grafu}
+32 
+33       pde\_loc%flux\_name(1) = \textcolor{stringliteral}{"conc\_flux"}  
+34       pde\_loc%flux\_name(2) = \textcolor{stringliteral}{"concentration flux [M.L^\{-2\}.T^\{-1\}]"}
+35 
+36       pde\_loc%mass\_name(1) = \textcolor{stringliteral}{"conc\_in\_porous\_medium"}
+37       pde\_loc%mass\_name(2) = \textcolor{stringliteral}{"concetration [M/L^3]"}
+38       
+39       
+40 
+41       \textcolor{keyword}{call }find_unit(file_contaminant, 200)
+42       \textcolor{keyword}{open}(unit = file_contaminant, file=\textcolor{stringliteral}{"drutes.conf/ADE/contaminant.conf"}\textcolor{comment}{, action=}\textcolor{stringliteral}{"read"}\textcolor{comment}{, status=}\textcolor{stringliteral}{"old"}\textcolor{comment}{, 
+      iostat=i\_err)}
+43 \textcolor{comment}{      }\textcolor{keywordflow}{if} (i\_err /= 0) \textcolor{keywordflow}{then}
+44         print *, \textcolor{stringliteral}{"missing drutes.conf/ADE/contaminant.conf file"}
+45         error stop
+46 \textcolor{keywordflow}{      end if}
+47      
+48 
+49       \textcolor{keyword}{allocate}(adepar(maxval(elements%material)))
+50       
+51       \textcolor{keyword}{call }fileread(n, file_contaminant)
+52       
+53       backspace(file_contaminant)
+54       
+55       \textcolor{keyword}{write}(msg, fmt=*) \textcolor{stringliteral}{"ERROR!! incorrect number of materials in drutes.conf/ADE/contaminant.conf  &}
+56 \textcolor{stringliteral}{}\textcolor{stringliteral}{        the mesh defines"}, maxval(elements%material)  , \textcolor{stringliteral}{"materials, and your input file defines"}\textcolor{comment}{, n, }\textcolor{stringliteral}{
+      "material(s)."}
+57         
+58      
+59       \textcolor{keyword}{call }fileread(n, file_contaminant, ranges=(/1\_ikind*maxval(elements%material\textcolor{comment}{),1\_ikind*maxval(
+      elements%material)/),&}
+60 \textcolor{comment}{        errmsg=trim(msg))}
+61 \textcolor{comment}{      }
+62 \textcolor{comment}{      }\textcolor{keyword}{write}(unit=msg, fmt=*) \textcolor{stringliteral}{"HINT 1: Is the molecular diffusion value positive?"}\textcolor{comment}{, new\_line(}\textcolor{stringliteral}{"a"}\textcolor{comment}{), &}
+63 \textcolor{comment}{                              }\textcolor{stringliteral}{"HINT 2 : Is the number of molecular diffusion values corresponding to the
+       amount of layers?"}
+64                               
+65       \textcolor{keywordflow}{do} i=1, ubound(adepar,1)
+66         \textcolor{keyword}{call }fileread(adepar(i)%difmol, file_contaminant, ranges=(/0.0\_rkind, 1\textcolor{comment}{.0\_rkind*huge(tmp)/), &}
+67 \textcolor{comment}{          errmsg=trim(msg))}
+68 \textcolor{comment}{}\textcolor{keywordflow}{      end do}
+69  
+70       \textcolor{keyword}{write}(unit=msg, fmt=*) \textcolor{stringliteral}{"HINT 1: Are all values anisotropy defining anisotropical diffusivity
+       positive? "}\textcolor{comment}{, new\_line(}\textcolor{stringliteral}{"a"}\textcolor{comment}{), &}
+71 \textcolor{comment}{        }\textcolor{stringliteral}{"HINT 2 : Have you defined enough values for anisotropy &}
+72 \textcolor{stringliteral}{}\textcolor{stringliteral}{        (e.g. for 2D define angle and the maximal and minimal value of diffusivity, in total 3 values)?"}\textcolor{comment}{, 
+      new\_line(}\textcolor{stringliteral}{"a"}\textcolor{comment}{),&}
+73 \textcolor{comment}{        }\textcolor{stringliteral}{"HINT 3: The number of lines with diffusivity has to correspond to the number of materials & }
+74 \textcolor{stringliteral}{}\textcolor{stringliteral}{        defined by your mesh"}
+75       
+76       
+77       \textcolor{keyword}{allocate}(tmp\_array(drutes_config%dimen + 1))
+78       \textcolor{keywordflow}{do} i=1, ubound(adepar,1)
+79         \textcolor{keyword}{allocate}(adepar(i)%diff\_loc(drutes_config%dimen))
+80         \textcolor{keyword}{call }fileread(r=tmp\_array, fileid=file_contaminant, ranges=(/0.0\_rkind,\textcolor{comment}{ huge(tmp)/), errmsg=trim(
+      msg))}
+81 \textcolor{comment}{        adepar(i)%anisoangle = tmp\_array(1)}
+82 \textcolor{comment}{        adepar(i)%diff\_loc = tmp\_array(2:drutes_config%dimen + 1)}
+83 \textcolor{comment}{        }\textcolor{keyword}{allocate}(adepar(i)%diff(drutes_config%dimen, drutes_config%dimen))
+84         \textcolor{keyword}{call }set_tensor(adepar(i)%diff\_loc, (/adepar(i)%anisoangle/), adepar(i)%diff\textcolor{comment}{)}
+85 \textcolor{comment}{}\textcolor{keywordflow}{      end do}
+86       
+87       
+88       \textcolor{keywordflow}{do} i=1, ubound(adepar,1)
+89        \textcolor{keyword}{call }comment(file_contaminant)
+90        \textcolor{keyword}{read}(unit=file_contaminant, fmt=*, iostat=i\_err) adepar(i)%cinit,\textcolor{comment}{ adepar(i)%icondtype}
+91 \textcolor{comment}{       }\textcolor{keywordflow}{if} (i\_err /= 0) \textcolor{keywordflow}{then}
+92          \textcolor{keyword}{write}(unit=terminal, fmt=*) \textcolor{stringliteral}{"The number of lines for initial concentration has to be equal to the
+       number of materials"}
+93          backspace(file_contaminant)
+94          \textcolor{keyword}{call }comment(file_contaminant)
+95          \textcolor{keyword}{read}(unit=file_contaminant, fmt=*, iostat=i\_err) linetext
+96          \textcolor{keyword}{write}(unit=terminal, fmt=*) \textcolor{stringliteral}{"the following inappropriate line was specified in your config file"}\textcolor{comment}{, 
+      trim(linetext)}
+97 \textcolor{comment}{         }\textcolor{keyword}{call }file_error(file_contaminant)   
+98 \textcolor{keywordflow}{       end if}
+99        \textcolor{keywordflow}{select case} (adepar(i)%icondtype)
+100          \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"cr"}, \textcolor{stringliteral}{"ca"})
+101            \textcolor{keywordflow}{if} (adepar(i)%icondtype == \textcolor{stringliteral}{"cr"}) crelative=.true.
+102            \textcolor{keywordflow}{CONTINUE}
+103 \textcolor{keywordflow}{         case default}
+104            \textcolor{keyword}{write}(unit=terminal, fmt=*) \textcolor{stringliteral}{" Your initial concentration can be only:  "}
+105            \textcolor{keyword}{write}(unit=terminal, fmt=*) \textcolor{stringliteral}{"  ca - for absolute concentration"}
+106            \textcolor{keyword}{write}(unit=terminal, fmt=*) \textcolor{stringliteral}{"  cr - for relative concentration"}
+107            \textcolor{keyword}{call }file_error(file_contaminant)
+108 \textcolor{keywordflow}{        end select}
+109            
+110 \textcolor{keywordflow}{       end do}
+111        
+112        \textcolor{keywordflow}{if} (crelative) \textcolor{keywordflow}{then}
+113          \textcolor{keyword}{call  }fileread(adepar(1)%cmax, file_contaminant, errmsg=\textcolor{stringliteral}{"Have you defined correct value for the
+       maximal concentration?"}\textcolor{comment}{)}
+114 \textcolor{comment}{         }\textcolor{keywordflow}{do} i=2, ubound(adepar,1)
+115           adepar(i)%cmax = adepar(1)%cmax
+116 \textcolor{keywordflow}{         end do}
+117 \textcolor{keywordflow}{       end if}
+118        
+119   
+120        
+121        \textcolor{keywordflow}{if} (.not. crelative) \textcolor{keywordflow}{then}
+122         \textcolor{keyword}{write}(msg, *) \textcolor{stringliteral}{"HINT 1: Specify [y/n] to define whether you prefer to compute convection from the
+       Richards equation or"}\textcolor{comment}{, &}
+123 \textcolor{comment}{        }\textcolor{stringliteral}{" specify the convection directly here."}, new\_line(\textcolor{stringliteral}{"a"}), &
+124          \textcolor{stringliteral}{"   HINT 2: Since you don't use relative concentration for the initial condition, check whether
+       you left the"}\textcolor{comment}{, &}
+125 \textcolor{comment}{        }\textcolor{stringliteral}{" line with cmax blank."}
+126        \textcolor{keywordflow}{else}
+127         \textcolor{keyword}{write}(msg, *) \textcolor{stringliteral}{"HINT 1: Specify [y/n] to define whether you prefer to compute convection from the
+       Richards equation or &}
+128 \textcolor{stringliteral}{}\textcolor{stringliteral}{         specify the convection directly here."}
+129 \textcolor{keywordflow}{       end if}
+130        
+131        \textcolor{keyword}{call }fileread(with_richards, file_contaminant, errmsg=trim(msg))
+132        
+133        \textcolor{keywordflow}{select case}(adjustl(trim(drutes_config%name)))
+134          \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"ADEstd"}, \textcolor{stringliteral}{"ADEstd\_kinsorb"})
+135            with\_richards\_def = .false.
+136 \textcolor{keywordflow}{         case default}
+137            with\_richards\_def = .true.
+138 \textcolor{keywordflow}{        end select}
+139        
+140        \textcolor{keywordflow}{if} (.not. with_richards .and. with\_richards\_def) \textcolor{keywordflow}{then}
+141          \textcolor{keyword}{write}(unit=msg, fmt=*) \textcolor{stringliteral}{"You have specified"} , &
+142               \textcolor{stringliteral}{" convection to be  computed from the Richards equation, but you want to specify the
+       convection here."}\textcolor{comment}{ ,&}
+143 \textcolor{comment}{              new\_line(}\textcolor{stringliteral}{"a"}), \textcolor{stringliteral}{"   Solution: change model type setup in global.conf or comment out the
+       convection values here."}
+144          \textcolor{keyword}{call }file_error(file_contaminant, msg)
+145        \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (with_richards .and. .not. with\_richards\_def) \textcolor{keywordflow}{then}
+146         \textcolor{keyword}{write}(unit=msg, fmt=*) \textcolor{stringliteral}{"You have specified here to compute the convection fromt the Richards
+       equation, "}\textcolor{comment}{,  &}
+147 \textcolor{comment}{               }\textcolor{stringliteral}{" but in your global config you have requested solving ADE equation only, and so convection
+       has to be specified here."}\textcolor{comment}{, &}
+148 \textcolor{comment}{         new\_line(}\textcolor{stringliteral}{"a"}),  \textcolor{stringliteral}{"   Solution:  change model type setup in global.conf or supply the convection
+       here."}
+149          \textcolor{keyword}{call }file_error(file_contaminant, msg)
+150 \textcolor{keywordflow}{       end if}
+151          
+152        
+153        \textcolor{keywordflow}{if} (.not. with_richards) \textcolor{keywordflow}{then}
+154          \textcolor{keywordflow}{if} (\textcolor{keyword}{allocated}(tmp\_array)) \textcolor{keyword}{deallocate}(tmp\_array)
+155          \textcolor{keyword}{allocate}(tmp\_array(2))
+156          \textcolor{keywordflow}{do} i=1, maxval(elements%material)
+157            \textcolor{keyword}{call }fileread(tmp\_array, file_contaminant, errmsg=\textcolor{stringliteral}{"convection has to be defined for each layer"}\textcolor{comment}{)}
+158 \textcolor{comment}{           adepar(i)%convection = tmp\_array(1)}
+159 \textcolor{comment}{           adepar(i)%water\_cont = tmp\_array(2)}
+160 \textcolor{comment}{}\textcolor{keywordflow}{         end do}
+161 \textcolor{keywordflow}{      end if}
+162       
+163       \textcolor{keywordflow}{if} (with_richards) \textcolor{keywordflow}{then}
+164         \textcolor{keyword}{write}(unit=msg, fmt=*) \textcolor{stringliteral}{"HINT1: Have you commented out all lines with convection values? "}\textcolor{comment}{, &}
+165 \textcolor{comment}{        }\textcolor{stringliteral}{"Since the convection is computed from the Richards equation."}, new\_line\textcolor{comment}{(}\textcolor{stringliteral}{"a"}\textcolor{comment}{), &}
+166 \textcolor{comment}{        }\textcolor{stringliteral}{"   HINT2: The number of orders of reactions has to be positive or zero."}
+167       \textcolor{keywordflow}{else}
+168         \textcolor{keyword}{write}(unit=msg, fmt=*) \textcolor{stringliteral}{"HINT1: Is your number of lines with convection definition corresponding
+       with the number of layers?"}\textcolor{comment}{,&}
+169 \textcolor{comment}{        new\_line(}\textcolor{stringliteral}{"a"}), &
+170         \textcolor{stringliteral}{"   HINT2: The number of orders of reactions has to be positive or zero."}
+171 \textcolor{keywordflow}{      end if}
+172        
+173        \textcolor{keyword}{call }fileread(n, file_contaminant, ranges=(/0\_ikind, 1\_ikind*huge\textcolor{comment}{(n)/), & }
+174 \textcolor{comment}{         errmsg=trim(msg))}
+175 \textcolor{comment}{       }
+176 \textcolor{comment}{       }
+177 \textcolor{comment}{       }\textcolor{keyword}{write}(unit=msg, fmt=*) \textcolor{stringliteral}{"You have requested "}, n,\textcolor{stringliteral}{" different orders of reactions."}\textcolor{comment}{, new\_line(}\textcolor{stringliteral}{"a"}\textcolor{comment}{), &}
+178 \textcolor{comment}{           }\textcolor{stringliteral}{"For each different "}
+179        
+180        
+181        \textcolor{keyword}{write}(unit=msg, fmt=*) \textcolor{stringliteral}{"You have requested "}, n,\textcolor{stringliteral}{" different orders of reactions."}\textcolor{comment}{, new\_line(}\textcolor{stringliteral}{"a"}\textcolor{comment}{), &}
+182 \textcolor{comment}{           }\textcolor{stringliteral}{"Specify the list of orders of reactions,"}, new\_line(\textcolor{stringliteral}{"a"}), &
+183            \textcolor{stringliteral}{"!!!!EACH material requires its line!!!!"},  new\_line(\textcolor{stringliteral}{"a"}), &
+184            \textcolor{stringliteral}{"    e.g. you want to use zero order and second order reaction for first material and "}\textcolor{comment}{,  
+      new\_line(}\textcolor{stringliteral}{"a"}\textcolor{comment}{), & }
+185 \textcolor{comment}{           }\textcolor{stringliteral}{" first and second order reaction for second material, then specify the following lines"}\textcolor{comment}{, 
+      new\_line(}\textcolor{stringliteral}{"a"}\textcolor{comment}{),new\_line(}\textcolor{stringliteral}{"a"}\textcolor{comment}{),&}
+186 \textcolor{comment}{           " 0 2 }\textcolor{stringliteral}{", new\_line("}a\textcolor{stringliteral}{"), "} 1 2 \textcolor{stringliteral}{"}
+187 \textcolor{stringliteral}{}\textcolor{stringliteral}{       do i=1, ubound(adepar,1)}
+188 \textcolor{stringliteral}{}\textcolor{stringliteral}{         allocate(adepar(i)%orders(n))}
+189 \textcolor{stringliteral}{}\textcolor{stringliteral}{         call fileread(adepar(i)%orders, file\_contaminant, errmsg=trim(msg))}
+190 \textcolor{stringliteral}{}\textcolor{stringliteral}{       end do}
+191 \textcolor{stringliteral}{}\textcolor{stringliteral}{       }
+192 \textcolor{stringliteral}{}\textcolor{stringliteral}{       write(unit=msg, fmt=*) "}you have requested \textcolor{stringliteral}{", n,"} different orders\textcolor{comment}{ of reactions.}\textcolor{stringliteral}{", new\_line("}a\textcolor{stringliteral}{"), &}
+193 \textcolor{stringliteral}{}\textcolor{stringliteral}{           "}specify the list of rates of reactions,\textcolor{stringliteral}{", new\_line("}a\textcolor{stringliteral}{"), &}
+194 \textcolor{stringliteral}{}\textcolor{stringliteral}{           "}!\textcolor{comment}{!!!EACH material requires its line!!!!",  new\_line("a"), &}
+195            \textcolor{stringliteral}{"    e.g. you want to use zero order with rate 0.2 and second order reaction with rate 0.6 for
+       first material and "}\textcolor{comment}{,&}
+196 \textcolor{comment}{           new\_line(}\textcolor{stringliteral}{"a"}), & 
+197            \textcolor{stringliteral}{"and you have specified the requested orders of reactions above"},  new\_line\textcolor{comment}{(}\textcolor{stringliteral}{"a"}\textcolor{comment}{), & }
+198 \textcolor{comment}{           }\textcolor{stringliteral}{" for the second material you would like to use only  opnly second order kinetics with rate 0.4
+       "}\textcolor{comment}{,& }
+199 \textcolor{comment}{           new\_line(}\textcolor{stringliteral}{"a"}), \textcolor{stringliteral}{"then the following lines has to be specified"},&
+200            new\_line(\textcolor{stringliteral}{"a"}),new\_line(\textcolor{stringliteral}{"a"}),&
+201            " 0.2 0.6 \textcolor{stringliteral}{", new\_line("}a\textcolor{stringliteral}{"), "} 0.0 0.4 \textcolor{stringliteral}{"}
+202 \textcolor{stringliteral}{}\textcolor{stringliteral}{           }
+203 \textcolor{stringliteral}{}\textcolor{stringliteral}{       do i=1, ubound(adepar,1)}
+204 \textcolor{stringliteral}{}\textcolor{stringliteral}{         allocate(adepar(i)%lambda(n))}
+205 \textcolor{stringliteral}{}\textcolor{stringliteral}{         call fileread(adepar(i)%lambda, file\_contaminant, errmsg=trim(msg))}
+206 \textcolor{stringliteral}{}\textcolor{stringliteral}{       end do   }
+207 \textcolor{stringliteral}{}\textcolor{stringliteral}{}
+208 \textcolor{stringliteral}{}\textcolor{stringliteral}{       }
+209 \textcolor{stringliteral}{}\textcolor{stringliteral}{       select case(adjustl(trim(drutes\_config%name)))}
+210 \textcolor{stringliteral}{}\textcolor{stringliteral}{          case("}adestd\_kinsorb\textcolor{stringliteral}{", "}ade\_re\_std\_kinsorb\textcolor{stringliteral}{", "}ade\_restdh\_kinsorb\textcolor{stringliteral}{", "}ade\_re\_rot\_kinsorb\textcolor{stringliteral}{", "}
+      ade\_reroth\_kinsorb\textcolor{stringliteral}{")}
+211 \textcolor{stringliteral}{}\textcolor{stringliteral}{            adepar(:)%sorption%kinetic = .true.}
+212 \textcolor{stringliteral}{}\textcolor{stringliteral}{          case default}
+213 \textcolor{stringliteral}{}\textcolor{stringliteral}{            adepar(:)%sorption%kinetic = .false.}
+214 \textcolor{stringliteral}{}\textcolor{stringliteral}{        end select}
+215 \textcolor{stringliteral}{}\textcolor{stringliteral}{ }
+216 \textcolor{stringliteral}{}\textcolor{stringliteral}{      }
+217 \textcolor{stringliteral}{}\textcolor{stringliteral}{      write(msg, *) "}hint1: the number of lines for kinetic/equilibrium sorption\textcolor{comment}{ parameters has to be}\textcolor{stringliteral}{", &}
+218 \textcolor{stringliteral}{}\textcolor{stringliteral}{      "} equal to the number of materials\textcolor{stringliteral}{" , &}
+219 \textcolor{stringliteral}{}\textcolor{stringliteral}{      new\_line("}a\textcolor{stringliteral}{"), "}   hint2: the bulk density has to be positive \textcolor{keywordtype}{value}\textcolor{comment}{ greater than zero.}\textcolor{stringliteral}{"}
+220 \textcolor{stringliteral}{}\textcolor{stringliteral}{      }
+221 \textcolor{stringliteral}{}\textcolor{stringliteral}{      do i=1, ubound(adepar,1)}
+222 \textcolor{stringliteral}{}\textcolor{stringliteral}{         call fileread(adepar(i)%bd, file\_contaminant, errmsg=trim(msg), &}
+223 \textcolor{stringliteral}{}\textcolor{stringliteral}{         ranges=(/epsilon(0.0\_rkind), huge(0.0\_rkind)/))}
+224 \textcolor{stringliteral}{}\textcolor{stringliteral}{      end do}
+225 \textcolor{stringliteral}{}\textcolor{stringliteral}{      }
+226 \textcolor{stringliteral}{}\textcolor{stringliteral}{      }
+227 \textcolor{stringliteral}{}\textcolor{stringliteral}{      write(msg, *) "}hint1: the number of lines for kinetic/equilibrium sorption\textcolor{comment}{ parameters has to be equal
+       &}
+228 \textcolor{comment}{        to the number of materials}\textcolor{stringliteral}{"&}
+229 \textcolor{stringliteral}{}\textcolor{stringliteral}{       , new\_line("}a\textcolor{stringliteral}{"), "}   hint2: have you specified the sorption model\textcolor{comment}{ name correctly?}\textcolor{stringliteral}{"}
+230 \textcolor{stringliteral}{}\textcolor{stringliteral}{      }
+231 \textcolor{stringliteral}{}\textcolor{stringliteral}{      do i=1, ubound(adepar,1)}
+232 \textcolor{stringliteral}{}\textcolor{stringliteral}{         call fileread(adepar(i)%sorption%name, file\_contaminant, errmsg=trim(msg), options=(/"}freund\textcolor{stringliteral}{", "}
+      langmu\textcolor{stringliteral}{"/))}
+233 \textcolor{stringliteral}{}\textcolor{stringliteral}{      end do}
+234 \textcolor{stringliteral}{}\textcolor{stringliteral}{      }
+235 \textcolor{stringliteral}{}\textcolor{stringliteral}{      if (allocated(tmp\_array)) deallocate(tmp\_array)}
+236 \textcolor{stringliteral}{}\textcolor{stringliteral}{      allocate(tmp\_array(3))}
+237 \textcolor{stringliteral}{}\textcolor{stringliteral}{      }
+238 \textcolor{stringliteral}{}\textcolor{stringliteral}{      do i=1, ubound(adepar,1)}
+239 \textcolor{stringliteral}{}\textcolor{stringliteral}{        call fileread(tmp\_array, file\_contaminant, errmsg=trim(msg), ranges=(/0.0\_rkind, huge(0.0\_rkind)/))}
+240 \textcolor{stringliteral}{}\textcolor{stringliteral}{        adepar(i)%sorption%adsorb=tmp\_array(1)}
+241 \textcolor{stringliteral}{}\textcolor{stringliteral}{        adepar(i)%sorption%desorb=tmp\_array(2)}
+242 \textcolor{stringliteral}{}\textcolor{stringliteral}{        adepar(i)%sorption%third=tmp\_array(3)}
+243 \textcolor{stringliteral}{}.not..and..and.\textcolor{stringliteral}{ if ( adepar(i)%sorption%kinetic  adepar(i)%sorption%desorb < 100*epsilon(1.0\_rkind)  &}
+244 \textcolor{stringliteral}{}\textcolor{stringliteral}{        abs(adepar(i)%sorption%adsorb) > 100*epsilon(1.0\_rkind)) then}
+245 \textcolor{stringliteral}{}\textcolor{stringliteral}{          write(msg, *) "}this is non-sence\textcolor{comment}{!! You have defined zero desorption rate but you want to use
+       equilibrium sorption.", &}
+246           new\_line(\textcolor{stringliteral}{"a"}), &
+247           \textcolor{stringliteral}{"Divisions by zero are in general not accepted in a good society."}
+248           \textcolor{keyword}{call }file_error(file_contaminant, message=trim(msg))
+249 \textcolor{keywordflow}{        end if}
+250 \textcolor{keywordflow}{      end do}
+251       
+252       \textcolor{keywordflow}{if} (drutes_config%name == \textcolor{stringliteral}{"ADEwrk"} .or. drutes_config%name==\textcolor{stringliteral}{"ADEstk"}\textcolor{comment}{) }\textcolor{keywordflow}{then}
+253         \textcolor{keywordflow}{do} i=1, ubound(adepar,1)
+254           \textcolor{keyword}{call }fileread(adepar(i)%csinit, file_contaminant, errmsg=\textcolor{stringliteral}{"Have you defined value for c\_s\_init"}\textcolor{comment}{)}
+255 \textcolor{comment}{}\textcolor{keywordflow}{        end do}
+256 \textcolor{keywordflow}{      end if}
+257       
+258       \textcolor{keywordflow}{if} (drutes_config%name == \textcolor{stringliteral}{"ADEwrk"} .or. drutes_config%name==\textcolor{stringliteral}{"ADEstk"}\textcolor{comment}{) }\textcolor{keywordflow}{then}
+259         \textcolor{keyword}{write}(msg, *) \textcolor{stringliteral}{"HINT 1: You have selected strange number of boundaries for ADE problem."}\textcolor{comment}{, new\_line(}\textcolor{stringliteral}{
+      "a"}\textcolor{comment}{), &}
+260 \textcolor{comment}{                    }\textcolor{stringliteral}{"  HINT 2: Since you requested nonequilibrium sorption, then you should provide csinit
+       for each material."}
+261       \textcolor{keywordflow}{else}
+262         \textcolor{keyword}{write}(msg, *) \textcolor{stringliteral}{"HINT 1: You have selected strange number of boundaries for ADE problem."}\textcolor{comment}{, new\_line(}\textcolor{stringliteral}{
+      "a"}\textcolor{comment}{), &}
+263 \textcolor{comment}{                    }\textcolor{stringliteral}{"   HINT 2: Since you requested equilibrium sorption, then comment or erase lines with
+       csinit"}
+264 \textcolor{keywordflow}{      end if}
+265                     
+266       
+267       \textcolor{keyword}{call }fileread(n, file_contaminant, ranges=(/1\_ikind, huge(n)/), &
+268       errmsg=trim(msg))
+269       
+270       
+271       \textcolor{keyword}{call }readbcvals(unitw=file_contaminant, struct=pde\_loc%bc, dimen=n\textcolor{comment}{, &}
+272 \textcolor{comment}{        dirname=}\textcolor{stringliteral}{"drutes.conf/ADE/"})
+273       
+274       
+275       
+276 
+\end{DoxyCode}
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespaceade__reader_ab579f926de43ae5ba712d144494109fb_cgraph}
+\end{center}
+\end{figure}
+
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespaceade__reader_ab579f926de43ae5ba712d144494109fb_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{ade\+\_\+reader@{ade\+\_\+reader}!adecs\+\_\+read@{adecs\+\_\+read}}
+\index{adecs\+\_\+read@{adecs\+\_\+read}!ade\+\_\+reader@{ade\+\_\+reader}}
+\subsubsection[{adecs\+\_\+read(pde\+\_\+loc)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine ade\+\_\+reader\+::adecs\+\_\+read (
+\begin{DoxyParamCaption}
+\item[{class({\bf pde\+\_\+str}), intent(inout)}]{pde\+\_\+loc}
+\end{DoxyParamCaption}
+)}\label{namespaceade__reader_ac47e668b8eeddab2ccfae1527f991bf0}
+
+
+Definition at line 280 of file A\+D\+E\+\_\+reader.\+f90.
+
+
+
+Referenced by ade\+\_\+pointers\+::adekinsorb().
+
+
+\begin{DoxyCode}
+280       \textcolor{keywordtype}{use }typy
+281       \textcolor{keywordtype}{use }pde_objs
+282           
+283       \textcolor{keywordtype}{class}(pde_str), \textcolor{keywordtype}{intent(in out)} :: pde\_loc
+284       
+285       pde\_loc%problem\_name(1) = \textcolor{stringliteral}{"ADER\_in\_solid"}
+286       pde\_loc%problem\_name(2) = \textcolor{stringliteral}{"Advection-dispersion-reaction equation (solute concentration adsorbed in
+       solid phase)"}
+287 
+288       pde\_loc%solution\_name(1) = \textcolor{stringliteral}{"solute\_concentration"} \textcolor{comment}{!nazev vystupnich souboru}
+289       pde\_loc%solution\_name(2) = \textcolor{stringliteral}{"c  [M/M]"} \textcolor{comment}{!popisek grafu}
+290 
+291       pde\_loc%flux\_name(1) = \textcolor{stringliteral}{"zero\_flux"}  
+292       pde\_loc%flux\_name(2) = \textcolor{stringliteral}{"zero flux"}
+293 
+294       pde\_loc%mass\_name(1) = \textcolor{stringliteral}{"conc\_in\_solid\_phase"}
+295       pde\_loc%mass\_name(2) = \textcolor{stringliteral}{"concetration [M/M]"}
+296       
+297     
+\end{DoxyCode}
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespaceade__reader_ac47e668b8eeddab2ccfae1527f991bf0_icgraph}
+\end{center}
+\end{figure}
+
+

@@ -1,0 +1,22 @@
+\section{src/tools/postpro.f90 File Reference}
+\label{postpro_8f90}\index{src/tools/postpro.\+f90@{src/tools/postpro.\+f90}}
+\subsection*{Modules}
+\begin{DoxyCompactItemize}
+\item 
+module {\bf postpro}
+\begin{DoxyCompactList}\small\item\em solver for the advection dispersion equation \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Functions/\+Subroutines}
+\begin{DoxyCompactItemize}
+\item 
+subroutine, public {\bf postpro\+::make\+\_\+print} (behaviour, curtime, name)
+\item 
+subroutine, public {\bf postpro\+::write\+\_\+obs} ()
+\item 
+subroutine, public {\bf postpro\+::get\+\_\+ram\+\_\+use} ()
+\begin{DoxyCompactList}\small\item\em this subroutine parses /proc/[P\+ID]/status file in order to get R\+AM consumption statistics, it works only under P\+O\+S\+IX systems \end{DoxyCompactList}\item 
+subroutine, private {\bf postpro\+::print\+\_\+scilab} (ids, proc, quadpnt)
+\item 
+subroutine, private {\bf postpro\+::print\+\_\+pure} (ids, proc, quadpnt)
+\item 
+subroutine, private {\bf postpro\+::print\+\_\+gmsh} (ids, proc, quadpnt)
+\end{DoxyCompactItemize}

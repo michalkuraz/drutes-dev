@@ -1,0 +1,63 @@
+\section{mtx\+\_\+int\+:\+:geti Interface Reference}
+\label{interfacemtx__int_1_1geti}\index{mtx\+\_\+int\+::geti@{mtx\+\_\+int\+::geti}}
+
+
+interface pro ziskani prvku  
+
+
+\subsection*{Private Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+integer(kind=ikind) function {\bf geti} (a, i, j)
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+interface pro ziskani prvku 
+
+funkce pro ziskani prvku 
+
+Definition at line 99 of file mtx\+\_\+int.\+f90.
+
+
+
+\subsection{Constructor \& Destructor Documentation}
+\index{mtx\+\_\+int\+::geti@{mtx\+\_\+int\+::geti}!geti@{geti}}
+\index{geti@{geti}!mtx\+\_\+int\+::geti@{mtx\+\_\+int\+::geti}}
+\subsubsection[{geti(a, i, j)}]{\setlength{\rightskip}{0pt plus 5cm}integer(kind=ikind) function mtx\+\_\+int\+::geti\+::geti (
+\begin{DoxyParamCaption}
+\item[{class({\bf matrix\+\_\+int}), intent(in)}]{a, }
+\item[{integer(kind=ikind), intent(in)}]{i, }
+\item[{integer(kind=ikind), intent(in)}]{j}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [private]}}\label{interfacemtx__int_1_1geti_a91d7747b531b815675dad817bef139dc}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em a} & matice\\
+\hline
+\mbox{\tt in}  & {\em i} & radkovy index\\
+\hline
+\mbox{\tt in}  & {\em j} & sloupcovy index\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+hodnota prvku 
+\end{DoxyReturn}
+
+
+Definition at line 100 of file mtx\+\_\+int.\+f90.
+
+
+\begin{DoxyCode}
+100         \textcolor{keywordtype}{use }typy
+101         \textcolor{keywordtype}{import }:: matrix\_int
+103         \textcolor{keywordtype}{class}(matrix\_int), \textcolor{keywordtype}{intent(in)} :: a
+105         \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(in)} :: i
+107         \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(in)} :: j
+109         \textcolor{keywordtype}{integer(kind=ikind)} :: r
+\end{DoxyCode}
+
+
+The documentation for this interface was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+src/pma++/{\bf mtx\+\_\+int.\+f90}\end{DoxyCompactItemize}

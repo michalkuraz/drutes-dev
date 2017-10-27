@@ -1,0 +1,26 @@
+var typy_8f90 =
+[
+    [ "stringlist", "structtypy_1_1stringlist.html", "structtypy_1_1stringlist" ],
+    [ "tcount", "structtypy_1_1tcount.html", "structtypy_1_1tcount" ],
+    [ "tident", "structtypy_1_1tident.html", "structtypy_1_1tident" ],
+    [ "funroot", "structtypy_1_1funroot.html", "structtypy_1_1funroot" ],
+    [ "derevalc", "typy_8f90.html#a16067e958bdf9389bb57d5668cebfe9e", null ],
+    [ "derevalr", "typy_8f90.html#a295c03aaa7ce2e74798fbe5cf1ffdea3", null ],
+    [ "evalc", "typy_8f90.html#a68479e2ecf0216a9f42352825a65ff2a", null ],
+    [ "evalr", "typy_8f90.html#aa9d1554ab6e4f79da6530666f0492519", null ],
+    [ "norm2", "typy_8f90.html#ad5f707f5192c4a743f7da534989ceb19", null ],
+    [ "print_info", "typy_8f90.html#a33123a40a2f37a906b69811afdae4451", null ],
+    [ "update_info", "typy_8f90.html#ada3e985608fcf32a049964e60e2428f1", null ],
+    [ "chkind", "typy_8f90.html#afe2d7be9b03aa584baf1034c60e0e648", null ],
+    [ "dprec", "typy_8f90.html#ae0f8e139f705c6faa45237bccab7f898", null ],
+    [ "ikind", "typy_8f90.html#a80b310812529ce60b2aec26670db402c", null ],
+    [ "likind", "typy_8f90.html#a2d07d3bd8360ffc201ade93859a7cc84", null ],
+    [ "lowikind", "typy_8f90.html#a12500d26e1bc4ac63296b8a3b9eebdec", null ],
+    [ "maxlen", "typy_8f90.html#a9a47109f421c00b5931520ad47c3d986", null ],
+    [ "r16", "typy_8f90.html#a091f7740354e90d8be3661156e875533", null ],
+    [ "r4", "typy_8f90.html#ac852c2bd4923127662b9ae950f7bd1c0", null ],
+    [ "r8", "typy_8f90.html#aee26dcc94380ff1a097ec84546a87020", null ],
+    [ "rkind", "typy_8f90.html#a2169287dfed38b596625c595cf3b5677", null ],
+    [ "sprec", "typy_8f90.html#a298bf05440c7f02aa0b18c47966def03", null ],
+    [ "strmax", "typy_8f90.html#a0e473281928fc9c218d9e9c6d19a3aa9", null ]
+];

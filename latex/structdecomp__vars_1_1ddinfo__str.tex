@@ -1,0 +1,167 @@
+\section{decomp\+\_\+vars\+:\+:ddinfo\+\_\+str Type Reference}
+\label{structdecomp__vars_1_1ddinfo__str}\index{decomp\+\_\+vars\+::ddinfo\+\_\+str@{decomp\+\_\+vars\+::ddinfo\+\_\+str}}
+
+
+Collaboration diagram for decomp\+\_\+vars\+:\+:ddinfo\+\_\+str\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=308pt]{structdecomp__vars_1_1ddinfo__str__coll__graph}
+\end{center}
+\end{figure}
+\subsection*{Private Attributes}
+\begin{DoxyCompactItemize}
+\item 
+integer(kind=ikind) {\bf number}
+\item 
+real(kind=rkind) {\bf t\+\_\+change}
+\item 
+real(kind=rkind) {\bf cput\+\_\+change}
+\item 
+type({\bf disjoint\+\_\+nd\+\_\+str}) {\bf nd\+\_\+dsjnt}
+\item 
+integer(kind=ikind) {\bf ndofs\+\_\+tot}
+\item 
+integer(kind=ikind) {\bf overlaps}
+\item 
+integer(kind=ikind), dimension(\+:), allocatable {\bf elincoarse}
+\item 
+integer(kind=ikind), dimension(\+:), allocatable {\bf coarseinsub}
+\item 
+type({\bf smartarray\+\_\+int}), dimension(\+:), allocatable {\bf nodesinsub}
+\begin{DoxyCompactList}\small\item\em list of nodes (geometrical) with a list of subdomains \end{DoxyCompactList}\item 
+type({\bf smartarray\+\_\+int}), dimension(\+:), allocatable {\bf nodesinextsub}
+\begin{DoxyCompactList}\small\item\em list of nodes (geometrical) with a list of extended subdomains \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+
+
+Definition at line 125 of file decomp\+\_\+vars.\+f90.
+
+
+
+\subsection{Member Data Documentation}
+\index{decomp\+\_\+vars\+::ddinfo\+\_\+str@{decomp\+\_\+vars\+::ddinfo\+\_\+str}!coarseinsub@{coarseinsub}}
+\index{coarseinsub@{coarseinsub}!decomp\+\_\+vars\+::ddinfo\+\_\+str@{decomp\+\_\+vars\+::ddinfo\+\_\+str}}
+\subsubsection[{coarseinsub}]{\setlength{\rightskip}{0pt plus 5cm}integer(kind=ikind), dimension(\+:), allocatable decomp\+\_\+vars\+::ddinfo\+\_\+str\+::coarseinsub\hspace{0.3cm}{\ttfamily [private]}}\label{structdecomp__vars_1_1ddinfo__str_aaf5a560aab637b4e424dfcf185a69805}
+
+
+Definition at line 133 of file decomp\+\_\+vars.\+f90.
+
+
+\begin{DoxyCode}
+133     \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable} :: coarseinsub
+\end{DoxyCode}
+\index{decomp\+\_\+vars\+::ddinfo\+\_\+str@{decomp\+\_\+vars\+::ddinfo\+\_\+str}!cput\+\_\+change@{cput\+\_\+change}}
+\index{cput\+\_\+change@{cput\+\_\+change}!decomp\+\_\+vars\+::ddinfo\+\_\+str@{decomp\+\_\+vars\+::ddinfo\+\_\+str}}
+\subsubsection[{cput\+\_\+change}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind) decomp\+\_\+vars\+::ddinfo\+\_\+str\+::cput\+\_\+change\hspace{0.3cm}{\ttfamily [private]}}\label{structdecomp__vars_1_1ddinfo__str_aa16b4ffe83bcecc64d681fa3609e5358}
+
+
+Definition at line 128 of file decomp\+\_\+vars.\+f90.
+
+
+\begin{DoxyCode}
+128     \textcolor{keywordtype}{real(kind=rkind)} :: cput\_change
+\end{DoxyCode}
+\index{decomp\+\_\+vars\+::ddinfo\+\_\+str@{decomp\+\_\+vars\+::ddinfo\+\_\+str}!elincoarse@{elincoarse}}
+\index{elincoarse@{elincoarse}!decomp\+\_\+vars\+::ddinfo\+\_\+str@{decomp\+\_\+vars\+::ddinfo\+\_\+str}}
+\subsubsection[{elincoarse}]{\setlength{\rightskip}{0pt plus 5cm}integer(kind=ikind), dimension(\+:), allocatable decomp\+\_\+vars\+::ddinfo\+\_\+str\+::elincoarse\hspace{0.3cm}{\ttfamily [private]}}\label{structdecomp__vars_1_1ddinfo__str_af343f2d75693893cbc522ea40d6a6f27}
+
+
+Definition at line 132 of file decomp\+\_\+vars.\+f90.
+
+
+\begin{DoxyCode}
+132     \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable} :: elincoarse
+\end{DoxyCode}
+\index{decomp\+\_\+vars\+::ddinfo\+\_\+str@{decomp\+\_\+vars\+::ddinfo\+\_\+str}!nd\+\_\+dsjnt@{nd\+\_\+dsjnt}}
+\index{nd\+\_\+dsjnt@{nd\+\_\+dsjnt}!decomp\+\_\+vars\+::ddinfo\+\_\+str@{decomp\+\_\+vars\+::ddinfo\+\_\+str}}
+\subsubsection[{nd\+\_\+dsjnt}]{\setlength{\rightskip}{0pt plus 5cm}type({\bf disjoint\+\_\+nd\+\_\+str}) decomp\+\_\+vars\+::ddinfo\+\_\+str\+::nd\+\_\+dsjnt\hspace{0.3cm}{\ttfamily [private]}}\label{structdecomp__vars_1_1ddinfo__str_ad789da6e101a955fc8b8e2daee580a10}
+
+
+Definition at line 129 of file decomp\+\_\+vars.\+f90.
+
+
+\begin{DoxyCode}
+129     \textcolor{keywordtype}{type}(disjoint_nd_str) :: nd\_dsjnt
+\end{DoxyCode}
+\index{decomp\+\_\+vars\+::ddinfo\+\_\+str@{decomp\+\_\+vars\+::ddinfo\+\_\+str}!ndofs\+\_\+tot@{ndofs\+\_\+tot}}
+\index{ndofs\+\_\+tot@{ndofs\+\_\+tot}!decomp\+\_\+vars\+::ddinfo\+\_\+str@{decomp\+\_\+vars\+::ddinfo\+\_\+str}}
+\subsubsection[{ndofs\+\_\+tot}]{\setlength{\rightskip}{0pt plus 5cm}integer(kind=ikind) decomp\+\_\+vars\+::ddinfo\+\_\+str\+::ndofs\+\_\+tot\hspace{0.3cm}{\ttfamily [private]}}\label{structdecomp__vars_1_1ddinfo__str_a465faabba80076c5b098ff4eddc7d7c8}
+
+
+Definition at line 130 of file decomp\+\_\+vars.\+f90.
+
+
+\begin{DoxyCode}
+130     \textcolor{keywordtype}{integer(kind=ikind)} :: ndofs\_tot
+\end{DoxyCode}
+\index{decomp\+\_\+vars\+::ddinfo\+\_\+str@{decomp\+\_\+vars\+::ddinfo\+\_\+str}!nodesinextsub@{nodesinextsub}}
+\index{nodesinextsub@{nodesinextsub}!decomp\+\_\+vars\+::ddinfo\+\_\+str@{decomp\+\_\+vars\+::ddinfo\+\_\+str}}
+\subsubsection[{nodesinextsub}]{\setlength{\rightskip}{0pt plus 5cm}type({\bf smartarray\+\_\+int}), dimension(\+:), allocatable decomp\+\_\+vars\+::ddinfo\+\_\+str\+::nodesinextsub\hspace{0.3cm}{\ttfamily [private]}}\label{structdecomp__vars_1_1ddinfo__str_ab4b9e284c046719a7e0429a3b89703f3}
+
+
+list of nodes (geometrical) with a list of extended subdomains 
+
+
+
+Definition at line 137 of file decomp\+\_\+vars.\+f90.
+
+
+\begin{DoxyCode}
+137     \textcolor{keywordtype}{type}(smartarray_int), \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable} :: nodesinextsub
+\end{DoxyCode}
+\index{decomp\+\_\+vars\+::ddinfo\+\_\+str@{decomp\+\_\+vars\+::ddinfo\+\_\+str}!nodesinsub@{nodesinsub}}
+\index{nodesinsub@{nodesinsub}!decomp\+\_\+vars\+::ddinfo\+\_\+str@{decomp\+\_\+vars\+::ddinfo\+\_\+str}}
+\subsubsection[{nodesinsub}]{\setlength{\rightskip}{0pt plus 5cm}type({\bf smartarray\+\_\+int}), dimension(\+:), allocatable decomp\+\_\+vars\+::ddinfo\+\_\+str\+::nodesinsub\hspace{0.3cm}{\ttfamily [private]}}\label{structdecomp__vars_1_1ddinfo__str_a0dd279324bd51bf0b0db63515be165a9}
+
+
+list of nodes (geometrical) with a list of subdomains 
+
+
+
+Definition at line 135 of file decomp\+\_\+vars.\+f90.
+
+
+\begin{DoxyCode}
+135     \textcolor{keywordtype}{type}(smartarray_int), \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable} :: nodesinsub
+\end{DoxyCode}
+\index{decomp\+\_\+vars\+::ddinfo\+\_\+str@{decomp\+\_\+vars\+::ddinfo\+\_\+str}!number@{number}}
+\index{number@{number}!decomp\+\_\+vars\+::ddinfo\+\_\+str@{decomp\+\_\+vars\+::ddinfo\+\_\+str}}
+\subsubsection[{number}]{\setlength{\rightskip}{0pt plus 5cm}integer(kind=ikind) decomp\+\_\+vars\+::ddinfo\+\_\+str\+::number\hspace{0.3cm}{\ttfamily [private]}}\label{structdecomp__vars_1_1ddinfo__str_a3fad03c6185d5c466e293bdde8ac6dad}
+
+
+Definition at line 126 of file decomp\+\_\+vars.\+f90.
+
+
+\begin{DoxyCode}
+126     \textcolor{keywordtype}{integer(kind=ikind)} :: number
+\end{DoxyCode}
+\index{decomp\+\_\+vars\+::ddinfo\+\_\+str@{decomp\+\_\+vars\+::ddinfo\+\_\+str}!overlaps@{overlaps}}
+\index{overlaps@{overlaps}!decomp\+\_\+vars\+::ddinfo\+\_\+str@{decomp\+\_\+vars\+::ddinfo\+\_\+str}}
+\subsubsection[{overlaps}]{\setlength{\rightskip}{0pt plus 5cm}integer(kind=ikind) decomp\+\_\+vars\+::ddinfo\+\_\+str\+::overlaps\hspace{0.3cm}{\ttfamily [private]}}\label{structdecomp__vars_1_1ddinfo__str_a2f405949fed6799acb264de1e476420c}
+
+
+Definition at line 131 of file decomp\+\_\+vars.\+f90.
+
+
+\begin{DoxyCode}
+131     \textcolor{keywordtype}{integer(kind=ikind)} :: overlaps
+\end{DoxyCode}
+\index{decomp\+\_\+vars\+::ddinfo\+\_\+str@{decomp\+\_\+vars\+::ddinfo\+\_\+str}!t\+\_\+change@{t\+\_\+change}}
+\index{t\+\_\+change@{t\+\_\+change}!decomp\+\_\+vars\+::ddinfo\+\_\+str@{decomp\+\_\+vars\+::ddinfo\+\_\+str}}
+\subsubsection[{t\+\_\+change}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind) decomp\+\_\+vars\+::ddinfo\+\_\+str\+::t\+\_\+change\hspace{0.3cm}{\ttfamily [private]}}\label{structdecomp__vars_1_1ddinfo__str_aaa4c75d8c450ed951bf7a108fe1a3456}
+
+
+Definition at line 127 of file decomp\+\_\+vars.\+f90.
+
+
+\begin{DoxyCode}
+127     \textcolor{keywordtype}{real(kind=rkind)} :: t\_change
+\end{DoxyCode}
+
+
+The documentation for this type was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+src/decompo/{\bf decomp\+\_\+vars.\+f90}\end{DoxyCompactItemize}

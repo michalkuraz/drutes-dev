@@ -1,0 +1,51 @@
+<map id="re_pointers::restdh" name="re_pointers::restdh">
+<area shape="rect" id="node2" href="$namespacere__pointers.html#a5f39d856da70973c02dcc8ed10844884" title="re_pointers::allrepointers" alt="" coords="187,643,351,670"/>
+<area shape="rect" id="node30" href="$namespacere__total.html#a69e62c90d2abde0ffc21c28a6c6717b9" title="re_total::darcy4toth" alt="" coords="201,593,336,619"/>
+<area shape="rect" id="node31" href="$namespacere__total.html#a52ce5b4dd78109c258014d2f601c5d06" title="specific function for Richards equation in H&#45;form (total hydraulic head form), replaces pde_objs::get..." alt="" coords="198,1129,339,1155"/>
+<area shape="rect" id="node38" href="$namespacere__pointers.html#ad0da880edec99cec0e70b76e0819172d" title="re_pointers::re_totheadbc" alt="" coords="184,1373,353,1399"/>
+<area shape="rect" id="node47" href="$namespacere__total.html#a5d572dd5f6da46314cdd0d5039c2db7c" title="re_total::retot_initcond" alt="" coords="665,233,816,259"/>
+<area shape="rect" id="node3" href="$namespacere__constitutive.html#a69e92c71f9859f011cbf34e28dc8922c" title="derivative of Mualem&#39;s function with van Genuchten&#39;s substitution for water content function &#160;..." alt="" coords="401,719,591,746"/>
+<area shape="rect" id="node4" href="$namespacere__constitutive.html#a4902efda05309f68b332f0ff35b701ac" title="re_constitutive::domainswitch" alt="" coords="643,682,838,709"/>
+<area shape="rect" id="node5" href="$namespacere__constitutive.html#a3c7de19cd5e93ba8f0f4bb821e87790c" title="re_constitutive::init\l_zones" alt="" coords="430,827,562,868"/>
+<area shape="rect" id="node11" href="$namespacere__constitutive.html#a5a331b5dac127bd2b449ffdecf9e3714" title="Van Genuchten relation &#160;&#160;water content is considered as absolute value not the relative one &#160;&#160;see ..." alt="" coords="1109,961,1267,987"/>
+<area shape="rect" id="node12" href="$namespacere__constitutive.html#a36b172485f285a7c37b92d738eb21029" title="so&#45;called retention water capacity, it is a derivative to retention curve function &#160;E(h) = C(h) + {(h..." alt="" coords="897,1037,1055,1079"/>
+<area shape="rect" id="node13" href="$namespacere__constitutive.html#a350f561bf6541e41a24b80a1dafdfad0" title="Mualem&#39;s fucntion for unsaturated hydraulic conductivity with van Genuchten&#39;s water content substitut..." alt="" coords="660,327,821,354"/>
+<area shape="rect" id="node14" href="$namespacere__constitutive.html#a8923c35fda157f8198854a3afadd1f99" title="re_constitutive::mualem_tab" alt="" coords="403,385,589,411"/>
+<area shape="rect" id="node20" href="$namespacere__constitutive.html#a9868257a176611d41d573f6fb131fc70" title="re_constitutive::rcza\l_check" alt="" coords="426,436,566,477"/>
+<area shape="rect" id="node21" href="$namespacere__reader.html#abee07a4923b280459f7a1b135cc70346" title="opens and reads water.conf/matrix.conf, input data for the Richards equation in single mode..." alt="" coords="673,109,808,135"/>
+<area shape="rect" id="node26" href="$namespacere__constitutive.html#a33a509607909bb5e6b33c6d2ba2247e2" title="re_constitutive::sinkterm" alt="" coords="413,567,579,594"/>
+<area shape="rect" id="node27" href="$namespacere__constitutive.html#a6bfdd98c01994ec23b252bfb214199bd" title="creates a table of values of constitutive functions for the Richards equation to be linearly approxim..." alt="" coords="411,770,581,797"/>
+<area shape="rect" id="node28" href="$namespacere__constitutive.html#aa39d302eed50bc490b34dd310caf7ed8" title="re_constitutive::vangen\l_elast_tab" alt="" coords="417,501,575,543"/>
+<area shape="rect" id="node29" href="$namespacere__constitutive.html#a21d8dd738d02ef5a1501b79f7b80f50b" title="re_constitutive::vangen_tab" alt="" coords="405,618,587,645"/>
+<area shape="rect" id="node6" href="$namespaceprinttools.html#ac71e43f1627ed0239558720411181068" title="if default output is stdout, then this procedure prints nice progress bar " alt="" coords="665,783,816,810"/>
+<area shape="rect" id="node7" href="$namespacere__constitutive.html#ade7567448cbab0c91885d4d3f48e03a2" title="re_constitutive::secondder_retc" alt="" coords="639,885,843,911"/>
+<area shape="rect" id="node8" href="$namespacegeom__tools.html#a2fde1713e8d912a2be95dfa7f6789bab" title="bisecton method searching for a root of function f on defined intervals xmin and xmax ..." alt="" coords="891,809,1061,835"/>
+<area shape="rect" id="node10" href="$namespacere__constitutive.html#a6c717771e468878eec01e1aa2a27ba7a" title="re_constitutive::zone\l_error_val" alt="" coords="669,987,812,1028"/>
+<area shape="rect" id="node9" href="$namespacecore__tools.html#abe09f9b4dc2abc5384a24020c5031e95" title="core_tools::write_log" alt="" coords="1117,454,1259,481"/>
+<area shape="rect" id="node15" href="$namespacere__constitutive.html#aaab88fb88c11ce508ad8240a96275a6b" title="re_constitutive::intoverflow" alt="" coords="651,429,830,455"/>
+<area shape="rect" id="node16" href="$namespacepostpro.html#a21af39d8fdc38e6b736346450f99fece" title="postpro::make_print" alt="" coords="907,261,1045,287"/>
+<area shape="rect" id="node17" href="$namespacecore__tools.html#a01c1527fcc56448471e2b349571e51ee" title="core_tools::find_unit" alt="" coords="1119,159,1257,186"/>
+<area shape="rect" id="node18" href="$namespacepostpro.html#a075d651e98dee329985f2b054ba54415" title="postpro::print_gmsh" alt="" coords="1119,286,1257,313"/>
+<area shape="rect" id="node19" href="$namespacepostpro.html#ac9d752e3b26cac769ba607b84791ba2a" title="postpro::print_pure" alt="" coords="1123,235,1253,262"/>
+<area shape="rect" id="node22" href="$namespacereadtools.html#a718f41934d7cc35a0c4f8d4107a69029" title="this procedure set up an anisothropy tensor, the local anisothrophy values are supllied in values arr..." alt="" coords="904,210,1048,237"/>
+<area shape="rect" id="node23" href="$namespacereadtools.html#ab8bc95060d3f5e8bfb8d4e4519c3568a" title="readtools::comment" alt="" coords="1119,7,1257,34"/>
+<area shape="rect" id="node24" href="$namespacereadtools.html#a9481f44f055c2f4bc518a4b91db43b5c" title="readtools::file_error" alt="" coords="1121,58,1255,85"/>
+<area shape="rect" id="node25" href="$namespacereadtools.html#a35dde6b411a1476727771fcb8f5d1bc9" title="readtools::readbcvals" alt="" coords="903,58,1049,85"/>
+<area shape="rect" id="node32" href="$namespacegeom__tools.html#a4c2336f6e1e7d512a9d81acb21c71456" title="geom_tools::getcoor" alt="" coords="671,1205,811,1231"/>
+<area shape="rect" id="node34" href="$namespacepde__objs.html#aece3def127980c03c455456068cb3e48" title="returns solution value for p1 approximation " alt="" coords="431,1103,561,1130"/>
+<area shape="rect" id="node37" href="$namespacegeom__tools.html#aa7bb57f436fc77331aea42f34fde56a5" title="geom_tools::get_layer" alt="" coords="421,1205,571,1231"/>
+<area shape="rect" id="node33" href="$namespacegeom__tools.html#a91ddf015e5cea9e21d182b93603f5139" title="geom_tools::dist" alt="" coords="917,1205,1035,1231"/>
+<area shape="rect" id="node35" href="$namespacepde__objs.html#ad649cdb29899f292c7702c48fa9a6cf0" title="in case of asynchronyous temporal integration this function is separated from getvalp1, if standard temporal integration used, then this function is called from the first line of getvalp1 " alt="" coords="667,1103,815,1130"/>
+<area shape="rect" id="node36" href="$namespacepde__objs.html#aafa68686beee7a3cff07efb9febdfae0" title="pde_objs::get2dderivative" alt="" coords="891,1103,1061,1130"/>
+<area shape="rect" id="node39" href="$namespacere__constitutive.html#aaf76632a958340d25d948fafea6a16c9" title="re_constitutive::re\l_null_bc" alt="" coords="433,1525,559,1567"/>
+<area shape="rect" id="node40" href="$namespacere__total.html#a50dadbca5603f1a3c8ba55b4321af666" title="re_total::retot_dirichlet_bc" alt="" coords="410,1255,582,1282"/>
+<area shape="rect" id="node41" href="$namespacere__total.html#ab293d5a72c9e61e4ce8c4e3c2439bba7" title="re_total::retot_dirichlet\l_height_bc" alt="" coords="421,1307,571,1348"/>
+<area shape="rect" id="node42" href="$namespacere__total.html#aa380a43e84f13ae7babb943b15399e3a" title="re_total::retot_freedrainage" alt="" coords="407,1373,585,1399"/>
+<area shape="rect" id="node43" href="$namespacere__total.html#af10fe9475a9afdc1f8a4e047877db2e4" title="re_total::retot_neumann_bc" alt="" coords="406,1423,586,1450"/>
+<area shape="rect" id="node44" href="$namespacere__total.html#aba9ffc0b12bd41e731c2b7bfd4a22f88" title="re_total::retot_seepage" alt="" coords="419,1474,573,1501"/>
+<area shape="rect" id="node45" href="$namespacegeom__tools.html#a9a7f232fec395ff22f8985cffeebd146" title="this function returns outer normal boundary vector bcpoints &#45; nodes ids at the element boundary..." alt="" coords="663,1474,818,1501"/>
+<area shape="rect" id="node46" href="$namespacegeom__tools.html#addda2c9ac04812dd1ae188c3780594f4" title="function to determine if the point C lies above or below the line defined by points A and B result is..." alt="" coords="900,1474,1052,1501"/>
+<area shape="rect" id="node48" href="$namespacegeom__tools.html#a5a6548d90c258b44ecc6d58dd159b845" title="geom_tools::map1d2dj" alt="" coords="899,109,1053,135"/>
+<area shape="rect" id="node50" href="$namespacere__constitutive.html#a6cc0f4bc06a19ad696d83967878a54fb" title="re_constitutive::inverse\l_vangen" alt="" coords="897,312,1055,353"/>
+<area shape="rect" id="node49" href="$namespacecore__tools.html#aca00f87d69884142f2350a340fe3642e" title="dummy functions, the pointer procedure is set to this function in case if not being considered ..." alt="" coords="1134,109,1242,135"/>
+</map>

@@ -1,0 +1,255 @@
+\section{decomp\+\_\+vars\+:\+:cluster Type Reference}
+\label{structdecomp__vars_1_1cluster}\index{decomp\+\_\+vars\+::cluster@{decomp\+\_\+vars\+::cluster}}
+
+
+Collaboration diagram for decomp\+\_\+vars\+:\+:cluster\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=178pt]{structdecomp__vars_1_1cluster__coll__graph}
+\end{center}
+\end{figure}
+\subsection*{Private Attributes}
+\begin{DoxyCompactItemize}
+\item 
+real(kind=rkind), dimension(2) {\bf ranges}
+\begin{DoxyCompactList}\small\item\em contains ranges of defined material properties range(1) -\/ low range range(2) -\/ high range \end{DoxyCompactList}\item 
+integer(kind=ikind), dimension(\+:), allocatable {\bf elements}
+\item 
+integer(kind=ikind) {\bf el\+\_\+count}
+\begin{DoxyCompactList}\small\item\em number of elements at cluster \end{DoxyCompactList}\item 
+integer(kind=ikind) {\bf ndof\+\_\+cl}
+\begin{DoxyCompactList}\small\item\em N\+D\+OF at cluster. \end{DoxyCompactList}\item 
+integer(kind=ikind), dimension(\+:), allocatable {\bf neighbours}
+\begin{DoxyCompactList}\small\item\em id of neibourhood elements, (only used for coarse meshes) \end{DoxyCompactList}\item 
+integer(kind=ikind) {\bf level}
+\begin{DoxyCompactList}\small\item\em the level is defined as follows the level is defined as an average exponent value from the nodal hydraulic conductivity \end{DoxyCompactList}\item 
+logical {\bf treat\+\_\+alone}
+\begin{DoxyCompactList}\small\item\em if the cluster contains more then two orders of magnitude in conductivity, the cluster is treated saporately, treat\+\_\+alone = .true., otherwise treat\+\_\+alone = .false. \end{DoxyCompactList}\item 
+integer(kind=ikind) {\bf subdomain}
+\begin{DoxyCompactList}\small\item\em ID number of the subdomain, the subdomains are obtained from joining the clusters. \end{DoxyCompactList}\item 
+integer(kind=ikind) {\bf prevsub}
+\item 
+logical {\bf evaluated}
+\begin{DoxyCompactList}\small\item\em if evaluated, then the subdomain for this cluster has been already set up \end{DoxyCompactList}\item 
+integer {\bf iter\+\_\+count}
+\begin{DoxyCompactList}\small\item\em number of iterations at current cluster \end{DoxyCompactList}\item 
+integer {\bf subdomiter}
+\begin{DoxyCompactList}\small\item\em number of iterations at current subdomain \end{DoxyCompactList}\item 
+logical {\bf active}
+\item 
+type({\bf smartarray\+\_\+int}), dimension(\+:), allocatable {\bf overlap\+\_\+el}
+\begin{DoxyCompactList}\small\item\em array of elements at the neighborhood cluster, the number of rows is the number of overlap levels, the lower column rank is zero, where zero is the list of the boundary nodes \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+
+
+Definition at line 7 of file decomp\+\_\+vars.\+f90.
+
+
+
+\subsection{Member Data Documentation}
+\index{decomp\+\_\+vars\+::cluster@{decomp\+\_\+vars\+::cluster}!active@{active}}
+\index{active@{active}!decomp\+\_\+vars\+::cluster@{decomp\+\_\+vars\+::cluster}}
+\subsubsection[{active}]{\setlength{\rightskip}{0pt plus 5cm}logical decomp\+\_\+vars\+::cluster\+::active\hspace{0.3cm}{\ttfamily [private]}}\label{structdecomp__vars_1_1cluster_aa4e7ecbf3a6514d511a1d7f3f4362bfe}
+
+
+Definition at line 35 of file decomp\+\_\+vars.\+f90.
+
+
+\begin{DoxyCode}
+35     \textcolor{keywordtype}{logical} :: active
+\end{DoxyCode}
+\index{decomp\+\_\+vars\+::cluster@{decomp\+\_\+vars\+::cluster}!el\+\_\+count@{el\+\_\+count}}
+\index{el\+\_\+count@{el\+\_\+count}!decomp\+\_\+vars\+::cluster@{decomp\+\_\+vars\+::cluster}}
+\subsubsection[{el\+\_\+count}]{\setlength{\rightskip}{0pt plus 5cm}integer(kind=ikind) decomp\+\_\+vars\+::cluster\+::el\+\_\+count\hspace{0.3cm}{\ttfamily [private]}}\label{structdecomp__vars_1_1cluster_a14a956c4b26f6c4da3a0bc0f55d46187}
+
+
+number of elements at cluster 
+
+
+
+Definition at line 15 of file decomp\+\_\+vars.\+f90.
+
+
+\begin{DoxyCode}
+15     \textcolor{keywordtype}{integer(kind=ikind)} :: el\_count
+\end{DoxyCode}
+\index{decomp\+\_\+vars\+::cluster@{decomp\+\_\+vars\+::cluster}!elements@{elements}}
+\index{elements@{elements}!decomp\+\_\+vars\+::cluster@{decomp\+\_\+vars\+::cluster}}
+\subsubsection[{elements}]{\setlength{\rightskip}{0pt plus 5cm}integer(kind=ikind), dimension(\+:), allocatable decomp\+\_\+vars\+::cluster\+::elements\hspace{0.3cm}{\ttfamily [private]}}\label{structdecomp__vars_1_1cluster_a625a20993e91d255156b9d48c87a20d1}
+
+
+Definition at line 13 of file decomp\+\_\+vars.\+f90.
+
+
+\begin{DoxyCode}
+13     \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable} :: elements
+\end{DoxyCode}
+\index{decomp\+\_\+vars\+::cluster@{decomp\+\_\+vars\+::cluster}!evaluated@{evaluated}}
+\index{evaluated@{evaluated}!decomp\+\_\+vars\+::cluster@{decomp\+\_\+vars\+::cluster}}
+\subsubsection[{evaluated}]{\setlength{\rightskip}{0pt plus 5cm}logical decomp\+\_\+vars\+::cluster\+::evaluated\hspace{0.3cm}{\ttfamily [private]}}\label{structdecomp__vars_1_1cluster_aabadc83f577db1e8d25234ce1d5c0784}
+
+
+if evaluated, then the subdomain for this cluster has been already set up 
+
+
+
+Definition at line 30 of file decomp\+\_\+vars.\+f90.
+
+
+\begin{DoxyCode}
+30     \textcolor{keywordtype}{logical} :: evaluated
+\end{DoxyCode}
+\index{decomp\+\_\+vars\+::cluster@{decomp\+\_\+vars\+::cluster}!iter\+\_\+count@{iter\+\_\+count}}
+\index{iter\+\_\+count@{iter\+\_\+count}!decomp\+\_\+vars\+::cluster@{decomp\+\_\+vars\+::cluster}}
+\subsubsection[{iter\+\_\+count}]{\setlength{\rightskip}{0pt plus 5cm}integer decomp\+\_\+vars\+::cluster\+::iter\+\_\+count\hspace{0.3cm}{\ttfamily [private]}}\label{structdecomp__vars_1_1cluster_a2e2ce50aa1a39238e672f79bb7ed4c9d}
+
+
+number of iterations at current cluster 
+
+
+
+Definition at line 32 of file decomp\+\_\+vars.\+f90.
+
+
+\begin{DoxyCode}
+32     \textcolor{keywordtype}{integer} :: iter\_count
+\end{DoxyCode}
+\index{decomp\+\_\+vars\+::cluster@{decomp\+\_\+vars\+::cluster}!level@{level}}
+\index{level@{level}!decomp\+\_\+vars\+::cluster@{decomp\+\_\+vars\+::cluster}}
+\subsubsection[{level}]{\setlength{\rightskip}{0pt plus 5cm}integer(kind=ikind) decomp\+\_\+vars\+::cluster\+::level\hspace{0.3cm}{\ttfamily [private]}}\label{structdecomp__vars_1_1cluster_a245e4e2b507919299b6b0078e7ca6e44}
+
+
+the level is defined as follows the level is defined as an average exponent value from the nodal hydraulic conductivity 
+
+
+
+Definition at line 23 of file decomp\+\_\+vars.\+f90.
+
+
+\begin{DoxyCode}
+23     \textcolor{keywordtype}{integer(kind=ikind)}   :: level
+\end{DoxyCode}
+\index{decomp\+\_\+vars\+::cluster@{decomp\+\_\+vars\+::cluster}!ndof\+\_\+cl@{ndof\+\_\+cl}}
+\index{ndof\+\_\+cl@{ndof\+\_\+cl}!decomp\+\_\+vars\+::cluster@{decomp\+\_\+vars\+::cluster}}
+\subsubsection[{ndof\+\_\+cl}]{\setlength{\rightskip}{0pt plus 5cm}integer(kind=ikind) decomp\+\_\+vars\+::cluster\+::ndof\+\_\+cl\hspace{0.3cm}{\ttfamily [private]}}\label{structdecomp__vars_1_1cluster_a764a725d5ff9b9c6d39e02a408c1937e}
+
+
+N\+D\+OF at cluster. 
+
+
+
+Definition at line 17 of file decomp\+\_\+vars.\+f90.
+
+
+\begin{DoxyCode}
+17     \textcolor{keywordtype}{integer(kind=ikind)} :: ndof\_cl
+\end{DoxyCode}
+\index{decomp\+\_\+vars\+::cluster@{decomp\+\_\+vars\+::cluster}!neighbours@{neighbours}}
+\index{neighbours@{neighbours}!decomp\+\_\+vars\+::cluster@{decomp\+\_\+vars\+::cluster}}
+\subsubsection[{neighbours}]{\setlength{\rightskip}{0pt plus 5cm}integer(kind=ikind), dimension(\+:), allocatable decomp\+\_\+vars\+::cluster\+::neighbours\hspace{0.3cm}{\ttfamily [private]}}\label{structdecomp__vars_1_1cluster_afee19e9d9dde4f487dec611ce84d656a}
+
+
+id of neibourhood elements, (only used for coarse meshes) 
+
+
+
+Definition at line 19 of file decomp\+\_\+vars.\+f90.
+
+
+\begin{DoxyCode}
+19     \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable} :: neighbours
+\end{DoxyCode}
+\index{decomp\+\_\+vars\+::cluster@{decomp\+\_\+vars\+::cluster}!overlap\+\_\+el@{overlap\+\_\+el}}
+\index{overlap\+\_\+el@{overlap\+\_\+el}!decomp\+\_\+vars\+::cluster@{decomp\+\_\+vars\+::cluster}}
+\subsubsection[{overlap\+\_\+el}]{\setlength{\rightskip}{0pt plus 5cm}type({\bf smartarray\+\_\+int}), dimension(\+:), allocatable decomp\+\_\+vars\+::cluster\+::overlap\+\_\+el\hspace{0.3cm}{\ttfamily [private]}}\label{structdecomp__vars_1_1cluster_ae47f4d990e61f86570507d0be94211f7}
+
+
+array of elements at the neighborhood cluster, the number of rows is the number of overlap levels, the lower column rank is zero, where zero is the list of the boundary nodes 
+
+
+
+Definition at line 37 of file decomp\+\_\+vars.\+f90.
+
+
+\begin{DoxyCode}
+37     \textcolor{keywordtype}{type}(smartarray_int), \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable} :: overlap\_el
+\end{DoxyCode}
+\index{decomp\+\_\+vars\+::cluster@{decomp\+\_\+vars\+::cluster}!prevsub@{prevsub}}
+\index{prevsub@{prevsub}!decomp\+\_\+vars\+::cluster@{decomp\+\_\+vars\+::cluster}}
+\subsubsection[{prevsub}]{\setlength{\rightskip}{0pt plus 5cm}integer(kind=ikind) decomp\+\_\+vars\+::cluster\+::prevsub\hspace{0.3cm}{\ttfamily [private]}}\label{structdecomp__vars_1_1cluster_a3e2cedb128c215c91251777d6b134066}
+
+
+Definition at line 28 of file decomp\+\_\+vars.\+f90.
+
+
+\begin{DoxyCode}
+28     \textcolor{keywordtype}{integer(kind=ikind)}   :: prevsub
+\end{DoxyCode}
+\index{decomp\+\_\+vars\+::cluster@{decomp\+\_\+vars\+::cluster}!ranges@{ranges}}
+\index{ranges@{ranges}!decomp\+\_\+vars\+::cluster@{decomp\+\_\+vars\+::cluster}}
+\subsubsection[{ranges}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind), dimension(2) decomp\+\_\+vars\+::cluster\+::ranges\hspace{0.3cm}{\ttfamily [private]}}\label{structdecomp__vars_1_1cluster_a63fe4ef698d426f20051cadeb411389a}
+
+
+contains ranges of defined material properties range(1) -\/ low range range(2) -\/ high range 
+
+
+
+Definition at line 12 of file decomp\+\_\+vars.\+f90.
+
+
+\begin{DoxyCode}
+12     \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(2)}    :: ranges
+\end{DoxyCode}
+\index{decomp\+\_\+vars\+::cluster@{decomp\+\_\+vars\+::cluster}!subdomain@{subdomain}}
+\index{subdomain@{subdomain}!decomp\+\_\+vars\+::cluster@{decomp\+\_\+vars\+::cluster}}
+\subsubsection[{subdomain}]{\setlength{\rightskip}{0pt plus 5cm}integer(kind=ikind) decomp\+\_\+vars\+::cluster\+::subdomain\hspace{0.3cm}{\ttfamily [private]}}\label{structdecomp__vars_1_1cluster_a6b081fbb823b1cc7bb949c5818e83494}
+
+
+ID number of the subdomain, the subdomains are obtained from joining the clusters. 
+
+
+
+Definition at line 27 of file decomp\+\_\+vars.\+f90.
+
+
+\begin{DoxyCode}
+27     \textcolor{keywordtype}{integer(kind=ikind)}   :: subdomain
+\end{DoxyCode}
+\index{decomp\+\_\+vars\+::cluster@{decomp\+\_\+vars\+::cluster}!subdomiter@{subdomiter}}
+\index{subdomiter@{subdomiter}!decomp\+\_\+vars\+::cluster@{decomp\+\_\+vars\+::cluster}}
+\subsubsection[{subdomiter}]{\setlength{\rightskip}{0pt plus 5cm}integer decomp\+\_\+vars\+::cluster\+::subdomiter\hspace{0.3cm}{\ttfamily [private]}}\label{structdecomp__vars_1_1cluster_a30683e939b5f8b9d66a240ab6edd8857}
+
+
+number of iterations at current subdomain 
+
+
+
+Definition at line 34 of file decomp\+\_\+vars.\+f90.
+
+
+\begin{DoxyCode}
+34     \textcolor{keywordtype}{integer} :: subdomiter
+\end{DoxyCode}
+\index{decomp\+\_\+vars\+::cluster@{decomp\+\_\+vars\+::cluster}!treat\+\_\+alone@{treat\+\_\+alone}}
+\index{treat\+\_\+alone@{treat\+\_\+alone}!decomp\+\_\+vars\+::cluster@{decomp\+\_\+vars\+::cluster}}
+\subsubsection[{treat\+\_\+alone}]{\setlength{\rightskip}{0pt plus 5cm}logical decomp\+\_\+vars\+::cluster\+::treat\+\_\+alone\hspace{0.3cm}{\ttfamily [private]}}\label{structdecomp__vars_1_1cluster_ab404ccbe86d9d1f31e26a84b2eeeff20}
+
+
+if the cluster contains more then two orders of magnitude in conductivity, the cluster is treated saporately, treat\+\_\+alone = .true., otherwise treat\+\_\+alone = .false. 
+
+
+
+Definition at line 25 of file decomp\+\_\+vars.\+f90.
+
+
+\begin{DoxyCode}
+25     \textcolor{keywordtype}{logical} :: treat\_alone
+\end{DoxyCode}
+
+
+The documentation for this type was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+src/decompo/{\bf decomp\+\_\+vars.\+f90}\end{DoxyCompactItemize}

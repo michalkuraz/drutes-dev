@@ -1,0 +1,159 @@
+\section{global\+\_\+objs\+:\+:smartarray\+\_\+int Type Reference}
+\label{structglobal__objs_1_1smartarray__int}\index{global\+\_\+objs\+::smartarray\+\_\+int@{global\+\_\+objs\+::smartarray\+\_\+int}}
+
+
+smart array, you don\textquotesingle{}t need to allocate -- usefull if you don\textquotesingle{}t know how many data you will write in, it is simply smart enough, it does all allocations automatically. By default the array data allocates on dimension 2, if the data doesn\textquotesingle{}t fit into this array, then the array is reallocated for a double of its original size  
+
+
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+procedure {\bf fill} =$>$ {\bf ismartfill}
+\begin{DoxyCompactList}\small\item\em fills value into array, its dimension is automaticaly allocated \end{DoxyCompactList}\item 
+procedure {\bf clear} =$>$ {\bf ismartclear}
+\begin{DoxyCompactList}\small\item\em clear the smart array, input parameter is logical F\+U\+LL, this parameter is optional by default if F\+U\+LL not passed or F\+U\+LL is .false., then only the value smartpos is set to zero if F\+U\+LL .true., the also the array data is deallocated it turns out that F\+U\+LL .false. is faster, but less memory efficient \end{DoxyCompactList}\item 
+procedure {\bf nrfill} =$>$ {\bf ismartfill\+\_\+norepeat}
+\begin{DoxyCompactList}\small\item\em disjoint fill -- it fills value into array, only if the same value does not already exist in the array \end{DoxyCompactList}\item 
+procedure {\bf exist} =$>$ {\bf ismartexist}
+\begin{DoxyCompactList}\small\item\em return value is logical, if the value already exist in the array, then the reutrn value is .true. otherwise .false. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+integer(kind=ikind), dimension(\+:), allocatable {\bf data}
+\begin{DoxyCompactList}\small\item\em array with data \end{DoxyCompactList}\item 
+integer(kind=ikind), dimension(\+:), allocatable {\bf info}
+\begin{DoxyCompactList}\small\item\em put there what ever you like, sometimes it can be usefull if you have this array \end{DoxyCompactList}\item 
+integer(kind=ikind) {\bf pos} =0
+\begin{DoxyCompactList}\small\item\em current dimension of your data, e.\+g. your smart array is declared as smart, then don\textquotesingle{}t try ubound(smart\%data) N\+E\+V\+E\+R!! for the array dimension see the value smartpos \end{DoxyCompactList}\item 
+integer(kind=ikind) {\bf infopos} =0
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+smart array, you don\textquotesingle{}t need to allocate -- usefull if you don\textquotesingle{}t know how many data you will write in, it is simply smart enough, it does all allocations automatically. By default the array data allocates on dimension 2, if the data doesn\textquotesingle{}t fit into this array, then the array is reallocated for a double of its original size 
+
+Definition at line 40 of file global\+\_\+objs.\+f90.
+
+
+
+\subsection{Member Function/\+Subroutine Documentation}
+\index{global\+\_\+objs\+::smartarray\+\_\+int@{global\+\_\+objs\+::smartarray\+\_\+int}!clear@{clear}}
+\index{clear@{clear}!global\+\_\+objs\+::smartarray\+\_\+int@{global\+\_\+objs\+::smartarray\+\_\+int}}
+\subsubsection[{clear=$>$ ismartclear}]{\setlength{\rightskip}{0pt plus 5cm}procedure global\+\_\+objs\+::smartarray\+\_\+int\+::clear (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}\label{structglobal__objs_1_1smartarray__int_a3dd07c4ec5b8c9f4cdb9c5ec339141c7}
+
+
+clear the smart array, input parameter is logical F\+U\+LL, this parameter is optional by default if F\+U\+LL not passed or F\+U\+LL is .false., then only the value smartpos is set to zero if F\+U\+LL .true., the also the array data is deallocated it turns out that F\+U\+LL .false. is faster, but less memory efficient 
+
+
+
+Definition at line 57 of file global\+\_\+objs.\+f90.
+
+\index{global\+\_\+objs\+::smartarray\+\_\+int@{global\+\_\+objs\+::smartarray\+\_\+int}!exist@{exist}}
+\index{exist@{exist}!global\+\_\+objs\+::smartarray\+\_\+int@{global\+\_\+objs\+::smartarray\+\_\+int}}
+\subsubsection[{exist=$>$ ismartexist}]{\setlength{\rightskip}{0pt plus 5cm}procedure global\+\_\+objs\+::smartarray\+\_\+int\+::exist (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}\label{structglobal__objs_1_1smartarray__int_a1b76e19e062ce9b998ba6360df665994}
+
+
+return value is logical, if the value already exist in the array, then the reutrn value is .true. otherwise .false. 
+
+
+
+Definition at line 61 of file global\+\_\+objs.\+f90.
+
+\index{global\+\_\+objs\+::smartarray\+\_\+int@{global\+\_\+objs\+::smartarray\+\_\+int}!fill@{fill}}
+\index{fill@{fill}!global\+\_\+objs\+::smartarray\+\_\+int@{global\+\_\+objs\+::smartarray\+\_\+int}}
+\subsubsection[{fill=$>$ ismartfill}]{\setlength{\rightskip}{0pt plus 5cm}procedure global\+\_\+objs\+::smartarray\+\_\+int\+::fill (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}\label{structglobal__objs_1_1smartarray__int_a02b630f818946538c4976a805ad0ffa1}
+
+
+fills value into array, its dimension is automaticaly allocated 
+
+
+
+Definition at line 51 of file global\+\_\+objs.\+f90.
+
+\index{global\+\_\+objs\+::smartarray\+\_\+int@{global\+\_\+objs\+::smartarray\+\_\+int}!nrfill@{nrfill}}
+\index{nrfill@{nrfill}!global\+\_\+objs\+::smartarray\+\_\+int@{global\+\_\+objs\+::smartarray\+\_\+int}}
+\subsubsection[{nrfill=$>$ ismartfill\+\_\+norepeat}]{\setlength{\rightskip}{0pt plus 5cm}procedure global\+\_\+objs\+::smartarray\+\_\+int\+::nrfill (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}\label{structglobal__objs_1_1smartarray__int_a937f72a00bfda8837099746e1113d095}
+
+
+disjoint fill -- it fills value into array, only if the same value does not already exist in the array 
+
+
+
+Definition at line 59 of file global\+\_\+objs.\+f90.
+
+
+
+\subsection{Member Data Documentation}
+\index{global\+\_\+objs\+::smartarray\+\_\+int@{global\+\_\+objs\+::smartarray\+\_\+int}!data@{data}}
+\index{data@{data}!global\+\_\+objs\+::smartarray\+\_\+int@{global\+\_\+objs\+::smartarray\+\_\+int}}
+\subsubsection[{data}]{\setlength{\rightskip}{0pt plus 5cm}integer(kind=ikind), dimension(\+:), allocatable global\+\_\+objs\+::smartarray\+\_\+int\+::data}\label{structglobal__objs_1_1smartarray__int_a36e80df8b15a0c6ecd084b58688f3791}
+
+
+array with data 
+
+
+
+Definition at line 42 of file global\+\_\+objs.\+f90.
+
+
+\begin{DoxyCode}
+42     \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable} :: data
+\end{DoxyCode}
+\index{global\+\_\+objs\+::smartarray\+\_\+int@{global\+\_\+objs\+::smartarray\+\_\+int}!info@{info}}
+\index{info@{info}!global\+\_\+objs\+::smartarray\+\_\+int@{global\+\_\+objs\+::smartarray\+\_\+int}}
+\subsubsection[{info}]{\setlength{\rightskip}{0pt plus 5cm}integer(kind=ikind), dimension(\+:), allocatable global\+\_\+objs\+::smartarray\+\_\+int\+::info}\label{structglobal__objs_1_1smartarray__int_a0d4c475d2de3a084dc9766df0b99ad76}
+
+
+put there what ever you like, sometimes it can be usefull if you have this array 
+
+
+
+Definition at line 44 of file global\+\_\+objs.\+f90.
+
+
+\begin{DoxyCode}
+44     \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable} :: info
+\end{DoxyCode}
+\index{global\+\_\+objs\+::smartarray\+\_\+int@{global\+\_\+objs\+::smartarray\+\_\+int}!infopos@{infopos}}
+\index{infopos@{infopos}!global\+\_\+objs\+::smartarray\+\_\+int@{global\+\_\+objs\+::smartarray\+\_\+int}}
+\subsubsection[{infopos}]{\setlength{\rightskip}{0pt plus 5cm}integer(kind=ikind) global\+\_\+objs\+::smartarray\+\_\+int\+::infopos =0}\label{structglobal__objs_1_1smartarray__int_aa65bac89284c97de70faad2b7a990754}
+
+
+Definition at line 48 of file global\+\_\+objs.\+f90.
+
+\index{global\+\_\+objs\+::smartarray\+\_\+int@{global\+\_\+objs\+::smartarray\+\_\+int}!pos@{pos}}
+\index{pos@{pos}!global\+\_\+objs\+::smartarray\+\_\+int@{global\+\_\+objs\+::smartarray\+\_\+int}}
+\subsubsection[{pos}]{\setlength{\rightskip}{0pt plus 5cm}integer(kind=ikind) global\+\_\+objs\+::smartarray\+\_\+int\+::pos =0}\label{structglobal__objs_1_1smartarray__int_a6282982fe86310331c9d8c0027d9374f}
+
+
+current dimension of your data, e.\+g. your smart array is declared as smart, then don\textquotesingle{}t try ubound(smart\%data) N\+E\+V\+E\+R!! for the array dimension see the value smartpos 
+
+
+
+Definition at line 48 of file global\+\_\+objs.\+f90.
+
+
+\begin{DoxyCode}
+48     \textcolor{keywordtype}{integer(kind=ikind)} :: pos=0, infopos=0
+\end{DoxyCode}
+
+
+The documentation for this type was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+src/core/{\bf global\+\_\+objs.\+f90}\end{DoxyCompactItemize}

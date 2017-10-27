@@ -1,0 +1,47 @@
+\form#0:\[ \nabla .(a u) = (\nabla . a) u + a (\nabla . u) \]
+\form#1:\[ E(u)\frac{\partial u}{\partial t} = \nabla . D(u) \nabla u - \nabla . (c(u) u) + r(u) u \]
+\form#2:\[ \mathbf{x} = \mathbf{x} \times \frac{1}{\mathbf{a_{diag}}} \]
+\form#3:\[ C\frac{\partial T}{\partial t} = \mathbf{\lambda} \Delta T - C_w \nabla \cdot \vec{q} T \]
+\form#4:\[ \theta = f(pressure) \]
+\form#5:\[ \theta_e = \frac{1}{(1+(\alpha*h)^n)^m} \]
+\form#6:\[ \theta_e = \frac{\theta - \theta_r}{\theta_s-\theta_r} \]
+\form#7:\[ \theta = \frac{1}{(1+(\alpha*h)^n)^m} \]
+\form#8:\[ C(h) = \left\{ \begin{array}{l l}\frac{m n \alpha (-h \alpha )^{-1+n}}{\left(1+(-h \alpha )^n\right)^{1+m}}(\theta_s - \theta_r) , & \quad \mbox{$\forall$ $h \in (-\infty, 0 )$}\\ 0, & \quad \mbox{$\forall$ $h \in \langle 0, + \infty )$}\\ \end{array} \right. \]
+\form#9:\[ \theta(h) = \left\{ \begin{array}{l l} \frac{\theta_s -\theta_r}{(1+(-\alpha h)^n_{vg})^m_{vg}} + \theta_r, & \quad \mbox{$\forall$ $h \in (-\infty, 0 )$}\\ \theta_S, & \quad \mbox{$\forall$ $h \in \langle 0, + \infty )$}\\ \end{array} \right. \]
+\form#10:\[ E(h) = \left\{ \begin{array}{l l} \alpha (\theta_s - \theta_r) exp(\alpha h) , & \quad \mbox{$\forall$ $h \in (-\infty, 0 )$}\\ 0, & \quad \mbox{$\forall$ $h \in \langle 0, + \infty )$}\\ \end{array} \right. \]
+\form#11:\[ K(h) = \left\{ \begin{array}{l l} K_s\frac{\left( 1- (-\alpha h)^{n_{vg}m_{vg}} \left( 1+ (-\alpha h)^{n_{vg}} \right)^{-m_{vg}} \right)^2}{\left(1+(-\alpha h)^{n_{vg}} \right)^{\frac{m_{vg}}{2}}}, & \mbox{$\forall$ $h \in$ $(-\infty,0)$}\\ K_s, \mbox{$\forall$ $h \in$ $\langle 0, +\infty)$}\\ \end{array} \right. \]
+\form#12:\[ K(h) = K_s exp(\alpha h), \mbox{$\forall$ $h \in$ $(-\infty,0)$}\\ K_s, \mbox{$\forall$ $h \in$ $\langle 0, +\infty)$}. \]
+\form#13:\[ \frac{\textrm{d} K(h)}{\textrm{d} h} = \left\{ \begin{array}{l l} K_s \frac{1}{2} \alpha (-\alpha h)^{(-1 + n)} (1 + (-\alpha h)^n)^{(-1 - m/ 2)} (1 - (-\alpha h)^{(m n)} (1 + (-\alpha h)^n)^{-m})^2 m n + 2 (1 + (-\alpha h)^n)^{(-m/2)} (1 - (-\alpha h)^{(m n)} (1 + (-\alpha h)^n)^{-m}) (-\alpha (-\alpha h)^{(-1 + n + m n)} (1 + (-\alpha h)^n)^{(-1 - m)} m n + \alpha (-\alpha h)^{(-1 + m n)} (1 + (-a h)^n)^{-m} m n), \quad \mbox{$\forall$ $h \in$ $(-\infty,0)$}\\ 0, \quad \mbox{$\forall$ $h \in$ $\langle 0, +\infty)$}\\ \end{array} \right. \]
+\form#14:$rain - evap*\theta(h)^{\frac{2}{3}}$
+\form#15:$Ka=\frac{Ka(hm)+Ka(hf)}{2}$
+\form#16:$Ka=\sqrt{Ka(hm)*Ka(hf)}$
+\form#17:$Ka=min(Km(hm),Kf(hf),Km(hf),Kf(hf))$
+\form#18:$Ka=min(Km(hm*weight_m+hf*weight_f),Kf(hm*weight_m+hf*weight_f))$
+\form#19:$ x_{i+1} = x_i + M^{-1}*(b-A*x_i) $
+\form#20:$ M $
+\form#21:$ A $
+\form#22:$ r_i = b-A*x_i $
+\form#23:$ reps = || r_i || / || r_0 || $
+\form#24:$ T=I-M^{-1}A $
+\form#25:$ F(x)=x^{T}Ax-2x^{T}b $
+\form#26:\[ x_{k+1}=x_k+\frac{r_{k}^{T}r_k}{r_{k}^{T}Ar_k}r_k \]
+\form#27:$ r_k=b-Ax_ k $
+\form#28:$ r_0 = b-Ax_0$
+\form#29:$ p_0 = r_0 $
+\form#30:$ \alpha_j=\frac{(r_j , r_j)}{(p_j , Ap_j)} $
+\form#31:$ x_{j+1} = x_j + \alpha_j p_j $
+\form#32:$ r_{j+1} = r_j - \alpha_j Ap_j $
+\form#33:$ \beta_j = \frac {(r_{j+1} , r_{j+1})} {(r_j , r_j)} $
+\form#34:$ p_{j+1} = r_{j+1} + \beta_j *p_j$
+\form#35:\[ \left(\begin{array}{cccccc} \frac{1}{\alpha_{0}} & \frac{\sqrt{\beta_{0}}}{\alpha_{0}} & 0 & 0 & \ldots & 0\\ \frac{\sqrt{\beta_{0}}}{\alpha_{0}} & \frac{1}{\alpha_{1}}+\frac{\beta_{0}}{\alpha_{0}} & \frac{\sqrt{\beta_{1}}}{\alpha_{1}} & 0 & \ddots & \vdots\\ 0 & \frac{\sqrt{\beta_{1}}}{\alpha_{1}} & \ddots & \ddots & \ddots & 0\\ 0 & 0 & \ddots & \ddots & \ddots & 0\\ \vdots & \ddots & \ddots & \ddots & \ddots & \frac{\sqrt{\beta_{m-2}}}{\alpha_{m-2}}\\ 0 & \ldots & 0 & 0 & \frac{\sqrt{\beta_{m-2}}}{\alpha_{m-2}} & \frac{1}{\alpha_{m-1}}+\frac{\beta_{m-2}}{\alpha_{m-2}} \end{array}\right) \]
+\form#36:$ r_0 = A^T (b-Ax_0 )$
+\form#37:$ \alpha_j=\frac{(r_j , r_j)}{(Ap_j , Ap_j)} $
+\form#38:$ r_{j+1} = r_j - \alpha_j A^T Ap_j $
+\form#39:$ z_0 = M^{-1} r_0 $
+\form#40:$ p_0 = z_0 $
+\form#41:$ \alpha_j=\frac{(r_j , z_j)}{(p_j , Ap_j)} $
+\form#42:$ z_{j+1} = M^{-1} r_{j+1} $
+\form#43:$ \beta_j = \frac {(r_{j+1} , z_{j+1})} {(r_j , z_j)} $
+\form#44:$ p_{j+1} = r_{j+1} + \beta_j p_j$
+\form#45:\[ \left( \begin{array}{c} e \\ f \end{array} \right) + \left( \begin{array}{cc} a & b \\ c & d \end{array}\right) \left( \begin{array}{c} x \\ y \end{array} \right) = \left( \begin{array}{c} x^T \\ y^T \end{array} \right) \]
+\form#46:\[ \left( \begin{array}{cc} a & b \\ c & d \end{array}\right) \]

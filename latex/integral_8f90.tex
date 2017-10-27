@@ -1,0 +1,40 @@
+\section{src/mathtools/integral.f90 File Reference}
+\label{integral_8f90}\index{src/mathtools/integral.\+f90@{src/mathtools/integral.\+f90}}
+\subsection*{Data Types}
+\begin{DoxyCompactItemize}
+\item 
+type {\bf integral\+::formulka}
+\end{DoxyCompactItemize}
+\subsection*{Modules}
+\begin{DoxyCompactItemize}
+\item 
+module {\bf integral}
+\end{DoxyCompactItemize}
+\subsection*{Functions/\+Subroutines}
+\begin{DoxyCompactItemize}
+\item 
+subroutine, public {\bf integral\+::init\+\_\+integration\+\_\+formulas} (n, ierr)
+\item 
+pure subroutine, public {\bf integral\+::getform} (n, a, h, ierr)
+\item 
+real(kind=rkind) function, public {\bf integral\+::integ1} (a, b, f, n)
+\item 
+pure real(kind=rkind) function, private {\bf integral\+::integ2} (a, b, f, n)
+\item 
+pure recursive subroutine, public {\bf integral\+::integs} (a, b, f, n, rel\+\_\+chyba, i\+\_\+err, counter, hloubka, ilvl, cislo)
+\item 
+real(kind=rkind) function, public {\bf integral\+::integ} (a, b, f, n, rel\+\_\+chyba, counter, hloubka, ilvl)
+\item 
+pure subroutine, private {\bf integral\+::setup} (n, a, h, ierr)
+\item 
+pure real(kind=rkind) function, private {\bf integral\+::dohledej} (xl, xp, p)
+\item 
+real(kind=rkind) function, private {\bf integral\+::horner} (p, x)
+\begin{DoxyCompactList}\small\item\em simple horner\textquotesingle{}s scheme (zero derivatives only) \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+type(formulka), dimension(\+:), pointer, private {\bf integral\+::group} =$>$ null()
+\item 
+integer, private {\bf integral\+::prep\+\_\+forms} = 0
+\end{DoxyCompactItemize}

@@ -1,0 +1,210 @@
+\section{re\+\_\+analytical Module Reference}
+\label{namespacere__analytical}\index{re\+\_\+analytical@{re\+\_\+analytical}}
+\subsection*{Functions/\+Subroutines}
+\begin{DoxyCompactItemize}
+\item 
+subroutine, public {\bf tracy\+\_\+bc} (bcval, x\+\_\+coord, width, hinit)
+\begin{DoxyCompactList}\small\item\em Boundary condition for Tracy\textquotesingle{}s analytical solution. \end{DoxyCompactList}\item 
+subroutine, public {\bf tracy} (hinit, coord, t, width, length, h)
+\begin{DoxyCompactList}\small\item\em analytical solution to the transient 2D Richards\textquotesingle{} equation based on (Tracy, 2006) \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Function/\+Subroutine Documentation}
+\index{re\+\_\+analytical@{re\+\_\+analytical}!tracy@{tracy}}
+\index{tracy@{tracy}!re\+\_\+analytical@{re\+\_\+analytical}}
+\subsubsection[{tracy(hinit, coord, t, width, length, h)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, public re\+\_\+analytical\+::tracy (
+\begin{DoxyParamCaption}
+\item[{real(kind=rkind), intent(in)}]{hinit, }
+\item[{real(kind=rkind), dimension(\+:), intent(in)}]{coord, }
+\item[{real(kind=rkind), intent(in)}]{t, }
+\item[{real(kind=rkind), intent(in)}]{width, }
+\item[{real(kind=rkind), intent(in)}]{length, }
+\item[{real(kind=rkind), intent(out)}]{h}
+\end{DoxyParamCaption}
+)}\label{namespacere__analytical_a6c5054a3bc18c9fcca94fc8267fbf662}
+
+
+analytical solution to the transient 2D Richards\textquotesingle{} equation based on (Tracy, 2006) 
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em hinit} & initial state (must be constant)\\
+\hline
+\mbox{\tt in}  & {\em coord} & point coordinates\\
+\hline
+\mbox{\tt in}  & {\em t} & simulation time\\
+\hline
+\mbox{\tt in}  & {\em width} & simulation time\\
+\hline
+\mbox{\tt in}  & {\em length} & simulation time\\
+\hline
+\mbox{\tt out}  & {\em h} & solution \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 30 of file re\+\_\+analytical.\+f90.
+
+
+
+References tracy\+\_\+bc().
+
+
+\begin{DoxyCode}
+30       \textcolor{keywordtype}{use }typy
+31       \textcolor{keywordtype}{use }re_constitutive
+32 
+34       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{intent(in)} :: hinit
+36       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{intent(in)} :: coord
+38       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{intent(in)}               :: t, width, length
+40       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{intent(out)}              :: h
+41 
+42 
+43 
+44 \textcolor{comment}{!--------local variables--------------------}
+45       \textcolor{keywordtype}{real(kind=rkind)} :: lambda
+46       \textcolor{keywordtype}{real(kind=rkind)} :: c
+47       \textcolor{keywordtype}{real(kind=rkind)} :: gamma
+48       \textcolor{keywordtype}{real(kind=rkind)} :: phi
+49       \textcolor{keywordtype}{real(kind=rkind)} :: hbar
+50       \textcolor{keywordtype}{real(kind=rkind)} :: beta
+51       \textcolor{keywordtype}{real(kind=rkind)} :: ho
+52       \textcolor{keywordtype}{real(kind=rkind)} :: hr
+53       \textcolor{keywordtype}{real(kind=rkind)} :: suma
+54       \textcolor{keywordtype}{real(kind=rkind)} :: hss
+55       \textcolor{keywordtype}{real(kind=rkind)} :: tmp
+56       \textcolor{keywordtype}{real(kind=rkind)} :: alpha
+57       \textcolor{keywordtype}{real(kind=rkind)} :: a
+58       \textcolor{keywordtype}{real(kind=rkind)} :: l, absval
+59       \textcolor{keywordtype}{integer(kind=ikind)} :: i
+60       
+61       \textcolor{keywordflow}{if} (abs(t) < epsilon(t)) \textcolor{keywordflow}{then}
+62         \textcolor{keywordflow}{if} (abs(coord(2)-length) < epsilon(length)) \textcolor{keywordflow}{then}
+63           \textcolor{keyword}{call }tracy\_bc(h, coord(1), width, hinit)
+64         \textcolor{keywordflow}{else}
+65           h=hinit
+66 \textcolor{keywordflow}{        end if}
+67         \textcolor{keywordflow}{RETURN}
+68 \textcolor{keywordflow}{      end if}
+69   
+70 
+71       a = width
+72 
+73       l = length
+74 
+75 
+76       alpha = vgset(1)%alpha
+77 
+78       ho = 1-exp(alpha*hinit)
+79 
+80       beta = sqrt(alpha**2/4 + (4*atan(1.0)/a)**2)
+81 
+82       c = alpha*(vgset(1)%ths-vgset(1)%thr)/vgset(1)%Ks(1,1)
+83 
+84       hss = ho*sin(4*atan(1.0)*coord(1)/a)*exp(alpha/2*(l-coord(2)))*sinh\textcolor{comment}{(beta*coord(2))/sinh(beta*l)}
+85 \textcolor{comment}{}
+86 \textcolor{comment}{      suma = 0}
+87 \textcolor{comment}{}
+88 \textcolor{comment}{      i = 0}
+89 \textcolor{comment}{}
+90 \textcolor{comment}{      }\textcolor{keywordflow}{do}
+91         i = i+1
+92         tmp = suma
+93         lambda = i*4*atan(1.0)/l
+94         gamma = 1/c*(beta*beta + lambda*lambda)
+95         tmp = ((-1)**i)*lambda/gamma*sin(lambda*coord(2))*exp(-gamma*t)
+96         \textcolor{keywordflow}{if} (i==1) absval=abs(tmp)
+97         suma = suma + tmp
+98         \textcolor{keywordflow}{if} (abs(tmp) < absval*epsilon(tmp) ) \textcolor{keywordflow}{then}
+99           \textcolor{keywordflow}{EXIT}
+100 \textcolor{keywordflow}{        end if}
+101       
+102 \textcolor{keywordflow}{      end do}
+103 
+104       phi = 2*ho/(l*c)*sin(4*atan(1.0)*coord(1)/a)*exp(alpha/2*(l-coord(\textcolor{comment}{2)))*suma}
+105 \textcolor{comment}{}
+106 \textcolor{comment}{}
+107 \textcolor{comment}{      hbar = phi + hss}
+108 \textcolor{comment}{}
+109 \textcolor{comment}{}
+110 \textcolor{comment}{      h = 1/alpha*log(exp(alpha*hinit)+hbar)}
+111 \textcolor{comment}{}
+112 \textcolor{comment}{}
+\textcolor{comment}{\end{DoxyCode}
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=294pt]{namespacere__analytical_a6c5054a3bc18c9fcca94fc8267fbf662_cgraph}
+\end{center}
+\end{figure}
+
+
+\index{re\+\_\+analytical@{re\+\_\+analytical}!tracy\+\_\+bc@{tracy\+\_\+bc}}
+\index{tracy\+\_\+bc@{tracy\+\_\+bc}!re\+\_\+analytical@{re\+\_\+analytical}}
+\subsubsection[{tracy\+\_\+bc(bcval, x\+\_\+coord, width, hinit)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, public re\+\_\+analytical\+::tracy\+\_\+bc (
+\begin{DoxyParamCaption}
+\item[{real(kind=rkind), intent(out)}]{bcval, }
+\item[{real(kind=rkind), intent(in)}]{x\+\_\+coord, }
+\item[{real(kind=rkind), intent(in)}]{width, }
+\item[{real(kind=rkind), intent(in)}]{hinit}
+\end{DoxyParamCaption}
+)}\label{namespacere__analytical_a3b8f01e552b8004aa63ddcb9665cc748}
+
+
+Boundary condition for Tracy\textquotesingle{}s analytical solution. 
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt out}  & {\em bcval} & output boundary value\\
+\hline
+\mbox{\tt in}  & {\em width} & with -\/ the width of the domain, coord -\/ the x coordinate at the boundary, hihit -\/ initial condition (should be very dry))\\
+\hline
+\mbox{\tt in}  & {\em x\+\_\+coord} & with -\/ the width of the domain, coord -\/ the x coordinate at the boundary, hihit -\/ initial condition (should be very dry))\\
+\hline
+\mbox{\tt in}  & {\em hinit} & with -\/ the width of the domain, coord -\/ the x coordinate at the boundary, hihit -\/ initial condition (should be very dry)) \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 9 of file re\+\_\+analytical.\+f90.
+
+
+
+References re\+\_\+globals\+::vgset.
+
+
+
+Referenced by tracy().
+
+
+\begin{DoxyCode}
+9       \textcolor{keywordtype}{use }typy
+10       \textcolor{keywordtype}{use }re_globals
+11 
+13       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{intent(out)} :: bcval
+15       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{intent(in)} :: width, x\_coord, hinit
+16 
+17       \textcolor{keywordtype}{real(kind=rkind)} :: hbar, alpha
+18     
+19       alpha = vgset(1)%alpha
+20     
+21       hbar = 1 - exp(alpha*hinit)
+22 
+23       bcval = 1.0/alpha*log(exp(alpha*hinit) + hbar*sin(4*atan(1.0)*x\_coord\textcolor{comment}{/width))}
+24 \textcolor{comment}{}
+25 \textcolor{comment}{}
+\textcolor{comment}{\end{DoxyCode}
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=294pt]{namespacere__analytical_a3b8f01e552b8004aa63ddcb9665cc748_icgraph}
+\end{center}
+\end{figure}
+
+

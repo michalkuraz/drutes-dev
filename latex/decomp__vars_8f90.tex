@@ -1,0 +1,62 @@
+\section{src/decompo/decomp\+\_\+vars.f90 File Reference}
+\label{decomp__vars_8f90}\index{src/decompo/decomp\+\_\+vars.\+f90@{src/decompo/decomp\+\_\+vars.\+f90}}
+\subsection*{Data Types}
+\begin{DoxyCompactItemize}
+\item 
+type {\bf decomp\+\_\+vars\+::cluster}
+\item 
+type {\bf decomp\+\_\+vars\+::resvct\+\_\+str}
+\item 
+type {\bf decomp\+\_\+vars\+::subdomain\+\_\+str}
+\item 
+type {\bf decomp\+\_\+vars\+::disjoint\+\_\+nd\+\_\+str}
+\begin{DoxyCompactList}\small\item\em array map with a disjoint map of subdomains, \end{DoxyCompactList}\item 
+type {\bf decomp\+\_\+vars\+::ddinfo\+\_\+str}
+\end{DoxyCompactItemize}
+\subsection*{Modules}
+\begin{DoxyCompactItemize}
+\item 
+module {\bf decomp\+\_\+vars}
+\end{DoxyCompactItemize}
+\subsection*{Functions/\+Subroutines}
+\begin{DoxyCompactItemize}
+\item 
+real(kind=rkind) function, private {\bf decomp\+\_\+vars\+::returnval} (subdom, i, subtime)
+\end{DoxyCompactItemize}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+type(cluster), dimension(\+:), allocatable {\bf decomp\+\_\+vars\+::ddcoarse\+\_\+mesh}
+\item 
+type({\bf node}), public {\bf decomp\+\_\+vars\+::coarse\+\_\+nodes}
+\item 
+type({\bf element}), public {\bf decomp\+\_\+vars\+::coarse\+\_\+elements}
+\item 
+type(subdomain\+\_\+str), dimension(\+:), allocatable {\bf decomp\+\_\+vars\+::subdomain}
+\item 
+type(ddinfo\+\_\+str), public {\bf decomp\+\_\+vars\+::ddinfo}
+\item 
+type({\bf extsmtx}), public {\bf decomp\+\_\+vars\+::prolong\+\_\+mtx}
+\item 
+type({\bf extsmtx}), public {\bf decomp\+\_\+vars\+::coarse\+\_\+mtx}
+\item 
+type({\bf extsmtx}), public {\bf decomp\+\_\+vars\+::coarse2}
+\item 
+type({\bf extsmtx}), public {\bf decomp\+\_\+vars\+::prolongt}
+\item 
+type({\bf extsmtx}), public {\bf decomp\+\_\+vars\+::tmpmat}
+\item 
+real(kind=rkind), dimension(\+:), allocatable, public {\bf decomp\+\_\+vars\+::bcoarse}
+\item 
+real(kind=rkind), dimension(\+:), allocatable, public {\bf decomp\+\_\+vars\+::xcoarse}
+\item 
+real(kind=rkind), public {\bf decomp\+\_\+vars\+::inner\+\_\+criterion}
+\begin{DoxyCompactList}\small\item\em inner Ax=b criterion \end{DoxyCompactList}\item 
+logical, public {\bf decomp\+\_\+vars\+::use\+\_\+coarselev}
+\item 
+integer, public {\bf decomp\+\_\+vars\+::file\+\_\+decomp}
+\item 
+integer, public {\bf decomp\+\_\+vars\+::file\+\_\+ddinfo}
+\item 
+integer, public {\bf decomp\+\_\+vars\+::file\+\_\+dt}
+\end{DoxyCompactItemize}

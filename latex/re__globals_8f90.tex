@@ -1,0 +1,32 @@
+\section{src/models/\+R\+E/re\+\_\+globals.f90 File Reference}
+\label{re__globals_8f90}\index{src/models/\+R\+E/re\+\_\+globals.\+f90@{src/models/\+R\+E/re\+\_\+globals.\+f90}}
+\subsection*{Data Types}
+\begin{DoxyCompactItemize}
+\item 
+type {\bf re\+\_\+globals\+::rcza}
+\begin{DoxyCompactList}\small\item\em rcza structure \end{DoxyCompactList}\item 
+type {\bf re\+\_\+globals\+::soilpar}
+\end{DoxyCompactItemize}
+\subsection*{Modules}
+\begin{DoxyCompactItemize}
+\item 
+module {\bf re\+\_\+globals}
+\end{DoxyCompactItemize}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+type(soilpar), dimension(\+:), allocatable, target, public {\bf re\+\_\+globals\+::vgmatrix}
+\begin{DoxyCompactList}\small\item\em soil and layer parameters \end{DoxyCompactList}\item 
+integer(kind=ikind), public {\bf re\+\_\+globals\+::retc\+\_\+method}
+\begin{DoxyCompactList}\small\item\em formula of the retention curve \end{DoxyCompactList}\item 
+real(kind=rkind), dimension(\+:,\+:), allocatable, public {\bf re\+\_\+globals\+::dual\+\_\+prop}
+\begin{DoxyCompactList}\small\item\em an array with values of dual richards equation coupling term and the fast domain ratio dual\+\_\+prop(i,1) = layer i, parameter\+: omega\+\_\+f ~\newline
+ dual\+\_\+prop(i,2) = layer i, parameter\+: \end{DoxyCompactList}\item 
+type(soilpar), dimension(\+:), allocatable, target, public {\bf re\+\_\+globals\+::vgfractures}
+\begin{DoxyCompactList}\small\item\em soil and layer parameters \end{DoxyCompactList}\item 
+integer(kind=ikind), public {\bf re\+\_\+globals\+::retc\+\_\+method\+\_\+f}
+\begin{DoxyCompactList}\small\item\em formula of the retention curve \end{DoxyCompactList}\item 
+type(soilpar), dimension(\+:), pointer, public {\bf re\+\_\+globals\+::vgset}
+\begin{DoxyCompactList}\small\item\em depending on current domain, this pointer is pointed to current parameters as if (domain == matrix) vgset =$>$ vgmatrix if (domain == fractures) vgset =$>$ vgfractures \end{DoxyCompactList}\item 
+integer, public {\bf re\+\_\+globals\+::file\+\_\+waterm}
+\end{DoxyCompactItemize}

@@ -1,0 +1,69 @@
+
+
+ Metody jsou ve dvou zakladnich tridach
+
+
+\begin{DoxyItemize}
+\item \doxyref{Iteracni metody}{p.}{iterace}
+\item \doxyref{Prime metody}{p.}{elim} 
+\end{DoxyItemize}\section{\char`\"{}\+Iteracni metody\char`\"{}}\label{iterace}
+Zakladem iteracnich metod je postupne zpresnovani aktualni aproximace. Vyhodou je obvykle vyrazne mensi pametova narocnost. Nevyhodou je obtizne predvidatelny pocet iteraci. Nejcastejsi pouziti je pri reseni rozsahlych soustav s ridkou matici. Prvni dve jsou stacionarni maticove metody.
+
+
+\begin{DoxyItemize}
+\item \doxyref{Jacobiova metoda}{p.}{Jacobi}
+\item \doxyref{Gauss-\/\+Seidelova metoda}{p.}{gs}
+\item \doxyref{Metoda nejvetsiho spadu}{p.}{sd}
+\item \doxyref{Metoda sdruzenych gradientu}{p.}{cg}
+\item \doxyref{Metoda sdruzenych gradientu pro normalni rovnice}{p.}{cgn}
+\item \doxyref{Metoda predpodminenych sdruzenych gradientu}{p.}{pcg} 
+\end{DoxyItemize}\subsection{Jacobiova metoda}\label{Jacobi}
+Jde o iteracni postup $ x_{i+1} = x_i + M^{-1}*(b-A*x_i) $ kde $ M $ je diagonala matice $ A $ . ~\newline
+ Oznacime-\/li residuum jako $ r_i = b-A*x_i $, pak $ reps = || r_i || / || r_0 || $ . O konvergenci rozhoduje spektralni polomer matice $ T=I-M^{-1}A $
+
+Implementace je v \doxyref{jacobi()}{p.}{namespacesolvers_aea926a2b4b690d018a06ab48856ab0e7} . \subsection{Gauss-\/\+Seidelova metoda}\label{gs}
+Jde o iteracni postup $ x_{i+1} = x_i + M^{-1}*(b-A*x_i) $ kde $ M $ je dolni trojuhelnik matice $ A $ . ~\newline
+ Oznacime-\/li residuum jako $ r_i = b-A*x_i $, pak $ reps = || r_i || / || r_0 || $ . \subsection{\char`\"{}\+Metoda nejvetsiho spadu\char`\"{}}\label{sd}
+Metoda je zalozena na lokalni minimalizaci funkcionalu $ F(x)=x^{T}Ax-2x^{T}b $ . Minimalizace je provadena ve smeru gradientu, coz je residuum. Vysledny postup je ~\newline
+ \[ x_{k+1}=x_k+\frac{r_{k}^{T}r_k}{r_{k}^{T}Ar_k}r_k \] kde $ r_k=b-Ax_ k $ . \subsection{Metoda sdruzenych gradientu}\label{cg}
+metoda probiha podle nasledujiciho algoritmu
+\begin{DoxyEnumerate}
+\item $ r_0 = b-Ax_0$ , $ p_0 = r_0 $
+\item pro j=0, ... do konvergence
+\item $ \alpha_j=\frac{(r_j , r_j)}{(p_j , Ap_j)} $
+\item $ x_{j+1} = x_j + \alpha_j p_j $
+\item $ r_{j+1} = r_j - \alpha_j Ap_j $
+\item $ \beta_j = \frac {(r_{j+1} , r_{j+1})} {(r_j , r_j)} $
+\item $ p_{j+1} = r_{j+1} + \beta_j *p_j$
+\item konec cyklu
+\end{DoxyEnumerate}
+
+Odhad cisla podminenosti lze provest pomoci spocitanych udaju, viz. Saad, Iterative solution ... , str.\+181 Vlastni cisla odhaduji vlastni cisla matice \[ \left(\begin{array}{cccccc} \frac{1}{\alpha_{0}} & \frac{\sqrt{\beta_{0}}}{\alpha_{0}} & 0 & 0 & \ldots & 0\\ \frac{\sqrt{\beta_{0}}}{\alpha_{0}} & \frac{1}{\alpha_{1}}+\frac{\beta_{0}}{\alpha_{0}} & \frac{\sqrt{\beta_{1}}}{\alpha_{1}} & 0 & \ddots & \vdots\\ 0 & \frac{\sqrt{\beta_{1}}}{\alpha_{1}} & \ddots & \ddots & \ddots & 0\\ 0 & 0 & \ddots & \ddots & \ddots & 0\\ \vdots & \ddots & \ddots & \ddots & \ddots & \frac{\sqrt{\beta_{m-2}}}{\alpha_{m-2}}\\ 0 & \ldots & 0 & 0 & \frac{\sqrt{\beta_{m-2}}}{\alpha_{m-2}} & \frac{1}{\alpha_{m-1}}+\frac{\beta_{m-2}}{\alpha_{m-2}} \end{array}\right) \] \subsection{Metoda sdruzenych gradientu pro normalni rovnice}\label{cgn}
+metoda probiha podle nasledujiciho algoritmu
+\begin{DoxyEnumerate}
+\item $ r_0 = A^T (b-Ax_0 )$ , $ p_0 = r_0 $
+\item pro j=0, ... do konvergence
+\item $ \alpha_j=\frac{(r_j , r_j)}{(Ap_j , Ap_j)} $
+\item $ x_{j+1} = x_j + \alpha_j p_j $
+\item $ r_{j+1} = r_j - \alpha_j A^T Ap_j $
+\item $ \beta_j = \frac {(r_{j+1} , r_{j+1})} {(r_j , r_j)} $
+\item $ p_{j+1} = r_{j+1} + \beta_j *p_j$
+\item konec cyklu
+\end{DoxyEnumerate}
+
+Odhad cisla podminenosti lze provest pomoci spocitanych udaju, viz. Saad, Iterative solution ... , str.\+181 Vlastni cisla odhaduji vlastni cisla matice \[ \left(\begin{array}{cccccc} \frac{1}{\alpha_{0}} & \frac{\sqrt{\beta_{0}}}{\alpha_{0}} & 0 & 0 & \ldots & 0\\ \frac{\sqrt{\beta_{0}}}{\alpha_{0}} & \frac{1}{\alpha_{1}}+\frac{\beta_{0}}{\alpha_{0}} & \frac{\sqrt{\beta_{1}}}{\alpha_{1}} & 0 & \ddots & \vdots\\ 0 & \frac{\sqrt{\beta_{1}}}{\alpha_{1}} & \ddots & \ddots & \ddots & 0\\ 0 & 0 & \ddots & \ddots & \ddots & 0\\ \vdots & \ddots & \ddots & \ddots & \ddots & \frac{\sqrt{\beta_{m-2}}}{\alpha_{m-2}}\\ 0 & \ldots & 0 & 0 & \frac{\sqrt{\beta_{m-2}}}{\alpha_{m-2}} & \frac{1}{\alpha_{m-1}}+\frac{\beta_{m-2}}{\alpha_{m-2}} \end{array}\right) \] \subsection{Metoda predpodminenych sdruzenych gradientu}\label{pcg}
+metoda probiha podle nasledujiciho algoritmu
+\begin{DoxyEnumerate}
+\item $ r_0 = b-Ax_0$ , $ z_0 = M^{-1} r_0 $ , $ p_0 = z_0 $
+\item pro j=0, ... do konvergence
+\item $ \alpha_j=\frac{(r_j , z_j)}{(p_j , Ap_j)} $
+\item $ x_{j+1} = x_j + \alpha_j p_j $
+\item $ r_{j+1} = r_j - \alpha_j Ap_j $
+\item $ z_{j+1} = M^{-1} r_{j+1} $
+\item $ \beta_j = \frac {(r_{j+1} , z_{j+1})} {(r_j , z_j)} $
+\item $ p_{j+1} = r_{j+1} + \beta_j p_j$
+\item konec cyklu
+\end{DoxyEnumerate}
+
+Odhad cisla podminenosti lze provest pomoci spocitanych udaju, viz. Saad, Iterative solution ... , str.\+181 Vlastni cisla odhaduji vlastni cisla matice \[ \left(\begin{array}{cccccc} \frac{1}{\alpha_{0}} & \frac{\sqrt{\beta_{0}}}{\alpha_{0}} & 0 & 0 & \ldots & 0\\ \frac{\sqrt{\beta_{0}}}{\alpha_{0}} & \frac{1}{\alpha_{1}}+\frac{\beta_{0}}{\alpha_{0}} & \frac{\sqrt{\beta_{1}}}{\alpha_{1}} & 0 & \ddots & \vdots\\ 0 & \frac{\sqrt{\beta_{1}}}{\alpha_{1}} & \ddots & \ddots & \ddots & 0\\ 0 & 0 & \ddots & \ddots & \ddots & 0\\ \vdots & \ddots & \ddots & \ddots & \ddots & \frac{\sqrt{\beta_{m-2}}}{\alpha_{m-2}}\\ 0 & \ldots & 0 & 0 & \frac{\sqrt{\beta_{m-2}}}{\alpha_{m-2}} & \frac{1}{\alpha_{m-1}}+\frac{\beta_{m-2}}{\alpha_{m-2}} \end{array}\right) \] \section{\char`\"{}\+Prime metody\char`\"{}}\label{elim}
+\doxyref{L\+DU}{p.}{ldu} \subsection{ldu}\label{ldu}

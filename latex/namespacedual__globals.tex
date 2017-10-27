@@ -1,0 +1,195 @@
+\section{dual\+\_\+globals Module Reference}
+\label{namespacedual__globals}\index{dual\+\_\+globals@{dual\+\_\+globals}}
+\subsection*{Data Types}
+\begin{DoxyCompactItemize}
+\item 
+type {\bf exch\+\_\+k}
+\begin{DoxyCompactList}\small\item\em exchange parameters \end{DoxyCompactList}\item 
+type {\bf expar}
+\begin{DoxyCompactList}\small\item\em exchange parameters according to Gerke and van Genuchten (1993) \end{DoxyCompactList}\item 
+type {\bf soilpar}
+\begin{DoxyCompactList}\small\item\em defining soil parameters \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+integer(kind=ikind), public {\bf coup\+\_\+model}
+\begin{DoxyCompactList}\small\item\em coupling model type \end{DoxyCompactList}\item 
+real(kind=rkind), public {\bf disttozero}
+\begin{DoxyCompactList}\small\item\em distance of top boundary to zero z-\/coordinate \end{DoxyCompactList}\item 
+real(kind=rkind), public {\bf infweight}
+\begin{DoxyCompactList}\small\item\em Use-\/defined infiltration weight for boundary condition. \end{DoxyCompactList}\item 
+character(len=50) {\bf fracfile}
+\begin{DoxyCompactList}\small\item\em in progress\+: switching for different input files for fractrue and matrix (not implemented yet) \end{DoxyCompactList}\item 
+character(len=50) {\bf matfile}
+\item 
+type({\bf soilpar}), dimension(\+:), allocatable, public {\bf vgmatrix}
+\begin{DoxyCompactList}\small\item\em soil and layer parameters \end{DoxyCompactList}\item 
+type({\bf exch\+\_\+k}), dimension(\+:), allocatable, public {\bf vgexchange}
+\item 
+type({\bf soilpar}), dimension(\+:), allocatable, public {\bf vgfracture}
+\item 
+type({\bf expar}), dimension(\+:), allocatable, public {\bf exchange}
+\item 
+integer(kind=ikind), public {\bf retc\+\_\+method}
+\begin{DoxyCompactList}\small\item\em formula of the retention curve \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Variable Documentation}
+\index{dual\+\_\+globals@{dual\+\_\+globals}!coup\+\_\+model@{coup\+\_\+model}}
+\index{coup\+\_\+model@{coup\+\_\+model}!dual\+\_\+globals@{dual\+\_\+globals}}
+\subsubsection[{coup\+\_\+model}]{\setlength{\rightskip}{0pt plus 5cm}integer(kind=ikind), public dual\+\_\+globals\+::coup\+\_\+model}\label{namespacedual__globals_a84403212967c8c21860b5369ee56c6a0}
+
+
+coupling model type 
+
+
+
+Definition at line 45 of file Re\+\_\+dual\+\_\+globals.\+f90.
+
+
+
+Referenced by dual\+\_\+coup\+::dual\+\_\+coup\+\_\+min(), dual\+\_\+coup\+::dual\+\_\+coupling(), dual\+\_\+tab\+::dual\+\_\+coupling\+\_\+tab(), and re\+\_\+dual\+\_\+reader\+::re\+\_\+dual\+\_\+var().
+
+
+\begin{DoxyCode}
+45   \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{public} :: coup_model
+\end{DoxyCode}
+\index{dual\+\_\+globals@{dual\+\_\+globals}!disttozero@{disttozero}}
+\index{disttozero@{disttozero}!dual\+\_\+globals@{dual\+\_\+globals}}
+\subsubsection[{disttozero}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind), public dual\+\_\+globals\+::disttozero}\label{namespacedual__globals_a5f70bcc05cdd95957a1314e8aad7a87a}
+
+
+distance of top boundary to zero z-\/coordinate 
+
+
+
+Definition at line 47 of file Re\+\_\+dual\+\_\+globals.\+f90.
+
+
+
+Referenced by dual\+\_\+por\+::dual\+\_\+inicond(), and re\+\_\+dual\+\_\+reader\+::re\+\_\+dual\+\_\+var().
+
+
+\begin{DoxyCode}
+47   \textcolor{keywordtype}{real(kind=rkind)},\textcolor{keywordtype}{public} :: disttozero
+\end{DoxyCode}
+\index{dual\+\_\+globals@{dual\+\_\+globals}!exchange@{exchange}}
+\index{exchange@{exchange}!dual\+\_\+globals@{dual\+\_\+globals}}
+\subsubsection[{exchange}]{\setlength{\rightskip}{0pt plus 5cm}type({\bf expar}), dimension(\+:), allocatable, public dual\+\_\+globals\+::exchange}\label{namespacedual__globals_a5407ebae154d8d337e3e527b1ee73129}
+
+
+Definition at line 71 of file Re\+\_\+dual\+\_\+globals.\+f90.
+
+
+
+Referenced by dual\+\_\+coup\+::dual\+\_\+coup\+\_\+min(), dual\+\_\+coup\+::dual\+\_\+coupling(), dual\+\_\+tab\+::dual\+\_\+coupling\+\_\+tab(), dual\+\_\+por\+::dual\+\_\+mualem(), re\+\_\+dual\+\_\+bc\+::dual\+\_\+neumann\+\_\+bc(), dual\+\_\+por\+::dual\+\_\+ret\+\_\+cap(), dual\+\_\+tab\+::dual\+\_\+ret\+\_\+cap\+\_\+tab(), re\+\_\+dual\+\_\+reader\+::re\+\_\+dual\+\_\+var(), and dual\+\_\+por\+::vangen\+\_\+d().
+
+
+\begin{DoxyCode}
+71   \textcolor{keywordtype}{type}(expar), \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable}, \textcolor{keywordtype}{public} :: exchange
+\end{DoxyCode}
+\index{dual\+\_\+globals@{dual\+\_\+globals}!fracfile@{fracfile}}
+\index{fracfile@{fracfile}!dual\+\_\+globals@{dual\+\_\+globals}}
+\subsubsection[{fracfile}]{\setlength{\rightskip}{0pt plus 5cm}character(len=50) dual\+\_\+globals\+::fracfile}\label{namespacedual__globals_a0eba84c0036f30687cff4cef7415048e}
+
+
+in progress\+: switching for different input files for fractrue and matrix (not implemented yet) 
+
+
+
+Definition at line 51 of file Re\+\_\+dual\+\_\+globals.\+f90.
+
+
+\begin{DoxyCode}
+51   \textcolor{keywordtype}{character(len=50)} :: fracfile, matfile
+\end{DoxyCode}
+\index{dual\+\_\+globals@{dual\+\_\+globals}!infweight@{infweight}}
+\index{infweight@{infweight}!dual\+\_\+globals@{dual\+\_\+globals}}
+\subsubsection[{infweight}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind), public dual\+\_\+globals\+::infweight}\label{namespacedual__globals_ab091219954e9459555311e4f6311c3f9}
+
+
+Use-\/defined infiltration weight for boundary condition. 
+
+
+
+Definition at line 49 of file Re\+\_\+dual\+\_\+globals.\+f90.
+
+
+
+Referenced by re\+\_\+dual\+\_\+bc\+::dual\+\_\+atmospheric(), re\+\_\+dual\+\_\+bc\+::inf\+\_\+neumann\+\_\+bc(), re\+\_\+dual\+\_\+reader\+::re\+\_\+dual\+\_\+readf(), and re\+\_\+dual\+\_\+reader\+::re\+\_\+dual\+\_\+readm().
+
+
+\begin{DoxyCode}
+49   \textcolor{keywordtype}{real(kind=rkind)},\textcolor{keywordtype}{public} ::infweight
+\end{DoxyCode}
+\index{dual\+\_\+globals@{dual\+\_\+globals}!matfile@{matfile}}
+\index{matfile@{matfile}!dual\+\_\+globals@{dual\+\_\+globals}}
+\subsubsection[{matfile}]{\setlength{\rightskip}{0pt plus 5cm}character(len=50) dual\+\_\+globals\+::matfile}\label{namespacedual__globals_acbc5f257f0c5b314a04184a600ed0c54}
+
+
+Definition at line 51 of file Re\+\_\+dual\+\_\+globals.\+f90.
+
+\index{dual\+\_\+globals@{dual\+\_\+globals}!retc\+\_\+method@{retc\+\_\+method}}
+\index{retc\+\_\+method@{retc\+\_\+method}!dual\+\_\+globals@{dual\+\_\+globals}}
+\subsubsection[{retc\+\_\+method}]{\setlength{\rightskip}{0pt plus 5cm}integer(kind=ikind), public dual\+\_\+globals\+::retc\+\_\+method}\label{namespacedual__globals_a460074c4f6e2c7e262bed554a7b59fb6}
+
+
+formula of the retention curve 
+
+
+
+Definition at line 75 of file Re\+\_\+dual\+\_\+globals.\+f90.
+
+
+\begin{DoxyCode}
+75   \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{public} :: retc_method
+\end{DoxyCode}
+\index{dual\+\_\+globals@{dual\+\_\+globals}!vgexchange@{vgexchange}}
+\index{vgexchange@{vgexchange}!dual\+\_\+globals@{dual\+\_\+globals}}
+\subsubsection[{vgexchange}]{\setlength{\rightskip}{0pt plus 5cm}type({\bf exch\+\_\+k}), dimension(\+:), allocatable, public dual\+\_\+globals\+::vgexchange}\label{namespacedual__globals_ae684f40b743ae05201c926981ec8cecb}
+
+
+Definition at line 69 of file Re\+\_\+dual\+\_\+globals.\+f90.
+
+
+
+Referenced by dual\+\_\+coup\+::dual\+\_\+coupling(), dual\+\_\+coup\+::dual\+\_\+coupling\+\_\+k(), dual\+\_\+tab\+::dual\+\_\+coupling\+\_\+tab(), and re\+\_\+dual\+\_\+reader\+::re\+\_\+dual\+\_\+var().
+
+
+\begin{DoxyCode}
+69   \textcolor{keywordtype}{type}(exch_k), \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable}, \textcolor{keywordtype}{public} :: vgexchange
+\end{DoxyCode}
+\index{dual\+\_\+globals@{dual\+\_\+globals}!vgfracture@{vgfracture}}
+\index{vgfracture@{vgfracture}!dual\+\_\+globals@{dual\+\_\+globals}}
+\subsubsection[{vgfracture}]{\setlength{\rightskip}{0pt plus 5cm}type({\bf soilpar}), dimension(\+:), allocatable, public dual\+\_\+globals\+::vgfracture}\label{namespacedual__globals_a4e09add4a27badb061002e921c28cff0}
+
+
+Definition at line 70 of file Re\+\_\+dual\+\_\+globals.\+f90.
+
+
+
+Referenced by dual\+\_\+coup\+::dual\+\_\+coup\+\_\+min(), dual\+\_\+tab\+::dual\+\_\+coupling\+\_\+tab(), dual\+\_\+por\+::dual\+\_\+inicond(), dual\+\_\+por\+::dual\+\_\+mualem(), dual\+\_\+tab\+::dual\+\_\+mualem\+\_\+tab(), dual\+\_\+por\+::dual\+\_\+ret\+\_\+cap(), dual\+\_\+tab\+::dual\+\_\+ret\+\_\+cap\+\_\+tab(), dual\+\_\+tab\+::dual\+\_\+tabvalues(), re\+\_\+dual\+\_\+reader\+::re\+\_\+dual\+\_\+var(), dual\+\_\+por\+::vangen\+\_\+d(), and dual\+\_\+tab\+::vangen\+\_\+d\+\_\+tab().
+
+
+\begin{DoxyCode}
+70   \textcolor{keywordtype}{type}(soilpar), \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable}, \textcolor{keywordtype}{public} :: vgfracture
+\end{DoxyCode}
+\index{dual\+\_\+globals@{dual\+\_\+globals}!vgmatrix@{vgmatrix}}
+\index{vgmatrix@{vgmatrix}!dual\+\_\+globals@{dual\+\_\+globals}}
+\subsubsection[{vgmatrix}]{\setlength{\rightskip}{0pt plus 5cm}type({\bf soilpar}), dimension(\+:), allocatable, public dual\+\_\+globals\+::vgmatrix}\label{namespacedual__globals_a2bc790692a595654839b3e2c01d5b39d}
+
+
+soil and layer parameters 
+
+
+
+Definition at line 68 of file Re\+\_\+dual\+\_\+globals.\+f90.
+
+
+
+Referenced by dual\+\_\+coup\+::dual\+\_\+coup\+\_\+min(), dual\+\_\+tab\+::dual\+\_\+coupling\+\_\+tab(), dual\+\_\+por\+::dual\+\_\+inicond(), dual\+\_\+por\+::dual\+\_\+mualem(), dual\+\_\+tab\+::dual\+\_\+mualem\+\_\+tab(), dual\+\_\+por\+::dual\+\_\+ret\+\_\+cap(), dual\+\_\+tab\+::dual\+\_\+ret\+\_\+cap\+\_\+tab(), dual\+\_\+tab\+::dual\+\_\+tabvalues(), re\+\_\+dual\+\_\+reader\+::re\+\_\+dual\+\_\+var(), dual\+\_\+por\+::vangen\+\_\+d(), and dual\+\_\+tab\+::vangen\+\_\+d\+\_\+tab().
+
+
+\begin{DoxyCode}
+68   \textcolor{keywordtype}{type}(soilpar), \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable}, \textcolor{keywordtype}{public} :: vgmatrix
+\end{DoxyCode}

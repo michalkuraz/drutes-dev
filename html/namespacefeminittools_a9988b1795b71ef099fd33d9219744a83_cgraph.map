@@ -1,0 +1,24 @@
+<map id="feminittools::feminit" name="feminittools::feminit">
+<area shape="rect" id="node2" href="$namespacefeminittools.html#a7ef75bcab723e61e7d20b4082e3a506e" title="set ups integration nodes and weights " alt="" coords="213,49,328,90"/>
+<area shape="rect" id="node8" href="$namespacegeom__tools.html#a1e93d0ec91a9f2fcc7573e6347a9f9ef" title="specify the x and y derivates of a plane defined by three points " alt="" coords="400,111,591,137"/>
+<area shape="rect" id="node9" href="$namespaceprinttools.html#ac71e43f1627ed0239558720411181068" title="if default output is stdout, then this procedure prints nice progress bar " alt="" coords="639,259,790,285"/>
+<area shape="rect" id="node10" href="$namespaceread__inputs.html#a954a7e348edc1cfa2fd131955cf224a5" title="read_inputs::read_scilab" alt="" coords="189,216,352,243"/>
+<area shape="rect" id="node13" href="$namespacefeminittools.html#a90095d9e2771208379c535c9efdb31ab" title="feminittools::reorder" alt="" coords="202,267,339,293"/>
+<area shape="rect" id="node14" href="$namespacefeminittools.html#a36826eda9dbcdb639506e838d6ec2e3e" title="evaluates an array that contains length of the element edge, if the element edge is boundary edge..." alt="" coords="201,369,341,410"/>
+<area shape="rect" id="node16" href="$namespacecore__tools.html#abe09f9b4dc2abc5384a24020c5031e95" title="core_tools::write_log" alt="" coords="424,317,567,344"/>
+<area shape="rect" id="node23" href="$namespacegeom__tools.html#af5e7826748ab86ab44154a7637fcc080" title="geom_tools::triarea" alt="" coords="204,435,337,461"/>
+<area shape="rect" id="node3" href="$namespaceintegral.html#a0201981d5a57be0c8ce2d83b2307f2ee" title="integral::getform" alt="" coords="437,56,553,83"/>
+<area shape="rect" id="node4" href="$namespaceintegral.html#a24274aecb38e46145fb771f116b452ba" title="integral::setup" alt="" coords="663,56,767,83"/>
+<area shape="rect" id="node5" href="$namespacelinalg.html#a59ec4fd454fde0117c42b153537f53fd" title="Gaussova eliminace. " alt="" coords="860,5,945,32"/>
+<area shape="rect" id="node6" href="$namespaceintegral.html#a705235ccaf73af9c9c0c1040d433e52d" title="simple horner&#39;s scheme (zero derivatives only) " alt="" coords="1020,81,1128,108"/>
+<area shape="rect" id="node7" href="$namespaceintegral.html#a55a8ad85782fea037b50024f88628b90" title="integral::dohledej" alt="" coords="843,107,963,133"/>
+<area shape="rect" id="node11" href="$namespacecore__tools.html#a01c1527fcc56448471e2b349571e51ee" title="core_tools::find_unit" alt="" coords="426,216,565,243"/>
+<area shape="rect" id="node12" href="$namespacetypy.html#ad5f707f5192c4a743f7da534989ceb19" title="spocte L2 normu vektoru " alt="" coords="450,267,541,293"/>
+<area shape="rect" id="node15" href="$namespacegeom__tools.html#a28a5bc6f02c538f8998441d9a251a8d0" title="geom_tools::find_neighbours" alt="" coords="401,368,589,395"/>
+<area shape="rect" id="node17" href="$namespacefeminittools.html#a01c57c36680035f551a4f63b6b849a8a" title="feminittools::set_boundary" alt="" coords="408,419,583,445"/>
+<area shape="rect" id="node20" href="$namespacegeom__tools.html#a91ddf015e5cea9e21d182b93603f5139" title="geom_tools::dist" alt="" coords="1015,441,1133,468"/>
+<area shape="rect" id="node21" href="$namespacegeom__tools.html#a1237d1dc8b45bd650de0daff46162d6b" title="function that provides z coordinate of boundary normal vector, the boundary is defined by two points:..." alt="" coords="427,520,563,547"/>
+<area shape="rect" id="node18" href="$namespacefeminittools.html#a419a077d1fcd5cada245669a697e1800" title="this procedure identifies boundary nodes on 2D mesh only. The method searches for all surrounding nod..." alt="" coords="647,403,783,445"/>
+<area shape="rect" id="node19" href="$namespacegeom__tools.html#ac7d40a2d1dba95e3a69c11bb9fa21b2f" title="geom_tools::angle" alt="" coords="839,415,967,441"/>
+<area shape="rect" id="node22" href="$namespacegeom__tools.html#addda2c9ac04812dd1ae188c3780594f4" title="function to determine if the point C lies above or below the line defined by points A and B result is..." alt="" coords="639,520,791,547"/>
+</map>

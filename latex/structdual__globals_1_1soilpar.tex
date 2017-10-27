@@ -1,0 +1,212 @@
+\section{dual\+\_\+globals\+:\+:soilpar Type Reference}
+\label{structdual__globals_1_1soilpar}\index{dual\+\_\+globals\+::soilpar@{dual\+\_\+globals\+::soilpar}}
+
+
+defining soil parameters  
+
+
+\subsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+real(kind=rkind) {\bf alpha}
+\begin{DoxyCompactList}\small\item\em inverse to air entry value or inverse to capillary rise [L$^\wedge$\{-\/1\}] \end{DoxyCompactList}\item 
+real(kind=rkind) {\bf n}
+\begin{DoxyCompactList}\small\item\em shape parameter n \end{DoxyCompactList}\item 
+real(kind=rkind) {\bf m}
+\begin{DoxyCompactList}\small\item\em shape parameter m \end{DoxyCompactList}\item 
+real(kind=rkind) {\bf thr}
+\begin{DoxyCompactList}\small\item\em residual water content \end{DoxyCompactList}\item 
+real(kind=rkind) {\bf ths}
+\begin{DoxyCompactList}\small\item\em saturated water content \end{DoxyCompactList}\item 
+real(kind=rkind) {\bf ss}
+\begin{DoxyCompactList}\small\item\em specific storage \end{DoxyCompactList}\item 
+real(kind=rkind), dimension(\+:,\+:), allocatable {\bf ks}
+\begin{DoxyCompactList}\small\item\em hydraulic conductivity tensor of second order \end{DoxyCompactList}\item 
+real(kind=rkind), dimension(\+:), allocatable {\bf ks\+\_\+local}
+\begin{DoxyCompactList}\small\item\em hydraulic conductivity \end{DoxyCompactList}\item 
+real(kind=rkind), dimension(\+:), allocatable {\bf anisoangle}
+\begin{DoxyCompactList}\small\item\em angle for anistropy of flow \end{DoxyCompactList}\item 
+real(kind=rkind) {\bf initcond}
+\begin{DoxyCompactList}\small\item\em initial condition \end{DoxyCompactList}\item 
+character(len=5) {\bf icondtype}
+\begin{DoxyCompactList}\small\item\em type of initial condition\+: pressure head, water content or input read from file (also pressure head) \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+defining soil parameters 
+
+Definition at line 5 of file Re\+\_\+dual\+\_\+globals.\+f90.
+
+
+
+\subsection{Member Data Documentation}
+\index{dual\+\_\+globals\+::soilpar@{dual\+\_\+globals\+::soilpar}!alpha@{alpha}}
+\index{alpha@{alpha}!dual\+\_\+globals\+::soilpar@{dual\+\_\+globals\+::soilpar}}
+\subsubsection[{alpha}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind) dual\+\_\+globals\+::soilpar\+::alpha}\label{structdual__globals_1_1soilpar_abceeba3b3c9ac4ed88b825cfb0597dd1}
+
+
+inverse to air entry value or inverse to capillary rise [L$^\wedge$\{-\/1\}] 
+
+
+
+Definition at line 7 of file Re\+\_\+dual\+\_\+globals.\+f90.
+
+
+\begin{DoxyCode}
+7     \textcolor{keywordtype}{real(kind=rkind)} :: alpha
+\end{DoxyCode}
+\index{dual\+\_\+globals\+::soilpar@{dual\+\_\+globals\+::soilpar}!anisoangle@{anisoangle}}
+\index{anisoangle@{anisoangle}!dual\+\_\+globals\+::soilpar@{dual\+\_\+globals\+::soilpar}}
+\subsubsection[{anisoangle}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind), dimension(\+:), allocatable dual\+\_\+globals\+::soilpar\+::anisoangle}\label{structdual__globals_1_1soilpar_a13e82c05eedeb29d851a09b0d663ff80}
+
+
+angle for anistropy of flow 
+
+
+
+Definition at line 23 of file Re\+\_\+dual\+\_\+globals.\+f90.
+
+
+\begin{DoxyCode}
+23     \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable}   :: anisoangle
+\end{DoxyCode}
+\index{dual\+\_\+globals\+::soilpar@{dual\+\_\+globals\+::soilpar}!icondtype@{icondtype}}
+\index{icondtype@{icondtype}!dual\+\_\+globals\+::soilpar@{dual\+\_\+globals\+::soilpar}}
+\subsubsection[{icondtype}]{\setlength{\rightskip}{0pt plus 5cm}character(len=5) dual\+\_\+globals\+::soilpar\+::icondtype}\label{structdual__globals_1_1soilpar_a9a9a169e1ddd733114f4a370658b0ce2}
+
+
+type of initial condition\+: pressure head, water content or input read from file (also pressure head) 
+
+
+
+Definition at line 27 of file Re\+\_\+dual\+\_\+globals.\+f90.
+
+
+\begin{DoxyCode}
+27     \textcolor{keywordtype}{character(len=5)} :: icondtype
+\end{DoxyCode}
+\index{dual\+\_\+globals\+::soilpar@{dual\+\_\+globals\+::soilpar}!initcond@{initcond}}
+\index{initcond@{initcond}!dual\+\_\+globals\+::soilpar@{dual\+\_\+globals\+::soilpar}}
+\subsubsection[{initcond}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind) dual\+\_\+globals\+::soilpar\+::initcond}\label{structdual__globals_1_1soilpar_a3bfca09ee48af7e66657ebf8a9725c91}
+
+
+initial condition 
+
+
+
+Definition at line 25 of file Re\+\_\+dual\+\_\+globals.\+f90.
+
+
+\begin{DoxyCode}
+25     \textcolor{keywordtype}{real(kind=rkind)} :: initcond
+\end{DoxyCode}
+\index{dual\+\_\+globals\+::soilpar@{dual\+\_\+globals\+::soilpar}!ks@{ks}}
+\index{ks@{ks}!dual\+\_\+globals\+::soilpar@{dual\+\_\+globals\+::soilpar}}
+\subsubsection[{ks}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind), dimension(\+:,\+:), allocatable dual\+\_\+globals\+::soilpar\+::ks}\label{structdual__globals_1_1soilpar_a617f8a47209b6ad01a191cbfdc5affa9}
+
+
+hydraulic conductivity tensor of second order 
+
+
+
+Definition at line 19 of file Re\+\_\+dual\+\_\+globals.\+f90.
+
+
+\begin{DoxyCode}
+19     \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:,:)}, \textcolor{keywordtype}{allocatable} :: ks
+\end{DoxyCode}
+\index{dual\+\_\+globals\+::soilpar@{dual\+\_\+globals\+::soilpar}!ks\+\_\+local@{ks\+\_\+local}}
+\index{ks\+\_\+local@{ks\+\_\+local}!dual\+\_\+globals\+::soilpar@{dual\+\_\+globals\+::soilpar}}
+\subsubsection[{ks\+\_\+local}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind), dimension(\+:), allocatable dual\+\_\+globals\+::soilpar\+::ks\+\_\+local}\label{structdual__globals_1_1soilpar_a9e1928e1f191bf5d8479130e30889b81}
+
+
+hydraulic conductivity 
+
+
+
+Definition at line 21 of file Re\+\_\+dual\+\_\+globals.\+f90.
+
+
+\begin{DoxyCode}
+21     \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable}   :: ks\_local
+\end{DoxyCode}
+\index{dual\+\_\+globals\+::soilpar@{dual\+\_\+globals\+::soilpar}!m@{m}}
+\index{m@{m}!dual\+\_\+globals\+::soilpar@{dual\+\_\+globals\+::soilpar}}
+\subsubsection[{m}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind) dual\+\_\+globals\+::soilpar\+::m}\label{structdual__globals_1_1soilpar_a9b32754cd311ca231833b02b5edc7fc9}
+
+
+shape parameter m 
+
+
+
+Definition at line 11 of file Re\+\_\+dual\+\_\+globals.\+f90.
+
+
+\begin{DoxyCode}
+11     \textcolor{keywordtype}{real(kind=rkind)} :: m
+\end{DoxyCode}
+\index{dual\+\_\+globals\+::soilpar@{dual\+\_\+globals\+::soilpar}!n@{n}}
+\index{n@{n}!dual\+\_\+globals\+::soilpar@{dual\+\_\+globals\+::soilpar}}
+\subsubsection[{n}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind) dual\+\_\+globals\+::soilpar\+::n}\label{structdual__globals_1_1soilpar_a5f3b332d71dee9fa4576a3abc48ba5c2}
+
+
+shape parameter n 
+
+
+
+Definition at line 9 of file Re\+\_\+dual\+\_\+globals.\+f90.
+
+
+\begin{DoxyCode}
+9     \textcolor{keywordtype}{real(kind=rkind)} :: n
+\end{DoxyCode}
+\index{dual\+\_\+globals\+::soilpar@{dual\+\_\+globals\+::soilpar}!ss@{ss}}
+\index{ss@{ss}!dual\+\_\+globals\+::soilpar@{dual\+\_\+globals\+::soilpar}}
+\subsubsection[{ss}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind) dual\+\_\+globals\+::soilpar\+::ss}\label{structdual__globals_1_1soilpar_af6c075b429d7a26e8808a6549a37ee41}
+
+
+specific storage 
+
+
+
+Definition at line 17 of file Re\+\_\+dual\+\_\+globals.\+f90.
+
+
+\begin{DoxyCode}
+17     \textcolor{keywordtype}{real(kind=rkind)} :: ss
+\end{DoxyCode}
+\index{dual\+\_\+globals\+::soilpar@{dual\+\_\+globals\+::soilpar}!thr@{thr}}
+\index{thr@{thr}!dual\+\_\+globals\+::soilpar@{dual\+\_\+globals\+::soilpar}}
+\subsubsection[{thr}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind) dual\+\_\+globals\+::soilpar\+::thr}\label{structdual__globals_1_1soilpar_a2855a7395b9673162e91aae5c1c97a05}
+
+
+residual water content 
+
+
+
+Definition at line 13 of file Re\+\_\+dual\+\_\+globals.\+f90.
+
+
+\begin{DoxyCode}
+13     \textcolor{keywordtype}{real(kind=rkind)} :: thr
+\end{DoxyCode}
+\index{dual\+\_\+globals\+::soilpar@{dual\+\_\+globals\+::soilpar}!ths@{ths}}
+\index{ths@{ths}!dual\+\_\+globals\+::soilpar@{dual\+\_\+globals\+::soilpar}}
+\subsubsection[{ths}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind) dual\+\_\+globals\+::soilpar\+::ths}\label{structdual__globals_1_1soilpar_aea95fbbfe366bfada314d6a1f28fdaad}
+
+
+saturated water content 
+
+
+
+Definition at line 15 of file Re\+\_\+dual\+\_\+globals.\+f90.
+
+
+\begin{DoxyCode}
+15     \textcolor{keywordtype}{real(kind=rkind)} :: ths
+\end{DoxyCode}
+
+
+The documentation for this type was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+src/models/\+R\+E\+\_\+dual/{\bf Re\+\_\+dual\+\_\+globals.\+f90}\end{DoxyCompactItemize}

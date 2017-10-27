@@ -1,0 +1,51 @@
+\section{heat\+\_\+globals Module Reference}
+\label{namespaceheat__globals}\index{heat\+\_\+globals@{heat\+\_\+globals}}
+\subsection*{Data Types}
+\begin{DoxyCompactItemize}
+\item 
+type {\bf heatpars\+\_\+str}
+\begin{DoxyCompactList}\small\item\em A\+DE solute/material parameters array. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+type({\bf heatpars\+\_\+str}), dimension(\+:), allocatable, public {\bf heatpar}
+\begin{DoxyCompactList}\small\item\em structure of solute parameters \end{DoxyCompactList}\item 
+integer, public {\bf file\+\_\+heat}
+\end{DoxyCompactItemize}
+
+
+\subsection{Variable Documentation}
+\index{heat\+\_\+globals@{heat\+\_\+globals}!file\+\_\+heat@{file\+\_\+heat}}
+\index{file\+\_\+heat@{file\+\_\+heat}!heat\+\_\+globals@{heat\+\_\+globals}}
+\subsubsection[{file\+\_\+heat}]{\setlength{\rightskip}{0pt plus 5cm}integer, public heat\+\_\+globals\+::file\+\_\+heat}\label{namespaceheat__globals_ae6cd0aae7b5239fd359b17dad91c404d}
+
+
+Definition at line 20 of file heat\+\_\+globals.\+f90.
+
+
+
+Referenced by heat\+\_\+reader\+::heat\+\_\+read().
+
+
+\begin{DoxyCode}
+20   \textcolor{keywordtype}{integer}, \textcolor{keywordtype}{public} :: file_heat
+\end{DoxyCode}
+\index{heat\+\_\+globals@{heat\+\_\+globals}!heatpar@{heatpar}}
+\index{heatpar@{heatpar}!heat\+\_\+globals@{heat\+\_\+globals}}
+\subsubsection[{heatpar}]{\setlength{\rightskip}{0pt plus 5cm}type({\bf heatpars\+\_\+str}), dimension(\+:), allocatable, public heat\+\_\+globals\+::heatpar}\label{namespaceheat__globals_a6309c12e240392d62f10861b507b7896}
+
+
+structure of solute parameters 
+
+
+
+Definition at line 19 of file heat\+\_\+globals.\+f90.
+
+
+
+Referenced by heat\+\_\+fnc\+::heat\+\_\+conduct(), heat\+\_\+fnc\+::heat\+\_\+convect(), heat\+\_\+fnc\+::heat\+\_\+elast(), heat\+\_\+fnc\+::heat\+\_\+flux(), heat\+\_\+fnc\+::heat\+\_\+icond(), heat\+\_\+reader\+::heat\+\_\+read(), and heat\+\_\+fnc\+::heat\+\_\+source().
+
+
+\begin{DoxyCode}
+19   \textcolor{keywordtype}{type}(heatpars_str), \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable}, \textcolor{keywordtype}{public} :: heatpar
+\end{DoxyCode}

@@ -1,0 +1,40 @@
+<map id="re_dual_pointers::re_fracture" name="re_dual_pointers::re_fracture">
+<area shape="rect" id="node2" href="$namespacedual__por.html#a4233fa8c59b20267b6821a289f8bf98e" title="defines flux function according to Darcy Law (valid for laminar flow) " alt="" coords="213,5,365,32"/>
+<area shape="rect" id="node3" href="$namespacere__dual__bc.html#a3c7fa40f15c5d89f1d6441664f1c71b4" title="Assigns a simple atmospheric boundary based on water content in the soil and potential evaporation an..." alt="" coords="191,56,386,83"/>
+<area shape="rect" id="node4" href="$namespacedual__coup.html#a6ff2a1e14fda6be9ae0ac50bc2cc8f76" title="The following coupling schemes use the minimum value of case(4) &#160;and case(5) . &#160;&#160;This has the advanta..." alt="" coords="439,224,615,251"/>
+<area shape="rect" id="node5" href="$namespacedual__por.html#aae8823c30cb66137867252e7604745de" title="defines dispersion functiona according to van Genuchten Mualem model (1980) " alt="" coords="680,249,836,276"/>
+<area shape="rect" id="node6" href="$namespacedual__coup.html#a61aa217a5b2540a81820d9c213f50056" title="neg coupling defined for case(4) and case (5) for coupled matrix, i.e. matrix part in fracture and fr..." alt="" coords="215,158,363,199"/>
+<area shape="rect" id="node7" href="$namespacedual__coup.html#a45c1c65b71e8f97db4a84a2a775b90e5" title="Coupling defined for case(1), case (2) and case (3) Case(1) The exchange term is calculated based on ..." alt="" coords="443,519,611,545"/>
+<area shape="rect" id="node8" href="$namespacedual__coup.html#a77fbe6b94667bab7c4a93936da557f24" title="coupling conductivity function for tab values " alt="" coords="667,399,849,425"/>
+<area shape="rect" id="node9" href="$namespacedual__coup.html#a392d4e7e0705fd62f272c62ab400ae68" title="neg coupling defined for case(1), case (2) and case (3) for coupled matrix, i.e. matrix part in fract..." alt="" coords="191,493,387,520"/>
+<area shape="rect" id="node10" href="$namespacedual__tab.html#afde4065ace745063aac1c62ea6d318f8" title="dual_tab::dual_coupling\l_neg_tab" alt="" coords="209,377,368,418"/>
+<area shape="rect" id="node11" href="$namespacedual__tab.html#afffe9ba95899c3c5bb0c1d53929c5ed3" title="Tabular versions of coupling term for case(1) and case(2) " alt="" coords="436,355,619,381"/>
+<area shape="rect" id="node12" href="$namespacere__dual__bc.html#a6fda172ea12121188b6138b77a3254aa" title="Assigns free drainage boundary (unit gradient) for dual permeability model. " alt="" coords="191,595,386,621"/>
+<area shape="rect" id="node13" href="$namespacedual__por.html#a56d450c18eee19012cb05d2b1dd008e1" title="assigns initial condition " alt="" coords="213,645,364,672"/>
+<area shape="rect" id="node19" href="$namespacedual__tab.html#a7268f9bd1dd01ea5d2e7799ba210ef81" title="Tabular versions of dispersion. " alt="" coords="437,275,618,301"/>
+<area shape="rect" id="node20" href="$namespacere__dual__bc.html#a930f9415d0b3aa33933f05bdded7b2d1" title="Defines Neumann (flux) boundary condition for the dual permeability model. " alt="" coords="189,763,388,789"/>
+<area shape="rect" id="node21" href="$namespacedual__por.html#aa4ffcdb25d45c5fe70242f0a40eb9916" title="defines elasticity or retention functiona according to van Genuchten Mualem model (1980) ..." alt="" coords="451,825,604,852"/>
+<area shape="rect" id="node22" href="$namespacedual__tab.html#a07ff8aefff61c7abeb3c09949a5cc5e0" title="Tabular versions of elastiocity. " alt="" coords="226,814,351,855"/>
+<area shape="rect" id="node23" href="$namespacedual__tab.html#aad3dbc3def209ecebf2c7059fd42fff3" title="creates a table of values of constitutive functions for the Richards equation to be linearly approxim..." alt="" coords="205,931,372,957"/>
+<area shape="rect" id="node26" href="$namespacedual__por.html#ae77ab5b0b843109d82c589c9ac537062" title="specific function for Richards equation in H&#45;form (total hydraulic head form), replaces pde_objs::get..." alt="" coords="199,1032,378,1059"/>
+<area shape="rect" id="node32" href="$namespacere__dual__bc.html#ab0840c2415aee6d7acfdbeead7212aed" title="Also defines Neumann type boundary. The weighting for matrix and fracture domains is user defined..." alt="" coords="195,1083,383,1109"/>
+<area shape="rect" id="node33" href="$namespacere__dual__reader.html#a23cf85f4d1be812361380db52c0e7e33" title="re_dual_reader::re\l_dual_readf" alt="" coords="225,697,352,738"/>
+<area shape="rect" id="node35" href="$namespacere__constitutive.html#aaf76632a958340d25d948fafea6a16c9" title="re_constitutive::re\l_null_bc" alt="" coords="225,1134,352,1175"/>
+<area shape="rect" id="node36" href="$namespacere__total.html#a50dadbca5603f1a3c8ba55b4321af666" title="re_total::retot_dirichlet_bc" alt="" coords="203,981,375,1008"/>
+<area shape="rect" id="node37" href="$namespacere__total.html#ab293d5a72c9e61e4ce8c4e3c2439bba7" title="re_total::retot_dirichlet\l_height_bc" alt="" coords="213,1199,364,1241"/>
+<area shape="rect" id="node38" href="$namespacedual__por.html#a37908a4269cdf910f57dcaa8b557a741" title="defines mass functiona according to van Genuchten Mualem model (1980) " alt="" coords="460,1291,595,1317"/>
+<area shape="rect" id="node39" href="$namespacedual__tab.html#a4c7205301837b0f1b9b645d4cbb4b6ea" title="Tabular versions of mass. " alt="" coords="209,1265,369,1292"/>
+<area shape="rect" id="node14" href="$namespacegeom__tools.html#a5a6548d90c258b44ecc6d58dd159b845" title="geom_tools::map1d2dj" alt="" coords="451,649,604,676"/>
+<area shape="rect" id="node15" href="$namespacereadtools.html#ab8bc95060d3f5e8bfb8d4e4519c3568a" title="readtools::comment" alt="" coords="689,649,827,676"/>
+<area shape="rect" id="node16" href="$namespacecore__tools.html#aca00f87d69884142f2350a340fe3642e" title="dummy functions, the pointer procedure is set to this function in case if not being considered ..." alt="" coords="704,599,812,625"/>
+<area shape="rect" id="node17" href="$namespacereadtools.html#a9481f44f055c2f4bc518a4b91db43b5c" title="readtools::file_error" alt="" coords="691,700,825,727"/>
+<area shape="rect" id="node18" href="$namespacecore__tools.html#a01c1527fcc56448471e2b349571e51ee" title="core_tools::find_unit" alt="" coords="689,751,827,777"/>
+<area shape="rect" id="node24" href="$namespaceprinttools.html#ac71e43f1627ed0239558720411181068" title="if default output is stdout, then this procedure prints nice progress bar " alt="" coords="452,880,603,907"/>
+<area shape="rect" id="node25" href="$namespacecore__tools.html#abe09f9b4dc2abc5384a24020c5031e95" title="core_tools::write_log" alt="" coords="456,931,599,957"/>
+<area shape="rect" id="node27" href="$namespacegeom__tools.html#a4c2336f6e1e7d512a9d81acb21c71456" title="geom_tools::getcoor" alt="" coords="457,981,597,1008"/>
+<area shape="rect" id="node29" href="$namespacepde__objs.html#aece3def127980c03c455456068cb3e48" title="returns solution value for p1 approximation " alt="" coords="462,1032,593,1059"/>
+<area shape="rect" id="node28" href="$namespacegeom__tools.html#a91ddf015e5cea9e21d182b93603f5139" title="geom_tools::dist" alt="" coords="699,981,817,1008"/>
+<area shape="rect" id="node30" href="$namespacepde__objs.html#ad649cdb29899f292c7702c48fa9a6cf0" title="in case of asynchronyous temporal integration this function is separated from getvalp1, if standard temporal integration used, then this function is called from the first line of getvalp1 " alt="" coords="684,1032,832,1059"/>
+<area shape="rect" id="node31" href="$namespacepde__objs.html#aafa68686beee7a3cff07efb9febdfae0" title="pde_objs::get2dderivative" alt="" coords="897,1032,1068,1059"/>
+<area shape="rect" id="node34" href="$namespacereadtools.html#a35dde6b411a1476727771fcb8f5d1bc9" title="readtools::readbcvals" alt="" coords="454,700,601,727"/>
+</map>

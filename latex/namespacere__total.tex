@@ -1,0 +1,1215 @@
+\section{re\+\_\+total Module Reference}
+\label{namespacere__total}\index{re\+\_\+total@{re\+\_\+total}}
+\subsection*{Functions/\+Subroutines}
+\begin{DoxyCompactItemize}
+\item 
+real(kind=rkind) function, public {\bf getval\+\_\+retot} (pde\+\_\+loc, quadpnt)
+\begin{DoxyCompactList}\small\item\em specific function for Richards equation in H-\/form (total hydraulic head form), replaces \doxyref{pde\+\_\+objs\+::getvalp1}{p.}{namespacepde__objs_aece3def127980c03c455456068cb3e48} in order to distinguish between H and h \end{DoxyCompactList}\item 
+subroutine, public {\bf darcy4toth} (pde\+\_\+loc, layer, quadpnt, x, grad, flux, flux\+\_\+length)
+\item 
+subroutine, public {\bf retot\+\_\+dirichlet\+\_\+bc} (pde\+\_\+loc, el\+\_\+id, node\+\_\+order, value, code)
+\item 
+subroutine, public {\bf retot\+\_\+dirichlet\+\_\+height\+\_\+bc} (pde\+\_\+loc, el\+\_\+id, node\+\_\+order, value, code)
+\item 
+subroutine, public {\bf retot\+\_\+seepage} (pde\+\_\+loc, el\+\_\+id, node\+\_\+order, value, code)
+\item 
+subroutine, public {\bf retot\+\_\+neumann\+\_\+bc} (pde\+\_\+loc, el\+\_\+id, node\+\_\+order, value, code)
+\item 
+subroutine, public {\bf retot\+\_\+atmospheric} (pde\+\_\+loc, el\+\_\+id, node\+\_\+order, value, code)
+\item 
+subroutine, public {\bf retot\+\_\+freedrainage} (pde\+\_\+loc, el\+\_\+id, node\+\_\+order, value, code)
+\item 
+subroutine {\bf retot\+\_\+seepageface} (pde\+\_\+loc, el\+\_\+id, node\+\_\+order, value, code)
+\item 
+subroutine, public {\bf retot\+\_\+initcond} (pde\+\_\+loc)
+\item 
+subroutine, public {\bf iconddebouss} (pde\+\_\+loc)
+\end{DoxyCompactItemize}
+
+
+\subsection{Function/\+Subroutine Documentation}
+\index{re\+\_\+total@{re\+\_\+total}!darcy4toth@{darcy4toth}}
+\index{darcy4toth@{darcy4toth}!re\+\_\+total@{re\+\_\+total}}
+\subsubsection[{darcy4toth(pde\+\_\+loc, layer, quadpnt, x, grad, flux, flux\+\_\+length)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, public re\+\_\+total\+::darcy4toth (
+\begin{DoxyParamCaption}
+\item[{class({\bf pde\+\_\+str}), intent(in)}]{pde\+\_\+loc, }
+\item[{integer(kind=ikind), intent(in)}]{layer, }
+\item[{type({\bf integpnt\+\_\+str}), intent(in), optional}]{quadpnt, }
+\item[{real(kind=rkind), dimension(\+:), intent(in), optional}]{x, }
+\item[{real(kind=rkind), dimension(\+:), intent(in), optional}]{grad, }
+\item[{real(kind=rkind), dimension(\+:), intent(out), optional}]{flux, }
+\item[{real(kind=rkind), intent(out), optional}]{flux\+\_\+length}
+\end{DoxyParamCaption}
+)}\label{namespacere__total_a69e62c90d2abde0ffc21c28a6c6717b9}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em grad} & this value is optional, because it is required by the vector\+\_\+fnc procedure pointer global definition \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 49 of file re\+\_\+total.\+f90.
+
+
+
+Referenced by re\+\_\+pointers\+::reroth(), and re\+\_\+pointers\+::restdh().
+
+
+\begin{DoxyCode}
+49       \textcolor{keywordtype}{use }typy
+50       \textcolor{keywordtype}{use }pde_objs
+51       \textcolor{keywordtype}{use }global_objs
+52       \textcolor{keywordtype}{use }debug_tools
+53       \textcolor{keywordtype}{use }re_globals
+54        
+55       \textcolor{keywordtype}{class}(pde_str), \textcolor{keywordtype}{intent(in)} :: pde\_loc
+56       \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(in)}                          :: layer
+57       \textcolor{keywordtype}{type}(integpnt_str), \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional} :: quadpnt    
+58       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{optional}              \textcolor{comment}{     :: x}
+60       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional}     :: grad
+61       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{intent(out)}, \textcolor{keywordtype}{optional}    :: flux
+62       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{intent(out)}, \textcolor{keywordtype}{optional}                  :: flux\_length
+63 
+64       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(3,3)}  :: k
+65       \textcolor{keywordtype}{integer(kind=ikind)}               :: d
+66       \textcolor{keywordtype}{integer(kind=ikind)}               :: i
+67       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable}, \textcolor{keywordtype}{save}  :: gradh
+68       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable}, \textcolor{keywordtype}{save}  :: vct
+69       \textcolor{keywordtype}{real(kind=rkind)} :: h
+70       \textcolor{keywordtype}{type}(integpnt_str) :: quadpnt\_loc
+71       
+72       d = drutes_config%dimen
+73 
+74       \textcolor{keywordflow}{if} (.not.(\textcolor{keyword}{allocated}(gradh))) \textcolor{keywordflow}{then}
+75         \textcolor{keyword}{allocate}(gradh(1:d))
+76         \textcolor{keyword}{allocate}(vct(1:d))
+77 \textcolor{keywordflow}{      end if}
+78 
+79       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(quadpnt) .and. (\textcolor{keyword}{present}(grad) .or. \textcolor{keyword}{present}(x))) \textcolor{keywordflow}{then}
+80         print *, \textcolor{stringliteral}{"ERROR: the function can be called either with integ point or x value definition and
+       gradient, not both of them"}
+81         print *, \textcolor{stringliteral}{"exited from re\_constitutive::darcy\_law"}
+82         error stop
+83       \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} ((.not. \textcolor{keyword}{present}(grad) .or. .not. \textcolor{keyword}{present}(x)) .and. .not. \textcolor{keyword}{present}\textcolor{comment}{(quadpnt)) }\textcolor{keywordflow}{then}
+84         print *, \textcolor{stringliteral}{"ERROR: you have not specified either integ point or x value"}
+85         print *, \textcolor{stringliteral}{"exited from re\_constitutive::darcy\_law"}
+86         error stop
+87 \textcolor{keywordflow}{      end if}
+88       
+89       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(quadpnt)) \textcolor{keywordflow}{then}
+90         quadpnt\_loc=quadpnt
+91         quadpnt\_loc%preproc=.true.
+92         h = pde\_loc%getval(quadpnt\_loc)
+93         \textcolor{keyword}{call }pde\_loc%getgrad(quadpnt, gradh)
+94       \textcolor{keywordflow}{else}
+95         \textcolor{keywordflow}{if} (ubound(x,1) /=1) \textcolor{keywordflow}{then}
+96           print *, \textcolor{stringliteral}{"ERROR: van Genuchten function is a function of a single variable h"}
+97           print *, \textcolor{stringliteral}{"       your input data has:"}, ubound(x,1), \textcolor{stringliteral}{"variables"}
+98           print *, \textcolor{stringliteral}{"exited from re\_constitutive::darcy\_law"}
+99           error stop
+100 \textcolor{keywordflow}{        end if}
+101         h = x(1)
+102         gradh(1:d) = grad
+103 \textcolor{keywordflow}{      end if}
+104       
+105       \textcolor{keyword}{call }pde\_loc%pde\_fnc(1)%dispersion(pde\_loc, layer, x=(/h/), tensor\textcolor{comment}{=k(1:d, 1:d))}
+106 \textcolor{comment}{     }
+107 \textcolor{comment}{      }
+108 \textcolor{comment}{      vct(1:d) = matmul(-k(1:d,1:d), gradh(1:d))}
+109 \textcolor{comment}{}
+110 \textcolor{comment}{}
+111 \textcolor{comment}{      }\textcolor{keywordflow}{if} (\textcolor{keyword}{present}(flux\_length)) \textcolor{keywordflow}{then}
+112         \textcolor{keywordflow}{select case}(d)
+113           \textcolor{keywordflow}{case}(1)
+114                 flux\_length = vct(1)
+115           \textcolor{keywordflow}{case}(2)
+116                 flux\_length = sqrt(vct(1)*vct(1) + vct(2)*vct(2))
+117           \textcolor{keywordflow}{case}(3)
+118                 flux\_length = sqrt(vct(1)*vct(1) + vct(2)*vct(2) + vct(3\textcolor{comment}{)*vct(3))}
+119 \textcolor{comment}{}\textcolor{keywordflow}{        end select}
+120 \textcolor{keywordflow}{      end if}
+121 
+122 
+123       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(flux)) \textcolor{keywordflow}{then}
+124         flux(1:d) = vct(1:d)
+125 \textcolor{keywordflow}{      end if}
+126 
+\end{DoxyCode}
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacere__total_a69e62c90d2abde0ffc21c28a6c6717b9_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{re\+\_\+total@{re\+\_\+total}!getval\+\_\+retot@{getval\+\_\+retot}}
+\index{getval\+\_\+retot@{getval\+\_\+retot}!re\+\_\+total@{re\+\_\+total}}
+\subsubsection[{getval\+\_\+retot(pde\+\_\+loc, quadpnt)}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind) function, public re\+\_\+total\+::getval\+\_\+retot (
+\begin{DoxyParamCaption}
+\item[{class({\bf pde\+\_\+str}), intent(in)}]{pde\+\_\+loc, }
+\item[{type({\bf integpnt\+\_\+str}), intent(in)}]{quadpnt}
+\end{DoxyParamCaption}
+)}\label{namespacere__total_a52ce5b4dd78109c258014d2f601c5d06}
+
+
+specific function for Richards equation in H-\/form (total hydraulic head form), replaces \doxyref{pde\+\_\+objs\+::getvalp1}{p.}{namespacepde__objs_aece3def127980c03c455456068cb3e48} in order to distinguish between H and h 
+
+
+
+Definition at line 14 of file re\+\_\+total.\+f90.
+
+
+
+References geom\+\_\+tools\+::get\+\_\+layer(), geom\+\_\+tools\+::getcoor(), pde\+\_\+objs\+::getvalp1(), and re\+\_\+globals\+::vgset.
+
+
+
+Referenced by re\+\_\+pointers\+::reroth(), and re\+\_\+pointers\+::restdh().
+
+
+\begin{DoxyCode}
+14       \textcolor{keywordtype}{use }typy
+15       \textcolor{keywordtype}{use }pde_objs
+16       \textcolor{keywordtype}{use }geom_tools
+17       \textcolor{keywordtype}{use }re_globals
+18       
+19       \textcolor{keywordtype}{class}(pde_str), \textcolor{keywordtype}{intent(in)} :: pde\_loc
+20       \textcolor{keywordtype}{type}(integpnt_str), \textcolor{keywordtype}{intent(in)} :: quadpnt
+21       \textcolor{keywordtype}{real(kind=rkind)} :: val
+22       
+23       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(3)} :: xyz
+24       \textcolor{keywordtype}{integer(kind=ikind)} :: d, layer
+25       
+26 
+27            
+28       \textcolor{keywordflow}{if} (quadpnt%preproc) \textcolor{keywordflow}{then}
+29       
+30         d = drutes_config%dimen
+31        
+32         \textcolor{keyword}{call }getcoor(quadpnt, xyz(1:d))
+33         
+34         \textcolor{keywordflow}{if} (drutes_config%dimen>1) \textcolor{keywordflow}{then}
+35           val = getvalp1(pde\_loc, quadpnt) - xyz(d)
+36         \textcolor{keywordflow}{else}
+37           layer = get_layer(quadpnt)
+38           val = getvalp1(pde\_loc, quadpnt) - xyz(d)*cos(4*atan(1.0\_rkind)/180*
+      vgset\textcolor{comment}{(layer)%anisoangle(1))}
+39 \textcolor{comment}{}\textcolor{keywordflow}{        end if}
+40       \textcolor{keywordflow}{else}
+41         val = getvalp1(pde\_loc, quadpnt)
+42 \textcolor{keywordflow}{      end if}
+43         
+44       
+\end{DoxyCode}
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacere__total_a52ce5b4dd78109c258014d2f601c5d06_cgraph}
+\end{center}
+\end{figure}
+
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacere__total_a52ce5b4dd78109c258014d2f601c5d06_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{re\+\_\+total@{re\+\_\+total}!iconddebouss@{iconddebouss}}
+\index{iconddebouss@{iconddebouss}!re\+\_\+total@{re\+\_\+total}}
+\subsubsection[{iconddebouss(pde\+\_\+loc)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, public re\+\_\+total\+::iconddebouss (
+\begin{DoxyParamCaption}
+\item[{class({\bf pde\+\_\+str}), intent(inout)}]{pde\+\_\+loc}
+\end{DoxyParamCaption}
+)}\label{namespacere__total_a72fad1fa5baac148dc282d7cf8516ff6}
+
+
+Definition at line 723 of file re\+\_\+total.\+f90.
+
+
+
+References core\+\_\+tools\+::find\+\_\+unit(), and globals\+::nodes.
+
+
+\begin{DoxyCode}
+723       \textcolor{keywordtype}{use }typy
+724       \textcolor{keywordtype}{use }globals
+725       \textcolor{keywordtype}{use }global_objs
+726       \textcolor{keywordtype}{use }pde_objs
+727       \textcolor{keywordtype}{use }re_globals
+728       \textcolor{keywordtype}{use }re_constitutive
+729       \textcolor{keywordtype}{use }core_tools
+730       \textcolor{keywordtype}{use }debug_tools
+731       
+732       \textcolor{keywordtype}{class}(pde_str), \textcolor{keywordtype}{intent(in out)} :: pde\_loc
+733       
+734       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:,:)}, \textcolor{keywordtype}{allocatable} :: boussdata, slopesdata
+735       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable} :: ndheight
+736       
+737       \textcolor{keywordtype}{integer(kind=ikind)} :: i, counter, j
+738       
+739       \textcolor{keywordtype}{integer}, \textcolor{keywordtype}{dimension(2)} :: fileid
+740       \textcolor{keywordtype}{real(kind=rkind)} :: tmp, dx, slope
+741       \textcolor{keywordtype}{integer} :: ierr
+742       
+743            
+744       \textcolor{keyword}{call }find_unit(fileid(1), 200)
+745       \textcolor{keyword}{open}(unit=fileid(1), file=\textcolor{stringliteral}{"drutes.conf/boussinesq.conf/iconds/slopes.csv"}\textcolor{comment}{, action=}\textcolor{stringliteral}{"read"}\textcolor{comment}{, status=}\textcolor{stringliteral}{
+      "old"}\textcolor{comment}{)}
+746 \textcolor{comment}{      }
+747 \textcolor{comment}{      }\textcolor{keyword}{call }find_unit(fileid(2), 200)
+748       \textcolor{keyword}{open}(unit=fileid(2), file=\textcolor{stringliteral}{"drutes.conf/boussinesq.conf/iconds/bouss\_water\_table-1.dat"}\textcolor{comment}{, action=}\textcolor{stringliteral}{"read"}\textcolor{comment}{
+      , status=}\textcolor{stringliteral}{"old"}\textcolor{comment}{)}
+749 \textcolor{comment}{      }
+750 \textcolor{comment}{      counter=0}
+751 \textcolor{comment}{      }\textcolor{keywordflow}{do} 
+752         \textcolor{keyword}{read}(unit=fileid(1), fmt=*, iostat=ierr) tmp
+753         \textcolor{keywordflow}{if} (ierr == 0) \textcolor{keywordflow}{then}
+754           counter = counter+1
+755         \textcolor{keywordflow}{else}
+756           \textcolor{keywordflow}{exit}
+757 \textcolor{keywordflow}{        end if}
+758 \textcolor{keywordflow}{      end do}
+759       
+760       \textcolor{keyword}{allocate}(slopesdata(counter,3))
+761       
+762       \textcolor{keyword}{close}(fileid(1))
+763       \textcolor{keyword}{open}(unit=fileid(1), file=\textcolor{stringliteral}{"drutes.conf/boussinesq.conf/iconds/slopes.csv"}\textcolor{comment}{, action=}\textcolor{stringliteral}{"read"}\textcolor{comment}{, status=}\textcolor{stringliteral}{
+      "old"}\textcolor{comment}{)}
+764 \textcolor{comment}{      }
+765 \textcolor{comment}{      }
+766 \textcolor{comment}{      }\textcolor{keywordflow}{do} i=1, ubound(slopesdata,1)
+767         \textcolor{keyword}{read}(fileid(1), fmt=*) slopesdata(i,:)
+768 \textcolor{keywordflow}{      end do}
+769       
+770       counter=0
+771       \textcolor{keywordflow}{do} 
+772         \textcolor{keyword}{read}(unit=fileid(2), fmt=*, iostat=ierr) tmp
+773         \textcolor{keywordflow}{if} (ierr == 0) \textcolor{keywordflow}{then}
+774           counter = counter+1
+775         \textcolor{keywordflow}{else}
+776           \textcolor{keywordflow}{exit}
+777 \textcolor{keywordflow}{        end if}
+778 \textcolor{keywordflow}{      end do}
+779       
+780       \textcolor{keyword}{allocate}(boussdata(counter,2))
+781       
+782       \textcolor{keyword}{close}(fileid(2))
+783       \textcolor{keyword}{open}(unit=fileid(2), file=\textcolor{stringliteral}{"drutes.conf/boussinesq.conf/iconds/bouss\_water\_table-1.dat"}\textcolor{comment}{, action=}\textcolor{stringliteral}{"read"}\textcolor{comment}{
+      , status=}\textcolor{stringliteral}{"old"}\textcolor{comment}{)}
+784 \textcolor{comment}{      }
+785 \textcolor{comment}{      }\textcolor{keywordflow}{do} i=1, ubound(boussdata,1)
+786         \textcolor{keyword}{read}(fileid(2), fmt=*) boussdata(i,:)
+787 \textcolor{keywordflow}{      end do}
+788       boussdata(:,1) = 560 - boussdata(:,1)
+789       
+790 
+791       \textcolor{keyword}{allocate}(ndheight(nodes%kolik))
+792       \textcolor{keywordflow}{do} i=1, nodes%kolik
+793         \textcolor{keywordflow}{do} j=1, ubound(slopesdata,1) -1
+794           \textcolor{keywordflow}{if} (nodes%data(i,1) >=slopesdata(j,1) .and. nodes%data(i,1) < slopesdata\textcolor{comment}{(j+1,1))  }\textcolor{keywordflow}{then}
+795             slope = slopesdata(j,2)
+796             dx = nodes%data(i,1) - slopesdata(j,1)
+797             ndheight(i) = dx*slope + slopesdata(j,3)
+798             \textcolor{keywordflow}{EXIT}
+799 \textcolor{keywordflow}{          end if}
+800 \textcolor{keywordflow}{        end do}
+801 \textcolor{keywordflow}{      end do}
+802       
+803 
+804       
+805       \textcolor{keywordflow}{do} i=1, nodes%kolik
+806         \textcolor{keywordflow}{do} j=1, ubound(boussdata,1) - 1
+807           \textcolor{keywordflow}{if} (nodes%data(i,1) >=boussdata(j+1,1) .and. nodes%data(i,1) < boussdata\textcolor{comment}{(j,1) ) then!.or. &}
+808           \textcolor{comment}{!j==ubound(boussdata,1) -1) then}
+809             slope = (boussdata(j+1,2) - boussdata(j,2))/  (boussdata(j+1,1) - boussdata\textcolor{comment}{(j,1))}
+810 \textcolor{comment}{            pde\_loc%solution(i) = boussdata(j+1,2) + (nodes%data(i,1)-boussdata(j+1,1))*slope + ndheight(i)}
+811 \textcolor{comment}{            }\textcolor{keywordflow}{EXIT}
+812 \textcolor{keywordflow}{          end if}
+813 \textcolor{keywordflow}{        end do}
+814         \textcolor{keywordflow}{if} (nodes%data(i,1) > boussdata(1,1)) \textcolor{keywordflow}{then}
+815           print *, maxval(nodes%data(:,1)), maxval(boussdata(:,1))
+816           stop
+817 \textcolor{keywordflow}{        END IF}
+818 \textcolor{keywordflow}{      end do}
+819           
+820     
+\end{DoxyCode}
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=299pt]{namespacere__total_a72fad1fa5baac148dc282d7cf8516ff6_cgraph}
+\end{center}
+\end{figure}
+
+
+\index{re\+\_\+total@{re\+\_\+total}!retot\+\_\+atmospheric@{retot\+\_\+atmospheric}}
+\index{retot\+\_\+atmospheric@{retot\+\_\+atmospheric}!re\+\_\+total@{re\+\_\+total}}
+\subsubsection[{retot\+\_\+atmospheric(pde\+\_\+loc, el\+\_\+id, node\+\_\+order, value, code)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, public re\+\_\+total\+::retot\+\_\+atmospheric (
+\begin{DoxyParamCaption}
+\item[{class({\bf pde\+\_\+str}), intent(in)}]{pde\+\_\+loc, }
+\item[{integer(kind=ikind), intent(in)}]{el\+\_\+id, }
+\item[{integer(kind=ikind), intent(in)}]{node\+\_\+order, }
+\item[{real(kind=rkind), intent(out), optional}]{value, }
+\item[{integer(kind=ikind), intent(out), optional}]{code}
+\end{DoxyParamCaption}
+)}\label{namespacere__total_a41bb3daf0f8d641040f5e15f0ea322e1}
+
+
+Definition at line 528 of file re\+\_\+total.\+f90.
+
+
+
+References globals\+::elements, globals\+::nodes, and globals\+::time.
+
+
+\begin{DoxyCode}
+528       \textcolor{keywordtype}{use }typy
+529       \textcolor{keywordtype}{use }globals
+530       \textcolor{keywordtype}{use }global_objs
+531       \textcolor{keywordtype}{use }pde_objs
+532       \textcolor{keywordtype}{use }re_globals
+533 
+534       \textcolor{keywordtype}{class}(pde_str), \textcolor{keywordtype}{intent(in)} :: pde\_loc
+535       \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(in)}  :: el\_id, node\_order
+536       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{intent(out)}, \textcolor{keywordtype}{optional}    :: value
+537       \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(out)}, \textcolor{keywordtype}{optional} :: code
+538       
+539       
+540       
+541       \textcolor{keywordtype}{type}(integpnt_str) :: quadpnt
+542       \textcolor{keywordtype}{integer(kind=ikind)} :: layer
+543       \textcolor{keywordtype}{real(kind=rkind)} :: theta, rain, evap
+544       \textcolor{keywordtype}{integer(kind=ikind)} :: i, edge\_id, j
+545       
+546       
+547       
+548       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(code)) \textcolor{keywordflow}{then}
+549         code = 2
+550 \textcolor{keywordflow}{      end if}
+551       
+552       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(\textcolor{keywordtype}{value})) \textcolor{keywordflow}{then}
+553         edge\_id = nodes%edge(elements%data(el\_id, node\_order))
+554 
+555         i = pde\_loc%permut(elements%data(el\_id, node\_order))
+556         
+557 
+558         \textcolor{keywordflow}{if} (pde\_loc%bc(edge\_id)%file) \textcolor{keywordflow}{then}
+559           \textcolor{keywordflow}{do} i=1, ubound(pde\_loc%bc(edge\_id)%series,1)
+560             \textcolor{keywordflow}{if} (pde\_loc%bc(edge\_id)%series(i,1) > time) \textcolor{keywordflow}{then}
+561               \textcolor{keywordflow}{if} (i > 1) \textcolor{keywordflow}{then}
+562                 j = i-1
+563               \textcolor{keywordflow}{else}
+564                 j = i
+565 \textcolor{keywordflow}{              end if}
+566               rain = pde\_loc%bc(edge\_id)%series(j,2)
+567               evap = pde\_loc%bc(edge\_id)%series(j,3)
+568               \textcolor{keywordflow}{EXIT}
+569 \textcolor{keywordflow}{            end if}
+570 \textcolor{keywordflow}{          end do}
+571         \textcolor{keywordflow}{else}
+572           print *, \textcolor{stringliteral}{"atmospheric boundary must be time dependent, check record for the boundary"}\textcolor{comment}{, edge\_id}
+573 \textcolor{comment}{          error stop}
+574 \textcolor{comment}{}\textcolor{keywordflow}{        end if}
+575         
+576         
+577         quadpnt%type\_pnt = \textcolor{stringliteral}{"ndpt"}
+578         quadpnt%order = elements%data(el\_id,node\_order)
+579         layer = elements%material(el\_id,1)
+580         theta =  pde\_loc%mass(layer, quadpnt)
+581         \textcolor{keywordtype}{value} = rain - evap*theta**(2.0\_rkind/3.0\_rkind)
+582 
+583 
+584 \textcolor{keywordflow}{      end if}
+585       
+586       
+\end{DoxyCode}
+\index{re\+\_\+total@{re\+\_\+total}!retot\+\_\+dirichlet\+\_\+bc@{retot\+\_\+dirichlet\+\_\+bc}}
+\index{retot\+\_\+dirichlet\+\_\+bc@{retot\+\_\+dirichlet\+\_\+bc}!re\+\_\+total@{re\+\_\+total}}
+\subsubsection[{retot\+\_\+dirichlet\+\_\+bc(pde\+\_\+loc, el\+\_\+id, node\+\_\+order, value, code)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, public re\+\_\+total\+::retot\+\_\+dirichlet\+\_\+bc (
+\begin{DoxyParamCaption}
+\item[{class({\bf pde\+\_\+str}), intent(in)}]{pde\+\_\+loc, }
+\item[{integer(kind=ikind), intent(in)}]{el\+\_\+id, }
+\item[{integer(kind=ikind), intent(in)}]{node\+\_\+order, }
+\item[{real(kind=rkind), intent(out), optional}]{value, }
+\item[{integer(kind=ikind), intent(out), optional}]{code}
+\end{DoxyParamCaption}
+)}\label{namespacere__total_a50dadbca5603f1a3c8ba55b4321af666}
+
+
+Definition at line 130 of file re\+\_\+total.\+f90.
+
+
+
+References globals\+::drutes\+\_\+config, globals\+::elements, geom\+\_\+tools\+::getcoor(), globals\+::nodes, and globals\+::time.
+
+
+
+Referenced by re\+\_\+dual\+\_\+pointers\+::re\+\_\+fracture(), re\+\_\+dual\+\_\+pointers\+::re\+\_\+matrix(), and re\+\_\+pointers\+::re\+\_\+totheadbc().
+
+
+\begin{DoxyCode}
+130       \textcolor{keywordtype}{use }typy
+131       \textcolor{keywordtype}{use }globals
+132       \textcolor{keywordtype}{use }global_objs
+133       \textcolor{keywordtype}{use }pde_objs
+134       \textcolor{keywordtype}{use }geom_tools
+135       \textcolor{keywordtype}{use }re_globals
+136 
+137       \textcolor{keywordtype}{class}(pde_str), \textcolor{keywordtype}{intent(in)} :: pde\_loc
+138       \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(in)}  :: el\_id, node\_order
+139       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{intent(out)}, \textcolor{keywordtype}{optional}   :: value
+140       \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(out)}, \textcolor{keywordtype}{optional} :: code
+141 
+142       \textcolor{keywordtype}{integer(kind=ikind)} :: edge\_id, i, j, d
+143       \textcolor{keywordtype}{type}(integpnt_str) :: quadpnt
+144       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(3)} :: xyz
+145 
+146       
+147       
+148       edge\_id = nodes%edge(elements%data(el\_id, node\_order))
+149 
+150       quadpnt%type\_pnt = \textcolor{stringliteral}{"ndpt"}
+151       quadpnt%order = elements%data(el\_id, node\_order)
+152       d = drutes_config%dimen
+153       \textcolor{keyword}{call }getcoor(quadpnt, xyz(1:d))
+154       
+155       
+156       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(\textcolor{keywordtype}{value})) \textcolor{keywordflow}{then}
+157         \textcolor{keywordflow}{if} (pde\_loc%bc(edge\_id)%file) \textcolor{keywordflow}{then}
+158           \textcolor{keywordflow}{do} i=1, ubound(pde\_loc%bc(edge\_id)%series,1)
+159             \textcolor{keywordflow}{if} (pde\_loc%bc(edge\_id)%series(i,1) > time) \textcolor{keywordflow}{then}
+160               \textcolor{keywordflow}{if} (i > 1) \textcolor{keywordflow}{then}
+161                 j = i-1
+162               \textcolor{keywordflow}{else}
+163                 j = i
+164 \textcolor{keywordflow}{              end if}
+165               \textcolor{keywordtype}{value} = pde\_loc%bc(edge\_id)%series(j,2) + xyz(d)
+166               \textcolor{keywordflow}{EXIT}
+167 \textcolor{keywordflow}{            end if}
+168 \textcolor{keywordflow}{          end do}
+169         \textcolor{keywordflow}{else}
+170           \textcolor{keywordtype}{value} = pde\_loc%bc(edge\_id)%value + xyz(d)
+171 \textcolor{keywordflow}{        end if}
+172 \textcolor{keywordflow}{      end if}
+173       
+174 
+175       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(code)) \textcolor{keywordflow}{then}
+176         code = 1
+177 \textcolor{keywordflow}{      end if}
+178       
+179       
+\end{DoxyCode}
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacere__total_a50dadbca5603f1a3c8ba55b4321af666_cgraph}
+\end{center}
+\end{figure}
+
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacere__total_a50dadbca5603f1a3c8ba55b4321af666_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{re\+\_\+total@{re\+\_\+total}!retot\+\_\+dirichlet\+\_\+height\+\_\+bc@{retot\+\_\+dirichlet\+\_\+height\+\_\+bc}}
+\index{retot\+\_\+dirichlet\+\_\+height\+\_\+bc@{retot\+\_\+dirichlet\+\_\+height\+\_\+bc}!re\+\_\+total@{re\+\_\+total}}
+\subsubsection[{retot\+\_\+dirichlet\+\_\+height\+\_\+bc(pde\+\_\+loc, el\+\_\+id, node\+\_\+order, value, code)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, public re\+\_\+total\+::retot\+\_\+dirichlet\+\_\+height\+\_\+bc (
+\begin{DoxyParamCaption}
+\item[{class({\bf pde\+\_\+str}), intent(in)}]{pde\+\_\+loc, }
+\item[{integer(kind=ikind), intent(in)}]{el\+\_\+id, }
+\item[{integer(kind=ikind), intent(in)}]{node\+\_\+order, }
+\item[{real(kind=rkind), intent(out), optional}]{value, }
+\item[{integer(kind=ikind), intent(out), optional}]{code}
+\end{DoxyParamCaption}
+)}\label{namespacere__total_ab293d5a72c9e61e4ce8c4e3c2439bba7}
+
+
+Definition at line 186 of file re\+\_\+total.\+f90.
+
+
+
+References globals\+::drutes\+\_\+config, globals\+::elements, globals\+::nodes, and globals\+::time.
+
+
+
+Referenced by re\+\_\+dual\+\_\+pointers\+::re\+\_\+fracture(), re\+\_\+dual\+\_\+pointers\+::re\+\_\+matrix(), and re\+\_\+pointers\+::re\+\_\+totheadbc().
+
+
+\begin{DoxyCode}
+186       \textcolor{keywordtype}{use }typy
+187       \textcolor{keywordtype}{use }globals
+188       \textcolor{keywordtype}{use }global_objs
+189       \textcolor{keywordtype}{use }pde_objs
+190       \textcolor{keywordtype}{use }debug_tools
+191       \textcolor{keywordtype}{use }re_globals
+192       
+193       \textcolor{keywordtype}{class}(pde_str), \textcolor{keywordtype}{intent(in)} :: pde\_loc
+194       \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(in)}  :: el\_id, node\_order
+195       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{intent(out)}, \textcolor{keywordtype}{optional}    :: value
+196       \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(out)}, \textcolor{keywordtype}{optional} :: code
+197 
+198       
+199       \textcolor{keywordtype}{integer(kind=ikind)} :: edge\_id, i, j
+200       \textcolor{keywordtype}{real(kind=rkind)} :: tempval, node\_height
+201       
+202       
+203       edge\_id = nodes%edge(elements%data(el\_id, node\_order))
+204       node\_height = nodes%data(elements%data(el\_id, node\_order), drutes_config%dimen\textcolor{comment}{)}
+205 \textcolor{comment}{}
+206 \textcolor{comment}{      }\textcolor{keywordflow}{if} (\textcolor{keyword}{present}(\textcolor{keywordtype}{value})) \textcolor{keywordflow}{then}
+207         \textcolor{keywordflow}{if} (pde\_loc%bc(edge\_id)%file) \textcolor{keywordflow}{then}
+208           \textcolor{keywordflow}{do} i=1, ubound(pde\_loc%bc(edge\_id)%series,1)
+209             \textcolor{keywordflow}{if} (pde\_loc%bc(edge\_id)%series(i,1) > time) \textcolor{keywordflow}{then}
+210               \textcolor{keywordflow}{if} (i > 1) \textcolor{keywordflow}{then}
+211                 j = i-1
+212               \textcolor{keywordflow}{else}
+213                 j = i
+214 \textcolor{keywordflow}{              end if}
+215               tempval = pde\_loc%bc(edge\_id)%series(j,2)
+216               \textcolor{keywordflow}{EXIT}
+217 \textcolor{keywordflow}{            end if}
+218 \textcolor{keywordflow}{          end do}
+219         \textcolor{keywordflow}{else}
+220           tempval =  pde\_loc%bc(edge\_id)%value
+221 \textcolor{keywordflow}{        end if}
+222         \textcolor{keywordtype}{value} = tempval 
+223 \textcolor{keywordflow}{      end if}
+224 
+225 
+226       
+227       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(code)) \textcolor{keywordflow}{then}
+228         code = 1
+229 \textcolor{keywordflow}{      end if}
+230       
+\end{DoxyCode}
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacere__total_ab293d5a72c9e61e4ce8c4e3c2439bba7_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{re\+\_\+total@{re\+\_\+total}!retot\+\_\+freedrainage@{retot\+\_\+freedrainage}}
+\index{retot\+\_\+freedrainage@{retot\+\_\+freedrainage}!re\+\_\+total@{re\+\_\+total}}
+\subsubsection[{retot\+\_\+freedrainage(pde\+\_\+loc, el\+\_\+id, node\+\_\+order, value, code)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, public re\+\_\+total\+::retot\+\_\+freedrainage (
+\begin{DoxyParamCaption}
+\item[{class({\bf pde\+\_\+str}), intent(in)}]{pde\+\_\+loc, }
+\item[{integer(kind=ikind), intent(in)}]{el\+\_\+id, }
+\item[{integer(kind=ikind), intent(in)}]{node\+\_\+order, }
+\item[{real(kind=rkind), intent(out), optional}]{value, }
+\item[{integer(kind=ikind), intent(out), optional}]{code}
+\end{DoxyParamCaption}
+)}\label{namespacere__total_aa380a43e84f13ae7babb943b15399e3a}
+
+
+Definition at line 590 of file re\+\_\+total.\+f90.
+
+
+
+References globals\+::drutes\+\_\+config, and globals\+::elements.
+
+
+
+Referenced by re\+\_\+pointers\+::re\+\_\+totheadbc().
+
+
+\begin{DoxyCode}
+590       \textcolor{keywordtype}{use }typy
+591       \textcolor{keywordtype}{use }globals
+592       \textcolor{keywordtype}{use }global_objs
+593       \textcolor{keywordtype}{use }pde_objs
+594       \textcolor{keywordtype}{use }re_globals
+595 
+596       \textcolor{keywordtype}{class}(pde_str), \textcolor{keywordtype}{intent(in)} :: pde\_loc
+597       \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(in)}  :: el\_id, node\_order
+598       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{intent(out)}, \textcolor{keywordtype}{optional}    :: value
+599       \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(out)}, \textcolor{keywordtype}{optional} :: code
+600       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(3,3)} :: k
+601       \textcolor{keywordtype}{type}(integpnt_str) :: quadpnt
+602       \textcolor{keywordtype}{integer(kind=ikind)} :: layer, d
+603       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(3)} :: gravflux
+604       
+605       
+606       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(\textcolor{keywordtype}{value})) \textcolor{keywordflow}{then}
+607         
+608         quadpnt%type\_pnt = \textcolor{stringliteral}{"ndpt"}
+609         quadpnt%column = 2
+610         quadpnt%order = elements%data(el\_id, node\_order)
+611         layer = elements%material(el\_id,1)
+612         d = drutes_config%dimen
+613         \textcolor{keyword}{call }pde\_loc%pde\_fnc(1)%dispersion(pde\_loc, layer, quadpnt, tensor=k(1:d\textcolor{comment}{,1:d))}
+614 \textcolor{comment}{        }
+615 \textcolor{comment}{        }\textcolor{keywordflow}{select case}(d)
+616           \textcolor{keywordflow}{case}(1)
+617             \textcolor{keywordflow}{if} (node\_order == 1) \textcolor{keywordflow}{then}
+618               \textcolor{keywordtype}{value} = k(1,1) 
+619             \textcolor{keywordflow}{else}
+620               \textcolor{keywordtype}{value} = -k(1,1)
+621 \textcolor{keywordflow}{            end if}
+622           \textcolor{keywordflow}{case}(2)         
+623             gravflux(1) = sqrt(1-elements%nvect\_z(el\_id, node\_order)*elements%nvect\_z\textcolor{comment}{(el\_id, node\_order))*k
+      (1,2)}
+624 \textcolor{comment}{            }
+625 \textcolor{comment}{            gravflux(2) = elements%nvect\_z(el\_id, node\_order)*k(2,2)}
+626 \textcolor{comment}{}
+627 \textcolor{comment}{            }\textcolor{keywordtype}{value} = sqrt(gravflux(1)*gravflux(1) + gravflux(2)*gravflux(2))
+628 \textcolor{keywordflow}{        end select}
+629 \textcolor{keywordflow}{      end if}
+630       
+631       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(code)) \textcolor{keywordflow}{then}
+632         code = 2
+633 \textcolor{keywordflow}{      end if}
+634       
+\end{DoxyCode}
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacere__total_aa380a43e84f13ae7babb943b15399e3a_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{re\+\_\+total@{re\+\_\+total}!retot\+\_\+initcond@{retot\+\_\+initcond}}
+\index{retot\+\_\+initcond@{retot\+\_\+initcond}!re\+\_\+total@{re\+\_\+total}}
+\subsubsection[{retot\+\_\+initcond(pde\+\_\+loc)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, public re\+\_\+total\+::retot\+\_\+initcond (
+\begin{DoxyParamCaption}
+\item[{class({\bf pde\+\_\+str}), intent(inout)}]{pde\+\_\+loc}
+\end{DoxyParamCaption}
+)}\label{namespacere__total_a5d572dd5f6da46314cdd0d5039c2db7c}
+
+
+Definition at line 672 of file re\+\_\+total.\+f90.
+
+
+
+References globals\+::drutes\+\_\+config, globals\+::elements, re\+\_\+constitutive\+::inverse\+\_\+vangen(), geom\+\_\+tools\+::map1d2dj(), globals\+::nodes, and re\+\_\+globals\+::vgset.
+
+
+
+Referenced by re\+\_\+pointers\+::reroth(), and re\+\_\+pointers\+::restdh().
+
+
+\begin{DoxyCode}
+672       \textcolor{keywordtype}{use }typy
+673       \textcolor{keywordtype}{use }globals
+674       \textcolor{keywordtype}{use }global_objs
+675       \textcolor{keywordtype}{use }pde_objs
+676       \textcolor{keywordtype}{use }re_globals
+677       \textcolor{keywordtype}{use }re_constitutive
+678       \textcolor{keywordtype}{use }geom_tools
+679 
+680       
+681       \textcolor{keywordtype}{class}(pde_str), \textcolor{keywordtype}{intent(in out)} :: pde\_loc
+682       \textcolor{keywordtype}{integer(kind=ikind)} :: i, j, k,l, m, layer, d
+683       \textcolor{keywordtype}{real(kind=rkind)} :: value
+684               d = drutes_config%dimen
+685       \textcolor{keywordflow}{select case} (vgset(1\_ikind)%icondtype)
+686         \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"input"})
+687           \textcolor{keyword}{call }map1d2dj(pde\_loc,\textcolor{stringliteral}{"drutes.conf/water.conf/hini.in"})
+688 \textcolor{keywordflow}{      end select}
+689       
+690       d = drutes_config%dimen
+691       \textcolor{keywordflow}{do} i=1, elements%kolik
+692         layer = elements%material(i,1)
+693         \textcolor{keywordflow}{do} j=1, ubound(elements%data,2)
+694           k = elements%data(i,j)
+695           l = nodes%edge(k)
+696           m = pde\_loc%permut(k)
+697           \textcolor{keywordflow}{if} (m == 0) \textcolor{keywordflow}{then}
+698             \textcolor{keyword}{call }pde\_loc%bc(l)%value\_fnc(pde\_loc, i, j, \textcolor{keywordtype}{value})
+699             pde\_loc%solution(k) =  \textcolor{keywordtype}{value} 
+700           \textcolor{keywordflow}{else}
+701             \textcolor{keywordflow}{select case} (vgset(layer)%icondtype)
+702               \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"H\_tot"})
+703                 pde\_loc%solution(k) = vgset(layer)%initcond \textcolor{comment}{!+ nodes%data(k,1)}
+704               \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"hpres"})
+705                 
+706                 pde\_loc%solution(k) = vgset(layer)%initcond + nodes%data(k,d)
+707               \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"theta"})
+708                 \textcolor{keywordtype}{value} = inverse_vangen(pde\_loc, layer, x=(/vgset(layer)%initcond/))
+709                 pde\_loc%solution(k) = \textcolor{keywordtype}{value} + nodes%data(k,d)
+710 \textcolor{keywordflow}{            end select}
+711 \textcolor{keywordflow}{          end if}
+712 \textcolor{keywordflow}{        end do}   
+713 \textcolor{keywordflow}{      end do}
+714       
+715 \textcolor{comment}{!       call map1d2d("data.in")}
+716       
+717   
+718 
+\end{DoxyCode}
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacere__total_a5d572dd5f6da46314cdd0d5039c2db7c_cgraph}
+\end{center}
+\end{figure}
+
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacere__total_a5d572dd5f6da46314cdd0d5039c2db7c_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{re\+\_\+total@{re\+\_\+total}!retot\+\_\+neumann\+\_\+bc@{retot\+\_\+neumann\+\_\+bc}}
+\index{retot\+\_\+neumann\+\_\+bc@{retot\+\_\+neumann\+\_\+bc}!re\+\_\+total@{re\+\_\+total}}
+\subsubsection[{retot\+\_\+neumann\+\_\+bc(pde\+\_\+loc, el\+\_\+id, node\+\_\+order, value, code)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, public re\+\_\+total\+::retot\+\_\+neumann\+\_\+bc (
+\begin{DoxyParamCaption}
+\item[{class({\bf pde\+\_\+str}), intent(in)}]{pde\+\_\+loc, }
+\item[{integer(kind=ikind), intent(in)}]{el\+\_\+id, }
+\item[{integer(kind=ikind), intent(in)}]{node\+\_\+order, }
+\item[{real(kind=rkind), intent(out), optional}]{value, }
+\item[{integer(kind=ikind), intent(out), optional}]{code}
+\end{DoxyParamCaption}
+)}\label{namespacere__total_af10fe9475a9afdc1f8a4e047877db2e4}
+
+
+Definition at line 475 of file re\+\_\+total.\+f90.
+
+
+
+References globals\+::elements, globals\+::nodes, and globals\+::time.
+
+
+
+Referenced by re\+\_\+pointers\+::re\+\_\+totheadbc().
+
+
+\begin{DoxyCode}
+475       \textcolor{keywordtype}{use }typy
+476       \textcolor{keywordtype}{use }globals
+477       \textcolor{keywordtype}{use }global_objs
+478       \textcolor{keywordtype}{use }pde_objs
+479       \textcolor{keywordtype}{use }re_globals
+480 
+481       \textcolor{keywordtype}{class}(pde_str), \textcolor{keywordtype}{intent(in)} :: pde\_loc
+482       \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(in)}  :: el\_id, node\_order
+483       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{intent(out)}, \textcolor{keywordtype}{optional}    :: value
+484       \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(out)}, \textcolor{keywordtype}{optional} :: code
+485      
+486 
+487       \textcolor{keywordtype}{integer(kind=ikind)} :: i, edge\_id, j
+488       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(3)} :: gravflux, bcflux
+489       \textcolor{keywordtype}{real(kind=rkind)} :: bcval, gfluxval
+490       \textcolor{keywordtype}{integer} :: i1
+491       
+492       
+493 
+494       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(\textcolor{keywordtype}{value})) \textcolor{keywordflow}{then}
+495         edge\_id = nodes%edge(elements%data(el\_id, node\_order))
+496         i = pde\_loc%permut(elements%data(el\_id, node\_order))
+497         
+498         \textcolor{keywordflow}{if} (pde\_loc%bc(edge\_id)%file) \textcolor{keywordflow}{then}
+499           \textcolor{keywordflow}{do} i=1, ubound(pde\_loc%bc(edge\_id)%series,1)
+500             \textcolor{keywordflow}{if} (pde\_loc%bc(edge\_id)%series(i,1) > time) \textcolor{keywordflow}{then}
+501               \textcolor{keywordflow}{if} (i > 1) \textcolor{keywordflow}{then}
+502                 j = i-1
+503               \textcolor{keywordflow}{else}
+504                 j = i
+505 \textcolor{keywordflow}{              end if}
+506               bcval = pde\_loc%bc(edge\_id)%series(j,2)
+507               \textcolor{keywordflow}{EXIT}
+508 \textcolor{keywordflow}{            end if}
+509 \textcolor{keywordflow}{          end do}
+510         \textcolor{keywordflow}{else}
+511           bcval = pde\_loc%bc(edge\_id)%value
+512 \textcolor{keywordflow}{        end if}
+513         
+514 
+515 
+516         \textcolor{keywordtype}{value} = bcval
+517 
+518 \textcolor{keywordflow}{      end if}
+519       
+520       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(code)) \textcolor{keywordflow}{then}
+521         code = 2
+522 \textcolor{keywordflow}{      end if}
+523 
+524 
+\end{DoxyCode}
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacere__total_af10fe9475a9afdc1f8a4e047877db2e4_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{re\+\_\+total@{re\+\_\+total}!retot\+\_\+seepage@{retot\+\_\+seepage}}
+\index{retot\+\_\+seepage@{retot\+\_\+seepage}!re\+\_\+total@{re\+\_\+total}}
+\subsubsection[{retot\+\_\+seepage(pde\+\_\+loc, el\+\_\+id, node\+\_\+order, value, code)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, public re\+\_\+total\+::retot\+\_\+seepage (
+\begin{DoxyParamCaption}
+\item[{class({\bf pde\+\_\+str}), intent(in)}]{pde\+\_\+loc, }
+\item[{integer(kind=ikind), intent(in)}]{el\+\_\+id, }
+\item[{integer(kind=ikind), intent(in)}]{node\+\_\+order, }
+\item[{real(kind=rkind), intent(out), optional}]{value, }
+\item[{integer(kind=ikind), intent(out), optional}]{code}
+\end{DoxyParamCaption}
+)}\label{namespacere__total_aba9ffc0b12bd41e731c2b7bfd4a22f88}
+
+
+Definition at line 236 of file re\+\_\+total.\+f90.
+
+
+
+References globals\+::drutes\+\_\+config, globals\+::elements, geom\+\_\+tools\+::getnormal(), globals\+::nodes, and pde\+\_\+objs\+::pde\+\_\+common.
+
+
+
+Referenced by re\+\_\+pointers\+::re\+\_\+totheadbc().
+
+
+\begin{DoxyCode}
+236       \textcolor{keywordtype}{use }typy
+237       \textcolor{keywordtype}{use }globals
+238       \textcolor{keywordtype}{use }global_objs
+239       \textcolor{keywordtype}{use }pde_objs
+240       \textcolor{keywordtype}{use }debug_tools
+241       \textcolor{keywordtype}{use }re_globals
+242       \textcolor{keywordtype}{use }geom_tools
+243       
+244       \textcolor{keywordtype}{class}(pde_str), \textcolor{keywordtype}{intent(in)} :: pde\_loc
+245       \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(in)}  :: el\_id, node\_order
+246       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{intent(out)}, \textcolor{keywordtype}{optional}    :: value
+247       \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(out)}, \textcolor{keywordtype}{optional} :: code
+248       
+249       \textcolor{keywordtype}{real(kind=rkind)} :: solval, gradn
+250       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable}, \textcolor{keywordtype}{save} :: solgrad, nvect
+251       \textcolor{keywordtype}{type}(integpnt_str) :: quadpnt
+252       \textcolor{keywordtype}{integer(kind=ikind)} :: i, el\_vecino, el\_vecino2, nd\_tmp, nd, counter\textcolor{comment}{, status, nd\_vecino, nd\_vecino2, 
+      pos, test1, test2, nd3}
+253 \textcolor{comment}{      }\textcolor{keywordtype}{integer(kind=ikind)} :: myel, edge\_id
+254       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(2,2)} :: points
+255       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(2)} :: third
+256  
+257 
+258               
+259       
+260       \textcolor{keywordflow}{if} (.not. \textcolor{keyword}{allocated}(pde_common%xvect) ) \textcolor{keywordflow}{then}
+261         \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(\textcolor{keywordtype}{value})) \textcolor{keywordtype}{value} = 0
+262         \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(code)) code = 2
+263         \textcolor{keywordflow}{RETURN}
+264 \textcolor{keywordflow}{      end if}
+265      
+266       
+267       nd = elements%data(el\_id, node\_order)
+268       
+269       quadpnt%type\_pnt = \textcolor{stringliteral}{"ndpt"}
+270       quadpnt%order = elements%data(el\_id,node\_order)
+271       quadpnt%column = 1
+272         
+273       quadpnt%preproc = .true.
+274         
+275       solval = pde\_loc%getval(quadpnt)
+276         
+277       quadpnt%preproc = .false.
+278         
+279       \textcolor{keyword}{call }pde\_loc%getgrad(quadpnt, solgrad)
+280       
+281       
+282       
+283       \textcolor{keywordflow}{if} (drutes_config%dimen > 1) \textcolor{keywordflow}{then}
+284       
+285         status = nodes%element(nd)%pos
+286         
+287         \textcolor{keywordflow}{if} (status == 3 .and. elements%border(el\_id)%pos > 0) \textcolor{keywordflow}{then}
+288           status = 2
+289 \textcolor{keywordflow}{        end if}
+290         
+291         \textcolor{keywordflow}{select case}(status)
+292           \textcolor{keywordflow}{case}(1)
+293             el\_vecino = el\_id
+294             el\_vecino2 = el\_id
+295           \textcolor{keywordflow}{case}(2)      
+296             \textcolor{keywordflow}{do} i=1, nodes%element(nd)%pos
+297               el\_vecino = nodes%element(nd)%data(i)
+298               \textcolor{keywordflow}{if} (elements%border(el\_vecino)%pos > 0 .and. el\_vecino /= el\_id\textcolor{comment}{) }\textcolor{keywordflow}{then}
+299                 \textcolor{keywordflow}{EXIT}
+300 \textcolor{keywordflow}{              end if}
+301               \textcolor{keywordflow}{if} (i==nodes%element(nd)%pos) el\_vecino=0
+302 \textcolor{keywordflow}{            end do}
+303             el\_vecino2 = el\_id
+304 \textcolor{keywordflow}{          case default}
+305             \textcolor{keywordflow}{do} i=1, nodes%element(nd)%pos
+306               el\_vecino = nodes%element(nd)%data(i)
+307               \textcolor{keywordflow}{if} (elements%border(el\_vecino)%pos > 0 .and. el\_vecino /= el\_id\textcolor{comment}{) }\textcolor{keywordflow}{then}
+308                 \textcolor{keywordflow}{EXIT}
+309 \textcolor{keywordflow}{              end if}
+310               \textcolor{keywordflow}{if} (i==nodes%element(nd)%pos) el\_vecino=0
+311 \textcolor{keywordflow}{            end do}
+312             
+313             \textcolor{keywordflow}{do} i=1, nodes%element(nd)%pos
+314               el\_vecino2 = nodes%element(nd)%data(i)
+315               \textcolor{keywordflow}{if} (elements%border(el\_vecino2)%pos > 0 .and. el\_vecino2 /\textcolor{comment}{= el\_id .and. el\_vecino2 /= 
+      el\_vecino) }\textcolor{keywordflow}{then}
+316                 \textcolor{keywordflow}{EXIT}
+317 \textcolor{keywordflow}{              end if}
+318               \textcolor{keywordflow}{if} (i==nodes%element(nd)%pos) el\_vecino2=0
+319 \textcolor{keywordflow}{            end do}
+320 \textcolor{keywordflow}{        end select}
+321         
+322         
+323         \textcolor{keywordflow}{if} (el\_vecino == 0 .or. el\_vecino2 == 0) \textcolor{keywordflow}{then}
+324           print *, \textcolor{stringliteral}{"bug in re\_total::re\_seepage "}
+325           print *,  \textcolor{stringliteral}{"bug keyword: all neighbours are zeroes (don't worry if you don't understand it)"}
+326           print *, \textcolor{stringliteral}{"contact Michal -> michalkuraz@gmail.com"}
+327           error stop
+328 \textcolor{keywordflow}{        end if}
+329         
+330         
+331 
+332         \textcolor{keywordflow}{do} i=1, elements%border(el\_vecino)%pos
+333           \textcolor{keywordflow}{if} (elements%border(el\_vecino)%data(i) == nd) \textcolor{keywordflow}{then}
+334             \textcolor{keywordflow}{if} (elements%border(el\_vecino)%pos < 3 .or. nodes%element(nd\textcolor{comment}{)%pos == 1) }\textcolor{keywordflow}{then}
+335               \textcolor{keywordflow}{if} (i < elements%border(el\_vecino)%pos) \textcolor{keywordflow}{then}
+336                 nd\_vecino = elements%border(el\_vecino)%data(i+1)
+337               \textcolor{keywordflow}{else}
+338                 nd\_vecino = elements%border(el\_vecino)%data(1)
+339 \textcolor{keywordflow}{              end if}
+340               \textcolor{keywordflow}{EXIT}
+341             \textcolor{keywordflow}{else}
+342               \textcolor{keywordflow}{if} (i < elements%border(el\_vecino)%pos .and. i > 1) \textcolor{keywordflow}{then}
+343                 test1 = i+1
+344                 test2 = i-1
+345               \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (i == elements%border(el\_vecino)%pos ) \textcolor{keywordflow}{then}
+346                 test1 = 1
+347                 test2 = i-1
+348               \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (i == 1) \textcolor{keywordflow}{then}
+349                 test1 = 2
+350                 test2 = elements%border(el\_vecino)%pos
+351 \textcolor{keywordflow}{              end if}
+352               
+353               \textcolor{keywordflow}{if} (nodes%element(elements%data(el\_vecino,test1))%pos == 1\textcolor{comment}{) }\textcolor{keywordflow}{then}
+354                 nd\_vecino = elements%data(el\_vecino,test1)
+355               \textcolor{keywordflow}{else} \textcolor{keywordflow}{if}  (nodes%element(elements%data(el\_vecino,test2))%pos\textcolor{comment}{ == 1) }\textcolor{keywordflow}{then}
+356                 nd\_vecino = elements%data(el\_vecino,test2)
+357               \textcolor{keywordflow}{else}
+358                 print *, \textcolor{stringliteral}{"bug in re\_total::re\_seepage, bug keyword: unable to find neighbour vecino1 "}
+359                 print *, \textcolor{stringliteral}{"(don't worry if you don't understand it)"}
+360                 print *, \textcolor{stringliteral}{"contact Michal -> michalkuraz@gmail.com"}
+361                 error stop  
+362 \textcolor{keywordflow}{              end if}   
+363               \textcolor{keywordflow}{EXIT}        
+364 \textcolor{keywordflow}{            end if}
+365 \textcolor{keywordflow}{          end if}
+366 \textcolor{keywordflow}{        end do}
+367                 
+368         \textcolor{keywordflow}{do} i=1, elements%border(el\_vecino2)%pos
+369           \textcolor{keywordflow}{if} (elements%border(el\_vecino2)%data(i) == nd) \textcolor{keywordflow}{then}
+370             \textcolor{keywordflow}{if} (elements%border(el\_vecino2)%pos < 3 .or. nodes%element(nd\textcolor{comment}{)%pos == 1) }\textcolor{keywordflow}{then}
+371               \textcolor{keywordflow}{if} (i < elements%border(el\_vecino2)%pos) \textcolor{keywordflow}{then}
+372                 nd\_vecino2 = elements%border(el\_vecino2)%data(i+1)
+373                 \textcolor{keywordflow}{if} (nd\_vecino2 == nd\_vecino) \textcolor{keywordflow}{then}
+374                   pos = i-1
+375                   \textcolor{keywordflow}{if} (pos < 1) \textcolor{keywordflow}{then}
+376                     pos = elements%border(el\_vecino)%pos
+377 \textcolor{keywordflow}{                  end if}
+378                   nd\_vecino2 = elements%border(el\_vecino2)%data(pos)
+379 \textcolor{keywordflow}{                end if}
+380               \textcolor{keywordflow}{else}
+381                 nd\_vecino2 = elements%border(el\_vecino2)%data(1)
+382                 \textcolor{keywordflow}{if} (nd\_vecino2 == nd\_vecino) \textcolor{keywordflow}{then}
+383                   pos = i-1
+384                   nd\_vecino2 = elements%border(el\_vecino2)%data(pos)
+385 \textcolor{keywordflow}{                end if}
+386 \textcolor{keywordflow}{              end if}
+387               \textcolor{keywordflow}{EXIT}
+388             \textcolor{keywordflow}{else} 
+389               \textcolor{keywordflow}{if} (i < elements%border(el\_vecino2)%pos .and. i > 1) \textcolor{keywordflow}{then}
+390                 test1 = i+1
+391                 test2 = i-1
+392               \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (i == elements%border(el\_vecino2)%pos ) \textcolor{keywordflow}{then}
+393                 test1 = 1
+394                 test2 = i-1
+395               \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (i == 1) \textcolor{keywordflow}{then}
+396                 test1 = 2
+397                 test2 = elements%border(el\_vecino2)%pos
+398 \textcolor{keywordflow}{              end if}
+399               
+400               \textcolor{keywordflow}{if} (nodes%element(elements%data(el\_vecino2,test1))%pos == \textcolor{comment}{1) }\textcolor{keywordflow}{then}
+401                 nd\_vecino2 = elements%data(el\_vecino2,test1)
+402               \textcolor{keywordflow}{else} \textcolor{keywordflow}{if}  (nodes%element(elements%data(el\_vecino2,test2))%pos\textcolor{comment}{ == 1) }\textcolor{keywordflow}{then}
+403                 nd\_vecino2 = elements%data(el\_vecino2,test2)
+404               \textcolor{keywordflow}{else}
+405                 print *, \textcolor{stringliteral}{"bug in re\_total::re\_seepage, bug keyword: unable to find neighbour vecino2 "}
+406                 print *, \textcolor{stringliteral}{"(don't worry if you don't understand it)"}
+407                 print *, \textcolor{stringliteral}{"contact Michal -> michalkuraz@gmail.com"}
+408                 error stop  
+409 \textcolor{keywordflow}{              end if}   
+410               \textcolor{keywordflow}{EXIT}         
+411 \textcolor{keywordflow}{            end if}
+412 \textcolor{keywordflow}{          end if}
+413 \textcolor{keywordflow}{        end do}
+414         
+415         points(1,:) = nodes%data(nd\_vecino,:)
+416         points(2,:) = nodes%data(nd\_vecino2,:)
+417         
+418         
+419         \textcolor{keywordflow}{if} (elements%border(el\_id)%pos < 2) \textcolor{keywordflow}{then}
+420           myel = el\_id
+421         \textcolor{keywordflow}{else}
+422           myel = elements%neighbours(el\_id,1)
+423 \textcolor{keywordflow}{        end if}
+424         
+425         \textcolor{keywordflow}{do} i=1, ubound(elements%data,2)
+426           nd3 =  elements%data(myel, i)
+427           \textcolor{keywordflow}{if} ( nd3 /= nd .and. nd3 /= nd\_vecino .and. nd3 /= nd\_vecino2)\textcolor{comment}{ }\textcolor{keywordflow}{then}
+428             third = nodes%data(nd3,:)
+429             \textcolor{keywordflow}{EXIT}
+430 \textcolor{keywordflow}{          end if}
+431           
+432           \textcolor{keywordflow}{if} (i == ubound(elements%data,2)) \textcolor{keywordflow}{then}
+433             print *,  \textcolor{stringliteral}{"bug in re\_total::re\_seepage, bug keyword: unable to find internal element node"}
+434             print *, \textcolor{stringliteral}{"(don't worry if you don't understand it)"}
+435             print *, \textcolor{stringliteral}{"contact Michal -> michalkuraz@gmail.com"}
+436             error stop  
+437 \textcolor{keywordflow}{          end if}
+438 \textcolor{keywordflow}{        end do}  
+439       
+440       
+441         \textcolor{keyword}{call }getnormal(points, third, nvect)    
+442       
+443 
+444         gradn = solgrad(1)*nvect(1) + solgrad(2)*nvect(2)
+445       
+446       \textcolor{keywordflow}{else}
+447      
+448         \textcolor{keywordflow}{if} (node\_order == 1) \textcolor{keywordflow}{then}
+449           gradn = -solgrad(1)
+450         \textcolor{keywordflow}{else}
+451           gradn = solgrad(1)
+452 \textcolor{keywordflow}{        end if}
+453       
+454 \textcolor{keywordflow}{      end if}
+455      
+456       edge\_id = nodes%edge(elements%data(el\_id, node\_order))
+457       
+458       \textcolor{keywordflow}{if} (solval < pde\_loc%bc(edge\_id)%value .or. gradn > 0) \textcolor{keywordflow}{then}
+459         code = 2
+460         \textcolor{keywordtype}{value} = 0
+461       \textcolor{keywordflow}{else} 
+462         code = 4
+463         \textcolor{keywordtype}{value} = nodes%data(nd,drutes_config%dimen)
+464 \textcolor{keywordflow}{      end if}
+465        
+466           
+467     
+\end{DoxyCode}
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacere__total_aba9ffc0b12bd41e731c2b7bfd4a22f88_cgraph}
+\end{center}
+\end{figure}
+
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacere__total_aba9ffc0b12bd41e731c2b7bfd4a22f88_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{re\+\_\+total@{re\+\_\+total}!retot\+\_\+seepageface@{retot\+\_\+seepageface}}
+\index{retot\+\_\+seepageface@{retot\+\_\+seepageface}!re\+\_\+total@{re\+\_\+total}}
+\subsubsection[{retot\+\_\+seepageface(pde\+\_\+loc, el\+\_\+id, node\+\_\+order, value, code)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine re\+\_\+total\+::retot\+\_\+seepageface (
+\begin{DoxyParamCaption}
+\item[{class({\bf pde\+\_\+str}), intent(in)}]{pde\+\_\+loc, }
+\item[{integer(kind=ikind), intent(in)}]{el\+\_\+id, }
+\item[{integer(kind=ikind), intent(in)}]{node\+\_\+order, }
+\item[{real(kind=rkind), intent(out), optional}]{value, }
+\item[{integer(kind=ikind), intent(out), optional}]{code}
+\end{DoxyParamCaption}
+)}\label{namespacere__total_a067b74bf2cdada90ac175b51e9d0a746}
+
+
+Definition at line 639 of file re\+\_\+total.\+f90.
+
+
+
+References globals\+::elements.
+
+
+\begin{DoxyCode}
+639       \textcolor{keywordtype}{use }typy
+640       \textcolor{keywordtype}{use }globals
+641       \textcolor{keywordtype}{use }global_objs
+642       \textcolor{keywordtype}{use }pde_objs
+643       \textcolor{keywordtype}{use }re_globals
+644       
+645       \textcolor{keywordtype}{class}(pde_str), \textcolor{keywordtype}{intent(in)} :: pde\_loc
+646       \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(in)}  :: el\_id, node\_order
+647       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{intent(out)}, \textcolor{keywordtype}{optional}    :: value
+648       \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(out)}, \textcolor{keywordtype}{optional} :: code
+649       
+650       \textcolor{comment}{! local variables}
+651       \textcolor{keywordtype}{type}(integpnt_str) :: quadpnt
+652       \textcolor{keywordtype}{real(kind=rkind)} :: val
+653       
+654       quadpnt%type\_pnt = \textcolor{stringliteral}{"ndpt"}
+655       quadpnt%column = 1
+656       quadpnt%order = elements%data(el\_id, node\_order)
+657       
+658       val=pde\_loc%getval(quadpnt)
+659     
+660       \textcolor{keywordflow}{if} (val < 0) \textcolor{keywordflow}{then}
+661         \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(code)) code=2
+662         \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(\textcolor{keywordtype}{value})) \textcolor{keywordtype}{value}=0
+663         \textcolor{keywordflow}{RETURN}
+664       \textcolor{keywordflow}{else}
+665       
+666 \textcolor{keywordflow}{      end if}
+667         
+\end{DoxyCode}

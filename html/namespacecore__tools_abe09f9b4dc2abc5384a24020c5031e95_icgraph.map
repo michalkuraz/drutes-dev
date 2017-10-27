@@ -1,0 +1,46 @@
+<map id="core_tools::write_log" name="core_tools::write_log">
+<area shape="rect" id="node2" href="$namespacedecomposer.html#a87f6f57c647e1ad908958389ba844b86" title="decomposer::clear_subdomain" alt="" coords="204,857,403,884"/>
+<area shape="rect" id="node3" href="$namespacedecomposer.html#abbcc7a95b77ad1dbec2b528470df7daf" title="the subdomains are combined based on the gradients of the solution and the Picard iterations ..." alt="" coords="459,908,655,935"/>
+<area shape="rect" id="node7" href="$main_8f90.html#a8ec2266d83cd6c0b762cbcbc92c0af3d" title="main" alt="" coords="1555,729,1605,756"/>
+<area shape="rect" id="node10" href="$namespacere__constitutive.html#a3f619b615de841ad748f42a738bb8ff4" title="re_constitutive::dmualem\l_dh_tab" alt="" coords="712,771,880,813"/>
+<area shape="rect" id="node15" href="$namespacedual__tab.html#aad3dbc3def209ecebf2c7059fd42fff3" title="creates a table of values of constitutive functions for the Richards equation to be linearly approxim..." alt="" coords="943,1069,1110,1096"/>
+<area shape="rect" id="node18" href="$namespacefem.html#af582706106c3f9c9118b6730da771c2b" title="fem::evol_dt" alt="" coords="749,284,843,311"/>
+<area shape="rect" id="node19" href="$namespacefem.html#a7c82bbee50c3ee9cdb4fdcd0f6272932" title="solves the nonstationary pde problem in time " alt="" coords="971,309,1082,336"/>
+<area shape="rect" id="node20" href="$namespacefem.html#ab14ae3c1eca7662249464059ea9e8a76" title="fem::exitme" alt="" coords="511,284,602,311"/>
+<area shape="rect" id="node21" href="$namespacefeminittools.html#a9988b1795b71ef099fd33d9219744a83" title="feminittools::feminit" alt="" coords="489,124,625,151"/>
+<area shape="rect" id="node22" href="$namespacepostpro.html#ad7dbd8a9caed2ac75b253d6b46d098d2" title="this subroutine parses /proc/[PID]/status file in order to get RAM consumption statistics, it works only under POSIX systems " alt="" coords="1359,603,1507,629"/>
+<area shape="rect" id="node23" href="$namespacefem__tools.html#aef722f7948c3d119dc3410f572f26821" title="fem_tools::icond4neumann" alt="" coords="214,1009,393,1036"/>
+<area shape="rect" id="node25" href="$namespacedecomposer.html#a98718ed1ed87442f86951d651992261d" title="decomposer::init_decomp" alt="" coords="471,1169,642,1196"/>
+<area shape="rect" id="node26" href="$namespacere__constitutive.html#aaab88fb88c11ce508ad8240a96275a6b" title="re_constitutive::intoverflow" alt="" coords="467,537,646,564"/>
+<area shape="rect" id="node27" href="$namespacere__constitutive.html#a21d8dd738d02ef5a1501b79f7b80f50b" title="re_constitutive::vangen_tab" alt="" coords="705,436,887,463"/>
+<area shape="rect" id="node30" href="$namespacere__constitutive.html#aa39d302eed50bc490b34dd310caf7ed8" title="re_constitutive::vangen\l_elast_tab" alt="" coords="717,487,875,529"/>
+<area shape="rect" id="node31" href="$namespacere__constitutive.html#a8923c35fda157f8198854a3afadd1f99" title="re_constitutive::mualem_tab" alt="" coords="703,553,889,580"/>
+<area shape="rect" id="node32" href="$namespacere__constitutive.html#a6cc0f4bc06a19ad696d83967878a54fb" title="re_constitutive::inverse\l_vangen" alt="" coords="717,706,875,747"/>
+<area shape="rect" id="node35" href="$namespacepostpro.html#a21af39d8fdc38e6b736346450f99fece" title="postpro::make_print" alt="" coords="235,335,372,361"/>
+<area shape="rect" id="node36" href="$namespacedecomposer.html#a58c48dfbf6d81b7645cb64e5d88e3022" title="subroutine that creates mesh of quadrangles – coarse mesh (clusters) " alt="" coords="203,1111,403,1137"/>
+<area shape="rect" id="node37" href="$namespacedrutes__init.html#ac0d99b874b2dbf6a5726f534d3ee0943" title="routine to open all files to read and write " alt="" coords="495,1221,618,1262"/>
+<area shape="rect" id="node38" href="$namespaceread__inputs.html#a29f942f0f7f893e5e5cf1c53fc3ef61f" title="read_inputs::read_2dmesh_gmsh" alt="" coords="196,1263,411,1289"/>
+<area shape="rect" id="node39" href="$namespacedecomposer.html#a9ce50809a5a28381c14ba27ff5284722" title="decomposer::read_coarse_mesh" alt="" coords="198,1161,409,1188"/>
+<area shape="rect" id="node40" href="$namespaceobjfnc.html#ac0a20b2f9874813942bd7dc35e3b4842" title="objfnc::reader" alt="" coords="1187,1295,1288,1321"/>
+<area shape="rect" id="node42" href="$namespacegeom__tools.html#a2fde1713e8d912a2be95dfa7f6789bab" title="bisecton method searching for a root of function f on defined intervals xmin and xmax ..." alt="" coords="218,696,389,723"/>
+<area shape="rect" id="node44" href="$namespacefeminittools.html#a36826eda9dbcdb639506e838d6ec2e3e" title="evaluates an array that contains length of the element edge, if the element edge is boundary edge..." alt="" coords="233,117,373,158"/>
+<area shape="rect" id="node45" href="$namespacere__constitutive.html#a6bfdd98c01994ec23b252bfb214199bd" title="creates a table of values of constitutive functions for the Richards equation to be linearly approxim..." alt="" coords="471,639,642,665"/>
+<area shape="rect" id="node4" href="$namespaceschwarz__dd__time__test.html#a28474cc01fb4558d0a875080f5a52724" title="solves the problem using Picard method with Schwarz multiplicative domain decomposition reflecting th..." alt="" coords="719,902,873,943"/>
+<area shape="rect" id="node5" href="$namespaceschwarz__dd.html#a5e1abf918f5afac4e96fa81e0cfa5f7a" title="solves the problem using Picard method with Schwarz multiplicative domain decomposition reflecting th..." alt="" coords="952,938,1101,979"/>
+<area shape="rect" id="node8" href="$namespaceschwarz__dd2subcyc.html#a1172bd9a4c93b3862894cf530bff7fea" title="solves the problem using Picard method with Schwarz multiplicative domain decomposition reflecting th..." alt="" coords="952,1003,1101,1045"/>
+<area shape="rect" id="node9" href="$namespacesubcycling.html#a676c0ac81f3576e037f6f49c0001ce78" title="solves the problem using Picard method with Schwarz multiplicative domain decomposition reflecting th..." alt="" coords="729,837,863,878"/>
+<area shape="rect" id="node6" href="$namespacemanage__pointers.html#a8275d1f0bd8032fa68b910b70058a4cf" title="set pointers for the entire problem, except the file read pointers " alt="" coords="1359,847,1506,889"/>
+<area shape="rect" id="node11" href="$namespacere__constitutive.html#a060c1f794f98499dd22932984f0b97e8" title="convection term for the Richards equation for axisymmetric problems the vertical convection is equal ..." alt="" coords="937,705,1116,746"/>
+<area shape="rect" id="node13" href="$namespacere__pointers.html#a4f4fd0e928850ecdd8a81e8d55a70143" title="re_pointers::re_rot" alt="" coords="1174,777,1301,804"/>
+<area shape="rect" id="node14" href="$namespacere__pointers.html#adc1e1c0ad055044eb884aeb7b9f2814c" title="re_pointers::re_std" alt="" coords="1172,828,1303,855"/>
+<area shape="rect" id="node12" href="$namespacere__pointers.html#a2ae8b49e9d185cc91057283c869cb633" title="re_pointers::reroth" alt="" coords="1174,708,1301,735"/>
+<area shape="rect" id="node16" href="$namespacere__dual__pointers.html#aa76c31f626d7323a2032a80d6cac5ff6" title="Links to releveant subroutines for matrix domain. " alt="" coords="1169,983,1305,1025"/>
+<area shape="rect" id="node17" href="$namespacere__dual__pointers.html#a7c3a2d7fee47e270402505ab315ca55d" title="Links to releveant subroutines for fracture domain. " alt="" coords="1169,1050,1305,1091"/>
+<area shape="rect" id="node24" href="$namespacefemmat.html#a52b471f60b8aeb92d66b95268970a0ac" title="solves the problem using Picard method " alt="" coords="1164,1120,1311,1147"/>
+<area shape="rect" id="node28" href="$namespacere__pointers.html#a5f39d856da70973c02dcc8ed10844884" title="re_pointers::allrepointers" alt="" coords="945,603,1109,629"/>
+<area shape="rect" id="node29" href="$namespacere__pointers.html#ab30747cb46458aeac12088c565317b00" title="re_pointers::restdh" alt="" coords="1172,653,1303,680"/>
+<area shape="rect" id="node33" href="$namespacere__constitutive.html#a7a0c1ec8d57856234ae33b61eab450f2" title="re_constitutive::re\l_initcond" alt="" coords="963,770,1090,811"/>
+<area shape="rect" id="node34" href="$namespacere__total.html#a5d572dd5f6da46314cdd0d5039c2db7c" title="re_total::retot_initcond" alt="" coords="951,653,1102,680"/>
+<area shape="rect" id="node41" href="$namespaceobjfnc.html#aa9a5392e2af633f2f53554a6f6f93026" title="objfnc::get_objval" alt="" coords="1371,1285,1495,1312"/>
+<area shape="rect" id="node43" href="$namespacere__constitutive.html#a3c7de19cd5e93ba8f0f4bb821e87790c" title="re_constitutive::init\l_zones" alt="" coords="491,690,623,731"/>
+</map>

@@ -1,0 +1,341 @@
+\section{femmat Module Reference}
+\label{namespacefemmat}\index{femmat@{femmat}}
+\subsection*{Functions/\+Subroutines}
+\begin{DoxyCompactItemize}
+\item 
+subroutine, public {\bf solve\+\_\+picard} (ierr, itcount, success)
+\begin{DoxyCompactList}\small\item\em solves the problem using Picard method \end{DoxyCompactList}\item 
+subroutine, public {\bf assemble\+\_\+mat} (ierr)
+\item 
+subroutine, private {\bf results\+\_\+extractor} ()
+\end{DoxyCompactItemize}
+
+
+\subsection{Function/\+Subroutine Documentation}
+\index{femmat@{femmat}!assemble\+\_\+mat@{assemble\+\_\+mat}}
+\index{assemble\+\_\+mat@{assemble\+\_\+mat}!femmat@{femmat}}
+\subsubsection[{assemble\+\_\+mat(ierr)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, public femmat\+::assemble\+\_\+mat (
+\begin{DoxyParamCaption}
+\item[{integer, intent(out)}]{ierr}
+\end{DoxyParamCaption}
+)}\label{namespacefemmat_ad353c969789b835fe3ca33d717ca0553}
+
+
+Definition at line 125 of file femmat.\+f90.
+
+
+
+References stiffmat\+::build\+\_\+bvect(), stiffmat\+::build\+\_\+stiff\+\_\+np(), globals\+::cap\+\_\+mat, globals\+::elements, globals\+::elnode\+\_\+prev, fem\+\_\+tools\+::in2global(), globals\+::nodes, solver\+\_\+interfaces\+::null\+\_\+problem(), pde\+\_\+objs\+::pde, pde\+\_\+objs\+::pde\+\_\+common, globals\+::spmatrix, globals\+::stiff\+\_\+mat, and globals\+::time\+\_\+step.
+
+
+
+Referenced by solve\+\_\+picard().
+
+
+\begin{DoxyCode}
+125       \textcolor{keywordtype}{use }typy
+126       \textcolor{keywordtype}{use }globals
+127       \textcolor{keywordtype}{use }global_objs
+128       \textcolor{keywordtype}{use }pde_objs
+129       \textcolor{keywordtype}{use }capmat
+130       \textcolor{keywordtype}{use }stiffmat
+131       \textcolor{keywordtype}{use }feminittools
+132       \textcolor{keywordtype}{use }geom_tools
+133       \textcolor{keywordtype}{use }fem_tools
+134       \textcolor{keywordtype}{use }re_constitutive
+135       \textcolor{keywordtype}{use }linalg
+136       \textcolor{keywordtype}{use }solver_interfaces
+137       \textcolor{keywordtype}{use }debug_tools
+138 
+139       \textcolor{keywordtype}{integer}, \textcolor{keywordtype}{intent(out)} :: ierr
+140 
+141       \textcolor{keywordtype}{integer(kind=ikind)} :: i,j,k,l, proc, ll, limits
+142             
+143       \textcolor{keywordtype}{type}(integpnt_str) :: quadpnt
+144       
+145       \textcolor{keywordtype}{real(kind=rkind)} :: value
+146 
+147       \textcolor{keyword}{call }null_problem(spmatrix, pde_common%bvect)
+148       
+149       limits = ubound(stiff_mat,1)/ubound(pde,1)
+150 
+151 
+152 
+153       \textcolor{keywordflow}{do} i=1, elements%kolik
+154         pde_common%current\_el = i
+155         processes: \textcolor{keywordflow}{do} proc=1, ubound(pde,1)
+156                     \textcolor{keywordflow}{do} j=1+(proc-1)*limits, ubound(elements%data,2) + (proc-1)*limits
+157                       ll = j - (proc-1)*ubound(stiff_mat,1)/ubound(pde,1)
+158                       k = pde(proc)%permut(elements%data(i,ll))
+159                       \textcolor{keywordflow}{if} (k > 0) \textcolor{keywordflow}{then}
+160                         elnode_prev(j) = pde_common%xvect(k,1)
+161                       \textcolor{keywordflow}{else}
+162                         k = nodes%edge(elements%data(i,ll))
+163                         \textcolor{keyword}{call }pde(proc)%bc(k)%value\_fnc(pde(proc), i, ll, \textcolor{keywordtype}{value})
+164                         elnode_prev(j) = \textcolor{keywordtype}{value}
+165 \textcolor{keywordflow}{                      end if}
+166 \textcolor{keywordflow}{                    end do}
+167 \textcolor{keywordflow}{        end do} processes
+168         
+169 
+170         \textcolor{keyword}{call }build_bvect(i, time_step)
+171         
+172         \textcolor{keyword}{call }build_stiff_np(i, time_step)
+173         
+174         \textcolor{keyword}{call }pde_common%time\_integ(i)
+175                 
+176         stiff_mat = stiff_mat + cap_mat
+177 
+178         
+179         \textcolor{keyword}{call }in2global(i,spmatrix, pde_common%bvect)
+180 
+181 \textcolor{keywordflow}{      end do}
+182 
+183 
+\end{DoxyCode}
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=312pt]{namespacefemmat_ad353c969789b835fe3ca33d717ca0553_cgraph}
+\end{center}
+\end{figure}
+
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacefemmat_ad353c969789b835fe3ca33d717ca0553_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{femmat@{femmat}!results\+\_\+extractor@{results\+\_\+extractor}}
+\index{results\+\_\+extractor@{results\+\_\+extractor}!femmat@{femmat}}
+\subsubsection[{results\+\_\+extractor()}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, private femmat\+::results\+\_\+extractor (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [private]}}\label{namespacefemmat_a6ba01cbc9f5df8ce73824da2b4dee722}
+
+
+Definition at line 188 of file femmat.\+f90.
+
+
+
+References globals\+::elements, globals\+::nodes, pde\+\_\+objs\+::pde, and pde\+\_\+objs\+::pde\+\_\+common.
+
+
+
+Referenced by solve\+\_\+picard().
+
+
+\begin{DoxyCode}
+188       \textcolor{keywordtype}{use }typy
+189       \textcolor{keywordtype}{use }globals
+190       \textcolor{keywordtype}{use }global_objs
+191       \textcolor{keywordtype}{use }pde_objs
+192 
+193       \textcolor{keywordtype}{integer(kind=ikind)} :: i, j, proc, nd, edge
+194       \textcolor{keywordtype}{real(kind=rkind)} :: value
+195 
+196       
+197       \textcolor{keywordflow}{do} proc=1, ubound(pde,1)
+198         \textcolor{keywordflow}{do} i=1, elements%kolik
+199           \textcolor{keywordflow}{do} j=1, ubound(elements%data,2)
+200             nd = elements%data(i,j)
+201             \textcolor{keywordflow}{if} (pde(proc)%permut(nd) > 0) \textcolor{keywordflow}{then}
+202               pde(proc)%solution(nd) = pde_common%xvect(pde(proc)%permut(nd),3)
+203             \textcolor{keywordflow}{else}
+204               edge = nodes%edge(nd)
+205               \textcolor{keyword}{call }pde(proc)%bc(edge)%value\_fnc(pde(proc), i, j, \textcolor{keywordtype}{value})
+206               pde(proc)%solution(nd) = \textcolor{keywordtype}{value}
+207 \textcolor{keywordflow}{            end if}
+208 \textcolor{keywordflow}{          end do}
+209 \textcolor{keywordflow}{        end do}
+210 \textcolor{keywordflow}{      end do}
+211 
+212       pde_common%xvect(:,4) = pde_common%xvect(:,1)
+213       pde_common%xvect(:,1) = pde_common%xvect(:,3)
+214       pde_common%xvect(:,2) = pde_common%xvect(:,3)
+215 
+\end{DoxyCode}
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacefemmat_a6ba01cbc9f5df8ce73824da2b4dee722_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{femmat@{femmat}!solve\+\_\+picard@{solve\+\_\+picard}}
+\index{solve\+\_\+picard@{solve\+\_\+picard}!femmat@{femmat}}
+\subsubsection[{solve\+\_\+picard(ierr, itcount, success)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, public femmat\+::solve\+\_\+picard (
+\begin{DoxyParamCaption}
+\item[{integer, intent(out)}]{ierr, }
+\item[{integer(kind=ikind), intent(out)}]{itcount, }
+\item[{logical, intent(out)}]{success}
+\end{DoxyParamCaption}
+)}\label{namespacefemmat_a52b471f60b8aeb92d66b95268970a0ac}
+
+
+solves the problem using Picard method 
+
+
+
+Definition at line 10 of file femmat.\+f90.
+
+
+
+References assemble\+\_\+mat(), simplelinalg\+::diag\+\_\+precond(), globals\+::drutes\+\_\+config, globals\+::file\+\_\+itcg, fem\+\_\+tools\+::icond4neumann(), globals\+::iter\+\_\+criterion, globals\+::max\+\_\+itcount, typy\+::norm2(), pde\+\_\+objs\+::pde, pde\+\_\+objs\+::pde\+\_\+common, results\+\_\+extractor(), pde\+\_\+objs\+::solve\+\_\+matrix, globals\+::spmatrix, and globals\+::time.
+
+
+
+Referenced by manage\+\_\+pointers\+::set\+\_\+pointers().
+
+
+\begin{DoxyCode}
+10       \textcolor{keywordtype}{use }typy
+11       \textcolor{keywordtype}{use }globals
+12       \textcolor{keywordtype}{use }global_objs
+13       \textcolor{keywordtype}{use }pde_objs
+14       \textcolor{keywordtype}{use }re_constitutive
+15       \textcolor{keywordtype}{use }feminittools
+16       \textcolor{keywordtype}{use }fem_tools
+17       \textcolor{keywordtype}{use }linalg
+18       \textcolor{keywordtype}{use }debug_tools
+19       \textcolor{keywordtype}{use }solvers
+20       \textcolor{keywordtype}{use }postpro
+21       \textcolor{keywordtype}{use }decomp_tools
+22       \textcolor{keywordtype}{use }decomp_vars
+23       \textcolor{keywordtype}{use }simplelinalg
+24       \textcolor{keywordtype}{use }debug_tools
+25       \textcolor{keywordtype}{use }mtxiotools
+26 \textcolor{comment}{!       use decomposer}
+27 
+28 
+29       \textcolor{keywordtype}{integer}, \textcolor{keywordtype}{intent(out)} :: ierr
+30       \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(out)} :: itcount
+31       \textcolor{keywordtype}{integer(kind=ikind)} ::  fin, pcg\_it
+32       \textcolor{keywordtype}{logical}, \textcolor{keywordtype}{intent(out)} :: success
+33       \textcolor{keywordtype}{integer(kind=ikind)} :: i, proc,j, m, l, k, top, bot
+34       \textcolor{keywordtype}{real(kind=rkind)} :: error, loc\_error, reps\_err
+35       \textcolor{keywordtype}{logical} :: dt\_fine
+36       \textcolor{keywordtype}{integer} :: ierr\_loc, ll
+37       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable} :: vcttmp
+38       \textcolor{keywordtype}{real(kind=rkind)} :: lambda\_l, lambda\_h, tmpxx=0, maxtime=0
+39 
+40       
+41       proc = ubound(pde,1)
+42       fin = maxval(pde(proc)%permut(:))
+43       itcount = 0
+44       \textcolor{keyword}{allocate}(vcttmp(ubound(pde_common%bvect,1)))
+45       
+46 
+47       \textcolor{keywordflow}{do}
+48 
+49         \textcolor{keywordflow}{do} proc=1, ubound(pde,1)
+50           \textcolor{keyword}{call }icond4neumann(proc)
+51 \textcolor{keywordflow}{        end do}
+52 
+53         itcount = itcount + 1
+54 
+55         
+56         \textcolor{keyword}{call }assemble_mat(ierr)
+57 
+58         
+59         \textcolor{keywordflow}{if} (drutes_config%dimen >  1) \textcolor{keywordflow}{then}
+60           \textcolor{keyword}{call }diag_precond(a=spmatrix, x=pde_common%xvect(1:fin,3), mode=1)
+61 \textcolor{keywordflow}{        end if}
+62 
+63         \textcolor{keyword}{call }solve_matrix(spmatrix, pde_common%bvect(1:fin), pde_common%xvect(1\textcolor{comment}{:fin,3),  itmax1=fin, &}
+64 \textcolor{comment}{                  reps1=1e-15\_rkind, itfin1=pcg\_it, repsfin1=reps\_err)}
+65 \textcolor{comment}{                  }
+66 \textcolor{comment}{                  }
+67 \textcolor{comment}{        }\textcolor{keywordflow}{if} (pcg\_it > 0.35*fin) \textcolor{keywordflow}{then} 
+68           ierr=-1
+69         \textcolor{keywordflow}{else}
+70           ierr=0
+71 \textcolor{keywordflow}{        end if}
+72                   
+73 
+74         \textcolor{keywordflow}{if} (drutes_config%dimen >  1) \textcolor{keywordflow}{then}
+75           \textcolor{keyword}{write}(unit=file_itcg, fmt = *) time, pcg\_it, reps\_err
+76           \textcolor{keyword}{call }flush(file_itcg)
+77           \textcolor{keyword}{call }diag_precond(a=spmatrix, x=pde_common%xvect(1:fin,3), mode=-1)
+78 \textcolor{keywordflow}{        end if}  
+79 
+80         error = norm2(pde_common%xvect(1:fin,2)-pde_common%xvect(1:fin,3\textcolor{comment}{))/ubound(
+      pde_common%xvect,1)}
+81 \textcolor{comment}{        }
+82 \textcolor{comment}{         }
+83 \textcolor{comment}{        }\textcolor{keywordflow}{if} (itcount == 1 .or. error <= iter_criterion) \textcolor{keywordflow}{then}
+84           \textcolor{keywordflow}{do} proc=1, ubound(pde,1)
+85             top = pde(proc)%permut(1)
+86             bot = pde(proc)%permut(ubound(pde(proc)%permut,1))
+87             dt\_fine = pde(proc)%dt\_check()
+88 \textcolor{keywordflow}{          end do}
+89         \textcolor{keywordflow}{else}
+90           dt\_fine = .true.
+91 \textcolor{keywordflow}{        end if}
+92 
+93 
+94         \textcolor{keywordflow}{if} (.not.(dt\_fine)) \textcolor{keywordflow}{then}
+95           ierr = 2
+96           success = .false.
+97           \textcolor{keywordflow}{RETURN}
+98 \textcolor{keywordflow}{        end if}
+99 
+100 
+101 
+102         \textcolor{keywordflow}{if} (error <= iter_criterion) \textcolor{keywordflow}{then}
+103         
+104           \textcolor{keywordflow}{if} (ierr /= -1) ierr = 0
+105           
+106           \textcolor{keyword}{call }results_extractor()
+107           
+108 
+109           success = .true.
+110           \textcolor{keywordflow}{RETURN}
+111         \textcolor{keywordflow}{else}
+112           pde_common%xvect(:,2) = pde_common%xvect(:,3)
+113 \textcolor{keywordflow}{        end if}
+114 
+115         \textcolor{keywordflow}{if} (itcount >= max_itcount) \textcolor{keywordflow}{then}
+116           ierr = 1
+117           success = .false.
+118           \textcolor{keywordflow}{EXIT}
+119 \textcolor{keywordflow}{        end if}
+120 \textcolor{keywordflow}{      end do}
+121 
+\end{DoxyCode}
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacefemmat_a52b471f60b8aeb92d66b95268970a0ac_cgraph}
+\end{center}
+\end{figure}
+
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacefemmat_a52b471f60b8aeb92d66b95268970a0ac_icgraph}
+\end{center}
+\end{figure}
+
+

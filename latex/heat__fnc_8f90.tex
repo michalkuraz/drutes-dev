@@ -1,0 +1,26 @@
+\section{src/models/heat/heat\+\_\+fnc.f90 File Reference}
+\label{heat__fnc_8f90}\index{src/models/heat/heat\+\_\+fnc.\+f90@{src/models/heat/heat\+\_\+fnc.\+f90}}
+\subsection*{Modules}
+\begin{DoxyCompactItemize}
+\item 
+module {\bf heat\+\_\+fnc}
+\end{DoxyCompactItemize}
+\subsection*{Functions/\+Subroutines}
+\begin{DoxyCompactItemize}
+\item 
+subroutine, public {\bf heat\+\_\+fnc\+::heat\+\_\+conduct} (pde\+\_\+loc, layer, quadpnt, x, tensor, scalar)
+\item 
+subroutine, public {\bf heat\+\_\+fnc\+::heat\+\_\+convect} (pde\+\_\+loc, layer, quadpnt, x, vector\+\_\+in, vector\+\_\+out, scalar)
+\item 
+real(kind=rkind) function, public {\bf heat\+\_\+fnc\+::heat\+\_\+elast} (pde\+\_\+loc, layer, quadpnt, x)
+\item 
+real(kind=rkind) function, public {\bf heat\+\_\+fnc\+::heat\+\_\+source} (pde\+\_\+loc, layer, quadpnt, x)
+\item 
+subroutine, public {\bf heat\+\_\+fnc\+::heat\+\_\+dirichlet} (pde\+\_\+loc, el\+\_\+id, node\+\_\+order, value, code)
+\item 
+subroutine, public {\bf heat\+\_\+fnc\+::heat\+\_\+neumann} (pde\+\_\+loc, el\+\_\+id, node\+\_\+order, value, code)
+\item 
+subroutine, public {\bf heat\+\_\+fnc\+::heat\+\_\+flux} (pde\+\_\+loc, layer, quadpnt, x, grad, flux, flux\+\_\+length)
+\item 
+subroutine, public {\bf heat\+\_\+fnc\+::heat\+\_\+icond} (pde\+\_\+loc)
+\end{DoxyCompactItemize}

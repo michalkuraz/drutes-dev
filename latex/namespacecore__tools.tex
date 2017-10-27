@@ -1,0 +1,348 @@
+\section{core\+\_\+tools Module Reference}
+\label{namespacecore__tools}\index{core\+\_\+tools@{core\+\_\+tools}}
+\subsection*{Functions/\+Subroutines}
+\begin{DoxyCompactItemize}
+\item 
+character(len=\+:) function, allocatable, public {\bf cut} (ch)
+\begin{DoxyCompactList}\small\item\em dummy functions, the pointer procedure is set to this function in case if not being considered \end{DoxyCompactList}\item 
+subroutine, public {\bf write\+\_\+log} (text, real1, int1, text2, real2, int2, text3, real3, int3, hidden)
+\item 
+real(kind=rkind) function, public {\bf avg} (a, b)
+\item 
+subroutine, public {\bf mesh\+\_\+allocater} ()
+\begin{DoxyCompactList}\small\item\em allocates structures for nodes and elements \end{DoxyCompactList}\item 
+subroutine, public {\bf find\+\_\+unit} (iunit, start\+\_\+id)
+\end{DoxyCompactItemize}
+
+
+\subsection{Function/\+Subroutine Documentation}
+\index{core\+\_\+tools@{core\+\_\+tools}!avg@{avg}}
+\index{avg@{avg}!core\+\_\+tools@{core\+\_\+tools}}
+\subsubsection[{avg(a, b)}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind) function, public core\+\_\+tools\+::avg (
+\begin{DoxyParamCaption}
+\item[{real(kind=rkind), intent(in)}]{a, }
+\item[{real(kind=rkind), intent(in)}]{b}
+\end{DoxyParamCaption}
+)}\label{namespacecore__tools_af0abb0a9edbab36984797ab055df1e0b}
+
+
+Definition at line 132 of file core\+\_\+tools.\+f90.
+
+
+
+Referenced by simegen\+::simegen1d().
+
+
+\begin{DoxyCode}
+132       \textcolor{keywordtype}{use }typy
+133       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{intent(in)} :: a
+134       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{intent(in)} :: b
+135       \textcolor{keywordtype}{real(kind=rkind)} :: c
+136 
+137       c = (a+b)/2.0\_rkind
+138 
+\end{DoxyCode}
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacecore__tools_af0abb0a9edbab36984797ab055df1e0b_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{core\+\_\+tools@{core\+\_\+tools}!cut@{cut}}
+\index{cut@{cut}!core\+\_\+tools@{core\+\_\+tools}}
+\subsubsection[{cut(ch)}]{\setlength{\rightskip}{0pt plus 5cm}character(len=\+:) function, allocatable, public core\+\_\+tools\+::cut (
+\begin{DoxyParamCaption}
+\item[{character(len=$\ast$), intent(in)}]{ch}
+\end{DoxyParamCaption}
+)}\label{namespacecore__tools_aca00f87d69884142f2350a340fe3642e}
+
+
+dummy functions, the pointer procedure is set to this function in case if not being considered 
+
+
+
+Definition at line 30 of file core\+\_\+tools.\+f90.
+
+
+
+Referenced by geom\+\_\+tools\+::map1d2d(), and geom\+\_\+tools\+::map1d2dj().
+
+
+\begin{DoxyCode}
+30   
+31     \textcolor{keywordtype}{character(len=*)}, \textcolor{keywordtype}{intent(in)} :: ch
+32     \textcolor{keywordtype}{character(len=:)}, \textcolor{keywordtype}{allocatable} :: out\_ch
+33     
+34     \textcolor{keyword}{allocate}(\textcolor{keywordtype}{character}(len=len(adjustl(trim(ch)))) :: out\_ch)
+35     
+36     out\_ch=adjustl(trim(ch))
+37     
+\end{DoxyCode}
+
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacecore__tools_aca00f87d69884142f2350a340fe3642e_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{core\+\_\+tools@{core\+\_\+tools}!find\+\_\+unit@{find\+\_\+unit}}
+\index{find\+\_\+unit@{find\+\_\+unit}!core\+\_\+tools@{core\+\_\+tools}}
+\subsubsection[{find\+\_\+unit(iunit, start\+\_\+id)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, public core\+\_\+tools\+::find\+\_\+unit (
+\begin{DoxyParamCaption}
+\item[{integer, intent(out)}]{iunit, }
+\item[{integer, intent(in), optional}]{start\+\_\+id}
+\end{DoxyParamCaption}
+)}\label{namespacecore__tools_a01c1527fcc56448471e2b349571e51ee}
+
+
+Definition at line 177 of file core\+\_\+tools.\+f90.
+
+
+
+Referenced by ade\+\_\+reader\+::ade\+\_\+read(), boussread\+::boussreader(), drutes\+\_\+init\+::get\+\_\+cmd\+\_\+options(), postpro\+::get\+\_\+ram\+\_\+use(), heat\+\_\+reader\+::heat\+\_\+read(), re\+\_\+total\+::iconddebouss(), decomposer\+::init\+\_\+decomp(), drutes\+\_\+init\+::init\+\_\+observe(), main(), postpro\+::make\+\_\+print(), geom\+\_\+tools\+::map1d2d(), geom\+\_\+tools\+::map1d2dj(), drutes\+\_\+init\+::parse\+\_\+globals(), decomp\+\_\+tools\+::print\+\_\+domains(), decomp\+\_\+tools\+::print\+\_\+elements\+\_\+dd(), debug\+\_\+tools\+::print\+\_\+int\+\_\+matrix(), debug\+\_\+tools\+::print\+\_\+int\+\_\+vector(), debug\+\_\+tools\+::print\+\_\+logical\+\_\+array(), debug\+\_\+tools\+::print\+\_\+quadpnt(), debug\+\_\+tools\+::print\+\_\+real\+\_\+matrix(), debug\+\_\+tools\+::print\+\_\+real\+\_\+vector(), debug\+\_\+tools\+::print\+\_\+real\+\_\+vector4(), debug\+\_\+tools\+::print\+\_\+smartarray\+\_\+i(), debug\+\_\+tools\+::print\+\_\+smartmatrix\+\_\+i(), debug\+\_\+tools\+::print\+\_\+sparse\+\_\+matrix(), re\+\_\+dual\+\_\+reader\+::re\+\_\+dual\+\_\+readf(), re\+\_\+dual\+\_\+reader\+::re\+\_\+dual\+\_\+readm(), re\+\_\+dual\+\_\+reader\+::re\+\_\+dual\+\_\+var(), read\+\_\+inputs\+::read\+\_\+2dmesh\+\_\+gmsh(), decomposer\+::read\+\_\+coarse\+\_\+mesh(), read\+\_\+inputs\+::read\+\_\+scilab(), readtools\+::readbcvals(), re\+\_\+reader\+::res\+\_\+read(), drutes\+\_\+init\+::set\+\_\+global\+\_\+vars(), fem\+::solve\+\_\+pde(), and printtools\+::time2finish().
+
+
+\begin{DoxyCode}
+177       \textcolor{keywordtype}{integer}, \textcolor{keywordtype}{intent(out)} :: iunit
+178       \textcolor{keywordtype}{integer}, \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional} :: start\_id
+179       \textcolor{keywordtype}{logical} :: op
+180 
+181       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(start\_id)) \textcolor{keywordflow}{then}
+182         iunit = start\_id*1 + 1
+183       \textcolor{keywordflow}{else}
+184         iunit = 100 \textcolor{comment}{! the lower values are often reserved}
+185 \textcolor{keywordflow}{      end if}
+186 
+187       \textcolor{keywordflow}{do}
+188         \textcolor{keyword}{inquire}(unit=iunit,opened=op)
+189         \textcolor{keywordflow}{if} (.not.op) \textcolor{keywordflow}{then}
+190           \textcolor{keywordflow}{exit}
+191 \textcolor{keywordflow}{        end if} 
+192         iunit = iunit + 1  
+193         \textcolor{keywordflow}{if} (iunit >= huge(iunit) - 1) \textcolor{keywordflow}{then}
+194           error stop \textcolor{stringliteral}{"SYSTEM PANIC, unable to find any free unit"}
+195           \textcolor{keywordflow}{exit}
+196 \textcolor{keywordflow}{        end if}
+197 \textcolor{keywordflow}{      end do}
+198   
+\end{DoxyCode}
+
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=550pt]{namespacecore__tools_a01c1527fcc56448471e2b349571e51ee_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{core\+\_\+tools@{core\+\_\+tools}!mesh\+\_\+allocater@{mesh\+\_\+allocater}}
+\index{mesh\+\_\+allocater@{mesh\+\_\+allocater}!core\+\_\+tools@{core\+\_\+tools}}
+\subsubsection[{mesh\+\_\+allocater()}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, public core\+\_\+tools\+::mesh\+\_\+allocater (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}\label{namespacecore__tools_a05e8cc58b84b9391b49c5070db1160f7}
+
+
+allocates structures for nodes and elements 
+
+
+
+Definition at line 143 of file core\+\_\+tools.\+f90.
+
+
+
+References globals\+::drutes\+\_\+config, globals\+::elements, globals\+::nodes, and pde\+\_\+objs\+::pde\+\_\+common.
+
+
+
+Referenced by read\+\_\+inputs\+::read\+\_\+2dmesh\+\_\+gmsh(), read\+\_\+inputs\+::read\+\_\+2dmesh\+\_\+t3d(), simegen\+::simegen1d(), and simegen\+::simegen2d().
+
+
+\begin{DoxyCode}
+143       \textcolor{keywordtype}{use }typy
+144       \textcolor{keywordtype}{use }global_objs
+145       \textcolor{keywordtype}{use }pde_objs
+146       \textcolor{keywordtype}{use }globals
+147 
+148       \textcolor{keywordtype}{integer} :: n
+149 
+150       \textcolor{keyword}{allocate}(nodes%id(nodes%kolik))
+151       \textcolor{keyword}{allocate}(nodes%edge(nodes%kolik))
+152       \textcolor{keyword}{allocate}(nodes%data(nodes%kolik,drutes_config%dimen))
+153       \textcolor{keyword}{allocate}(nodes%boundary(nodes%kolik))
+154       \textcolor{keyword}{allocate}(nodes%el2integ(nodes%kolik))
+155       \textcolor{keyword}{allocate}(nodes%element(nodes%kolik))
+156       \textcolor{keyword}{allocate}(elements%length(elements%kolik,drutes_config%dimen + 1))
+157       \textcolor{keyword}{allocate}(elements%nvect\_z(elements%kolik,drutes_config%dimen + 1))
+158       \textcolor{keyword}{allocate}(elements%id(elements%kolik))
+159       \textcolor{keyword}{allocate}(elements%data(elements%kolik, drutes_config%dimen+1))
+160       \textcolor{keyword}{allocate}(elements%areas(elements%kolik))
+161       \textcolor{keyword}{allocate}(elements%ders(elements%kolik, drutes_config%dimen+1, 
+      drutes_config%dimen\textcolor{comment}{))}
+162 \textcolor{comment}{      }\textcolor{keyword}{allocate}(elements%border(elements%kolik))
+163       
+164       n = pde_common%processes
+165       \textcolor{keyword}{allocate}(elements%material(elements%kolik, n))
+166       
+167       \textcolor{keyword}{allocate}(elements%neighbours(elements%kolik, ubound(elements%data,\textcolor{comment}{2)))}
+168 \textcolor{comment}{      }
+169 \textcolor{comment}{      }\textcolor{keyword}{allocate}(nodes%boundary\_order(nodes%kolik))
+170 
+171       
+172 
+\end{DoxyCode}
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacecore__tools_a05e8cc58b84b9391b49c5070db1160f7_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{core\+\_\+tools@{core\+\_\+tools}!write\+\_\+log@{write\+\_\+log}}
+\index{write\+\_\+log@{write\+\_\+log}!core\+\_\+tools@{core\+\_\+tools}}
+\subsubsection[{write\+\_\+log(text, real1, int1, text2, real2, int2, text3, real3, int3, hidden)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, public core\+\_\+tools\+::write\+\_\+log (
+\begin{DoxyParamCaption}
+\item[{character(len=$\ast$), intent(in)}]{text, }
+\item[{real(kind=rkind), intent(in), optional}]{real1, }
+\item[{integer(kind=ikind), intent(in), optional}]{int1, }
+\item[{character(len=$\ast$), intent(in), optional}]{text2, }
+\item[{real(kind=rkind), intent(in), optional}]{real2, }
+\item[{integer(kind=ikind), intent(in), optional}]{int2, }
+\item[{character(len=$\ast$), intent(in), optional}]{text3, }
+\item[{real(kind=rkind), intent(in), optional}]{real3, }
+\item[{integer(kind=ikind), intent(in), optional}]{int3, }
+\item[{logical, optional}]{hidden}
+\end{DoxyParamCaption}
+)}\label{namespacecore__tools_abe09f9b4dc2abc5384a24020c5031e95}
+character to store the time info
+
+the character to store the date info 
+
+Definition at line 41 of file core\+\_\+tools.\+f90.
+
+
+
+References globals\+::logfile, and globals\+::terminal.
+
+
+
+Referenced by decomposer\+::clear\+\_\+subdomain(), re\+\_\+constitutive\+::dmualem\+\_\+dh\+\_\+tab(), dual\+\_\+tab\+::dual\+\_\+tabvalues(), fem\+::evol\+\_\+dt(), fem\+::exitme(), feminittools\+::feminit(), postpro\+::get\+\_\+ram\+\_\+use(), fem\+\_\+tools\+::icond4neumann(), decomposer\+::init\+\_\+decomp(), re\+\_\+constitutive\+::intoverflow(), re\+\_\+constitutive\+::inverse\+\_\+vangen(), main(), postpro\+::make\+\_\+print(), decomposer\+::make\+\_\+quadmesh(), re\+\_\+constitutive\+::mualem\+\_\+tab(), drutes\+\_\+init\+::parse\+\_\+globals(), read\+\_\+inputs\+::read\+\_\+2dmesh\+\_\+gmsh(), decomposer\+::read\+\_\+coarse\+\_\+mesh(), objfnc\+::reader(), decomposer\+::set\+\_\+subdomains(), geom\+\_\+tools\+::solve\+\_\+bisect(), fem\+::solve\+\_\+pde(), feminittools\+::surface\+\_\+integ(), re\+\_\+constitutive\+::tabvalues(), re\+\_\+constitutive\+::vangen\+\_\+elast\+\_\+tab(), and re\+\_\+constitutive\+::vangen\+\_\+tab().
+
+
+\begin{DoxyCode}
+41     \textcolor{keywordtype}{use }typy
+42     \textcolor{keywordtype}{use }globals
+43     \textcolor{keywordtype}{character(len=*)}, \textcolor{keywordtype}{intent(in)} :: text
+44     \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional} :: real1, real2, real3
+45     \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional} :: int1, int2, int3
+46     \textcolor{keywordtype}{character(len=*)}, \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional} :: text2, text3
+48     \textcolor{keywordtype}{character(len=10)} :: timer
+50     \textcolor{keywordtype}{character(len=8)} :: dater
+51 
+52     \textcolor{keywordtype}{character(len=1024)} :: ch1, ch2, ch3, ch4, ch5, ch6, ch7, ch8
+53     \textcolor{keywordtype}{logical}, \textcolor{keywordtype}{optional} :: hidden
+54 
+55     \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(real1)) \textcolor{keywordflow}{then}
+56       \textcolor{keyword}{write}(unit=ch1, fmt=*) real1
+57     \textcolor{keywordflow}{else}
+58       \textcolor{keyword}{write}(unit=ch1, fmt=*) \textcolor{stringliteral}{""}
+59 \textcolor{keywordflow}{    end if}
+60 
+61 
+62     \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(int1)) \textcolor{keywordflow}{then}
+63       \textcolor{keyword}{write}(unit=ch2, fmt=*) int1
+64     \textcolor{keywordflow}{else}
+65       \textcolor{keyword}{write}(unit=ch2, fmt=*) \textcolor{stringliteral}{""}
+66 \textcolor{keywordflow}{    end if}
+67 
+68     \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(text2)) \textcolor{keywordflow}{then}
+69       \textcolor{keyword}{write}(unit=ch3, fmt=*) text2
+70     \textcolor{keywordflow}{else}
+71       \textcolor{keyword}{write}(unit=ch3, fmt=*) \textcolor{stringliteral}{""}
+72 \textcolor{keywordflow}{    end if}
+73 
+74     \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(real2)) \textcolor{keywordflow}{then}
+75       \textcolor{keyword}{write}(unit=ch4, fmt=*) real2
+76     \textcolor{keywordflow}{else}
+77       \textcolor{keyword}{write}(unit=ch4, fmt=*) \textcolor{stringliteral}{""}
+78 \textcolor{keywordflow}{    end if}
+79 
+80     \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(int2)) \textcolor{keywordflow}{then}
+81       \textcolor{keyword}{write}(unit=ch5, fmt=*) int2
+82     \textcolor{keywordflow}{else}
+83       \textcolor{keyword}{write}(unit=ch5, fmt=*) \textcolor{stringliteral}{""}
+84 \textcolor{keywordflow}{    end if}
+85 
+86     
+87     \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(text3)) \textcolor{keywordflow}{then}
+88       \textcolor{keyword}{write}(unit=ch6, fmt=*) text3
+89     \textcolor{keywordflow}{else}
+90       \textcolor{keyword}{write}(unit=ch6, fmt=*) \textcolor{stringliteral}{""}
+91 \textcolor{keywordflow}{    end if}
+92 
+93     \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(real3)) \textcolor{keywordflow}{then}
+94       \textcolor{keyword}{write}(unit=ch7, fmt=*) real3
+95     \textcolor{keywordflow}{else}
+96       \textcolor{keyword}{write}(unit=ch7, fmt=*) \textcolor{stringliteral}{""}
+97 \textcolor{keywordflow}{    end if}
+98 
+99     \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(int3)) \textcolor{keywordflow}{then}
+100       \textcolor{keyword}{write}(unit=ch8, fmt=*) int3
+101     \textcolor{keywordflow}{else}
+102       \textcolor{keyword}{write}(unit=ch8, fmt=*) \textcolor{stringliteral}{""}
+103 \textcolor{keywordflow}{    end if}
+104 
+105     \textcolor{keyword}{call }date\_and\_time(dater, timer)
+106     \textcolor{keyword}{write}(unit=logfile, fmt = *) \textcolor{stringliteral}{"---------------------------------------------------------------"}
+107     \textcolor{keyword}{write}(unit=logfile, fmt = *)  timer(1:2), \textcolor{stringliteral}{"hrs"}, \textcolor{stringliteral}{" : "}, timer(3:4), \textcolor{stringliteral}{"min"},\textcolor{stringliteral}{" : "}, timer(5:10), \textcolor{stringliteral}{"s"}, \textcolor{stringliteral}{"  -
+        "}, dater(1:4), &
+108        \textcolor{stringliteral}{"/"}, dater(5:6), \textcolor{stringliteral}{"/"}, dater(7:8), \textcolor{stringliteral}{"    "},  trim(text), trim(ch1), trim(ch2), trim(ch3), trim(ch4), 
+      trim(ch5), &
+109             trim(ch6), trim(ch7), trim(ch8)
+110     \textcolor{keywordflow}{if} (.not. \textcolor{keyword}{present}(hidden)) \textcolor{keywordflow}{then}         
+111       \textcolor{keyword}{write}(unit=terminal, fmt=*) trim(text), trim(ch1), trim(ch2), trim(ch3), trim(ch4), trim(ch5), &
+112                       trim(ch6), trim(ch7), trim(ch8)
+113     \textcolor{keywordflow}{else} 
+114       \textcolor{keywordflow}{if} (.not. hidden) \textcolor{keywordflow}{then}
+115         \textcolor{keyword}{write}(unit=terminal, fmt=*) trim(text), trim(ch1), trim(ch2), trim(ch3), trim(ch4), trim(ch5), &
+116               trim(ch6), trim(ch7), trim(ch8)
+117 \textcolor{keywordflow}{      end if}
+118 \textcolor{keywordflow}{    end if}
+119       
+120 
+121  
+122 \textcolor{comment}{!     if (present(time)) then}
+123 \textcolor{comment}{!       write(unit=logfile, fmt = *) "simulation time=", time}
+124 \textcolor{comment}{!     end if}
+125     \textcolor{keyword}{call }flush(logfile)
+126 
+\end{DoxyCode}
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacecore__tools_abe09f9b4dc2abc5384a24020c5031e95_icgraph}
+\end{center}
+\end{figure}
+
+

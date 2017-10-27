@@ -1,0 +1,31 @@
+\section{src/models/\+R\+E\+\_\+dual/\+Re\+\_\+dual\+\_\+coupling.f90 File Reference}
+\label{_re__dual__coupling_8f90}\index{src/models/\+R\+E\+\_\+dual/\+Re\+\_\+dual\+\_\+coupling.\+f90@{src/models/\+R\+E\+\_\+dual/\+Re\+\_\+dual\+\_\+coupling.\+f90}}
+\subsection*{Modules}
+\begin{DoxyCompactItemize}
+\item 
+module {\bf dual\+\_\+coup}
+\begin{DoxyCompactList}\small\item\em This module contains variants of coupling terms of the dual permeability model. Boundary gets assigned mualem parameters in case(2) and (3). Case(1) The exchange term is calculated based on arithmetic mean of $Ka=\frac{Ka(hm)+Ka(hf)}{2}$. ~\newline
+ Case(2) The exchange term is calculated based on geometric mean of $Ka=\sqrt{Ka(hm)*Ka(hf)}$. ~\newline
+ Case(3) The exchange boundary term is constant.~\newline
+ Case (4) and (5) don\textquotesingle{}t require further parameters. ~\newline
+ Case(4) The exchange term is the minimum of $Ka=min(Km(hm),Kf(hf),Km(hf),Kf(hf))$ ~\newline
+ Case(5) The exchange term is the minimum of $Ka=min(Km(hm*weight_m+hf*weight_f),Kf(hm*weight_m+hf*weight_f))$. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Functions/\+Subroutines}
+\begin{DoxyCompactItemize}
+\item 
+real(kind=rkind) function, public {\bf dual\+\_\+coup\+::dual\+\_\+coupling} (pde\+\_\+loc, layer, quadpnt, x)
+\begin{DoxyCompactList}\small\item\em Coupling defined for case(1), case (2) and case (3) Case(1) The exchange term is calculated based on arithmetic mean of $Ka=\frac{Ka(hm)+Ka(hf)}{2}$. ~\newline
+ Case(2) The exchange term is calculated based on geometric mean of $Ka=\sqrt{Ka(hm)*Ka(hf)}$. ~\newline
+ Case(3) The exchange boundary term is constant.~\newline
+ \end{DoxyCompactList}\item 
+real(kind=rkind) function, public {\bf dual\+\_\+coup\+::dual\+\_\+coupling\+\_\+neg} (pde\+\_\+loc, layer, quadpnt, x)
+\begin{DoxyCompactList}\small\item\em neg coupling defined for case(1), case (2) and case (3) for coupled matrix, i.\+e. matrix part in fracture and fracture part in matrix. \end{DoxyCompactList}\item 
+real(kind=rkind) function, public {\bf dual\+\_\+coup\+::dual\+\_\+coup\+\_\+min} (pde\+\_\+loc, layer, quadpnt, x)
+\begin{DoxyCompactList}\small\item\em The following coupling schemes use the minimum value of case(4) $Ka=min(Km(hm),Kf(hf),Km(hf),Kf(hf))$ and case(5) $Ka=min(Km(hm*weight_m+hf*weight_f),Kf(hm*weight_m+hf*weight_f))$. ~\newline
+ This has the advantage that no extra parameters need to be defined describing the hydraulic properties at the boundary~\newline
+ This reduces the number of parameters to be estimated by 3\+: Kas, a, n ~\newline
+ This also assures that the exchange term is always smaller than or equal the fracture and matrix conductivity. \end{DoxyCompactList}\item 
+real(kind=rkind) function, public {\bf dual\+\_\+coup\+::dual\+\_\+coup\+\_\+min\+\_\+neg} (pde\+\_\+loc, layer, quadpnt, x)
+\begin{DoxyCompactList}\small\item\em neg coupling defined for case(4) and case (5) for coupled matrix, i.\+e. matrix part in fracture and fracture part in matrix. \end{DoxyCompactList}\item 
+real(kind=rkind) function, public {\bf dual\+\_\+coup\+::dual\+\_\+coupling\+\_\+k} (pde\+\_\+loc, layer, quadpnt, x)
+\begin{DoxyCompactList}\small\item\em coupling conductivity function for tab values \end{DoxyCompactList}\end{DoxyCompactItemize}

@@ -1,0 +1,43 @@
+\section{pde\+\_\+objs\+:\+:getval\+\_\+str Interface Reference}
+\label{interfacepde__objs_1_1getval__str}\index{pde\+\_\+objs\+::getval\+\_\+str@{pde\+\_\+objs\+::getval\+\_\+str}}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+real(kind=rkind) function {\bf getval\+\_\+str} (pde\+\_\+loc, quadpnt)
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+
+
+Definition at line 105 of file pde\+\_\+objs.\+f90.
+
+
+
+\subsection{Constructor \& Destructor Documentation}
+\index{pde\+\_\+objs\+::getval\+\_\+str@{pde\+\_\+objs\+::getval\+\_\+str}!getval\+\_\+str@{getval\+\_\+str}}
+\index{getval\+\_\+str@{getval\+\_\+str}!pde\+\_\+objs\+::getval\+\_\+str@{pde\+\_\+objs\+::getval\+\_\+str}}
+\subsubsection[{getval\+\_\+str(pde\+\_\+loc, quadpnt)}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind) function pde\+\_\+objs\+::getval\+\_\+str\+::getval\+\_\+str (
+\begin{DoxyParamCaption}
+\item[{class({\bf pde\+\_\+str}), intent(in)}]{pde\+\_\+loc, }
+\item[{type({\bf integpnt\+\_\+str}), intent(in)}]{quadpnt}
+\end{DoxyParamCaption}
+)}\label{interfacepde__objs_1_1getval__str_a190ccbb92558f9c013cd25ff14ab1f4e}
+
+
+Definition at line 106 of file pde\+\_\+objs.\+f90.
+
+
+\begin{DoxyCode}
+106       \textcolor{keywordtype}{use }typy
+107       \textcolor{keywordtype}{use }global_objs
+108       import::pde_str
+109       \textcolor{keywordtype}{class}(pde_str), \textcolor{keywordtype}{intent(in)} :: pde\_loc
+110       \textcolor{keywordtype}{type}(integpnt_str), \textcolor{keywordtype}{intent(in)} :: quadpnt
+111       \textcolor{keywordtype}{real(kind=rkind)} :: value
+\end{DoxyCode}
+
+
+The documentation for this interface was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+src/core/{\bf pde\+\_\+objs.\+f90}\end{DoxyCompactItemize}

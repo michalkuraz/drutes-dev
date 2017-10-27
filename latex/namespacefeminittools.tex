@@ -1,0 +1,991 @@
+\section{feminittools Module Reference}
+\label{namespacefeminittools}\index{feminittools@{feminittools}}
+\subsection*{Functions/\+Subroutines}
+\begin{DoxyCompactItemize}
+\item 
+subroutine, public {\bf feminit} ()
+\item 
+subroutine, private {\bf init\+\_\+integ} ()
+\begin{DoxyCompactList}\small\item\em set ups integration nodes and weights \end{DoxyCompactList}\item 
+subroutine, private {\bf reorder} ()
+\item 
+subroutine, private {\bf surface\+\_\+integ} ()
+\begin{DoxyCompactList}\small\item\em evaluates an array that contains length of the element edge, if the element edge is boundary edge, if the element edge is apart the boundary, zero value is supplied \end{DoxyCompactList}\item 
+subroutine, private {\bf search\+\_\+bnd\+\_\+nodes} (id, found)
+\begin{DoxyCompactList}\small\item\em this procedure identifies boundary nodes on 2D mesh only. The method searches for all surrounding nodes and evaluates angles. If the angle is lower then 360dg, then this particular node must be the boundary node. \end{DoxyCompactList}\item 
+subroutine, private {\bf set\+\_\+boundary} ()
+\end{DoxyCompactItemize}
+
+
+\subsection{Function/\+Subroutine Documentation}
+\index{feminittools@{feminittools}!feminit@{feminit}}
+\index{feminit@{feminit}!feminittools@{feminittools}}
+\subsubsection[{feminit()}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, public feminittools\+::feminit (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}\label{namespacefeminittools_a9988b1795b71ef099fd33d9219744a83}
+
+
+Definition at line 12 of file feminittools.\+f90.
+
+
+
+References globals\+::backup\+\_\+file, globals\+::bside, globals\+::cap\+\_\+mat, globals\+::drutes\+\_\+config, globals\+::elements, globals\+::elnode\+\_\+prev, init\+\_\+integ(), globals\+::nodes, pde\+\_\+objs\+::pde, pde\+\_\+objs\+::pde\+\_\+common, geom\+\_\+tools\+::plane\+\_\+derivative(), printtools\+::progressbar(), read\+\_\+inputs\+::read\+\_\+scilab(), reorder(), globals\+::spmatrix, globals\+::stiff\+\_\+mat, surface\+\_\+integ(), geom\+\_\+tools\+::triarea(), and core\+\_\+tools\+::write\+\_\+log().
+
+
+
+Referenced by main().
+
+
+\begin{DoxyCode}
+12       \textcolor{keywordtype}{use }typy
+13       \textcolor{keywordtype}{use }integral
+14       \textcolor{keywordtype}{use }globals
+15       \textcolor{keywordtype}{use }global_objs
+16       \textcolor{keywordtype}{use }pde_objs
+17       \textcolor{keywordtype}{use }globals2d
+18       \textcolor{keywordtype}{use }geom_tools
+19       \textcolor{keywordtype}{use }re_constitutive
+20       \textcolor{keywordtype}{use }sparsematrix
+21       \textcolor{keywordtype}{use }debug_tools
+22       \textcolor{keywordtype}{use }printtools
+23       \textcolor{keywordtype}{use }core_tools
+24       \textcolor{keywordtype}{use }read_inputs
+25 
+26       \textcolor{keywordtype}{integer(kind=ikind)} :: i,j,k,l, locmatdim, process, limits,  el, nd
+27       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:,:)}, \textcolor{keywordtype}{allocatable} :: a\_s
+28       \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable} :: itmp\_vct
+29       
+30       
+31       locmatdim = (ubound(elements%data,2))*ubound(pde,1)
+32   
+33       \textcolor{keyword}{allocate}(cap_mat(locmatdim, locmatdim))
+34       
+35       \textcolor{keyword}{allocate}(stiff_mat(locmatdim, locmatdim))
+36       
+37       \textcolor{keyword}{allocate}(bside(locmatdim))
+38 
+39       \textcolor{keyword}{allocate}(elnode_prev(locmatdim))
+40 
+41       \textcolor{keyword}{allocate}(a\_s(drutes_config%dimen+1, drutes_config%dimen+1))
+42 
+43       \textcolor{keyword}{call }init_integ()
+44 
+45       \textcolor{keywordflow}{select case}(drutes_config%dimen)
+46         \textcolor{keywordflow}{case}(1)
+47           \textcolor{keywordflow}{do} i=1, elements%kolik
+48             elements%areas(i) = abs(nodes%data(elements%data(i,2),1) - nodes%data\textcolor{comment}{(
+      elements%data(i,1),1))}
+49 \textcolor{comment}{            elements%ders(i,1,1) = -1.0\_rkind/(nodes%data(elements%data(i,2),1) - 
+      nodes%data(elements%data(i,1),1))}
+50 \textcolor{comment}{}\textcolor{keywordflow}{          end do}
+51 
+52           elements%ders(:,2,1) = -elements%ders(:,1,1)  
+53 
+54         \textcolor{keywordflow}{case}(2)
+55           \textcolor{keyword}{call }write_log(\textcolor{stringliteral}{"calculating elements geometrical properties..."})
+56           \textcolor{keywordflow}{do} i=1, elements%kolik
+57             \textcolor{keyword}{call }progressbar(int(100*i/elements%kolik))
+58             elements%areas(i) = triarea(nodes%data(elements%data(i,1),:), nodes%data\textcolor{comment}{(
+      elements%data(i,2),:), &}
+59 \textcolor{comment}{                                nodes%data(elements%data(i,3),:))}
+60 \textcolor{comment}{            }\textcolor{keywordflow}{do} j=1,3
+61               a\_s(j,1) = nodes%data(elements%data(i,j),1)
+62               a\_s(j,2) = nodes%data(elements%data(i,j),2)
+63 \textcolor{keywordflow}{            end do}
+64 
+65             a\_s(:,3) = (/1.0\_rkind, 0.0\_rkind, 0.0\_rkind/)
+66            
+67             
+68             \textcolor{keyword}{call }plane_derivative(a\_s(1,:), a\_s(2,:), a\_s(3,:) , &
+69                               elements%ders(i,1,1), elements%ders(i,1,2))
+70 
+71             a\_s(:,3) = (/0.0\_rkind, 1.0\_rkind, 0.0\_rkind/)
+72 
+73             \textcolor{keyword}{call }plane_derivative(a\_s(1,:), a\_s(2,:), a\_s(3,:) , &
+74                               elements%ders(i,2,1), elements%ders(i,2,2))
+75 
+76             a\_s(:,3) = (/0.0\_rkind, 0.0\_rkind, 1.0\_rkind/)
+77 
+78             \textcolor{keyword}{call }plane_derivative(a\_s(1,:), a\_s(2,:), a\_s(3,:) , &
+79                               elements%ders(i,3,1), elements%ders(i,3,2))
+80 
+81 \textcolor{keywordflow}{          end do}
+82 \textcolor{keywordflow}{      end select}
+83 
+84       
+85       \textcolor{keyword}{call }reorder()
+86    
+87       i = ubound(pde,1)
+88       
+89       \textcolor{keywordflow}{if} (drutes_config%it\_method /= 1) \textcolor{keywordflow}{then}
+90         \textcolor{keyword}{call }spmatrix%init(maxval(pde(i)%permut(:)),maxval(pde(i)%permut(:)))
+91 \textcolor{keywordflow}{      end if}
+92 
+93       \textcolor{keyword}{allocate}(pde_common%bvect(maxval(pde(i)%permut(:)))) 
+94       \textcolor{keyword}{allocate}(pde_common%xvect(maxval(pde(i)%permut(:)),4))
+95       
+96       \textcolor{comment}{! create for each node list of elements where the node belongs     }
+97       \textcolor{keywordflow}{do} i=1, elements%kolik
+98         \textcolor{keywordflow}{do} j=1, ubound(elements%data,2)
+99           nd = elements%data(i,j)
+100           \textcolor{keyword}{call }nodes%element(nd)%fill(i)
+101 \textcolor{keywordflow}{        end do}
+102         
+103 \textcolor{keywordflow}{      end do}
+104 
+105  
+106       \textcolor{comment}{! fill nodes%el2integ}
+107       \textcolor{comment}{!--------------}
+108       \textcolor{keyword}{call }write_log(\textcolor{stringliteral}{"analyzing mesh structure..."})
+109       \textcolor{keywordflow}{do} el=1, elements%kolik
+110         \textcolor{keyword}{call }progressbar(int(100*el/elements%kolik))
+111         \textcolor{keywordflow}{do} j=1, ubound(elements%data,2)
+112           nd=elements%data(el,j) 
+113           \textcolor{keyword}{call }nodes%el2integ(nd)%fill(el) 
+114 \textcolor{keywordflow}{        end do} 
+115 \textcolor{keywordflow}{      end do}
+116       \textcolor{comment}{!-----------------}
+117       
+118        \textcolor{keyword}{call }surface_integ()
+119       
+120       \textcolor{keywordflow}{if} (.not. drutes_config%run\_from\_backup) \textcolor{keywordflow}{then}   
+121         \textcolor{keywordflow}{do} process=1, ubound(pde,1)
+122           \textcolor{keyword}{call }pde(process)%initcond()
+123 \textcolor{keywordflow}{        end do}
+124       \textcolor{keywordflow}{else}
+125         \textcolor{keyword}{call }read_scilab(adjustl(trim(backup_file)), 1\_ikind)
+126 \textcolor{keywordflow}{      end if}
+127 
+128 
+129       \textcolor{keywordflow}{do} process=1, ubound(pde,1)
+130         \textcolor{keywordflow}{do} j=1, nodes%kolik
+131           k = pde(process)%permut(j)
+132           \textcolor{keywordflow}{if} (k > 0) \textcolor{keywordflow}{then}
+133             pde_common%xvect(k,:) = pde(process)%solution(j)
+134 \textcolor{keywordflow}{          end if} 
+135 \textcolor{keywordflow}{        end do}
+136 \textcolor{keywordflow}{      end do}
+137 
+138 
+139 
+140       \textcolor{keyword}{deallocate}(a\_s)
+141 
+\end{DoxyCode}
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacefeminittools_a9988b1795b71ef099fd33d9219744a83_cgraph}
+\end{center}
+\end{figure}
+
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=220pt]{namespacefeminittools_a9988b1795b71ef099fd33d9219744a83_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{feminittools@{feminittools}!init\+\_\+integ@{init\+\_\+integ}}
+\index{init\+\_\+integ@{init\+\_\+integ}!feminittools@{feminittools}}
+\subsubsection[{init\+\_\+integ()}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, private feminittools\+::init\+\_\+integ (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [private]}}\label{namespacefeminittools_a7ef75bcab723e61e7d20b4082e3a506e}
+
+
+set ups integration nodes and weights 
+
+warning this method differs from the others, it was derived form one dimensional problem transfered to quadrangle, that was transformed into triangle, Petr Mayer\textquotesingle{}s trick \+:) 
+
+Definition at line 146 of file feminittools.\+f90.
+
+
+
+References globals\+::base\+\_\+fnc, globals\+::drutes\+\_\+config, globals\+::gauss\+\_\+points, integral\+::getform(), globals\+::integ\+\_\+method, globals\+::integnode\+\_\+now, globals\+::integnode\+\_\+prev, pde\+\_\+objs\+::pde, and geom\+\_\+tools\+::plane\+\_\+derivative().
+
+
+
+Referenced by feminit().
+
+
+\begin{DoxyCode}
+146       \textcolor{keywordtype}{use }typy
+147       \textcolor{keywordtype}{use }integral
+148       \textcolor{keywordtype}{use }globals2d
+149       \textcolor{keywordtype}{use }linalg
+150       \textcolor{keywordtype}{use }globals
+151       \textcolor{keywordtype}{use }geom_tools
+152       \textcolor{keywordtype}{use }pde_objs
+153       
+154       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable} :: uzly
+155       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable} :: vahy
+156       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(3)} :: bod
+157       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(9,2)} :: body
+158       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(6)} :: rezy
+159       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(9,3,3)} :: values
+160       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(3)} :: delka
+161       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(3,2)} :: ders
+162       \textcolor{keywordtype}{integer(kind=ikind)} :: l,j,i, no\_points
+163       \textcolor{keywordtype}{real(kind=rkind)} :: tmp, tmp2
+164       
+165       \textcolor{comment}{!number of integration nodes, depends on integration method}
+166       no\_points = int(integ_method/10\_ikind)
+167 
+168       \textcolor{keyword}{allocate}(gauss_points%point(no\_points, drutes_config%dimen))
+169 
+170       \textcolor{keyword}{allocate}(gauss_points%weight(no\_points))
+171       
+172       \textcolor{keyword}{allocate}(base_fnc(drutes_config%dimen+1, no\_points))  
+173 
+174       \textcolor{keyword}{allocate}(integnode_now(no\_points, ubound(pde,1)))
+175 
+176       \textcolor{keyword}{allocate}(integnode_prev(no\_points, ubound(pde,1)))
+177 
+178       \textcolor{keywordflow}{select case}(drutes_config%dimen)
+179   
+180         \textcolor{keywordflow}{case}(1)
+181 
+182           \textcolor{keywordflow}{if} (modulo(no\_points,2\_ikind) == 0) \textcolor{keywordflow}{then}
+183             \textcolor{keyword}{allocate}(uzly(no\_points/2))
+184             \textcolor{keyword}{allocate}(vahy(no\_points/2))
+185           \textcolor{keywordflow}{else}
+186             \textcolor{keyword}{allocate}(uzly(no\_points/2+1))
+187             \textcolor{keyword}{allocate}(vahy(no\_points/2+1))
+188 \textcolor{keywordflow}{          end if}
+189 
+190           \textcolor{keyword}{call }getform(no\_points, uzly, vahy)
+191 
+192 
+193           \textcolor{keywordflow}{if} (modulo(no\_points,2\_ikind) == 0) \textcolor{keywordflow}{then}
+194 
+195             \textcolor{keywordflow}{do} i = 1, ubound(uzly,1) 
+196               gauss_points%point(i,1) = 0.5\_rkind - uzly(i)/2.0\_rkind
+197               gauss_points%point(i+ubound(uzly,1),1) = 0.5\_rkind + uzly(i)/2.0\_rkind
+198               gauss_points%weight(i) = vahy(i)/2.0\_rkind
+199               gauss_points%weight(i+ubound(uzly,1)) = vahy(i)/2.0\_rkind
+200 \textcolor{keywordflow}{            end do}
+201 
+202           \textcolor{keywordflow}{else}
+203 
+204             gauss_points%point(ubound(uzly,1),1) = 0.5\_rkind
+205             gauss_points%weight(ubound(uzly,1)) = vahy(ubound(vahy,1))/2.0\_rkind
+206 
+207             \textcolor{keywordflow}{do} i = 1, ubound(uzly,1) - 1 
+208               gauss_points%point(i,1) = 0.5\_rkind - uzly(i)/2.0\_rkind
+209               gauss_points%point(i+ubound(uzly,1),1) = 0.5\_rkind + uzly(i)/2.0\_rkind
+210               gauss_points%weight(i) = vahy(i)/2.0\_rkind
+211               gauss_points%weight(i+ubound(uzly,1)) = vahy(i)/2.0\_rkind
+212 \textcolor{keywordflow}{            end do}
+213 
+214 \textcolor{keywordflow}{          end if}
+215 
+216           \textcolor{keywordflow}{do} i=1,no\_points
+217             base_fnc(1,i) = 1 - gauss_points%point(i,1)
+218             base_fnc(2,i) = gauss_points%point(i,1)
+219 \textcolor{keywordflow}{          end do}
+220           
+221           gauss_points%area = 1.0\_rkind
+222           
+223 
+224         \textcolor{keywordflow}{case}(2)
+225           gauss_points%area = 0.5\_rkind
+226 
+227           \textcolor{keywordflow}{select case}(integ_method)
+228             \textcolor{keywordflow}{case}(10)
+229               gauss_points%point(1,:) = (/0.333333333333333\_rkind, 0.3333333333\textcolor{comment}{33333\_rkind/)}
+230 \textcolor{comment}{}
+231 \textcolor{comment}{              gauss_points%weight = 0.5\_rkind}
+232 \textcolor{comment}{}
+233 \textcolor{comment}{            }\textcolor{keywordflow}{case}(20)
+234 
+235               print *, \textcolor{stringliteral}{"integration method"}, integ_method,   \textcolor{stringliteral}{"for 2D not allowed, select from the following
+       values"}
+236               print *, \textcolor{stringliteral}{"10, 30, 40, 60, 70, 90, 120"}
+237 
+238             \textcolor{keywordflow}{case}(30) 
+239               gauss_points%point(1,:) = (/0.1666666666666667\_rkind, 0.166666666\textcolor{comment}{6666667\_rkind/)}
+240 \textcolor{comment}{              gauss_points%point(2,:) = (/0.6666666666666667\_rkind, 0.1666666666666667\_rkind/)}
+241 \textcolor{comment}{              gauss_points%point(3,:) = (/0.1666666666666667\_rkind, 0.6666666666666667\_rkind/)}
+242 \textcolor{comment}{}
+243 \textcolor{comment}{              gauss_points%weight(1) = 0.1666666666666667\_rkind}
+244 \textcolor{comment}{              gauss_points%weight(2) = 0.1666666666666667\_rkind}
+245 \textcolor{comment}{              gauss_points%weight(3) = 0.1666666666666667\_rkind}
+246 \textcolor{comment}{}
+247 \textcolor{comment}{            }\textcolor{keywordflow}{case}(40) 
+248               gauss_points%point(1,:) = (/0.2\_rkind, 0.2\_rkind/)
+249               gauss_points%point(2,:) = (/0.6\_rkind, 0.2\_rkind/)
+250               gauss_points%point(3,:) = (/0.2\_rkind, 0.6\_rkind/)
+251               gauss_points%point(4,:) = (/0.333333333333333\_rkind,0.33333333333\textcolor{comment}{3333\_rkind/)}
+252 \textcolor{comment}{}
+253 \textcolor{comment}{              gauss_points%weight(1) = 0.260416666666667\_rkind}
+254 \textcolor{comment}{              gauss_points%weight(2) = 0.260416666666667\_rkind}
+255 \textcolor{comment}{              gauss_points%weight(3) = 0.260416666666667\_rkind}
+256 \textcolor{comment}{              gauss_points%weight(4) = -0.28125\_rkind}
+257 \textcolor{comment}{}
+258 \textcolor{comment}{            }\textcolor{keywordflow}{case}(50)
+259               print *, \textcolor{stringliteral}{"integration method"}, integ_method,   \textcolor{stringliteral}{"for 2D not allowed, define one the following
+       values"}
+260               print *, \textcolor{stringliteral}{"10, 30, 40, 60, 70, 90, 120"}
+261 
+262 
+263             \textcolor{keywordflow}{case}(60)
+264               gauss_points%point(1,:) = (/0.816847572980459\_rkind, 0.0915762135\textcolor{comment}{09771\_rkind/)}
+265 \textcolor{comment}{              gauss_points%point(2,:) = (/0.091576213509771\_rkind, 0.816847572980459\_rkind/)}
+266 \textcolor{comment}{              gauss_points%point(3,:) = (/0.091576213509771\_rkind, 0.091576213509771\_rkind/)}
+267 \textcolor{comment}{              gauss_points%point(4,:) = (/0.108103018168070\_rkind, 0.445948490915965\_rkind/)}
+268 \textcolor{comment}{              gauss_points%point(5,:) = (/0.445948490915965\_rkind, 0.108103018168070\_rkind/)}
+269 \textcolor{comment}{              gauss_points%point(6,:) = (/0.445948490915965\_rkind, 0.445948490915965\_rkind/)}
+270 \textcolor{comment}{}
+271 \textcolor{comment}{              gauss_points%weight(1) = 0.054975871827661\_rkind}
+272 \textcolor{comment}{              gauss_points%weight(2) = 0.054975871827661\_rkind}
+273 \textcolor{comment}{              gauss_points%weight(3) = 0.054975871827661\_rkind}
+274 \textcolor{comment}{              gauss_points%weight(4) = 0.111690794839005\_rkind}
+275 \textcolor{comment}{              gauss_points%weight(5) = 0.111690794839005\_rkind}
+276 \textcolor{comment}{              gauss_points%weight(6) = 0.111690794839005\_rkind}
+277 \textcolor{comment}{}
+278 \textcolor{comment}{            }\textcolor{keywordflow}{case}(70)
+279               gauss_points%point(1,:) = (/0.333333333333333\_rkind, 0.3333333333\textcolor{comment}{33333\_rkind/)}
+280 \textcolor{comment}{              gauss_points%point(2,:) = (/0.059715871798770\_rkind, 0.470142064105115\_rkind/)}
+281 \textcolor{comment}{              gauss_points%point(3,:) = (/0.470142064105115\_rkind, 0.059715871798770\_rkind/)}
+282 \textcolor{comment}{              gauss_points%point(4,:) = (/0.470142064105115\_rkind, 0.470142064105115\_rkind/)}
+283 \textcolor{comment}{              gauss_points%point(5,:) = (/0.797426985353087\_rkind, 0.101286507323456\_rkind/)}
+284 \textcolor{comment}{              gauss_points%point(6,:) = (/0.101286507323456\_rkind, 0.797426985353087\_rkind/)}
+285 \textcolor{comment}{              gauss_points%point(7,:) = (/0.101286507323456\_rkind, 0.101286507323456\_rkind/)}
+286 \textcolor{comment}{}
+287 \textcolor{comment}{              gauss_points%weight(1) = 0.1125\_rkind}
+288 \textcolor{comment}{              gauss_points%weight(2) = 0.066197076394253\_rkind}
+289 \textcolor{comment}{              gauss_points%weight(3) = 0.066197076394253\_rkind}
+290 \textcolor{comment}{              gauss_points%weight(4) = 0.066197076394253\_rkind}
+291 \textcolor{comment}{              gauss_points%weight(5) = 0.066197076394253\_rkind}
+292 \textcolor{comment}{              gauss_points%weight(6) = 0.066197076394253\_rkind}
+293 \textcolor{comment}{              gauss_points%weight(7) = 0.066197076394253\_rkind}
+294 \textcolor{comment}{}
+295 \textcolor{comment}{            }\textcolor{keywordflow}{case}(80)
+296               print *, \textcolor{stringliteral}{"integration method"}, integ_method,   \textcolor{stringliteral}{"for 2D not allowed, define one the following
+       values"}
+297               print *, \textcolor{stringliteral}{"10, 30, 40, 60, 70, 90, 120"}
+298 
+299 
+300             \textcolor{keywordflow}{case}(90)
+302               \textcolor{keyword}{allocate}(uzly(2))
+303               \textcolor{keyword}{allocate}(vahy(2))
+304 
+305               \textcolor{keyword}{call }getform(3\_ikind, uzly, vahy)
+306               bod(1) = (1 - uzly(1))/2
+307               bod(2) = 0.5\_rkind
+308               bod(3) = (1 + uzly(1))/2
+309 
+310               
+311               delka(1) = 1 - bod(1)
+312 
+313               delka(2) = 0.5\_rkind
+314 
+315               delka(3) = bod(1)  
+316 
+317 
+318 
+319 
+320             !shape of the unit triangle
+321 
+322           \textcolor{comment}{! [0,1]}
+323           \textcolor{comment}{! |\(\backslash\)}
+324           \textcolor{comment}{! |  \(\backslash\)}
+325           \textcolor{comment}{! |     \(\backslash\)}
+326           \textcolor{comment}{! |       \(\backslash\)}
+327           \textcolor{comment}{! |         \(\backslash\)}
+328           \textcolor{comment}{! |           \(\backslash\)}
+329           \textcolor{comment}{! |               \(\backslash\) }
+330           \textcolor{comment}{! |----7|---8|---9|---\(\backslash\) }
+331           \textcolor{comment}{! |     |    |    |    \(\backslash\)}
+332           \textcolor{comment}{! |----4|---5|---6|---  \(\backslash\)}
+333           \textcolor{comment}{! |     |    |    |       \(\backslash\)}
+334           \textcolor{comment}{! |----1|---2|---3|-----   -\(\backslash\)       }
+335           \textcolor{comment}{! |     |    |    |           \(\backslash\) }
+336           \textcolor{comment}{! |     |    |    |             \(\backslash\)}
+337           \textcolor{comment}{! -----------------------------------------}
+338           \textcolor{comment}{! [0,0]                          [1,0]}
+339 
+340               body(1,1) = bod(1)
+341               body(1,2) = bod(1)*delka(1)
+342               body(2,1) = bod(2)
+343               body(2,2) = bod(1)*delka(2)
+344               body(3,1) = bod(3)
+345               body(3,2) = bod(1)*delka(3)
+346               body(4,1) = bod(1)
+347               body(4,2) = bod(2)*delka(1)
+348               body(5,1) = bod(2)
+349               body(5,2) = bod(2)*delka(2)
+350               body(6,1) = bod(3)
+351               body(6,2) = bod(2)*delka(3)
+352               body(7,1) = bod(1)
+353               body(7,2) = bod(3)*delka(1)
+354               body(8,1) = bod(2)
+355               body(8,2) = bod(3)*delka(2)
+356               body(9,1) = bod(3)
+357               body(9,2) = bod(3)*delka(3)
+358 
+359             
+360               
+361               
+362               gauss_points%weight(1) = vahy(1)*vahy(1)/4*(1-body(1,1))
+363               gauss_points%weight(2) = vahy(2)*vahy(1)/4*(1-body(2,1))
+364               gauss_points%weight(3) = vahy(1)*vahy(1)/4*(1-body(3,1))
+365               gauss_points%weight(4) = vahy(2)*vahy(1)/4*(1-body(4,1))
+366               gauss_points%weight(5) = vahy(2)*vahy(2)/4*(1-body(5,1))
+367               gauss_points%weight(6) = vahy(2)*vahy(1)/4*(1-body(6,1))
+368               gauss_points%weight(7) = vahy(1)*vahy(1)/4*(1-body(7,1))
+369               gauss_points%weight(8) = vahy(2)*vahy(1)/4*(1-body(8,1))
+370               gauss_points%weight(9) = vahy(1)*vahy(1)/4*(1-body(9,1))
+371               
+372               gauss_points%point = body
+373 
+374               gauss_points%area = 0.5\_rkind     
+375 
+376               \textcolor{keywordflow}{case}(120)
+377                 gauss_points%point(1,:) = (/0.873821971016996\_rkind, 0.063089014491502\_rkind\textcolor{comment}{/)}
+378 \textcolor{comment}{                gauss_points%point(2,:) = (/0.063089014491502\_rkind, 0.873821971016996\_rkind/)}
+379 \textcolor{comment}{                gauss_points%point(3,:) = (/0.063089014491502\_rkind, 0.063089014491502\_rkind/)}
+380 \textcolor{comment}{                gauss_points%point(4,:) = (/0.501426509658179\_rkind, 0.249286745170910\_rkind/)}
+381 \textcolor{comment}{                gauss_points%point(5,:) = (/0.249286745170910\_rkind, 0.501426509658179\_rkind/)}
+382 \textcolor{comment}{                gauss_points%point(6,:) = (/0.249286745170910\_rkind, 0.249286745170910\_rkind/)}
+383 \textcolor{comment}{                gauss_points%point(7,:) = (/0.636502499121399\_rkind, 0.310352451033785\_rkind/)}
+384 \textcolor{comment}{                gauss_points%point(8,:) = (/0.310352451033785\_rkind, 0.053145049844816\_rkind/)}
+385 \textcolor{comment}{                gauss_points%point(9,:) = (/0.636502499121399\_rkind, 0.053145049844816\_rkind/)}
+386 \textcolor{comment}{                gauss_points%point(10,:) = (/0.636502499121399\_rkind, 0.053145049844816\_rkind/)}
+387 \textcolor{comment}{                gauss_points%point(11,:) = (/0.310352451033785\_rkind, 0.636502499121399\_rkind/)}
+388 \textcolor{comment}{                gauss_points%point(12,:) = (/0.053145049844816\_rkind, 0.310352451033785\_rkind/)}
+389 \textcolor{comment}{}
+390 \textcolor{comment}{                gauss_points%weight(1) = 0.025422453185103\_rkind}
+391 \textcolor{comment}{                gauss_points%weight(2) = 0.025422453185103\_rkind}
+392 \textcolor{comment}{                gauss_points%weight(3) = 0.025422453185103\_rkind}
+393 \textcolor{comment}{                gauss_points%weight(4) = 0.058393137863189\_rkind}
+394 \textcolor{comment}{                gauss_points%weight(5) = 0.058393137863189\_rkind}
+395 \textcolor{comment}{                gauss_points%weight(6) = 0.058393137863189\_rkind}
+396 \textcolor{comment}{                gauss_points%weight(7) = 0.041425537809187\_rkind}
+397 \textcolor{comment}{                gauss_points%weight(8) = 0.041425537809187\_rkind}
+398 \textcolor{comment}{                gauss_points%weight(9) = 0.041425537809187\_rkind}
+399 \textcolor{comment}{                gauss_points%weight(10) = 0.041425537809187\_rkind}
+400 \textcolor{comment}{                gauss_points%weight(11) = 0.041425537809187\_rkind}
+401 \textcolor{comment}{                gauss_points%weight(12) = 0.041425537809187\_rkind}
+402 \textcolor{comment}{}
+403 \textcolor{comment}{}\textcolor{keywordflow}{              case default}
+404                 print *, \textcolor{stringliteral}{"unknown integration method was selected (maybe runtime error) -> exiting"}
+405                 print *, \textcolor{stringliteral}{"called from feminittools::init\_integ"}
+406                 error stop
+407 \textcolor{keywordflow}{            end select}
+408 
+409             \textcolor{keyword}{call }plane_derivative((/0.0\_rkind, 0.0\_rkind, 1.0\_rkind/), (/1.0\_rkind\textcolor{comment}{, 0.0\_rkind, 0.0\_rkind/),
+       (/0.0\_rkind, &}
+410 \textcolor{comment}{                                1.0\_rkind, 0.0\_rkind/), ders(1,1), ders(1,2))}
+411 \textcolor{comment}{}
+412 \textcolor{comment}{            }\textcolor{keyword}{call }plane_derivative((/0.0\_rkind, 0.0\_rkind, 0.0\_rkind/), (/1.0\_rkind\textcolor{comment}{, 0.0\_rkind, 1.0\_rkind/),
+       (/0.0\_rkind, &}
+413 \textcolor{comment}{                                1.0\_rkind, 0.0\_rkind/), ders(2,1), ders(2,2))}
+414 \textcolor{comment}{            }
+415 \textcolor{comment}{            }\textcolor{keyword}{call }plane_derivative((/0.0\_rkind, 0.0\_rkind, 0.0\_rkind/), (/1.0\_rkind\textcolor{comment}{, 0.0\_rkind, 0.0\_rkind/),
+       (/0.0\_rkind, &}
+416 \textcolor{comment}{                                1.0\_rkind, 1.0\_rkind/), ders(3,1), ders(3,2))}
+417 \textcolor{comment}{            }\textcolor{keywordflow}{do} i=1, ubound(gauss_points%point,1)
+418               base_fnc(1,i) = 1 + gauss_points%point(i,1)*ders(1,1) + 
+      gauss_points%point\textcolor{comment}{(i,2)*ders(1,2)}
+419 \textcolor{comment}{}\textcolor{keywordflow}{            end do}
+420 
+421             \textcolor{keywordflow}{do} j=2,3
+422               \textcolor{keywordflow}{do} i=1,ubound(gauss_points%point,1)
+423                 base_fnc(j,i) = gauss_points%point(i,1)*ders(j,1) + gauss_points%point\textcolor{comment}{(i,2)*ders(j,2)}
+424 \textcolor{comment}{}\textcolor{keywordflow}{              end do}
+425 \textcolor{keywordflow}{            end do}
+426 
+427           \textcolor{keywordflow}{case}(3)
+428 
+429           \textcolor{comment}{!to be implemented}
+430 
+431 \textcolor{keywordflow}{          case default}
+432             print *, \textcolor{stringliteral}{"incorrect problem dimension, the problem dimension value is"}\textcolor{comment}{, 
+      drutes_config%dimen}
+433 \textcolor{comment}{            stop}
+434 \textcolor{comment}{}\textcolor{keywordflow}{        end select}
+435 
+436         \textcolor{keywordflow}{if} (\textcolor{keyword}{allocated}(uzly)) \textcolor{keywordflow}{then}
+437           \textcolor{keyword}{deallocate}(uzly)
+438 \textcolor{keywordflow}{        end if}
+439 
+440         \textcolor{keywordflow}{if} (\textcolor{keyword}{allocated}(vahy)) \textcolor{keywordflow}{then}
+441           \textcolor{keyword}{deallocate}(vahy)
+442 \textcolor{keywordflow}{        end if}
+443       
+444 
+445 
+\end{DoxyCode}
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacefeminittools_a7ef75bcab723e61e7d20b4082e3a506e_cgraph}
+\end{center}
+\end{figure}
+
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=342pt]{namespacefeminittools_a7ef75bcab723e61e7d20b4082e3a506e_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{feminittools@{feminittools}!reorder@{reorder}}
+\index{reorder@{reorder}!feminittools@{feminittools}}
+\subsubsection[{reorder()}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, private feminittools\+::reorder (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [private]}}\label{namespacefeminittools_a90095d9e2771208379c535c9efdb31ab}
+
+
+Definition at line 450 of file feminittools.\+f90.
+
+
+
+References globals\+::nodes, pde\+\_\+objs\+::pde, and pde\+\_\+objs\+::pde\+\_\+common.
+
+
+
+Referenced by feminit().
+
+
+\begin{DoxyCode}
+450         \textcolor{keywordtype}{use }typy
+451         \textcolor{keywordtype}{use }globals
+452         \textcolor{keywordtype}{use }global_objs
+453         \textcolor{keywordtype}{use }pde_objs
+454         \textcolor{keywordtype}{use }core_tools
+455         \textcolor{keywordtype}{use }debug_tools
+456 
+457         \textcolor{keywordtype}{integer(kind=ikind)} :: i, counter, bc, j, last, proc, proc\_start
+458 
+459         counter = 1
+460         proc\_start = 0
+461         
+462         \textcolor{keywordflow}{do} proc=1, ubound(pde,1)
+463 
+464           pde(proc)%procbase\_fnc(1) = counter
+465 
+466           \textcolor{keywordflow}{do} i=1, nodes%kolik
+467             pde(proc)%permut(i) = i
+468             \textcolor{keywordflow}{if} (nodes%edge(i) /= 0) \textcolor{keywordflow}{then}
+469               \textcolor{keyword}{call }pde(proc)%bc(nodes%edge(i))%value\_fnc(pde(proc), 1\_ikind,1\_ikind, code=bc)
+470             \textcolor{keywordflow}{else}
+471               bc = 0
+472 \textcolor{keywordflow}{            end if}
+473             
+474             \textcolor{keywordflow}{select case}(bc)
+475               \textcolor{keywordflow}{case}(1)
+476                 pde(proc)%permut(i) = 0
+477 \textcolor{keywordflow}{              case default}
+478                 pde(proc)%permut(i) = counter 
+479                 counter  = counter + 1
+480 \textcolor{keywordflow}{            end select}  
+481 \textcolor{keywordflow}{          end do}
+482 
+483           proc\_start = counter-1
+484           pde(proc)%procbase\_fnc(2) = counter - 1
+485 
+486 \textcolor{keywordflow}{        end do}
+487 
+488         \textcolor{keyword}{allocate}(pde_common%invpermut(counter))
+489         
+490         \textcolor{keywordflow}{do} proc=1, ubound(pde,1)
+491           \textcolor{keywordflow}{do} i=1, ubound(pde(proc)%permut,1)
+492             j = pde(proc)%permut(i)
+493             \textcolor{keywordflow}{if} (j > 0) \textcolor{keywordflow}{then}
+494               pde_common%invpermut(j) = i
+495 \textcolor{keywordflow}{            end if}
+496 \textcolor{keywordflow}{          end do}
+497 \textcolor{keywordflow}{        end do}
+498 
+499 
+500 
+\end{DoxyCode}
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacefeminittools_a90095d9e2771208379c535c9efdb31ab_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{feminittools@{feminittools}!search\+\_\+bnd\+\_\+nodes@{search\+\_\+bnd\+\_\+nodes}}
+\index{search\+\_\+bnd\+\_\+nodes@{search\+\_\+bnd\+\_\+nodes}!feminittools@{feminittools}}
+\subsubsection[{search\+\_\+bnd\+\_\+nodes(id, found)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, private feminittools\+::search\+\_\+bnd\+\_\+nodes (
+\begin{DoxyParamCaption}
+\item[{integer(kind=ikind), intent(in)}]{id, }
+\item[{logical, intent(out)}]{found}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [private]}}\label{namespacefeminittools_a419a077d1fcd5cada245669a697e1800}
+
+
+this procedure identifies boundary nodes on 2D mesh only. The method searches for all surrounding nodes and evaluates angles. If the angle is lower then 360dg, then this particular node must be the boundary node. 
+
+
+
+Definition at line 595 of file feminittools.\+f90.
+
+
+
+References geom\+\_\+tools\+::angle(), globals\+::elements, and globals\+::nodes.
+
+
+
+Referenced by set\+\_\+boundary().
+
+
+\begin{DoxyCode}
+595         \textcolor{keywordtype}{use }typy
+596         \textcolor{keywordtype}{use }globals
+597         \textcolor{keywordtype}{use }global_objs
+598         \textcolor{keywordtype}{use }geom_tools
+599         \textcolor{keywordtype}{use }debug_tools
+600 
+601         \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(in)} :: id
+602         \textcolor{keywordtype}{logical}, \textcolor{keywordtype}{intent(out)} :: found
+603         \textcolor{keywordtype}{integer(kind=ikind)} :: i,j, k, l, counter, m
+604         \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(2)} :: a,b,c
+605         \textcolor{keywordtype}{real(kind=rkind)} :: ang
+606 
+607 
+608 
+609         ang = 0.0\_rkind
+610         \textcolor{keywordflow}{do} i=1, nodes%el2integ(id)%pos
+611           j=nodes%el2integ(id)%data(i)
+612           \textcolor{keywordflow}{do} k=1,3
+613             \textcolor{keywordflow}{if} (elements%data(j,k) == id) \textcolor{keywordflow}{then}
+614               c = nodes%data(elements%data(j,k),:)
+615               \textcolor{keywordflow}{select case}(k)
+616                 \textcolor{keywordflow}{case}(1)
+617                       a = nodes%data(elements%data(j,2),:)
+618                       b = nodes%data(elements%data(j,3),:)
+619                 \textcolor{keywordflow}{case}(2)
+620                       a = nodes%data(elements%data(j,1),:)
+621                       b = nodes%data(elements%data(j,3),:)
+622                 \textcolor{keywordflow}{case}(3)
+623                       a = nodes%data(elements%data(j,1),:)
+624                       b = nodes%data(elements%data(j,2),:)
+625 \textcolor{keywordflow}{              end select}
+626               ang = ang + angle(a,b,c)*180.0\_rkind/(4*datan(1.0d0))
+627 \textcolor{keywordflow}{            end if}
+628 \textcolor{keywordflow}{          end do}
+629           \textcolor{keywordflow}{if} (ang >= 360 - 100*epsilon(ang) ) \textcolor{keywordflow}{then}
+630             \textcolor{keywordflow}{EXIT}
+631 \textcolor{keywordflow}{          end if}
+632 \textcolor{keywordflow}{        end do}
+633 
+634 
+635         \textcolor{keywordflow}{if} (ang < 360 - 100*epsilon(ang)) \textcolor{keywordflow}{then}
+636           nodes%boundary(id) = .true.
+637           found = .true.
+638         \textcolor{keywordflow}{else}
+639           nodes%boundary(id) = .false.
+640           found = .false.
+641 \textcolor{keywordflow}{        end if}
+642 
+643 
+\end{DoxyCode}
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacefeminittools_a419a077d1fcd5cada245669a697e1800_cgraph}
+\end{center}
+\end{figure}
+
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacefeminittools_a419a077d1fcd5cada245669a697e1800_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{feminittools@{feminittools}!set\+\_\+boundary@{set\+\_\+boundary}}
+\index{set\+\_\+boundary@{set\+\_\+boundary}!feminittools@{feminittools}}
+\subsubsection[{set\+\_\+boundary()}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, private feminittools\+::set\+\_\+boundary (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [private]}}\label{namespacefeminittools_a01c57c36680035f551a4f63b6b849a8a}
+
+
+Definition at line 647 of file feminittools.\+f90.
+
+
+
+References globals\+::elements, globals\+::nodes, and search\+\_\+bnd\+\_\+nodes().
+
+
+
+Referenced by surface\+\_\+integ().
+
+
+\begin{DoxyCode}
+647         \textcolor{keywordtype}{use }typy
+648         \textcolor{keywordtype}{use }globals
+649         \textcolor{keywordtype}{use }global_objs
+650         \textcolor{keywordtype}{use }debug_tools
+651         \textcolor{keywordtype}{use }core_tools
+652         \textcolor{keywordtype}{use }printtools
+653         \textcolor{keywordtype}{use }simplelinalg
+654         
+655         \textcolor{keywordtype}{integer(kind=ikind)} :: i, j, k, el, nd, elfirst, counter, nodes\_at\_bc, elprev, n, ii, jj, el1, el2
+656         \textcolor{keywordtype}{logical} :: found
+657         \textcolor{keywordtype}{logical}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable}, \textcolor{keywordtype}{save} :: nd\_processed
+658         \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{dimension(:,:)}, \textcolor{keywordtype}{allocatable} :: el\_combi
+659 
+660         nodes%boundary = .false.
+661         
+662         \textcolor{keywordflow}{if} (.not. \textcolor{keyword}{allocated}(nd\_processed)) \textcolor{keywordflow}{then}
+663           \textcolor{keyword}{allocate}(nd\_processed(nodes%kolik))
+664           nd\_processed = .false.
+665 \textcolor{keywordflow}{        end if}
+666 
+667         \textcolor{keywordflow}{do} i=1, elements%kolik
+668           outer: \textcolor{keywordflow}{do} j=1, ubound(elements%data,2)
+669             \textcolor{keywordflow}{if} (elements%neighbours(i,j) == 0) \textcolor{keywordflow}{then}
+670               inner: \textcolor{keywordflow}{do} k = 1, ubound(elements%data,2)
+671                 nd = elements%data(i,k)
+672                 \textcolor{keywordflow}{if} (.not. nd\_processed(nd)) \textcolor{keywordflow}{then}
+673                   \textcolor{keyword}{call }search_bnd_nodes(elements%data(i,k), found)
+674                   nd\_processed(nd) = .true.
+675 \textcolor{keywordflow}{                end if}
+676 \textcolor{keywordflow}{              end do} inner
+677 \textcolor{keywordflow}{            end if}
+678 \textcolor{keywordflow}{          end do} outer   
+679 \textcolor{keywordflow}{        end do}  
+680         
+681 
+682         
+683         nodes%boundary\_order=0
+684         
+685         \textcolor{keyword}{allocate}(el\_combi(ubound(elements%data,2),2))
+686         
+687 
+688         \textcolor{keywordflow}{do} el=1, elements%kolik
+689           j=0
+690           \textcolor{keywordflow}{do} i=1, ubound(elements%data,2)
+691             nd=elements%data(el,i)
+692             \textcolor{keywordflow}{if} (nodes%boundary(nd)) j=j+1
+693 \textcolor{keywordflow}{          end do}
+694           
+695           found=.false.
+696 
+697            \textcolor{keywordflow}{if} (j>1 .and. j<=ubound(elements%data,2)) \textcolor{keywordflow}{then}
+698             el\_combi=0
+699             \textcolor{keywordflow}{do} i=1,ubound(elements%data,2)
+700               \textcolor{keywordflow}{if} (i<ubound(elements%data,2)) \textcolor{keywordflow}{then}
+701                 el\_combi(i,:) = (/elements%data(el,i), elements%data(el, i+1)/)
+702               \textcolor{keywordflow}{else}
+703                 el\_combi(i,:) =  (/elements%data(el,i), elements%data(el, 1)/)
+704 \textcolor{keywordflow}{              end if}
+705 \textcolor{keywordflow}{            end do}
+706             
+707             found = .true.
+708             elcomb: \textcolor{keywordflow}{do} i=1, ubound(el\_combi,1)
+709               \textcolor{keywordflow}{if} (nodes%boundary(el\_combi(i,1)) .and. nodes%boundary(el\_combi(i,2))) \textcolor{keywordflow}{then}
+710                 el\_test: \textcolor{keywordflow}{do} ii=1, nodes%element(el\_combi(i,1))%pos
+711                   el1 = nodes%element(el\_combi(i,1))%data(ii)
+712                   \textcolor{keywordflow}{do} jj=1, nodes%element(el\_combi(i,2))%pos
+713                     el2 = nodes%element(el\_combi(i,2))%data(jj)
+714                     \textcolor{keywordflow}{if} (el1==el2 .and. el1 /= el .and. el2 /= el) \textcolor{keywordflow}{then}
+715                       found=.false.
+716                       \textcolor{keywordflow}{exit} el\_test
+717 \textcolor{keywordflow}{                    end if}
+718 \textcolor{keywordflow}{                  end do} 
+719 \textcolor{keywordflow}{                end do} el\_test
+720                 \textcolor{keywordflow}{if} (found) \textcolor{keywordflow}{then}
+721                   \textcolor{keyword}{call }elements%border(el)%nrfill(el\_combi(i,1))
+722                   \textcolor{keyword}{call }elements%border(el)%nrfill(el\_combi(i,2))
+723 \textcolor{keywordflow}{                end if}
+724 \textcolor{keywordflow}{              end if}
+725 \textcolor{keywordflow}{            end do} elcomb
+726           
+727 \textcolor{keywordflow}{          end if}
+728             
+729          
+730 \textcolor{keywordflow}{        end do}
+731         
+732 
+733 
+734                
+735 
+\end{DoxyCode}
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacefeminittools_a01c57c36680035f551a4f63b6b849a8a_cgraph}
+\end{center}
+\end{figure}
+
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacefeminittools_a01c57c36680035f551a4f63b6b849a8a_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{feminittools@{feminittools}!surface\+\_\+integ@{surface\+\_\+integ}}
+\index{surface\+\_\+integ@{surface\+\_\+integ}!feminittools@{feminittools}}
+\subsubsection[{surface\+\_\+integ()}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, private feminittools\+::surface\+\_\+integ (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [private]}}\label{namespacefeminittools_a36826eda9dbcdb639506e838d6ec2e3e}
+
+
+evaluates an array that contains length of the element edge, if the element edge is boundary edge, if the element edge is apart the boundary, zero value is supplied 
+
+3 /$\vert$ / $\vert$ l3 / $\vert$ l2 / $\vert$ /\+\_\+\+\_\+\+\_\+\+\_\+$\vert$ 1 2 l1
+
+this figure explains the boundary length order in the lenght array, thus the line between the nodes 1-\/2 has order length(1), the line between the nodes 3-\/1 (or 1-\/3) has order lenght(3) 
+
+Definition at line 520 of file feminittools.\+f90.
+
+
+
+References geom\+\_\+tools\+::dist(), globals\+::drutes\+\_\+config, globals\+::elements, geom\+\_\+tools\+::find\+\_\+neighbours(), geom\+\_\+tools\+::get\+\_\+nz(), globals\+::nodes, set\+\_\+boundary(), and core\+\_\+tools\+::write\+\_\+log().
+
+
+
+Referenced by feminit().
+
+
+\begin{DoxyCode}
+520         \textcolor{keywordtype}{use }typy
+521         \textcolor{keywordtype}{use }globals
+522         \textcolor{keywordtype}{use }global_objs
+523         \textcolor{keywordtype}{use }geom_tools
+524         \textcolor{keywordtype}{use }core_tools
+525         \textcolor{keywordtype}{use }debug_tools
+526 
+527         \textcolor{keywordtype}{integer(kind=ikind)} :: i,j,k,l, found
+528 
+529 
+530         \textcolor{keywordflow}{select case}(drutes_config%dimen)
+531           \textcolor{keywordflow}{case}(1)
+532           
+533             \textcolor{keyword}{call }find_neighbours(elements, nodes)
+534   
+535             nodes%boundary(1) = .true.
+536             nodes%boundary(nodes%kolik) = .true.
+537             nodes%boundary(2:nodes%kolik-1) = .false.
+538 
+539             elements%length = 1.0\_rkind
+540 
+541             elements%nvect\_z = 0.0\_rkind
+542 
+543             elements%nvect\_z(1,1) = -1.0\_rkind
+544 
+545             elements%nvect\_z(elements%kolik,2) = 1.0\_rkind
+546 
+547           \textcolor{keywordflow}{case}(2)
+548           
+549             \textcolor{keyword}{call }write_log(\textcolor{stringliteral}{"creating graph of the discretization mesh, and searching for boundary nodes..."}
+      )
+550             
+551             \textcolor{keyword}{call }find_neighbours(elements, nodes)
+552             
+553             \textcolor{keyword}{call }set_boundary()
+554 
+555             elements%length = 0.0\_rkind
+556 
+557             elements%nvect\_z = 0.0\_rkind
+558 
+559             \textcolor{keywordflow}{do} i=1, elements%kolik
+560               found = -1
+561               \textcolor{keywordflow}{do} j=1,3
+562                 \textcolor{keywordflow}{if} (nodes%boundary(elements%data(i,j))) \textcolor{keywordflow}{then}
+563                   \textcolor{keywordflow}{do} k=1,3
+564                     \textcolor{keywordflow}{if} (k/=j .and. nodes%edge(elements%data(i,j)) == nodes%edge(
+      elements%data(i,k)) & 
+565                           .and. found /= elements%data(i,j) ) \textcolor{keywordflow}{then}
+566 
+567                       elements%length(i,j) = elements%length(i,j) + &
+568                                              dist(nodes%data(elements%data(i,j),:), 
+      nodes%data(elements%data(i,k),:))/2
+569                       elements%nvect\_z(i,j) = get_nz(i,j,k)
+570 
+571                       elements%length(i,k) = elements%length(i,k) + &
+572                                               dist(nodes%data(elements%data(i,j),:), 
+      nodes%data(elements%data(i,k),:))/2
+573                       elements%nvect\_z(i,k) = get_nz(i, j,k)
+574 
+575                       found = elements%data(i,k)
+576 
+577 \textcolor{keywordflow}{                    end if}
+578 \textcolor{keywordflow}{                  end do}
+579 \textcolor{keywordflow}{                end if}
+580 \textcolor{keywordflow}{              end do}
+581 \textcolor{keywordflow}{            end do}
+582 \textcolor{keywordflow}{          case default}
+583             print *, \textcolor{stringliteral}{"not implemented, called from feminittools::surface\_integ"}
+584             error stop
+585 \textcolor{keywordflow}{        end select}
+586             
+587             
+588 
+589         
+\end{DoxyCode}
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacefeminittools_a36826eda9dbcdb639506e838d6ec2e3e_cgraph}
+\end{center}
+\end{figure}
+
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacefeminittools_a36826eda9dbcdb639506e838d6ec2e3e_icgraph}
+\end{center}
+\end{figure}
+
+

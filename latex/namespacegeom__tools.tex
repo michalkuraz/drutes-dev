@@ -1,0 +1,1996 @@
+\section{geom\+\_\+tools Module Reference}
+\label{namespacegeom__tools}\index{geom\+\_\+tools@{geom\+\_\+tools}}
+\subsection*{Functions/\+Subroutines}
+\begin{DoxyCompactItemize}
+\item 
+integer(kind=ikind) function, public {\bf get\+\_\+layer} (quadpnt)
+\item 
+subroutine, public {\bf getcoor} (quadpnt, array)
+\item 
+subroutine, public {\bf interpolate} (vals, points)
+\begin{DoxyCompactList}\small\item\em returns the solution values on gaussian nodes positions \end{DoxyCompactList}\item 
+subroutine, public {\bf plane\+\_\+derivative} (a, b, c, xder, yder)
+\begin{DoxyCompactList}\small\item\em specify the x and y derivates of a plane defined by three points \end{DoxyCompactList}\item 
+subroutine, public {\bf init\+\_\+transform} (aT, bT, cT, {\bf matrix})
+\begin{DoxyCompactList}\small\item\em procedure to create transformation matrix \[ \left( \begin{array}{c} e \\ f \end{array} \right) + \left( \begin{array}{cc} a & b \\ c & d \end{array}\right) \left( \begin{array}{c} x \\ y \end{array} \right) = \left( \begin{array}{c} x^T \\ y^T \end{array} \right) \] where (e,f) is the vector of move and the matrix \[ \left( \begin{array}{cc} a & b \\ c & d \end{array}\right) \] is the matrix of rotation each line represents the element id, the first column in row represents numbers e,f,a,b the second column reprerents numbers f,c,d \end{DoxyCompactList}\item 
+real(kind=rkind) function, public {\bf get\+\_\+nz} (el\+\_\+id, order1, order2)
+\begin{DoxyCompactList}\small\item\em function that provides z coordinate of boundary normal vector, the boundary is defined by two points\+: bod1, bod2 \end{DoxyCompactList}\item 
+logical function, public {\bf inside} (domain, bod)
+\item 
+subroutine, private {\bf shoot} (bod, k, domain, inter, valid)
+\item 
+real(kind=rkind) function, public {\bf triarea} (a, b, c)
+\item 
+real(kind=rkind) function, public {\bf dist} (A, B)
+\item 
+real(kind=rkind) function, public {\bf angle} (A, B, C)
+\item 
+logical function, public {\bf inline} (A, B, bod)
+\begin{DoxyCompactList}\small\item\em function to determine whether the third point is on line formed by the first two points \end{DoxyCompactList}\item 
+subroutine, public {\bf solve\+\_\+bisect} (xmin, xmax, f, reps, ierr, solution)
+\begin{DoxyCompactList}\small\item\em bisecton method searching for a root of function f on defined intervals xmin and xmax \end{DoxyCompactList}\item 
+logical function, private {\bf aboveline} (a, b, c)
+\begin{DoxyCompactList}\small\item\em function to determine if the point C lies above or below the line defined by points A and B result is logical value nad, if true point lies above if false it lies below if the line is vertical, then if true the point lies on the left hand side from the line, if false the point lies on the right hand side from the line. \end{DoxyCompactList}\item 
+subroutine, public {\bf getnormal} (bcpoints, thirdpt, nvect)
+\begin{DoxyCompactList}\small\item\em this function returns outer normal boundary vector bcpoints -\/ nodes ids at the element boundary, integer, dimension(2) thirdpt -\/ coordinates of a point at at element, which lies out of the boundary. It is important in order to obtain proper positive direction of the normal vector \end{DoxyCompactList}\item 
+subroutine, public {\bf najdi\+\_\+bod} (a, b, c, bod)
+\begin{DoxyCompactList}\small\item\em subroutine seeking for the point which is on line identified by points a and b, and line between this point and c is rectangular to the line $<$a,b$>$ \end{DoxyCompactList}\item 
+subroutine, public {\bf max\+\_\+height} (a, b, c, height)
+\begin{DoxyCompactList}\small\item\em subroutine searching for the maximum height on triangle element \end{DoxyCompactList}\item 
+real(kind=rkind) function, dimension(2) {\bf gravity\+\_\+center} (a, b, c)
+\item 
+subroutine, public {\bf find\+\_\+neighbours} (el, nd)
+\item 
+subroutine, public {\bf map1d2d} (filename)
+\item 
+subroutine, public {\bf map1d2dj} (pde\+\_\+loc, filename)
+\end{DoxyCompactItemize}
+
+
+\subsection{Function/\+Subroutine Documentation}
+\index{geom\+\_\+tools@{geom\+\_\+tools}!aboveline@{aboveline}}
+\index{aboveline@{aboveline}!geom\+\_\+tools@{geom\+\_\+tools}}
+\subsubsection[{aboveline(a, b, c)}]{\setlength{\rightskip}{0pt plus 5cm}logical function, private geom\+\_\+tools\+::aboveline (
+\begin{DoxyParamCaption}
+\item[{real(kind=rkind), dimension(\+:), intent(in)}]{a, }
+\item[{real(kind=rkind), dimension(\+:), intent(in)}]{b, }
+\item[{real(kind=rkind), dimension(\+:), intent(in)}]{c}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [private]}}\label{namespacegeom__tools_addda2c9ac04812dd1ae188c3780594f4}
+
+
+function to determine if the point C lies above or below the line defined by points A and B result is logical value nad, if true point lies above if false it lies below if the line is vertical, then if true the point lies on the left hand side from the line, if false the point lies on the right hand side from the line. 
+
+
+
+Definition at line 681 of file geom\+\_\+tools.\+f90.
+
+
+
+Referenced by get\+\_\+nz(), and getnormal().
+
+
+\begin{DoxyCode}
+681     \textcolor{keywordtype}{use }typy
+682     \textcolor{keywordtype}{use }globals
+683     \textcolor{keywordtype}{use }globals2d
+684     \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{intent(in)} :: a,b,c
+685     \textcolor{keywordtype}{logical} :: nad
+686     \textcolor{keywordtype}{real(kind=rkind)} :: xa1, yb1, q1, xa2, yb2, q2, x\_int, y\_int
+687     \textcolor{comment}{!first define the coefficient of the line equation defined by A and B}
+688     
+689     \textcolor{keywordflow}{if} (abs(b(1)-a(1)) > 100*epsilon(xa1) .and. abs(b(2)-a(2)) > 100*epsilon(xa1)) \textcolor{keywordflow}{then}
+690       xa1 = (b(2) - a(2))/(b(1) - a(1))
+691       
+692       yb1 = -1.0\_rkind
+693       
+694       q1 = -xa1*a(1) - yb1*a(2)
+695 
+696       xa2 = yb1
+697       
+698       yb2 = -xa1
+699       
+700       q2 = -xa2*c(1) - yb2*c(2) 
+701       
+702       x\_int = (-q1 + yb1*q2/yb2)/(xa1 - yb1*xa2/yb2)
+703       
+704       y\_int = (-q2 - xa2*x\_int)/yb2
+705       
+706       
+707       \textcolor{keywordflow}{if} (y\_int >= c(2)) \textcolor{keywordflow}{then}
+708         nad = .false.
+709       \textcolor{keywordflow}{else}
+710         nad = .true.
+711 \textcolor{keywordflow}{      end if}
+712     \textcolor{keywordflow}{else}
+713       \textcolor{keywordflow}{if} (abs(b(1)-a(1)) < 100*epsilon(xa1)) \textcolor{keywordflow}{then} \textcolor{comment}{! vertical line}
+714  
+715         \textcolor{keywordflow}{if} (c(1) >= b(1)) \textcolor{keywordflow}{then} 
+716           nad = .false.
+717         \textcolor{keywordflow}{else} 
+718           nad = .true.
+719 \textcolor{keywordflow}{        end if}
+720         
+721 \textcolor{keywordflow}{      end if}
+722       
+723       \textcolor{keywordflow}{if} (abs(b(2)-a(2)) < 100*epsilon(xa1)) \textcolor{keywordflow}{then} \textcolor{comment}{! horizontal line}
+724         
+725         \textcolor{keywordflow}{if} (c(2) >= b(2)) \textcolor{keywordflow}{then}
+726           nad = .true.
+727         \textcolor{keywordflow}{else}
+728           nad = .false.
+729 \textcolor{keywordflow}{        end if}
+730 \textcolor{keywordflow}{      end if}
+731 \textcolor{keywordflow}{    end if}
+732       
+\end{DoxyCode}
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacegeom__tools_addda2c9ac04812dd1ae188c3780594f4_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{geom\+\_\+tools@{geom\+\_\+tools}!angle@{angle}}
+\index{angle@{angle}!geom\+\_\+tools@{geom\+\_\+tools}}
+\subsubsection[{angle(\+A, B, C)}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind) function, public geom\+\_\+tools\+::angle (
+\begin{DoxyParamCaption}
+\item[{real(kind=rkind), dimension(\+:), intent(in)}]{A, }
+\item[{real(kind=rkind), dimension(\+:), intent(in)}]{B, }
+\item[{real(kind=rkind), dimension(\+:), intent(in)}]{C}
+\end{DoxyParamCaption}
+)}\label{namespacegeom__tools_ac7d40a2d1dba95e3a69c11bb9fa21b2f}
+
+
+Definition at line 569 of file geom\+\_\+tools.\+f90.
+
+
+
+References dist().
+
+
+
+Referenced by feminittools\+::search\+\_\+bnd\+\_\+nodes().
+
+
+\begin{DoxyCode}
+569     \textcolor{keywordtype}{use }typy
+570     
+571     \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{intent(in)} :: a, b, c
+572     \textcolor{keywordtype}{real(kind=rkind)} :: gamma
+573     \textcolor{keywordtype}{real(kind=rkind)} :: la, lb, lc
+574     
+575     lc = dist(a,b)
+576     lb = dist(a,c)
+577     la = dist(b,c)
+578     
+579     \textcolor{keywordflow}{if} (la > 10*epsilon(la) .and. lb > 10*epsilon(la)) \textcolor{keywordflow}{then}
+580       gamma = acos(min((lc**2-la**2-lb**2)/(-2.0\_rkind*la*lb),1.0\_rkind))
+581     \textcolor{keywordflow}{else}
+582       gamma = acos(1.0\_dprec)
+583 \textcolor{keywordflow}{    end if}
+584 
+\end{DoxyCode}
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=265pt]{namespacegeom__tools_ac7d40a2d1dba95e3a69c11bb9fa21b2f_cgraph}
+\end{center}
+\end{figure}
+
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacegeom__tools_ac7d40a2d1dba95e3a69c11bb9fa21b2f_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{geom\+\_\+tools@{geom\+\_\+tools}!dist@{dist}}
+\index{dist@{dist}!geom\+\_\+tools@{geom\+\_\+tools}}
+\subsubsection[{dist(\+A, B)}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind) function, public geom\+\_\+tools\+::dist (
+\begin{DoxyParamCaption}
+\item[{real(kind=rkind), dimension(\+:), intent(in)}]{A, }
+\item[{real(kind=rkind), dimension(\+:), intent(in)}]{B}
+\end{DoxyParamCaption}
+)}\label{namespacegeom__tools_a91ddf015e5cea9e21d182b93603f5139}
+
+
+Definition at line 552 of file geom\+\_\+tools.\+f90.
+
+
+
+References globals\+::drutes\+\_\+config.
+
+
+
+Referenced by angle(), getcoor(), drutes\+\_\+init\+::init\+\_\+measured(), inline(), inside(), max\+\_\+height(), and feminittools\+::surface\+\_\+integ().
+
+
+\begin{DoxyCode}
+552     \textcolor{keywordtype}{use }typy
+553     \textcolor{keywordtype}{use }globals
+554     
+555     \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{intent(in)} :: a,b
+556     \textcolor{keywordtype}{real(kind=rkind)} :: l
+557     
+558     \textcolor{keywordflow}{select case}(drutes_config%dimen)
+559       \textcolor{keywordflow}{case}(1)
+560         l = abs(a(1) - b(1))
+561       \textcolor{keywordflow}{case}(2)
+562         l = sqrt((a(1)-b(1))*(a(1)-b(1)) + (a(2)-b(2))*(a(2)-b(2)))
+563 \textcolor{keywordflow}{    end select}
+564   
+\end{DoxyCode}
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacegeom__tools_a91ddf015e5cea9e21d182b93603f5139_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{geom\+\_\+tools@{geom\+\_\+tools}!find\+\_\+neighbours@{find\+\_\+neighbours}}
+\index{find\+\_\+neighbours@{find\+\_\+neighbours}!geom\+\_\+tools@{geom\+\_\+tools}}
+\subsubsection[{find\+\_\+neighbours(el, nd)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, public geom\+\_\+tools\+::find\+\_\+neighbours (
+\begin{DoxyParamCaption}
+\item[{type({\bf element}), intent(inout)}]{el, }
+\item[{type({\bf node}), intent(in)}]{nd}
+\end{DoxyParamCaption}
+)}\label{namespacegeom__tools_a28a5bc6f02c538f8998441d9a251a8d0}
+
+
+Definition at line 939 of file geom\+\_\+tools.\+f90.
+
+
+
+References globals\+::drutes\+\_\+config, globals\+::elements, and printtools\+::progressbar().
+
+
+
+Referenced by decomposer\+::make\+\_\+quadmesh(), decomposer\+::read\+\_\+coarse\+\_\+mesh(), and feminittools\+::surface\+\_\+integ().
+
+
+\begin{DoxyCode}
+939       \textcolor{keywordtype}{use }typy
+940       \textcolor{keywordtype}{use }globals
+941       \textcolor{keywordtype}{use }global_objs
+942       \textcolor{keywordtype}{use }printtools
+943       \textcolor{keywordtype}{use }core_tools
+944       \textcolor{keywordtype}{use }debug_tools
+945       \textcolor{keywordtype}{use }debug_tools
+946 
+947       \textcolor{keywordtype}{type}(element), \textcolor{keywordtype}{intent(in out)} :: el
+948       \textcolor{keywordtype}{type}(node), \textcolor{keywordtype}{intent(in)} :: nd
+949       
+950       \textcolor{keywordtype}{integer(kind=ikind)} :: i,j,k,l,m,upward,downward,pos, n, o
+951       
+952       el%neighbours = 0\_ikind
+953       
+954       \textcolor{keywordflow}{select case}(drutes_config%dimen)
+955         \textcolor{keywordflow}{case}(1)
+956           \textcolor{keywordflow}{do} i=1, el%kolik - 1
+957             el%neighbours(i,1) = i-1
+958             el%neighbours(i,2) = i+1
+959 \textcolor{keywordflow}{           end do}
+960            el%neighbours(elements%kolik,1) = elements%kolik - 1
+961            el%neighbours(elements%kolik,2) = 0
+962         \textcolor{keywordflow}{case}(2)
+963             !set neighbours
+964             \textcolor{keywordflow}{do} i=1, el%kolik
+965               pos = 0
+966               j = i
+967               k = i
+968 
+969               \textcolor{keyword}{call }progressbar(int(100*i/el%kolik))
+970 
+971               okoli: \textcolor{keywordflow}{do} 
+972                         j = min(j+1, el%kolik+1)
+973                         k = max(k-1, 0\_ikind)
+974 
+975                         \textcolor{keywordflow}{if} (j <= el%kolik) \textcolor{keywordflow}{then}
+976                           upward = 0
+977                           moje1: \textcolor{keywordflow}{do} l=1,ubound(el%data,2)
+978                                     nasel1: \textcolor{keywordflow}{do} m=1,ubound(el%data,2)
+979                                             \textcolor{keywordflow}{if} (el%data(i,l) == el%data(j,m) .and. i/=j) \textcolor{keywordflow}{then}
+980                                               upward = upward + 1
+981                                               \textcolor{keywordflow}{if} (upward == 2) \textcolor{keywordflow}{then} 
+982                                                 pos = pos + 1
+983                                                 el%neighbours(i,pos) = j
+984                                                 \textcolor{keywordflow}{EXIT} nasel1
+985 \textcolor{keywordflow}{                                              end if}
+986 \textcolor{keywordflow}{                                            end if}
+987 \textcolor{keywordflow}{                                  end do} nasel1
+988 \textcolor{keywordflow}{                          end do} moje1
+989 \textcolor{keywordflow}{                        end if}
+990 
+991                         \textcolor{keywordflow}{if} (k > 0) \textcolor{keywordflow}{then}
+992                           downward = 0
+993                           moje2: \textcolor{keywordflow}{do} l=1,ubound(el%data,2)
+994                                   nasel2: \textcolor{keywordflow}{do} m=1,ubound(el%data,2)
+995                                             \textcolor{keywordflow}{if} (el%data(i,l) == el%data(k,m) .and. i /= k) \textcolor{keywordflow}{then}
+996                                               downward = downward + 1
+997                                               \textcolor{keywordflow}{if} (downward == 2) \textcolor{keywordflow}{then} 
+998                                                 pos = pos + 1
+999                                                 el%neighbours(i,pos) = k
+1000                                                 \textcolor{keywordflow}{EXIT} nasel2
+1001 \textcolor{keywordflow}{                                              end if}
+1002 \textcolor{keywordflow}{                                            end if}
+1003 \textcolor{keywordflow}{                                  end do} nasel2 
+1004 \textcolor{keywordflow}{                          end do} moje2
+1005 \textcolor{keywordflow}{                        end if}
+1006 
+1007                         \textcolor{keywordflow}{if} (pos == ubound(el%data,2) .or. (j == el%kolik+1 .and. k == 0\_ikind\textcolor{comment}{)) }\textcolor{keywordflow}{then}
+1008                           \textcolor{keywordflow}{EXIT} okoli
+1009 \textcolor{keywordflow}{                        end if}
+1010 \textcolor{keywordflow}{              end do} okoli
+1011 \textcolor{keywordflow}{            end do}
+1012             
+1013 \textcolor{keywordflow}{        end select}
+1014       
+1015 
+\end{DoxyCode}
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=334pt]{namespacegeom__tools_a28a5bc6f02c538f8998441d9a251a8d0_cgraph}
+\end{center}
+\end{figure}
+
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacegeom__tools_a28a5bc6f02c538f8998441d9a251a8d0_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{geom\+\_\+tools@{geom\+\_\+tools}!get\+\_\+layer@{get\+\_\+layer}}
+\index{get\+\_\+layer@{get\+\_\+layer}!geom\+\_\+tools@{geom\+\_\+tools}}
+\subsubsection[{get\+\_\+layer(quadpnt)}]{\setlength{\rightskip}{0pt plus 5cm}integer(kind=ikind) function, public geom\+\_\+tools\+::get\+\_\+layer (
+\begin{DoxyParamCaption}
+\item[{type({\bf integpnt\+\_\+str}), intent(in)}]{quadpnt}
+\end{DoxyParamCaption}
+)}\label{namespacegeom__tools_aa7bb57f436fc77331aea42f34fde56a5}
+
+
+Definition at line 40 of file geom\+\_\+tools.\+f90.
+
+
+
+References globals\+::elements, and globals\+::nodes.
+
+
+
+Referenced by re\+\_\+total\+::getval\+\_\+retot().
+
+
+\begin{DoxyCode}
+40     \textcolor{keywordtype}{use }typy
+41     \textcolor{keywordtype}{use }globals
+42     \textcolor{keywordtype}{use }global_objs
+43     
+44     \textcolor{keywordtype}{type}(integpnt_str), \textcolor{keywordtype}{intent(in)} :: quadpnt
+45     \textcolor{keywordtype}{integer(kind=ikind)} :: layer
+46     \textcolor{keywordtype}{integer(kind=ikind)} :: el
+47     
+48     \textcolor{keywordflow}{select case}(quadpnt%type\_pnt)
+49       \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"ndpt"})
+50         el = nodes%element(quadpnt%order)%data(1)
+51         layer=elements%material(el,1)
+52       \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"obpt"}, \textcolor{stringliteral}{"gqnd"})
+53         el = quadpnt%element
+54         \textcolor{keywordflow}{if} (.not. (el >= 1 .and. el<=elements%kolik)) \textcolor{keywordflow}{then}
+55           print *, \textcolor{stringliteral}{"error in quadpnt data"}, el, quadpnt%type\_pnt
+56           print *, \textcolor{stringliteral}{"called from geom\_tools::get\_layer"}
+57           print *, \textcolor{stringliteral}{"contact Michal -> michalkuraz@gmail.com"}
+58           error stop
+59 \textcolor{keywordflow}{        end if}
+60         layer = elements%material(el,1)
+61 \textcolor{keywordflow}{      case default}
+62           print *, \textcolor{stringliteral}{"err or in quadpnt data"}
+63           print *, \textcolor{stringliteral}{"called from geom\_tools::get\_layer"}
+64           print *, \textcolor{stringliteral}{"contact Michal -> michalkuraz@gmail.com"}
+65           error stop
+66 \textcolor{keywordflow}{    end select}
+67   
+\end{DoxyCode}
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacegeom__tools_aa7bb57f436fc77331aea42f34fde56a5_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{geom\+\_\+tools@{geom\+\_\+tools}!get\+\_\+nz@{get\+\_\+nz}}
+\index{get\+\_\+nz@{get\+\_\+nz}!geom\+\_\+tools@{geom\+\_\+tools}}
+\subsubsection[{get\+\_\+nz(el\+\_\+id, order1, order2)}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind) function, public geom\+\_\+tools\+::get\+\_\+nz (
+\begin{DoxyParamCaption}
+\item[{integer(kind=ikind), intent(in)}]{el\+\_\+id, }
+\item[{integer(kind=ikind), intent(in)}]{order1, }
+\item[{integer(kind=ikind), intent(in)}]{order2}
+\end{DoxyParamCaption}
+)}\label{namespacegeom__tools_a1237d1dc8b45bd650de0daff46162d6b}
+
+
+function that provides z coordinate of boundary normal vector, the boundary is defined by two points\+: bod1, bod2 
+
+
+
+Definition at line 332 of file geom\+\_\+tools.\+f90.
+
+
+
+References aboveline(), globals\+::elements, and globals\+::nodes.
+
+
+
+Referenced by feminittools\+::surface\+\_\+integ().
+
+
+\begin{DoxyCode}
+332     \textcolor{keywordtype}{use }typy
+333     \textcolor{keywordtype}{use }globals
+334     \textcolor{keywordtype}{use }global_objs
+335 
+336     \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(in)} :: el\_id, order1, order2
+337     \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(2)} :: bod1, bod2
+338     \textcolor{keywordtype}{real(kind=rkind)} :: zcoord
+339 
+340     \textcolor{keywordtype}{real(kind=rkind)} :: tg
+341     \textcolor{keywordtype}{integer(kind=ikind)} :: order3
+342 
+343 
+344     bod1 = nodes%data(elements%data(el\_id,order1),:)
+345     bod2 = nodes%data(elements%data(el\_id,order2),:)
+346 
+347     \textcolor{keywordflow}{if} (abs(bod1(1)-bod2(1)) > epsilon(tg)) \textcolor{keywordflow}{then}
+348       tg = (abs(bod2(2)-bod1(2))/abs(bod1(1)-bod2(1)))
+349       zcoord = 1/sqrt(1+tg*tg)
+350     \textcolor{keywordflow}{else}
+351       zcoord = 0
+352 \textcolor{keywordflow}{    end if}
+353 
+354     \textcolor{keywordflow}{select case}(order1+order2)
+355       \textcolor{keywordflow}{case}(3)
+356         order3=3
+357       \textcolor{keywordflow}{case}(4)
+358         order3=2
+359       \textcolor{keywordflow}{case}(5)
+360         order3=1
+361 \textcolor{keywordflow}{    end select}
+362 
+363     \textcolor{keywordflow}{if} (.not. aboveline(bod1, bod2, nodes%data(elements%data(el\_id, order3),:))) \textcolor{keywordflow}{then}
+364       zcoord = -zcoord
+365 \textcolor{keywordflow}{    end if}
+366 
+\end{DoxyCode}
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=296pt]{namespacegeom__tools_a1237d1dc8b45bd650de0daff46162d6b_cgraph}
+\end{center}
+\end{figure}
+
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacegeom__tools_a1237d1dc8b45bd650de0daff46162d6b_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{geom\+\_\+tools@{geom\+\_\+tools}!getcoor@{getcoor}}
+\index{getcoor@{getcoor}!geom\+\_\+tools@{geom\+\_\+tools}}
+\subsubsection[{getcoor(quadpnt, array)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, public geom\+\_\+tools\+::getcoor (
+\begin{DoxyParamCaption}
+\item[{type({\bf integpnt\+\_\+str}), intent(in)}]{quadpnt, }
+\item[{real(kind=rkind), dimension(\+:), intent(out)}]{array}
+\end{DoxyParamCaption}
+)}\label{namespacegeom__tools_a4c2336f6e1e7d512a9d81acb21c71456}
+
+
+Definition at line 72 of file geom\+\_\+tools.\+f90.
+
+
+
+References dist(), globals\+::drutes\+\_\+config, globals\+::elements, globals\+::gauss\+\_\+points, globals\+::nodes, and globals\+::observation\+\_\+array.
+
+
+
+Referenced by boussfnc\+::bouss\+\_\+adv(), boussfnc\+::bouss\+\_\+cond(), boussfnc\+::bouss\+\_\+elast(), re\+\_\+constitutive\+::convection\+\_\+rerot(), boussfnc\+::darcy4bouss(), re\+\_\+total\+::getval\+\_\+retot(), dual\+\_\+por\+::getval\+\_\+retot\+\_\+dual(), and re\+\_\+total\+::retot\+\_\+dirichlet\+\_\+bc().
+
+
+\begin{DoxyCode}
+72     \textcolor{keywordtype}{use }typy
+73     \textcolor{keywordtype}{use }pde_objs
+74     \textcolor{keywordtype}{use }globals
+75     \textcolor{keywordtype}{use }debug_tools
+76     
+77     \textcolor{keywordtype}{type}(integpnt_str), \textcolor{keywordtype}{intent(in)} :: quadpnt
+78     \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{intent(out)} :: array
+79     \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{dimension(3)} :: nd
+80     \textcolor{keywordtype}{integer(kind=ikind)} :: el, i
+81     \textcolor{keywordtype}{real(kind=rkind)} :: dist1, dist2, r1, r2, k1, k2, q1, q2
+82     \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(2)} :: r,k,q,d
+83     \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(3,2)} :: triagpnt
+84     \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(2,2)} :: midpnt
+85     \textcolor{keywordtype}{logical}, \textcolor{keywordtype}{dimension(2)} :: vert 
+86      
+87     
+88     \textcolor{keywordflow}{select case}(quadpnt%type\_pnt)
+89       \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"gqnd"})
+90         \textcolor{keywordflow}{select case} (drutes_config%dimen)
+91           \textcolor{keywordflow}{case}(1)
+92             el = quadpnt%element
+93             nd(1:2) = elements%data(el,1:2)
+94             dist1 = nodes%data(nd(2),1) - nodes%data(nd(1),1)
+95             array(1) = nodes%data(nd(1),1) + dist1*gauss_points%point(quadpnt%order,1)
+96            \textcolor{keywordflow}{case}(2)
+97            
+98 \textcolor{comment}{! triag scheme    }
+99 \textcolor{comment}{!          triag(3)}
+100 \textcolor{comment}{!          |\(\backslash\) }
+101 \textcolor{comment}{!          | \(\backslash\) }
+102 \textcolor{comment}{!          |  \(\backslash\)}
+103 \textcolor{comment}{!          |   \(\backslash\)}
+104 \textcolor{comment}{!          |    \(\backslash\)}
+105 \textcolor{comment}{!          |     \(\backslash\)}
+106 \textcolor{comment}{!          |      \(\backslash\)}
+107 \textcolor{comment}{!          |       \(\backslash\)}
+108 \textcolor{comment}{! midpnt(1)|...x    \(\backslash\)}
+109 \textcolor{comment}{!          |   .     \(\backslash\)}
+110 \textcolor{comment}{!      d(1)|   .      \(\backslash\)}
+111 \textcolor{comment}{!          |   . d(2)  \(\backslash\)}
+112 \textcolor{comment}{! triag(1) -------------\(\backslash\) triag(2)}
+113 \textcolor{comment}{!              midpnt(2)}
+114           
+115           
+116             vert = .false.
+117             el = quadpnt%element
+118             \textcolor{keywordflow}{do} i=1,3
+119               triagpnt(i,:) = nodes%data(elements%data(el,i),:)
+120 \textcolor{keywordflow}{            end do}
+121             d(1) = dist(triagpnt(1,:), triagpnt(3,:))
+122             d(2) = dist(triagpnt(1,:), triagpnt(2,:))
+123             \textcolor{comment}{!z distance on unit triangle}
+124             r(1) = gauss_points%point(quadpnt%order,2)
+125             \textcolor{comment}{!x distance on unit triangle}
+126             r(2) = gauss_points%point(quadpnt%order,1)
+127             
+128             midpnt(1,:) = triagpnt(1,:) + (triagpnt(3,:) - triagpnt(1,:)) * r(1)
+129             
+130             midpnt(2,:) = triagpnt(1,:) + (triagpnt(2,:) - triagpnt(1,:)) * r(2)
+131             
+132             \textcolor{keywordflow}{if} (abs(midpnt(2,1)-triagpnt(1,1)) > 100*epsilon(k1) ) \textcolor{keywordflow}{then}
+133               k(1) = (midpnt(2,2) - triagpnt(1,2))/(midpnt(2,1)-triagpnt(1,1))
+134             \textcolor{keywordflow}{else}
+135               vert(1) = .true.
+136 \textcolor{keywordflow}{            end if}
+137             
+138             \textcolor{keywordflow}{if} (abs(midpnt(1,1)-triagpnt(1,1)) > 100*epsilon(k1) ) \textcolor{keywordflow}{then}
+139               k(2) = (midpnt(1,2) - triagpnt(1,2))/(midpnt(1,1)-triagpnt(1,1))
+140             \textcolor{keywordflow}{else}
+141               vert(2) = .true.
+142 \textcolor{keywordflow}{            end if}
+143             
+144             \textcolor{keywordflow}{where} (.not.(vert))
+145               q(:) = midpnt(:,2) - k(:)*midpnt(:,1)
+146 \textcolor{keywordflow}{            end where}
+147             
+148 \textcolor{comment}{!           print *, "----beg-------"}
+149 \textcolor{comment}{!           print *, midpnt(1,:)}
+150 \textcolor{comment}{!           print *, midpnt(2,:)}
+151 \textcolor{comment}{!           print *, k}
+152 \textcolor{comment}{!           print *, vert}
+153 \textcolor{comment}{!           print *, "-----end-----"}
+154             
+155             
+156             \textcolor{keywordflow}{if} (.not. vert(1) .and. .not. vert(2)) \textcolor{keywordflow}{then}
+157               array(1) = (q(1)- q(2))/(k(2)-k(1))
+158               \textcolor{keywordflow}{if} (abs(k(1) - k(2)) <= epsilon(k1)) \textcolor{keywordflow}{then}
+159                 print *, \textcolor{stringliteral}{"there must be a bug, both lines have equal tangent, or your mesh is really bad"}
+160                 print *, \textcolor{stringliteral}{"interrupted from geom\_tools::getcoor"}
+161                 error stop
+162 \textcolor{keywordflow}{              end if}
+163               array(2) = k(1)*array(1) + q(1)
+164             \textcolor{keywordflow}{else}
+165               \textcolor{keywordflow}{if} (vert(1) .and. .not. (vert(2))) \textcolor{keywordflow}{then}
+166                 array(1) = midpnt(1,1)
+167                 array(2) = midpnt(2,2) + k(2)*(midpnt(1,1)-midpnt(2,1))
+168               \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (.not.vert(1) .and. (vert(2))) \textcolor{keywordflow}{then}
+169                 array(1) = midpnt(2,1)
+170                 array(2) = midpnt(1,2) + k(1)*(midpnt(2,1) - midpnt(1,1))
+171               \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} ( vert(1) .and. vert(2) ) \textcolor{keywordflow}{then}
+172                 print *, \textcolor{stringliteral}{"there must be a bug, both lines are vertical"}
+173                 print *, \textcolor{stringliteral}{"interrupted from geom\_tools::getcoor"}
+174                 error stop
+175 \textcolor{keywordflow}{              end if}
+176 \textcolor{keywordflow}{            end if}   
+177 \textcolor{keywordflow}{        end select}
+178       \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"obpt"})
+179         array = observation_array(quadpnt%order)%xyz
+180       \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"ndpt"})
+181         array = nodes%data(quadpnt%order,:)
+182 \textcolor{keywordflow}{    end select}
+\end{DoxyCode}
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=274pt]{namespacegeom__tools_a4c2336f6e1e7d512a9d81acb21c71456_cgraph}
+\end{center}
+\end{figure}
+
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacegeom__tools_a4c2336f6e1e7d512a9d81acb21c71456_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{geom\+\_\+tools@{geom\+\_\+tools}!getnormal@{getnormal}}
+\index{getnormal@{getnormal}!geom\+\_\+tools@{geom\+\_\+tools}}
+\subsubsection[{getnormal(bcpoints, thirdpt, nvect)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, public geom\+\_\+tools\+::getnormal (
+\begin{DoxyParamCaption}
+\item[{real(kind=rkind), dimension(\+:,\+:), intent(in)}]{bcpoints, }
+\item[{real(kind=rkind), dimension(\+:), intent(in)}]{thirdpt, }
+\item[{real(kind=rkind), dimension(\+:), intent(out), allocatable}]{nvect}
+\end{DoxyParamCaption}
+)}\label{namespacegeom__tools_a9a7f232fec395ff22f8985cffeebd146}
+
+
+this function returns outer normal boundary vector bcpoints -\/ nodes ids at the element boundary, integer, dimension(2) thirdpt -\/ coordinates of a point at at element, which lies out of the boundary. It is important in order to obtain proper positive direction of the normal vector 
+
+
+
+Definition at line 741 of file geom\+\_\+tools.\+f90.
+
+
+
+References aboveline(), and globals\+::drutes\+\_\+config.
+
+
+
+Referenced by re\+\_\+total\+::retot\+\_\+seepage().
+
+
+\begin{DoxyCode}
+741     \textcolor{keywordtype}{use }typy
+742     \textcolor{keywordtype}{use }globals
+743     
+744     \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:,:)}, \textcolor{keywordtype}{intent(in)} :: bcpoints
+745     \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{intent(in)} :: thirdpt
+746     \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable}, \textcolor{keywordtype}{intent(out)} :: nvect
+747     
+748     \textcolor{keywordtype}{real(kind=rkind)} :: k
+749     
+750     \textcolor{keywordflow}{if} (drutes_config%dimen == 1) \textcolor{keywordflow}{then}
+751       print *, \textcolor{stringliteral}{"RUNTIME ERROR, function geomtools::getnormal is called for 1D problem"}
+752       print *, \textcolor{stringliteral}{"if (desporate) contact Michal -> michalkuraz@gmail.com"}
+753       error stop
+754 \textcolor{keywordflow}{    end if}    
+755     
+756     \textcolor{keywordflow}{if} (.not. \textcolor{keyword}{allocated}(nvect)) \textcolor{keyword}{allocate}(nvect(drutes_config%dimen))
+757   
+758     \textcolor{keywordflow}{if} (abs(bcpoints(1,1)-bcpoints(2,1)) > 100*epsilon(bcpoints(1,1)) .and. &
+759       abs(bcpoints(1,2)-bcpoints(2,2)) > 100*epsilon(bcpoints(1,1))) \textcolor{keywordflow}{then}
+760      
+761       k = (bcpoints(1,2)-bcpoints(2,2))/(bcpoints(1,1)-bcpoints(2,1))
+762      
+763       \textcolor{keywordflow}{if} (aboveline(bcpoints(1,:), bcpoints(2,:), thirdpt)) \textcolor{keywordflow}{then}
+764         nvect(2) = -1
+765       \textcolor{keywordflow}{else}
+766         nvect(2) = 1
+767 \textcolor{keywordflow}{      end if}
+768       
+769       \textcolor{comment}{! change x for y}
+770       \textcolor{keywordflow}{if} (aboveline((/bcpoints(1,2), bcpoints(1,1)/), (/bcpoints(2,2), bcpoints(2,1)/), (/thirdpt(2), 
+      thirdpt(1)/))) \textcolor{keywordflow}{then}
+771         nvect(1) =  -abs(1.0\_rkind/k)
+772       \textcolor{keywordflow}{else}
+773         nvect(1) = abs(1.0\_rkind/k)
+774 \textcolor{keywordflow}{      end if}
+775       
+776       nvect = nvect/(sqrt(nvect(1)*nvect(1)+nvect(2)*nvect(2)))
+777      
+778     \textcolor{comment}{!vertical line}
+779     \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (abs(bcpoints(1,1)-bcpoints(2,1)) < 100*epsilon(bcpoints(1,1)) .and. &
+780        abs(bcpoints(1,2)-bcpoints(2,2)) > 100*epsilon(bcpoints(1,1))) \textcolor{keywordflow}{then}
+781        
+782        \textcolor{keywordflow}{if} (aboveline(bcpoints(1,:), bcpoints(2,:), thirdpt)) \textcolor{keywordflow}{then}
+783          nvect(1) = 1
+784        \textcolor{keywordflow}{else}
+785          nvect(1) = -1
+786 \textcolor{keywordflow}{       end if}
+787        
+788        nvect(2) = 0
+789        
+790      \textcolor{comment}{!horizontal line}
+791     \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (abs(bcpoints(1,1)-bcpoints(2,1)) > 100*epsilon(bcpoints(1,1)) .and. &
+792        abs(bcpoints(1,2)-bcpoints(2,2)) < 100*epsilon(bcpoints(1,1))) \textcolor{keywordflow}{then}
+793        
+794        \textcolor{keywordflow}{if} (aboveline(bcpoints(1,:), bcpoints(2,:), thirdpt)) \textcolor{keywordflow}{then}
+795          nvect(2) = -1
+796        \textcolor{keywordflow}{else}
+797          nvect(2) = 1
+798 \textcolor{keywordflow}{       end if}
+799        
+800        nvect(1) = 0
+801      \textcolor{keywordflow}{else}
+802        print *, \textcolor{stringliteral}{"runtime error, exited from geomtools::getnormal seems like your boundary is defined by a
+       single point"}
+803        print *, \textcolor{stringliteral}{"check your mesh, if your mesh is ok, then contact Michal -> michalkuraz@gmail.com"}
+804        error stop
+805 \textcolor{keywordflow}{     end if}
+806   
+\end{DoxyCode}
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=310pt]{namespacegeom__tools_a9a7f232fec395ff22f8985cffeebd146_cgraph}
+\end{center}
+\end{figure}
+
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacegeom__tools_a9a7f232fec395ff22f8985cffeebd146_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{geom\+\_\+tools@{geom\+\_\+tools}!gravity\+\_\+center@{gravity\+\_\+center}}
+\index{gravity\+\_\+center@{gravity\+\_\+center}!geom\+\_\+tools@{geom\+\_\+tools}}
+\subsubsection[{gravity\+\_\+center(a, b, c)}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind) function, dimension(2) geom\+\_\+tools\+::gravity\+\_\+center (
+\begin{DoxyParamCaption}
+\item[{real(kind=rkind), dimension(\+:), intent(in)}]{a, }
+\item[{real(kind=rkind), dimension(\+:), intent(in)}]{b, }
+\item[{real(kind=rkind), dimension(\+:), intent(in)}]{c}
+\end{DoxyParamCaption}
+)}\label{namespacegeom__tools_ac5eea8089dba9b61e9512793819eca93}
+
+
+Definition at line 871 of file geom\+\_\+tools.\+f90.
+
+
+
+References linalg\+::gem().
+
+
+
+Referenced by decomposer\+::init\+\_\+decomp(), and read\+\_\+inputs\+::read\+\_\+2dmesh\+\_\+gmsh().
+
+
+\begin{DoxyCode}
+871     \textcolor{keywordtype}{use }typy
+872     \textcolor{keywordtype}{use }linalg
+873     \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{intent(in)} :: a,b,c
+874     \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(2)} :: gc
+875 
+876     \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(2,2)} :: line\_pars, matrix
+877     \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(2)} :: point, bside
+878     \textcolor{keywordtype}{integer(kind=ikind)} :: i
+879     \textcolor{keywordtype}{logical} :: vertical
+880 
+881     
+882     point = (b+c)/2.0\_rkind
+883     
+884 
+885 
+886     \textcolor{keywordflow}{if} (abs(a(1)-point(1)) > 1000*epsilon(a(1))) \textcolor{keywordflow}{then}
+887       bside(1) = a(2)
+888       bside(2) = point(2)
+889 
+890       matrix(:,2) = 1.0\_rkind
+891       matrix(1,1) = a(1)
+892       matrix(2,1) = point(1)
+893 
+894       \textcolor{keyword}{call }gem(matrix, bside, line\_pars(1,:))
+895 
+896       vertical = .false.
+897 
+898     \textcolor{keywordflow}{else}
+899       gc(1) = (a(1)+point(1))/2.0\_rkind
+900       vertical = .true.
+901       i = 2
+902 \textcolor{keywordflow}{    end if}
+903       
+904     
+905     point = (a + c)/2.0\_rkind
+906    
+907     \textcolor{keywordflow}{if} (abs(b(1)-point(1)) > 1000*epsilon(a(1))) \textcolor{keywordflow}{then}
+908       bside(1) = b(2)
+909       bside(2) = point(2)
+910       matrix(:,2) = 1
+911       matrix(1,1) = b(1)
+912       matrix(2,1) = point(1)
+913     
+914       \textcolor{keyword}{call }gem(matrix, bside, line\_pars(2,:))
+915 
+916     \textcolor{keywordflow}{else}
+917       gc(1) = (b(1)+point(1))/2.0\_rkind
+918       vertical = .true.
+919       i = 1
+920 \textcolor{keywordflow}{    end if}
+921       
+922     \textcolor{keywordflow}{if} (.not.(vertical)) \textcolor{keywordflow}{then}
+923       bside = -line\_pars(:,2)
+924 
+925       matrix(:,1) = line\_pars(:,1)
+926 
+927       matrix(:,2) = -1.0\_rkind
+928 
+929       \textcolor{keyword}{call }gem(matrix, bside, gc)
+930     \textcolor{keywordflow}{else}
+931       gc(2) = line\_pars(i,1)*gc(1) + line\_pars(i,2)
+932 \textcolor{keywordflow}{    end if}
+933     
+934 
+\end{DoxyCode}
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=246pt]{namespacegeom__tools_ac5eea8089dba9b61e9512793819eca93_cgraph}
+\end{center}
+\end{figure}
+
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacegeom__tools_ac5eea8089dba9b61e9512793819eca93_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{geom\+\_\+tools@{geom\+\_\+tools}!init\+\_\+transform@{init\+\_\+transform}}
+\index{init\+\_\+transform@{init\+\_\+transform}!geom\+\_\+tools@{geom\+\_\+tools}}
+\subsubsection[{init\+\_\+transform(a\+T, b\+T, c\+T, matrix)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, public geom\+\_\+tools\+::init\+\_\+transform (
+\begin{DoxyParamCaption}
+\item[{real(kind=rkind), dimension(\+:), intent(in)}]{aT, }
+\item[{real(kind=rkind), dimension(\+:), intent(in)}]{bT, }
+\item[{real(kind=rkind), dimension(\+:), intent(in)}]{cT, }
+\item[{real(kind=rkind), dimension(\+:,\+:), intent(out)}]{matrix}
+\end{DoxyParamCaption}
+)}\label{namespacegeom__tools_a55e9334704d756a28f729ba3a950a9ea}
+
+
+procedure to create transformation matrix \[ \left( \begin{array}{c} e \\ f \end{array} \right) + \left( \begin{array}{cc} a & b \\ c & d \end{array}\right) \left( \begin{array}{c} x \\ y \end{array} \right) = \left( \begin{array}{c} x^T \\ y^T \end{array} \right) \] where (e,f) is the vector of move and the matrix \[ \left( \begin{array}{cc} a & b \\ c & d \end{array}\right) \] is the matrix of rotation each line represents the element id, the first column in row represents numbers e,f,a,b the second column reprerents numbers f,c,d 
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em at} & nodes of triangle\\
+\hline
+\mbox{\tt out}  & {\em matrix} & to store the transformation matrix \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 279 of file geom\+\_\+tools.\+f90.
+
+
+\begin{DoxyCode}
+279     \textcolor{keywordtype}{use }typy
+281     \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{intent(in)} :: at
+282     \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{intent(in)} :: bt
+283     \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{intent(in)} :: ct
+285     \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:,:)}, \textcolor{keywordtype}{intent(out)} :: matrix
+286     \textcolor{keywordtype}{real(kind=rkind)} :: a,b,c,d,e,f
+287     \textcolor{keywordtype}{integer(kind=ikind)} :: i
+288     
+289     
+290 
+291     \textcolor{comment}{!shape of the unit triangle}
+292 
+293 \textcolor{comment}{! [0,1]}
+294 \textcolor{comment}{! |\(\backslash\)}
+295 \textcolor{comment}{! |  \(\backslash\)}
+296 \textcolor{comment}{! |     \(\backslash\)}
+297 \textcolor{comment}{! |       \(\backslash\)}
+298 \textcolor{comment}{! |         \(\backslash\)}
+299 \textcolor{comment}{! |           \(\backslash\)}
+300 \textcolor{comment}{! |               \(\backslash\) }
+301 \textcolor{comment}{! |----7|---8|---9|--\(\backslash\) }
+302 \textcolor{comment}{! |     |    |    |   \(\backslash\)}
+303 \textcolor{comment}{! |----4|---5|---6|---  \(\backslash\)}
+304 \textcolor{comment}{! |     |    |    |       \(\backslash\)}
+305 \textcolor{comment}{! |----1|---2|---3|-----   -\(\backslash\)       }
+306 \textcolor{comment}{! |     |    |    |           \(\backslash\) }
+307 \textcolor{comment}{! |     |    |    |             \(\backslash\)}
+308 \textcolor{comment}{! -----------------------------------------}
+309 \textcolor{comment}{! [0,0]                          [1,0]}
+310 
+311     e = at(1)
+312     f = at(2)
+313 
+314     a = bt(1) - e
+315     c = bt(2) - f
+316 
+317     b = ct(1) - e 
+318     d = ct(2) - f 
+319       
+320     matrix(1,1) = e
+321     matrix(1,2) = f
+322     matrix(2,1) = a
+323     matrix(2,2) = c
+324     matrix(3,1) = b
+325     matrix(3,2) = d
+326 
+\end{DoxyCode}
+\index{geom\+\_\+tools@{geom\+\_\+tools}!inline@{inline}}
+\index{inline@{inline}!geom\+\_\+tools@{geom\+\_\+tools}}
+\subsubsection[{inline(\+A, B, bod)}]{\setlength{\rightskip}{0pt plus 5cm}logical function, public geom\+\_\+tools\+::inline (
+\begin{DoxyParamCaption}
+\item[{real(kind=rkind), dimension(\+:), intent(in)}]{A, }
+\item[{real(kind=rkind), dimension(\+:), intent(in)}]{B, }
+\item[{real(kind=rkind), dimension(\+:), intent(in)}]{bod}
+\end{DoxyParamCaption}
+)}\label{namespacegeom__tools_a648dcde3507b3b3b66eecaea12b43603}
+
+
+function to determine whether the third point is on line formed by the first two points 
+
+
+
+Definition at line 590 of file geom\+\_\+tools.\+f90.
+
+
+
+References dist().
+
+
+
+Referenced by inside(), shoot(), and simegen\+::simegen2d().
+
+
+\begin{DoxyCode}
+590     \textcolor{keywordtype}{use }typy
+591     \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{intent(in)} :: bod, a,b
+592     \textcolor{keywordtype}{real(kind=rkind)} :: precision
+593     \textcolor{keywordtype}{logical} :: true
+594     
+595 
+596     precision = 1000*epsilon(precision)
+597 
+598 
+599     \textcolor{keywordflow}{if} (abs(dist(a,b) - dist(a,bod) - dist(b,bod)) < precision) \textcolor{keywordflow}{then}
+600       true = .true.
+601     \textcolor{keywordflow}{else}
+602       true = .false.
+603 \textcolor{keywordflow}{    end if}
+604 
+605 
+606     
+\end{DoxyCode}
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=264pt]{namespacegeom__tools_a648dcde3507b3b3b66eecaea12b43603_cgraph}
+\end{center}
+\end{figure}
+
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacegeom__tools_a648dcde3507b3b3b66eecaea12b43603_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{geom\+\_\+tools@{geom\+\_\+tools}!inside@{inside}}
+\index{inside@{inside}!geom\+\_\+tools@{geom\+\_\+tools}}
+\subsubsection[{inside(domain, bod)}]{\setlength{\rightskip}{0pt plus 5cm}logical function, public geom\+\_\+tools\+::inside (
+\begin{DoxyParamCaption}
+\item[{real(kind=rkind), dimension(\+:,\+:), intent(in)}]{domain, }
+\item[{real(kind=rkind), dimension(\+:), intent(in)}]{bod}
+\end{DoxyParamCaption}
+)}\label{namespacegeom__tools_ad0cfc5aedee571cb83174e83f5d30606}
+
+
+Definition at line 372 of file geom\+\_\+tools.\+f90.
+
+
+
+References dist(), globals\+::drutes\+\_\+config, inline(), and shoot().
+
+
+
+Referenced by decomposer\+::init\+\_\+decomp(), drutes\+\_\+init\+::init\+\_\+observe(), and read\+\_\+inputs\+::read\+\_\+2dmesh\+\_\+gmsh().
+
+
+\begin{DoxyCode}
+372     \textcolor{keywordtype}{use }typy
+373     \textcolor{keywordtype}{use }globals
+374     \textcolor{keywordtype}{use }global_objs
+375     \textcolor{keywordtype}{use }debug_tools
+376 
+377     
+378     \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{intent(in)} :: bod
+379     \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(2)} :: a,b
+380     \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:,:,:)}, \textcolor{keywordtype}{allocatable} :: inter
+381     \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:,:)}, \textcolor{keywordtype}{intent(in)}  :: domain
+382     \textcolor{keywordtype}{integer(kind=ikind)} :: zasah, i, l, p, j, k
+383     \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable} :: checked
+384     \textcolor{keywordtype}{logical}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable} :: valid
+385     \textcolor{keywordtype}{logical} :: true
+386     \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable} :: smer
+387     
+388     \textcolor{keywordflow}{select case}(drutes_config%dimen)
+389       \textcolor{keywordflow}{case}(1)
+390         \textcolor{keywordflow}{if} ((domain(1,1) <= bod(1) .and. domain(2,1) >= bod(1)) .or. &
+391             (domain(1,1) >= bod(1) .and. domain(2,1) <= bod(1)) ) \textcolor{keywordflow}{then}
+392           true = .true.
+393         \textcolor{keywordflow}{else}
+394           true = .false.
+395 \textcolor{keywordflow}{        end if}
+396 
+397       \textcolor{keywordflow}{case}(2)
+398 
+399         \textcolor{keyword}{allocate}(smer(ubound(domain,1)+1))
+400         \textcolor{keyword}{allocate}(inter(ubound(smer,1),ubound(domain,1),2))
+401         \textcolor{keyword}{allocate}(valid(ubound(domain,1)))
+402         \textcolor{keyword}{allocate}(checked(ubound(smer,1)))
+403         checked = 0
+404 
+405 
+406         \textcolor{keywordflow}{do} i=1, ubound(domain,1)
+407           \textcolor{keywordflow}{if} (i < ubound(domain,1)) \textcolor{keywordflow}{then}
+408             l = i
+409             p = i+1
+410           \textcolor{keywordflow}{else}
+411             l = i
+412             p = 1
+413 \textcolor{keywordflow}{          end if}
+414           
+415           a = domain(l,:)
+416     
+417           b = domain(p,:)
+418           
+419 
+420           \textcolor{keywordflow}{if} (inline(domain(l,:), domain(p,:), bod)) \textcolor{keywordflow}{then}
+421             true = .true.
+422             \textcolor{keywordflow}{RETURN}
+423 \textcolor{keywordflow}{          end if}
+424 
+425           \textcolor{keywordflow}{do} j=1, ubound(smer,1)
+426             smer(j) = rand() + 0.25
+427             \textcolor{keyword}{call }shoot(bod, smer(j), domain,  inter(j,:,:), valid)
+428             zasah = 0
+429             \textcolor{keywordflow}{do} k=1, ubound(domain,1)
+430               \textcolor{keywordflow}{if} (valid(k)) \textcolor{keywordflow}{then}
+431                 \textcolor{keywordflow}{if} (dist(a,inter(j,k,:)) > 10*epsilon(smer(1)) .and. dist(b,inter(j,k,:)) > 10*epsilon(smer
+      (1))) \textcolor{keywordflow}{then}
+432                   zasah = zasah + 1
+433                 \textcolor{keywordflow}{else}
+434                   print *, inter(j,k,:), a, b, dist(a,inter(j,k,:)) , dist(b,inter(j,k,:))
+435                   checked(j) = -1
+436 \textcolor{keywordflow}{                end if}
+437 \textcolor{keywordflow}{              end if}
+438 \textcolor{keywordflow}{            end do}
+439             
+440             \textcolor{keywordflow}{if} (checked(j) /= -1) \textcolor{keywordflow}{then}
+441               \textcolor{keywordflow}{if} (modulo(zasah,2) /= 0 .and. zasah /= ubound(domain,1)) \textcolor{keywordflow}{then}
+442                 checked(j) = 1
+443 \textcolor{keywordflow}{              end if}
+444 \textcolor{keywordflow}{            end if}
+445                   
+446 
+447               
+448 \textcolor{keywordflow}{          end do}
+449 \textcolor{keywordflow}{        end do}
+450         j=0
+451         \textcolor{keywordflow}{do} i=1, ubound(checked,1) 
+452           \textcolor{keywordflow}{if} (checked(i) == 0) \textcolor{keywordflow}{then}
+453             true = .false.
+454             \textcolor{keywordflow}{RETURN}
+455 \textcolor{keywordflow}{          end if}
+456           j = j + checked(i)
+457 \textcolor{keywordflow}{        end do}
+458         
+459         \textcolor{keywordflow}{if} (j == -ubound(checked,1)) \textcolor{keywordflow}{then}
+460           print *, \textcolor{stringliteral}{"bug in geom\_tools::inside, contact developer with a full bug report"}
+461           error stop
+462 \textcolor{keywordflow}{        end if}
+463         
+464         true = .true.
+465       
+466 \textcolor{keywordflow}{      case default}
+467         error stop \textcolor{stringliteral}{"generated from geom\_tools::inside"}
+468 \textcolor{keywordflow}{    end select}
+469 
+\end{DoxyCode}
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacegeom__tools_ad0cfc5aedee571cb83174e83f5d30606_cgraph}
+\end{center}
+\end{figure}
+
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacegeom__tools_ad0cfc5aedee571cb83174e83f5d30606_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{geom\+\_\+tools@{geom\+\_\+tools}!interpolate@{interpolate}}
+\index{interpolate@{interpolate}!geom\+\_\+tools@{geom\+\_\+tools}}
+\subsubsection[{interpolate(vals, points)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, public geom\+\_\+tools\+::interpolate (
+\begin{DoxyParamCaption}
+\item[{real(kind=rkind), dimension(\+:), intent(in)}]{vals, }
+\item[{real(kind=rkind), dimension(\+:), intent(out)}]{points}
+\end{DoxyParamCaption}
+)}\label{namespacegeom__tools_a2d14dfd00b3162fe5cc76004ddd815c2}
+
+
+returns the solution values on gaussian nodes positions 
+
+
+
+Definition at line 187 of file geom\+\_\+tools.\+f90.
+
+
+
+References globals\+::drutes\+\_\+config, globals\+::gauss\+\_\+points, and plane\+\_\+derivative().
+
+
+\begin{DoxyCode}
+187     \textcolor{keywordtype}{use }typy
+188     \textcolor{keywordtype}{use }globals
+189     \textcolor{keywordtype}{use }global_objs
+190     \textcolor{keywordtype}{use }globals2d
+191 
+192     \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{intent(in)} :: vals
+193     \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{intent(out)} :: points
+194     \textcolor{keywordtype}{integer(kind=ikind)} :: i 
+195     \textcolor{keywordtype}{real(kind=rkind)} :: xder, yder
+196 
+197     \textcolor{keywordflow}{select case}(drutes_config%dimen)
+198       \textcolor{keywordflow}{case}(1)
+199         \textcolor{keywordflow}{do} i=1, ubound(gauss_points%weight,1)
+200           points(i) = (vals(2) - vals(1))*gauss_points%point(i,1) + vals(1) 
+201 \textcolor{keywordflow}{        end do}
+202       \textcolor{keywordflow}{case}(2)
+203         \textcolor{keyword}{call }plane_derivative((/0.0\_rkind, 0.0\_rkind, vals(1)/), (/1.0\_rkind, 0.0\_rkind, vals(2)/), (/0.0
+      \_rkind, &
+204                          1.0\_rkind, vals(3)/), xder, yder)
+205 
+206         \textcolor{keywordflow}{do} i=1, ubound(gauss_points%weight,1)
+207           points(i) = vals(1) + xder*gauss_points%point(i,1) + yder*gauss_points%point(i,2)
+208 \textcolor{keywordflow}{        end do}
+209 
+210 \textcolor{keywordflow}{    end select}
+211 
+\end{DoxyCode}
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=341pt]{namespacegeom__tools_a2d14dfd00b3162fe5cc76004ddd815c2_cgraph}
+\end{center}
+\end{figure}
+
+
+\index{geom\+\_\+tools@{geom\+\_\+tools}!map1d2d@{map1d2d}}
+\index{map1d2d@{map1d2d}!geom\+\_\+tools@{geom\+\_\+tools}}
+\subsubsection[{map1d2d(filename)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, public geom\+\_\+tools\+::map1d2d (
+\begin{DoxyParamCaption}
+\item[{character(len=$\ast$), intent(in)}]{filename}
+\end{DoxyParamCaption}
+)}\label{namespacegeom__tools_a414b4c651eccb3bab087a28455f38ba7}
+
+
+Definition at line 1020 of file geom\+\_\+tools.\+f90.
+
+
+
+References readtools\+::comment(), core\+\_\+tools\+::cut(), globals\+::elements, readtools\+::file\+\_\+error(), core\+\_\+tools\+::find\+\_\+unit(), globals\+::nodes, and pde\+\_\+objs\+::pde.
+
+
+\begin{DoxyCode}
+1020       \textcolor{keywordtype}{use }typy
+1021       \textcolor{keywordtype}{use }global_objs
+1022       \textcolor{keywordtype}{use }globals
+1023       \textcolor{keywordtype}{use }pde_objs
+1024       \textcolor{keywordtype}{use }core_tools
+1025       \textcolor{keywordtype}{use }readtools
+1026       \textcolor{keywordtype}{use }debug_tools
+1027       
+1028       \textcolor{keywordtype}{character(len=*)}, \textcolor{keywordtype}{intent(in)} :: filename
+1029       
+1030       \textcolor{keywordtype}{integer} :: fileid, ierr
+1031       \textcolor{keywordtype}{integer(kind=ikind)} :: i, counter, k, l, m, proc, j, ii
+1032       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:,:)}, \textcolor{keywordtype}{allocatable} :: input
+1033       \textcolor{keywordtype}{real(kind=rkind)} :: tmp, \textcolor{keywordtype}{value}, grad
+1034       \textcolor{keywordtype}{logical} :: val\_defined
+1035       
+1036       \textcolor{keyword}{call }find_unit(fileid)
+1037       
+1038       
+1039       \textcolor{keyword}{open}(unit=fileid, file=cut(filename), action=\textcolor{stringliteral}{"read"}, iostat=ierr)
+1040       
+1041       \textcolor{keywordflow}{if} (ierr /= 0) \textcolor{keywordflow}{then}
+1042         print *, \textcolor{stringliteral}{"unable to open file with the vertical distribution of the initial condition, exiting...."}
+1043         print *, \textcolor{stringliteral}{"called from map1d2d::drutes\_init"}
+1044         error stop
+1045 \textcolor{keywordflow}{      end if}
+1046       
+1047       counter = 0
+1048       
+1049       \textcolor{keywordflow}{do}
+1050         \textcolor{keyword}{call }comment(fileid)
+1051         \textcolor{keyword}{read}(fileid, fmt=*, iostat=ierr) tmp
+1052         \textcolor{keywordflow}{if} (ierr /= 0) \textcolor{keywordflow}{then}
+1053           \textcolor{keywordflow}{EXIT}
+1054         \textcolor{keywordflow}{else}
+1055           counter = counter + 1
+1056 \textcolor{keywordflow}{        end if}
+1057 \textcolor{keywordflow}{      end do}
+1058       
+1059       \textcolor{keyword}{allocate}(input(counter, ubound(pde,1)+1))
+1060       
+1061       \textcolor{keyword}{close}(fileid)
+1062       
+1063       \textcolor{keyword}{open}(unit=fileid, file=cut(filename), action=\textcolor{stringliteral}{"read"})
+1064       
+1065       \textcolor{keywordflow}{do} i=1, counter
+1066         \textcolor{keyword}{call }fileread(input(i,:), fileid)
+1067 \textcolor{keywordflow}{      end do}
+1068             
+1069 
+1070       \textcolor{keywordflow}{do} i=1, elements%kolik
+1071         \textcolor{keywordflow}{do} j=1, ubound(elements%data,2)
+1072           k = elements%data(i,j)
+1073           l = nodes%edge(k)
+1074           \textcolor{keywordflow}{do} proc=1, ubound(pde,1)
+1075             m = pde(proc)%permut(k)
+1076             \textcolor{keywordflow}{if} (m == 0) \textcolor{keywordflow}{then}
+1077               \textcolor{keywordflow}{if} (l>100) \textcolor{keywordflow}{then}
+1078                 \textcolor{keyword}{call }pde(proc)%bc(l)%value\_fnc(pde(proc), i, j, \textcolor{keywordtype}{value})
+1079                 val\_defined=.true.
+1080               \textcolor{keywordflow}{else}
+1081                 print *, \textcolor{stringliteral}{"runtime error, exited from map1d2d::drutes\_init"}
+1082                 error stop
+1083 \textcolor{keywordflow}{              end if}             
+1084             \textcolor{keywordflow}{else}
+1085               val\_defined=.false.
+1086               \textcolor{keywordflow}{do} ii=1, ubound(input,1)-1
+1087                 \textcolor{keywordflow}{if} (nodes%data(k,2) >= input(ii,1) .and. nodes%data(k,2)\textcolor{comment}{ <= input(ii+1,1)) }\textcolor{keywordflow}{then}
+1088                   grad = (input(ii+1,proc+1) - input(ii,proc+1))/(input(ii\textcolor{comment}{+1,1) - input(ii,1))}
+1089 \textcolor{comment}{                  }\textcolor{keywordtype}{value} =  input(ii,proc+1) + grad*(nodes%data(k,2) - input\textcolor{comment}{(ii,1))}
+1090 \textcolor{comment}{                  val\_defined=.true.}
+1091 \textcolor{comment}{                  }\textcolor{keywordflow}{if} (isnan(\textcolor{keywordtype}{value})) \textcolor{keywordflow}{then}
+1092                     \textcolor{keyword}{call }file_error(fileid, \textcolor{stringliteral}{"bad input file with initial conditions"}\textcolor{comment}{)}
+1093 \textcolor{comment}{}\textcolor{keywordflow}{                  end if}
+1094                   \textcolor{keywordflow}{EXIT}
+1095 \textcolor{keywordflow}{                end if}
+1096 \textcolor{keywordflow}{              end do}
+1097               \textcolor{keywordflow}{if} (.not. val\_defined) \textcolor{keywordflow}{then}
+1098                 \textcolor{keywordflow}{if} (nodes%data(k,2) < minval(input(:,1))) \textcolor{keywordflow}{then}
+1099                   \textcolor{keywordtype}{value} = input(minloc(input(:,1),1), proc)
+1100                   val\_defined=.true.
+1101 \textcolor{keywordflow}{                end if}
+1102                 \textcolor{keywordflow}{if} (nodes%data(k,2) < maxval(input(:,1))) \textcolor{keywordflow}{then}
+1103                   \textcolor{keywordtype}{value} = input(maxloc(input(:,1),1), proc)
+1104                   val\_defined=.true.
+1105 \textcolor{keywordflow}{                end if}
+1106                 \textcolor{keywordflow}{if} (.not. val\_defined) \textcolor{keywordflow}{then}
+1107                   \textcolor{keyword}{call }file_error(fileid, \textcolor{stringliteral}{"Have you covered the entire vertical profile with data for the
+       initial condition?"}\textcolor{comment}{)}
+1108 \textcolor{comment}{}\textcolor{keywordflow}{                end if}
+1109 \textcolor{keywordflow}{              end if}
+1110 \textcolor{keywordflow}{            end if}
+1111             pde(proc)%solution(k) =  \textcolor{keywordtype}{value} 
+1112 \textcolor{keywordflow}{          end do}
+1113 \textcolor{keywordflow}{        end do}
+1114 \textcolor{keywordflow}{      end do}
+1115             
+1116       \textcolor{keyword}{close}(fileid)
+1117  
+1118       
+\end{DoxyCode}
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=297pt]{namespacegeom__tools_a414b4c651eccb3bab087a28455f38ba7_cgraph}
+\end{center}
+\end{figure}
+
+
+\index{geom\+\_\+tools@{geom\+\_\+tools}!map1d2dj@{map1d2dj}}
+\index{map1d2dj@{map1d2dj}!geom\+\_\+tools@{geom\+\_\+tools}}
+\subsubsection[{map1d2dj(pde\+\_\+loc, filename)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, public geom\+\_\+tools\+::map1d2dj (
+\begin{DoxyParamCaption}
+\item[{class({\bf pde\+\_\+str}), intent(inout)}]{pde\+\_\+loc, }
+\item[{character(len=$\ast$), intent(in)}]{filename}
+\end{DoxyParamCaption}
+)}\label{namespacegeom__tools_a5a6548d90c258b44ecc6d58dd159b845}
+
+
+Definition at line 1122 of file geom\+\_\+tools.\+f90.
+
+
+
+References readtools\+::comment(), core\+\_\+tools\+::cut(), globals\+::drutes\+\_\+config, globals\+::elements, readtools\+::file\+\_\+error(), core\+\_\+tools\+::find\+\_\+unit(), globals\+::nodes, and pde\+\_\+objs\+::pde.
+
+
+
+Referenced by dual\+\_\+por\+::dual\+\_\+inicond(), re\+\_\+constitutive\+::re\+\_\+initcond(), and re\+\_\+total\+::retot\+\_\+initcond().
+
+
+\begin{DoxyCode}
+1122       \textcolor{keywordtype}{use }typy
+1123       \textcolor{keywordtype}{use }global_objs
+1124       \textcolor{keywordtype}{use }globals
+1125       \textcolor{keywordtype}{use }pde_objs
+1126       \textcolor{keywordtype}{use }core_tools
+1127       \textcolor{keywordtype}{use }readtools
+1128       \textcolor{keywordtype}{use }debug_tools
+1129       
+1130       \textcolor{keywordtype}{character(len=*)}, \textcolor{keywordtype}{intent(in)} :: filename
+1131       \textcolor{keywordtype}{class}(pde_str), \textcolor{keywordtype}{intent(in out)} :: pde\_loc
+1132       \textcolor{keywordtype}{integer} :: fileid, ierr
+1133       \textcolor{keywordtype}{integer(kind=ikind)} :: i, counter, k, l, m, proc, j, ii, d
+1134       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:,:)}, \textcolor{keywordtype}{allocatable} :: input
+1135       \textcolor{keywordtype}{real(kind=rkind)} :: tmp, \textcolor{keywordtype}{value}, grad
+1136       \textcolor{keywordtype}{logical} :: val\_defined
+1137       
+1138       
+1139       d = drutes_config%dimen
+1140       \textcolor{keyword}{call }find_unit(fileid)
+1141       
+1142       
+1143       \textcolor{keyword}{open}(unit=fileid, file=cut(filename), action=\textcolor{stringliteral}{"read"}, iostat=ierr)
+1144       
+1145       \textcolor{keywordflow}{if} (ierr /= 0) \textcolor{keywordflow}{then}
+1146         print *, \textcolor{stringliteral}{"unable to open file with the vertical distribution of the initial condition, exiting...."}
+1147         print *, \textcolor{stringliteral}{"called from map1d2dJ::drutes\_init"}
+1148         error stop
+1149 \textcolor{keywordflow}{      end if}
+1150       
+1151       counter = 0
+1152       
+1153       \textcolor{keywordflow}{do}
+1154         \textcolor{keyword}{call }comment(fileid)
+1155         \textcolor{keyword}{read}(fileid, fmt=*, iostat=ierr) tmp
+1156         \textcolor{keywordflow}{if} (ierr /= 0) \textcolor{keywordflow}{then}
+1157           \textcolor{keywordflow}{EXIT}
+1158         \textcolor{keywordflow}{else}
+1159           counter = counter + 1
+1160 \textcolor{keywordflow}{        end if}
+1161 \textcolor{keywordflow}{      end do}
+1162       
+1163       \textcolor{keyword}{allocate}(input(counter, 3))
+1164       
+1165       \textcolor{keyword}{close}(fileid)
+1166       
+1167       \textcolor{keyword}{open}(unit=fileid, file=cut(filename), action=\textcolor{stringliteral}{"read"})
+1168       
+1169       \textcolor{keywordflow}{do} i=1, counter
+1170         \textcolor{keyword}{call }fileread(input(i,:), fileid)
+1171 \textcolor{keywordflow}{      end do}
+1172 
+1173       \textcolor{keywordflow}{do} i=1, elements%kolik
+1174         \textcolor{keywordflow}{do} j=1, ubound(elements%data,2)
+1175           k = elements%data(i,j)
+1176           l = nodes%edge(k)
+1177             m = pde\_loc%permut(k)
+1178             \textcolor{keywordflow}{if} (m == 0) \textcolor{keywordflow}{then}
+1179               \textcolor{keywordflow}{if} (l>100) \textcolor{keywordflow}{then}
+1180                 \textcolor{keywordflow}{do} ii=1, ubound(input,1)-1
+1181     
+1182                   \textcolor{keywordflow}{if} (nodes%data(k,d) >= input(ii,2) .and. nodes%data(k,d\textcolor{comment}{) <= input(ii+1,2)) }\textcolor{keywordflow}{then}
+1183                     grad = (input(ii+1,3) - input(ii,3))/(input(ii+1,2) \textcolor{comment}{- input(ii,2))}
+1184 \textcolor{comment}{                    }\textcolor{keywordtype}{value} =  input(ii,3) + grad*(nodes%data(k,d) - input\textcolor{comment}{(ii,2))}
+1185 \textcolor{comment}{                    val\_defined=.true.}
+1186 \textcolor{comment}{                    }\textcolor{keywordflow}{if} (isnan(\textcolor{keywordtype}{value})) \textcolor{keywordflow}{then}
+1187                       \textcolor{keyword}{call }file_error(fileid, \textcolor{stringliteral}{"bad input file with initial conditions"}\textcolor{comment}{)}
+1188 \textcolor{comment}{}\textcolor{keywordflow}{                    end if}
+1189                     \textcolor{keywordflow}{EXIT}
+1190 \textcolor{keywordflow}{                   end if}
+1191 \textcolor{keywordflow}{                 end do}
+1192                  \textcolor{keywordflow}{if}(.not. val\_defined) \textcolor{keywordflow}{then}
+1193                    \textcolor{keyword}{call }pde(proc)%bc(l)%value\_fnc(pde(proc), i, j, \textcolor{keywordtype}{value}\textcolor{comment}{)}
+1194 \textcolor{comment}{                   val\_defined=.true.}
+1195 \textcolor{comment}{}\textcolor{keywordflow}{                 end if} 
+1196               \textcolor{keywordflow}{else}
+1197                 print *, \textcolor{stringliteral}{"runtime error, exited from map1d2dJ::drutes\_init"}
+1198                 error stop
+1199 \textcolor{keywordflow}{              end if}             
+1200             \textcolor{keywordflow}{else}
+1201               val\_defined=.false.
+1202               \textcolor{keywordflow}{do} ii=1, ubound(input,1)-1
+1203                 \textcolor{keywordflow}{if} (nodes%data(k,d) >= input(ii,2) .and. nodes%data(k,d)\textcolor{comment}{ <= input(ii+1,2)) }\textcolor{keywordflow}{then}
+1204                   
+1205                   grad = (input(ii+1,3) - input(ii,3))/(input(ii+1,2) - input\textcolor{comment}{(ii,2))}
+1206 \textcolor{comment}{                  }\textcolor{keywordtype}{value} =  input(ii,3) + grad*(nodes%data(k,d) - input(ii\textcolor{comment}{,2))}
+1207 \textcolor{comment}{                  val\_defined=.true.}
+1208 \textcolor{comment}{                  }\textcolor{keywordflow}{if} (isnan(\textcolor{keywordtype}{value})) \textcolor{keywordflow}{then}
+1209                     \textcolor{keyword}{call }file_error(fileid, \textcolor{stringliteral}{"bad input file with initial conditions"}\textcolor{comment}{)}
+1210 \textcolor{comment}{}\textcolor{keywordflow}{                  end if}
+1211                   \textcolor{keywordflow}{EXIT}
+1212 \textcolor{keywordflow}{                end if}
+1213 \textcolor{keywordflow}{              end do}
+1214               \textcolor{keywordflow}{if} (.not. val\_defined) \textcolor{keywordflow}{then}
+1215                 \textcolor{keywordflow}{if} (nodes%data(k,d) < minval(input(:,2))) \textcolor{keywordflow}{then}
+1216                   \textcolor{keywordtype}{value} = input(minloc(input(:,2),1),3)
+1217                   val\_defined=.true.
+1218 \textcolor{keywordflow}{                end if}
+1219                 \textcolor{keywordflow}{if} (nodes%data(k,d) > maxval(input(:,2))) \textcolor{keywordflow}{then}
+1220                   \textcolor{keywordtype}{value} = input(maxloc(input(:,2),1), 3)
+1221                   val\_defined=.true.
+1222 \textcolor{keywordflow}{                end if}
+1223                 \textcolor{keywordflow}{if} (.not. val\_defined) \textcolor{keywordflow}{then}
+1224                   print *, nodes%data(k,d) ; stop
+1225                   \textcolor{keyword}{call }file_error(fileid, \textcolor{stringliteral}{"Have you covered the entire vertical profile with data for the
+       initial condition?"}\textcolor{comment}{)}
+1226 \textcolor{comment}{}\textcolor{keywordflow}{                end if}
+1227 \textcolor{keywordflow}{              end if}
+1228 \textcolor{keywordflow}{            end if}
+1229             pde\_loc%solution(k) =  \textcolor{keywordtype}{value}+nodes%data(k,d) 
+1230 \textcolor{keywordflow}{        end do}
+1231 \textcolor{keywordflow}{      end do}
+1232         
+1233       \textcolor{keyword}{close}(fileid)
+1234       
+\end{DoxyCode}
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=299pt]{namespacegeom__tools_a5a6548d90c258b44ecc6d58dd159b845_cgraph}
+\end{center}
+\end{figure}
+
+
+
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacegeom__tools_a5a6548d90c258b44ecc6d58dd159b845_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{geom\+\_\+tools@{geom\+\_\+tools}!max\+\_\+height@{max\+\_\+height}}
+\index{max\+\_\+height@{max\+\_\+height}!geom\+\_\+tools@{geom\+\_\+tools}}
+\subsubsection[{max\+\_\+height(a, b, c, height)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, public geom\+\_\+tools\+::max\+\_\+height (
+\begin{DoxyParamCaption}
+\item[{real(kind=rkind), dimension(\+:), intent(in)}]{a, }
+\item[{real(kind=rkind), dimension(\+:), intent(in)}]{b, }
+\item[{real(kind=rkind), dimension(\+:), intent(in)}]{c, }
+\item[{real(kind=rkind), intent(out)}]{height}
+\end{DoxyParamCaption}
+)}\label{namespacegeom__tools_a50afc0353d5731dc64cb3731f11b8361}
+
+
+subroutine searching for the maximum height on triangle element 
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em a} & input element edges\\
+\hline
+\mbox{\tt in}  & {\em b} & input element edges\\
+\hline
+\mbox{\tt in}  & {\em c} & input element edges\\
+\hline
+\mbox{\tt out}  & {\em height} & the maximal element height \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 841 of file geom\+\_\+tools.\+f90.
+
+
+
+References dist(), and najdi\+\_\+bod().
+
+
+\begin{DoxyCode}
+841     \textcolor{keywordtype}{use }typy
+843     \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{intent(in)} :: a,b,c
+845     \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{intent(out)} :: height
+846     
+847     \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(2)} :: bod
+848     \textcolor{keywordtype}{real(kind=rkind)} :: ha,hb,hc
+849     \textcolor{keywordtype}{real(kind=rkind)} :: la, lb, lc
+850     
+851     
+852     \textcolor{keyword}{call }najdi_bod(a,b,c, bod)
+853     
+854     hc = dist(c,bod)
+855     
+856     lc = dist(a,b)
+857     la = dist(c,b)
+858     lb = dist(a,c)
+859     
+860     ha = la/lc*hc
+861     hb = lb/lc*hc
+862     
+863     height = max(ha,hb,hc)
+864 \textcolor{comment}{!     height = (ha + hb + hc)/3}
+865     
+866   
+\end{DoxyCode}
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=317pt]{namespacegeom__tools_a50afc0353d5731dc64cb3731f11b8361_cgraph}
+\end{center}
+\end{figure}
+
+
+\index{geom\+\_\+tools@{geom\+\_\+tools}!najdi\+\_\+bod@{najdi\+\_\+bod}}
+\index{najdi\+\_\+bod@{najdi\+\_\+bod}!geom\+\_\+tools@{geom\+\_\+tools}}
+\subsubsection[{najdi\+\_\+bod(a, b, c, bod)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, public geom\+\_\+tools\+::najdi\+\_\+bod (
+\begin{DoxyParamCaption}
+\item[{real(kind=rkind), dimension(\+:), intent(in)}]{a, }
+\item[{real(kind=rkind), dimension(\+:), intent(in)}]{b, }
+\item[{real(kind=rkind), dimension(\+:), intent(in)}]{c, }
+\item[{real(kind=rkind), dimension(\+:), intent(out)}]{bod}
+\end{DoxyParamCaption}
+)}\label{namespacegeom__tools_abb7e5ddeeee2bd0f031e5c2713571e5d}
+
+
+subroutine seeking for the point which is on line identified by points a and b, and line between this point and c is rectangular to the line $<$a,b$>$ 
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em a} & element points\\
+\hline
+\mbox{\tt in}  & {\em b} & element points\\
+\hline
+\mbox{\tt in}  & {\em c} & element points\\
+\hline
+\mbox{\tt out}  & {\em bod} & the rectangular pointer \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 812 of file geom\+\_\+tools.\+f90.
+
+
+
+Referenced by max\+\_\+height().
+
+
+\begin{DoxyCode}
+812     \textcolor{keywordtype}{use }typy
+814     \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{intent(in)} :: a,b,c
+816     \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{intent(out)} :: bod
+817 
+818     \textcolor{keywordtype}{real(kind=rkind)} :: k, q, q2
+819 
+820 
+821     \textcolor{keywordflow}{if} (abs(b(1) - a(1)) > 100*epsilon(a(1))) \textcolor{keywordflow}{then}
+822       k = (b(2)-a(2))/(b(1)-a(1))
+823 
+824       q = a(2) - k*a(1)
+825 
+826       q2 = -c(1) - k*c(2)
+827 
+828       bod(2) = (-k*q2+q)/(k*k+1)
+829 
+830       bod(1) = -k*bod(2)-q2
+831 
+832     \textcolor{keywordflow}{else}
+833       bod(1) = a(1)
+834       bod(2) = c(2)
+835 \textcolor{keywordflow}{    end if}
+836       
+\end{DoxyCode}
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=317pt]{namespacegeom__tools_abb7e5ddeeee2bd0f031e5c2713571e5d_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{geom\+\_\+tools@{geom\+\_\+tools}!plane\+\_\+derivative@{plane\+\_\+derivative}}
+\index{plane\+\_\+derivative@{plane\+\_\+derivative}!geom\+\_\+tools@{geom\+\_\+tools}}
+\subsubsection[{plane\+\_\+derivative(a, b, c, xder, yder)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, public geom\+\_\+tools\+::plane\+\_\+derivative (
+\begin{DoxyParamCaption}
+\item[{real(kind=rkind), dimension(\+:), intent(in)}]{a, }
+\item[{real(kind=rkind), dimension(\+:), intent(in)}]{b, }
+\item[{real(kind=rkind), dimension(\+:), intent(in)}]{c, }
+\item[{real(kind=rkind), intent(out)}]{xder, }
+\item[{real(kind=rkind), intent(out)}]{yder}
+\end{DoxyParamCaption}
+)}\label{namespacegeom__tools_a1e93d0ec91a9f2fcc7573e6347a9f9ef}
+
+
+specify the x and y derivates of a plane defined by three points 
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em a} & 1st point of the plane\\
+\hline
+\mbox{\tt in}  & {\em b} & 2nd point of the plane\\
+\hline
+\mbox{\tt in}  & {\em c} & 3rd point of the plane\\
+\hline
+\mbox{\tt out}  & {\em xder} & resulting x derivate\\
+\hline
+\mbox{\tt out}  & {\em yder} & resulting y derivate \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 216 of file geom\+\_\+tools.\+f90.
+
+
+
+Referenced by re\+\_\+constitutive\+::derkz(), feminittools\+::feminit(), feminittools\+::init\+\_\+integ(), interpolate(), and decomposer\+::set\+\_\+subdomains().
+
+
+\begin{DoxyCode}
+216     \textcolor{keywordtype}{use }typy
+218     \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{intent(in)} :: a
+220     \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{intent(in)} :: b
+222     \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{intent(in)} :: c
+224     \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{intent(out)} :: xder
+226     \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{intent(out)} :: yder
+227     \textcolor{comment}{!-------local variables--------------}
+228     \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(3)} :: u
+229     \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(3)} :: v
+230     \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(3)} :: n
+231     \textcolor{keywordtype}{integer(kind=ikind)} :: i
+232     \textcolor{keywordtype}{real(kind=rkind)} :: reps
+233 
+234 
+235     reps = epsilon(reps)
+236 
+237 
+238     \textcolor{comment}{!check if the plane is not horizontal}
+239     \textcolor{keywordflow}{if} (abs(a(3) - b(3)) < reps*(abs(a(3))-abs(b(3)))  .and.  &
+240         abs(a(3) - c(3)) < reps*(abs(a(3))-abs(c(3)))  .and.  &
+241         abs(b(3) - c(3)) < reps*(abs(b(3))-abs(c(3)))) \textcolor{keywordflow}{then}
+242       xder = 0.0\_rkind
+243       yder = 0.0\_rkind
+244       \textcolor{keywordflow}{RETURN}
+245     \textcolor{keywordflow}{else}
+246       \textcolor{keywordflow}{CONTINUE}
+247 \textcolor{keywordflow}{    end if}
+248 
+249     \textcolor{comment}{!creates the plane vectors }
+250     \textcolor{keywordflow}{do} i=1,3
+251       u(i) = a(i) - b(i)
+252       v(i) = a(i) - c(i)
+253 \textcolor{keywordflow}{    end do}
+254 
+255     \textcolor{comment}{! the normal plane vector is defined as}
+256     n(1) = u(2)*v(3) - v(2)*u(3)
+257     n(2) = u(3)*v(1) - v(3)*u(1)
+258     n(3) = u(1)*v(2) - v(1)*u(2)
+259 
+260     \textcolor{comment}{! finally the derivate is as follows, the horizontality has been already checked}
+261     \textcolor{comment}{! the verticality check}
+262     \textcolor{keywordflow}{if} (abs(n(3)) < 1e2*reps) \textcolor{keywordflow}{then}
+263       print *, \textcolor{stringliteral}{"the mesh is wrong, base function can't be vertical"}
+264       print *, abs(n(3))
+265       error stop
+266 \textcolor{keywordflow}{    end if} 
+267     xder = -n(1)/n(3)
+268     yder = -n(2)/n(3)
+269 
+270     
+\end{DoxyCode}
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacegeom__tools_a1e93d0ec91a9f2fcc7573e6347a9f9ef_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{geom\+\_\+tools@{geom\+\_\+tools}!shoot@{shoot}}
+\index{shoot@{shoot}!geom\+\_\+tools@{geom\+\_\+tools}}
+\subsubsection[{shoot(bod, k, domain, inter, valid)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, private geom\+\_\+tools\+::shoot (
+\begin{DoxyParamCaption}
+\item[{real(kind=rkind), dimension(\+:), intent(in)}]{bod, }
+\item[{real(kind=rkind), intent(in)}]{k, }
+\item[{real(kind=rkind), dimension(\+:,\+:), intent(in)}]{domain, }
+\item[{real(kind=rkind), dimension(\+:,\+:), intent(out)}]{inter, }
+\item[{logical, dimension(\+:), intent(out)}]{valid}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [private]}}\label{namespacegeom__tools_a52bdc7b016cad84e97b0fd88231c997e}
+
+
+Definition at line 473 of file geom\+\_\+tools.\+f90.
+
+
+
+References inline().
+
+
+
+Referenced by inside().
+
+
+\begin{DoxyCode}
+473     \textcolor{keywordtype}{use }typy
+474     \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{intent(in)} :: bod
+475     \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{intent(in)} :: k
+476     \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:,:)}, \textcolor{keywordtype}{intent(in)} :: domain
+477     \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:,:)}, \textcolor{keywordtype}{intent(out)} :: inter
+478     \textcolor{keywordtype}{logical}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{intent(out)} :: valid
+479     
+480     \textcolor{keywordtype}{real(kind=rkind)} :: q, qq, kk
+481     \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(2)} :: a,b
+482     \textcolor{keywordtype}{integer(kind=ikind)} :: l,p, i
+483     
+484     q = bod(2) - k*bod(1)
+485     
+486     \textcolor{keywordflow}{do} i=1, ubound(domain,1)
+487       \textcolor{keywordflow}{if} (i < ubound(domain,1)) \textcolor{keywordflow}{then}
+488         l = i
+489         p = i+1
+490       \textcolor{keywordflow}{else}
+491         l = i
+492         p = 1
+493 \textcolor{keywordflow}{      end if} 
+494       
+495       a = domain(l,:)
+496     
+497       b = domain(p,:)
+498       
+499       \textcolor{keywordflow}{if} (abs(a(1)-b(1)) > 10*epsilon(a(1))) \textcolor{keywordflow}{then}
+500         kk = (b(2) - a(2))/(b(1)-a(1))
+501         qq = b(2) - b(1)*kk
+502         \textcolor{keywordflow}{if} (abs(k-kk) > 10*epsilon(k)) \textcolor{keywordflow}{then}
+503           inter(i,1) = (qq-q)/(k-kk)
+504           inter(i,2) = k*inter(i,1) + q
+505         \textcolor{keywordflow}{else}
+506           \textcolor{keywordflow}{if} (abs(q-qq) > 10*epsilon(q)) \textcolor{keywordflow}{then}
+507             inter(i,:) = (/huge(k), huge(k)/)
+508           \textcolor{keywordflow}{else}
+509             \textcolor{keywordflow}{if} (a(1) > b(1)) \textcolor{keywordflow}{then}
+510               inter(i,:) = a
+511             \textcolor{keywordflow}{else}
+512               inter(i,:) = b
+513 \textcolor{keywordflow}{            end if}
+514 \textcolor{keywordflow}{          end if}
+515 \textcolor{keywordflow}{        end if}
+516       \textcolor{keywordflow}{else}
+517         inter(i,1) = a(1)
+518         inter(i,2) = k*inter(i,1) + q
+519 \textcolor{keywordflow}{      end if}
+520       \textcolor{keywordflow}{if} (inline(a,b, inter(i,:)) .and. inter(i,1) > bod(1)) \textcolor{keywordflow}{then}
+521         valid(i) = .true.
+522       \textcolor{keywordflow}{else}
+523         valid(i) = .false.
+524 \textcolor{keywordflow}{      end if}
+525 \textcolor{keywordflow}{    end do}
+526     
+527  
+528         
+\end{DoxyCode}
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacegeom__tools_a52bdc7b016cad84e97b0fd88231c997e_cgraph}
+\end{center}
+\end{figure}
+
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacegeom__tools_a52bdc7b016cad84e97b0fd88231c997e_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{geom\+\_\+tools@{geom\+\_\+tools}!solve\+\_\+bisect@{solve\+\_\+bisect}}
+\index{solve\+\_\+bisect@{solve\+\_\+bisect}!geom\+\_\+tools@{geom\+\_\+tools}}
+\subsubsection[{solve\+\_\+bisect(xmin, xmax, f, reps, ierr, solution)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, public geom\+\_\+tools\+::solve\+\_\+bisect (
+\begin{DoxyParamCaption}
+\item[{real(kind=rkind), intent(in)}]{xmin, }
+\item[{real(kind=rkind), intent(in)}]{xmax, }
+\item[{}]{f, }
+\item[{real(kind=rkind), intent(in)}]{reps, }
+\item[{integer, intent(out)}]{ierr, }
+\item[{real(kind=rkind), intent(out)}]{solution}
+\end{DoxyParamCaption}
+)}\label{namespacegeom__tools_a2fde1713e8d912a2be95dfa7f6789bab}
+
+
+bisecton method searching for a root of function f on defined intervals xmin and xmax 
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em xmin} & a interval where the root is searched\\
+\hline
+\mbox{\tt in}  & {\em xmax} & a interval where the root is searched\\
+\hline
+\mbox{\tt in}  & {\em reps} & accuracy\\
+\hline
+\mbox{\tt out}  & {\em ierr} & error code output\\
+\hline
+\mbox{\tt out}  & {\em solution} & the result \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 612 of file geom\+\_\+tools.\+f90.
+
+
+
+References core\+\_\+tools\+::write\+\_\+log().
+
+
+
+Referenced by re\+\_\+constitutive\+::init\+\_\+zones().
+
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=315pt]{namespacegeom__tools_a2fde1713e8d912a2be95dfa7f6789bab_cgraph}
+\end{center}
+\end{figure}
+
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacegeom__tools_a2fde1713e8d912a2be95dfa7f6789bab_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{geom\+\_\+tools@{geom\+\_\+tools}!triarea@{triarea}}
+\index{triarea@{triarea}!geom\+\_\+tools@{geom\+\_\+tools}}
+\subsubsection[{triarea(a, b, c)}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind) function, public geom\+\_\+tools\+::triarea (
+\begin{DoxyParamCaption}
+\item[{real(kind=rkind), dimension(\+:), intent(in)}]{a, }
+\item[{real(kind=rkind), dimension(\+:), intent(in)}]{b, }
+\item[{real(kind=rkind), dimension(\+:), intent(in)}]{c}
+\end{DoxyParamCaption}
+)}\label{namespacegeom__tools_af5e7826748ab86ab44154a7637fcc080}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em a} & triangle points\\
+\hline
+\mbox{\tt in}  & {\em b} & triangle points\\
+\hline
+\mbox{\tt in}  & {\em c} & triangle points\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+result 
+\end{DoxyReturn}
+
+
+Definition at line 533 of file geom\+\_\+tools.\+f90.
+
+
+
+Referenced by feminittools\+::feminit().
+
+
+\begin{DoxyCode}
+533     \textcolor{keywordtype}{use }typy
+535     \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{intent(in)} :: a,b,c
+537     \textcolor{keywordtype}{real(kind=rkind)} :: area
+538     \textcolor{keywordtype}{real(kind=rkind)} :: la,lb,lc
+539     
+540     lc = sqrt((a(1) - b(1))**2 + (a(2) - b(2))**2)
+541     
+542     lb = sqrt((a(1) - c(1))**2 + (a(2) - c(2))**2)
+543     
+544     la = sqrt((b(1) - c(1))**2 + (b(2) - c(2))**2)
+545     
+546     area = 0.25*sqrt((la+lb+lc)*(lb + lc - la)*(lc + la - lb)*(la + lb - lc))
+547   
+\end{DoxyCode}
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacegeom__tools_af5e7826748ab86ab44154a7637fcc080_icgraph}
+\end{center}
+\end{figure}
+
+

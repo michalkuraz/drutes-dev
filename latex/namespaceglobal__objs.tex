@@ -1,0 +1,424 @@
+\section{global\+\_\+objs Module Reference}
+\label{namespaceglobal__objs}\index{global\+\_\+objs@{global\+\_\+objs}}
+\subsection*{Data Types}
+\begin{DoxyCompactItemize}
+\item 
+type {\bf configuration}
+\begin{DoxyCompactList}\small\item\em structure with basic model configuration \end{DoxyCompactList}\item 
+type {\bf dirglob\+\_\+str}
+\item 
+type {\bf element}
+\begin{DoxyCompactList}\small\item\em mesh array type for elements \end{DoxyCompactList}\item 
+type {\bf extsmtx}
+\item 
+type {\bf integnodes}
+\item 
+type {\bf integpnt\+\_\+str}
+\begin{DoxyCompactList}\small\item\em structure that specifies the point \end{DoxyCompactList}\item 
+type {\bf measured}
+\item 
+type {\bf node}
+\begin{DoxyCompactList}\small\item\em mesh array type for node kolik = number of nodes id = id number of node, equal to position data = x,y coordinates bc = boundary condition for current node edge = boundary id number, if the node lies apart from any boundary, default value is 0 results = final iteration at each time step will be copied into this vector \end{DoxyCompactList}\item 
+type {\bf observation}
+\begin{DoxyCompactList}\small\item\em structure to define observation points \end{DoxyCompactList}\item 
+type {\bf observe\+\_\+info\+\_\+str}
+\item 
+type {\bf observe\+\_\+time\+\_\+str}
+\item 
+type {\bf smartarray\+\_\+int}
+\begin{DoxyCompactList}\small\item\em smart array, you don\textquotesingle{}t need to allocate -- usefull if you don\textquotesingle{}t know how many data you will write in, it is simply smart enough, it does all allocations automatically. By default the array data allocates on dimension 2, if the data doesn\textquotesingle{}t fit into this array, then the array is reallocated for a double of its original size \end{DoxyCompactList}\item 
+type {\bf smartarray\+\_\+real}
+\begin{DoxyCompactList}\small\item\em For comments and description see \doxyref{smartarray\+\_\+int}{p.}{structglobal__objs_1_1smartarray__int}. \end{DoxyCompactList}\item 
+type {\bf version}
+\end{DoxyCompactItemize}
+\subsection*{Functions/\+Subroutines}
+\begin{DoxyCompactItemize}
+\item 
+subroutine, private {\bf ismartfill} (array, input, info)
+\item 
+subroutine, private {\bf ismartfill\+\_\+norepeat} (array, input, info)
+\item 
+subroutine, private {\bf ismartclear} (array, full)
+\item 
+logical function, private {\bf ismartexist} (array, value)
+\item 
+subroutine, private {\bf rsmartfill} (array, input, info)
+\item 
+subroutine, private {\bf rsmartfill\+\_\+norepeat} (array, input, info)
+\item 
+subroutine, private {\bf rsmartclear} (array, full)
+\end{DoxyCompactItemize}
+
+
+\subsection{Function/\+Subroutine Documentation}
+\index{global\+\_\+objs@{global\+\_\+objs}!ismartclear@{ismartclear}}
+\index{ismartclear@{ismartclear}!global\+\_\+objs@{global\+\_\+objs}}
+\subsubsection[{ismartclear(array, full)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, private global\+\_\+objs\+::ismartclear (
+\begin{DoxyParamCaption}
+\item[{class({\bf smartarray\+\_\+int}), intent(inout)}]{array, }
+\item[{logical, intent(in), optional}]{full}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [private]}}\label{namespaceglobal__objs_aafa01c672498e43db42f36366b8f6a49}
+
+
+Definition at line 366 of file global\+\_\+objs.\+f90.
+
+
+\begin{DoxyCode}
+366       \textcolor{keywordtype}{class}(smartarray_int), \textcolor{keywordtype}{intent(in out)} :: array
+367       \textcolor{keywordtype}{logical}, \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional} :: full
+368       
+369       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(full) .and. full .and. \textcolor{keyword}{allocated}(array%data)) \textcolor{keywordflow}{then}
+370         \textcolor{keyword}{deallocate}(array%data)
+371 \textcolor{keywordflow}{      end if}
+372 
+373       array%pos = 0
+374       
+\end{DoxyCode}
+\index{global\+\_\+objs@{global\+\_\+objs}!ismartexist@{ismartexist}}
+\index{ismartexist@{ismartexist}!global\+\_\+objs@{global\+\_\+objs}}
+\subsubsection[{ismartexist(array, value)}]{\setlength{\rightskip}{0pt plus 5cm}logical function, private global\+\_\+objs\+::ismartexist (
+\begin{DoxyParamCaption}
+\item[{class({\bf smartarray\+\_\+int}), intent(in)}]{array, }
+\item[{integer(kind=ikind), intent(in)}]{value}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [private]}}\label{namespaceglobal__objs_a9bf5fd06455eba0abccc615f543b83c0}
+
+
+Definition at line 378 of file global\+\_\+objs.\+f90.
+
+
+\begin{DoxyCode}
+378       \textcolor{keywordtype}{use }typy
+379       \textcolor{keywordtype}{class}(smartarray_int), \textcolor{keywordtype}{intent(in)} :: array
+380       \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(in)} :: value
+381       \textcolor{keywordtype}{logical} :: exist
+382       
+383       \textcolor{keywordtype}{integer(kind=ikind)} :: i
+384       
+385       exist = .false.
+386       
+387       \textcolor{keywordflow}{do} i=1, array%pos
+388         \textcolor{keywordflow}{if} (array%data(i) == \textcolor{keywordtype}{value}) \textcolor{keywordflow}{then}
+389           exist = .true.
+390           \textcolor{keywordflow}{RETURN}
+391 \textcolor{keywordflow}{        end if}
+392 \textcolor{keywordflow}{      end do}
+393       
+\end{DoxyCode}
+\index{global\+\_\+objs@{global\+\_\+objs}!ismartfill@{ismartfill}}
+\index{ismartfill@{ismartfill}!global\+\_\+objs@{global\+\_\+objs}}
+\subsubsection[{ismartfill(array, input, info)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, private global\+\_\+objs\+::ismartfill (
+\begin{DoxyParamCaption}
+\item[{class({\bf smartarray\+\_\+int}), intent(inout)}]{array, }
+\item[{integer(kind=ikind), intent(in)}]{input, }
+\item[{integer(kind=ikind), intent(in), optional}]{info}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [private]}}\label{namespaceglobal__objs_a83fc4abb24b91daa0ee10e01514e8d4e}
+
+
+Definition at line 273 of file global\+\_\+objs.\+f90.
+
+
+
+Referenced by ismartfill\+\_\+norepeat().
+
+
+\begin{DoxyCode}
+273       \textcolor{keywordtype}{use }typy
+274       \textcolor{keywordtype}{class}(smartarray_int), \textcolor{keywordtype}{intent(in out)} :: array
+275       \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(in)} :: input
+276       \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional} :: info
+277       
+278       \textcolor{keywordtype}{integer(kind=ikind)} :: l
+279       \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable} :: itmp
+280       \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable}  :: logtmp
+281       
+282       \textcolor{comment}{! check allocations}
+283       \textcolor{keywordflow}{if} (.not. \textcolor{keyword}{allocated}(array%data)) \textcolor{keywordflow}{then}
+284         array%pos = 0
+285         \textcolor{keyword}{allocate}(array%data(1))
+286         \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(info)) \textcolor{keywordflow}{then}
+287           array%infopos = 0
+288           \textcolor{keyword}{allocate}(array%info(1))
+289 \textcolor{keywordflow}{        end if}
+290 \textcolor{keywordflow}{      end if}
+291       
+292       array%pos = array%pos+1
+293       
+294       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(info)) \textcolor{keywordflow}{then}
+295         array%infopos = array%infopos + 1
+296         \textcolor{keywordflow}{if} (array%pos /= array%infopos) \textcolor{keywordflow}{then}
+297             print *, \textcolor{stringliteral}{"this is a bug in the code"}
+298             print *, \textcolor{stringliteral}{"smartarray%data and smartarray%info has different amount of data written"}
+299             print *, \textcolor{stringliteral}{"called from global\_objs::rsmartfill"}
+300             print *, \textcolor{stringliteral}{"contact Michal -> michalkuraz@gmail.com"}
+301             error stop
+302 \textcolor{keywordflow}{        end if}
+303 \textcolor{keywordflow}{      end if}
+304       
+305       \textcolor{keywordflow}{if} (ubound(array%data,1) < array%pos) \textcolor{keywordflow}{then}
+306         l = ubound(array%data,1)
+307         \textcolor{keyword}{allocate}(itmp(l))
+308         itmp = array%data
+309         \textcolor{keyword}{deallocate}(array%data)
+310         \textcolor{keyword}{allocate}(array%data(2*l))
+311         array%data(1:l) = itmp
+312         \textcolor{keyword}{deallocate}(itmp)
+313         \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(info)) \textcolor{keywordflow}{then}
+314           \textcolor{keyword}{allocate} (logtmp(l))
+315           logtmp = array%info
+316           \textcolor{keyword}{deallocate}(array%info)
+317           \textcolor{keyword}{allocate}(array%info(2*l))
+318           array%info(1:l) = logtmp
+319           \textcolor{keyword}{deallocate}(logtmp)
+320 \textcolor{keywordflow}{        end if}    
+321 \textcolor{keywordflow}{      end if}
+322       
+323       array%data(array%pos) = input
+324       
+325       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(info)) \textcolor{keywordflow}{then}
+326         array%info = info
+327 \textcolor{keywordflow}{      end if}
+328       
+329       
+\end{DoxyCode}
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=296pt]{namespaceglobal__objs_a83fc4abb24b91daa0ee10e01514e8d4e_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{global\+\_\+objs@{global\+\_\+objs}!ismartfill\+\_\+norepeat@{ismartfill\+\_\+norepeat}}
+\index{ismartfill\+\_\+norepeat@{ismartfill\+\_\+norepeat}!global\+\_\+objs@{global\+\_\+objs}}
+\subsubsection[{ismartfill\+\_\+norepeat(array, input, info)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, private global\+\_\+objs\+::ismartfill\+\_\+norepeat (
+\begin{DoxyParamCaption}
+\item[{class({\bf smartarray\+\_\+int}), intent(inout)}]{array, }
+\item[{integer(kind=ikind), intent(in)}]{input, }
+\item[{integer(kind=ikind), intent(in), optional}]{info}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [private]}}\label{namespaceglobal__objs_af94c69343197c2486319b0485791e57d}
+
+
+Definition at line 336 of file global\+\_\+objs.\+f90.
+
+
+
+References ismartfill().
+
+
+\begin{DoxyCode}
+336       \textcolor{keywordtype}{use }typy
+337       \textcolor{keywordtype}{class}(smartarray_int), \textcolor{keywordtype}{intent(in out)} :: array
+338       \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(in)} :: input
+339       \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional} :: info
+340       
+341       \textcolor{keywordtype}{integer(kind=ikind)} :: i
+342       \textcolor{keywordtype}{logical} :: exist
+343       
+344       exist = .false.
+345       \textcolor{keywordflow}{if} (\textcolor{keyword}{allocated}(array%data)) \textcolor{keywordflow}{then}
+346         \textcolor{keywordflow}{do} i=1, array%pos
+347           \textcolor{keywordflow}{if} (array%data(i) == input) \textcolor{keywordflow}{then}
+348             exist = .true.
+349             \textcolor{keywordflow}{EXIT}
+350 \textcolor{keywordflow}{          end if}
+351 \textcolor{keywordflow}{        end do}
+352 \textcolor{keywordflow}{       end if}
+353       
+354       \textcolor{keywordflow}{if} (.not. exist) \textcolor{keywordflow}{then}
+355         \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(info)) \textcolor{keywordflow}{then}
+356           \textcolor{keyword}{call }ismartfill(array, input, info)
+357         \textcolor{keywordflow}{else}
+358           \textcolor{keyword}{call }ismartfill(array, input)
+359 \textcolor{keywordflow}{        end if}
+360 \textcolor{keywordflow}{      end if}
+361     
+362     
+\end{DoxyCode}
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=296pt]{namespaceglobal__objs_af94c69343197c2486319b0485791e57d_cgraph}
+\end{center}
+\end{figure}
+
+
+\index{global\+\_\+objs@{global\+\_\+objs}!rsmartclear@{rsmartclear}}
+\index{rsmartclear@{rsmartclear}!global\+\_\+objs@{global\+\_\+objs}}
+\subsubsection[{rsmartclear(array, full)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, private global\+\_\+objs\+::rsmartclear (
+\begin{DoxyParamCaption}
+\item[{class({\bf smartarray\+\_\+real}), intent(inout)}]{array, }
+\item[{logical, intent(in), optional}]{full}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [private]}}\label{namespaceglobal__objs_a4690e37d20db8a61e4f12c3a356ab8a6}
+
+
+Definition at line 491 of file global\+\_\+objs.\+f90.
+
+
+\begin{DoxyCode}
+491       \textcolor{keywordtype}{class}(smartarray_real), \textcolor{keywordtype}{intent(in out)} :: array
+492       \textcolor{keywordtype}{logical}, \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional} :: full
+493       
+494       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(full) .and. full .and. \textcolor{keyword}{allocated}(array%data)) \textcolor{keywordflow}{then}
+495         \textcolor{keyword}{deallocate}(array%data)
+496 \textcolor{keywordflow}{      end if}
+497 
+498       array%pos = 0
+499       
+\end{DoxyCode}
+\index{global\+\_\+objs@{global\+\_\+objs}!rsmartfill@{rsmartfill}}
+\index{rsmartfill@{rsmartfill}!global\+\_\+objs@{global\+\_\+objs}}
+\subsubsection[{rsmartfill(array, input, info)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, private global\+\_\+objs\+::rsmartfill (
+\begin{DoxyParamCaption}
+\item[{class({\bf smartarray\+\_\+real}), intent(inout)}]{array, }
+\item[{real(kind=rkind), intent(in)}]{input, }
+\item[{integer(kind=ikind), intent(in), optional}]{info}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [private]}}\label{namespaceglobal__objs_ad7685797cc189e57e3c04309b5d16cb0}
+
+
+Definition at line 398 of file global\+\_\+objs.\+f90.
+
+
+
+Referenced by rsmartfill\+\_\+norepeat().
+
+
+\begin{DoxyCode}
+398       \textcolor{keywordtype}{use }typy
+399       \textcolor{keywordtype}{class}(smartarray_real), \textcolor{keywordtype}{intent(in out)} :: array
+400       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{intent(in)} :: input
+401       \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional} :: info
+402       
+403       \textcolor{keywordtype}{integer(kind=ikind)} :: l
+404       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable} :: rtmp
+405       \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable}  :: logtmp
+406       
+407       \textcolor{comment}{! check allocations}
+408       \textcolor{keywordflow}{if} (.not. \textcolor{keyword}{allocated}(array%data)) \textcolor{keywordflow}{then}
+409         array%pos = 0
+410         \textcolor{keyword}{allocate}(array%data(1))
+411         \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(info)) \textcolor{keywordflow}{then}
+412           array%infopos = 0
+413           \textcolor{keyword}{allocate}(array%info(1))
+414 \textcolor{keywordflow}{        end if}
+415 \textcolor{keywordflow}{      end if}
+416       
+417       array%pos = array%pos+1
+418       
+419       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(info)) \textcolor{keywordflow}{then}
+420         array%infopos = array%infopos + 1
+421         \textcolor{keywordflow}{if} (array%pos /= array%infopos) \textcolor{keywordflow}{then}
+422             print *, \textcolor{stringliteral}{"this is a bug in the code"}
+423             print *, \textcolor{stringliteral}{"smartarray%data and smartarray%info has different amount of data written"}
+424             print *, \textcolor{stringliteral}{"called from global\_objs::rsmartfill"}
+425             print *, \textcolor{stringliteral}{"contact Michal -> michalkuraz@gmail.com"}
+426             error stop
+427 \textcolor{keywordflow}{        end if}
+428 \textcolor{keywordflow}{      end if}
+429       
+430       \textcolor{keywordflow}{if} (ubound(array%data,1) < array%pos) \textcolor{keywordflow}{then}
+431         l = ubound(array%data,1)
+432         \textcolor{keyword}{allocate}(rtmp(l))
+433         rtmp = array%data
+434         \textcolor{keyword}{deallocate}(array%data)
+435         \textcolor{keyword}{allocate}(array%data(2*l))
+436         array%data(1:l) = rtmp
+437         \textcolor{keyword}{deallocate}(rtmp)
+438         \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(info)) \textcolor{keywordflow}{then}
+439           \textcolor{keyword}{allocate} (logtmp(l))
+440           logtmp = array%info
+441           \textcolor{keyword}{deallocate}(array%info)
+442           \textcolor{keyword}{allocate}(array%info(2*l))
+443           array%info(1:l) = logtmp
+444           \textcolor{keyword}{deallocate}(logtmp)
+445 \textcolor{keywordflow}{        end if}    
+446 \textcolor{keywordflow}{      end if}
+447       
+448       array%data(array%pos) = input
+449       
+450       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(info)) \textcolor{keywordflow}{then}
+451         array%info = info
+452 \textcolor{keywordflow}{      end if}
+453       
+454       
+\end{DoxyCode}
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=298pt]{namespaceglobal__objs_ad7685797cc189e57e3c04309b5d16cb0_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{global\+\_\+objs@{global\+\_\+objs}!rsmartfill\+\_\+norepeat@{rsmartfill\+\_\+norepeat}}
+\index{rsmartfill\+\_\+norepeat@{rsmartfill\+\_\+norepeat}!global\+\_\+objs@{global\+\_\+objs}}
+\subsubsection[{rsmartfill\+\_\+norepeat(array, input, info)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, private global\+\_\+objs\+::rsmartfill\+\_\+norepeat (
+\begin{DoxyParamCaption}
+\item[{class({\bf smartarray\+\_\+real}), intent(inout)}]{array, }
+\item[{real(kind=rkind), intent(in)}]{input, }
+\item[{integer(kind=ikind), intent(in), optional}]{info}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [private]}}\label{namespaceglobal__objs_ab970d8c8efde024a67e48def636ee4d4}
+
+
+Definition at line 461 of file global\+\_\+objs.\+f90.
+
+
+
+References rsmartfill().
+
+
+\begin{DoxyCode}
+461       \textcolor{keywordtype}{use }typy
+462       \textcolor{keywordtype}{class}(smartarray_real), \textcolor{keywordtype}{intent(in out)} :: array
+463       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{intent(in)} :: input
+464       \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional} :: info
+465       
+466       \textcolor{keywordtype}{integer(kind=ikind)} :: i
+467       \textcolor{keywordtype}{logical} :: exist
+468       
+469       exist = .false.
+470       \textcolor{keywordflow}{if} (\textcolor{keyword}{allocated}(array%data)) \textcolor{keywordflow}{then}
+471         \textcolor{keywordflow}{do} i=1, array%pos
+472           \textcolor{keywordflow}{if} (abs(array%data(i) - input) < max(abs(array%data(i)), abs(input))*\textcolor{comment}{(epsilon(input))) }\textcolor{keywordflow}{then}
+473             exist = .true.
+474             \textcolor{keywordflow}{EXIT}
+475 \textcolor{keywordflow}{          end if}
+476 \textcolor{keywordflow}{        end do}
+477 \textcolor{keywordflow}{       end if}
+478       
+479       \textcolor{keywordflow}{if} (.not. exist) \textcolor{keywordflow}{then}
+480         \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(info)) \textcolor{keywordflow}{then}
+481           \textcolor{keyword}{call }rsmartfill(array, input, info)
+482         \textcolor{keywordflow}{else}
+483           \textcolor{keyword}{call }rsmartfill(array, input)
+484 \textcolor{keywordflow}{        end if}
+485 \textcolor{keywordflow}{      end if}
+486     
+487     
+\end{DoxyCode}
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=298pt]{namespaceglobal__objs_ab970d8c8efde024a67e48def636ee4d4_cgraph}
+\end{center}
+\end{figure}
+
+

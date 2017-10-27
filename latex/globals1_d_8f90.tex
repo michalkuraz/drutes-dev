@@ -1,0 +1,20 @@
+\section{src/core/globals1D.f90 File Reference}
+\label{globals1_d_8f90}\index{src/core/globals1\+D.\+f90@{src/core/globals1\+D.\+f90}}
+\subsection*{Modules}
+\begin{DoxyCompactItemize}
+\item 
+module {\bf globals1d}
+\begin{DoxyCompactList}\small\item\em contains specific variables for 1D problem \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+real(kind=rkind), public {\bf globals1d\+::length\+\_\+1d}
+\begin{DoxyCompactList}\small\item\em 1D mesh data \end{DoxyCompactList}\item 
+real(kind=rkind), dimension(\+:,\+:), allocatable, public {\bf globals1d\+::deltax\+\_\+1d}
+\begin{DoxyCompactList}\small\item\em 1D domain discretization array \end{DoxyCompactList}\item 
+real(kind=rkind), dimension(\+:,\+:), allocatable, public {\bf globals1d\+::materials\+\_\+1d}
+\begin{DoxyCompactList}\small\item\em 1D materials \end{DoxyCompactList}\item 
+integer(kind=ikind), dimension(\+:), allocatable, public {\bf globals1d\+::permut\+\_\+vector}
+\begin{DoxyCompactList}\small\item\em permutation array -\/ how-\/to permutate, for 1D \end{DoxyCompactList}\item 
+integer(kind=ikind), dimension(\+:), allocatable, public {\bf globals1d\+::permut\+\_\+inverse}
+\end{DoxyCompactItemize}

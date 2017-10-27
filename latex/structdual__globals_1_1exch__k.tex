@@ -1,0 +1,110 @@
+\section{dual\+\_\+globals\+:\+:exch\+\_\+k Type Reference}
+\label{structdual__globals_1_1exch__k}\index{dual\+\_\+globals\+::exch\+\_\+k@{dual\+\_\+globals\+::exch\+\_\+k}}
+
+
+exchange parameters  
+
+
+\subsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+real(kind=rkind) {\bf alpha}
+\begin{DoxyCompactList}\small\item\em inverse to air entry value or inverse to capillary rise [L$^\wedge$\{-\/1\}] \end{DoxyCompactList}\item 
+real(kind=rkind) {\bf n}
+\begin{DoxyCompactList}\small\item\em shape parameter n \end{DoxyCompactList}\item 
+real(kind=rkind) {\bf m}
+\begin{DoxyCompactList}\small\item\em shape parameter m \end{DoxyCompactList}\item 
+real(kind=rkind), dimension(\+:,\+:), allocatable {\bf ks}
+\begin{DoxyCompactList}\small\item\em hydraulic conductivity tensor of second order \end{DoxyCompactList}\item 
+real(kind=rkind), dimension(\+:), allocatable {\bf ks\+\_\+local}
+\begin{DoxyCompactList}\small\item\em hydraulic conductivity \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+exchange parameters 
+
+Definition at line 31 of file Re\+\_\+dual\+\_\+globals.\+f90.
+
+
+
+\subsection{Member Data Documentation}
+\index{dual\+\_\+globals\+::exch\+\_\+k@{dual\+\_\+globals\+::exch\+\_\+k}!alpha@{alpha}}
+\index{alpha@{alpha}!dual\+\_\+globals\+::exch\+\_\+k@{dual\+\_\+globals\+::exch\+\_\+k}}
+\subsubsection[{alpha}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind) dual\+\_\+globals\+::exch\+\_\+k\+::alpha}\label{structdual__globals_1_1exch__k_a93ac8511cdcb39facbda099361b9b814}
+
+
+inverse to air entry value or inverse to capillary rise [L$^\wedge$\{-\/1\}] 
+
+
+
+Definition at line 33 of file Re\+\_\+dual\+\_\+globals.\+f90.
+
+
+\begin{DoxyCode}
+33     \textcolor{keywordtype}{real(kind=rkind)} :: alpha
+\end{DoxyCode}
+\index{dual\+\_\+globals\+::exch\+\_\+k@{dual\+\_\+globals\+::exch\+\_\+k}!ks@{ks}}
+\index{ks@{ks}!dual\+\_\+globals\+::exch\+\_\+k@{dual\+\_\+globals\+::exch\+\_\+k}}
+\subsubsection[{ks}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind), dimension(\+:,\+:), allocatable dual\+\_\+globals\+::exch\+\_\+k\+::ks}\label{structdual__globals_1_1exch__k_a6588da44ed6d780160ad16cdc717704d}
+
+
+hydraulic conductivity tensor of second order 
+
+
+
+Definition at line 39 of file Re\+\_\+dual\+\_\+globals.\+f90.
+
+
+\begin{DoxyCode}
+39     \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:,:)}, \textcolor{keywordtype}{allocatable} :: ks
+\end{DoxyCode}
+\index{dual\+\_\+globals\+::exch\+\_\+k@{dual\+\_\+globals\+::exch\+\_\+k}!ks\+\_\+local@{ks\+\_\+local}}
+\index{ks\+\_\+local@{ks\+\_\+local}!dual\+\_\+globals\+::exch\+\_\+k@{dual\+\_\+globals\+::exch\+\_\+k}}
+\subsubsection[{ks\+\_\+local}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind), dimension(\+:), allocatable dual\+\_\+globals\+::exch\+\_\+k\+::ks\+\_\+local}\label{structdual__globals_1_1exch__k_a816b66749c3ed8a24823aa5d12797185}
+
+
+hydraulic conductivity 
+
+
+
+Definition at line 41 of file Re\+\_\+dual\+\_\+globals.\+f90.
+
+
+\begin{DoxyCode}
+41     \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable}   :: ks\_local
+\end{DoxyCode}
+\index{dual\+\_\+globals\+::exch\+\_\+k@{dual\+\_\+globals\+::exch\+\_\+k}!m@{m}}
+\index{m@{m}!dual\+\_\+globals\+::exch\+\_\+k@{dual\+\_\+globals\+::exch\+\_\+k}}
+\subsubsection[{m}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind) dual\+\_\+globals\+::exch\+\_\+k\+::m}\label{structdual__globals_1_1exch__k_aff1988e2fda4dd4719139e9a3312b290}
+
+
+shape parameter m 
+
+
+
+Definition at line 37 of file Re\+\_\+dual\+\_\+globals.\+f90.
+
+
+\begin{DoxyCode}
+37     \textcolor{keywordtype}{real(kind=rkind)} :: m
+\end{DoxyCode}
+\index{dual\+\_\+globals\+::exch\+\_\+k@{dual\+\_\+globals\+::exch\+\_\+k}!n@{n}}
+\index{n@{n}!dual\+\_\+globals\+::exch\+\_\+k@{dual\+\_\+globals\+::exch\+\_\+k}}
+\subsubsection[{n}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind) dual\+\_\+globals\+::exch\+\_\+k\+::n}\label{structdual__globals_1_1exch__k_a37177cdf73321e5b36a05b641e831a1d}
+
+
+shape parameter n 
+
+
+
+Definition at line 35 of file Re\+\_\+dual\+\_\+globals.\+f90.
+
+
+\begin{DoxyCode}
+35     \textcolor{keywordtype}{real(kind=rkind)} :: n
+\end{DoxyCode}
+
+
+The documentation for this type was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+src/models/\+R\+E\+\_\+dual/{\bf Re\+\_\+dual\+\_\+globals.\+f90}\end{DoxyCompactItemize}

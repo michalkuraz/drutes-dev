@@ -1,0 +1,28 @@
+\section{src/decompo/subcycling.f90 File Reference}
+\label{subcycling_8f90}\index{src/decompo/subcycling.\+f90@{src/decompo/subcycling.\+f90}}
+\subsection*{Modules}
+\begin{DoxyCompactItemize}
+\item 
+module {\bf subcycling}
+\end{DoxyCompactItemize}
+\subsection*{Functions/\+Subroutines}
+\begin{DoxyCompactItemize}
+\item 
+subroutine, public {\bf subcycling\+::subcyc\+\_\+schwarz} (ierr, itcount, success)
+\begin{DoxyCompactList}\small\item\em solves the problem using Picard method with Schwarz multiplicative domain decomposition reflecting the nonlinear problem \end{DoxyCompactList}\item 
+subroutine, private {\bf subcycling\+::build\+\_\+xvect} ()
+\item 
+subroutine, private {\bf subcycling\+::update\+\_\+domain} (id, bigupdate)
+\item 
+subroutine {\bf subcycling\+::search\+\_\+error\+\_\+cluster} (sub, itcount)
+\item 
+subroutine, private {\bf subcycling\+::results\+\_\+extractor} ()
+\item 
+integer(kind=ikind) function, private {\bf subcycling\+::domains\+\_\+solved} ()
+\begin{DoxyCompactList}\small\item\em counts number of solved subdomains \end{DoxyCompactList}\item 
+integer(kind=ikind) function {\bf subcycling\+::ndofs\+\_\+solved} ()
+\begin{DoxyCompactList}\small\item\em counts number of solved subdomains \end{DoxyCompactList}\item 
+subroutine, private {\bf subcycling\+::correctdoms} ()
+\item 
+subroutine, private {\bf subcycling\+::getlocres} (subdom, resvct)
+\end{DoxyCompactItemize}

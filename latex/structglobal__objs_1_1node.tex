@@ -1,0 +1,167 @@
+\section{global\+\_\+objs\+:\+:node Type Reference}
+\label{structglobal__objs_1_1node}\index{global\+\_\+objs\+::node@{global\+\_\+objs\+::node}}
+
+
+mesh array type for node kolik = number of nodes id = id number of node, equal to position data = x,y coordinates bc = boundary condition for current node edge = boundary id number, if the node lies apart from any boundary, default value is 0 results = final iteration at each time step will be copied into this vector  
+
+
+
+
+Collaboration diagram for global\+\_\+objs\+:\+:node\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=178pt]{structglobal__objs_1_1node__coll__graph}
+\end{center}
+\end{figure}
+\subsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+integer(kind=ikind) {\bf kolik}
+\item 
+integer(kind=ikind), dimension(\+:), allocatable {\bf id}
+\item 
+real(kind=rkind), dimension(\+:,\+:), allocatable {\bf data}
+\item 
+integer(kind=ikind), dimension(\+:), allocatable {\bf edge}
+\item 
+real(kind=rkind), dimension(\+:,\+:), allocatable {\bf results}
+\item 
+logical, dimension(\+:), allocatable {\bf boundary}
+\begin{DoxyCompactList}\small\item\em logical array.\+if true, then the particular node is the domain boundary node, the domain should be sufficiently Lipshitz type \end{DoxyCompactList}\item 
+integer(kind=ikind), dimension(\+:), allocatable {\bf boundary\+\_\+order}
+\begin{DoxyCompactList}\small\item\em integer array, if the node is a boundary node, then this stores the order of boundary node on the boundary curve (for 2D) \end{DoxyCompactList}\item 
+type({\bf smartarray\+\_\+int}), dimension(\+:), allocatable {\bf el2integ}
+\begin{DoxyCompactList}\small\item\em array of elements el2integ(i)data that are covered by basis function the basis function that originates from the node el2integ(i) \end{DoxyCompactList}\item 
+type({\bf smartarray\+\_\+int}), dimension(\+:), allocatable {\bf element}
+\begin{DoxyCompactList}\small\item\em list of elements of geometrical discretization, where this node belongs \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+mesh array type for node kolik = number of nodes id = id number of node, equal to position data = x,y coordinates bc = boundary condition for current node edge = boundary id number, if the node lies apart from any boundary, default value is 0 results = final iteration at each time step will be copied into this vector 
+
+Definition at line 188 of file global\+\_\+objs.\+f90.
+
+
+
+\subsection{Member Data Documentation}
+\index{global\+\_\+objs\+::node@{global\+\_\+objs\+::node}!boundary@{boundary}}
+\index{boundary@{boundary}!global\+\_\+objs\+::node@{global\+\_\+objs\+::node}}
+\subsubsection[{boundary}]{\setlength{\rightskip}{0pt plus 5cm}logical, dimension(\+:), allocatable global\+\_\+objs\+::node\+::boundary}\label{structglobal__objs_1_1node_aae148b03b33523c7b3164267bfe38a0b}
+
+
+logical array.\+if true, then the particular node is the domain boundary node, the domain should be sufficiently Lipshitz type 
+
+
+
+Definition at line 195 of file global\+\_\+objs.\+f90.
+
+
+\begin{DoxyCode}
+195     \textcolor{keywordtype}{logical}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable}             :: boundary
+\end{DoxyCode}
+\index{global\+\_\+objs\+::node@{global\+\_\+objs\+::node}!boundary\+\_\+order@{boundary\+\_\+order}}
+\index{boundary\+\_\+order@{boundary\+\_\+order}!global\+\_\+objs\+::node@{global\+\_\+objs\+::node}}
+\subsubsection[{boundary\+\_\+order}]{\setlength{\rightskip}{0pt plus 5cm}integer(kind=ikind), dimension(\+:), allocatable global\+\_\+objs\+::node\+::boundary\+\_\+order}\label{structglobal__objs_1_1node_a27ddcfdc358fa391a367a4998ad90608}
+
+
+integer array, if the node is a boundary node, then this stores the order of boundary node on the boundary curve (for 2D) 
+
+
+
+Definition at line 197 of file global\+\_\+objs.\+f90.
+
+
+\begin{DoxyCode}
+197     \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable} :: boundary\_order
+\end{DoxyCode}
+\index{global\+\_\+objs\+::node@{global\+\_\+objs\+::node}!data@{data}}
+\index{data@{data}!global\+\_\+objs\+::node@{global\+\_\+objs\+::node}}
+\subsubsection[{data}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind), dimension(\+:,\+:), allocatable global\+\_\+objs\+::node\+::data}\label{structglobal__objs_1_1node_aef94abb820696071bf6636a7a57c104d}
+
+
+Definition at line 191 of file global\+\_\+objs.\+f90.
+
+
+\begin{DoxyCode}
+191     \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:,:)}, \textcolor{keywordtype}{allocatable}  :: data
+\end{DoxyCode}
+\index{global\+\_\+objs\+::node@{global\+\_\+objs\+::node}!edge@{edge}}
+\index{edge@{edge}!global\+\_\+objs\+::node@{global\+\_\+objs\+::node}}
+\subsubsection[{edge}]{\setlength{\rightskip}{0pt plus 5cm}integer(kind=ikind), dimension(\+:), allocatable global\+\_\+objs\+::node\+::edge}\label{structglobal__objs_1_1node_ab01cdcebe98c98eda1e43a6283111823}
+
+
+Definition at line 192 of file global\+\_\+objs.\+f90.
+
+
+\begin{DoxyCode}
+192     \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable} :: edge
+\end{DoxyCode}
+\index{global\+\_\+objs\+::node@{global\+\_\+objs\+::node}!el2integ@{el2integ}}
+\index{el2integ@{el2integ}!global\+\_\+objs\+::node@{global\+\_\+objs\+::node}}
+\subsubsection[{el2integ}]{\setlength{\rightskip}{0pt plus 5cm}type({\bf smartarray\+\_\+int}), dimension(\+:), allocatable global\+\_\+objs\+::node\+::el2integ}\label{structglobal__objs_1_1node_a1cd2aa07b4e1ccd4e513b75d901d52d2}
+
+
+array of elements el2integ(i)data that are covered by basis function the basis function that originates from the node el2integ(i) 
+
+
+
+Definition at line 199 of file global\+\_\+objs.\+f90.
+
+
+\begin{DoxyCode}
+199     \textcolor{keywordtype}{type}(smartarray_int), \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable} :: el2integ
+\end{DoxyCode}
+\index{global\+\_\+objs\+::node@{global\+\_\+objs\+::node}!element@{element}}
+\index{element@{element}!global\+\_\+objs\+::node@{global\+\_\+objs\+::node}}
+\subsubsection[{element}]{\setlength{\rightskip}{0pt plus 5cm}type({\bf smartarray\+\_\+int}), dimension(\+:), allocatable global\+\_\+objs\+::node\+::element}\label{structglobal__objs_1_1node_a7371f7895a20d51177574da103d54b01}
+
+
+list of elements of geometrical discretization, where this node belongs 
+
+
+
+Definition at line 201 of file global\+\_\+objs.\+f90.
+
+
+\begin{DoxyCode}
+201     \textcolor{keywordtype}{type}(smartarray_int), \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable} :: element
+\end{DoxyCode}
+\index{global\+\_\+objs\+::node@{global\+\_\+objs\+::node}!id@{id}}
+\index{id@{id}!global\+\_\+objs\+::node@{global\+\_\+objs\+::node}}
+\subsubsection[{id}]{\setlength{\rightskip}{0pt plus 5cm}integer(kind=ikind), dimension(\+:), allocatable global\+\_\+objs\+::node\+::id}\label{structglobal__objs_1_1node_ae8fd762bd83836d135b6304d1678f582}
+
+
+Definition at line 190 of file global\+\_\+objs.\+f90.
+
+
+\begin{DoxyCode}
+190     \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable} :: id
+\end{DoxyCode}
+\index{global\+\_\+objs\+::node@{global\+\_\+objs\+::node}!kolik@{kolik}}
+\index{kolik@{kolik}!global\+\_\+objs\+::node@{global\+\_\+objs\+::node}}
+\subsubsection[{kolik}]{\setlength{\rightskip}{0pt plus 5cm}integer(kind=ikind) global\+\_\+objs\+::node\+::kolik}\label{structglobal__objs_1_1node_a31d502a06911ea13edf15478d5d7903f}
+
+
+Definition at line 189 of file global\+\_\+objs.\+f90.
+
+
+\begin{DoxyCode}
+189     \textcolor{keywordtype}{integer(kind=ikind)} ::  kolik
+\end{DoxyCode}
+\index{global\+\_\+objs\+::node@{global\+\_\+objs\+::node}!results@{results}}
+\index{results@{results}!global\+\_\+objs\+::node@{global\+\_\+objs\+::node}}
+\subsubsection[{results}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind), dimension(\+:,\+:), allocatable global\+\_\+objs\+::node\+::results}\label{structglobal__objs_1_1node_a9b6924f22b00e9284a3cf94acbe42b21}
+
+
+Definition at line 193 of file global\+\_\+objs.\+f90.
+
+
+\begin{DoxyCode}
+193     \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:,:)}, \textcolor{keywordtype}{allocatable}  :: results
+\end{DoxyCode}
+
+
+The documentation for this type was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+src/core/{\bf global\+\_\+objs.\+f90}\end{DoxyCompactItemize}

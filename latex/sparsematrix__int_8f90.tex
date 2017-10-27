@@ -1,0 +1,50 @@
+\section{src/pma++/sparsematrix\+\_\+int.f90 File Reference}
+\label{sparsematrix__int_8f90}\index{src/pma++/sparsematrix\+\_\+int.\+f90@{src/pma++/sparsematrix\+\_\+int.\+f90}}
+
+
+implementace vlastnosti ridke matice  
+
+
+\subsection*{Data Types}
+\begin{DoxyCompactItemize}
+\item 
+type {\bf sparsematrix\+\_\+int\+::elemt\+\_\+int}
+\begin{DoxyCompactList}\small\item\em typ pro prvek ridke matice \end{DoxyCompactList}\item 
+type {\bf sparsematrix\+\_\+int\+::smtx\+\_\+int}
+\begin{DoxyCompactList}\small\item\em ridka matice \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Modules}
+\begin{DoxyCompactItemize}
+\item 
+module {\bf sparsematrix\+\_\+int}
+\end{DoxyCompactItemize}
+\subsection*{Functions/\+Subroutines}
+\begin{DoxyCompactItemize}
+\item 
+integer(kind=ikind) function {\bf sparsematrix\+\_\+int\+::felem} (a, i, j)
+\begin{DoxyCompactList}\small\item\em najde prvek v ridke strukture \end{DoxyCompactList}\item 
+integer(kind=ikind) function {\bf sparsematrix\+\_\+int\+::getsp} (a, i, j)
+\begin{DoxyCompactList}\small\item\em ziska prvek z ridke matice \end{DoxyCompactList}\item 
+subroutine {\bf sparsematrix\+\_\+int\+::setsp} (r, a, i, j)
+\begin{DoxyCompactList}\small\item\em nastavi prvek matice, pokud neni tak vlozi \end{DoxyCompactList}\item 
+subroutine {\bf sparsematrix\+\_\+int\+::insertsp} (a, r, i, j)
+\begin{DoxyCompactList}\small\item\em prida neexistujici prvek do matice \end{DoxyCompactList}\item 
+subroutine {\bf sparsematrix\+\_\+int\+::removesp} (a, i, j, index)
+\begin{DoxyCompactList}\small\item\em smazne existujici prvek z ridke matici \end{DoxyCompactList}\item 
+subroutine {\bf sparsematrix\+\_\+int\+::initsp} (a, n, m)
+\begin{DoxyCompactList}\small\item\em inicializace a vymazani matice \end{DoxyCompactList}\item 
+subroutine {\bf sparsematrix\+\_\+int\+::sparseprint} (a, ncol, width, caption)
+\begin{DoxyCompactList}\small\item\em vytiskne ridkou matici \end{DoxyCompactList}\item 
+subroutine {\bf sparsematrix\+\_\+int\+::sparsedump} (a)
+\begin{DoxyCompactList}\small\item\em ridky dump \end{DoxyCompactList}\item 
+integer(kind=ikind) function {\bf sparsematrix\+\_\+int\+::sparsenz} (a)
+\begin{DoxyCompactList}\small\item\em vrati pocet nenul v matici \end{DoxyCompactList}\item 
+subroutine {\bf sparsematrix\+\_\+int\+::getcolsparse} (a, j, v, ii, nelem, mask)
+\item 
+subroutine {\bf sparsematrix\+\_\+int\+::getrowsparse} (a, i, v, jj, nelem, mask)
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+implementace vlastnosti ridke matice 
+
+xxx 

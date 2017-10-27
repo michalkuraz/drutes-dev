@@ -1,0 +1,950 @@
+\section{drutes\+\_\+init Module Reference}
+\label{namespacedrutes__init}\index{drutes\+\_\+init@{drutes\+\_\+init}}
+\subsection*{Functions/\+Subroutines}
+\begin{DoxyCompactItemize}
+\item 
+subroutine, public {\bf parse\+\_\+globals} ()
+\begin{DoxyCompactList}\small\item\em routine to open all files to read and write \end{DoxyCompactList}\item 
+subroutine, private {\bf pde\+\_\+constructor} (processes)
+\item 
+subroutine, public {\bf get\+\_\+cmd\+\_\+options} ()
+\item 
+subroutine, private {\bf set\+\_\+global\+\_\+vars} ()
+\item 
+subroutine, public {\bf init\+\_\+observe} ()
+\item 
+subroutine, public {\bf init\+\_\+measured} ()
+\item 
+subroutine, private {\bf open\+\_\+obs\+\_\+unit} (pde\+\_\+loc, name, decimals)
+\item 
+subroutine, private {\bf init\+\_\+obstimes} ()
+\end{DoxyCompactItemize}
+
+
+\subsection{Function/\+Subroutine Documentation}
+\index{drutes\+\_\+init@{drutes\+\_\+init}!get\+\_\+cmd\+\_\+options@{get\+\_\+cmd\+\_\+options}}
+\index{get\+\_\+cmd\+\_\+options@{get\+\_\+cmd\+\_\+options}!drutes\+\_\+init@{drutes\+\_\+init}}
+\subsubsection[{get\+\_\+cmd\+\_\+options()}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, public drutes\+\_\+init\+::get\+\_\+cmd\+\_\+options (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}\label{namespacedrutes__init_a1545ed5db34f1bfba97c067c63633bd6}
+
+
+Definition at line 212 of file drutes\+\_\+init.\+f90.
+
+
+
+References globals\+::cpu\+\_\+max\+\_\+time, globals\+::cpu\+\_\+time\+\_\+limit, globals\+::dir\+\_\+name, globals\+::dirglob, core\+\_\+tools\+::find\+\_\+unit(), globals\+::optim, globals\+::terminal, globals\+::terminal\+\_\+assigned, globals\+::version\+\_\+id, and globals\+::www.
+
+
+
+Referenced by main().
+
+
+\begin{DoxyCode}
+212       \textcolor{keywordtype}{use }globals
+213       \textcolor{keywordtype}{use }core_tools
+214       
+215       \textcolor{keywordtype}{character(len=64)} :: arg, oarg
+216       \textcolor{keywordtype}{character(len=4096)} :: dir
+217       \textcolor{keywordtype}{integer} :: i, fileid, ierr, j
+218       \textcolor{keywordtype}{integer},  \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable} :: skip 
+219       
+220       \textcolor{keyword}{allocate}(skip(1))
+221       skip = 0
+222       
+223       \textcolor{keywordflow}{do} i = 1, iargc()
+224         \textcolor{keyword}{call }getarg(i, arg)
+225       
+226         \textcolor{keywordflow}{if} (maxval(skip) == 0) \textcolor{keywordflow}{then}
+227           \textcolor{keywordflow}{select case}(trim(arg))
+228             \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"-o"})
+229                     \textcolor{keyword}{call }getarg(i+1,oarg)
+230                     \textcolor{keywordflow}{select case}(trim(oarg))
+231                       \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"www"})
+232                         www=.true.
+233                       \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"optim"})
+234                         optim=.true.
+235 \textcolor{keywordflow}{                      case default}
+236                         print *, \textcolor{stringliteral}{"unrecognized option after -o , exiting...."}
+237 \textcolor{keywordflow}{                    end select}
+238 
+239                     skip = 1
+240                     
+241             \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"--print-level"})
+242                     \textcolor{keyword}{call }getarg(i+1,oarg)
+243                     \textcolor{keywordflow}{if} (trim(oarg) == \textcolor{stringliteral}{"1"}) \textcolor{keywordflow}{then}
+244                       \textcolor{keyword}{call }find_unit(terminal, 2000)
+245                       \textcolor{keyword}{open}(unit=terminal, file=\textcolor{stringliteral}{"out/screen.log"}, action=\textcolor{stringliteral}{"write"}, status\textcolor{comment}{=}\textcolor{stringliteral}{"replace"}\textcolor{comment}{, iostat=
+      ierr)}
+246 \textcolor{comment}{                      }\textcolor{keywordflow}{if} (ierr /=0) \textcolor{keywordflow}{then}
+247                         \textcolor{keyword}{call }system(\textcolor{stringliteral}{"mkdir out"})
+248                         \textcolor{keyword}{open}(unit=terminal, file=\textcolor{stringliteral}{"out/screen.log"}, action=\textcolor{stringliteral}{"write"}, status=\textcolor{stringliteral}{"replace"}\textcolor{comment}{, iostat
+      =ierr)}
+249 \textcolor{comment}{}\textcolor{keywordflow}{                      end if}
+250                       \textcolor{keywordflow}{if} (ierr /=0) \textcolor{keywordflow}{then}
+251                         print *, \textcolor{stringliteral}{"ERROR: directory out cannot be created"}
+252                         error stop
+253 \textcolor{keywordflow}{                      end if}
+254                     \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (trim(oarg) == \textcolor{stringliteral}{"0"}) \textcolor{keywordflow}{then}
+255                       \textcolor{keywordflow}{CONTINUE}
+256                     \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (trim(oarg) == \textcolor{stringliteral}{"2"}) \textcolor{keywordflow}{then}
+257                         \textcolor{keyword}{call }find_unit(terminal, 2000)
+258                         \textcolor{keyword}{open}(unit=terminal, file=\textcolor{stringliteral}{"/dev/null"}, action=\textcolor{stringliteral}{"write"}, status=\textcolor{stringliteral}{"replace"}\textcolor{comment}{, iostat=ierr
+      )}
+259 \textcolor{comment}{                        }\textcolor{keywordflow}{if} (ierr /=0) \textcolor{keywordflow}{then}
+260                           print *, \textcolor{stringliteral}{"ERROR: file /dev/null does not exist, are you running GNU/Linux based
+       os?"}
+261                           print *, \textcolor{stringliteral}{"       if not do not set --print-level 2 in your command line option"}
+262                           error stop
+263 \textcolor{keywordflow}{                        end if}
+264                       \textcolor{keywordflow}{else}
+265                         print *, \textcolor{stringliteral}{"incorrect argument after --print-level, exiting..."}
+266                         error stop
+267 \textcolor{keywordflow}{                      end if}
+268                     skip = 1
+269                     terminal_assigned = .true.
+270                                     
+271             \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"-v"})
+272                 print *, \textcolor{stringliteral}{" "} //achar(27)//\textcolor{stringliteral}{'[94m'}, \textcolor{stringliteral}{"DRUtES"} //achar(27)//\textcolor{stringliteral}{'[0m'}, &
+273                 \textcolor{stringliteral}{" version: "} //achar(27)//\textcolor{stringliteral}{'[92m'}, version_id, \textcolor{stringliteral}{" "} //achar(27)//\textcolor{stringliteral}{'[0m'}
+274     \textcolor{comment}{!           print *, "compiled with:", compiler\_version()}
+275     \textcolor{comment}{!           print *, "with options:", compiler\_options()}
+276                     stop
+277             \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"--tmax"})
+278                   \textcolor{keyword}{call }getarg(i+1, oarg)
+279                   \textcolor{keyword}{read}(unit=oarg, fmt=*, iostat=ierr) cpu_max_time
+280                   \textcolor{keywordflow}{if} (ierr /= 0 .or. cpu_max_time <= 0) \textcolor{keywordflow}{then}
+281                    print *, \textcolor{stringliteral}{"incorrect maximal cpu time value (the value after --tmax option)"}
+282                    error stop
+283 \textcolor{keywordflow}{                  end if}
+284                   \textcolor{keyword}{call }getarg(i+2, oarg)
+285                   \textcolor{keywordflow}{select case}(trim(oarg))
+286                     \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"s"})
+287                       \textcolor{keywordflow}{CONTINUE}
+288                     \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"min"})
+289                       cpu_max_time = cpu_max_time * 60
+290                     \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"hrs"})
+291                       cpu_max_time = cpu_max_time * 3600
+292                     \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"day"})
+293                       cpu_max_time = cpu_max_time * 86400
+294 \textcolor{keywordflow}{                    case default}
+295                       print *, \textcolor{stringliteral}{"you have specified incorrect time units for maximal CPU time (--tmax
+       option)"}
+296                       print *, \textcolor{stringliteral}{"the available units are [s, min, hrs, day]"}
+297                       error stop
+298 \textcolor{keywordflow}{                  end select}
+299                   cpu_time_limit = .true.
+300                   \textcolor{keyword}{deallocate}(skip)
+301                   \textcolor{keyword}{allocate}(skip(2))
+302                   skip = 1
+303             \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"--dir-local"})
+304                   \textcolor{keyword}{call }getarg(i+1, dir)
+305                   \textcolor{keyword}{call }chdir(trim(dir))
+306 \textcolor{comment}{!                 if (.not. www) then}
+307                   print *, \textcolor{stringliteral}{"actual directory is:"}, trim(dir)
+308 \textcolor{comment}{!                 end if}
+309                   dir_name=dir
+310                   skip = 1
+311             \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"--dir-global"})
+312                   \textcolor{keyword}{call }getarg(i+1, dirglob%dir)
+313                   dirglob%valid = .true.
+314                   skip = 1            
+315             \textcolor{keywordflow}{case}(\textcolor{stringliteral}{""})
+316                     \textcolor{keywordflow}{CONTINUE}
+317 \textcolor{keywordflow}{            case default}
+318                     print *, \textcolor{stringliteral}{"incorrect command line options, your option was:"}
+319                     print *, trim(arg)
+320                     error stop
+321 \textcolor{keywordflow}{          end select}
+322         \textcolor{keywordflow}{else}
+323           \textcolor{keywordflow}{do} j=1, ubound(skip,1)
+324             \textcolor{keywordflow}{if} (skip(j) == 1) \textcolor{keywordflow}{then}
+325               skip(j) = 0
+326               \textcolor{keywordflow}{EXIT}  
+327 \textcolor{keywordflow}{            end if}
+328 \textcolor{keywordflow}{          end do}
+329           \textcolor{keywordflow}{if} (ubound(skip,1) > 1 .and. maxval(skip) == 0) \textcolor{keywordflow}{then}
+330             \textcolor{keyword}{deallocate}(skip)
+331             \textcolor{keyword}{allocate}(skip(1))
+332 \textcolor{keywordflow}{          end if}
+333 \textcolor{keywordflow}{        end if}
+334 \textcolor{keywordflow}{      end do}
+335       
+336       \textcolor{keywordflow}{if} (www) \textcolor{keywordflow}{then}
+337         \textcolor{keyword}{call }find_unit(fileid,1000)
+338         \textcolor{keyword}{call }system(\textcolor{stringliteral}{"rm -rf 4www"})
+339         \textcolor{keyword}{call }system(\textcolor{stringliteral}{"mkdir 4www"})
+340         \textcolor{keyword}{open}(unit=fileid, file=\textcolor{stringliteral}{"4www/mypid"}, action=\textcolor{stringliteral}{"write"}, status=\textcolor{stringliteral}{"replace"})
+341         \textcolor{keyword}{write}(unit=fileid, fmt=*) getpid()
+342         \textcolor{keyword}{close}(fileid)
+343 \textcolor{keywordflow}{      end if}
+344     
+\end{DoxyCode}
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=289pt]{namespacedrutes__init_a1545ed5db34f1bfba97c067c63633bd6_cgraph}
+\end{center}
+\end{figure}
+
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=223pt]{namespacedrutes__init_a1545ed5db34f1bfba97c067c63633bd6_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{drutes\+\_\+init@{drutes\+\_\+init}!init\+\_\+measured@{init\+\_\+measured}}
+\index{init\+\_\+measured@{init\+\_\+measured}!drutes\+\_\+init@{drutes\+\_\+init}}
+\subsubsection[{init\+\_\+measured()}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, public drutes\+\_\+init\+::init\+\_\+measured (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}\label{namespacedrutes__init_a3531f097f8fa7bd5d2d88a4772195708}
+
+
+Definition at line 479 of file drutes\+\_\+init.\+f90.
+
+
+
+References geom\+\_\+tools\+::dist(), globals\+::measured\+\_\+pts, globals\+::nodes, and globals\+::outer\+\_\+boundaries.
+
+
+
+Referenced by main().
+
+
+\begin{DoxyCode}
+479       \textcolor{keywordtype}{use }typy
+480       \textcolor{keywordtype}{use }globals
+481       \textcolor{keywordtype}{use }global_objs
+482       \textcolor{keywordtype}{use }pde_objs
+483       \textcolor{keywordtype}{use }geom_tools
+484       \textcolor{keywordtype}{use }core_tools 
+485       
+486       \textcolor{keywordtype}{integer(kind=ikind)} :: i,j
+487       \textcolor{keywordtype}{real(kind=rkind)} :: act\_dist
+488       
+489       
+490       act\_dist = huge(act\_dist)
+491       \textcolor{keywordflow}{do} i=1, ubound(measured_pts,1)
+492         \textcolor{keywordflow}{do} j=1, nodes%kolik
+493           \textcolor{keywordflow}{if} (dist(measured_pts(i)%xyz, nodes%data(j,:)) < act\_dist) \textcolor{keywordflow}{then}
+494             measured_pts(i)%node = j
+495             act\_dist = dist(measured_pts(i)%xyz, nodes%data(j,:))
+496             \textcolor{keywordflow}{if} (act\_dist <= epsilon(act\_dist)) \textcolor{keywordflow}{EXIT}
+497 \textcolor{keywordflow}{          end if}
+498 \textcolor{keywordflow}{        end do}
+499 \textcolor{keywordflow}{      end do}
+500       
+501       outer_boundaries = maxval(nodes%edge)
+502       
+503       \textcolor{keywordflow}{do} i=1, ubound(measured_pts,1)
+504        nodes%edge(measured_pts(i)%node) = outer_boundaries + i
+505 \textcolor{keywordflow}{      end do}
+506       
+507           
+508 
+509       
+510       
+\end{DoxyCode}
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=297pt]{namespacedrutes__init_a3531f097f8fa7bd5d2d88a4772195708_cgraph}
+\end{center}
+\end{figure}
+
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=246pt]{namespacedrutes__init_a3531f097f8fa7bd5d2d88a4772195708_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{drutes\+\_\+init@{drutes\+\_\+init}!init\+\_\+observe@{init\+\_\+observe}}
+\index{init\+\_\+observe@{init\+\_\+observe}!drutes\+\_\+init@{drutes\+\_\+init}}
+\subsubsection[{init\+\_\+observe()}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, public drutes\+\_\+init\+::init\+\_\+observe (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}\label{namespacedrutes__init_ad427e6d36ddcd56e4e4c44eb4dee50c5}
+
+
+Definition at line 405 of file drutes\+\_\+init.\+f90.
+
+
+
+References globals\+::drutes\+\_\+config, globals\+::elements, core\+\_\+tools\+::find\+\_\+unit(), geom\+\_\+tools\+::inside(), globals\+::nodes, globals\+::observation\+\_\+array, open\+\_\+obs\+\_\+unit(), and pde\+\_\+objs\+::pde.
+
+
+
+Referenced by main().
+
+
+\begin{DoxyCode}
+405       \textcolor{keywordtype}{use }typy
+406       \textcolor{keywordtype}{use }globals
+407       \textcolor{keywordtype}{use }global_objs
+408       \textcolor{keywordtype}{use }pde_objs
+409       \textcolor{keywordtype}{use }geom_tools
+410       \textcolor{keywordtype}{use }core_tools
+411       \textcolor{keywordtype}{use }debug_tools
+412 
+413       \textcolor{keywordtype}{integer(kind=ikind)} :: i, j, k, point, dec
+414       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:,:)}, \textcolor{keywordtype}{allocatable} :: domain
+415       \textcolor{keywordtype}{logical} :: error\_stop = .false.
+416 
+417       \textcolor{keyword}{allocate}(domain(ubound(elements%data,2), drutes_config%dimen))
+418 
+419       observation_array(:)%element = 0
+420       
+421       \textcolor{keywordflow}{do} i=1, ubound(observation_array,1)
+422         \textcolor{keyword}{allocate}(observation_array(i)%cumflux(ubound(pde,1)))
+423         observation_array(i)%cumflux = 0.0\_rkind
+424 \textcolor{keywordflow}{      end do}
+425       
+426 
+427       \textcolor{keywordflow}{do} i = 1, ubound(observation_array,1)
+428         \textcolor{keywordflow}{do} j=1, elements%kolik
+429           \textcolor{keywordflow}{do} k=1, ubound(elements%data,2)
+430             domain(k,:) = nodes%data(elements%data(j,k),:)
+431 \textcolor{keywordflow}{          end do}
+432           \textcolor{keywordflow}{if} (inside(domain, observation_array(i)%xyz)) \textcolor{keywordflow}{then}
+433             observation_array(i)%element = j
+434             \textcolor{keywordflow}{EXIT}
+435           \textcolor{keywordflow}{else}
+436             \textcolor{keywordflow}{CONTINUE}
+437 \textcolor{keywordflow}{          end if}
+438 \textcolor{keywordflow}{        end do}
+439 \textcolor{keywordflow}{      end do}
+440 
+441       \textcolor{keywordflow}{do} i=1, ubound(observation_array,1)
+442         \textcolor{keywordflow}{if} (observation_array(i)%element == 0) \textcolor{keywordflow}{then}
+443           print *, \textcolor{stringliteral}{"ERROR: observation point: "}, i, \textcolor{stringliteral}{"with coordinates: "}, 
+      observation_array\textcolor{comment}{(i)%xyz, }\textcolor{stringliteral}{"lies out of domain"}
+444           error\_stop = .true.
+445 \textcolor{keywordflow}{        end if}
+446 \textcolor{keywordflow}{      end do}
+447 
+448       \textcolor{keywordflow}{if} (error\_stop) \textcolor{keywordflow}{then}
+449         error stop \textcolor{stringliteral}{"error in observation points definition, check drutes.conf/global.conf"}
+450 \textcolor{keywordflow}{      end if}
+451 
+452       
+453       \textcolor{keywordflow}{do} i=1, ubound(pde,1)
+454         \textcolor{keyword}{allocate}(pde(i)%obspt\_filename(ubound(observation_array,1)))
+455 \textcolor{keywordflow}{      end do}
+456 
+457 
+458       \textcolor{keywordflow}{do} point=1, ubound(observation_array,1)
+459         \textcolor{keywordflow}{do} i=1, ubound(pde,1)
+460           \textcolor{keyword}{call }find_unit(pde(i)%obspt\_unit(point),5000)
+461           dec = 0
+462           \textcolor{keywordflow}{do} 
+463             dec = dec+1
+464             \textcolor{keywordflow}{if} (point/(10**dec) < 1) \textcolor{keywordflow}{then}
+465               \textcolor{keywordflow}{EXIT}
+466 \textcolor{keywordflow}{            end if}
+467 \textcolor{keywordflow}{          end do}
+468           \textcolor{keyword}{call }open\_obs\_unit(pde(i), point, dec)
+469 \textcolor{keywordflow}{        end do}
+470 \textcolor{keywordflow}{      end do}
+471 
+472       \textcolor{keyword}{deallocate}(domain)
+473       
+474 
+\end{DoxyCode}
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacedrutes__init_ad427e6d36ddcd56e4e4c44eb4dee50c5_cgraph}
+\end{center}
+\end{figure}
+
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=238pt]{namespacedrutes__init_ad427e6d36ddcd56e4e4c44eb4dee50c5_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{drutes\+\_\+init@{drutes\+\_\+init}!init\+\_\+obstimes@{init\+\_\+obstimes}}
+\index{init\+\_\+obstimes@{init\+\_\+obstimes}!drutes\+\_\+init@{drutes\+\_\+init}}
+\subsubsection[{init\+\_\+obstimes()}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, private drutes\+\_\+init\+::init\+\_\+obstimes (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [private]}}\label{namespacedrutes__init_a3fad3da1159cce8aa8cbaba2e2dfcc2b}
+
+
+Definition at line 557 of file drutes\+\_\+init.\+f90.
+
+
+
+References globals\+::end\+\_\+time, globals\+::observe\+\_\+info, and globals\+::observe\+\_\+time.
+
+
+
+Referenced by parse\+\_\+globals().
+
+
+\begin{DoxyCode}
+557       \textcolor{keywordtype}{use }typy
+558       \textcolor{keywordtype}{use }globals
+559       \textcolor{keywordtype}{use }global_objs
+560       
+561       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:,:)}, \textcolor{keywordtype}{allocatable} :: tables
+562       \textcolor{keywordtype}{real(kind=rkind)} :: curtime, dt
+563       \textcolor{keywordtype}{integer(kind=ikind)} :: i, j, insert
+564       \textcolor{keywordtype}{type}(smartarray_int) :: loc
+565       
+566       
+567       \textcolor{keyword}{allocate}(tables(ubound(observe_time,1),2))      
+568       tables(:,1) = observe_time(1:ubound(tables,1))%value
+569       
+570       \textcolor{keywordflow}{if} (observe_info%anime) \textcolor{keywordflow}{then}
+571         dt = end_time/observe_info%nframes
+572         \textcolor{keywordflow}{do} i=1, observe_info%nframes
+573           tables(i + ubound(observe_time,1) - observe_info%nframes,1) = i*dt
+574 \textcolor{keywordflow}{        end do}  
+575 \textcolor{keywordflow}{      end if}
+576  
+577       curtime = 0.0
+578 
+579       
+580       i=0
+581       \textcolor{keywordflow}{do}
+582         \textcolor{keywordflow}{where} (tables(:,1) - curtime > epsilon(curtime))
+583           tables(:,2) = tables(:,1) - curtime
+584         \textcolor{keywordflow}{else} \textcolor{keywordflow}{where}
+585           tables(:,2) = huge(dt)
+586 \textcolor{keywordflow}{        end where}
+587         
+588         \textcolor{keyword}{call }loc%nrfill(1\_ikind*minloc((tables(:,2)),1))
+589         
+590         \textcolor{keywordflow}{do} j=1, ubound(observe_time,1)
+591           \textcolor{keywordflow}{if} (abs(tables(j,1) - tables(loc%data(1),1)) < epsilon(dt) .and. j/=loc%data\textcolor{comment}{(1)) }\textcolor{keywordflow}{then}
+592             \textcolor{keyword}{call }loc%nrfill(j)
+593 \textcolor{keywordflow}{          end if}
+594 \textcolor{keywordflow}{        end do}
+595         
+596         \textcolor{keywordflow}{do} j=1, loc%pos
+597           insert = loc%data(j)
+598           i=min(i+1, ubound(observe_time,1))
+599           
+600           \textcolor{keywordflow}{if} (i == 0) \textcolor{keywordflow}{then}
+601             \textcolor{keywordflow}{RETURN}
+602 \textcolor{keywordflow}{          end if}
+603           
+604           \textcolor{keywordflow}{if} (insert >  ubound(observe_time,1) - observe_info%nframes .and. 
+      observe_info%anime\textcolor{comment}{) }\textcolor{keywordflow}{then}
+605             observe_time(i)%name = \textcolor{stringliteral}{"avi"}
+606           \textcolor{keywordflow}{else}
+607             observe_time(i)%name = \textcolor{stringliteral}{"obs"}
+608 \textcolor{keywordflow}{          end if}
+609           
+610           observe_time(i)%value = tables(insert,1)
+611           curtime = observe_time(i)%value
+612 \textcolor{keywordflow}{        end do}
+613 
+614         \textcolor{keyword}{call }loc%clear()
+615         
+616         \textcolor{keywordflow}{if} (i==ubound(observe_time,1)) \textcolor{keywordflow}{then}
+617           \textcolor{keywordflow}{EXIT}
+618 \textcolor{keywordflow}{        end if}
+619         
+620 \textcolor{keywordflow}{      end do}
+621       
+\end{DoxyCode}
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacedrutes__init_a3fad3da1159cce8aa8cbaba2e2dfcc2b_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{drutes\+\_\+init@{drutes\+\_\+init}!open\+\_\+obs\+\_\+unit@{open\+\_\+obs\+\_\+unit}}
+\index{open\+\_\+obs\+\_\+unit@{open\+\_\+obs\+\_\+unit}!drutes\+\_\+init@{drutes\+\_\+init}}
+\subsubsection[{open\+\_\+obs\+\_\+unit(pde\+\_\+loc, name, decimals)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, private drutes\+\_\+init\+::open\+\_\+obs\+\_\+unit (
+\begin{DoxyParamCaption}
+\item[{class({\bf pde\+\_\+str}), intent(inout)}]{pde\+\_\+loc, }
+\item[{integer(kind=ikind), intent(in)}]{name, }
+\item[{integer(kind=ikind), intent(in)}]{decimals}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [private]}}\label{namespacedrutes__init_a7aa725ee0435aac36ecc6c6766a7686f}
+
+
+Definition at line 515 of file drutes\+\_\+init.\+f90.
+
+
+
+References globals\+::drutes\+\_\+config.
+
+
+
+Referenced by init\+\_\+observe().
+
+
+\begin{DoxyCode}
+515       \textcolor{keywordtype}{use }typy
+516       \textcolor{keywordtype}{use }globals
+517       \textcolor{keywordtype}{use }global_objs
+518       \textcolor{keywordtype}{use }pde_objs
+519 
+520       \textcolor{keywordtype}{class}(pde_str), \textcolor{keywordtype}{intent(in out)} :: pde\_loc
+521       \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(in)} :: name
+522       \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(in)} :: decimals
+523       \textcolor{keywordtype}{character(len=64)} :: forma
+524       \textcolor{keywordtype}{character(len=10)}, \textcolor{keywordtype}{dimension(3)} :: xyz
+525 
+526 
+527       xyz(1) = \textcolor{stringliteral}{"x"}
+528       xyz(2) = \textcolor{stringliteral}{"z"}
+529       xyz(3) = \textcolor{stringliteral}{"y"}
+530       
+531       \textcolor{keyword}{write}(unit=forma, fmt=\textcolor{stringliteral}{"(a, I16, a)"}) \textcolor{stringliteral}{"(a, a, a, I"}, decimals, \textcolor{stringliteral}{", a)"}
+532       \textcolor{keyword}{write}(unit=pde\_loc%obspt\_filename(name), fmt=forma) \textcolor{stringliteral}{"out/obspt\_"}, adjustl\textcolor{comment}{(trim(pde\_loc%problem\_name(1
+      ))), }\textcolor{stringliteral}{"-"}\textcolor{comment}{, name, }\textcolor{stringliteral}{".out"}
+533      
+534       \textcolor{keywordflow}{if} (.not. drutes_config%run\_from\_backup) \textcolor{keywordflow}{then}
+535         \textcolor{keyword}{open}(unit=pde\_loc%obspt\_unit(name), file=adjustl(trim(pde\_loc%obspt\_filename\textcolor{comment}{(name))), action=}\textcolor{stringliteral}{
+      "write"}\textcolor{comment}{, status=}\textcolor{stringliteral}{"replace"}\textcolor{comment}{)}
+536 \textcolor{comment}{        }
+537 \textcolor{comment}{        }\textcolor{keyword}{write}(unit=pde\_loc%obspt\_unit(name), fmt=*) \textcolor{stringliteral}{"#        time                      "}\textcolor{comment}{, &}
+538 \textcolor{comment}{          trim(pde\_loc%solution\_name(2)), }\textcolor{stringliteral}{"            "}, &
+539         \textcolor{comment}{!  trim(pde\_loc%solution\_name(2)), " (avg over el.)", &}
+540          \textcolor{stringliteral}{"       "}, trim(pde\_loc%mass\_name(2)), \textcolor{stringliteral}{"       "},&
+541           trim(pde\_loc%flux\_name(2)), \textcolor{stringliteral}{"   in    "}, xyz(1:drutes_config%dimen), \textcolor{stringliteral}{"     directions"}\textcolor{comment}{, }\textcolor{stringliteral}{"  
+       cumulative flux"}
+542         \textcolor{keyword}{write}(unit=pde\_loc%obspt\_unit(name), fmt=*) &
+543           \textcolor{stringliteral}{
+      "#-----------------------------------------------------------------------------------------------"}
+544         \textcolor{keyword}{write}(unit=pde\_loc%obspt\_unit(name), fmt=*)
+545         \textcolor{comment}{!J added }
+546 \textcolor{comment}{!       close(unit=pde\_loc%obspt\_unit(name))}
+547       \textcolor{keywordflow}{else}
+548         \textcolor{keyword}{open}(unit=pde\_loc%obspt\_unit(name), file=adjustl(trim(pde\_loc%obspt\_filename\textcolor{comment}{(name))), &}
+549 \textcolor{comment}{              action=}\textcolor{stringliteral}{"write"}, access=\textcolor{stringliteral}{"append"}, status=\textcolor{stringliteral}{"old"})
+550 \textcolor{keywordflow}{      end if}
+551 
+552           
+\end{DoxyCode}
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacedrutes__init_a7aa725ee0435aac36ecc6c6766a7686f_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{drutes\+\_\+init@{drutes\+\_\+init}!parse\+\_\+globals@{parse\+\_\+globals}}
+\index{parse\+\_\+globals@{parse\+\_\+globals}!drutes\+\_\+init@{drutes\+\_\+init}}
+\subsubsection[{parse\+\_\+globals()}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, public drutes\+\_\+init\+::parse\+\_\+globals (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}\label{namespacedrutes__init_ac0d99b874b2dbf6a5726f534d3ee0943}
+
+
+routine to open all files to read and write 
+
+
+
+Definition at line 25 of file drutes\+\_\+init.\+f90.
+
+
+
+References globals\+::debugfile, globals\+::debugmode, globals\+::dirglob, globals\+::drutes\+\_\+config, globals\+::file\+\_\+global, globals\+::file\+\_\+itcg, globals\+::file\+\_\+mesh, globals\+::file\+\_\+wwwglob, core\+\_\+tools\+::find\+\_\+unit(), init\+\_\+obstimes(), globals\+::logfile, pde\+\_\+objs\+::pde\+\_\+common, pde\+\_\+constructor(), read\+\_\+inputs\+::read\+\_\+1dmesh\+\_\+int(), read\+\_\+inputs\+::read\+\_\+2dmesh\+\_\+gmsh(), read\+\_\+inputs\+::read\+\_\+2dmesh\+\_\+int(), read\+\_\+inputs\+::read\+\_\+2dmesh\+\_\+t3d(), read\+\_\+inputs\+::read\+\_\+global(), set\+\_\+global\+\_\+vars(), globals\+::terminal, core\+\_\+tools\+::write\+\_\+log(), and globals\+::www.
+
+
+
+Referenced by main().
+
+
+\begin{DoxyCode}
+25       \textcolor{keywordtype}{use }typy
+26       \textcolor{keywordtype}{use }globals
+27       \textcolor{keywordtype}{use }pde_objs
+28       \textcolor{keywordtype}{use }core_tools
+29       \textcolor{keywordtype}{use }read_inputs
+30       \textcolor{keywordtype}{use }readtools
+31       \textcolor{keywordtype}{use }debug_tools
+32 
+33 
+34       \textcolor{keywordtype}{integer} :: i\_err, i
+35       \textcolor{keywordtype}{character(len=256)} ::  writer
+36       \textcolor{keywordtype}{character(len=8192)} :: dirname
+37       \textcolor{keywordtype}{real(kind=rkind)} :: const
+38 
+39 
+40       \textcolor{keyword}{call }find_unit(logfile, 2000)
+41 
+42       \textcolor{keyword}{open}(unit=logfile, file=\textcolor{stringliteral}{"out/DRUtES.log"}, action=\textcolor{stringliteral}{"write"}, status=\textcolor{stringliteral}{"replace"}\textcolor{comment}{, iostat=i\_err)}
+43 \textcolor{comment}{      }
+44 \textcolor{comment}{      }\textcolor{keywordflow}{if} (i\_err /= 0) \textcolor{keywordflow}{then}
+45         i\_err=system(\textcolor{stringliteral}{"mkdir out"})
+46         \textcolor{keyword}{open}(unit=logfile, file=\textcolor{stringliteral}{"out/DRUtES.log"}, action=\textcolor{stringliteral}{"write"}, status\textcolor{comment}{=}\textcolor{stringliteral}{"replace"}\textcolor{comment}{, iostat=i\_err)}
+47 \textcolor{comment}{        }\textcolor{keywordflow}{if} (i\_err /= 0) \textcolor{keywordflow}{then}
+48           print *, \textcolor{stringliteral}{"unable to open and create directory out (is it UN*X type os?), called  from
+       drutes\_init::parse\_globals"}
+49           error stop
+50 \textcolor{keywordflow}{        end if}
+51           
+52 \textcolor{keywordflow}{      end if}
+53       
+54       \textcolor{keyword}{write}(unit=logfile, fmt=*)  \textcolor{stringliteral}{"  \_\_\_\_\_  \_\_\_\_\_  \_    \_ \_   \_\_\_\_\_\_  \_\_\_\_\_ "}
+55       \textcolor{keyword}{write}(unit=logfile, fmt=*)  \textcolor{stringliteral}{" |  \_\_ \(\backslash\)|  \_\_ \(\backslash\)| |  | | | |  \_\_\_\_|/ \_\_\_\_|"}
+56       \textcolor{keyword}{write}(unit=logfile, fmt=*)  \textcolor{stringliteral}{" | |  | | |\_\_) | |  | | |\_| |\_\_  | (\_\_\_  "}
+57       \textcolor{keyword}{write}(unit=logfile, fmt=*)  \textcolor{stringliteral}{" | |  | |  \_  /| |  | | \_\_|  \_\_|  \(\backslash\)\_\_\_ \(\backslash\) "}
+58       \textcolor{keyword}{write}(unit=logfile, fmt=*)  \textcolor{stringliteral}{" | |\_\_| | | \(\backslash\) \(\backslash\)| |\_\_| | |\_| |\_\_\_\_ \_\_\_\_) | "}
+59       \textcolor{keyword}{write}(unit=logfile, fmt=*)  \textcolor{stringliteral}{" |\_\_\_\_\_/|\_|  \(\backslash\)\_\(\backslash\)\(\backslash\)\_\_\_\_/ \(\backslash\)\_\_|\_\_\_\_\_\_|\_\_\_\_\_/ "}
+60       
+61       \textcolor{keyword}{write}(unit=logfile, fmt=*)  \textcolor{stringliteral}{" "}
+62       \textcolor{keyword}{write}(unit=logfile, fmt=*)  \textcolor{stringliteral}{" "}
+63       \textcolor{keyword}{write}(unit=logfile, fmt=*)  \textcolor{stringliteral}{" "}
+64     
+65       \textcolor{keyword}{write}(unit=logfile, fmt=*, iostat = i\_err) \textcolor{stringliteral}{"DRUtES is initialising, reading input files"}
+66 
+67       \textcolor{keyword}{call }find_unit(file_itcg, 2000)
+68 
+69       \textcolor{keyword}{open}(unit=file_itcg, file=\textcolor{stringliteral}{"out/cgit.count"}, action=\textcolor{stringliteral}{"write"}, status\textcolor{comment}{=}\textcolor{stringliteral}{"replace"}\textcolor{comment}{, iostat=i\_err)}
+70 \textcolor{comment}{      }
+71 \textcolor{comment}{      }\textcolor{keyword}{call }write_log(text=\textcolor{stringliteral}{"total number of parallel images is:"}, int1=1\_ikind\textcolor{comment}{*num\_images())}
+72 \textcolor{comment}{}
+73 \textcolor{comment}{      }\textcolor{keyword}{call }write_log(\textcolor{stringliteral}{"reading input files and allocating..."})
+74 
+75       \textcolor{comment}{!global.conf}
+76       \textcolor{keyword}{call }find_unit(file_global, 200)
+77       
+78       \textcolor{keyword}{open}(unit=file_global,file=\textcolor{stringliteral}{"drutes.conf/global.conf"}, action=\textcolor{stringliteral}{"read"}\textcolor{comment}{, status=}\textcolor{stringliteral}{"old"}\textcolor{comment}{, iostat = i\_err)}
+79 \textcolor{comment}{}
+80 \textcolor{comment}{}
+81 \textcolor{comment}{      }\textcolor{keywordflow}{if} (i\_err /= 0) \textcolor{keywordflow}{then}
+82         print *, \textcolor{stringliteral}{"missing drutes.conf/global.conf file"}
+83         error stop
+84 \textcolor{keywordflow}{      end if}
+85       
+86       
+87       \textcolor{keywordflow}{if} (www) \textcolor{keywordflow}{then}
+88         \textcolor{keywordflow}{if} (.not. dirglob%valid) \textcolor{keywordflow}{then}
+89           print *, \textcolor{stringliteral}{"if you have specified option www you MUST specify location with global settings"}
+90           print *, \textcolor{stringliteral}{"specify option --dir-global path/to/your/global/settings"}
+91           error stop
+92 \textcolor{keywordflow}{        end if}
+93         \textcolor{keyword}{call }find_unit(file_wwwglob, 200)
+94         \textcolor{keyword}{write}(dirname, fmt=*) trim(dirglob%dir), \textcolor{stringliteral}{"drutes\_global.conf/global.conf"}\textcolor{comment}{ }
+95 \textcolor{comment}{        }\textcolor{keyword}{open}(unit=file_wwwglob,file=trim(adjustl(dirname)), action=\textcolor{stringliteral}{"read"}, status\textcolor{comment}{=}\textcolor{stringliteral}{"old"}\textcolor{comment}{, iostat = i\_err)}
+96 \textcolor{comment}{        }\textcolor{keywordflow}{if} (i\_err /= 0) \textcolor{keywordflow}{then}
+97           print *, \textcolor{stringliteral}{"incorrect definition of global configuration file"}
+98           print *, \textcolor{stringliteral}{"your definition was: "}, trim(dirglob%dir)
+99           print *, \textcolor{stringliteral}{"the constructed path was: "}, trim(adjustl(dirname))
+100           error stop
+101 \textcolor{keywordflow}{        end if}
+102 
+103 \textcolor{keywordflow}{      end if}
+104      
+105       
+106       \textcolor{keyword}{call }read_global()
+107      
+108       \textcolor{keyword}{call }set\_global\_vars()
+109       
+110       \textcolor{keyword}{call }init\_obstimes()
+111 
+112        \textcolor{comment}{!read mesh data}
+113       \textcolor{keyword}{call }find_unit(file_mesh, 200)
+114       \textcolor{keywordflow}{select case}(drutes_config%dimen)
+115         \textcolor{keywordflow}{case}(1)
+116           \textcolor{keyword}{open}(unit=file_mesh, file=\textcolor{stringliteral}{"drutes.conf/mesh/drumesh1d.conf"}, action\textcolor{comment}{=}\textcolor{stringliteral}{"read"}\textcolor{comment}{, status=}\textcolor{stringliteral}{"old"}\textcolor{comment}{, iostat=
+      i\_err)}
+117 \textcolor{comment}{          }\textcolor{keywordflow}{if} (i\_err /= 0) \textcolor{keywordflow}{then}
+118             print *, \textcolor{stringliteral}{"missing drutes.conf/mesh/drumesh1d.conf file"}
+119             error stop
+120 \textcolor{keywordflow}{          end if}
+121           \textcolor{keyword}{call }read_1dmesh_int()
+122 
+123         \textcolor{keywordflow}{case}(2)
+124           \textcolor{keywordflow}{select case}(drutes_config%mesh\_type)
+125             \textcolor{keywordflow}{case}(1)
+126               \textcolor{keyword}{open}(unit=file_mesh, file=\textcolor{stringliteral}{"drutes.conf/mesh/drumesh2d.conf"}, action\textcolor{comment}{=}\textcolor{stringliteral}{"read"}\textcolor{comment}{, status=}\textcolor{stringliteral}{"old"}\textcolor{comment}{, 
+      iostat=i\_err)}
+127 \textcolor{comment}{              }\textcolor{keywordflow}{if} (i\_err /= 0) \textcolor{keywordflow}{then}
+128                 print *, \textcolor{stringliteral}{"missing drutes.conf/mesh/drumesh2d.conf file"}
+129                 error stop
+130 \textcolor{keywordflow}{              end if}
+131               \textcolor{keyword}{call }read_2dmesh_int()
+132             \textcolor{keywordflow}{case}(2)
+133               \textcolor{keyword}{open}(unit=file_mesh, file=\textcolor{stringliteral}{"drutes.conf/mesh/mesh.t3d"}, action=\textcolor{stringliteral}{"read"}\textcolor{comment}{, status=}\textcolor{stringliteral}{"old"}\textcolor{comment}{, iostat=
+      i\_err)}
+134 \textcolor{comment}{              }\textcolor{keywordflow}{if} (i\_err /= 0) \textcolor{keywordflow}{then}
+135                 print *, \textcolor{stringliteral}{"missing drutes.conf/mesh/mesh.t3d file"}
+136                 error stop
+137 \textcolor{keywordflow}{              end if}
+138               \textcolor{keyword}{call }read_2dmesh_t3d()
+139             \textcolor{keywordflow}{case}(3)
+140               \textcolor{keyword}{open}(unit=file_mesh, file=\textcolor{stringliteral}{"drutes.conf/mesh/mesh.msh"}, action=\textcolor{stringliteral}{"read"}\textcolor{comment}{, status=}\textcolor{stringliteral}{"old"}\textcolor{comment}{, iostat=
+      i\_err)}
+141 \textcolor{comment}{              }\textcolor{keywordflow}{if} (i\_err /= 0) \textcolor{keywordflow}{then}
+142                 print *, \textcolor{stringliteral}{"missing drutes.conf/mesh/mesh.msh file"}
+143                 error stop
+144 \textcolor{keywordflow}{              end if}
+145               \textcolor{keyword}{call }read_2dmesh_gmsh()
+146 \textcolor{keywordflow}{            case default}
+147               \textcolor{keyword}{write}(unit=terminal, fmt=*) \textcolor{stringliteral}{"INCORRECT mesh type definition"}
+148               \textcolor{keyword}{write}(unit=terminal, fmt=*)\textcolor{stringliteral}{"you have defined value:"}, 
+      drutes_config%mesh\_type
+149               \textcolor{keyword}{write}(unit=terminal, fmt=*) \textcolor{stringliteral}{"the available options are: 1 - internal mesh generator"}\textcolor{comment}{ }
+150 \textcolor{comment}{              }\textcolor{keyword}{write}(unit=terminal, fmt=*) \textcolor{stringliteral}{"   (very simple uniform meshes, for debuging only"}
+151               \textcolor{keyword}{write}(unit=terminal, fmt=*)\textcolor{stringliteral}{"                           2 - t3d mesh generator"}
+152               \textcolor{keyword}{write}(unit=terminal, fmt=*)\textcolor{stringliteral}{"                           3 - gmsh mesh generator"}
+153               \textcolor{keyword}{write}(unit=terminal, fmt=*)\textcolor{stringliteral}{"exiting, called from drutes\_init::parse\_globals"}
+154               error stop
+155 \textcolor{keywordflow}{           end select}
+156 \textcolor{keywordflow}{        case default}
+157           \textcolor{keyword}{write}(unit=terminal, fmt=*)\textcolor{stringliteral}{"ERROR: unsupported problem dimension, the specified dimension was: "}\textcolor{comment}{,
+       drutes_config%dimen}
+158 \textcolor{comment}{          }\textcolor{keyword}{write}(unit=terminal, fmt=*)\textcolor{stringliteral}{"currently only 1D and 2D is supported"}
+159           error stop 
+160 \textcolor{keywordflow}{      end select}
+161 
+162       \textcolor{keyword}{call }pde\_constructor(pde_common%processes)
+163       
+164       \textcolor{keywordflow}{if} (debugmode) \textcolor{keywordflow}{then}
+165         \textcolor{keyword}{call }find_unit(debugfile)
+166         \textcolor{keyword}{open}(unit=debugfile, file=\textcolor{stringliteral}{"out/debug.infos"}, action=\textcolor{stringliteral}{"write"}, status=\textcolor{stringliteral}{"replace"}\textcolor{comment}{)}
+167 \textcolor{comment}{}\textcolor{keywordflow}{      end if}
+168 
+169       
+170 
+\end{DoxyCode}
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacedrutes__init_ac0d99b874b2dbf6a5726f534d3ee0943_cgraph}
+\end{center}
+\end{figure}
+
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=210pt]{namespacedrutes__init_ac0d99b874b2dbf6a5726f534d3ee0943_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{drutes\+\_\+init@{drutes\+\_\+init}!pde\+\_\+constructor@{pde\+\_\+constructor}}
+\index{pde\+\_\+constructor@{pde\+\_\+constructor}!drutes\+\_\+init@{drutes\+\_\+init}}
+\subsubsection[{pde\+\_\+constructor(processes)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, private drutes\+\_\+init\+::pde\+\_\+constructor (
+\begin{DoxyParamCaption}
+\item[{integer(kind=ikind), intent(in)}]{processes}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [private]}}\label{namespacedrutes__init_a9acb7782a166647924dd06acb9ab5786}
+
+
+Definition at line 175 of file drutes\+\_\+init.\+f90.
+
+
+
+References pde\+\_\+objs\+::do\+\_\+nothing(), dummy\+\_\+procs\+::dummy\+\_\+scalar(), dummy\+\_\+procs\+::dummy\+\_\+tensor(), dummy\+\_\+procs\+::dummy\+\_\+vector(), pde\+\_\+objs\+::getvalp1(), globals\+::nodes, globals\+::observation\+\_\+array, pde\+\_\+objs\+::pde, and dummy\+\_\+procs\+::time\+\_\+check\+\_\+ok().
+
+
+
+Referenced by parse\+\_\+globals().
+
+
+\begin{DoxyCode}
+175       \textcolor{keywordtype}{use }typy
+176       \textcolor{keywordtype}{use }global_objs
+177       \textcolor{keywordtype}{use }globals
+178       \textcolor{keywordtype}{use }pde_objs
+179       \textcolor{keywordtype}{use }dummy_procs
+180 
+181       \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(in)} :: processes
+182       
+183       \textcolor{keywordtype}{integer} :: i, j
+184 
+185       \textcolor{keyword}{allocate}(pde(processes))
+186 
+187       \textcolor{keywordflow}{do} i=1, processes
+188         \textcolor{keyword}{allocate}(pde(i)%pde\_fnc(processes))
+189         \textcolor{keywordflow}{do} j=1, processes
+190           pde(i)%pde\_fnc(j)%dispersion => dummy_tensor
+191           pde(i)%pde\_fnc(j)%convection => dummy_vector
+192           pde(i)%pde\_fnc(j)%der\_convect => dummy_vector
+193           pde(i)%pde\_fnc(j)%reaction => dummy_scalar
+194           pde(i)%pde\_fnc(j)%zerord => dummy_scalar
+195           pde(i)%pde\_fnc(j)%elasticity => dummy_scalar
+196 \textcolor{keywordflow}{        end do}  
+197         \textcolor{keyword}{allocate}(pde(i)%solution(nodes%kolik))
+198         \textcolor{keyword}{allocate}(pde(i)%obspt\_unit(ubound(observation_array,1)))
+199         \textcolor{keyword}{allocate}(pde(i)%permut(nodes%kolik))
+200         pde(i)%mass => dummy_scalar
+201         pde(i)%flux => dummy_vector
+202         pde(i)%dt\_check => time_check_ok
+203         pde(i)%process\_change => do_nothing
+204         pde(i)%getval => getvalp1
+205         pde(i)%order = i
+206 \textcolor{keywordflow}{      end do}
+207 
+208 
+\end{DoxyCode}
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacedrutes__init_a9acb7782a166647924dd06acb9ab5786_cgraph}
+\end{center}
+\end{figure}
+
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacedrutes__init_a9acb7782a166647924dd06acb9ab5786_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{drutes\+\_\+init@{drutes\+\_\+init}!set\+\_\+global\+\_\+vars@{set\+\_\+global\+\_\+vars}}
+\index{set\+\_\+global\+\_\+vars@{set\+\_\+global\+\_\+vars}!drutes\+\_\+init@{drutes\+\_\+init}}
+\subsubsection[{set\+\_\+global\+\_\+vars()}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, private drutes\+\_\+init\+::set\+\_\+global\+\_\+vars (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [private]}}\label{namespacedrutes__init_a065f201253947fa6ad693673a815febf}
+
+
+Definition at line 348 of file drutes\+\_\+init.\+f90.
+
+
+
+References globals\+::backup\+\_\+runs, globals\+::drutes\+\_\+config, core\+\_\+tools\+::find\+\_\+unit(), pde\+\_\+objs\+::pde\+\_\+common, globals\+::postpro\+\_\+dec, globals\+::postpro\+\_\+run, globals\+::print\+\_\+level, globals\+::solver\+\_\+call, globals\+::terminal, and globals\+::terminal\+\_\+assigned.
+
+
+
+Referenced by parse\+\_\+globals().
+
+
+\begin{DoxyCode}
+348       \textcolor{keywordtype}{use }globals
+349       \textcolor{keywordtype}{use }core_tools
+350       \textcolor{keywordtype}{use }pde_objs
+351 
+352       \textcolor{keywordtype}{integer} :: i\_err
+353       
+354       
+355       \textcolor{keywordflow}{select case} (adjustl(trim(drutes_config%name)))
+356         \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"RE\_std"}, \textcolor{stringliteral}{"RE\_rot"}, \textcolor{stringliteral}{"REstdH"}, \textcolor{stringliteral}{"RErotH"}, \textcolor{stringliteral}{"boussi"}, \textcolor{stringliteral}{"ADEstd"}, \textcolor{stringliteral}{"heat"}\textcolor{comment}{)}
+357 \textcolor{comment}{          pde_common%processes = 1}
+358 \textcolor{comment}{        }\textcolor{keywordflow}{case}(\textcolor{stringliteral}{"ADE\_RE\_std"}, \textcolor{stringliteral}{"ADE\_REstdH"}, \textcolor{stringliteral}{"ADE\_RE\_rot"}, \textcolor{stringliteral}{"ADE\_RErotH"}, \textcolor{stringliteral}{"ADEstd\_kinsorb"}\textcolor{comment}{, }\textcolor{stringliteral}{"Re\_dual\_totH"}\textcolor{comment}{)}
+359 \textcolor{comment}{          pde_common%processes = 2}
+360 \textcolor{comment}{        }\textcolor{keywordflow}{case}(\textcolor{stringliteral}{"RE\_mod"}, \textcolor{stringliteral}{"REtest"}, \textcolor{stringliteral}{"ADE\_RE\_std\_kinsorb"}, \textcolor{stringliteral}{"ADE\_REstdH\_kinsorb"}, \textcolor{stringliteral}{"ADE\_RE\_rot\_kinsorb"}\textcolor{comment}{, &}
+361 \textcolor{comment}{             }\textcolor{stringliteral}{"ADE\_RErotH\_kinsorb"})
+362           pde_common%processes = 3
+363 \textcolor{keywordflow}{        case default}
+364           print *, \textcolor{stringliteral}{"your new model: "}, trim(drutes_config%name), \textcolor{stringliteral}{" requires definition of the number of the
+       coupled processes"}
+365           print *, \textcolor{stringliteral}{"exited from drutes\_init::set\_global\_vars"}
+366           error stop
+367 \textcolor{keywordflow}{      end select}
+368 
+369       backup_runs = 0
+370 
+371       \textcolor{comment}{!set the terminal output unit ID}
+372       \textcolor{keywordflow}{if} (.not. (terminal_assigned)) \textcolor{keywordflow}{then}
+373         \textcolor{keywordflow}{select case}(print_level)
+374           \textcolor{keywordflow}{case}(0)
+375             terminal = 6
+376           \textcolor{keywordflow}{case}(1,-1)
+377             \textcolor{keyword}{call }find_unit(terminal, 2000)
+378             \textcolor{keywordflow}{if} (print_level == 1) \textcolor{keywordflow}{then}
+379               \textcolor{keyword}{open}(unit=terminal, file=\textcolor{stringliteral}{"out/screen.log"}, action=\textcolor{stringliteral}{"write"}, status\textcolor{comment}{=}\textcolor{stringliteral}{"replace"}\textcolor{comment}{, iostat=i\_err)}
+380 \textcolor{comment}{              }\textcolor{keywordflow}{if} (i\_err /=0) \textcolor{keywordflow}{then}
+381                 print *, \textcolor{stringliteral}{"ERROR: check if directory out/ exist!"}
+382                 error stop
+383 \textcolor{keywordflow}{              end if}
+384             \textcolor{keywordflow}{else}
+385               \textcolor{keyword}{open}(unit=terminal, file=\textcolor{stringliteral}{"/dev/null"}, action=\textcolor{stringliteral}{"write"}, status=\textcolor{stringliteral}{"replace"}\textcolor{comment}{, iostat=i\_err)}
+386 \textcolor{comment}{              }\textcolor{keywordflow}{if} (i\_err /=0) \textcolor{keywordflow}{then}
+387                 print *, \textcolor{stringliteral}{"ERROR: file /dev/null does not exist, are you running GNU/Linux based os?"}
+388                 print *, \textcolor{stringliteral}{"       if not do not set print level -1 in drutes.conf/global.conf"}
+389                 error stop
+390 \textcolor{keywordflow}{              end if}
+391 \textcolor{keywordflow}{            end if}
+392 \textcolor{keywordflow}{        end select}
+393 \textcolor{keywordflow}{      end if}
+394 
+395       solver_call = 0
+396 
+397       postpro_run = -1\_ikind
+398       postpro_dec = 1\_ikind
+399       
+400 
+\end{DoxyCode}
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=320pt]{namespacedrutes__init_a065f201253947fa6ad693673a815febf_cgraph}
+\end{center}
+\end{figure}
+
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacedrutes__init_a065f201253947fa6ad693673a815febf_icgraph}
+\end{center}
+\end{figure}
+
+

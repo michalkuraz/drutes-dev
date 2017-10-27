@@ -1,0 +1,475 @@
+\section{re\+\_\+dual\+\_\+bc Module Reference}
+\label{namespacere__dual__bc}\index{re\+\_\+dual\+\_\+bc@{re\+\_\+dual\+\_\+bc}}
+
+
+This module contains different boundary definitions for the fracture and matrix domains in the dual permeability model.  
+
+
+\subsection*{Functions/\+Subroutines}
+\begin{DoxyCompactItemize}
+\item 
+subroutine, public {\bf dual\+\_\+neumann\+\_\+bc} (pde\+\_\+loc, el\+\_\+id, node\+\_\+order, value, code)
+\begin{DoxyCompactList}\small\item\em Defines Neumann (flux) boundary condition for the dual permeability model. \end{DoxyCompactList}\item 
+subroutine, public {\bf inf\+\_\+neumann\+\_\+bc} (pde\+\_\+loc, el\+\_\+id, node\+\_\+order, value, code)
+\begin{DoxyCompactList}\small\item\em Also defines Neumann type boundary. The weighting for matrix and fracture domains is user defined. \end{DoxyCompactList}\item 
+subroutine, public {\bf dual\+\_\+freedrainage} (pde\+\_\+loc, el\+\_\+id, node\+\_\+order, value, code)
+\begin{DoxyCompactList}\small\item\em Assigns free drainage boundary (unit gradient) for dual permeability model. \end{DoxyCompactList}\item 
+subroutine, public {\bf dual\+\_\+atmospheric} (pde\+\_\+loc, el\+\_\+id, node\+\_\+order, value, code)
+\begin{DoxyCompactList}\small\item\em Assigns a simple atmospheric boundary based on water content in the soil and potential evaporation and rain for dual permeability model $rain - evap*\theta(h)^{\frac{2}{3}}$. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+This module contains different boundary definitions for the fracture and matrix domains in the dual permeability model. 
+
+\subsection{Function/\+Subroutine Documentation}
+\index{re\+\_\+dual\+\_\+bc@{re\+\_\+dual\+\_\+bc}!dual\+\_\+atmospheric@{dual\+\_\+atmospheric}}
+\index{dual\+\_\+atmospheric@{dual\+\_\+atmospheric}!re\+\_\+dual\+\_\+bc@{re\+\_\+dual\+\_\+bc}}
+\subsubsection[{dual\+\_\+atmospheric(pde\+\_\+loc, el\+\_\+id, node\+\_\+order, value, code)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, public re\+\_\+dual\+\_\+bc\+::dual\+\_\+atmospheric (
+\begin{DoxyParamCaption}
+\item[{class({\bf pde\+\_\+str}), intent(in)}]{pde\+\_\+loc, }
+\item[{integer(kind=ikind), intent(in)}]{el\+\_\+id, }
+\item[{integer(kind=ikind), intent(in)}]{node\+\_\+order, }
+\item[{real(kind=rkind), intent(out), optional}]{value, }
+\item[{integer(kind=ikind), intent(out), optional}]{code}
+\end{DoxyParamCaption}
+)}\label{namespacere__dual__bc_a3c7fa40f15c5d89f1d6441664f1c71b4}
+
+
+Assigns a simple atmospheric boundary based on water content in the soil and potential evaporation and rain for dual permeability model $rain - evap*\theta(h)^{\frac{2}{3}}$. 
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em pde\+\_\+loc} & takes the global pde\+\_\+loc structure\\
+\hline
+\mbox{\tt in}  & {\em el\+\_\+id} & takes the element id and node order\\
+\hline
+\mbox{\tt in}  & {\em node\+\_\+order} & takes the element id and node order\\
+\hline
+\mbox{\tt out}  & {\em value} & optional value output of the assigned boundary\\
+\hline
+\mbox{\tt out}  & {\em code} & optional code output. Different codes for different boundaries. Code = 2 \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 207 of file Re\+\_\+dual\+\_\+bc.\+f90.
+
+
+
+References globals\+::elements, dual\+\_\+globals\+::infweight, globals\+::nodes, and globals\+::time.
+
+
+
+Referenced by re\+\_\+dual\+\_\+pointers\+::re\+\_\+fracture(), and re\+\_\+dual\+\_\+pointers\+::re\+\_\+matrix().
+
+
+\begin{DoxyCode}
+207       \textcolor{keywordtype}{use }typy
+208       \textcolor{keywordtype}{use }globals
+209       \textcolor{keywordtype}{use }global_objs
+210       \textcolor{keywordtype}{use }pde_objs
+211       \textcolor{keywordtype}{use }dual_globals
+212 
+214       \textcolor{keywordtype}{class}(pde_str), \textcolor{keywordtype}{intent(in)} :: pde\_loc 
+216       \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(in)}  :: el\_id, node\_order
+218       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{intent(out)}, \textcolor{keywordtype}{optional}    :: value
+220       \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(out)}, \textcolor{keywordtype}{optional} :: code
+221       
+222       
+223       
+224       \textcolor{keywordtype}{type}(integpnt_str) :: quadpnt
+225       \textcolor{keywordtype}{integer(kind=ikind)} :: layer
+226       \textcolor{keywordtype}{real(kind=rkind)} :: theta, rain, evap
+227       \textcolor{keywordtype}{integer(kind=ikind)} :: i, edge\_id, j
+228       
+229       
+230 
+231       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(code)) \textcolor{keywordflow}{then}
+232             code = 2
+233 \textcolor{keywordflow}{      end if}
+234       
+235       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(\textcolor{keywordtype}{value})) \textcolor{keywordflow}{then}
+236         edge\_id = nodes%edge(elements%data(el\_id, node\_order))
+237 
+238         i = pde\_loc%permut(elements%data(el\_id, node\_order))
+239 
+240 
+241         \textcolor{keywordflow}{if} (pde\_loc%bc(edge\_id)%file) \textcolor{keywordflow}{then}
+242           \textcolor{keywordflow}{do} i=1, ubound(pde\_loc%bc(edge\_id)%series,1)
+243             \textcolor{keywordflow}{if} (pde\_loc%bc(edge\_id)%series(i,1) > time) \textcolor{keywordflow}{then}
+244               \textcolor{keywordflow}{if} (i > 1) \textcolor{keywordflow}{then}
+245                 j = i-1
+246               \textcolor{keywordflow}{else}
+247                 j = i
+248 \textcolor{keywordflow}{              end if}
+249               rain = pde\_loc%bc(edge\_id)%series(j,2)
+250               evap = pde\_loc%bc(edge\_id)%series(j,3)
+251               \textcolor{keywordflow}{EXIT}
+252 \textcolor{keywordflow}{            end if}
+253 \textcolor{keywordflow}{          end do}
+254         \textcolor{keywordflow}{else}
+255           print *, \textcolor{stringliteral}{"atmospheric boundary must be time dependent, check record for the boundary"}\textcolor{comment}{, edge\_id}
+256 \textcolor{comment}{          error stop}
+257 \textcolor{comment}{}\textcolor{keywordflow}{        end if}
+258 
+259         quadpnt%type\_pnt = \textcolor{stringliteral}{"ndpt"}
+260         quadpnt%column = 2
+261         quadpnt%order = elements%data(el\_id,node\_order)
+262         layer = elements%material(el\_id,1)
+263         theta =  pde\_loc%mass(layer, quadpnt)
+264         \textcolor{keywordflow}{select case} (pde\_loc%mfswitch)
+265           \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"m"})
+266             \textcolor{keywordtype}{value} = (rain - evap*theta**(2.0\_rkind/3.0\_rkind))*(1\_rkind-
+      infweight\textcolor{comment}{)  }
+267 \textcolor{comment}{          }\textcolor{keywordflow}{case}(\textcolor{stringliteral}{"f"})
+268             \textcolor{keywordtype}{value} = (rain - evap*theta**(2.0\_rkind/3.0\_rkind))*(infweight\textcolor{comment}{)}
+269 \textcolor{comment}{}\textcolor{keywordflow}{        end select}
+270 
+271 
+272 \textcolor{keywordflow}{      end if}
+273       
+\end{DoxyCode}
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacere__dual__bc_a3c7fa40f15c5d89f1d6441664f1c71b4_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{re\+\_\+dual\+\_\+bc@{re\+\_\+dual\+\_\+bc}!dual\+\_\+freedrainage@{dual\+\_\+freedrainage}}
+\index{dual\+\_\+freedrainage@{dual\+\_\+freedrainage}!re\+\_\+dual\+\_\+bc@{re\+\_\+dual\+\_\+bc}}
+\subsubsection[{dual\+\_\+freedrainage(pde\+\_\+loc, el\+\_\+id, node\+\_\+order, value, code)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, public re\+\_\+dual\+\_\+bc\+::dual\+\_\+freedrainage (
+\begin{DoxyParamCaption}
+\item[{class({\bf pde\+\_\+str}), intent(in)}]{pde\+\_\+loc, }
+\item[{integer(kind=ikind), intent(in)}]{el\+\_\+id, }
+\item[{integer(kind=ikind), intent(in)}]{node\+\_\+order, }
+\item[{real(kind=rkind), intent(out), optional}]{value, }
+\item[{integer(kind=ikind), intent(out), optional}]{code}
+\end{DoxyParamCaption}
+)}\label{namespacere__dual__bc_a6fda172ea12121188b6138b77a3254aa}
+
+
+Assigns free drainage boundary (unit gradient) for dual permeability model. 
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em pde\+\_\+loc} & takes the global pde\+\_\+loc structure\\
+\hline
+\mbox{\tt in}  & {\em el\+\_\+id} & takes the element id and node order\\
+\hline
+\mbox{\tt in}  & {\em node\+\_\+order} & takes the element id and node order\\
+\hline
+\mbox{\tt out}  & {\em value} & optional value output of the assigned boundary\\
+\hline
+\mbox{\tt out}  & {\em code} & optional code output. Different codes for different boundaries. Code = 2 \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 147 of file Re\+\_\+dual\+\_\+bc.\+f90.
+
+
+
+References globals\+::drutes\+\_\+config, globals\+::elements, and pde\+\_\+objs\+::pde.
+
+
+
+Referenced by re\+\_\+dual\+\_\+pointers\+::re\+\_\+fracture(), and re\+\_\+dual\+\_\+pointers\+::re\+\_\+matrix().
+
+
+\begin{DoxyCode}
+147       \textcolor{keywordtype}{use }typy
+148       \textcolor{keywordtype}{use }globals
+149       \textcolor{keywordtype}{use }global_objs
+150       \textcolor{keywordtype}{use }pde_objs
+151       \textcolor{keywordtype}{use }dual_globals
+152       \textcolor{keywordtype}{use }dual_por
+153       
+155       \textcolor{keywordtype}{class}(pde_str), \textcolor{keywordtype}{intent(in)} :: pde\_loc 
+157       \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(in)}  :: el\_id, node\_order
+159       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{intent(out)}, \textcolor{keywordtype}{optional}    :: value
+161       \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(out)}, \textcolor{keywordtype}{optional} :: code
+162       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(3,3)} :: k
+163       \textcolor{keywordtype}{type}(integpnt_str) :: quadpnt
+164       \textcolor{keywordtype}{integer(kind=ikind)} :: layer, d
+165       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(3)} :: gravflux
+166       
+167       
+168       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(\textcolor{keywordtype}{value})) \textcolor{keywordflow}{then}
+169 
+170         quadpnt%type\_pnt = \textcolor{stringliteral}{"ndpt"}
+171         quadpnt%column = 2
+172         quadpnt%order = elements%data(el\_id, node\_order)
+173         layer = elements%material(el\_id,1)
+174         d = drutes_config%dimen
+175         \textcolor{keywordflow}{select case} (pde\_loc%mfswitch)
+176           \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"m"})
+177             \textcolor{keyword}{call }pde(1)%pde\_fnc(1)%dispersion(pde\_loc, layer, quadpnt, tensor\textcolor{comment}{=k(1:d,1:d))          }
+178 \textcolor{comment}{          }\textcolor{keywordflow}{case}(\textcolor{stringliteral}{"f"})
+179             \textcolor{keyword}{call }pde(2)%pde\_fnc(2)%dispersion(pde\_loc, layer, quadpnt, tensor\textcolor{comment}{=k(1:d,1:d))         }
+180 \textcolor{comment}{}\textcolor{keywordflow}{        end select}
+181         
+182         
+183         \textcolor{keywordflow}{select case}(d)
+184           \textcolor{keywordflow}{case}(1)
+185           
+186             \textcolor{keywordtype}{value} = k(1,1) * elements%nvect\_z(el\_id, node\_order)
+187           
+188           \textcolor{keywordflow}{case}(2)         
+189             gravflux(1) = sqrt(1-elements%nvect\_z(el\_id, node\_order)*elements%nvect\_z\textcolor{comment}{(el\_id, node\_order))*k
+      (1,2)}
+190 \textcolor{comment}{            }
+191 \textcolor{comment}{            gravflux(2) = elements%nvect\_z(el\_id, node\_order)*k(2,2)}
+192 \textcolor{comment}{}
+193 \textcolor{comment}{            }\textcolor{keywordtype}{value} = sqrt(gravflux(1)*gravflux(1) + gravflux(2)*gravflux(2))
+194 
+195 \textcolor{keywordflow}{        end select}
+196 \textcolor{keywordflow}{      end if}
+197       
+198       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(code)) \textcolor{keywordflow}{then}
+199         code = 2
+200 \textcolor{keywordflow}{      end if}
+201       
+\end{DoxyCode}
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacere__dual__bc_a6fda172ea12121188b6138b77a3254aa_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{re\+\_\+dual\+\_\+bc@{re\+\_\+dual\+\_\+bc}!dual\+\_\+neumann\+\_\+bc@{dual\+\_\+neumann\+\_\+bc}}
+\index{dual\+\_\+neumann\+\_\+bc@{dual\+\_\+neumann\+\_\+bc}!re\+\_\+dual\+\_\+bc@{re\+\_\+dual\+\_\+bc}}
+\subsubsection[{dual\+\_\+neumann\+\_\+bc(pde\+\_\+loc, el\+\_\+id, node\+\_\+order, value, code)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, public re\+\_\+dual\+\_\+bc\+::dual\+\_\+neumann\+\_\+bc (
+\begin{DoxyParamCaption}
+\item[{class({\bf pde\+\_\+str}), intent(in)}]{pde\+\_\+loc, }
+\item[{integer(kind=ikind), intent(in)}]{el\+\_\+id, }
+\item[{integer(kind=ikind), intent(in)}]{node\+\_\+order, }
+\item[{real(kind=rkind), intent(out), optional}]{value, }
+\item[{integer(kind=ikind), intent(out), optional}]{code}
+\end{DoxyParamCaption}
+)}\label{namespacere__dual__bc_a930f9415d0b3aa33933f05bdded7b2d1}
+
+
+Defines Neumann (flux) boundary condition for the dual permeability model. 
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em pde\+\_\+loc} & takes the global pde\+\_\+loc structure\\
+\hline
+\mbox{\tt in}  & {\em el\+\_\+id} & takes the element id and node order\\
+\hline
+\mbox{\tt in}  & {\em node\+\_\+order} & takes the element id and node order\\
+\hline
+\mbox{\tt out}  & {\em value} & optional value output of the assigned boundary\\
+\hline
+\mbox{\tt out}  & {\em code} & optional code output. Different codes for different boundaries. Code = 2 \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 12 of file Re\+\_\+dual\+\_\+bc.\+f90.
+
+
+
+References globals\+::elements, dual\+\_\+globals\+::exchange, globals\+::nodes, and globals\+::time.
+
+
+
+Referenced by re\+\_\+dual\+\_\+pointers\+::re\+\_\+fracture(), and re\+\_\+dual\+\_\+pointers\+::re\+\_\+matrix().
+
+
+\begin{DoxyCode}
+12       \textcolor{keywordtype}{use }typy
+13       \textcolor{keywordtype}{use }globals
+14       \textcolor{keywordtype}{use }global_objs
+15       \textcolor{keywordtype}{use }pde_objs
+16       \textcolor{keywordtype}{use }dual_globals
+18       \textcolor{keywordtype}{class}(pde_str), \textcolor{keywordtype}{intent(in)} :: pde\_loc 
+20       \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(in)}  :: el\_id, node\_order
+22       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{intent(out)}, \textcolor{keywordtype}{optional}    :: value
+24       \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(out)}, \textcolor{keywordtype}{optional} :: code
+25      
+26 
+27       \textcolor{keywordtype}{integer(kind=ikind)} :: i, edge\_id, j,layer
+28       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(3)} :: gravflux, bcflux
+29       \textcolor{keywordtype}{real(kind=rkind)} :: bcval, gfluxval, weight
+30       \textcolor{keywordtype}{integer} :: i1
+31       
+32       
+33 
+34       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(\textcolor{keywordtype}{value})) \textcolor{keywordflow}{then}
+35         edge\_id = nodes%edge(elements%data(el\_id, node\_order))
+36 
+37         i = pde\_loc%permut(elements%data(el\_id, node\_order))
+38         
+39 
+40         \textcolor{keywordflow}{if} (pde\_loc%bc(edge\_id)%file) \textcolor{keywordflow}{then}
+41           \textcolor{keywordflow}{do} i=1, ubound(pde\_loc%bc(edge\_id)%series,1)
+42             \textcolor{keywordflow}{if} (pde\_loc%bc(edge\_id)%series(i,1) > time) \textcolor{keywordflow}{then}
+43               \textcolor{keywordflow}{if} (i > 1) \textcolor{keywordflow}{then}
+44                 j = i-1
+45               \textcolor{keywordflow}{else}
+46                 j = i
+47 \textcolor{keywordflow}{              end if}
+48               layer=pde\_loc%bc(edge\_id)%layer
+49                
+50               \textcolor{keywordflow}{select case} (pde\_loc%mfswitch)
+51                 \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"m"})
+52                   bcval = pde\_loc%bc(edge\_id)%series(j,2)*exchange(layer\textcolor{comment}{)%weightm}
+53 \textcolor{comment}{                }\textcolor{keywordflow}{case}(\textcolor{stringliteral}{"f"})
+54                   bcval = pde\_loc%bc(edge\_id)%series(j,2)*exchange(layer\textcolor{comment}{)%weightf}
+55 \textcolor{comment}{}\textcolor{keywordflow}{              end select}
+56               \textcolor{keywordflow}{EXIT}
+57 \textcolor{keywordflow}{            end if}
+58 \textcolor{keywordflow}{          end do}
+59         \textcolor{keywordflow}{else}
+60           layer=pde\_loc%bc(edge\_id)%layer
+61           \textcolor{keywordflow}{select case} (pde\_loc%mfswitch)
+62             \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"m"})
+63               bcval = pde\_loc%bc(edge\_id)%value*exchange(layer)%weightm
+64             \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"f"})
+65               bcval = pde\_loc%bc(edge\_id)%value*exchange(layer)%weightf
+66 \textcolor{keywordflow}{          end select}
+67 \textcolor{keywordflow}{        end if}
+68     
+69 
+70         \textcolor{keywordtype}{value} = bcval
+71 
+72 \textcolor{keywordflow}{      end if}
+73       
+74       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(code)) \textcolor{keywordflow}{then}
+75         code = 2
+76 \textcolor{keywordflow}{      end if}
+77 
+78 
+\end{DoxyCode}
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacere__dual__bc_a930f9415d0b3aa33933f05bdded7b2d1_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{re\+\_\+dual\+\_\+bc@{re\+\_\+dual\+\_\+bc}!inf\+\_\+neumann\+\_\+bc@{inf\+\_\+neumann\+\_\+bc}}
+\index{inf\+\_\+neumann\+\_\+bc@{inf\+\_\+neumann\+\_\+bc}!re\+\_\+dual\+\_\+bc@{re\+\_\+dual\+\_\+bc}}
+\subsubsection[{inf\+\_\+neumann\+\_\+bc(pde\+\_\+loc, el\+\_\+id, node\+\_\+order, value, code)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, public re\+\_\+dual\+\_\+bc\+::inf\+\_\+neumann\+\_\+bc (
+\begin{DoxyParamCaption}
+\item[{class({\bf pde\+\_\+str}), intent(in)}]{pde\+\_\+loc, }
+\item[{integer(kind=ikind), intent(in)}]{el\+\_\+id, }
+\item[{integer(kind=ikind), intent(in)}]{node\+\_\+order, }
+\item[{real(kind=rkind), intent(out), optional}]{value, }
+\item[{integer(kind=ikind), intent(out), optional}]{code}
+\end{DoxyParamCaption}
+)}\label{namespacere__dual__bc_ab0840c2415aee6d7acfdbeead7212aed}
+
+
+Also defines Neumann type boundary. The weighting for matrix and fracture domains is user defined. 
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em pde\+\_\+loc} & takes the global pde\+\_\+loc structure\\
+\hline
+\mbox{\tt in}  & {\em el\+\_\+id} & takes the element id and node order\\
+\hline
+\mbox{\tt in}  & {\em node\+\_\+order} & takes the element id and node order\\
+\hline
+\mbox{\tt out}  & {\em value} & optional value output of the assigned boundary\\
+\hline
+\mbox{\tt out}  & {\em code} & optional code output. Different codes for different boundaries. Code = 2 \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 83 of file Re\+\_\+dual\+\_\+bc.\+f90.
+
+
+
+References globals\+::elements, dual\+\_\+globals\+::infweight, globals\+::nodes, and globals\+::time.
+
+
+
+Referenced by re\+\_\+dual\+\_\+pointers\+::re\+\_\+fracture(), and re\+\_\+dual\+\_\+pointers\+::re\+\_\+matrix().
+
+
+\begin{DoxyCode}
+83       \textcolor{keywordtype}{use }typy
+84       \textcolor{keywordtype}{use }globals
+85       \textcolor{keywordtype}{use }global_objs
+86       \textcolor{keywordtype}{use }pde_objs
+87       \textcolor{keywordtype}{use }dual_globals
+88 
+90       \textcolor{keywordtype}{class}(pde_str), \textcolor{keywordtype}{intent(in)} :: pde\_loc 
+92       \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(in)}  :: el\_id, node\_order
+94       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{intent(out)}, \textcolor{keywordtype}{optional}    :: value
+96       \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(out)}, \textcolor{keywordtype}{optional} :: code
+97 
+98       \textcolor{keywordtype}{integer(kind=ikind)} :: i, edge\_id, j,layer
+99       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(3)} :: gravflux, bcflux
+100       \textcolor{keywordtype}{real(kind=rkind)} :: bcval, gfluxval, weight
+101       \textcolor{keywordtype}{integer} :: i1
+102       
+103       \textcolor{keywordflow}{select case} (pde\_loc%mfswitch)
+104         \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"m"})
+105           weight=(1\_rkind-infweight)
+106         \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"f"})
+107           weight=infweight
+108 \textcolor{keywordflow}{      end select}
+109 
+110       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(\textcolor{keywordtype}{value})) \textcolor{keywordflow}{then}
+111         edge\_id = nodes%edge(elements%data(el\_id, node\_order))
+112 
+113         i = pde\_loc%permut(elements%data(el\_id, node\_order))
+114         
+115 
+116         \textcolor{keywordflow}{if} (pde\_loc%bc(edge\_id)%file) \textcolor{keywordflow}{then}
+117           \textcolor{keywordflow}{do} i=1, ubound(pde\_loc%bc(edge\_id)%series,1)
+118             \textcolor{keywordflow}{if} (pde\_loc%bc(edge\_id)%series(i,1) > time) \textcolor{keywordflow}{then}
+119               \textcolor{keywordflow}{if} (i > 1) \textcolor{keywordflow}{then}
+120                 j = i-1
+121               \textcolor{keywordflow}{else}
+122                 j = i
+123 \textcolor{keywordflow}{              end if}
+124               layer=pde\_loc%bc(edge\_id)%layer
+125               bcval = pde\_loc%bc(edge\_id)%series(j,2)*weight
+126               \textcolor{keywordflow}{EXIT}
+127 \textcolor{keywordflow}{            end if}
+128 \textcolor{keywordflow}{          end do}
+129         \textcolor{keywordflow}{else}
+130           layer=pde\_loc%bc(edge\_id)%layer
+131           bcval = pde\_loc%bc(edge\_id)%value*weight
+132 \textcolor{keywordflow}{        end if}
+133 
+134         \textcolor{keywordtype}{value} = bcval
+135 
+136 \textcolor{keywordflow}{      end if}
+137       
+138       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(code)) \textcolor{keywordflow}{then}
+139         code = 2
+140 \textcolor{keywordflow}{      end if}
+141 
+142 
+\end{DoxyCode}
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacere__dual__bc_ab0840c2415aee6d7acfdbeead7212aed_icgraph}
+\end{center}
+\end{figure}
+
+

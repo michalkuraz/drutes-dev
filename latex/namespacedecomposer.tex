@@ -1,0 +1,1052 @@
+\section{decomposer Module Reference}
+\label{namespacedecomposer}\index{decomposer@{decomposer}}
+\subsection*{Functions/\+Subroutines}
+\begin{DoxyCompactItemize}
+\item 
+subroutine, public {\bf init\+\_\+decomp} ()
+\item 
+subroutine, public {\bf set\+\_\+subdomains} ()
+\begin{DoxyCompactList}\small\item\em the subdomains are combined based on the gradients of the solution and the Picard iterations \end{DoxyCompactList}\item 
+subroutine {\bf init\+\_\+subdomain} (sub, id)
+\item 
+subroutine {\bf clear\+\_\+subdomain} (sub)
+\item 
+subroutine, private {\bf read\+\_\+coarse\+\_\+mesh} ()
+\item 
+subroutine, private {\bf make\+\_\+quadmesh} (density)
+\begin{DoxyCompactList}\small\item\em subroutine that creates mesh of quadrangles -- coarse mesh (clusters) \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Function/\+Subroutine Documentation}
+\index{decomposer@{decomposer}!clear\+\_\+subdomain@{clear\+\_\+subdomain}}
+\index{clear\+\_\+subdomain@{clear\+\_\+subdomain}!decomposer@{decomposer}}
+\subsubsection[{clear\+\_\+subdomain(sub)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine decomposer\+::clear\+\_\+subdomain (
+\begin{DoxyParamCaption}
+\item[{type({\bf subdomain\+\_\+str}), intent(inout)}]{sub}
+\end{DoxyParamCaption}
+)}\label{namespacedecomposer_a87f6f57c647e1ad908958389ba844b86}
+
+
+Definition at line 577 of file decomposer.\+f90.
+
+
+
+References solver\+\_\+interfaces\+::null\+\_\+problem(), and core\+\_\+tools\+::write\+\_\+log().
+
+
+
+Referenced by set\+\_\+subdomains().
+
+
+\begin{DoxyCode}
+577       \textcolor{keywordtype}{use }typy
+578       \textcolor{keywordtype}{use }sparsematrix
+579       \textcolor{keywordtype}{use }decomp_vars
+580       \textcolor{keywordtype}{use }core_tools
+581       \textcolor{keywordtype}{use }solver_interfaces
+582       
+583       \textcolor{keywordtype}{type}(subdomain_str), \textcolor{keywordtype}{intent(in out)} :: sub
+584       \textcolor{keywordtype}{integer(kind=ikind)} :: i
+585       
+586       \textcolor{keyword}{call }null_problem(sub%matrix)
+587       
+588       
+589       \textcolor{keywordflow}{if} (\textcolor{keyword}{allocated}(sub%xvect)) \textcolor{keywordflow}{then}
+590         \textcolor{keyword}{deallocate}(sub%xvect)
+591       \textcolor{keywordflow}{else}
+592         \textcolor{keyword}{call }write_log(\textcolor{stringliteral}{"strange, subdomain%xvect not allocated, called from decomposer::clear\_subdomain"}\textcolor{comment}{)}
+593 \textcolor{comment}{}\textcolor{keywordflow}{      end if} 
+594      
+595  
+596       \textcolor{keyword}{call }sub%elsub%clear(full = .true.)
+597 
+598       \textcolor{keywordflow}{if} (\textcolor{keyword}{allocated}(sub%coarse\_el)) \textcolor{keywordflow}{then}
+599         \textcolor{keyword}{deallocate}(sub%coarse\_el)
+600       \textcolor{keywordflow}{else}
+601         \textcolor{keyword}{call }write_log(\textcolor{stringliteral}{"strange, subdomain%coarse\_el not allocated, called from
+       decomposer::clear\_subdomain"}\textcolor{comment}{)}
+602 \textcolor{comment}{}\textcolor{keywordflow}{      end if} 
+603       
+604       \textcolor{keywordflow}{if} (\textcolor{keyword}{allocated}(sub%ovect)) \textcolor{keywordflow}{then}
+605         \textcolor{keyword}{deallocate}(sub%ovect)
+606       \textcolor{keywordflow}{else}
+607         \textcolor{keyword}{call }write_log(\textcolor{stringliteral}{"strange, subdomain%ovect not allocated, called from decomposer::clear\_subdomain"}\textcolor{comment}{)}
+608 \textcolor{comment}{}\textcolor{keywordflow}{      end if} 
+609       
+610       \textcolor{keywordflow}{if} (\textcolor{keyword}{allocated}(sub%permut)) \textcolor{keywordflow}{then}
+611         \textcolor{keyword}{deallocate}(sub%permut)
+612       \textcolor{keywordflow}{else}
+613         \textcolor{keyword}{call }write_log(\textcolor{stringliteral}{"strange, subdomain%permut not allocated, called from decomposer::clear\_subdomain"}\textcolor{comment}{)}
+614 \textcolor{comment}{}\textcolor{keywordflow}{      end if} 
+615       
+616       \textcolor{keywordflow}{if} (\textcolor{keyword}{allocated}(sub%invpermut)) \textcolor{keywordflow}{then}
+617         \textcolor{keyword}{deallocate}(sub%invpermut)
+618       \textcolor{keywordflow}{else}
+619         \textcolor{keyword}{call }write_log(\textcolor{stringliteral}{"strange, subdomain%invpermut not allocated, called from
+       decomposer::clear\_subdomain"}\textcolor{comment}{)}
+620 \textcolor{comment}{}\textcolor{keywordflow}{      end if}
+621       
+622       \textcolor{keywordflow}{if} (\textcolor{keyword}{allocated}(sub%bvect)) \textcolor{keywordflow}{then}
+623         \textcolor{keyword}{deallocate}(sub%bvect)
+624       \textcolor{keywordflow}{else}
+625         \textcolor{keyword}{call }write_log(\textcolor{stringliteral}{"strange, subdomain%bvect not allocated, called from decomposer::clear\_subdomain"}\textcolor{comment}{)}
+626 \textcolor{comment}{}\textcolor{keywordflow}{      end if}
+627 
+628       \textcolor{keyword}{call }sub%disjoint%clear(full = .true.)
+629 
+630       \textcolor{keywordflow}{do} i=1, elements%kolik
+631         \textcolor{keyword}{call }elements%subdom(i)%clear()
+632 \textcolor{keywordflow}{      end do}
+633       
+634       \textcolor{keywordflow}{if} (\textcolor{keyword}{allocated}(sub%extbvect)) \textcolor{keywordflow}{then}
+635         \textcolor{keyword}{deallocate}(sub%extbvect)
+636         \textcolor{keyword}{deallocate}(sub%extpermut)
+637         \textcolor{keyword}{deallocate}(sub%extinvpermut)
+638 \textcolor{keywordflow}{      end if}
+639       
+640       \textcolor{keywordflow}{if} (\textcolor{keyword}{allocated}(sub%resvct%main)) \textcolor{keywordflow}{then}
+641         \textcolor{keyword}{deallocate}(sub%resvct%main)
+642 \textcolor{keywordflow}{      end if}
+643       
+644       \textcolor{keywordflow}{if} (\textcolor{keyword}{allocated}(sub%resvct%ext)) \textcolor{keywordflow}{then}
+645         \textcolor{keyword}{deallocate}(sub%resvct%ext)
+646 \textcolor{keywordflow}{      end if}
+647       
+648       
+649       \textcolor{keyword}{call }sub%elextra%clear(full = .true.)
+650       
+651       \textcolor{keyword}{call }sub%ndextra%clear(full = .true.)
+652       
+653       \textcolor{keyword}{call }null_problem(sub%extmatrix)
+654       
+655     
+\end{DoxyCode}
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=336pt]{namespacedecomposer_a87f6f57c647e1ad908958389ba844b86_cgraph}
+\end{center}
+\end{figure}
+
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacedecomposer_a87f6f57c647e1ad908958389ba844b86_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{decomposer@{decomposer}!init\+\_\+decomp@{init\+\_\+decomp}}
+\index{init\+\_\+decomp@{init\+\_\+decomp}!decomposer@{decomposer}}
+\subsubsection[{init\+\_\+decomp()}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, public decomposer\+::init\+\_\+decomp (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}\label{namespacedecomposer_a98718ed1ed87442f86951d651992261d}
+
+
+Definition at line 13 of file decomposer.\+f90.
+
+
+
+References decomp\+\_\+vars\+::coarse\+\_\+elements, decomp\+\_\+vars\+::coarse\+\_\+nodes, decomp\+\_\+vars\+::ddcoarse\+\_\+mesh, decomp\+\_\+vars\+::ddinfo, globals\+::drutes\+\_\+config, globals\+::elements, decomp\+\_\+vars\+::file\+\_\+ddinfo, decomp\+\_\+vars\+::file\+\_\+decomp, readtools\+::file\+\_\+error(), core\+\_\+tools\+::find\+\_\+unit(), geom\+\_\+tools\+::gravity\+\_\+center(), decomp\+\_\+tools\+::init\+\_\+addlevel(), geom\+\_\+tools\+::inside(), make\+\_\+quadmesh(), globals\+::nodes, pde\+\_\+objs\+::pde, printtools\+::progressbar(), read\+\_\+coarse\+\_\+mesh(), decomp\+\_\+vars\+::use\+\_\+coarselev, and core\+\_\+tools\+::write\+\_\+log().
+
+
+
+Referenced by main().
+
+
+\begin{DoxyCode}
+13       \textcolor{keywordtype}{use }typy
+14       \textcolor{keywordtype}{use }globals
+15       \textcolor{keywordtype}{use }global_objs
+16       \textcolor{keywordtype}{use }pde_objs
+17       \textcolor{keywordtype}{use }decomp_vars
+18       \textcolor{keywordtype}{use }geom_tools
+19       \textcolor{keywordtype}{use }core_tools
+20       \textcolor{keywordtype}{use }decomp_tools
+21       \textcolor{keywordtype}{use }printtools
+22       \textcolor{keywordtype}{use }readtools
+23       \textcolor{keywordtype}{use }debug_tools
+24     
+25 
+26       \textcolor{keywordtype}{real(kind=rkind)} :: coarse\_density
+27       \textcolor{keywordtype}{integer(kind=ikind)} :: i,j,k, counter, l, m, n
+28       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(2)} :: bod, a, b, c
+29       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:,:)}, \textcolor{keywordtype}{allocatable} :: domain
+30       \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable} :: elcounter
+31       \textcolor{keywordtype}{logical}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable} :: cluster\_def
+32       \textcolor{keywordtype}{logical}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable} :: node\_counted
+33       \textcolor{keywordtype}{logical} :: exited
+34       \textcolor{keywordtype}{integer} :: ierr
+35       \textcolor{keywordtype}{integer} :: file\_conf
+36       \textcolor{keywordtype}{integer(kind=ikind)} :: method
+37 
+38       \textcolor{keyword}{call }find_unit(file\_conf,100)
+39 
+40       \textcolor{keyword}{open}(unit=file\_conf, file=\textcolor{stringliteral}{"drutes.conf/mesh/coarse.conf"}, action=\textcolor{stringliteral}{"read"}\textcolor{comment}{, status=}\textcolor{stringliteral}{"old"}\textcolor{comment}{, iostat=ierr)}
+41 \textcolor{comment}{}
+42 \textcolor{comment}{      }\textcolor{keywordflow}{if} (ierr /= 0) \textcolor{keywordflow}{then}
+43         print *, \textcolor{stringliteral}{"unable to open file drutes.conf/mesh/coarse.conf, called from decomposer::init\_decomp"}
+44         error stop
+45 \textcolor{keywordflow}{      end if}
+46       
+47       \textcolor{keyword}{call }fileread(ddinfo%overlaps, file\_conf, ranges=(/0\_ikind, huge(1\_ikind\textcolor{comment}{)/))}
+48 \textcolor{comment}{}
+49 \textcolor{comment}{      }\textcolor{keyword}{call }fileread(i=method, fileid=file\_conf, ranges=(/0\_ikind,1\_ikind\textcolor{comment}{/))}
+50 \textcolor{comment}{      }
+51 \textcolor{comment}{      }\textcolor{keyword}{call }fileread(coarse\_density, file\_conf)
+52 
+53 
+54      \textcolor{keywordflow}{select case}(method)
+55         \textcolor{keywordflow}{case}(0)
+56             \textcolor{keyword}{call }make\_quadmesh(coarse\_density)
+57         \textcolor{keywordflow}{case}(1)
+58             \textcolor{keyword}{call }read\_coarse\_mesh()
+59 \textcolor{keywordflow}{      end select}
+60 
+61       
+62       \textcolor{keyword}{call }fileread(use_coarselev, file\_conf)
+63             
+64       \textcolor{keyword}{allocate}(domain(ubound(coarse_elements%data,2), drutes_config%dimen\textcolor{comment}{))}
+65 \textcolor{comment}{}
+66 \textcolor{comment}{      }\textcolor{keyword}{allocate}(elcounter(elements%kolik))
+67 
+68       \textcolor{keyword}{allocate}(elements%gc(elements%kolik, 2))
+69 
+70       \textcolor{keyword}{allocate}(cluster\_def(elements%kolik))
+71       
+72       \textcolor{keyword}{allocate}(node\_counted(nodes%kolik))
+73 
+74       i = ubound(pde,1)
+75 
+76       counter = maxval(pde(i)%permut(:))
+77 
+78       \textcolor{keyword}{allocate}(ddinfo%nd\_dsjnt%data(counter))
+79 
+80       \textcolor{keyword}{allocate}(ddinfo%nd\_dsjnt%crit(counter))
+81       
+82       \textcolor{keyword}{allocate}(elements%subdom(elements%kolik))
+83 
+84       cluster\_def = .false.
+85 
+86       \textcolor{keywordflow}{do} i=1, elements%kolik
+87         a = nodes%data(elements%data(i,1),:)
+88         b = nodes%data(elements%data(i,2),:)
+89         c = nodes%data(elements%data(i,3),:)
+90         elements%gc(i, 1:drutes_config%dimen) = gravity_center(a,b,c)
+91 \textcolor{keywordflow}{      end do}
+92 
+93       \textcolor{keyword}{call }write_log(\textcolor{stringliteral}{"filling the clusters and creating graph of the coarse mesh..."}\textcolor{comment}{)}
+94 \textcolor{comment}{            }
+95 \textcolor{comment}{      }\textcolor{keywordflow}{do} i=1, coarse_elements%kolik
+96         counter = 0
+97         \textcolor{keywordflow}{do} k=1, ubound(coarse_elements%data,2)
+98           domain(k,:) = coarse_nodes%data(coarse_elements%data(i,k),:)
+99 \textcolor{keywordflow}{        end do}
+100         \textcolor{keyword}{call }progressbar(int(100*i/coarse_elements%kolik))
+101         \textcolor{keywordflow}{do} j=1, elements%kolik
+102           \textcolor{keywordflow}{if} (.not. cluster\_def(j)) \textcolor{keywordflow}{then}
+103             \textcolor{keywordflow}{if} (inside(domain, elements%gc(j,1:2))) \textcolor{keywordflow}{then}
+104               counter = counter + 1
+105               elcounter(counter) = j
+106               cluster\_def(j) = .true.
+107 \textcolor{keywordflow}{            end if}
+108 \textcolor{keywordflow}{          end if}
+109 \textcolor{keywordflow}{        end do}
+110 
+111         \textcolor{keywordflow}{if} (counter > 0) \textcolor{keywordflow}{then}
+112           \textcolor{keywordflow}{if} (counter < 4) \textcolor{keyword}{call }write_log(\textcolor{stringliteral}{"WARNING, your coarse mesh defines cluster with less then 4 fine
+       mesh elements"}\textcolor{comment}{)}
+113 \textcolor{comment}{          }\textcolor{keyword}{allocate}(ddcoarse_mesh(i)%elements(counter))
+114           ddcoarse_mesh(i)%elements = elcounter(1:counter)
+115           ddcoarse_mesh(i)%el\_count = counter
+116         \textcolor{keywordflow}{else}
+117           \textcolor{keyword}{call }file_error(file\_conf, message=\textcolor{stringliteral}{"The coarse mesh contains elements that does not cover the &}
+118 \textcolor{stringliteral}{}\textcolor{stringliteral}{          fine mesh elements, the COARSE mesh has INCORRECT geometry."})
+119 \textcolor{keywordflow}{        end if}
+120 \textcolor{keywordflow}{      end do}
+121 
+122       ddcoarse_mesh(:)%iter\_count = 0
+123       ddcoarse_mesh(:)%subdomain = 0
+124       ddcoarse_mesh(:)%prevsub = 0
+125       
+126       \textcolor{keywordflow}{do} i=1, coarse_elements%kolik
+127         k = elements%material(ddcoarse_mesh(i)%elements(1),1)
+128         exited = .false.
+129         fine:  \textcolor{keywordflow}{do} j=1, ubound(ddcoarse_mesh(i)%elements,1)
+130             l = ddcoarse_mesh(i)%elements(j)
+131             \textcolor{keywordflow}{if} (k /= elements%material(l,1)) \textcolor{keywordflow}{then}
+132               coarse_elements%material(i,1) = 0
+133               exited = .true.
+134               \textcolor{keywordflow}{EXIT} fine
+135 \textcolor{keywordflow}{            end if}
+136 \textcolor{keywordflow}{        end do} fine
+137          
+138         \textcolor{keywordflow}{if} (.not.exited) \textcolor{keywordflow}{then}
+139           coarse_elements%material(i,1) = k
+140 \textcolor{keywordflow}{        end if}
+141 \textcolor{keywordflow}{      end do}
+142  
+143 
+144       \textcolor{keyword}{call }write_log(\textcolor{stringliteral}{"clusters filled."})
+145       
+146       \textcolor{keyword}{deallocate}(domain)
+147       \textcolor{keyword}{deallocate}(elcounter)
+148       \textcolor{keyword}{deallocate}(cluster\_def)
+149       \textcolor{keyword}{deallocate}(node\_counted)
+150             
+151       \textcolor{keyword}{call }find_unit(file_decomp)
+152       
+153       \textcolor{keyword}{open}(unit=file_decomp, file=\textcolor{stringliteral}{"out/dd/ddcount"}, action=\textcolor{stringliteral}{"write"}, status\textcolor{comment}{=}\textcolor{stringliteral}{"replace"}\textcolor{comment}{, iostat=ierr)}
+154 \textcolor{comment}{      }\textcolor{keywordflow}{if} (ierr /= 0) \textcolor{keywordflow}{then}
+155         ierr=system(\textcolor{stringliteral}{"mkdir out/dd"})
+156         \textcolor{keywordflow}{if} (ierr /=0) \textcolor{keywordflow}{then}
+157           error stop \textcolor{stringliteral}{"ERROR: unable to create directory out/dd, called from decomposer::init\_decomp"}
+158         \textcolor{keywordflow}{else}
+159           \textcolor{keyword}{open}(unit=file_decomp, file=\textcolor{stringliteral}{"out/dd/ddcount"}, action=\textcolor{stringliteral}{"write"}, status\textcolor{comment}{=}\textcolor{stringliteral}{"replace"}\textcolor{comment}{, iostat=ierr)}
+160 \textcolor{comment}{          }\textcolor{keywordflow}{if} (ierr /=0) \textcolor{keywordflow}{then}
+161             error stop \textcolor{stringliteral}{"ERROR: unable to open file out/dd/ddcount, called from decomposer::init\_decomp"}
+162 \textcolor{keywordflow}{          end if}
+163 \textcolor{keywordflow}{        end if}
+164 \textcolor{keywordflow}{      end if}
+165       
+166       \textcolor{keyword}{call }find_unit(file_ddinfo)
+167       
+168       \textcolor{keyword}{open}(unit=file_ddinfo, file=\textcolor{stringliteral}{"out/dd/ddinfo"}, action=\textcolor{stringliteral}{"write"}, status\textcolor{comment}{=}\textcolor{stringliteral}{"replace"}\textcolor{comment}{)}
+169 \textcolor{comment}{      }
+170 \textcolor{comment}{      }\textcolor{keyword}{call }init_addlevel()
+171       
+172 
+173         
+174 
+\end{DoxyCode}
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacedecomposer_a98718ed1ed87442f86951d651992261d_cgraph}
+\end{center}
+\end{figure}
+
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=246pt]{namespacedecomposer_a98718ed1ed87442f86951d651992261d_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{decomposer@{decomposer}!init\+\_\+subdomain@{init\+\_\+subdomain}}
+\index{init\+\_\+subdomain@{init\+\_\+subdomain}!decomposer@{decomposer}}
+\subsubsection[{init\+\_\+subdomain(sub, id)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine decomposer\+::init\+\_\+subdomain (
+\begin{DoxyParamCaption}
+\item[{type({\bf subdomain\+\_\+str}), intent(inout)}]{sub, }
+\item[{integer(kind=ikind), intent(in)}]{id}
+\end{DoxyParamCaption}
+)}\label{namespacedecomposer_ab3c22185fa432d9d3ca309ce5042f9b9}
+
+
+Definition at line 452 of file decomposer.\+f90.
+
+
+
+References globals\+::drutes\+\_\+config, globals\+::elements, pde\+\_\+objs\+::pde, and pde\+\_\+objs\+::pde\+\_\+common.
+
+
+
+Referenced by set\+\_\+subdomains().
+
+
+\begin{DoxyCode}
+452       \textcolor{keywordtype}{use }typy
+453       \textcolor{keywordtype}{use }sparsematrix
+454       \textcolor{keywordtype}{use }decomp_vars
+455       \textcolor{keywordtype}{use }globals
+456       \textcolor{keywordtype}{use }global_objs
+457       \textcolor{keywordtype}{use }pde_objs
+458       \textcolor{keywordtype}{use }core_tools
+459       \textcolor{keywordtype}{use }debug_tools
+460 
+461       
+462       \textcolor{keywordtype}{type}(subdomain_str), \textcolor{keywordtype}{intent(in out)} :: sub
+463       \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(in)} :: id
+464       \textcolor{keywordtype}{integer(kind=ikind)} :: i,j,k,l, counter
+465       \textcolor{keywordtype}{logical}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable}, \textcolor{keywordtype}{save} :: wrklist
+466     
+467       \textcolor{keywordflow}{if} (.not.(\textcolor{keyword}{allocated}(wrklist))) \textcolor{keywordflow}{then}
+468         \textcolor{keyword}{allocate}(wrklist(maxval(pde(1)%permut(:))))
+469 \textcolor{keywordflow}{      end if}
+470       
+471       \textcolor{keyword}{allocate}(sub%permut(3\_ikind*sub%elsub%pos))
+472       \textcolor{keyword}{allocate}(sub%invpermut(maxval(pde(1)%permut(:))))
+473       
+474       wrklist = .false.
+475       sub%ndof = 0
+476       sub%permut = 0
+477       
+478       \textcolor{keywordflow}{do} i=1,sub%elsub%pos
+479         \textcolor{keywordflow}{do} j=1, ubound(elements%data,2)
+480           l = sub%elsub%data(i)
+481           k = pde(1)%permut(elements%data(l,j))
+482           \textcolor{keywordflow}{if} (k /=0 ) \textcolor{keywordflow}{then}
+483             wrklist(k) = .true.
+484 \textcolor{keywordflow}{          end if}
+485 \textcolor{keywordflow}{        end do}
+486 \textcolor{keywordflow}{      end do}
+487       
+488       
+489       counter = 0
+490       sub%invpermut = 0
+491       \textcolor{keywordflow}{do} i=1, ubound(wrklist,1)
+492         \textcolor{keywordflow}{if} (wrklist(i)) \textcolor{keywordflow}{then}
+493           sub%ndof = sub%ndof + 1
+494           sub%permut(sub%ndof) = i
+495           counter = counter + 1
+496           sub%invpermut(i) = counter
+497 \textcolor{keywordflow}{        end if}
+498 \textcolor{keywordflow}{      end do}
+499       
+500 
+501       \textcolor{keyword}{call }sub%matrix%init(maxval(pde(1)%permut(:)),sub%ndof)
+502       
+503       \textcolor{comment}{!!if subcycling      }
+504       \textcolor{keywordflow}{if} (drutes_config%it\_method == 2) \textcolor{keywordflow}{then}
+505         
+506         i = sub%ndextra%pos
+507                 
+508         \textcolor{keyword}{allocate}(sub%extpermut(i))
+509         
+510         \textcolor{keyword}{allocate}(sub%extinvpermut(maxval(pde(1)%permut(:))))    
+511                 
+512         sub%extinvpermut = 0
+513         
+514         sub%extpermut = 0
+515         
+516         j=1     
+517         \textcolor{keywordflow}{do} i=1, sub%ndextra%pos
+518           \textcolor{keywordflow}{if} (pde(1)%permut(sub%ndextra%data(i)) > 0) \textcolor{keywordflow}{then}
+519             sub%extpermut(j) =  pde(1)%permut(sub%ndextra%data(i))
+520             j=j+1
+521 \textcolor{keywordflow}{          end if}          
+522 \textcolor{keywordflow}{        end do}
+523         
+524         sub%extndof = j-1
+525         
+526         
+527         \textcolor{keyword}{call }sub%extmatrix%init(maxval(pde(1)%permut(:)), sub%extndof)
+528 
+529         
+530         \textcolor{keyword}{allocate}(sub%extbvect(sub%extndof))
+531         
+532         l = 0
+533         \textcolor{keywordflow}{do} i=1, sub%ndextra%pos
+534         
+535           j = sub%ndextra%data(i)
+536           
+537           k = pde(1)%permut(j)
+538 
+539           \textcolor{keywordflow}{if} (k>0) \textcolor{keywordflow}{then}
+540             l = l + 1
+541             sub%extinvpermut(k) = l
+542 \textcolor{keywordflow}{          end if}
+543           
+544 \textcolor{keywordflow}{        end do}
+545         
+546         
+547         \textcolor{keyword}{allocate}(sub%resvct%main(sub%ndof))
+548         
+549         \textcolor{keyword}{allocate}(sub%resvct%ext(sub%extndof))
+550         
+551         \textcolor{keyword}{allocate}(sub%extxvect(sub%extndof,4))
+552         
+553         sub%extxvect(:,1:3) = pde_common%xvect(sub%extpermut(1:sub%extndof\textcolor{comment}{),1:3)}
+554 \textcolor{comment}{        sub%extxvect(:,4) = pde_common%xvect(sub%extpermut(1:sub%extndof),1)}
+555 \textcolor{comment}{}
+556 \textcolor{comment}{}\textcolor{keywordflow}{      end if}
+557       
+558       \textcolor{keyword}{allocate}(sub%xvect(sub%ndof,4))
+559       
+560 
+561       
+562       \textcolor{keyword}{allocate}(sub%ovect(sub%ndof))
+563       
+564       \textcolor{keyword}{allocate}(sub%bvect(sub%ndof))
+565 
+566       
+567       sub%xvect(:,1:3) = pde_common%xvect(sub%permut(1:sub%ndof),1:3)
+568       
+569       sub%xvect(:,4) = pde_common%xvect(sub%permut(1:sub%ndof),1)
+570       
+571 
+572             
+\end{DoxyCode}
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacedecomposer_ab3c22185fa432d9d3ca309ce5042f9b9_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{decomposer@{decomposer}!make\+\_\+quadmesh@{make\+\_\+quadmesh}}
+\index{make\+\_\+quadmesh@{make\+\_\+quadmesh}!decomposer@{decomposer}}
+\subsubsection[{make\+\_\+quadmesh(density)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, private decomposer\+::make\+\_\+quadmesh (
+\begin{DoxyParamCaption}
+\item[{real(kind=rkind), intent(in)}]{density}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [private]}}\label{namespacedecomposer_a58c48dfbf6d81b7645cb64e5d88e3022}
+
+
+subroutine that creates mesh of quadrangles -- coarse mesh (clusters) 
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em density} & mesh density (approximatelly) \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 718 of file decomposer.\+f90.
+
+
+
+References decomp\+\_\+vars\+::coarse\+\_\+elements, decomp\+\_\+vars\+::coarse\+\_\+nodes, decomp\+\_\+vars\+::ddcoarse\+\_\+mesh, geom\+\_\+tools\+::find\+\_\+neighbours(), globals\+::nodes, and core\+\_\+tools\+::write\+\_\+log().
+
+
+
+Referenced by init\+\_\+decomp().
+
+
+\begin{DoxyCode}
+718       \textcolor{keywordtype}{use }typy
+719       \textcolor{keywordtype}{use }globals
+720       \textcolor{keywordtype}{use }global_objs
+721       \textcolor{keywordtype}{use }decomp_vars
+722       \textcolor{keywordtype}{use }printtools
+723       \textcolor{keywordtype}{use }core_tools
+724       \textcolor{keywordtype}{use }decomp_tools
+725       \textcolor{keywordtype}{use }geom_tools
+726       
+728       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{intent(in)} :: density
+729       \textcolor{keywordtype}{real(kind=rkind)} :: xmax, xmin, zmax, zmin
+730       \textcolor{keywordtype}{real(kind=rkind)} :: xdens, zdens
+731 
+732       \textcolor{keywordtype}{integer(kind=ikind)} :: xcount, zcount, i,j, row
+733 
+734       xmax = maxval(nodes%data(:,1))
+735       xmin = minval(nodes%data(:,1))
+736       zmax = maxval(nodes%data(:,2))
+737       zmin = minval(nodes%data(:,2))
+738       \textcolor{keywordflow}{if} (((xmax - xmin)/density - int((xmax - xmin)/density)) > epsilon\textcolor{comment}{(xmax)) }\textcolor{keywordflow}{then}
+739         xcount = int((xmax - xmin)/density) + 1
+740       \textcolor{keywordflow}{else}
+741         xcount = int((xmax - xmin)/density)
+742 \textcolor{keywordflow}{      end if}
+743 
+744       xdens = (xmax - xmin)/(xcount*1.0\_rkind)
+745  
+746       \textcolor{keywordflow}{if} (((zmax - zmin)/density - int((zmax - zmin)/density)) > epsilon\textcolor{comment}{(zmax)) }\textcolor{keywordflow}{then}
+747         zcount = int((zmax - zmin)/density) + 1
+748       \textcolor{keywordflow}{else}
+749         zcount = int((zmax - zmin)/density)
+750 \textcolor{keywordflow}{      end if}
+751 
+752       zdens = (zmax - zmin)/(zcount*1.0\_rkind)
+753       
+754       \textcolor{keyword}{allocate}(coarse_nodes%data((xcount + 1)*(zcount + 1), 2))
+755       coarse_nodes%kolik = (xcount + 1)*(zcount + 1)
+756 
+757       \textcolor{keyword}{allocate}(coarse_elements%data(xcount*zcount, 4))
+758       coarse_elements%kolik = xcount*zcount
+759 
+760       \textcolor{keyword}{allocate}(ddcoarse_mesh(coarse_elements%kolik))
+761       
+762       \textcolor{keyword}{allocate}(coarse_elements%material(coarse_elements%kolik,1))
+763       
+764       \textcolor{keyword}{allocate}(coarse_elements%neighbours(coarse_elements%kolik, ubound(
+      coarse_elements%data\textcolor{comment}{,2)))}
+765 \textcolor{comment}{}
+766 \textcolor{comment}{}
+767 \textcolor{comment}{      row = 0}
+768 \textcolor{comment}{      }\textcolor{keywordflow}{do} j=0, zcount
+769         \textcolor{keywordflow}{do} i=0, xcount
+770           row = row+1
+771           coarse_nodes%data(row, 1) = xmin + i*xdens
+772           coarse_nodes%data(row, 2) = zmin + j*zdens
+773 \textcolor{keywordflow}{        end do}
+774 \textcolor{keywordflow}{      end do}
+775    
+776       row = 0
+777       \textcolor{keywordflow}{do} j=1, zcount
+778         \textcolor{keywordflow}{do} i=1, xcount
+779           row = row + 1
+780           coarse_elements%data(row,1) = (xcount+1)*(j-1) + i
+781           coarse_elements%data(row,2) = (xcount+1)*(j-1) + i + 1
+782           coarse_elements%data(row,3) = (xcount+1)*j + i + 1
+783           coarse_elements%data(row,4) = (xcount+1)*j + i
+784 \textcolor{keywordflow}{        end do}
+785 \textcolor{keywordflow}{      end do}
+786 
+787       
+788       print *, \textcolor{keyword}{allocated}(coarse_elements%neighbours) 
+789       
+790       \textcolor{keyword}{call }write_log(\textcolor{stringliteral}{"searching for neigbourhood clusters..."})
+791       \textcolor{keyword}{call }find_neighbours(coarse_elements, coarse_nodes)
+792   
+793 
+\end{DoxyCode}
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacedecomposer_a58c48dfbf6d81b7645cb64e5d88e3022_cgraph}
+\end{center}
+\end{figure}
+
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacedecomposer_a58c48dfbf6d81b7645cb64e5d88e3022_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{decomposer@{decomposer}!read\+\_\+coarse\+\_\+mesh@{read\+\_\+coarse\+\_\+mesh}}
+\index{read\+\_\+coarse\+\_\+mesh@{read\+\_\+coarse\+\_\+mesh}!decomposer@{decomposer}}
+\subsubsection[{read\+\_\+coarse\+\_\+mesh()}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, private decomposer\+::read\+\_\+coarse\+\_\+mesh (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [private]}}\label{namespacedecomposer_a9ce50809a5a28381c14ba27ff5284722}
+
+
+Definition at line 660 of file decomposer.\+f90.
+
+
+
+References decomp\+\_\+vars\+::coarse\+\_\+elements, decomp\+\_\+vars\+::coarse\+\_\+nodes, readtools\+::comment(), decomp\+\_\+vars\+::ddcoarse\+\_\+mesh, geom\+\_\+tools\+::find\+\_\+neighbours(), core\+\_\+tools\+::find\+\_\+unit(), and core\+\_\+tools\+::write\+\_\+log().
+
+
+
+Referenced by init\+\_\+decomp().
+
+
+\begin{DoxyCode}
+660       \textcolor{keywordtype}{use }typy
+661       \textcolor{keywordtype}{use }global_objs
+662       \textcolor{keywordtype}{use }globals
+663       \textcolor{keywordtype}{use }decomp_vars
+664       \textcolor{keywordtype}{use }core_tools
+665       \textcolor{keywordtype}{use }readtools
+666       \textcolor{keywordtype}{use }debug_tools
+667       \textcolor{keywordtype}{use }decomp_tools
+668       \textcolor{keywordtype}{use }geom_tools
+669 
+670       \textcolor{keywordtype}{integer} :: fmesh, ierr, chi
+671       \textcolor{keywordtype}{real} :: ch
+672       \textcolor{keywordtype}{integer(kind=ikind)} :: i
+673 
+674       \textcolor{keyword}{call }find_unit(fmesh)
+675     
+676       \textcolor{keyword}{open}(unit=fmesh, file=\textcolor{stringliteral}{"drutes.conf/mesh/coarse.t3d"}, action=\textcolor{stringliteral}{"read"}\textcolor{comment}{, status=}\textcolor{stringliteral}{"old"}\textcolor{comment}{, iostat=ierr)}
+677 \textcolor{comment}{  }
+678 \textcolor{comment}{      }\textcolor{keywordflow}{if} (ierr /= 0) \textcolor{keywordflow}{then}
+679         print *, \textcolor{stringliteral}{"unable to open file drutes.conf/mesh/coarse.t3d, called from decomposer::read\_coarse"}
+680         error stop
+681 \textcolor{keywordflow}{      end if}
+682 
+683       \textcolor{keyword}{call }comment(fmesh)
+684       \textcolor{keyword}{read}(unit=fmesh, fmt=*) ch
+685       \textcolor{keyword}{call }comment(fmesh)
+686       \textcolor{keyword}{read}(unit=fmesh, fmt=*) coarse_nodes%kolik, ch, coarse_elements%kolik
+687       \textcolor{keyword}{call }comment(fmesh) 
+688 
+689       \textcolor{keyword}{allocate}(coarse_nodes%data(coarse_nodes%kolik, 2))
+690     
+691       \textcolor{keyword}{allocate}(coarse_elements%data(coarse_elements%kolik, 3))
+692       
+693       \textcolor{keyword}{allocate}(coarse_elements%material(coarse_elements%kolik,1))
+694       
+695 
+696       \textcolor{keywordflow}{do} i=1, coarse_nodes%kolik
+697         \textcolor{keyword}{call }comment(fmesh)
+698         \textcolor{keyword}{read}(unit=fmesh, fmt=*) ch, coarse_nodes%data(i,:)
+699 \textcolor{keywordflow}{      end do}
+700 
+701       \textcolor{keywordflow}{do} i=1, coarse_elements%kolik
+702         \textcolor{keyword}{call }comment(fmesh)
+703         \textcolor{keyword}{read}(unit=fmesh, fmt=*) chi, coarse_elements%data(i,:)
+704 \textcolor{keywordflow}{      end do}
+705 
+706       \textcolor{keyword}{allocate}(ddcoarse_mesh(coarse_elements%kolik))
+707 
+708       \textcolor{keyword}{close}(fmesh)
+709 
+710       \textcolor{keyword}{call }write_log(\textcolor{stringliteral}{"searching for neigbourhood clusters..."})
+711       \textcolor{keyword}{call }find_neighbours(coarse_elements, coarse_nodes)
+712 
+\end{DoxyCode}
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacedecomposer_a9ce50809a5a28381c14ba27ff5284722_cgraph}
+\end{center}
+\end{figure}
+
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacedecomposer_a9ce50809a5a28381c14ba27ff5284722_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{decomposer@{decomposer}!set\+\_\+subdomains@{set\+\_\+subdomains}}
+\index{set\+\_\+subdomains@{set\+\_\+subdomains}!decomposer@{decomposer}}
+\subsubsection[{set\+\_\+subdomains()}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, public decomposer\+::set\+\_\+subdomains (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}\label{namespacedecomposer_abbcc7a95b77ad1dbec2b528470df7daf}
+
+
+the subdomains are combined based on the gradients of the solution and the Picard iterations 
+
+create disjoint map of subdomains 
+
+Definition at line 181 of file decomposer.\+f90.
+
+
+
+References decomp\+\_\+tools\+::addlevel(), clear\+\_\+subdomain(), decomp\+\_\+vars\+::coarse\+\_\+elements, decomp\+\_\+vars\+::ddcoarse\+\_\+mesh, decomp\+\_\+vars\+::ddinfo, globals\+::elements, decomp\+\_\+vars\+::file\+\_\+decomp, init\+\_\+subdomain(), globals\+::nodes, pde\+\_\+objs\+::pde, geom\+\_\+tools\+::plane\+\_\+derivative(), decomp\+\_\+vars\+::subdomain, globals\+::time, and core\+\_\+tools\+::write\+\_\+log().
+
+
+
+Referenced by schwarz\+\_\+dd\+::schwarz\+\_\+picard(), schwarz\+\_\+dd\+\_\+time\+\_\+test\+::schwarz\+\_\+picard\+\_\+tt(), schwarz\+\_\+dd2subcyc\+::schwarz\+\_\+subcyc(), and subcycling\+::subcyc\+\_\+schwarz().
+
+
+\begin{DoxyCode}
+181       \textcolor{keywordtype}{use }typy
+182       \textcolor{keywordtype}{use }globals
+183       \textcolor{keywordtype}{use }global_objs
+184       \textcolor{keywordtype}{use }pde_objs
+185       \textcolor{keywordtype}{use }decomp_vars
+186       \textcolor{keywordtype}{use }decomp_tools
+187       \textcolor{keywordtype}{use }geom_tools
+188       \textcolor{keywordtype}{use }core_tools
+189       \textcolor{keywordtype}{use }debug_tools
+190       \textcolor{keywordtype}{use }postpro
+191 
+192 
+193       \textcolor{keywordtype}{logical} :: remeshed
+194       \textcolor{keywordtype}{integer(kind=ikind)} :: i,j, k, l, counter, tmp\_int, coarse\_count, ii\textcolor{comment}{, subfin, processes\_count, m, n, 
+      level\_nei, decrease}
+195 \textcolor{comment}{      }\textcolor{keywordtype}{integer(kind=ikind)} :: el, nd, sub
+196       \textcolor{keywordtype}{integer(kind=ikind)} :: level, currentlev, row
+197       \textcolor{keywordtype}{real(kind=rkind)}    :: avgval, tmp, tmp1, tmp2, dgdz, dgdx
+198       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(2)} :: locders
+199       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(3,3)} :: points
+200       \textcolor{keywordtype}{logical} :: exited
+201       \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable}, \textcolor{keywordtype}{save} :: subdomsdim\textcolor{comment}{, coarse\_el}
+202 \textcolor{comment}{      }\textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable}, \textcolor{keywordtype}{save} :: subdoms
+203       \textcolor{keywordtype}{logical}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable}, \textcolor{keywordtype}{save} :: node\_set
+204       \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable}, \textcolor{keywordtype}{save} :: domain\_permut
+205       
+206 
+207       ddcoarse_mesh(:)%active = .true.
+208       ddcoarse_mesh(:)%evaluated = .false.
+209       
+210 
+211       processes\_count = ubound(pde,1)
+212       \textcolor{keywordflow}{if} (.not.(\textcolor{keyword}{allocated}(subdomsdim))) \textcolor{keywordflow}{then}
+213         \textcolor{keyword}{allocate}(subdomsdim(ubound(ddcoarse_mesh,1)))
+214         \textcolor{keyword}{allocate}(subdoms(elements%kolik))
+215         \textcolor{keyword}{allocate}(coarse\_el(coarse_elements%kolik))
+216         \textcolor{keyword}{allocate}(domain\_permut(coarse_elements%kolik))
+217         \textcolor{keyword}{allocate}(node\_set(maxval(pde(processes\_count)%permut(:))))
+218 \textcolor{keywordflow}{      end if}
+219       
+220       remeshed = .false.
+221 
+222       n=0
+223 
+224 
+225       \textcolor{comment}{!check if the cluster is critical (=steep derivatives or more than a single Picard iteration) }
+226       \textcolor{keywordflow}{do} i=1, coarse_elements%kolik
+227         row = 0
+228         exited = .false.
+229         incoarse: \textcolor{keywordflow}{do} j=1, ubound(ddcoarse_mesh(i)%elements,1)
+230                     l = ddcoarse_mesh(i)%elements(j)
+231                     row=row+1
+232                     \textcolor{keywordflow}{do} k=1,3
+233                       points(k,1:2) = nodes%data(elements%data(l,k),:)
+234                       points(k,3) = pde(1)%solution(elements%data(l,k))
+235 \textcolor{keywordflow}{                    end do}
+236                     
+237                     \textcolor{keyword}{call }plane_derivative(points(1,:), points(2,:), points(3,:), dgdx,\textcolor{comment}{ dgdz)}
+238 \textcolor{comment}{                    }
+239 \textcolor{comment}{!                     if ( ddcoarse\_mesh(i)%iter\_count > 1 .and. sqrt(dgdx*dgdx + dgdz*dgdz) > 0.0001 )
+       then}
+240                       \textcolor{keywordflow}{if} ( ddcoarse_mesh(i)%iter\_count > 1 ) \textcolor{keywordflow}{then}
+241                       ddcoarse_mesh(i)%treat\_alone = .true.
+242                       exited = .true.
+243                       \textcolor{keywordflow}{EXIT} incoarse
+244 \textcolor{keywordflow}{                    end if}
+245 \textcolor{keywordflow}{        end do} incoarse
+246           
+247         \textcolor{keywordflow}{if} (.not.exited) \textcolor{keywordflow}{then}
+248           ddcoarse_mesh(i)%treat\_alone = .false.
+249 \textcolor{keywordflow}{        end if}
+250         \textcolor{keywordflow}{if} (coarse_elements%material(i,1) == 0) \textcolor{keywordflow}{then}
+251           ddcoarse_mesh(i)%treat\_alone = .true.
+252 \textcolor{keywordflow}{        end if}
+253 \textcolor{keywordflow}{      end do}
+254 
+255       
+256       currentlev = 1
+257       subdomsdim = 0
+258       ddcoarse_mesh(:)%prevsub = ddcoarse_mesh(:)%subdomain
+259       ddcoarse_mesh(:)%subdomain = 0
+260 
+261 
+262       \textcolor{keywordflow}{do} i=1, coarse_elements%kolik
+263         \textcolor{keywordflow}{if} (ddcoarse_mesh(i)%subdomain == 0) \textcolor{keywordflow}{then}
+264           ddcoarse_mesh(i)%subdomain = currentlev
+265           currentlev = currentlev + 1
+266         \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (ddcoarse_mesh(i)%subdomain < currentlev) \textcolor{keywordflow}{then}
+267           \textcolor{keywordflow}{continue}
+268 \textcolor{keywordflow}{        end if}
+269 
+270         \textcolor{keywordflow}{if} (.not. ddcoarse_mesh(i)%treat\_alone) \textcolor{keywordflow}{then}
+271             \textcolor{keywordflow}{do} j=1, ubound(coarse_elements%neighbours,2)
+272               k = coarse_elements%neighbours(i,j) 
+273               \textcolor{keywordflow}{if} (k > 0) \textcolor{keywordflow}{then} 
+274                 \textcolor{keywordflow}{if} (coarse_elements%material(i,1) == coarse_elements%material(k,1)) \textcolor{keywordflow}{then}
+275                   \textcolor{keywordflow}{if} (.not. ddcoarse_mesh(k)%treat\_alone .and. ddcoarse_mesh(k)%subdomain\textcolor{comment}{ == 0) }\textcolor{keywordflow}{then}
+276                     ddcoarse_mesh(k)%subdomain= ddcoarse_mesh(i)%subdomain
+277 \textcolor{keywordflow}{                  end if}
+278                   \textcolor{keywordflow}{if} (ddcoarse_mesh(k)%subdomain < ddcoarse_mesh(i)%subdomain .and. .not.\textcolor{comment}{ 
+      ddcoarse_mesh(k)%treat\_alone) }\textcolor{keywordflow}{then}
+279                     level\_nei = ddcoarse_mesh(k)%subdomain
+280                     decrease = ddcoarse_mesh(i)%subdomain
+281                     \textcolor{keywordflow}{where} (ddcoarse_mesh(:)%subdomain == decrease)
+282                       ddcoarse_mesh(:)%subdomain = level\_nei
+283 \textcolor{keywordflow}{                    end where}
+284 \textcolor{keywordflow}{                  end if}
+285 \textcolor{keywordflow}{                end if}
+286 \textcolor{keywordflow}{              end if}
+287 \textcolor{keywordflow}{            end do}
+288 \textcolor{keywordflow}{          end if}
+289 \textcolor{keywordflow}{        end do}
+290           
+291      
+292        currentlev = 0
+293        domain\_permut = 0
+294        \textcolor{keywordflow}{do} i=1, ubound(ddcoarse_mesh,1)
+295         \textcolor{keywordflow}{if} (ddcoarse_mesh(i)%subdomain /= currentlev) \textcolor{keywordflow}{then}
+296           \textcolor{keywordflow}{if} (domain\_permut( ddcoarse_mesh(i)%subdomain ) == 0) \textcolor{keywordflow}{then}
+297             currentlev = currentlev + 1
+298             domain\_permut( ddcoarse_mesh(i)%subdomain ) = currentlev 
+299             ddcoarse_mesh(i)%subdomain = currentlev
+300           \textcolor{keywordflow}{else}
+301             ddcoarse_mesh(i)%subdomain = domain\_permut( ddcoarse_mesh(i)%subdomain\textcolor{comment}{ ) }
+302 \textcolor{comment}{}\textcolor{keywordflow}{          end if}
+303 \textcolor{keywordflow}{        end if}
+304         \textcolor{keywordflow}{if} (ddcoarse_mesh(i)%subdomain /= ddcoarse_mesh(i)%prevsub ) \textcolor{keywordflow}{then}
+305           remeshed = .true.
+306 \textcolor{keywordflow}{        end if}
+307 \textcolor{keywordflow}{      end do}
+308 
+309 
+310 
+311       ddinfo%number = currentlev 
+312       ddinfo%t\_change = time
+313       \textcolor{keyword}{call }cpu\_time(ddinfo%cput\_change)
+314 
+315       \textcolor{comment}{!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!}
+316       \textcolor{comment}{!!!!!!!!!!!!!!!!!!! begin if remeshed!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!}
+317       \textcolor{comment}{!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!}
+318       \textcolor{keywordflow}{if} (ubound(subdomain,1) /= ddinfo%number .or. remeshed) \textcolor{keywordflow}{then}
+319         \textcolor{keywordflow}{if} (\textcolor{keyword}{allocated}(subdomain)) \textcolor{keywordflow}{then}
+320           \textcolor{keywordflow}{do} i=1, ubound(subdomain,1) 
+321             \textcolor{keyword}{call }clear\_subdomain(subdomain(i))
+322 \textcolor{keywordflow}{          end do}
+323           \textcolor{keyword}{deallocate}(ddinfo%nodesinsub)
+324           \textcolor{keyword}{deallocate}(ddinfo%nodesinextsub)
+325           \textcolor{keyword}{deallocate}(subdomain)
+326 \textcolor{keywordflow}{        end if}  
+327         
+328         \textcolor{keywordflow}{do} i=1, ubound(ddinfo%nd\_dsjnt%crit,1)
+329           \textcolor{keyword}{call }ddinfo%nd\_dsjnt%crit(i)%clear()
+330 \textcolor{keywordflow}{        end do}
+331          
+332         \textcolor{keyword}{allocate}(subdomain(ddinfo%number))
+333         \textcolor{keyword}{allocate}(ddinfo%nodesinsub(nodes%kolik))
+334         \textcolor{keyword}{allocate}(ddinfo%nodesinextsub(nodes%kolik))
+335        
+336 
+337 
+338         \textcolor{keywordflow}{do} i=1, ubound(subdomain,1)
+339           counter = 0
+340           coarse\_count = 0
+341           \textcolor{keywordflow}{do} j=1, coarse_elements%kolik
+342             \textcolor{keywordflow}{if} (ddcoarse_mesh(j)%subdomain == i) \textcolor{keywordflow}{then}
+343               tmp\_int = counter + 1
+344               counter = counter + ubound(ddcoarse_mesh(j)%elements,1)
+345               coarse\_count = coarse\_count + 1
+346               coarse\_el(coarse\_count) = j
+347               subdoms(tmp\_int:counter) = ddcoarse_mesh(j)%elements
+348 \textcolor{keywordflow}{            end if}
+349 \textcolor{keywordflow}{          end do}
+350           \textcolor{comment}{! write fine elements}
+351 \textcolor{comment}{!         allocate(subdomain(i)%el(counter))}
+352 \textcolor{comment}{!         subdomain(i)%el = subdoms(1:counter)}
+353           \textcolor{keywordflow}{do} j=1, counter
+354             \textcolor{keyword}{call }subdomain(i)%elsub%fill(subdoms(j))
+355 \textcolor{keywordflow}{          end do}
+356           \textcolor{comment}{!write coarse elements}
+357           \textcolor{keyword}{allocate}(subdomain(i)%coarse\_el(coarse\_count))
+358           subdomain(i)%coarse\_el(1:coarse\_count) = coarse\_el(1:coarse\_count\textcolor{comment}{)}
+359 \textcolor{comment}{}\textcolor{keywordflow}{        end do}
+360 
+361         \textcolor{comment}{! create disjoint map of subdomain elements}
+362         \textcolor{keywordflow}{do} i=1, ubound(subdomain,1)
+363           \textcolor{keywordflow}{do} j=1, subdomain(i)%elsub%pos
+364             k = subdomain(i)%elsub%data(j)
+365             \textcolor{keyword}{call }elements%subdom(k)%fill(i)
+366 \textcolor{keywordflow}{          end do}
+367 \textcolor{keywordflow}{        end do}
+368 
+369 \textcolor{comment}{!       call printmtx(elements%subdom) ; call wait()}
+370         subdomain(:)%critical = .false.
+371 
+372         \textcolor{keywordflow}{do} i=1, coarse_elements%kolik
+373           \textcolor{keywordflow}{if} (ddcoarse_mesh(i)%treat\_alone) \textcolor{keywordflow}{then}
+374             subdomain(ddcoarse_mesh(i)%subdomain)%critical = .true.
+375 \textcolor{keywordflow}{          end if}
+376 \textcolor{keywordflow}{        end do}
+377         
+378         
+379         \textcolor{comment}{! and now you can add desired number of levels}
+380         \textcolor{keyword}{call }addlevel()
+381 
+382         
+383         \textcolor{comment}{! finish the subdomain initialization}
+384         \textcolor{keywordflow}{do} i=1, ubound(subdomain,1)
+385           \textcolor{keyword}{call }init\_subdomain(subdomain(i), i)
+386 \textcolor{keywordflow}{        end do}
+387         \textcolor{keyword}{call }write_log(text=\textcolor{stringliteral}{"domain decomposition was adapted to the new solution, number of subdomains
+       is:"}\textcolor{comment}{,&}
+388 \textcolor{comment}{                        int1=ddinfo%number, text2=}\textcolor{stringliteral}{"@ simulation time:"}, real2=
+      ddinfo%t\_change\textcolor{comment}{)}
+389 \textcolor{comment}{}
+390 \textcolor{comment}{}
+391 \textcolor{comment}{}
+392 \textcolor{comment}{       ! create a list of nodes with a list of subdomains, where the node belongs.}
+393         \textcolor{keywordflow}{do} sub=1, ubound(subdomain,1)
+394           \textcolor{keywordflow}{do} i=1, subdomain(sub)%elsub%pos
+395             el = subdomain(sub)%elsub%data(i)
+396             \textcolor{keywordflow}{do} j=1, ubound(elements%data,2)
+397               nd = elements%data(el,j)
+398               \textcolor{keyword}{call }ddinfo%nodesinsub(nd)%nrfill(sub)
+399 \textcolor{keywordflow}{            end do}
+400 \textcolor{keywordflow}{          end do}
+401 \textcolor{keywordflow}{        end do}
+402         
+403         
+404 
+405       
+406         \textcolor{keyword}{write}(unit=file_decomp, fmt=*) time, ubound(subdomain,1)
+407         \textcolor{keyword}{call }flush(file_decomp)
+408         
+409         
+410         node\_set = .false.
+411     
+413         \textcolor{keywordflow}{do} i=1, ubound(subdomain,1)
+414           \textcolor{keywordflow}{do} j=1, subdomain(i)%elsub%pos
+415             k = subdomain(i)%elsub%data(j)
+416             \textcolor{keywordflow}{do} l=1, ubound(elements%data,2)
+417               m = elements%data(k,l)
+418               n = pde(1)%permut(m)
+419               \textcolor{keywordflow}{if} (n > 0) \textcolor{keywordflow}{then}
+420                 \textcolor{keywordflow}{if} (.not. node\_set(n) .or. subdomain(i)%critical) \textcolor{keywordflow}{then}
+421                   ddinfo%nd\_dsjnt%data(n) = i
+422                   node\_set(n) = .true.
+423                   \textcolor{keywordflow}{if} (subdomain(i)%critical) \textcolor{keywordflow}{then}
+424                     \textcolor{keyword}{call }ddinfo%nd\_dsjnt%crit(n)%fill(i)
+425 \textcolor{keywordflow}{                  end if}
+426 \textcolor{keywordflow}{                end if}
+427 \textcolor{keywordflow}{              end if}
+428 \textcolor{keywordflow}{            end do}
+429 \textcolor{keywordflow}{          end do}
+430 \textcolor{keywordflow}{        end do}   
+431         
+432         \textcolor{keywordflow}{do} i=1, ubound(ddinfo%nd\_dsjnt%data,1)
+433           j=ddinfo%nd\_dsjnt%data(i)
+434           \textcolor{keyword}{call }subdomain(j)%disjoint%fill(i)
+435 \textcolor{keywordflow}{        end do}
+436 \textcolor{keywordflow}{      end if}
+437 
+438       ddinfo%ndofs\_tot = 0
+439       \textcolor{keywordflow}{do} i=1, ubound(subdomain,1)
+440         ddinfo%ndofs\_tot = ddinfo%ndofs\_tot + subdomain(i)%ndof
+441 \textcolor{keywordflow}{      end do}
+442       
+443       \textcolor{keywordflow}{do} i = 1, ubound(subdomain,1)
+444         subdomain(i)%order=i
+445 \textcolor{keywordflow}{      end do}
+446 
+447 
+\end{DoxyCode}
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacedecomposer_abbcc7a95b77ad1dbec2b528470df7daf_cgraph}
+\end{center}
+\end{figure}
+
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacedecomposer_abbcc7a95b77ad1dbec2b528470df7daf_icgraph}
+\end{center}
+\end{figure}
+
+

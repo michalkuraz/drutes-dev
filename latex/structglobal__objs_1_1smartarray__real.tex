@@ -1,0 +1,126 @@
+\section{global\+\_\+objs\+:\+:smartarray\+\_\+real Type Reference}
+\label{structglobal__objs_1_1smartarray__real}\index{global\+\_\+objs\+::smartarray\+\_\+real@{global\+\_\+objs\+::smartarray\+\_\+real}}
+
+
+For comments and description see \doxyref{smartarray\+\_\+int}{p.}{structglobal__objs_1_1smartarray__int}.  
+
+
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+procedure {\bf fill} =$>$ {\bf rsmartfill}
+\begin{DoxyCompactList}\small\item\em fills value into array, its dimension is automaticaly allocated \end{DoxyCompactList}\item 
+procedure {\bf clear} =$>$ {\bf rsmartclear}
+\item 
+procedure {\bf nrfill} =$>$ {\bf rsmartfill\+\_\+norepeat}
+\begin{DoxyCompactList}\small\item\em disjoint fill -- it fills value into array, only if the same value does not exist in the array. Since we deal with real numbers in this structure, then the real number is checked for absolute value of differece between two real numbers the value is checked as abs(arraydata(i) -\/ input) $<$ max(abs(arraydata(i)), abs(input))$\ast$(epsilon(input) \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+real(kind=rkind), dimension(\+:), allocatable {\bf data}
+\item 
+integer(kind=ikind), dimension(\+:), allocatable {\bf info}
+\item 
+integer(kind=ikind) {\bf pos} =0
+\item 
+integer(kind=ikind) {\bf infopos} =0
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+For comments and description see \doxyref{smartarray\+\_\+int}{p.}{structglobal__objs_1_1smartarray__int}. 
+
+Definition at line 66 of file global\+\_\+objs.\+f90.
+
+
+
+\subsection{Member Function/\+Subroutine Documentation}
+\index{global\+\_\+objs\+::smartarray\+\_\+real@{global\+\_\+objs\+::smartarray\+\_\+real}!clear@{clear}}
+\index{clear@{clear}!global\+\_\+objs\+::smartarray\+\_\+real@{global\+\_\+objs\+::smartarray\+\_\+real}}
+\subsubsection[{clear=$>$ rsmartclear}]{\setlength{\rightskip}{0pt plus 5cm}procedure global\+\_\+objs\+::smartarray\+\_\+real\+::clear (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}\label{structglobal__objs_1_1smartarray__real_a7a62f7e4eb8cc3cb067a5608eb61b0e7}
+
+
+Definition at line 73 of file global\+\_\+objs.\+f90.
+
+\index{global\+\_\+objs\+::smartarray\+\_\+real@{global\+\_\+objs\+::smartarray\+\_\+real}!fill@{fill}}
+\index{fill@{fill}!global\+\_\+objs\+::smartarray\+\_\+real@{global\+\_\+objs\+::smartarray\+\_\+real}}
+\subsubsection[{fill=$>$ rsmartfill}]{\setlength{\rightskip}{0pt plus 5cm}procedure global\+\_\+objs\+::smartarray\+\_\+real\+::fill (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}\label{structglobal__objs_1_1smartarray__real_a548c50bdcf30264bad397ac4ad052c1a}
+
+
+fills value into array, its dimension is automaticaly allocated 
+
+
+
+Definition at line 72 of file global\+\_\+objs.\+f90.
+
+\index{global\+\_\+objs\+::smartarray\+\_\+real@{global\+\_\+objs\+::smartarray\+\_\+real}!nrfill@{nrfill}}
+\index{nrfill@{nrfill}!global\+\_\+objs\+::smartarray\+\_\+real@{global\+\_\+objs\+::smartarray\+\_\+real}}
+\subsubsection[{nrfill=$>$ rsmartfill\+\_\+norepeat}]{\setlength{\rightskip}{0pt plus 5cm}procedure global\+\_\+objs\+::smartarray\+\_\+real\+::nrfill (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}\label{structglobal__objs_1_1smartarray__real_a3db295703e5b5fbd952667c9924ce1a0}
+
+
+disjoint fill -- it fills value into array, only if the same value does not exist in the array. Since we deal with real numbers in this structure, then the real number is checked for absolute value of differece between two real numbers the value is checked as abs(arraydata(i) -\/ input) $<$ max(abs(arraydata(i)), abs(input))$\ast$(epsilon(input) 
+
+
+
+Definition at line 78 of file global\+\_\+objs.\+f90.
+
+
+
+\subsection{Member Data Documentation}
+\index{global\+\_\+objs\+::smartarray\+\_\+real@{global\+\_\+objs\+::smartarray\+\_\+real}!data@{data}}
+\index{data@{data}!global\+\_\+objs\+::smartarray\+\_\+real@{global\+\_\+objs\+::smartarray\+\_\+real}}
+\subsubsection[{data}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind), dimension(\+:), allocatable global\+\_\+objs\+::smartarray\+\_\+real\+::data}\label{structglobal__objs_1_1smartarray__real_a5d3147a6d76a773f1c8bbaa43a19995f}
+
+
+Definition at line 67 of file global\+\_\+objs.\+f90.
+
+
+\begin{DoxyCode}
+67     \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable} :: data
+\end{DoxyCode}
+\index{global\+\_\+objs\+::smartarray\+\_\+real@{global\+\_\+objs\+::smartarray\+\_\+real}!info@{info}}
+\index{info@{info}!global\+\_\+objs\+::smartarray\+\_\+real@{global\+\_\+objs\+::smartarray\+\_\+real}}
+\subsubsection[{info}]{\setlength{\rightskip}{0pt plus 5cm}integer(kind=ikind), dimension(\+:), allocatable global\+\_\+objs\+::smartarray\+\_\+real\+::info}\label{structglobal__objs_1_1smartarray__real_a4d3e54d886e8762d1de13678dc7167ec}
+
+
+Definition at line 68 of file global\+\_\+objs.\+f90.
+
+
+\begin{DoxyCode}
+68     \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable} :: info
+\end{DoxyCode}
+\index{global\+\_\+objs\+::smartarray\+\_\+real@{global\+\_\+objs\+::smartarray\+\_\+real}!infopos@{infopos}}
+\index{infopos@{infopos}!global\+\_\+objs\+::smartarray\+\_\+real@{global\+\_\+objs\+::smartarray\+\_\+real}}
+\subsubsection[{infopos}]{\setlength{\rightskip}{0pt plus 5cm}integer(kind=ikind) global\+\_\+objs\+::smartarray\+\_\+real\+::infopos =0}\label{structglobal__objs_1_1smartarray__real_ab3eb55ff9499d66d75fdada5e54a3a0d}
+
+
+Definition at line 69 of file global\+\_\+objs.\+f90.
+
+\index{global\+\_\+objs\+::smartarray\+\_\+real@{global\+\_\+objs\+::smartarray\+\_\+real}!pos@{pos}}
+\index{pos@{pos}!global\+\_\+objs\+::smartarray\+\_\+real@{global\+\_\+objs\+::smartarray\+\_\+real}}
+\subsubsection[{pos}]{\setlength{\rightskip}{0pt plus 5cm}integer(kind=ikind) global\+\_\+objs\+::smartarray\+\_\+real\+::pos =0}\label{structglobal__objs_1_1smartarray__real_a372b7244d2506e03cc3e1df4e8825c14}
+
+
+Definition at line 69 of file global\+\_\+objs.\+f90.
+
+
+\begin{DoxyCode}
+69     \textcolor{keywordtype}{integer(kind=ikind)} :: pos=0, infopos=0
+\end{DoxyCode}
+
+
+The documentation for this type was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+src/core/{\bf global\+\_\+objs.\+f90}\end{DoxyCompactItemize}

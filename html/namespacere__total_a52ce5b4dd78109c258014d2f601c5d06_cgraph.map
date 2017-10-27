@@ -1,0 +1,8 @@
+<map id="re_total::getval_retot" name="re_total::getval_retot">
+<area shape="rect" id="node2" href="$namespacegeom__tools.html#aa7bb57f436fc77331aea42f34fde56a5" title="geom_tools::get_layer" alt="" coords="195,5,345,32"/>
+<area shape="rect" id="node3" href="$namespacegeom__tools.html#a4c2336f6e1e7d512a9d81acb21c71456" title="geom_tools::getcoor" alt="" coords="200,56,340,83"/>
+<area shape="rect" id="node5" href="$namespacepde__objs.html#aece3def127980c03c455456068cb3e48" title="returns solution value for p1 approximation " alt="" coords="205,107,335,133"/>
+<area shape="rect" id="node4" href="$namespacegeom__tools.html#a91ddf015e5cea9e21d182b93603f5139" title="geom_tools::dist" alt="" coords="408,56,527,83"/>
+<area shape="rect" id="node6" href="$namespacepde__objs.html#ad649cdb29899f292c7702c48fa9a6cf0" title="in case of asynchronyous temporal integration this function is separated from getvalp1, if standard temporal integration used, then this function is called from the first line of getvalp1 " alt="" coords="393,107,541,133"/>
+<area shape="rect" id="node7" href="$namespacepde__objs.html#aafa68686beee7a3cff07efb9febdfae0" title="pde_objs::get2dderivative" alt="" coords="589,107,760,133"/>
+</map>

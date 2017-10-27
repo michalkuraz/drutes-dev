@@ -1,0 +1,113 @@
+\section{global\+\_\+objs\+:\+:observe\+\_\+info\+\_\+str Type Reference}
+\label{structglobal__objs_1_1observe__info__str}\index{global\+\_\+objs\+::observe\+\_\+info\+\_\+str@{global\+\_\+objs\+::observe\+\_\+info\+\_\+str}}
+\subsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+integer(kind=ikind) {\bf method}
+\begin{DoxyCompactList}\small\item\em methods for observation time print 1 -\/ adjust time stepping to observation time values 2 -\/ linearly interpolate solution between two consecutive solutions (recommended) \end{DoxyCompactList}\item 
+character(len=4) {\bf fmt}
+\begin{DoxyCompactList}\small\item\em format of outputs for observation times pure -\/ raw data are printed, just nodes id with F\+EM coefficients scil -\/ scilab output gmsh -\/ gmsh output \end{DoxyCompactList}\item 
+logical {\bf anime}
+\item 
+integer(kind=ikind) {\bf nframes}
+\item 
+character(len=4) {\bf output\+\_\+fmt}
+\end{DoxyCompactItemize}
+\subsection*{Private Attributes}
+\begin{DoxyCompactItemize}
+\item 
+real(kind=rkind), dimension(\+:,\+:), allocatable, private {\bf model\+\_\+data}
+\begin{DoxyCompactList}\small\item\em format of output files for observation real(kind=rkind), dimension(\+:,\+:), allocatable, private \+:\+: exp\+\_\+data \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+
+
+Definition at line 154 of file global\+\_\+objs.\+f90.
+
+
+
+\subsection{Member Data Documentation}
+\index{global\+\_\+objs\+::observe\+\_\+info\+\_\+str@{global\+\_\+objs\+::observe\+\_\+info\+\_\+str}!anime@{anime}}
+\index{anime@{anime}!global\+\_\+objs\+::observe\+\_\+info\+\_\+str@{global\+\_\+objs\+::observe\+\_\+info\+\_\+str}}
+\subsubsection[{anime}]{\setlength{\rightskip}{0pt plus 5cm}logical global\+\_\+objs\+::observe\+\_\+info\+\_\+str\+::anime}\label{structglobal__objs_1_1observe__info__str_ac54eb8db3144177448c94b8621631365}
+
+
+Definition at line 166 of file global\+\_\+objs.\+f90.
+
+
+\begin{DoxyCode}
+166     \textcolor{keywordtype}{logical} :: anime
+\end{DoxyCode}
+\index{global\+\_\+objs\+::observe\+\_\+info\+\_\+str@{global\+\_\+objs\+::observe\+\_\+info\+\_\+str}!fmt@{fmt}}
+\index{fmt@{fmt}!global\+\_\+objs\+::observe\+\_\+info\+\_\+str@{global\+\_\+objs\+::observe\+\_\+info\+\_\+str}}
+\subsubsection[{fmt}]{\setlength{\rightskip}{0pt plus 5cm}character(len=4) global\+\_\+objs\+::observe\+\_\+info\+\_\+str\+::fmt}\label{structglobal__objs_1_1observe__info__str_afb4e729384e7e0f833501abc9a66d15f}
+
+
+format of outputs for observation times pure -\/ raw data are printed, just nodes id with F\+EM coefficients scil -\/ scilab output gmsh -\/ gmsh output 
+
+
+
+Definition at line 165 of file global\+\_\+objs.\+f90.
+
+
+\begin{DoxyCode}
+165     \textcolor{keywordtype}{character(len=4)} :: fmt
+\end{DoxyCode}
+\index{global\+\_\+objs\+::observe\+\_\+info\+\_\+str@{global\+\_\+objs\+::observe\+\_\+info\+\_\+str}!method@{method}}
+\index{method@{method}!global\+\_\+objs\+::observe\+\_\+info\+\_\+str@{global\+\_\+objs\+::observe\+\_\+info\+\_\+str}}
+\subsubsection[{method}]{\setlength{\rightskip}{0pt plus 5cm}integer(kind=ikind) global\+\_\+objs\+::observe\+\_\+info\+\_\+str\+::method}\label{structglobal__objs_1_1observe__info__str_a9daab35c8e37b96fdf0c2304c15a95b6}
+
+
+methods for observation time print 1 -\/ adjust time stepping to observation time values 2 -\/ linearly interpolate solution between two consecutive solutions (recommended) 
+
+
+
+Definition at line 159 of file global\+\_\+objs.\+f90.
+
+
+\begin{DoxyCode}
+159     \textcolor{keywordtype}{integer(kind=ikind)} :: method
+\end{DoxyCode}
+\index{global\+\_\+objs\+::observe\+\_\+info\+\_\+str@{global\+\_\+objs\+::observe\+\_\+info\+\_\+str}!model\+\_\+data@{model\+\_\+data}}
+\index{model\+\_\+data@{model\+\_\+data}!global\+\_\+objs\+::observe\+\_\+info\+\_\+str@{global\+\_\+objs\+::observe\+\_\+info\+\_\+str}}
+\subsubsection[{model\+\_\+data}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind), dimension(\+:,\+:), allocatable, private global\+\_\+objs\+::observe\+\_\+info\+\_\+str\+::model\+\_\+data\hspace{0.3cm}{\ttfamily [private]}}\label{structglobal__objs_1_1observe__info__str_a4054a4f436394b001ac209384ee1dbc4}
+
+
+format of output files for observation real(kind=rkind), dimension(\+:,\+:), allocatable, private \+:\+: exp\+\_\+data 
+
+
+
+Definition at line 169 of file global\+\_\+objs.\+f90.
+
+
+\begin{DoxyCode}
+169   \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:,:)}, \textcolor{keywordtype}{allocatable}, \textcolor{keywordtype}{private} :: model\_data
+\end{DoxyCode}
+\index{global\+\_\+objs\+::observe\+\_\+info\+\_\+str@{global\+\_\+objs\+::observe\+\_\+info\+\_\+str}!nframes@{nframes}}
+\index{nframes@{nframes}!global\+\_\+objs\+::observe\+\_\+info\+\_\+str@{global\+\_\+objs\+::observe\+\_\+info\+\_\+str}}
+\subsubsection[{nframes}]{\setlength{\rightskip}{0pt plus 5cm}integer(kind=ikind) global\+\_\+objs\+::observe\+\_\+info\+\_\+str\+::nframes}\label{structglobal__objs_1_1observe__info__str_a2e4f6a21c1402a9f76c983d79b86adaa}
+
+
+Definition at line 167 of file global\+\_\+objs.\+f90.
+
+
+\begin{DoxyCode}
+167     \textcolor{keywordtype}{integer(kind=ikind)} :: nframes
+\end{DoxyCode}
+\index{global\+\_\+objs\+::observe\+\_\+info\+\_\+str@{global\+\_\+objs\+::observe\+\_\+info\+\_\+str}!output\+\_\+fmt@{output\+\_\+fmt}}
+\index{output\+\_\+fmt@{output\+\_\+fmt}!global\+\_\+objs\+::observe\+\_\+info\+\_\+str@{global\+\_\+objs\+::observe\+\_\+info\+\_\+str}}
+\subsubsection[{output\+\_\+fmt}]{\setlength{\rightskip}{0pt plus 5cm}character(len=4) global\+\_\+objs\+::observe\+\_\+info\+\_\+str\+::output\+\_\+fmt}\label{structglobal__objs_1_1observe__info__str_a6be62b984ee978c10243302805bb7357}
+
+
+Definition at line 170 of file global\+\_\+objs.\+f90.
+
+
+\begin{DoxyCode}
+170     \textcolor{keywordtype}{character(len=4)} :: output\_fmt
+\end{DoxyCode}
+
+
+The documentation for this type was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+src/core/{\bf global\+\_\+objs.\+f90}\end{DoxyCompactItemize}

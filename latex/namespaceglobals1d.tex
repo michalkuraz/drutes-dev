@@ -1,0 +1,109 @@
+\section{globals1d Module Reference}
+\label{namespaceglobals1d}\index{globals1d@{globals1d}}
+
+
+contains specific variables for 1D problem  
+
+
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+real(kind=rkind), public {\bf length\+\_\+1d}
+\begin{DoxyCompactList}\small\item\em 1D mesh data \end{DoxyCompactList}\item 
+real(kind=rkind), dimension(\+:,\+:), allocatable, public {\bf deltax\+\_\+1d}
+\begin{DoxyCompactList}\small\item\em 1D domain discretization array \end{DoxyCompactList}\item 
+real(kind=rkind), dimension(\+:,\+:), allocatable, public {\bf materials\+\_\+1d}
+\begin{DoxyCompactList}\small\item\em 1D materials \end{DoxyCompactList}\item 
+integer(kind=ikind), dimension(\+:), allocatable, public {\bf permut\+\_\+vector}
+\begin{DoxyCompactList}\small\item\em permutation array -\/ how-\/to permutate, for 1D \end{DoxyCompactList}\item 
+integer(kind=ikind), dimension(\+:), allocatable, public {\bf permut\+\_\+inverse}
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+contains specific variables for 1D problem 
+
+\subsection{Variable Documentation}
+\index{globals1d@{globals1d}!deltax\+\_\+1d@{deltax\+\_\+1d}}
+\index{deltax\+\_\+1d@{deltax\+\_\+1d}!globals1d@{globals1d}}
+\subsubsection[{deltax\+\_\+1d}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind), dimension(\+:,\+:), allocatable, public globals1d\+::deltax\+\_\+1d}\label{namespaceglobals1d_ab7a30956e6923e6be127aeddf356fa27}
+
+
+1D domain discretization array 
+
+
+
+Definition at line 24 of file globals1\+D.\+f90.
+
+
+
+Referenced by read\+\_\+inputs\+::read\+\_\+1dmesh\+\_\+int(), and simegen\+::simegen1d().
+
+
+\begin{DoxyCode}
+24   \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:,:)}, \textcolor{keywordtype}{allocatable},  \textcolor{keywordtype}{public} :: deltax\_1d
+\end{DoxyCode}
+\index{globals1d@{globals1d}!length\+\_\+1d@{length\+\_\+1d}}
+\index{length\+\_\+1d@{length\+\_\+1d}!globals1d@{globals1d}}
+\subsubsection[{length\+\_\+1d}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind), public globals1d\+::length\+\_\+1d}\label{namespaceglobals1d_aa1804fbc2a8cf0ae95010fe1bc620f7f}
+
+
+1D mesh data 
+
+
+
+Definition at line 22 of file globals1\+D.\+f90.
+
+
+
+Referenced by read\+\_\+inputs\+::read\+\_\+1dmesh\+\_\+int().
+
+
+\begin{DoxyCode}
+22   \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{public} ::   length\_1d
+\end{DoxyCode}
+\index{globals1d@{globals1d}!materials\+\_\+1d@{materials\+\_\+1d}}
+\index{materials\+\_\+1d@{materials\+\_\+1d}!globals1d@{globals1d}}
+\subsubsection[{materials\+\_\+1d}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind), dimension(\+:,\+:), allocatable, public globals1d\+::materials\+\_\+1d}\label{namespaceglobals1d_a63eb12680491b38e60b92fb7ba1ec3ec}
+
+
+1D materials 
+
+
+
+Definition at line 26 of file globals1\+D.\+f90.
+
+
+
+Referenced by read\+\_\+inputs\+::read\+\_\+1dmesh\+\_\+int(), and simegen\+::simegen1d().
+
+
+\begin{DoxyCode}
+26   \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:,:)}, \textcolor{keywordtype}{allocatable}, \textcolor{keywordtype}{public} :: materials\_1d
+\end{DoxyCode}
+\index{globals1d@{globals1d}!permut\+\_\+inverse@{permut\+\_\+inverse}}
+\index{permut\+\_\+inverse@{permut\+\_\+inverse}!globals1d@{globals1d}}
+\subsubsection[{permut\+\_\+inverse}]{\setlength{\rightskip}{0pt plus 5cm}integer(kind=ikind), dimension(\+:), allocatable, public globals1d\+::permut\+\_\+inverse}\label{namespaceglobals1d_ac2022c2cd46f933f8743e7f7724c4340}
+
+
+Definition at line 29 of file globals1\+D.\+f90.
+
+
+\begin{DoxyCode}
+29   \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable}, \textcolor{keywordtype}{public} :: permut\_inverse
+\end{DoxyCode}
+\index{globals1d@{globals1d}!permut\+\_\+vector@{permut\+\_\+vector}}
+\index{permut\+\_\+vector@{permut\+\_\+vector}!globals1d@{globals1d}}
+\subsubsection[{permut\+\_\+vector}]{\setlength{\rightskip}{0pt plus 5cm}integer(kind=ikind), dimension(\+:), allocatable, public globals1d\+::permut\+\_\+vector}\label{namespaceglobals1d_a71c30b9d6e740673ec5a9cbd36b6cb29}
+
+
+permutation array -\/ how-\/to permutate, for 1D 
+
+
+
+Definition at line 28 of file globals1\+D.\+f90.
+
+
+\begin{DoxyCode}
+28   \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable}, \textcolor{keywordtype}{public} :: permut\_vector
+\end{DoxyCode}

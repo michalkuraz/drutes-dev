@@ -1,0 +1,16 @@
+<map id="pde_objs::getvalp1loc" name="pde_objs::getvalp1loc">
+<area shape="rect" id="node2" href="$namespacepde__objs.html#aece3def127980c03c455456068cb3e48" title="returns solution value for p1 approximation " alt="" coords="201,146,332,173"/>
+<area shape="rect" id="node4" href="$interfacepde__objs_1_1treat__pde__subrt.html#a9f5b27926620eb08071cf3c1c49c199b" title="pde_objs::treat_pde\l_subrt::treat_pde_subrt" alt="" coords="611,5,767,47"/>
+<area shape="rect" id="node3" href="$namespacepde__objs.html#aefc287211136e7fb40bb45ccb11886b2" title="returns solution gradient for p1 approximation " alt="" coords="402,95,541,122"/>
+<area shape="rect" id="node5" href="$namespacere__total.html#a52ce5b4dd78109c258014d2f601c5d06" title="specific function for Richards equation in H&#45;form (total hydraulic head form), replaces pde_objs::get..." alt="" coords="401,253,542,279"/>
+<area shape="rect" id="node10" href="$namespacedual__por.html#ae77ab5b0b843109d82c589c9ac537062" title="specific function for Richards equation in H&#45;form (total hydraulic head form), replaces pde_objs::get..." alt="" coords="382,146,561,173"/>
+<area shape="rect" id="node13" href="$namespacedrutes__init.html#a9acb7782a166647924dd06acb9ab5786" title="drutes_init::pde_constructor" alt="" coords="380,329,563,355"/>
+<area shape="rect" id="node15" href="$namespacere__pointers.html#adc1e1c0ad055044eb884aeb7b9f2814c" title="re_pointers::re_std" alt="" coords="406,198,537,225"/>
+<area shape="rect" id="node6" href="$namespacere__pointers.html#a2ae8b49e9d185cc91057283c869cb633" title="re_pointers::reroth" alt="" coords="625,253,752,279"/>
+<area shape="rect" id="node9" href="$namespacere__pointers.html#ab30747cb46458aeac12088c565317b00" title="re_pointers::restdh" alt="" coords="623,303,754,330"/>
+<area shape="rect" id="node7" href="$namespacemanage__pointers.html#a8275d1f0bd8032fa68b910b70058a4cf" title="set pointers for the entire problem, except the file read pointers " alt="" coords="815,220,961,261"/>
+<area shape="rect" id="node8" href="$main_8f90.html#a8ec2266d83cd6c0b762cbcbc92c0af3d" title="main" alt="" coords="1009,269,1060,295"/>
+<area shape="rect" id="node11" href="$namespacere__dual__pointers.html#a7c3a2d7fee47e270402505ab315ca55d" title="Links to releveant subroutines for fracture domain. " alt="" coords="621,71,757,112"/>
+<area shape="rect" id="node12" href="$namespacere__dual__pointers.html#aa76c31f626d7323a2032a80d6cac5ff6" title="Links to releveant subroutines for matrix domain. " alt="" coords="621,136,757,177"/>
+<area shape="rect" id="node14" href="$namespacedrutes__init.html#ac0d99b874b2dbf6a5726f534d3ee0943" title="routine to open all files to read and write " alt="" coords="827,303,949,344"/>
+</map>

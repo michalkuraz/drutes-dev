@@ -1,0 +1,188 @@
+\section{pde\+\_\+objs\+:\+:boundary\+\_\+vals Type Reference}
+\label{structpde__objs_1_1boundary__vals}\index{pde\+\_\+objs\+::boundary\+\_\+vals@{pde\+\_\+objs\+::boundary\+\_\+vals}}
+
+
+data structure to carry boundary value problem setup, allocation starts at 100  
+
+
+\subsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+integer(kind=ikind) {\bf id}
+\item 
+integer(kind=ikind) {\bf code}
+\item 
+logical {\bf file}
+\item 
+real(kind=rkind) {\bf value}
+\item 
+procedure({\bf bc\+\_\+fnc}), pointer, nopass {\bf value\+\_\+fnc}
+\begin{DoxyCompactList}\small\item\em value of the boundary condition, typically this is a function \end{DoxyCompactList}\item 
+real(kind=rkind) {\bf convect\+\_\+value}
+\begin{DoxyCompactList}\small\item\em in case of the Neumann boundary condition the value that is supplied into the system of equations contains only diffusion flux, and thus the convective flux should be subtracted \end{DoxyCompactList}\item 
+real(kind=rkind), dimension(\+:,\+:), allocatable {\bf series}
+\begin{DoxyCompactList}\small\item\em if file == .true., then series contains unsteady data series(\+:,1) = time series(\+:,2) = values \end{DoxyCompactList}\item 
+integer(kind=ikind) {\bf series\+\_\+pos}
+\begin{DoxyCompactList}\small\item\em current position in series data \end{DoxyCompactList}\item 
+integer(kind=ikind) {\bf xy\+\_\+count}
+\item 
+integer(kind=ikind) {\bf layer}
+\item 
+logical {\bf icond4neumann} = .false.
+\begin{DoxyCompactList}\small\item\em if icond4neumann == .true. then the initial condition is supplied into the Neumann boundary nodes, otherwise the initial condition in the Neumann nodes is evaluated for such value, that the Neumann condition is satisfied \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+data structure to carry boundary value problem setup, allocation starts at 100 
+
+Definition at line 41 of file pde\+\_\+objs.\+f90.
+
+
+
+\subsection{Member Data Documentation}
+\index{pde\+\_\+objs\+::boundary\+\_\+vals@{pde\+\_\+objs\+::boundary\+\_\+vals}!code@{code}}
+\index{code@{code}!pde\+\_\+objs\+::boundary\+\_\+vals@{pde\+\_\+objs\+::boundary\+\_\+vals}}
+\subsubsection[{code}]{\setlength{\rightskip}{0pt plus 5cm}integer(kind=ikind) pde\+\_\+objs\+::boundary\+\_\+vals\+::code}\label{structpde__objs_1_1boundary__vals_ad62cb93c29cff8c927706bbe810f8f84}
+
+
+Definition at line 43 of file pde\+\_\+objs.\+f90.
+
+
+\begin{DoxyCode}
+43     \textcolor{keywordtype}{integer(kind=ikind)} :: code
+\end{DoxyCode}
+\index{pde\+\_\+objs\+::boundary\+\_\+vals@{pde\+\_\+objs\+::boundary\+\_\+vals}!convect\+\_\+value@{convect\+\_\+value}}
+\index{convect\+\_\+value@{convect\+\_\+value}!pde\+\_\+objs\+::boundary\+\_\+vals@{pde\+\_\+objs\+::boundary\+\_\+vals}}
+\subsubsection[{convect\+\_\+value}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind) pde\+\_\+objs\+::boundary\+\_\+vals\+::convect\+\_\+value}\label{structpde__objs_1_1boundary__vals_a71ea5a9363d8811171caddfed9003662}
+
+
+in case of the Neumann boundary condition the value that is supplied into the system of equations contains only diffusion flux, and thus the convective flux should be subtracted 
+
+
+
+Definition at line 49 of file pde\+\_\+objs.\+f90.
+
+
+\begin{DoxyCode}
+49     \textcolor{keywordtype}{real(kind=rkind)}    :: convect\_value
+\end{DoxyCode}
+\index{pde\+\_\+objs\+::boundary\+\_\+vals@{pde\+\_\+objs\+::boundary\+\_\+vals}!file@{file}}
+\index{file@{file}!pde\+\_\+objs\+::boundary\+\_\+vals@{pde\+\_\+objs\+::boundary\+\_\+vals}}
+\subsubsection[{file}]{\setlength{\rightskip}{0pt plus 5cm}logical pde\+\_\+objs\+::boundary\+\_\+vals\+::file}\label{structpde__objs_1_1boundary__vals_ad4b1a963e3c0b630d6acb38f386825ce}
+
+
+Definition at line 44 of file pde\+\_\+objs.\+f90.
+
+
+\begin{DoxyCode}
+44     \textcolor{keywordtype}{logical}             :: file
+\end{DoxyCode}
+\index{pde\+\_\+objs\+::boundary\+\_\+vals@{pde\+\_\+objs\+::boundary\+\_\+vals}!icond4neumann@{icond4neumann}}
+\index{icond4neumann@{icond4neumann}!pde\+\_\+objs\+::boundary\+\_\+vals@{pde\+\_\+objs\+::boundary\+\_\+vals}}
+\subsubsection[{icond4neumann}]{\setlength{\rightskip}{0pt plus 5cm}logical pde\+\_\+objs\+::boundary\+\_\+vals\+::icond4neumann = .false.}\label{structpde__objs_1_1boundary__vals_a34b23ee02d036773458073918eae3158}
+
+
+if icond4neumann == .true. then the initial condition is supplied into the Neumann boundary nodes, otherwise the initial condition in the Neumann nodes is evaluated for such value, that the Neumann condition is satisfied 
+
+
+
+Definition at line 60 of file pde\+\_\+objs.\+f90.
+
+
+\begin{DoxyCode}
+60     \textcolor{keywordtype}{logical} :: icond4neumann = .false.
+\end{DoxyCode}
+\index{pde\+\_\+objs\+::boundary\+\_\+vals@{pde\+\_\+objs\+::boundary\+\_\+vals}!id@{id}}
+\index{id@{id}!pde\+\_\+objs\+::boundary\+\_\+vals@{pde\+\_\+objs\+::boundary\+\_\+vals}}
+\subsubsection[{id}]{\setlength{\rightskip}{0pt plus 5cm}integer(kind=ikind) pde\+\_\+objs\+::boundary\+\_\+vals\+::id}\label{structpde__objs_1_1boundary__vals_ae999a5f251cf5202ad25d3b8f29419b7}
+
+
+Definition at line 42 of file pde\+\_\+objs.\+f90.
+
+
+\begin{DoxyCode}
+42     \textcolor{keywordtype}{integer(kind=ikind)} :: id
+\end{DoxyCode}
+\index{pde\+\_\+objs\+::boundary\+\_\+vals@{pde\+\_\+objs\+::boundary\+\_\+vals}!layer@{layer}}
+\index{layer@{layer}!pde\+\_\+objs\+::boundary\+\_\+vals@{pde\+\_\+objs\+::boundary\+\_\+vals}}
+\subsubsection[{layer}]{\setlength{\rightskip}{0pt plus 5cm}integer(kind=ikind) pde\+\_\+objs\+::boundary\+\_\+vals\+::layer}\label{structpde__objs_1_1boundary__vals_a9524ef168191b78d17c6345a44300627}
+
+
+Definition at line 58 of file pde\+\_\+objs.\+f90.
+
+
+\begin{DoxyCode}
+58     \textcolor{keywordtype}{integer(kind=ikind)} :: layer
+\end{DoxyCode}
+\index{pde\+\_\+objs\+::boundary\+\_\+vals@{pde\+\_\+objs\+::boundary\+\_\+vals}!series@{series}}
+\index{series@{series}!pde\+\_\+objs\+::boundary\+\_\+vals@{pde\+\_\+objs\+::boundary\+\_\+vals}}
+\subsubsection[{series}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind), dimension(\+:,\+:), allocatable pde\+\_\+objs\+::boundary\+\_\+vals\+::series}\label{structpde__objs_1_1boundary__vals_ac9e3c7f87b16c30858358010c20af064}
+
+
+if file == .true., then series contains unsteady data series(\+:,1) = time series(\+:,2) = values 
+
+
+
+Definition at line 54 of file pde\+\_\+objs.\+f90.
+
+
+\begin{DoxyCode}
+54     \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:,:)}, \textcolor{keywordtype}{allocatable} :: series
+\end{DoxyCode}
+\index{pde\+\_\+objs\+::boundary\+\_\+vals@{pde\+\_\+objs\+::boundary\+\_\+vals}!series\+\_\+pos@{series\+\_\+pos}}
+\index{series\+\_\+pos@{series\+\_\+pos}!pde\+\_\+objs\+::boundary\+\_\+vals@{pde\+\_\+objs\+::boundary\+\_\+vals}}
+\subsubsection[{series\+\_\+pos}]{\setlength{\rightskip}{0pt plus 5cm}integer(kind=ikind) pde\+\_\+objs\+::boundary\+\_\+vals\+::series\+\_\+pos}\label{structpde__objs_1_1boundary__vals_a3f8b49dc65efbfcf58a27069f2666c0e}
+
+
+current position in series data 
+
+
+
+Definition at line 56 of file pde\+\_\+objs.\+f90.
+
+
+\begin{DoxyCode}
+56     \textcolor{keywordtype}{integer(kind=ikind)} :: series\_pos
+\end{DoxyCode}
+\index{pde\+\_\+objs\+::boundary\+\_\+vals@{pde\+\_\+objs\+::boundary\+\_\+vals}!value@{value}}
+\index{value@{value}!pde\+\_\+objs\+::boundary\+\_\+vals@{pde\+\_\+objs\+::boundary\+\_\+vals}}
+\subsubsection[{value}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind) pde\+\_\+objs\+::boundary\+\_\+vals\+::value}\label{structpde__objs_1_1boundary__vals_a27d265ff95b1082600acdbf462c4d8be}
+
+
+Definition at line 45 of file pde\+\_\+objs.\+f90.
+
+
+\begin{DoxyCode}
+45     \textcolor{keywordtype}{real(kind=rkind)}    :: value
+\end{DoxyCode}
+\index{pde\+\_\+objs\+::boundary\+\_\+vals@{pde\+\_\+objs\+::boundary\+\_\+vals}!value\+\_\+fnc@{value\+\_\+fnc}}
+\index{value\+\_\+fnc@{value\+\_\+fnc}!pde\+\_\+objs\+::boundary\+\_\+vals@{pde\+\_\+objs\+::boundary\+\_\+vals}}
+\subsubsection[{value\+\_\+fnc}]{\setlength{\rightskip}{0pt plus 5cm}procedure({\bf bc\+\_\+fnc}), pointer, nopass pde\+\_\+objs\+::boundary\+\_\+vals\+::value\+\_\+fnc}\label{structpde__objs_1_1boundary__vals_a47d40c66952a74caf2de905332b0a603}
+
+
+value of the boundary condition, typically this is a function 
+
+
+
+Definition at line 47 of file pde\+\_\+objs.\+f90.
+
+
+\begin{DoxyCode}
+47     \textcolor{keywordtype}{procedure}(bc_fnc), \textcolor{keywordtype}{nopass}, \textcolor{keywordtype}{pointer}    :: value\_fnc
+\end{DoxyCode}
+\index{pde\+\_\+objs\+::boundary\+\_\+vals@{pde\+\_\+objs\+::boundary\+\_\+vals}!xy\+\_\+count@{xy\+\_\+count}}
+\index{xy\+\_\+count@{xy\+\_\+count}!pde\+\_\+objs\+::boundary\+\_\+vals@{pde\+\_\+objs\+::boundary\+\_\+vals}}
+\subsubsection[{xy\+\_\+count}]{\setlength{\rightskip}{0pt plus 5cm}integer(kind=ikind) pde\+\_\+objs\+::boundary\+\_\+vals\+::xy\+\_\+count}\label{structpde__objs_1_1boundary__vals_a64a66c3b2a827b8d76ab76aa0257d4ed}
+
+
+Definition at line 57 of file pde\+\_\+objs.\+f90.
+
+
+\begin{DoxyCode}
+57     \textcolor{keywordtype}{integer(kind=ikind)} :: xy\_count
+\end{DoxyCode}
+
+
+The documentation for this type was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+src/core/{\bf pde\+\_\+objs.\+f90}\end{DoxyCompactItemize}

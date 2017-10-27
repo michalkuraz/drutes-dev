@@ -1,0 +1,22 @@
+\section{src/decompo/decomposer.f90 File Reference}
+\label{decomposer_8f90}\index{src/decompo/decomposer.\+f90@{src/decompo/decomposer.\+f90}}
+\subsection*{Modules}
+\begin{DoxyCompactItemize}
+\item 
+module {\bf decomposer}
+\end{DoxyCompactItemize}
+\subsection*{Functions/\+Subroutines}
+\begin{DoxyCompactItemize}
+\item 
+subroutine, public {\bf decomposer\+::init\+\_\+decomp} ()
+\item 
+subroutine, public {\bf decomposer\+::set\+\_\+subdomains} ()
+\begin{DoxyCompactList}\small\item\em the subdomains are combined based on the gradients of the solution and the Picard iterations \end{DoxyCompactList}\item 
+subroutine {\bf decomposer\+::init\+\_\+subdomain} (sub, id)
+\item 
+subroutine {\bf decomposer\+::clear\+\_\+subdomain} (sub)
+\item 
+subroutine, private {\bf decomposer\+::read\+\_\+coarse\+\_\+mesh} ()
+\item 
+subroutine, private {\bf decomposer\+::make\+\_\+quadmesh} (density)
+\begin{DoxyCompactList}\small\item\em subroutine that creates mesh of quadrangles -- coarse mesh (clusters) \end{DoxyCompactList}\end{DoxyCompactItemize}

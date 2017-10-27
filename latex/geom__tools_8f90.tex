@@ -1,0 +1,52 @@
+\section{src/tools/geom\+\_\+tools.f90 File Reference}
+\label{geom__tools_8f90}\index{src/tools/geom\+\_\+tools.\+f90@{src/tools/geom\+\_\+tools.\+f90}}
+\subsection*{Modules}
+\begin{DoxyCompactItemize}
+\item 
+module {\bf geom\+\_\+tools}
+\end{DoxyCompactItemize}
+\subsection*{Functions/\+Subroutines}
+\begin{DoxyCompactItemize}
+\item 
+integer(kind=ikind) function, public {\bf geom\+\_\+tools\+::get\+\_\+layer} (quadpnt)
+\item 
+subroutine, public {\bf geom\+\_\+tools\+::getcoor} (quadpnt, array)
+\item 
+subroutine, public {\bf geom\+\_\+tools\+::interpolate} (vals, points)
+\begin{DoxyCompactList}\small\item\em returns the solution values on gaussian nodes positions \end{DoxyCompactList}\item 
+subroutine, public {\bf geom\+\_\+tools\+::plane\+\_\+derivative} (a, b, c, xder, yder)
+\begin{DoxyCompactList}\small\item\em specify the x and y derivates of a plane defined by three points \end{DoxyCompactList}\item 
+subroutine, public {\bf geom\+\_\+tools\+::init\+\_\+transform} (aT, bT, cT, {\bf matrix})
+\begin{DoxyCompactList}\small\item\em procedure to create transformation matrix \[ \left( \begin{array}{c} e \\ f \end{array} \right) + \left( \begin{array}{cc} a & b \\ c & d \end{array}\right) \left( \begin{array}{c} x \\ y \end{array} \right) = \left( \begin{array}{c} x^T \\ y^T \end{array} \right) \] where (e,f) is the vector of move and the matrix \[ \left( \begin{array}{cc} a & b \\ c & d \end{array}\right) \] is the matrix of rotation each line represents the element id, the first column in row represents numbers e,f,a,b the second column reprerents numbers f,c,d \end{DoxyCompactList}\item 
+real(kind=rkind) function, public {\bf geom\+\_\+tools\+::get\+\_\+nz} (el\+\_\+id, order1, order2)
+\begin{DoxyCompactList}\small\item\em function that provides z coordinate of boundary normal vector, the boundary is defined by two points\+: bod1, bod2 \end{DoxyCompactList}\item 
+logical function, public {\bf geom\+\_\+tools\+::inside} (domain, bod)
+\item 
+subroutine, private {\bf geom\+\_\+tools\+::shoot} (bod, k, domain, inter, valid)
+\item 
+real(kind=rkind) function, public {\bf geom\+\_\+tools\+::triarea} (a, b, c)
+\item 
+real(kind=rkind) function, public {\bf geom\+\_\+tools\+::dist} (A, B)
+\item 
+real(kind=rkind) function, public {\bf geom\+\_\+tools\+::angle} (A, B, C)
+\item 
+logical function, public {\bf geom\+\_\+tools\+::inline} (A, B, bod)
+\begin{DoxyCompactList}\small\item\em function to determine whether the third point is on line formed by the first two points \end{DoxyCompactList}\item 
+subroutine, public {\bf geom\+\_\+tools\+::solve\+\_\+bisect} (xmin, xmax, f, reps, ierr, solution)
+\begin{DoxyCompactList}\small\item\em bisecton method searching for a root of function f on defined intervals xmin and xmax \end{DoxyCompactList}\item 
+logical function, private {\bf geom\+\_\+tools\+::aboveline} (a, b, c)
+\begin{DoxyCompactList}\small\item\em function to determine if the point C lies above or below the line defined by points A and B result is logical value nad, if true point lies above if false it lies below if the line is vertical, then if true the point lies on the left hand side from the line, if false the point lies on the right hand side from the line. \end{DoxyCompactList}\item 
+subroutine, public {\bf geom\+\_\+tools\+::getnormal} (bcpoints, thirdpt, nvect)
+\begin{DoxyCompactList}\small\item\em this function returns outer normal boundary vector bcpoints -\/ nodes ids at the element boundary, integer, dimension(2) thirdpt -\/ coordinates of a point at at element, which lies out of the boundary. It is important in order to obtain proper positive direction of the normal vector \end{DoxyCompactList}\item 
+subroutine, public {\bf geom\+\_\+tools\+::najdi\+\_\+bod} (a, b, c, bod)
+\begin{DoxyCompactList}\small\item\em subroutine seeking for the point which is on line identified by points a and b, and line between this point and c is rectangular to the line $<$a,b$>$ \end{DoxyCompactList}\item 
+subroutine, public {\bf geom\+\_\+tools\+::max\+\_\+height} (a, b, c, height)
+\begin{DoxyCompactList}\small\item\em subroutine searching for the maximum height on triangle element \end{DoxyCompactList}\item 
+real(kind=rkind) function, dimension(2) {\bf geom\+\_\+tools\+::gravity\+\_\+center} (a, b, c)
+\item 
+subroutine, public {\bf geom\+\_\+tools\+::find\+\_\+neighbours} (el, nd)
+\item 
+subroutine, public {\bf geom\+\_\+tools\+::map1d2d} (filename)
+\item 
+subroutine, public {\bf geom\+\_\+tools\+::map1d2dj} (pde\+\_\+loc, filename)
+\end{DoxyCompactItemize}

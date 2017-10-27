@@ -1,0 +1,593 @@
+\section{subcycling Module Reference}
+\label{namespacesubcycling}\index{subcycling@{subcycling}}
+\subsection*{Functions/\+Subroutines}
+\begin{DoxyCompactItemize}
+\item 
+subroutine, public {\bf subcyc\+\_\+schwarz} (ierr, itcount, success)
+\begin{DoxyCompactList}\small\item\em solves the problem using Picard method with Schwarz multiplicative domain decomposition reflecting the nonlinear problem \end{DoxyCompactList}\item 
+subroutine, private {\bf build\+\_\+xvect} ()
+\item 
+subroutine, private {\bf update\+\_\+domain} (id, bigupdate)
+\item 
+subroutine {\bf search\+\_\+error\+\_\+cluster} (sub, itcount)
+\item 
+subroutine, private {\bf results\+\_\+extractor} ()
+\item 
+integer(kind=ikind) function, private {\bf domains\+\_\+solved} ()
+\begin{DoxyCompactList}\small\item\em counts number of solved subdomains \end{DoxyCompactList}\item 
+integer(kind=ikind) function {\bf ndofs\+\_\+solved} ()
+\begin{DoxyCompactList}\small\item\em counts number of solved subdomains \end{DoxyCompactList}\item 
+subroutine, private {\bf correctdoms} ()
+\item 
+subroutine, private {\bf getlocres} (subdom, resvct)
+\end{DoxyCompactItemize}
+
+
+\subsection{Function/\+Subroutine Documentation}
+\index{subcycling@{subcycling}!build\+\_\+xvect@{build\+\_\+xvect}}
+\index{build\+\_\+xvect@{build\+\_\+xvect}!subcycling@{subcycling}}
+\subsubsection[{build\+\_\+xvect()}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, private subcycling\+::build\+\_\+xvect (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [private]}}\label{namespacesubcycling_a65188bacf9326244b48ac4bf605389bc}
+
+
+Definition at line 186 of file subcycling.\+f90.
+
+
+
+References pde\+\_\+objs\+::pde\+\_\+common, decomp\+\_\+vars\+::prolong\+\_\+mtx, and decomp\+\_\+vars\+::subdomain.
+
+
+\begin{DoxyCode}
+186         \textcolor{keywordtype}{use }typy
+187         \textcolor{keywordtype}{use }globals
+188         \textcolor{keywordtype}{use }global_objs
+189         \textcolor{keywordtype}{use }pde_objs
+190         \textcolor{keywordtype}{use }decomp_vars
+191         \textcolor{keywordtype}{use }debug_tools
+192         
+193         \textcolor{keywordtype}{integer(kind=ikind)} :: i, glob, loc, subcrit
+194 
+195 
+196         pde_common%xvect(:,2:3) = 0.0\_rkind
+197         
+198         
+199         \textcolor{keywordflow}{do} i = 1, ubound(subdomain,1)
+200           \textcolor{keywordflow}{do} loc = 1, subdomain(i)%ndof
+201             glob =  subdomain(i)%permut(loc)
+202             pde_common%xvect(glob,2:3) = pde_common%xvect(glob,2:3) + subdomain(i)%xvect(loc,2:3)*
+      prolong_mtx%get(glob,i)
+203 \textcolor{keywordflow}{          end do}
+204 \textcolor{keywordflow}{        end do}
+205         
+206 
+\end{DoxyCode}
+\index{subcycling@{subcycling}!correctdoms@{correctdoms}}
+\index{correctdoms@{correctdoms}!subcycling@{subcycling}}
+\subsubsection[{correctdoms()}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, private subcycling\+::correctdoms (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [private]}}\label{namespacesubcycling_a4642714542012f4fb2dac7e615bb1239}
+
+
+Definition at line 361 of file subcycling.\+f90.
+
+
+
+Referenced by subcyc\+\_\+schwarz().
+
+
+\begin{DoxyCode}
+361       
+\end{DoxyCode}
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=304pt]{namespacesubcycling_a4642714542012f4fb2dac7e615bb1239_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{subcycling@{subcycling}!domains\+\_\+solved@{domains\+\_\+solved}}
+\index{domains\+\_\+solved@{domains\+\_\+solved}!subcycling@{subcycling}}
+\subsubsection[{domains\+\_\+solved()}]{\setlength{\rightskip}{0pt plus 5cm}integer(kind=ikind) function, private subcycling\+::domains\+\_\+solved (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [private]}}\label{namespacesubcycling_af8ff91a12926d1b71a0fc0ae14ba2f88}
+
+
+counts number of solved subdomains 
+
+
+
+Definition at line 319 of file subcycling.\+f90.
+
+
+
+References decomp\+\_\+vars\+::subdomain, globals\+::time, and globals\+::time\+\_\+step.
+
+
+\begin{DoxyCode}
+319         \textcolor{keywordtype}{use }typy
+320         \textcolor{keywordtype}{use }globals
+321         \textcolor{keywordtype}{use }global_objs
+322         \textcolor{keywordtype}{use }decomp_vars
+323         
+324         \textcolor{keywordtype}{integer(kind=ikind)} :: no
+325 
+326         \textcolor{keywordtype}{integer(kind=ikind)} :: i
+327 
+328         no = 0
+329 
+330         \textcolor{keywordflow}{do} i=1, ubound(subdomain,1)
+331           \textcolor{keywordflow}{if} (abs(subdomain(i)%time - time+time_step) < 100*epsilon(time_step)) \textcolor{keywordflow}{then}
+332             no = no + 1
+333             subdomain(i)%solved = .true.
+334 \textcolor{keywordflow}{          end if}
+335 \textcolor{keywordflow}{        end do}
+336 
+\end{DoxyCode}
+\index{subcycling@{subcycling}!getlocres@{getlocres}}
+\index{getlocres@{getlocres}!subcycling@{subcycling}}
+\subsubsection[{getlocres(subdom, resvct)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, private subcycling\+::getlocres (
+\begin{DoxyParamCaption}
+\item[{class({\bf subdomain\+\_\+str}), intent(in)}]{subdom, }
+\item[{real(kind=rkind), dimension(\+:), intent(out)}]{resvct}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [private]}}\label{namespacesubcycling_aa80e4454e7ca1b326c3dad56440ec2d1}
+
+
+Definition at line 365 of file subcycling.\+f90.
+
+
+
+Referenced by subcyc\+\_\+schwarz().
+
+
+\begin{DoxyCode}
+365       \textcolor{keywordtype}{use }typy
+366       \textcolor{keywordtype}{use }global_objs
+367       \textcolor{keywordtype}{use }pde_objs
+368       \textcolor{keywordtype}{use }globals
+369       \textcolor{keywordtype}{use }decomp_vars
+370       \textcolor{keywordtype}{use }debug_tools
+371 
+372 
+373       \textcolor{keywordtype}{class}(subdomain_str), \textcolor{keywordtype}{intent(in)} :: subdom
+374       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{intent(out)} :: resvct
+375       
+376       resvct = subdom%bvect - subdom%matrix%mul(subdom%xvect(:,3))
+377       
+378       
+379     
+380     
+\end{DoxyCode}
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=290pt]{namespacesubcycling_aa80e4454e7ca1b326c3dad56440ec2d1_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{subcycling@{subcycling}!ndofs\+\_\+solved@{ndofs\+\_\+solved}}
+\index{ndofs\+\_\+solved@{ndofs\+\_\+solved}!subcycling@{subcycling}}
+\subsubsection[{ndofs\+\_\+solved()}]{\setlength{\rightskip}{0pt plus 5cm}integer(kind=ikind) function subcycling\+::ndofs\+\_\+solved (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}\label{namespacesubcycling_a96022e467ffae4b22e63d8ee2e687514}
+
+
+counts number of solved subdomains 
+
+
+
+Definition at line 341 of file subcycling.\+f90.
+
+
+
+References decomp\+\_\+vars\+::subdomain.
+
+
+\begin{DoxyCode}
+341         \textcolor{keywordtype}{use }typy
+342         \textcolor{keywordtype}{use }globals
+343         \textcolor{keywordtype}{use }global_objs
+344         \textcolor{keywordtype}{use }decomp_vars
+345         
+346         \textcolor{keywordtype}{integer(kind=ikind)} :: no
+347 
+348         \textcolor{keywordtype}{integer(kind=ikind)} :: i
+349 
+350         no = 0
+351 
+352         \textcolor{keywordflow}{do} i=1, ubound(subdomain,1)
+353           \textcolor{keywordflow}{if} (subdomain(i)%solved) \textcolor{keywordflow}{then}
+354             no = no + subdomain(i)%ndof
+355 \textcolor{keywordflow}{          end if}
+356 \textcolor{keywordflow}{        end do}
+357 
+\end{DoxyCode}
+\index{subcycling@{subcycling}!results\+\_\+extractor@{results\+\_\+extractor}}
+\index{results\+\_\+extractor@{results\+\_\+extractor}!subcycling@{subcycling}}
+\subsubsection[{results\+\_\+extractor()}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, private subcycling\+::results\+\_\+extractor (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [private]}}\label{namespacesubcycling_a4ea47cb4c1eb67ccdace3e2cf157b32a}
+
+
+Definition at line 290 of file subcycling.\+f90.
+
+
+
+References globals\+::nodes, pde\+\_\+objs\+::pde, and pde\+\_\+objs\+::pde\+\_\+common.
+
+
+\begin{DoxyCode}
+290           \textcolor{keywordtype}{use }typy
+291           \textcolor{keywordtype}{use }globals
+292           \textcolor{keywordtype}{use }global_objs
+293           \textcolor{keywordtype}{use }debug_tools
+294           \textcolor{keywordtype}{use }pde_objs
+295 
+296           \textcolor{keywordtype}{integer(kind=ikind)} :: i, j, proc
+297 
+298 
+299           \textcolor{keywordflow}{do} proc=1, ubound(pde,1)
+300               \textcolor{keywordflow}{do} i=1, nodes%kolik
+301                   \textcolor{keywordflow}{if} (pde(proc)%permut(i) > 0) \textcolor{keywordflow}{then}
+302                       pde(proc)%solution(i) = pde_common%xvect(pde(proc)%permut(i),3)
+303                   \textcolor{keywordflow}{else}
+304                       j = nodes%edge(i)
+305                       pde(proc)%solution(i) = pde(proc)%bc(j)%value
+306 \textcolor{keywordflow}{                  end if}
+307 \textcolor{keywordflow}{              end do}
+308 \textcolor{keywordflow}{          end do}
+309 
+310 
+311           pde_common%xvect(:,1) = pde_common%xvect(:,3)
+312           pde_common%xvect(:,2) = pde_common%xvect(:,3)
+313 
+\end{DoxyCode}
+\index{subcycling@{subcycling}!search\+\_\+error\+\_\+cluster@{search\+\_\+error\+\_\+cluster}}
+\index{search\+\_\+error\+\_\+cluster@{search\+\_\+error\+\_\+cluster}!subcycling@{subcycling}}
+\subsubsection[{search\+\_\+error\+\_\+cluster(sub, itcount)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine subcycling\+::search\+\_\+error\+\_\+cluster (
+\begin{DoxyParamCaption}
+\item[{type({\bf subdomain\+\_\+str}), intent(in)}]{sub, }
+\item[{integer(kind=ikind), intent(in)}]{itcount}
+\end{DoxyParamCaption}
+)}\label{namespacesubcycling_a717505e1ba6c27324725f23a201ca4ab}
+
+
+Definition at line 252 of file subcycling.\+f90.
+
+
+
+References decomp\+\_\+vars\+::ddcoarse\+\_\+mesh, globals\+::elements, globals\+::iter\+\_\+criterion, and pde\+\_\+objs\+::pde.
+
+
+\begin{DoxyCode}
+252         \textcolor{keywordtype}{use }typy
+253         \textcolor{keywordtype}{use }globals
+254         \textcolor{keywordtype}{use }global_objs
+255         \textcolor{keywordtype}{use }decomp_vars
+256         \textcolor{keywordtype}{use }debug_tools
+257         \textcolor{keywordtype}{use }pde_objs
+258 
+259         \textcolor{keywordtype}{type}(subdomain_str), \textcolor{keywordtype}{intent(in)} :: sub
+260         \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(in)} :: itcount
+261 
+262         \textcolor{keywordtype}{integer(kind=ikind)} :: i, j, ii, jj, el, nd, xpos, xpos\_loc
+263         \textcolor{keywordtype}{real(kind=rkind)} :: loc\_error
+264         
+265 
+266         \textcolor{keywordflow}{do} i=1, ubound(sub%coarse\_el,1)
+267           j = sub%coarse\_el(i)
+268           loc\_error = 0
+269           \textcolor{keywordflow}{do} ii=1, ubound(ddcoarse_mesh(j)%elements,1)
+270             el = ddcoarse_mesh(j)%elements(ii)
+271             \textcolor{keywordflow}{do} jj = 1, ubound(elements%data,2)
+272               nd = elements%data(el,jj)
+273               xpos = pde(1)%permut(nd)
+274               \textcolor{keywordflow}{if} (xpos > 0) \textcolor{keywordflow}{then}
+275                 xpos\_loc = sub%invpermut(xpos)
+276                 loc\_error = max(loc\_error, abs(sub%xvect(xpos\_loc,3)-sub%xvect(xpos\_loc,2)) )
+277 \textcolor{keywordflow}{              end if}
+278 \textcolor{keywordflow}{            end do}
+279 \textcolor{keywordflow}{          end do}
+280           \textcolor{keywordflow}{if} (loc\_error > iter_criterion) \textcolor{keywordflow}{then}
+281             ddcoarse_mesh(j)%iter\_count = ddcoarse_mesh(j)%iter\_count + 1
+282 \textcolor{keywordflow}{          end if}
+283 \textcolor{keywordflow}{        end do}
+284   
+285 
+\end{DoxyCode}
+\index{subcycling@{subcycling}!subcyc\+\_\+schwarz@{subcyc\+\_\+schwarz}}
+\index{subcyc\+\_\+schwarz@{subcyc\+\_\+schwarz}!subcycling@{subcycling}}
+\subsubsection[{subcyc\+\_\+schwarz(ierr, itcount, success)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, public subcycling\+::subcyc\+\_\+schwarz (
+\begin{DoxyParamCaption}
+\item[{integer, intent(out)}]{ierr, }
+\item[{integer(kind=ikind), intent(out)}]{itcount, }
+\item[{logical, intent(out)}]{success}
+\end{DoxyParamCaption}
+)}\label{namespacesubcycling_a676c0ac81f3576e037f6f49c0001ce78}
+
+
+solves the problem using Picard method with Schwarz multiplicative domain decomposition reflecting the nonlinear problem 
+
+
+
+Definition at line 14 of file subcycling.\+f90.
+
+
+
+References schwarz\+\_\+dd\+::build\+\_\+xvect(), correctdoms(), decomp\+\_\+vars\+::ddcoarse\+\_\+mesh, simplelinalg\+::diag\+\_\+precond(), schwarz\+\_\+dd\+::domains\+\_\+solved(), decomp\+\_\+vars\+::file\+\_\+ddinfo, getlocres(), decomp\+\_\+vars\+::inner\+\_\+criterion, globals\+::iter\+\_\+criterion, schwarz\+\_\+dd\+::locmat\+\_\+assembler(), globals\+::max\+\_\+itcount, pde\+\_\+objs\+::pde, pde\+\_\+objs\+::pde\+\_\+common, printtools\+::printtime(), schwarz\+\_\+dd\+::search\+\_\+error\+\_\+cluster(), decomposer\+::set\+\_\+subdomains(), pde\+\_\+objs\+::solve\+\_\+matrix, decomp\+\_\+vars\+::subdomain, globals\+::terminal, globals\+::time, globals\+::time\+\_\+step, and update\+\_\+domain().
+
+
+\begin{DoxyCode}
+14         \textcolor{keywordtype}{use }typy
+15         \textcolor{keywordtype}{use }globals
+16         \textcolor{keywordtype}{use }global_objs
+17         \textcolor{keywordtype}{use }pde_objs
+18         \textcolor{keywordtype}{use }feminittools
+19         \textcolor{keywordtype}{use }fem_tools
+20         \textcolor{keywordtype}{use }linalg
+21         \textcolor{keywordtype}{use }debug_tools
+22         \textcolor{keywordtype}{use }sparsematrix
+23         \textcolor{keywordtype}{use }decomp_vars
+24         \textcolor{keywordtype}{use }decomp_tools
+25         \textcolor{keywordtype}{use }decomposer
+26         \textcolor{keywordtype}{use }postpro
+27         \textcolor{keywordtype}{use }femmat
+28         \textcolor{keywordtype}{use }core_tools
+29         \textcolor{keywordtype}{use }simplelinalg
+30         \textcolor{keywordtype}{use }printtools
+31         \textcolor{keywordtype}{use }debug_tools
+32         \textcolor{keywordtype}{use }schwarz_dd
+33 
+34         \textcolor{keywordtype}{integer}, \textcolor{keywordtype}{intent(out)} :: ierr
+35         \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(out)} :: itcount
+36         \textcolor{keywordtype}{integer(kind=ikind)} ::  fin, pcg\_it, subfin
+37         \textcolor{keywordtype}{logical}, \textcolor{keywordtype}{intent(out)} :: success
+38         \textcolor{keywordtype}{integer(kind=ikind)} :: i, proc,j, m, l, k, ii, sub
+39         \textcolor{keywordtype}{real(kind=rkind)} :: error, loc\_error, res\_error, reps
+40         \textcolor{keywordtype}{logical} :: dt\_fine, first\_run, picard\_done, reset\_domains, bigupdate
+41         \textcolor{keywordtype}{integer} :: ierr\_loc
+42         \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable}, \textcolor{keywordtype}{save} :: resvct, corrvct
+43         \textcolor{keywordtype}{character(len=128)} :: text
+44         \textcolor{keywordtype}{real(4)}, \textcolor{keywordtype}{dimension(2,2)} :: taaray
+45         \textcolor{keywordtype}{real(4)}, \textcolor{keywordtype}{dimension(2)} :: rslt
+46 
+47 \textcolor{comment}{!       }
+48 
+49         \textcolor{keyword}{call }etime(taaray(1,:), rslt(1))
+50         proc = ubound(pde,1)
+51         fin = maxval(pde(proc)%permut(:))
+52         itcount = 0
+53         inner_criterion = 1e-20
+54 
+55         \textcolor{comment}{!reset local-local cluster iteration count}
+56         ddcoarse_mesh(:)%iter\_count = 1
+57         
+58         \textcolor{comment}{!the residual vector is not allocated, thus we are at the beginning}
+59         \textcolor{keywordflow}{if} (.not. \textcolor{keyword}{allocated}(resvct)) \textcolor{keywordflow}{then}
+60           first\_run = .true.
+61           \textcolor{keyword}{allocate}(resvct(fin))
+62           \textcolor{keyword}{allocate}(corrvct(fin))          
+63           \textcolor{keyword}{call }set_subdomains()
+64           subdomain(:)%time = 0
+65           \textcolor{keywordflow}{else}
+66           first\_run = .false.
+67 \textcolor{keywordflow}{        end if}
+68 
+69         \textcolor{keywordflow}{do} i=1, ubound(subdomain,1)
+70           \textcolor{keywordflow}{if} (subdomain(i)%critical) \textcolor{keywordflow}{then} 
+71             subdomain(i)%time\_step = time_step/3
+72           \textcolor{keywordflow}{else}
+73             subdomain(i)%time\_step = time_step
+74 \textcolor{keywordflow}{          end if}
+75 \textcolor{keywordflow}{        end do}
+76 
+77                 
+78         \textcolor{comment}{!reset local subdomain iteration count}
+79         subdomain(:)%itcount = 0                
+80 
+81         \textcolor{comment}{!reset successes on domains}
+82         subdomain(:)%solved = .false.
+83         
+84         picard\_done = .false.
+85         
+86 
+87         \textcolor{keyword}{write}(unit=terminal, fmt=\textcolor{stringliteral}{"(a)"}) \textcolor{stringliteral}{"  "}
+88         \textcolor{keyword}{write}(unit=terminal, fmt=\textcolor{stringliteral}{"(a, I4,a)"}) \textcolor{stringliteral}{" Solving"}, ubound(subdomain,1),  \textcolor{stringliteral}{" subdomains .... "}
+89         
+90         \textcolor{comment}{!compute the local residuum}
+91         \textcolor{comment}{!and create the local matrices}
+92         \textcolor{keywordflow}{do} i=1, ubound(subdomain,1)
+93           subdomain(i)%xvect(:,1:3) = pde_common%xvect(subdomain(i)%permut(1:
+      subdomain(i)%ndof),1:3)
+94           \textcolor{keywordflow}{if} (subdomain(i)%critical) \textcolor{keywordflow}{then}
+95             subdomain(i)%time\_step = time_step/3
+96 \textcolor{keywordflow}{          end if}
+97 \textcolor{keywordflow}{        end do}
+98 
+99         
+100         time\_loop: \textcolor{keywordflow}{do}
+101           
+102           \textcolor{keywordflow}{do} sub=1, ubound(subdomain,1)
+103             
+104             \textcolor{keyword}{call }update\_domain(sub, bigupdate)
+105             
+106             \textcolor{keywordflow}{if} (bigupdate) \textcolor{keywordflow}{then}
+107               \textcolor{keyword}{call }correctdoms()
+108 \textcolor{keywordflow}{            end if}
+109             
+110             \textcolor{keywordflow}{if} (subdomain(sub)%time < time + time_step) \textcolor{keywordflow}{then}
+111               
+112               itcount = 0
+113               
+114               \textcolor{comment}{!solve nonlinearities on subdomain}
+115               picard: \textcolor{keywordflow}{do}
+116               
+117                 \textcolor{keyword}{call }locmat_assembler(subdomain(i), ierr, i)
+118               
+119                 itcount = itcount + 1
+120                 
+121                 \textcolor{keyword}{call }getlocres(subdomain(sub), resvct)
+122                 
+123                 corrvct(1:subfin) = 0.0
+124 
+125                 \textcolor{keywordflow}{if} (subdomain(i)%critical) \textcolor{keywordflow}{then}
+126                   reps = 1e-20
+127                 \textcolor{keywordflow}{else}
+128                   reps = 1e-10
+129 \textcolor{keywordflow}{                end if}
+130                 
+131                 \textcolor{keyword}{call }diag_precond(a=subdomain(i)%matrix, prmt=subdomain(i)%permut,  mode=1)
+132                 
+133                 \textcolor{keyword}{call }solve_matrix(subdomain(i)%matrix, resvct, corrvct(1:subfin), ilev1=0, itmax1=subfin, 
+      reps1=reps)
+134 
+135                 \textcolor{keyword}{call }diag_precond(a=subdomain(i)%matrix, x=corrvct(1:subfin), mode=-1)  
+136                 
+137                 error = maxval(abs(corrvct(1:subfin)))
+138                 
+139                 subdomain(i)%xvect(:,3) = subdomain(i)%xvect(:,2) + corrvct(1:subfin)
+140                 
+141                 \textcolor{keyword}{call }search_error_cluster(subdomain(i), itcount) 
+142                 
+143                 subdomain(i)%itcount = itcount
+144                 
+145                 \textcolor{keywordflow}{if} (error <= iter_criterion) \textcolor{keywordflow}{then}
+146                   subdomain(sub)%time = subdomain(sub)%time + time_step
+147                   \textcolor{keywordflow}{EXIT} picard
+148                 \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (itcount > max_itcount) \textcolor{keywordflow}{then}
+149                   subdomain(sub)%time\_step = subdomain(sub)%time\_step*0.5
+150 \textcolor{keywordflow}{                end if}
+151 \textcolor{keywordflow}{              end do} picard
+152 \textcolor{keywordflow}{            end if}
+153 \textcolor{keywordflow}{          end do}
+154               
+155           \textcolor{keywordflow}{if} (domains_solved() == ubound(subdomain,1)) \textcolor{keywordflow}{then}
+156             \textcolor{keyword}{call }etime(taaray(2,:), rslt(2))
+157             \textcolor{keywordflow}{EXIT} time\_loop
+158 \textcolor{keywordflow}{         end if}
+159 \textcolor{keywordflow}{        end do} time\_loop
+160             
+161                   
+162         \textcolor{keyword}{call }build_xvect()
+163 
+164             
+165         \textcolor{keywordflow}{do} i=1, ubound(subdomain,1)
+166           \textcolor{keywordflow}{if} (.not. subdomain(i)%critical .and. subdomain(i)%itcount>1 ) \textcolor{keywordflow}{then}
+167             reset\_domains = .true.
+168             \textcolor{keywordflow}{EXIT}
+169           \textcolor{keywordflow}{else}
+170             reset\_domains = .false.
+171 \textcolor{keywordflow}{          end if}
+172 \textcolor{keywordflow}{        end do}
+173               
+174         \textcolor{keyword}{call }printtime(\textcolor{stringliteral}{"Time spent on iterations: "}, rslt(2)-rslt(1))
+175         \textcolor{keywordflow}{if} (reset\_domains) \textcolor{keyword}{call }set_subdomains()
+176         success = .true.
+177         ierr = 0
+178         \textcolor{keyword}{write}(unit=file_ddinfo, fmt=*) time, itcount, \textcolor{stringliteral}{"|"}, subdomain(:)%ndof
+179         \textcolor{keyword}{call }flush(file_ddinfo)
+180              
+181 
+182 
+\end{DoxyCode}
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacesubcycling_a676c0ac81f3576e037f6f49c0001ce78_cgraph}
+\end{center}
+\end{figure}
+
+
+\index{subcycling@{subcycling}!update\+\_\+domain@{update\+\_\+domain}}
+\index{update\+\_\+domain@{update\+\_\+domain}!subcycling@{subcycling}}
+\subsubsection[{update\+\_\+domain(id, bigupdate)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, private subcycling\+::update\+\_\+domain (
+\begin{DoxyParamCaption}
+\item[{integer(kind=ikind), intent(in)}]{id, }
+\item[{logical, intent(out)}]{bigupdate}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [private]}}\label{namespacesubcycling_abc2715f7cd421516a7858fd44bb02424}
+
+
+Definition at line 210 of file subcycling.\+f90.
+
+
+
+References decomp\+\_\+vars\+::prolong\+\_\+mtx, and decomp\+\_\+vars\+::subdomain.
+
+
+
+Referenced by subcyc\+\_\+schwarz().
+
+
+\begin{DoxyCode}
+210         \textcolor{keywordtype}{use }typy
+211         \textcolor{keywordtype}{use }decomp_vars
+212         
+213         \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(in)} :: id
+214         \textcolor{keywordtype}{logical}, \textcolor{keywordtype}{intent(out)} :: bigupdate
+215         \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable}, \textcolor{keywordtype}{save} :: nzindexes
+216         \textcolor{keywordtype}{integer(kind=ikind)} :: iglob, num, i, sub, j, iloc
+217         \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable}, \textcolor{keywordtype}{save} :: weight
+218         \textcolor{keywordtype}{real(kind=rkind)} :: \textcolor{keywordtype}{value}, subtime, currval
+219         
+220         \textcolor{keywordflow}{if} (.not. \textcolor{keyword}{allocated}(nzindexes)) \textcolor{keywordflow}{then}
+221           \textcolor{keyword}{allocate}(nzindexes(ubound(subdomain,1)))
+222           \textcolor{keyword}{allocate}(weight(ubound(subdomain,1)))
+223 \textcolor{keywordflow}{        end if}
+224         
+225         subtime = subdomain(id)%time
+226         bigupdate = .false.
+227         \textcolor{keywordflow}{do} i=1, ubound(subdomain(id)%xvect,1)
+228           iglob = subdomain(id)%permut(i)
+229           \textcolor{keyword}{call }prolong_mtx%getrow(i=iglob, v=weight, jj=nzindexes, nelem=num)
+230           \textcolor{keywordflow}{if} (num > 1) \textcolor{keywordflow}{then}
+231             currval = subdomain(id)%xvect(i,2)
+232             \textcolor{keywordtype}{value} = 0
+233             \textcolor{keywordflow}{do} j=1, num
+234               sub = nzindexes(j)
+235               iloc = subdomain(sub)%invpermut(iglob)
+236               \textcolor{keywordtype}{value} = \textcolor{keywordtype}{value} + subdomain(sub)%returnval(iloc, subtime)*weight(j)
+237 \textcolor{keywordflow}{            end do}
+238             \textcolor{keywordflow}{if} (abs(currval - \textcolor{keywordtype}{value}) > iter_criterion) \textcolor{keywordflow}{then}
+239               bigupdate = .true.
+240 \textcolor{keywordflow}{            end if}
+241             subdomain(id)%xvect(i, 2:3) = \textcolor{keywordtype}{value}
+242 \textcolor{keywordflow}{          end if}
+243 \textcolor{keywordflow}{        end do}
+244           
+245       
+246       
+\end{DoxyCode}
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=279pt]{namespacesubcycling_abc2715f7cd421516a7858fd44bb02424_icgraph}
+\end{center}
+\end{figure}
+
+

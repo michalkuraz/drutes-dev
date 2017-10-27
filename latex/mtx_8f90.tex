@@ -1,0 +1,83 @@
+\section{src/pma++/mtx.f90 File Reference}
+\label{mtx_8f90}\index{src/pma++/mtx.\+f90@{src/pma++/mtx.\+f90}}
+
+
+Objektova implementace matic.  
+
+
+\subsection*{Data Types}
+\begin{DoxyCompactItemize}
+\item 
+type {\bf mtx\+::matrix}
+\begin{DoxyCompactList}\small\item\em obecna matice \end{DoxyCompactList}\item 
+interface {\bf mtx\+::geti}
+\begin{DoxyCompactList}\small\item\em interface pro ziskani prvku \end{DoxyCompactList}\item 
+interface {\bf mtx\+::seti}
+\begin{DoxyCompactList}\small\item\em interface pro nastaveni prvku \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Modules}
+\begin{DoxyCompactItemize}
+\item 
+module {\bf mtx}
+\end{DoxyCompactItemize}
+\subsection*{Functions/\+Subroutines}
+\begin{DoxyCompactItemize}
+\item 
+subroutine {\bf mtx\+::setverbosity} (A, level)
+\begin{DoxyCompactList}\small\item\em nastavi podrobnost behovych reportu \end{DoxyCompactList}\item 
+subroutine {\bf mtx\+::addmatrix} (a, r, i, j)
+\begin{DoxyCompactList}\small\item\em pricte k prvku -\/ kandidat reimplementace v potomkovi \end{DoxyCompactList}\item 
+subroutine {\bf mtx\+::initmatrix} (a, n, m)
+\begin{DoxyCompactList}\small\item\em rutina pro inicializaci \end{DoxyCompactList}\item 
+pure integer(kind=ikind) function {\bf mtx\+::getnmatrix} (a)
+\begin{DoxyCompactList}\small\item\em vrati pocet radku \end{DoxyCompactList}\item 
+pure integer(kind=ikind) function {\bf mtx\+::getmmatrix} (a)
+\begin{DoxyCompactList}\small\item\em vrati pocet sloupcu \end{DoxyCompactList}\item 
+subroutine {\bf mtx\+::getrowmatrix} (a, i, v, jj, nelem, mask)
+\begin{DoxyCompactList}\small\item\em ziska radek z matice -\/ univerzal -\/ kandidat reimplementace v potomkovi \end{DoxyCompactList}\item 
+subroutine {\bf mtx\+::getcolmatrix} (a, j, v, ii, nelem, mask)
+\begin{DoxyCompactList}\small\item\em ziska sloupec z matice -\/ kandidat reimplementace v potomkovi \end{DoxyCompactList}\item 
+subroutine {\bf mtx\+::spymatrix} (a)
+\begin{DoxyCompactList}\small\item\em napodoba matlabovske spy \end{DoxyCompactList}\item 
+subroutine {\bf mtx\+::printmatrix} (a, ncol, width, caption)
+\begin{DoxyCompactList}\small\item\em vytiskne matici \end{DoxyCompactList}\item 
+subroutine {\bf mtx\+::dumpmatrix} (a)
+\begin{DoxyCompactList}\small\item\em zakladni dump \end{DoxyCompactList}\item 
+integer(kind=ikind) function {\bf mtx\+::nzmatrix} (a)
+\begin{DoxyCompactList}\small\item\em vrati pocet nenul v matici -\/ tady n$\ast$m \end{DoxyCompactList}\item 
+real(kind=rkind) function, dimension(\+:), allocatable {\bf mtx\+::mulmatrix} (a, x, count)
+\begin{DoxyCompactList}\small\item\em nasobi matici vektorem \end{DoxyCompactList}\item 
+real(kind=rkind) function, dimension(\+:), allocatable {\bf mtx\+::mulmatrixt} (a, x, count)
+\begin{DoxyCompactList}\small\item\em nasobi transponovanou matici vektorem \end{DoxyCompactList}\item 
+subroutine {\bf mtx\+::copymatrix} (A, B)
+\begin{DoxyCompactList}\small\item\em zkopiruje matici -\/ kandidat reimplementace v potomkovi \end{DoxyCompactList}\item 
+subroutine {\bf mtx\+::clonematrix} (A, B)
+\begin{DoxyCompactList}\small\item\em vytvori prazdnou kopii \end{DoxyCompactList}\item 
+subroutine {\bf mtx\+::mulmatrixmatrix} (A, B, C, info)
+\begin{DoxyCompactList}\small\item\em A = B$\ast$C !!!!!prepsat. \end{DoxyCompactList}\item 
+subroutine {\bf mtx\+::addmatrixmatrix} (A, B)
+\item 
+subroutine {\bf mtx\+::submatrixmatrix} (A, B)
+\begin{DoxyCompactList}\small\item\em A = A -\/ B. \end{DoxyCompactList}\item 
+real(kind=rkind) function {\bf mtx\+::normfmatrix} (A)
+\begin{DoxyCompactList}\small\item\em spocte Frobeniovu normu matice \end{DoxyCompactList}\item 
+class(matrix) function, allocatable {\bf mtx\+::smatrix} (A, ii, jj)
+\begin{DoxyCompactList}\small\item\em vybere submatici \end{DoxyCompactList}\item 
+subroutine {\bf mtx\+::read} (A, name)
+\item 
+subroutine {\bf mtx\+::write} (A, name)
+\item 
+real(kind=rkind) function {\bf mtx\+::mulrow} (A, x, i, count)
+\begin{DoxyCompactList}\small\item\em spocita skalarni soucin i-\/teho radku matice a vektoru \end{DoxyCompactList}\item 
+subroutine, public {\bf mtx\+::mtxtest} (A)
+\begin{DoxyCompactList}\small\item\em testy maticovych operaci vstupni parametr slouzi jen jako sablona pro volbu potomka \end{DoxyCompactList}\item 
+subroutine {\bf mtx\+::transpose} (A, B)
+\begin{DoxyCompactList}\small\item\em v A vrati transpozici matice B \end{DoxyCompactList}\item 
+integer(kind=ikind) function, dimension(\+:), allocatable {\bf mtx\+::nzrowsmatrix} (A)
+\begin{DoxyCompactList}\small\item\em vytvori seznam radku matice obsahujicich aspon jeden prvek \end{DoxyCompactList}\item 
+subroutine, public {\bf mtx\+::estimeigvalues} (A, lmin, lmax)
+\begin{DoxyCompactList}\small\item\em spocita nejvetsi a nejmensi vlastni cislo uziva mocninnou metodu, tedy tichy predpoklad je symetrie \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Objektova implementace matic. 
+

@@ -1,0 +1,14 @@
+\section{src/models/heat/heat\+\_\+pointers.f90 File Reference}
+\label{heat__pointers_8f90}\index{src/models/heat/heat\+\_\+pointers.\+f90@{src/models/heat/heat\+\_\+pointers.\+f90}}
+\subsection*{Modules}
+\begin{DoxyCompactItemize}
+\item 
+module {\bf heat\+\_\+pointers}
+\begin{DoxyCompactList}\small\item\em heat conduction based on (Sopohocleous, 1979) \[ C\frac{\partial T}{\partial t} = \mathbf{\lambda} \Delta T - C_w \nabla \cdot \vec{q} T \] \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Functions/\+Subroutines}
+\begin{DoxyCompactItemize}
+\item 
+subroutine, public {\bf heat\+\_\+pointers\+::heat} (pde\+\_\+loc)
+\item 
+real(kind=rkind) function {\bf heat\+\_\+pointers\+::heat\+\_\+source} (pde\+\_\+loc, layer, quadpnt, x)
+\end{DoxyCompactItemize}

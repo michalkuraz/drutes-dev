@@ -1,0 +1,64 @@
+\section{pde\+\_\+objs\+:\+:scalar\+\_\+fnc Interface Reference}
+\label{interfacepde__objs_1_1scalar__fnc}\index{pde\+\_\+objs\+::scalar\+\_\+fnc@{pde\+\_\+objs\+::scalar\+\_\+fnc}}
+
+
+abstract interface for scalar function  
+
+
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+real(kind=rkind) function {\bf scalar\+\_\+fnc} (pde\+\_\+loc, layer, quadpnt, x)
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+abstract interface for scalar function 
+
+Definition at line 182 of file pde\+\_\+objs.\+f90.
+
+
+
+\subsection{Constructor \& Destructor Documentation}
+\index{pde\+\_\+objs\+::scalar\+\_\+fnc@{pde\+\_\+objs\+::scalar\+\_\+fnc}!scalar\+\_\+fnc@{scalar\+\_\+fnc}}
+\index{scalar\+\_\+fnc@{scalar\+\_\+fnc}!pde\+\_\+objs\+::scalar\+\_\+fnc@{pde\+\_\+objs\+::scalar\+\_\+fnc}}
+\subsubsection[{scalar\+\_\+fnc(pde\+\_\+loc, layer, quadpnt, x)}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind) function pde\+\_\+objs\+::scalar\+\_\+fnc\+::scalar\+\_\+fnc (
+\begin{DoxyParamCaption}
+\item[{class({\bf pde\+\_\+str}), intent(in)}]{pde\+\_\+loc, }
+\item[{integer(kind=ikind), intent(in)}]{layer, }
+\item[{type({\bf integpnt\+\_\+str}), intent(in), optional}]{quadpnt, }
+\item[{real(kind=rkind), dimension(\+:), intent(in), optional}]{x}
+\end{DoxyParamCaption}
+)}\label{interfacepde__objs_1_1scalar__fnc_a722a1c1df1474e89f01ed2887af69ee9}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em x} & value of the nonlinear function\\
+\hline
+\mbox{\tt in}  & {\em quadpnt} & Gauss quadrature point structure (element number and rank of Gauss quadrature point)\\
+\hline
+\mbox{\tt in}  & {\em layer} & material ID\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+return value 
+\end{DoxyReturn}
+
+
+Definition at line 183 of file pde\+\_\+objs.\+f90.
+
+
+\begin{DoxyCode}
+183       \textcolor{keywordtype}{use }typy
+184       \textcolor{keywordtype}{use }global_objs
+185       \textcolor{keywordtype}{import }:: pde_str
+186       \textcolor{keywordtype}{class}(pde_str), \textcolor{keywordtype}{intent(in)} :: pde\_loc
+188       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional}    :: x
+190       \textcolor{keywordtype}{type}(integpnt_str), \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional} :: quadpnt
+192       \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(in)} :: layer
+194       \textcolor{keywordtype}{real(kind=rkind)}                :: val
+\end{DoxyCode}
+
+
+The documentation for this interface was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+src/core/{\bf pde\+\_\+objs.\+f90}\end{DoxyCompactItemize}

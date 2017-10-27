@@ -1,0 +1,8 @@
+<map id="decomp_vars::subdomain_str" name="decomp_vars::subdomain_str">
+<area shape="rect" id="node2" href="$structdecomp__vars_1_1resvct__str.html" title="decomp_vars::resvct_str" alt="" coords="5,222,172,249"/>
+<area shape="rect" id="node3" href="$structglobal__objs_1_1extsmtx.html" title="global_objs::extsmtx" alt="" coords="196,222,339,249"/>
+<area shape="rect" id="node4" href="$structsparsematrix_1_1smtx.html" title="ridka matice " alt="" coords="139,95,273,121"/>
+<area shape="rect" id="node5" href="$structmtx_1_1matrix.html" title="obecna matice " alt="" coords="94,5,182,32"/>
+<area shape="rect" id="node6" href="$structsparsematrix_1_1elemt.html" title="typ pro prvek ridke matice " alt="" coords="207,5,344,32"/>
+<area shape="rect" id="node7" href="$structglobal__objs_1_1smartarray__int.html" title="smart array, you don&#39;t need to allocate – usefull if you don&#39;t know how many data you will write in..." alt="" coords="298,95,477,121"/>
+</map>

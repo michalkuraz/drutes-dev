@@ -1,0 +1,168 @@
+\section{ade\+\_\+pointers Module Reference}
+\label{namespaceade__pointers}\index{ade\+\_\+pointers@{ade\+\_\+pointers}}
+\subsection*{Functions/\+Subroutines}
+\begin{DoxyCompactItemize}
+\item 
+subroutine, public {\bf ade} (pde\+\_\+loc)
+\item 
+subroutine, public {\bf adekinsorb} (pde\+\_\+loc)
+\end{DoxyCompactItemize}
+
+
+\subsection{Function/\+Subroutine Documentation}
+\index{ade\+\_\+pointers@{ade\+\_\+pointers}!ade@{ade}}
+\index{ade@{ade}!ade\+\_\+pointers@{ade\+\_\+pointers}}
+\subsubsection[{ade(pde\+\_\+loc)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, public ade\+\_\+pointers\+::ade (
+\begin{DoxyParamCaption}
+\item[{class({\bf pde\+\_\+str}), intent(inout)}]{pde\+\_\+loc}
+\end{DoxyParamCaption}
+)}\label{namespaceade__pointers_adcdbd3c086467f4845b54788e253d694}
+
+
+Definition at line 8 of file A\+D\+E\+\_\+pointers.\+f90.
+
+
+
+References ade\+\_\+fnc\+::ade\+\_\+convection(), ade\+\_\+fnc\+::ade\+\_\+dirichlet(), ade\+\_\+fnc\+::ade\+\_\+flux(), ade\+\_\+fnc\+::ade\+\_\+icond(), ade\+\_\+fnc\+::ade\+\_\+mass(), ade\+\_\+fnc\+::ade\+\_\+neumann(), ade\+\_\+fnc\+::ade\+\_\+reaction(), ade\+\_\+reader\+::ade\+\_\+read(), ade\+\_\+fnc\+::ade\+\_\+tder\+\_\+coef(), ade\+\_\+fnc\+::ade\+\_\+zerorder(), and ade\+\_\+fnc\+::adedispersion().
+
+
+
+Referenced by manage\+\_\+pointers\+::set\+\_\+pointers().
+
+
+\begin{DoxyCode}
+8       \textcolor{keywordtype}{use }typy
+9       \textcolor{keywordtype}{use }globals
+10       \textcolor{keywordtype}{use }global_objs
+11       \textcolor{keywordtype}{use }pde_objs
+12       \textcolor{keywordtype}{use }ade_fnc
+13       \textcolor{keywordtype}{use }ade_reader
+14       
+15       \textcolor{keywordtype}{class}(pde_str), \textcolor{keywordtype}{intent(in out)} :: pde\_loc
+16       \textcolor{keywordtype}{integer(kind=ikind)} :: i
+17       
+18       \textcolor{keyword}{call }ade_read(pde\_loc)
+19             
+20       pde\_loc%pde\_fnc(pde\_loc%order)%dispersion => adedispersion
+21       
+22       pde\_loc%pde\_fnc(pde\_loc%order)%convection => ade_convection
+23 
+24       pde\_loc%pde\_fnc(pde\_loc%order)%elasticity => ade_tder_coef
+25 
+26       pde\_loc%mass => ade_mass
+27 
+28       pde\_loc%pde\_fnc(pde\_loc%order)%reaction => ade_reaction
+29             
+30       pde\_loc%pde\_fnc(pde\_loc%order)%zerord => ade_zerorder
+31           
+32       \textcolor{keywordflow}{do} i=lbound(pde\_loc%bc,1), ubound(pde\_loc%bc,1)
+33         \textcolor{keywordflow}{select case}(pde\_loc%bc(i)%code)
+34           \textcolor{keywordflow}{case}(1)
+35             pde\_loc%bc(i)%value\_fnc => ade_dirichlet
+36           \textcolor{keywordflow}{case}(2)
+37             pde\_loc%bc(i)%value\_fnc => ade_neumann
+38 \textcolor{keywordflow}{        end select}
+39 \textcolor{keywordflow}{      end do}    
+40         
+41       pde\_loc%flux => ade_flux
+42       
+43       pde\_loc%initcond => ade_icond  
+44       
+45     
+\end{DoxyCode}
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespaceade__pointers_adcdbd3c086467f4845b54788e253d694_cgraph}
+\end{center}
+\end{figure}
+
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespaceade__pointers_adcdbd3c086467f4845b54788e253d694_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{ade\+\_\+pointers@{ade\+\_\+pointers}!adekinsorb@{adekinsorb}}
+\index{adekinsorb@{adekinsorb}!ade\+\_\+pointers@{ade\+\_\+pointers}}
+\subsubsection[{adekinsorb(pde\+\_\+loc)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, public ade\+\_\+pointers\+::adekinsorb (
+\begin{DoxyParamCaption}
+\item[{class({\bf pde\+\_\+str}), intent(inout)}]{pde\+\_\+loc}
+\end{DoxyParamCaption}
+)}\label{namespaceade__pointers_aa2bb46d0195e5bf43f5bc8066b07b803}
+
+
+Definition at line 49 of file A\+D\+E\+\_\+pointers.\+f90.
+
+
+
+References ade\+\_\+fnc\+::ade\+\_\+cscl\+\_\+react(), ade\+\_\+fnc\+::ade\+\_\+cscs\+\_\+react(), ade\+\_\+fnc\+::ade\+\_\+null\+\_\+bc(), ade\+\_\+fnc\+::ade\+\_\+tder\+\_\+cscl(), ade\+\_\+fnc\+::ade\+\_\+tder\+\_\+cscs(), ade\+\_\+fnc\+::adecs\+\_\+icond(), ade\+\_\+reader\+::adecs\+\_\+read(), and pde\+\_\+objs\+::pde.
+
+
+
+Referenced by manage\+\_\+pointers\+::set\+\_\+pointers().
+
+
+\begin{DoxyCode}
+49       \textcolor{keywordtype}{use }typy
+50       \textcolor{keywordtype}{use }globals
+51       \textcolor{keywordtype}{use }global_objs
+52       \textcolor{keywordtype}{use }pde_objs
+53       \textcolor{keywordtype}{use }ade_fnc
+54       \textcolor{keywordtype}{use }ade_reader
+55       
+56       \textcolor{keywordtype}{class}(pde_str), \textcolor{keywordtype}{intent(in out)} :: pde\_loc  
+57       \textcolor{keywordtype}{integer(kind=ikind)} :: i
+58       
+59       \textcolor{keyword}{call }adecs_read(pde\_loc)
+60       
+61       pde\_loc%pde\_fnc(pde\_loc%order)%elasticity => ade_tder_cscs
+62       
+63       pde(pde\_loc%order-1)%pde\_fnc(pde\_loc%order)%elasticity => ade_tder_cscl
+64       
+65       pde\_loc%pde\_fnc(pde\_loc%order-1)%reaction => ade_cscl_react
+66       
+67       pde\_loc%pde\_fnc(pde\_loc%order)%reaction => ade_cscs_react
+68       
+69       \textcolor{keyword}{allocate}(pde\_loc%bc(lbound(pde(pde\_loc%order-1)%bc,1) : (ubound(pde\textcolor{comment}{(pde\_loc%order-1)%bc,1) )  ))}
+70 \textcolor{comment}{      }
+71 \textcolor{comment}{      }\textcolor{keywordflow}{do} i=lbound(pde\_loc%bc,1), ubound(pde\_loc%bc,1)
+72         pde\_loc%bc(i)%code = 2
+73         pde\_loc%bc(i)%value\_fnc => ade_null_bc
+74 \textcolor{keywordflow}{      end do} 
+75       
+76       pde\_loc%initcond => adecs_icond
+77       
+78     
+\end{DoxyCode}
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=331pt]{namespaceade__pointers_aa2bb46d0195e5bf43f5bc8066b07b803_cgraph}
+\end{center}
+\end{figure}
+
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespaceade__pointers_aa2bb46d0195e5bf43f5bc8066b07b803_icgraph}
+\end{center}
+\end{figure}
+
+

@@ -1,0 +1,558 @@
+\section{dual\+\_\+coup Module Reference}
+\label{namespacedual__coup}\index{dual\+\_\+coup@{dual\+\_\+coup}}
+
+
+This module contains variants of coupling terms of the dual permeability model. Boundary gets assigned mualem parameters in case(2) and (3). Case(1) The exchange term is calculated based on arithmetic mean of $Ka=\frac{Ka(hm)+Ka(hf)}{2}$. ~\newline
+ Case(2) The exchange term is calculated based on geometric mean of $Ka=\sqrt{Ka(hm)*Ka(hf)}$. ~\newline
+ Case(3) The exchange boundary term is constant.~\newline
+ Case (4) and (5) don\textquotesingle{}t require further parameters. ~\newline
+ Case(4) The exchange term is the minimum of $Ka=min(Km(hm),Kf(hf),Km(hf),Kf(hf))$ ~\newline
+ Case(5) The exchange term is the minimum of $Ka=min(Km(hm*weight_m+hf*weight_f),Kf(hm*weight_m+hf*weight_f))$.  
+
+
+\subsection*{Functions/\+Subroutines}
+\begin{DoxyCompactItemize}
+\item 
+real(kind=rkind) function, public {\bf dual\+\_\+coupling} (pde\+\_\+loc, layer, quadpnt, x)
+\begin{DoxyCompactList}\small\item\em Coupling defined for case(1), case (2) and case (3) Case(1) The exchange term is calculated based on arithmetic mean of $Ka=\frac{Ka(hm)+Ka(hf)}{2}$. ~\newline
+ Case(2) The exchange term is calculated based on geometric mean of $Ka=\sqrt{Ka(hm)*Ka(hf)}$. ~\newline
+ Case(3) The exchange boundary term is constant.~\newline
+ \end{DoxyCompactList}\item 
+real(kind=rkind) function, public {\bf dual\+\_\+coupling\+\_\+neg} (pde\+\_\+loc, layer, quadpnt, x)
+\begin{DoxyCompactList}\small\item\em neg coupling defined for case(1), case (2) and case (3) for coupled matrix, i.\+e. matrix part in fracture and fracture part in matrix. \end{DoxyCompactList}\item 
+real(kind=rkind) function, public {\bf dual\+\_\+coup\+\_\+min} (pde\+\_\+loc, layer, quadpnt, x)
+\begin{DoxyCompactList}\small\item\em The following coupling schemes use the minimum value of case(4) $Ka=min(Km(hm),Kf(hf),Km(hf),Kf(hf))$ and case(5) $Ka=min(Km(hm*weight_m+hf*weight_f),Kf(hm*weight_m+hf*weight_f))$. ~\newline
+ This has the advantage that no extra parameters need to be defined describing the hydraulic properties at the boundary~\newline
+ This reduces the number of parameters to be estimated by 3\+: Kas, a, n ~\newline
+ This also assures that the exchange term is always smaller than or equal the fracture and matrix conductivity. \end{DoxyCompactList}\item 
+real(kind=rkind) function, public {\bf dual\+\_\+coup\+\_\+min\+\_\+neg} (pde\+\_\+loc, layer, quadpnt, x)
+\begin{DoxyCompactList}\small\item\em neg coupling defined for case(4) and case (5) for coupled matrix, i.\+e. matrix part in fracture and fracture part in matrix. \end{DoxyCompactList}\item 
+real(kind=rkind) function, public {\bf dual\+\_\+coupling\+\_\+k} (pde\+\_\+loc, layer, quadpnt, x)
+\begin{DoxyCompactList}\small\item\em coupling conductivity function for tab values \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+This module contains variants of coupling terms of the dual permeability model. Boundary gets assigned mualem parameters in case(2) and (3). Case(1) The exchange term is calculated based on arithmetic mean of $Ka=\frac{Ka(hm)+Ka(hf)}{2}$. ~\newline
+ Case(2) The exchange term is calculated based on geometric mean of $Ka=\sqrt{Ka(hm)*Ka(hf)}$. ~\newline
+ Case(3) The exchange boundary term is constant.~\newline
+ Case (4) and (5) don\textquotesingle{}t require further parameters. ~\newline
+ Case(4) The exchange term is the minimum of $Ka=min(Km(hm),Kf(hf),Km(hf),Kf(hf))$ ~\newline
+ Case(5) The exchange term is the minimum of $Ka=min(Km(hm*weight_m+hf*weight_f),Kf(hm*weight_m+hf*weight_f))$. 
+
+\subsection{Function/\+Subroutine Documentation}
+\index{dual\+\_\+coup@{dual\+\_\+coup}!dual\+\_\+coup\+\_\+min@{dual\+\_\+coup\+\_\+min}}
+\index{dual\+\_\+coup\+\_\+min@{dual\+\_\+coup\+\_\+min}!dual\+\_\+coup@{dual\+\_\+coup}}
+\subsubsection[{dual\+\_\+coup\+\_\+min(pde\+\_\+loc, layer, quadpnt, x)}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind) function, public dual\+\_\+coup\+::dual\+\_\+coup\+\_\+min (
+\begin{DoxyParamCaption}
+\item[{class({\bf pde\+\_\+str}), intent(in)}]{pde\+\_\+loc, }
+\item[{integer(kind=ikind), intent(in)}]{layer, }
+\item[{type({\bf integpnt\+\_\+str}), intent(in), optional}]{quadpnt, }
+\item[{real(kind=rkind), dimension(\+:), intent(in), optional}]{x}
+\end{DoxyParamCaption}
+)}\label{namespacedual__coup_a6ff2a1e14fda6be9ae0ac50bc2cc8f76}
+
+
+The following coupling schemes use the minimum value of case(4) $Ka=min(Km(hm),Kf(hf),Km(hf),Kf(hf))$ and case(5) $Ka=min(Km(hm*weight_m+hf*weight_f),Kf(hm*weight_m+hf*weight_f))$. ~\newline
+ This has the advantage that no extra parameters need to be defined describing the hydraulic properties at the boundary~\newline
+ This reduces the number of parameters to be estimated by 3\+: Kas, a, n ~\newline
+ This also assures that the exchange term is always smaller than or equal the fracture and matrix conductivity. 
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em x} & value of the nonlinear function\\
+\hline
+\mbox{\tt in}  & {\em quadpnt} & Gauss quadrature point structure (element number and rank of Gauss quadrature point)\\
+\hline
+\mbox{\tt in}  & {\em layer} & material ID \\
+\hline
+\end{DoxyParams}
+vg and ex parameters, later from conf file 
+
+Definition at line 141 of file Re\+\_\+dual\+\_\+coupling.\+f90.
+
+
+
+References dual\+\_\+globals\+::coup\+\_\+model, dual\+\_\+por\+::dual\+\_\+mualem(), dual\+\_\+globals\+::exchange, pde\+\_\+objs\+::pde, dual\+\_\+globals\+::vgfracture, and dual\+\_\+globals\+::vgmatrix.
+
+
+
+Referenced by dual\+\_\+coup\+\_\+min\+\_\+neg(), re\+\_\+dual\+\_\+pointers\+::re\+\_\+fracture(), and re\+\_\+dual\+\_\+pointers\+::re\+\_\+matrix().
+
+
+\begin{DoxyCode}
+141       \textcolor{keywordtype}{use }typy
+142       \textcolor{keywordtype}{use }global_objs
+143       \textcolor{keywordtype}{use }pde_objs
+144       \textcolor{keywordtype}{use }dual_globals
+145       \textcolor{keywordtype}{use }re_dual_reader
+146       \textcolor{keywordtype}{class}(pde_str), \textcolor{keywordtype}{intent(in)} :: pde\_loc
+148       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional}    :: x
+150       \textcolor{keywordtype}{type}(integpnt_str), \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional} :: quadpnt
+152       \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(in)} :: layer
+154       \textcolor{keywordtype}{real(kind=rkind)}::beta,a,gam\_par
+155       \textcolor{keywordtype}{real(kind=rkind)}::weightf,weightm,ks,ksm,ksf
+156       \textcolor{keywordtype}{real}(kind=rkind)                            :: ka\_ff,ka\_mf,ka\_mm,ka\_fm,ka,ex\_term,ka\_m,ka\_f
+157       \textcolor{keywordtype}{real}(kind=rkind)                            :: hm,hf
+158       \textcolor{keywordtype}{type}(integpnt_str) :: quadpnt\_loc     
+159         
+160       ksm=vgmatrix(layer)%KS\_local(1)
+161       ksf=vgfracture(layer)%KS\_local(1) 
+162             
+163       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(quadpnt)) \textcolor{keywordflow}{then}
+164         quadpnt\_loc=quadpnt
+165         quadpnt\_loc%preproc=.true.
+166         quadpnt\_loc%column=1
+167         hm = pde(1)%getval(quadpnt\_loc)
+168         hf = pde(2)%getval(quadpnt\_loc)
+169       \textcolor{keywordflow}{else}
+170             \textcolor{keywordflow}{if} (ubound(x,1) /=2) \textcolor{keywordflow}{then}
+171               print *, \textcolor{stringliteral}{"ERROR: exchange term requires two variables h"}
+172               print *, \textcolor{stringliteral}{"       your input data has:"}, ubound(x,1), \textcolor{stringliteral}{"variables"}
+173               error stop
+174 \textcolor{keywordflow}{            end if}
+175         \textcolor{keywordflow}{if} (ubound(x,1) /=2) \textcolor{keywordflow}{then}
+176               print *, \textcolor{stringliteral}{"ERROR: exchange term requires two variables h"}
+177               print *, \textcolor{stringliteral}{"       your input data has:"}, ubound(x,1), \textcolor{stringliteral}{"variables"}
+178               print *, \textcolor{stringliteral}{"exited from RE\_dual::dual\_coupling"}
+179               error stop
+180 \textcolor{keywordflow}{           end if}
+181            hm = x(1)
+182            hf = x(2)
+183 \textcolor{keywordflow}{     end if}
+184           
+185      \textcolor{keywordflow}{select case}(coup_model)
+186            \textcolor{keywordflow}{case}(4)
+187                  \textcolor{keyword}{call }dual\_mualem(pde\_loc, layer, x=[hm],scalar=ka\_mm)
+188                  \textcolor{keyword}{call }dual\_mualem(pde\_loc, layer, x=[hf],scalar=ka\_mf)
+189                  \textcolor{keyword}{call }dual\_mualem(pde\_loc, layer, x=[hm],scalar=ka\_fm)
+190                  \textcolor{keyword}{call }dual\_mualem(pde\_loc, layer, x=[hf],scalar=ka\_ff)
+191                  ka\_ff=ka\_ff*ksf
+192                  ka\_mf=ka\_mf*ksm
+193                  ka\_mm=ka\_mm*ksm
+194                  ka\_fm=ka\_fm*ksf
+195                  ka=minval((/ka\_ff,ka\_mf,ka\_mm,ka\_fm/))
+196 
+197        \textcolor{keywordflow}{case}(5)
+198          weightm=exchange(layer)%weightm
+199          weightf=exchange(layer)%weightf
+200          \textcolor{keyword}{call }dual\_mualem(pde\_loc, layer, x=[hm*weightm+hf*weightf],scalar\textcolor{comment}{=ka\_m)}
+201 \textcolor{comment}{         }\textcolor{keyword}{call }dual\_mualem(pde\_loc, layer, x=[hm*weightm+hf*weightf],scalar\textcolor{comment}{=ka\_f)}
+202 \textcolor{comment}{         ka\_m=ka\_m*ksm}
+203 \textcolor{comment}{         ka\_f=ka\_f*ksf}
+204 \textcolor{comment}{                 ka=minval((/ka\_f,ka\_m/))}
+205 \textcolor{comment}{}\textcolor{keywordflow}{    end select}
+206     
+207      beta=exchange(layer)%beta
+208      a=exchange(layer)%a
+209      gam\_par=exchange(layer)%gam\_par
+210      
+211      \textcolor{keywordflow}{if}(abs(hm-hf)>max(hm,hf)*epsilon(hm)) \textcolor{keywordflow}{then}
+212        ex\_term=beta/a**2*gam\_par*ka
+213      \textcolor{keywordflow}{else}
+214        ex\_term=0.0\_rkind
+215 \textcolor{keywordflow}{     end if}
+216 
+\end{DoxyCode}
+
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=329pt]{namespacedual__coup_a6ff2a1e14fda6be9ae0ac50bc2cc8f76_cgraph}
+\end{center}
+\end{figure}
+
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacedual__coup_a6ff2a1e14fda6be9ae0ac50bc2cc8f76_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{dual\+\_\+coup@{dual\+\_\+coup}!dual\+\_\+coup\+\_\+min\+\_\+neg@{dual\+\_\+coup\+\_\+min\+\_\+neg}}
+\index{dual\+\_\+coup\+\_\+min\+\_\+neg@{dual\+\_\+coup\+\_\+min\+\_\+neg}!dual\+\_\+coup@{dual\+\_\+coup}}
+\subsubsection[{dual\+\_\+coup\+\_\+min\+\_\+neg(pde\+\_\+loc, layer, quadpnt, x)}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind) function, public dual\+\_\+coup\+::dual\+\_\+coup\+\_\+min\+\_\+neg (
+\begin{DoxyParamCaption}
+\item[{class({\bf pde\+\_\+str}), intent(in)}]{pde\+\_\+loc, }
+\item[{integer(kind=ikind), intent(in)}]{layer, }
+\item[{type({\bf integpnt\+\_\+str}), intent(in), optional}]{quadpnt, }
+\item[{real(kind=rkind), dimension(\+:), intent(in), optional}]{x}
+\end{DoxyParamCaption}
+)}\label{namespacedual__coup_a61aa217a5b2540a81820d9c213f50056}
+
+
+neg coupling defined for case(4) and case (5) for coupled matrix, i.\+e. matrix part in fracture and fracture part in matrix. 
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em x} & value of the nonlinear function\\
+\hline
+\mbox{\tt in}  & {\em quadpnt} & Gauss quadrature point structure (element number and rank of Gauss quadrature point)\\
+\hline
+\mbox{\tt in}  & {\em layer} & material ID\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+vg and ex parameters 
+\end{DoxyReturn}
+
+
+Definition at line 221 of file Re\+\_\+dual\+\_\+coupling.\+f90.
+
+
+
+References dual\+\_\+coup\+\_\+min().
+
+
+
+Referenced by re\+\_\+dual\+\_\+pointers\+::re\+\_\+fracture(), and re\+\_\+dual\+\_\+pointers\+::re\+\_\+matrix().
+
+
+\begin{DoxyCode}
+221       \textcolor{keywordtype}{use }typy
+222       \textcolor{keywordtype}{use }global_objs
+223       \textcolor{keywordtype}{use }pde_objs
+224       \textcolor{keywordtype}{use }dual_globals
+225       \textcolor{keywordtype}{use }re_dual_reader
+226       \textcolor{keywordtype}{class}(pde_str), \textcolor{keywordtype}{intent(in)} :: pde\_loc
+228       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional}    :: x
+230       \textcolor{keywordtype}{type}(integpnt_str), \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional} :: quadpnt
+232       \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(in)} :: layer
+234 
+235       \textcolor{keywordtype}{real(kind=rkind)}   ::ex\_term
+236           
+237             
+238       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(quadpnt)) \textcolor{keywordflow}{then}
+239         ex\_term=-dual\_coup\_min(pde\_loc, layer, quadpnt)
+240 \textcolor{keywordflow}{      end if}
+241       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(x)) \textcolor{keywordflow}{then}
+242         ex\_term=-dual\_coup\_min(pde\_loc, layer, x=x)
+243 \textcolor{keywordflow}{      end if}
+244 
+245      
+\end{DoxyCode}
+
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacedual__coup_a61aa217a5b2540a81820d9c213f50056_cgraph}
+\end{center}
+\end{figure}
+
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacedual__coup_a61aa217a5b2540a81820d9c213f50056_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{dual\+\_\+coup@{dual\+\_\+coup}!dual\+\_\+coupling@{dual\+\_\+coupling}}
+\index{dual\+\_\+coupling@{dual\+\_\+coupling}!dual\+\_\+coup@{dual\+\_\+coup}}
+\subsubsection[{dual\+\_\+coupling(pde\+\_\+loc, layer, quadpnt, x)}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind) function, public dual\+\_\+coup\+::dual\+\_\+coupling (
+\begin{DoxyParamCaption}
+\item[{class({\bf pde\+\_\+str}), intent(in)}]{pde\+\_\+loc, }
+\item[{integer(kind=ikind), intent(in)}]{layer, }
+\item[{type({\bf integpnt\+\_\+str}), intent(in), optional}]{quadpnt, }
+\item[{real(kind=rkind), dimension(\+:), intent(in), optional}]{x}
+\end{DoxyParamCaption}
+)}\label{namespacedual__coup_a45c1c65b71e8f97db4a84a2a775b90e5}
+
+
+Coupling defined for case(1), case (2) and case (3) Case(1) The exchange term is calculated based on arithmetic mean of $Ka=\frac{Ka(hm)+Ka(hf)}{2}$. ~\newline
+ Case(2) The exchange term is calculated based on geometric mean of $Ka=\sqrt{Ka(hm)*Ka(hf)}$. ~\newline
+ Case(3) The exchange boundary term is constant.~\newline
+ 
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em x} & value of the nonlinear function\\
+\hline
+\mbox{\tt in}  & {\em quadpnt} & Gauss quadrature point structure (element number and rank of Gauss quadrature point)\\
+\hline
+\mbox{\tt in}  & {\em layer} & material ID \\
+\hline
+\end{DoxyParams}
+vg and ex parameters, later from conf file 
+
+Definition at line 29 of file Re\+\_\+dual\+\_\+coupling.\+f90.
+
+
+
+References dual\+\_\+globals\+::coup\+\_\+model, dual\+\_\+globals\+::exchange, pde\+\_\+objs\+::pde, and dual\+\_\+globals\+::vgexchange.
+
+
+
+Referenced by dual\+\_\+coupling\+\_\+neg(), re\+\_\+dual\+\_\+pointers\+::re\+\_\+fracture(), and re\+\_\+dual\+\_\+pointers\+::re\+\_\+matrix().
+
+
+\begin{DoxyCode}
+29       \textcolor{keywordtype}{use }typy
+30       \textcolor{keywordtype}{use }global_objs
+31       \textcolor{keywordtype}{use }pde_objs
+32       \textcolor{keywordtype}{use }dual_globals
+33       \textcolor{keywordtype}{use }re_dual_reader
+34       \textcolor{keywordtype}{class}(pde_str), \textcolor{keywordtype}{intent(in)} :: pde\_loc
+36       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional}    :: x
+38       \textcolor{keywordtype}{type}(integpnt_str), \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional} :: quadpnt
+40       \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(in)} :: layer
+42       \textcolor{keywordtype}{real(kind=rkind)}::beta,a,gam\_par
+43       \textcolor{keywordtype}{real(kind=rkind)}::n,m,alpha,ks
+44       \textcolor{keywordtype}{real}(kind=rkind)                            :: ka\_f,ka\_m,ka,ex\_term
+45       \textcolor{keywordtype}{real}(kind=rkind)                            :: hm,hf,one
+46       \textcolor{keywordtype}{type}(integpnt_str) :: quadpnt\_loc     
+47         
+48        
+49             
+50       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(quadpnt)) \textcolor{keywordflow}{then}
+51         quadpnt\_loc=quadpnt
+52         quadpnt\_loc%preproc=.true.
+53 
+54         hm = pde(1)%getval(quadpnt\_loc)
+55         hf = pde(2)%getval(quadpnt\_loc)
+56       \textcolor{keywordflow}{else}
+57             \textcolor{keywordflow}{if} (ubound(x,1) /=2) \textcolor{keywordflow}{then}
+58               print *, \textcolor{stringliteral}{"ERROR: exchange term requires two variables h"}
+59               print *, \textcolor{stringliteral}{"       your input data has:"}, ubound(x,1), \textcolor{stringliteral}{"variables"}
+60               error stop
+61 \textcolor{keywordflow}{            end if}
+62         \textcolor{keywordflow}{if} (ubound(x,1) /=2) \textcolor{keywordflow}{then}
+63               print *, \textcolor{stringliteral}{"ERROR: exchange term requires two variables h"}
+64               print *, \textcolor{stringliteral}{"       your input data has:"}, ubound(x,1), \textcolor{stringliteral}{"variables"}
+65               print *, \textcolor{stringliteral}{"exited from RE\_dual::dual\_coupling"}
+66               error stop
+67 \textcolor{keywordflow}{           end if}
+68            hm = x(1)
+69            hf = x(2)
+70 \textcolor{keywordflow}{     end if}
+71      
+72      alpha=vgexchange(layer)%alpha
+73      n=vgexchange(layer)%n
+74      m=vgexchange(layer)%m
+75      ks=vgexchange(layer)%KS\_local(1)
+76      one=1.0\_rkind   
+77      \textcolor{keywordflow}{if}(hf<0) \textcolor{keywordflow}{then}
+78        ka\_f=(one-abs(alpha*hf)**(n*m)*(one+abs(alpha*hf)**n)**(-m))**2/(one\textcolor{comment}{+abs(alpha*hf)**n)**(m/2)}
+79 \textcolor{comment}{     }\textcolor{keywordflow}{else}
+80        ka\_f=1.0\_rkind
+81 \textcolor{keywordflow}{     end if}
+82      \textcolor{keywordflow}{if}(hm<0) \textcolor{keywordflow}{then}
+83        ka\_m=(one-abs(alpha*hm)**(n*m)*(one+abs(alpha*hm)**n)**(-m))**2/(one\textcolor{comment}{+abs(alpha*hm)**n)**(m/2)}
+84 \textcolor{comment}{     }\textcolor{keywordflow}{else}
+85        ka\_m=1.0\_rkind
+86 \textcolor{keywordflow}{     end if}  
+87 
+88      \textcolor{keywordflow}{select case}(coup_model)
+89            \textcolor{keywordflow}{case}(1)
+90          ka=0.5*(ka\_f+ka\_m)*ks
+91        \textcolor{keywordflow}{case}(2)
+92          ka=(ka\_f*ka\_m)**0.5\_rkind*ks
+93        \textcolor{keywordflow}{case}(3)
+94          ka=vgexchange(layer)%KS\_local(1)
+95 \textcolor{keywordflow}{    end select}
+96     
+97      beta=exchange(layer)%beta
+98      a=exchange(layer)%a
+99      gam\_par=exchange(layer)%gam\_par
+100      \textcolor{keywordflow}{if}(abs(hm-hf)>max(hm,hf)*epsilon(hm)) \textcolor{keywordflow}{then}
+101        ex\_term=beta/a**2*gam\_par*ka
+102      \textcolor{keywordflow}{else}
+103        ex\_term=0.0\_rkind
+104 \textcolor{keywordflow}{     end if}
+105 
+\end{DoxyCode}
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacedual__coup_a45c1c65b71e8f97db4a84a2a775b90e5_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{dual\+\_\+coup@{dual\+\_\+coup}!dual\+\_\+coupling\+\_\+k@{dual\+\_\+coupling\+\_\+k}}
+\index{dual\+\_\+coupling\+\_\+k@{dual\+\_\+coupling\+\_\+k}!dual\+\_\+coup@{dual\+\_\+coup}}
+\subsubsection[{dual\+\_\+coupling\+\_\+k(pde\+\_\+loc, layer, quadpnt, x)}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind) function, public dual\+\_\+coup\+::dual\+\_\+coupling\+\_\+k (
+\begin{DoxyParamCaption}
+\item[{class({\bf pde\+\_\+str}), intent(in)}]{pde\+\_\+loc, }
+\item[{integer(kind=ikind), intent(in)}]{layer, }
+\item[{type({\bf integpnt\+\_\+str}), intent(in), optional}]{quadpnt, }
+\item[{real(kind=rkind), dimension(\+:), intent(in), optional}]{x}
+\end{DoxyParamCaption}
+)}\label{namespacedual__coup_a77fbe6b94667bab7c4a93936da557f24}
+
+
+coupling conductivity function for tab values 
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em x} & value of the nonlinear function\\
+\hline
+\mbox{\tt in}  & {\em quadpnt} & Gauss quadrature point structure (element number and rank of Gauss quadrature point)\\
+\hline
+\mbox{\tt in}  & {\em layer} & material ID \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 251 of file Re\+\_\+dual\+\_\+coupling.\+f90.
+
+
+
+References dual\+\_\+globals\+::vgexchange.
+
+
+
+Referenced by dual\+\_\+tab\+::dual\+\_\+coupling\+\_\+tab(), re\+\_\+dual\+\_\+pointers\+::re\+\_\+fracture(), and re\+\_\+dual\+\_\+pointers\+::re\+\_\+matrix().
+
+
+\begin{DoxyCode}
+251     \textcolor{keywordtype}{use }typy
+252     \textcolor{keywordtype}{use }global_objs
+253     \textcolor{keywordtype}{use }pde_objs
+254     \textcolor{keywordtype}{use }dual_globals
+255     \textcolor{keywordtype}{use }re_dual_reader
+256     
+257     \textcolor{keywordtype}{class}(pde_str), \textcolor{keywordtype}{intent(in)} :: pde\_loc
+259     \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional}    :: x
+261     \textcolor{keywordtype}{type}(integpnt_str), \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional} :: quadpnt
+263     \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(in)} :: layer
+264     \textcolor{keywordtype}{real(kind=rkind)}::ka\_c
+265     \textcolor{keywordtype}{real(kind=rkind)}::n,m,alpha
+266     \textcolor{keywordtype}{real(kind=rkind)}:: one,h
+267     \textcolor{keywordtype}{type}(integpnt_str) :: quadpnt\_loc
+268           
+269      \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(quadpnt)) \textcolor{keywordflow}{then}
+270         quadpnt\_loc=quadpnt
+271         quadpnt\_loc%preproc=.true.
+272         h = pde\_loc%getval(quadpnt\_loc)
+273      \textcolor{keywordflow}{else}
+274          \textcolor{keywordflow}{if} (ubound(x,1) /=1) \textcolor{keywordflow}{then}
+275            print *, \textcolor{stringliteral}{"ERROR: van Genuchten function is a function of a single variable h"}
+276            print *, \textcolor{stringliteral}{"       your input data has:"}, ubound(x,1), \textcolor{stringliteral}{"variables"}
+277            print *, \textcolor{stringliteral}{"exited from RE\_dual::dual\_coupling\_K"}
+278            error stop
+279 \textcolor{keywordflow}{         end if}
+280            h = x(1)
+281 \textcolor{keywordflow}{     end if}  
+282     alpha=vgexchange(layer)%alpha
+283     n=vgexchange(layer)%n
+284     m=vgexchange(layer)%m
+285     one=1.0\_rkind 
+286     \textcolor{keywordflow}{if}(h<0) \textcolor{keywordflow}{then}
+287       ka\_c=(one-(alpha*abs(h))**(n*m)*(one+(alpha*abs(h))**n)**(-m))**2/(one+(alpha*abs(h))**n)**(m/2)
+288     \textcolor{keywordflow}{else}
+289       ka\_c=1.0\_rkind
+290 \textcolor{keywordflow}{    end if}
+\end{DoxyCode}
+
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacedual__coup_a77fbe6b94667bab7c4a93936da557f24_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{dual\+\_\+coup@{dual\+\_\+coup}!dual\+\_\+coupling\+\_\+neg@{dual\+\_\+coupling\+\_\+neg}}
+\index{dual\+\_\+coupling\+\_\+neg@{dual\+\_\+coupling\+\_\+neg}!dual\+\_\+coup@{dual\+\_\+coup}}
+\subsubsection[{dual\+\_\+coupling\+\_\+neg(pde\+\_\+loc, layer, quadpnt, x)}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind) function, public dual\+\_\+coup\+::dual\+\_\+coupling\+\_\+neg (
+\begin{DoxyParamCaption}
+\item[{class({\bf pde\+\_\+str}), intent(in)}]{pde\+\_\+loc, }
+\item[{integer(kind=ikind), intent(in)}]{layer, }
+\item[{type({\bf integpnt\+\_\+str}), intent(in), optional}]{quadpnt, }
+\item[{real(kind=rkind), dimension(\+:), intent(in), optional}]{x}
+\end{DoxyParamCaption}
+)}\label{namespacedual__coup_a392d4e7e0705fd62f272c62ab400ae68}
+
+
+neg coupling defined for case(1), case (2) and case (3) for coupled matrix, i.\+e. matrix part in fracture and fracture part in matrix. 
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em x} & value of the nonlinear function\\
+\hline
+\mbox{\tt in}  & {\em quadpnt} & Gauss quadrature point structure (element number and rank of Gauss quadrature point)\\
+\hline
+\mbox{\tt in}  & {\em layer} & material ID\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+vg and ex parameters, later from conf file 
+\end{DoxyReturn}
+
+
+Definition at line 109 of file Re\+\_\+dual\+\_\+coupling.\+f90.
+
+
+
+References dual\+\_\+coupling().
+
+
+
+Referenced by re\+\_\+dual\+\_\+pointers\+::re\+\_\+fracture(), and re\+\_\+dual\+\_\+pointers\+::re\+\_\+matrix().
+
+
+\begin{DoxyCode}
+109       \textcolor{keywordtype}{use }typy
+110       \textcolor{keywordtype}{use }global_objs
+111       \textcolor{keywordtype}{use }pde_objs
+112       \textcolor{keywordtype}{use }dual_globals
+113       \textcolor{keywordtype}{use }re_dual_reader
+114       \textcolor{keywordtype}{class}(pde_str), \textcolor{keywordtype}{intent(in)} :: pde\_loc
+116       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional}    :: x
+118       \textcolor{keywordtype}{type}(integpnt_str), \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional} :: quadpnt
+120       \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(in)} :: layer
+122       \textcolor{keywordtype}{real(kind=rkind)}   ::ex\_term
+123           
+124             
+125       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(quadpnt)) \textcolor{keywordflow}{then}
+126         ex\_term=-dual\_coupling(pde\_loc, layer, quadpnt)
+127 \textcolor{keywordflow}{      end if}
+128       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(x)) \textcolor{keywordflow}{then}
+129         ex\_term=-dual\_coupling(pde\_loc, layer, x=x)
+130 \textcolor{keywordflow}{      end if}
+131 
+132      
+\end{DoxyCode}
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacedual__coup_a392d4e7e0705fd62f272c62ab400ae68_cgraph}
+\end{center}
+\end{figure}
+
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacedual__coup_a392d4e7e0705fd62f272c62ab400ae68_icgraph}
+\end{center}
+\end{figure}
+
+

@@ -1,0 +1,77 @@
+\section{mtx\+:\+:seti Interface Reference}
+\label{interfacemtx_1_1seti}\index{mtx\+::seti@{mtx\+::seti}}
+
+
+interface pro nastaveni prvku  
+
+
+\subsection*{Private Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+subroutine {\bf seti} (r, a, i, j)
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+interface pro nastaveni prvku 
+
+rutina pro nastaveni prvku 
+
+Definition at line 120 of file mtx.\+f90.
+
+
+
+\subsection{Constructor \& Destructor Documentation}
+\index{mtx\+::seti@{mtx\+::seti}!seti@{seti}}
+\index{seti@{seti}!mtx\+::seti@{mtx\+::seti}}
+\subsubsection[{seti(r, a, i, j)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine mtx\+::seti\+::seti (
+\begin{DoxyParamCaption}
+\item[{real(kind=rkind), intent(in)}]{r, }
+\item[{class({\bf matrix}), intent(inout)}]{a, }
+\item[{integer(kind=ikind), intent(in)}]{i, }
+\item[{integer(kind=ikind), intent(in)}]{j}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [private]}}\label{interfacemtx_1_1seti_a9fdf84fcf3ea0273201d44bf9e713480}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in,out}  & {\em a} & matice\\
+\hline
+\mbox{\tt in}  & {\em i} & souradnice\\
+\hline
+\mbox{\tt in}  & {\em j} & souradnice\\
+\hline
+\mbox{\tt in}  & {\em r} & hodnota \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 121 of file mtx.\+f90.
+
+
+
+References mtx\+::estimeigvalues(), and mtx\+::mtxtest().
+
+
+\begin{DoxyCode}
+121             \textcolor{keywordtype}{use }typy
+122             \textcolor{keywordtype}{import }:: matrix
+124             \textcolor{keywordtype}{class}(matrix), \textcolor{keywordtype}{intent(in out)} :: a
+126             \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(in)} :: i,j
+128             \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{intent(in)} :: r
+\end{DoxyCode}
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=261pt]{interfacemtx_1_1seti_a9fdf84fcf3ea0273201d44bf9e713480_cgraph}
+\end{center}
+\end{figure}
+
+
+
+
+The documentation for this interface was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+src/pma++/{\bf mtx.\+f90}\end{DoxyCompactItemize}

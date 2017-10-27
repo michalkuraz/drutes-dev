@@ -1,0 +1,137 @@
+\section{src/core/globals.f90 File Reference}
+\label{globals_8f90}\index{src/core/globals.\+f90@{src/core/globals.\+f90}}
+\subsection*{Modules}
+\begin{DoxyCompactItemize}
+\item 
+module {\bf globals}
+\end{DoxyCompactItemize}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+type(version), public {\bf globals\+::version\+\_\+id}
+\begin{DoxyCompactList}\small\item\em version id variable \end{DoxyCompactList}\item 
+integer, public {\bf globals\+::file\+\_\+global}
+\begin{DoxyCompactList}\small\item\em file units -\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/--- \end{DoxyCompactList}\item 
+integer, public {\bf globals\+::file\+\_\+mesh}
+\item 
+integer, public {\bf globals\+::file\+\_\+itcg}
+\item 
+integer, public {\bf globals\+::file\+\_\+wwwglob}
+\item 
+integer, public {\bf globals\+::logfile}
+\begin{DoxyCompactList}\small\item\em log file unit \end{DoxyCompactList}\item 
+integer, public {\bf globals\+::debugfile}
+\begin{DoxyCompactList}\small\item\em debug file unit (put there whatever you like) \end{DoxyCompactList}\item 
+integer, public {\bf globals\+::terminal} = 6
+\begin{DoxyCompactList}\small\item\em terminal ID, the print\+\_\+level sets its value \end{DoxyCompactList}\item 
+logical, public {\bf globals\+::terminal\+\_\+assigned} = .false.
+\item 
+real(kind=rkind), dimension(\+:,\+:), allocatable, public {\bf globals\+::gauss\+\_\+integ}
+\begin{DoxyCompactList}\small\item\em array of the gauss quadrature formula roots \end{DoxyCompactList}\item 
+type(configuration), public {\bf globals\+::drutes\+\_\+config}
+\begin{DoxyCompactList}\small\item\em program configuration \end{DoxyCompactList}\item 
+integer(kind=ikind), public {\bf globals\+::max\+\_\+itcount}
+\begin{DoxyCompactList}\small\item\em maximal number of iterations of Picard method for nonlinear problems \end{DoxyCompactList}\item 
+real(kind=rkind), public {\bf globals\+::iter\+\_\+criterion}
+\begin{DoxyCompactList}\small\item\em Picard iteration threshold value. \end{DoxyCompactList}\item 
+real(kind=rkind), public {\bf globals\+::init\+\_\+dt}
+\begin{DoxyCompactList}\small\item\em an intial dt \end{DoxyCompactList}\item 
+real(kind=rkind), public {\bf globals\+::end\+\_\+time}
+\begin{DoxyCompactList}\small\item\em simulation end time \end{DoxyCompactList}\item 
+real(kind=rkind), public {\bf globals\+::dtmin}
+\begin{DoxyCompactList}\small\item\em minimal dt \end{DoxyCompactList}\item 
+real(kind=rkind), public {\bf globals\+::dtmax}
+\begin{DoxyCompactList}\small\item\em maximal dt \end{DoxyCompactList}\item 
+character(len=5), public {\bf globals\+::time\+\_\+units}
+\begin{DoxyCompactList}\small\item\em time units \end{DoxyCompactList}\item 
+real(kind=rkind), public {\bf globals\+::maxpress}
+\begin{DoxyCompactList}\small\item\em maximal pressure to precalculate (tabelarise) the unsaturated hydraulic conductivity value \end{DoxyCompactList}\item 
+integer(kind=ikind) {\bf globals\+::outer\+\_\+boundaries}
+\begin{DoxyCompactList}\small\item\em number of outer boundaries \end{DoxyCompactList}\item 
+integer(kind=ikind), public {\bf globals\+::print\+\_\+level}
+\begin{DoxyCompactList}\small\item\em output print level 0 = standard output 1 = screen goes to out/screen.\+log -\/1 = does goes to /dev/null, not suitable for m\$ hell \end{DoxyCompactList}\item 
+integer, public {\bf globals\+::info\+\_\+level}
+\begin{DoxyCompactList}\small\item\em level of informations that are supplied to the user 0 the default level, only information about the time step solution is displayed 1 the detailed information about each iteration is displayed 2 extra detailed, even the information about the iterations of the conjugate gradient solver is displayed \end{DoxyCompactList}\item 
+type(observe\+\_\+time\+\_\+str), dimension(\+:), allocatable, public {\bf globals\+::observe\+\_\+time}
+\begin{DoxyCompactList}\small\item\em observation time array \end{DoxyCompactList}\item 
+type(observe\+\_\+info\+\_\+str), public {\bf globals\+::observe\+\_\+info}
+\item 
+type(observation), dimension(\+:), allocatable, public {\bf globals\+::observation\+\_\+array}
+\begin{DoxyCompactList}\small\item\em the number of observation points each row defines each point, the row is labeled in [observation] structure as [xyz] each row has an integer value, this value defines the element number to which this observation point belongs \end{DoxyCompactList}\item 
+type(measured), dimension(\+:), allocatable, public {\bf globals\+::measured\+\_\+pts}
+\begin{DoxyCompactList}\small\item\em the number of points with observation data \end{DoxyCompactList}\item 
+real(kind=rkind), public {\bf globals\+::backup\+\_\+time}
+\begin{DoxyCompactList}\small\item\em code defining the example type in format X\+YZ 10 -\/ Richards equation in single regime and 1D 11 -\/ Richards equation in dual regime and 1D 20 -\/ Richards equation in single regime and 2D 21 -\/ Richards equation in dual regime and 2D 100 -\/ Richards equation and transport A\+DE equation in single regime and 1D 110 -\/ Richards equation and transport A\+DE equation in dual regime and 1D 200 -\/ Richards equation and transport A\+DE equation in single regime and 2D 210 -\/ Richards equation and transport A\+DE equation in dual regime and 2D \end{DoxyCompactList}\item 
+integer(kind=ikind), public {\bf globals\+::backup\+\_\+runs}
+\begin{DoxyCompactList}\small\item\em stores the number of performed backups \end{DoxyCompactList}\item 
+character(len=256), public {\bf globals\+::dir\+\_\+name}
+\begin{DoxyCompactList}\small\item\em current directory name \end{DoxyCompactList}\item 
+real, public {\bf globals\+::start\+\_\+time}
+\begin{DoxyCompactList}\small\item\em C\+PU start time value. \end{DoxyCompactList}\item 
+integer(kind=ikind), public {\bf globals\+::solver\+\_\+call}
+\begin{DoxyCompactList}\small\item\em number of linear algebra solver calls \end{DoxyCompactList}\item 
+type(node), public {\bf globals\+::nodes}
+\item 
+type(element), public {\bf globals\+::elements}
+\item 
+real(kind=rkind), dimension(\+:,\+:), allocatable, public {\bf globals\+::cap\+\_\+mat}
+\begin{DoxyCompactList}\small\item\em local capacity matrix and local stiffness matrix \end{DoxyCompactList}\item 
+real(kind=rkind), dimension(\+:,\+:), allocatable, public {\bf globals\+::stiff\+\_\+mat}
+\item 
+real(kind=rkind), dimension(\+:), allocatable, public {\bf globals\+::bside}
+\begin{DoxyCompactList}\small\item\em local matrix vector \end{DoxyCompactList}\item 
+type(integnodes), public {\bf globals\+::gauss\+\_\+points}
+\begin{DoxyCompactList}\small\item\em points for gauss quadrature on line ~\newline
+ component point is node\textquotesingle{}s coordinate ~\newline
+ component weight is gaussian weight ~\newline
+ this array is derived for the unit length 1 and interval $<$0,1$>$, thus it differs from the init\+\_\+gauss procedure, see init\+\_\+gauss documentation \end{DoxyCompactList}\item 
+integer(kind=ikind), public {\bf globals\+::integ\+\_\+method}
+\begin{DoxyCompactList}\small\item\em code defining gauss quadrature integration method 10 -\/ 1 point formula, 20 -\/ 2 point formula 30 -\/ 3 point formula 40 -\/ 4 point formula 50 -\/ 5 point formula 60 -\/ 6 point formula 70 -\/ 7 point formula 90 -\/ 9 point formula (in 2-\/dimensions derived from 3 point formula, ask Michal Kuraz \+:) ) 120 -\/ 12 point formula \end{DoxyCompactList}\item 
+type(dirglob\+\_\+str), public {\bf globals\+::dirglob}
+\begin{DoxyCompactList}\small\item\em defines directory with global configuration files \end{DoxyCompactList}\item 
+real(kind=rkind), dimension(\+:,\+:), allocatable, public {\bf globals\+::base\+\_\+fnc}
+\begin{DoxyCompactList}\small\item\em values of base function on gauss quadrature nodes \end{DoxyCompactList}\item 
+real(kind=rkind), public {\bf globals\+::time}
+\begin{DoxyCompactList}\small\item\em the total time value \end{DoxyCompactList}\item 
+real(kind=rkind), public {\bf globals\+::time\+\_\+step}
+\begin{DoxyCompactList}\small\item\em time step value \end{DoxyCompactList}\item 
+real(kind=rkind), public {\bf globals\+::time4solve}
+\begin{DoxyCompactList}\small\item\em equals to the actual time level plus time step which is being processed \end{DoxyCompactList}\item 
+real(kind=rkind), public {\bf globals\+::dtprev}
+\begin{DoxyCompactList}\small\item\em previous time step \end{DoxyCompactList}\item 
+real(kind=rkind), public {\bf globals\+::minimal\+\_\+dt}
+\begin{DoxyCompactList}\small\item\em minimal adjusted time step \end{DoxyCompactList}\item 
+type(extsmtx), save, public {\bf globals\+::spmatrix}
+\begin{DoxyCompactList}\small\item\em sparse matrix \end{DoxyCompactList}\item 
+type(extsmtx), save, public {\bf globals\+::spmatrix2}
+\begin{DoxyCompactList}\small\item\em sparse matrix \end{DoxyCompactList}\item 
+integer(kind=ikind), public {\bf globals\+::global\+\_\+row\+\_\+id}
+\begin{DoxyCompactList}\small\item\em current position in the global stiffness matrix \end{DoxyCompactList}\item 
+logical, public {\bf globals\+::debug\+\_\+print} =.false.
+\item 
+logical, public {\bf globals\+::debugmode}
+\item 
+logical, public {\bf globals\+::coupled\+\_\+problem}
+\item 
+integer(kind=ikind), public {\bf globals\+::postpro\+\_\+run}
+\begin{DoxyCompactList}\small\item\em the amount of postprocess runs \end{DoxyCompactList}\item 
+integer(kind=ikind), public {\bf globals\+::postpro\+\_\+dec}
+\begin{DoxyCompactList}\small\item\em the amount of decimal numbers in postproces runs \end{DoxyCompactList}\item 
+character(len=1024), public {\bf globals\+::backup\+\_\+file}
+\item 
+real(kind=rkind), dimension(\+:,\+:), allocatable {\bf globals\+::integnode\+\_\+now}
+\item 
+real(kind=rkind), dimension(\+:,\+:), allocatable {\bf globals\+::integnode\+\_\+prev}
+\item 
+real(kind=rkind), dimension(\+:), allocatable {\bf globals\+::elnode\+\_\+prev}
+\item 
+logical, public {\bf globals\+::www} = .false.
+\item 
+logical, public {\bf globals\+::optim} =.false.
+\item 
+real(kind=rkind), public {\bf globals\+::cpu\+\_\+max\+\_\+time}
+\item 
+logical, public {\bf globals\+::cpu\+\_\+time\+\_\+limit} = .false.
+\item 
+integer(kind=ikind), public {\bf globals\+::itcum}
+\end{DoxyCompactItemize}

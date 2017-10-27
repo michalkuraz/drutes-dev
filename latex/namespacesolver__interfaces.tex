@@ -1,0 +1,556 @@
+\section{solver\+\_\+interfaces Module Reference}
+\label{namespacesolver__interfaces}\index{solver\+\_\+interfaces@{solver\+\_\+interfaces}}
+\subsection*{Functions/\+Subroutines}
+\begin{DoxyCompactItemize}
+\item 
+subroutine, public {\bf ldu\+\_\+face} (A, b, x, itmax1, reps1, ilev1, itfin1, repsfin1, ll1, ll2, cond1, opcnt1, errcode1)
+\item 
+subroutine, public {\bf cg\+\_\+face} (A, b, x, itmax1, reps1, ilev1, itfin1, repsfin1, ll1, ll2, cond1, opcnt1, errcode1)
+\item 
+subroutine, public {\bf cg\+\_\+normal\+\_\+face} (A, b, x, itmax1, reps1, ilev1, itfin1, repsfin1, ll1, ll2, cond1, opcnt1, errcode1)
+\item 
+subroutine, public {\bf jacobi\+\_\+face} (A, b, x, itmax1, reps1, ilev1, itfin1, repsfin1, ll1, ll2, cond1, opcnt1, errcode1)
+\item 
+subroutine, public {\bf null\+\_\+problem} (A, b)
+\end{DoxyCompactItemize}
+
+
+\subsection{Function/\+Subroutine Documentation}
+\index{solver\+\_\+interfaces@{solver\+\_\+interfaces}!cg\+\_\+face@{cg\+\_\+face}}
+\index{cg\+\_\+face@{cg\+\_\+face}!solver\+\_\+interfaces@{solver\+\_\+interfaces}}
+\subsubsection[{cg\+\_\+face(\+A, b, x, itmax1, reps1, ilev1, itfin1, repsfin1, ll1, ll2, cond1, opcnt1, errcode1)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, public solver\+\_\+interfaces\+::cg\+\_\+face (
+\begin{DoxyParamCaption}
+\item[{class({\bf matrix}), intent(inout)}]{A, }
+\item[{real(kind=rkind), dimension(\+:), intent(in)}]{b, }
+\item[{real(kind=rkind), dimension(\+:), intent(inout)}]{x, }
+\item[{integer(kind=ikind), intent(in), optional}]{itmax1, }
+\item[{real(kind=rkind), intent(in), optional}]{reps1, }
+\item[{integer, intent(in), optional}]{ilev1, }
+\item[{integer(kind=ikind), intent(out), optional}]{itfin1, }
+\item[{real(kind=rkind), intent(out), optional}]{repsfin1, }
+\item[{real(kind=rkind), intent(out), optional}]{ll1, }
+\item[{real(kind=rkind), intent(out), optional}]{ll2, }
+\item[{real(kind=rkind), intent(out), optional}]{cond1, }
+\item[{type({\bf tcount}), intent(out), optional}]{opcnt1, }
+\item[{integer, intent(out), optional}]{errcode1}
+\end{DoxyParamCaption}
+)}\label{namespacesolver__interfaces_aeddca7240bf222b090a3b7ae08905998}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in,out}  & {\em a} & matice soustavy~\newline
+ musi poskytovat getn, getm, mul (nasobeni vektorem)\\
+\hline
+\mbox{\tt in}  & {\em b} & vektor prave strany\\
+\hline
+\mbox{\tt in,out}  & {\em x} & aproximace reseni, postupne menena\\
+\hline
+\mbox{\tt in}  & {\em itmax1} & maximalni povoleny pocet iteraci, default = n ( Rozmer matice)\\
+\hline
+\mbox{\tt in}  & {\em reps1} & pozadovana relativni zmena rezidua, default = 1e-\/6\\
+\hline
+\mbox{\tt in}  & {\em ilev1} & informacni podrobnost~\newline
+
+\begin{DoxyItemize}
+\item 0 ... pracuj tise
+\item 1 ... minimalni informace
+\item 10 ... maximalni ukecanost
+\end{DoxyItemize}\\
+\hline
+\mbox{\tt out}  & {\em itfin1} & skutecne provedeny pocet iteraci\\
+\hline
+\mbox{\tt out}  & {\em repsfin1} & skutecne dosazena relativni zmena residua\\
+\hline
+\mbox{\tt out}  & {\em ll1} & odhad nejvetsiho vlastniho cisla\\
+\hline
+\mbox{\tt out}  & {\em ll2} & odhad nejmensiho vlastniho cisla\\
+\hline
+\mbox{\tt out}  & {\em cond1} & odhad cisla podminenosti \+: cond1 = ll1/ll2\\
+\hline
+\mbox{\tt out}  & {\em opcnt1} & celkovy pocet provedenych operaci a cas behu\\
+\hline
+\mbox{\tt out}  & {\em errcode1} & kod pripadnr chyby
+\begin{DoxyItemize}
+\item 0 ... OK
+\item 1 ... matice neni ctvercova
+\item 2 ... nesouhlasi b
+\item 3 ... nesouhasi x
+\item 4 ... ani jeden z vektoru nesouhlasi
+\item 5 ... vycerpan povoleny pocet iteraci
+\item 6 ... prestalo klesat residuum i energie 
+\end{DoxyItemize}\\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 75 of file solver\+\_\+interfaces.\+f90.
+
+
+
+References solvers\+::cg().
+
+
+\begin{DoxyCode}
+75         \textcolor{keywordtype}{use }mtx
+76         \textcolor{keywordtype}{use }typy
+77         \textcolor{keywordtype}{use }sparsematrix
+78         \textcolor{keywordtype}{use }solvers
+79         \textcolor{keywordtype}{implicit none}
+82         \textcolor{keywordtype}{class}(matrix), \textcolor{keywordtype}{intent(in out)} :: a
+84         \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{intent(in)} :: b
+86         \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{intent(in out)} :: x
+88         \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional} :: itmax1
+90         \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional} :: reps1
+95         \textcolor{keywordtype}{integer}, \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional} :: ilev1
+97         \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(out)}, \textcolor{keywordtype}{optional} :: itfin1
+99         \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{intent(out)}, \textcolor{keywordtype}{optional} :: repsfin1
+101         \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{intent(out)}, \textcolor{keywordtype}{optional} :: ll1
+103         \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{intent(out)}, \textcolor{keywordtype}{optional} :: ll2
+105         \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{intent(out)}, \textcolor{keywordtype}{optional} :: cond1
+107         \textcolor{keywordtype}{type}(tcount), \textcolor{keywordtype}{intent(out)}, \textcolor{keywordtype}{optional} :: opcnt1
+116         \textcolor{keywordtype}{integer}, \textcolor{keywordtype}{intent(out)}, \textcolor{keywordtype}{optional} :: errcode1
+117         \textcolor{keywordtype}{integer} :: ilevel
+118 
+119         \textcolor{keywordflow}{if} (.not. \textcolor{keyword}{present}(ilev1) ) \textcolor{keywordflow}{then}
+120           ilevel = 0
+121         \textcolor{keywordflow}{else}
+122           ilevel = ilev1
+123 \textcolor{keywordflow}{        end if}
+124 
+125 
+126         \textcolor{keyword}{call }cg(a=a, b=b,x=x,ilev1=ilevel,itmax1=itmax1,reps1=reps1)
+127 
+128 
+\end{DoxyCode}
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacesolver__interfaces_aeddca7240bf222b090a3b7ae08905998_cgraph}
+\end{center}
+\end{figure}
+
+
+\index{solver\+\_\+interfaces@{solver\+\_\+interfaces}!cg\+\_\+normal\+\_\+face@{cg\+\_\+normal\+\_\+face}}
+\index{cg\+\_\+normal\+\_\+face@{cg\+\_\+normal\+\_\+face}!solver\+\_\+interfaces@{solver\+\_\+interfaces}}
+\subsubsection[{cg\+\_\+normal\+\_\+face(\+A, b, x, itmax1, reps1, ilev1, itfin1, repsfin1, ll1, ll2, cond1, opcnt1, errcode1)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, public solver\+\_\+interfaces\+::cg\+\_\+normal\+\_\+face (
+\begin{DoxyParamCaption}
+\item[{class({\bf matrix}), intent(inout)}]{A, }
+\item[{real(kind=rkind), dimension(\+:), intent(in)}]{b, }
+\item[{real(kind=rkind), dimension(\+:), intent(inout)}]{x, }
+\item[{integer(kind=ikind), intent(in), optional}]{itmax1, }
+\item[{real(kind=rkind), intent(in), optional}]{reps1, }
+\item[{integer, intent(in), optional}]{ilev1, }
+\item[{integer(kind=ikind), intent(out), optional}]{itfin1, }
+\item[{real(kind=rkind), intent(out), optional}]{repsfin1, }
+\item[{real(kind=rkind), intent(out), optional}]{ll1, }
+\item[{real(kind=rkind), intent(out), optional}]{ll2, }
+\item[{real(kind=rkind), intent(out), optional}]{cond1, }
+\item[{type({\bf tcount}), intent(out), optional}]{opcnt1, }
+\item[{integer, intent(out), optional}]{errcode1}
+\end{DoxyParamCaption}
+)}\label{namespacesolver__interfaces_a50cb3e402cf79fcadbc703f40dbda99e}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in,out}  & {\em a} & matice soustavy~\newline
+ musi poskytovat getn, getm, mul (nasobeni vektorem)\\
+\hline
+\mbox{\tt in}  & {\em b} & vektor prave strany\\
+\hline
+\mbox{\tt in,out}  & {\em x} & aproximace reseni, postupne menena\\
+\hline
+\mbox{\tt in}  & {\em itmax1} & maximalni povoleny pocet iteraci, default = n ( Rozmer matice)\\
+\hline
+\mbox{\tt in}  & {\em reps1} & pozadovana relativni zmena rezidua, default = 1e-\/6\\
+\hline
+\mbox{\tt in}  & {\em ilev1} & informacni podrobnost~\newline
+
+\begin{DoxyItemize}
+\item 0 ... pracuj tise
+\item 1 ... minimalni informace
+\item 10 ... maximalni ukecanost
+\end{DoxyItemize}\\
+\hline
+\mbox{\tt out}  & {\em itfin1} & skutecne provedeny pocet iteraci\\
+\hline
+\mbox{\tt out}  & {\em repsfin1} & skutecne dosazena relativni zmena residua\\
+\hline
+\mbox{\tt out}  & {\em ll1} & odhad nejvetsiho vlastniho cisla\\
+\hline
+\mbox{\tt out}  & {\em ll2} & odhad nejmensiho vlastniho cisla\\
+\hline
+\mbox{\tt out}  & {\em cond1} & odhad cisla podminenosti \+: cond1 = ll1/ll2\\
+\hline
+\mbox{\tt out}  & {\em opcnt1} & celkovy pocet provedenych operaci a cas behu\\
+\hline
+\mbox{\tt out}  & {\em errcode1} & kod pripadnr chyby
+\begin{DoxyItemize}
+\item 0 ... OK
+\item 1 ... matice neni ctvercova
+\item 2 ... nesouhlasi b
+\item 3 ... nesouhasi x
+\item 4 ... ani jeden z vektoru nesouhlasi
+\item 5 ... vycerpan povoleny pocet iteraci
+\item 6 ... prestalo klesat residuum i energie 
+\end{DoxyItemize}\\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 135 of file solver\+\_\+interfaces.\+f90.
+
+
+
+References solvers\+::cgnormal().
+
+
+
+Referenced by manage\+\_\+pointers\+::set\+\_\+pointers().
+
+
+\begin{DoxyCode}
+135         \textcolor{keywordtype}{use }mtx
+136         \textcolor{keywordtype}{use }typy
+137         \textcolor{keywordtype}{use }sparsematrix
+138         \textcolor{keywordtype}{use }solvers
+139         \textcolor{keywordtype}{implicit none}
+142         \textcolor{keywordtype}{class}(matrix), \textcolor{keywordtype}{intent(in out)} :: a
+144         \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{intent(in)} :: b
+146         \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{intent(in out)} :: x
+148         \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional} :: itmax1
+150         \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional} :: reps1
+155         \textcolor{keywordtype}{integer}, \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional} :: ilev1
+157         \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(out)}, \textcolor{keywordtype}{optional} :: itfin1
+159         \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{intent(out)}, \textcolor{keywordtype}{optional} :: repsfin1
+161         \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{intent(out)}, \textcolor{keywordtype}{optional} :: ll1
+163         \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{intent(out)}, \textcolor{keywordtype}{optional} :: ll2
+165         \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{intent(out)}, \textcolor{keywordtype}{optional} :: cond1
+167         \textcolor{keywordtype}{type}(tcount), \textcolor{keywordtype}{intent(out)}, \textcolor{keywordtype}{optional} :: opcnt1
+176         \textcolor{keywordtype}{integer}, \textcolor{keywordtype}{intent(out)}, \textcolor{keywordtype}{optional} :: errcode1
+177         \textcolor{keywordtype}{integer} :: ilevel
+178 
+179         \textcolor{keywordflow}{if} (.not. \textcolor{keyword}{present}(ilev1) ) \textcolor{keywordflow}{then}
+180           ilevel = 0
+181         \textcolor{keywordflow}{else}
+182           ilevel = ilev1
+183 \textcolor{keywordflow}{        end if}
+184 
+185 
+186         \textcolor{keyword}{call }cgnormal(a=a, b=b,x=x,ilev1=ilevel,itmax1=itmax1,reps1=reps1, itfin1=itfin1, repsfin1=repsfin1
+      )
+187 
+188 
+\end{DoxyCode}
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=271pt]{namespacesolver__interfaces_a50cb3e402cf79fcadbc703f40dbda99e_cgraph}
+\end{center}
+\end{figure}
+
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacesolver__interfaces_a50cb3e402cf79fcadbc703f40dbda99e_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{solver\+\_\+interfaces@{solver\+\_\+interfaces}!jacobi\+\_\+face@{jacobi\+\_\+face}}
+\index{jacobi\+\_\+face@{jacobi\+\_\+face}!solver\+\_\+interfaces@{solver\+\_\+interfaces}}
+\subsubsection[{jacobi\+\_\+face(\+A, b, x, itmax1, reps1, ilev1, itfin1, repsfin1, ll1, ll2, cond1, opcnt1, errcode1)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, public solver\+\_\+interfaces\+::jacobi\+\_\+face (
+\begin{DoxyParamCaption}
+\item[{class({\bf matrix}), intent(inout)}]{A, }
+\item[{real(kind=rkind), dimension(\+:), intent(in)}]{b, }
+\item[{real(kind=rkind), dimension(\+:), intent(inout)}]{x, }
+\item[{integer(kind=ikind), intent(in), optional}]{itmax1, }
+\item[{real(kind=rkind), intent(in), optional}]{reps1, }
+\item[{integer, intent(in), optional}]{ilev1, }
+\item[{integer(kind=ikind), intent(out), optional}]{itfin1, }
+\item[{real(kind=rkind), intent(out), optional}]{repsfin1, }
+\item[{real(kind=rkind), intent(out), optional}]{ll1, }
+\item[{real(kind=rkind), intent(out), optional}]{ll2, }
+\item[{real(kind=rkind), intent(out), optional}]{cond1, }
+\item[{type({\bf tcount}), intent(out), optional}]{opcnt1, }
+\item[{integer, intent(out), optional}]{errcode1}
+\end{DoxyParamCaption}
+)}\label{namespacesolver__interfaces_a4ba16c58b7f46a46823245234f5667fb}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in,out}  & {\em a} & matice soustavy~\newline
+ musi poskytovat getn, getm, mul (nasobeni vektorem)\\
+\hline
+\mbox{\tt in}  & {\em b} & vektor prave strany\\
+\hline
+\mbox{\tt in,out}  & {\em x} & aproximace reseni, postupne menena\\
+\hline
+\mbox{\tt in}  & {\em itmax1} & maximalni povoleny pocet iteraci, default = n ( Rozmer matice)\\
+\hline
+\mbox{\tt in}  & {\em reps1} & pozadovana relativni zmena rezidua, default = 1e-\/6\\
+\hline
+\mbox{\tt in}  & {\em ilev1} & informacni podrobnost~\newline
+
+\begin{DoxyItemize}
+\item 0 ... pracuj tise
+\item 1 ... minimalni informace
+\item 10 ... maximalni ukecanost
+\end{DoxyItemize}\\
+\hline
+\mbox{\tt out}  & {\em itfin1} & skutecne provedeny pocet iteraci\\
+\hline
+\mbox{\tt out}  & {\em repsfin1} & skutecne dosazena relativni zmena residua\\
+\hline
+\mbox{\tt out}  & {\em ll1} & odhad nejvetsiho vlastniho cisla\\
+\hline
+\mbox{\tt out}  & {\em ll2} & odhad nejmensiho vlastniho cisla\\
+\hline
+\mbox{\tt out}  & {\em cond1} & odhad cisla podminenosti \+: cond1 = ll1/ll2\\
+\hline
+\mbox{\tt out}  & {\em opcnt1} & celkovy pocet provedenych operaci a cas behu\\
+\hline
+\mbox{\tt out}  & {\em errcode1} & kod pripadnr chyby
+\begin{DoxyItemize}
+\item 0 ... OK
+\item 1 ... matice neni ctvercova
+\item 2 ... nesouhlasi b
+\item 3 ... nesouhasi x
+\item 4 ... ani jeden z vektoru nesouhlasi
+\item 5 ... vycerpan povoleny pocet iteraci
+\item 6 ... prestalo klesat residuum i energie 
+\end{DoxyItemize}\\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 194 of file solver\+\_\+interfaces.\+f90.
+
+
+
+References solvers\+::jacobi().
+
+
+\begin{DoxyCode}
+194         \textcolor{keywordtype}{use }mtx
+195         \textcolor{keywordtype}{use }typy
+196         \textcolor{keywordtype}{use }solvers
+197         \textcolor{keywordtype}{implicit none}
+200         \textcolor{keywordtype}{class}(matrix), \textcolor{keywordtype}{intent(in out)} :: a
+202         \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{intent(in)} :: b
+204         \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{intent(in out)} :: x
+206         \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional} :: itmax1
+208         \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional} :: reps1
+213         \textcolor{keywordtype}{integer}, \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional} :: ilev1
+215         \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(out)}, \textcolor{keywordtype}{optional} :: itfin1
+217         \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{intent(out)}, \textcolor{keywordtype}{optional} :: repsfin1
+219         \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{intent(out)}, \textcolor{keywordtype}{optional} :: ll1
+221         \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{intent(out)}, \textcolor{keywordtype}{optional} :: ll2
+223         \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{intent(out)}, \textcolor{keywordtype}{optional} :: cond1
+225         \textcolor{keywordtype}{type}(tcount), \textcolor{keywordtype}{intent(out)}, \textcolor{keywordtype}{optional} :: opcnt1
+234         \textcolor{keywordtype}{integer}, \textcolor{keywordtype}{intent(out)}, \textcolor{keywordtype}{optional} :: errcode1
+235         
+236         \textcolor{keyword}{call }jacobi(a,b,x,itmax1, reps1)
+237 
+\end{DoxyCode}
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacesolver__interfaces_a4ba16c58b7f46a46823245234f5667fb_cgraph}
+\end{center}
+\end{figure}
+
+
+\index{solver\+\_\+interfaces@{solver\+\_\+interfaces}!ldu\+\_\+face@{ldu\+\_\+face}}
+\index{ldu\+\_\+face@{ldu\+\_\+face}!solver\+\_\+interfaces@{solver\+\_\+interfaces}}
+\subsubsection[{ldu\+\_\+face(\+A, b, x, itmax1, reps1, ilev1, itfin1, repsfin1, ll1, ll2, cond1, opcnt1, errcode1)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, public solver\+\_\+interfaces\+::ldu\+\_\+face (
+\begin{DoxyParamCaption}
+\item[{class({\bf matrix}), intent(inout)}]{A, }
+\item[{real(kind=rkind), dimension(\+:), intent(in)}]{b, }
+\item[{real(kind=rkind), dimension(\+:), intent(inout)}]{x, }
+\item[{integer(kind=ikind), intent(in), optional}]{itmax1, }
+\item[{real(kind=rkind), intent(in), optional}]{reps1, }
+\item[{integer, intent(in), optional}]{ilev1, }
+\item[{integer(kind=ikind), intent(out), optional}]{itfin1, }
+\item[{real(kind=rkind), intent(out), optional}]{repsfin1, }
+\item[{real(kind=rkind), intent(out), optional}]{ll1, }
+\item[{real(kind=rkind), intent(out), optional}]{ll2, }
+\item[{real(kind=rkind), intent(out), optional}]{cond1, }
+\item[{type({\bf tcount}), intent(out), optional}]{opcnt1, }
+\item[{integer, intent(out), optional}]{errcode1}
+\end{DoxyParamCaption}
+)}\label{namespacesolver__interfaces_affcc4b462663ec74c63d7318e182ff71}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in,out}  & {\em a} & matice soustavy~\newline
+ musi poskytovat getn, getm, mul (nasobeni vektorem)\\
+\hline
+\mbox{\tt in}  & {\em b} & vektor prave strany\\
+\hline
+\mbox{\tt in,out}  & {\em x} & aproximace reseni, postupne menena\\
+\hline
+\mbox{\tt in}  & {\em itmax1} & maximalni povoleny pocet iteraci, default = n ( Rozmer matice)\\
+\hline
+\mbox{\tt in}  & {\em reps1} & pozadovana relativni zmena rezidua, default = 1e-\/6\\
+\hline
+\mbox{\tt in}  & {\em ilev1} & informacni podrobnost~\newline
+
+\begin{DoxyItemize}
+\item 0 ... pracuj tise
+\item 1 ... minimalni informace
+\item 10 ... maximalni ukecanost
+\end{DoxyItemize}\\
+\hline
+\mbox{\tt out}  & {\em itfin1} & skutecne provedeny pocet iteraci\\
+\hline
+\mbox{\tt out}  & {\em repsfin1} & skutecne dosazena relativni zmena residua\\
+\hline
+\mbox{\tt out}  & {\em ll1} & odhad nejvetsiho vlastniho cisla\\
+\hline
+\mbox{\tt out}  & {\em ll2} & odhad nejmensiho vlastniho cisla\\
+\hline
+\mbox{\tt out}  & {\em cond1} & odhad cisla podminenosti \+: cond1 = ll1/ll2\\
+\hline
+\mbox{\tt out}  & {\em opcnt1} & celkovy pocet provedenych operaci a cas behu\\
+\hline
+\mbox{\tt out}  & {\em errcode1} & kod pripadnr chyby
+\begin{DoxyItemize}
+\item 0 ... OK
+\item 1 ... matice neni ctvercova
+\item 2 ... nesouhlasi b
+\item 3 ... nesouhasi x
+\item 4 ... ani jeden z vektoru nesouhlasi
+\item 5 ... vycerpan povoleny pocet iteraci
+\item 6 ... prestalo klesat residuum i energie 
+\end{DoxyItemize}\\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 12 of file solver\+\_\+interfaces.\+f90.
+
+
+
+References solvers\+::lduback(), and solvers\+::ldud().
+
+
+
+Referenced by manage\+\_\+pointers\+::set\+\_\+pointers().
+
+
+\begin{DoxyCode}
+12         \textcolor{keywordtype}{use }mtx
+13         \textcolor{keywordtype}{use }typy
+14         \textcolor{keywordtype}{use }solvers
+15         \textcolor{keywordtype}{implicit none}
+18         \textcolor{keywordtype}{class}(matrix), \textcolor{keywordtype}{intent(in out)} :: a
+20         \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{intent(in)} :: b
+22         \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{intent(in out)} :: x
+24         \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional} :: itmax1
+26         \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional} :: reps1
+31         \textcolor{keywordtype}{integer}, \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional} :: ilev1
+33         \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(out)}, \textcolor{keywordtype}{optional} :: itfin1
+35         \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{intent(out)}, \textcolor{keywordtype}{optional} :: repsfin1
+37         \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{intent(out)}, \textcolor{keywordtype}{optional} :: ll1
+39         \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{intent(out)}, \textcolor{keywordtype}{optional} :: ll2
+41         \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{intent(out)}, \textcolor{keywordtype}{optional} :: cond1
+43         \textcolor{keywordtype}{type}(tcount), \textcolor{keywordtype}{intent(out)}, \textcolor{keywordtype}{optional} :: opcnt1
+52         \textcolor{keywordtype}{integer}, \textcolor{keywordtype}{intent(out)}, \textcolor{keywordtype}{optional} :: errcode1
+53         
+54         \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable}, \textcolor{keywordtype}{save} :: p1, p2
+55         
+56         
+57         \textcolor{keywordflow}{if} (.not. \textcolor{keyword}{allocated}(p1)) \textcolor{keywordflow}{then}
+58           \textcolor{keyword}{allocate}(p1(ubound(b,1)))
+59           \textcolor{keyword}{allocate}(p2(ubound(b,1)))
+60 \textcolor{keywordflow}{        end if}
+61     
+62          \textcolor{keyword}{call }ldud(a, pivtype=5, ilev=0, perm1=p1, perm2=p2)
+63          
+64          \textcolor{keyword}{call }lduback(a, b, x, p1=p1, p2=p2)
+65          
+66          \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(itfin1)) \textcolor{keywordflow}{then} 
+67            itfin1 = 1
+68 \textcolor{keywordflow}{         end if}
+69 
+\end{DoxyCode}
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacesolver__interfaces_affcc4b462663ec74c63d7318e182ff71_cgraph}
+\end{center}
+\end{figure}
+
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacesolver__interfaces_affcc4b462663ec74c63d7318e182ff71_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{solver\+\_\+interfaces@{solver\+\_\+interfaces}!null\+\_\+problem@{null\+\_\+problem}}
+\index{null\+\_\+problem@{null\+\_\+problem}!solver\+\_\+interfaces@{solver\+\_\+interfaces}}
+\subsubsection[{null\+\_\+problem(\+A, b)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, public solver\+\_\+interfaces\+::null\+\_\+problem (
+\begin{DoxyParamCaption}
+\item[{class({\bf extsmtx}), intent(inout)}]{A, }
+\item[{real(kind=rkind), dimension(\+:), intent(inout), optional}]{b}
+\end{DoxyParamCaption}
+)}\label{namespacesolver__interfaces_abd70a6e039e5f2f62c473d9afbe90cc2}
+
+
+Definition at line 242 of file solver\+\_\+interfaces.\+f90.
+
+
+
+Referenced by femmat\+::assemble\+\_\+mat(), decomposer\+::clear\+\_\+subdomain(), schwarz\+\_\+dd\+::locmat\+\_\+assembler(), and schwarz\+\_\+dd2subcyc\+::locmat\+\_\+assembler().
+
+
+\begin{DoxyCode}
+242       \textcolor{keywordtype}{use }typy
+243       \textcolor{keywordtype}{use }globals
+244       \textcolor{keywordtype}{use }sparsematrix
+245       \textcolor{keywordtype}{class}(extsmtx), \textcolor{keywordtype}{intent(in out)} :: a
+246       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{intent(in out)}, \textcolor{keywordtype}{optional} :: b
+247       \textcolor{keywordtype}{integer(kind=ikind)} :: n\_rows, m\_rows
+248 
+249       
+250       n\_rows = a%getn()
+251       m\_rows = a%getm()
+252    
+253       \textcolor{keyword}{call }a%init(n\_rows,m\_rows)
+254       
+255       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(b)) \textcolor{keywordflow}{then}
+256         b = 0.0\_rkind
+257 \textcolor{keywordflow}{      end if}
+258       
+259       \textcolor{keyword}{call }a%rowsfilled%clear
+260       
+\end{DoxyCode}
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacesolver__interfaces_abd70a6e039e5f2f62c473d9afbe90cc2_icgraph}
+\end{center}
+\end{figure}
+
+

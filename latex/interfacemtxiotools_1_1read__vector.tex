@@ -1,0 +1,140 @@
+\section{mtxiotools\+:\+:read\+\_\+vector Interface Reference}
+\label{interfacemtxiotools_1_1read__vector}\index{mtxiotools\+::read\+\_\+vector@{mtxiotools\+::read\+\_\+vector}}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+subroutine {\bf read\+\_\+vector\+\_\+real} (x, name, fil, ilev, ierr, mode, rlen)
+\begin{DoxyCompactList}\small\item\em precte vektor ze souboru \end{DoxyCompactList}\item 
+subroutine {\bf read\+\_\+vector\+\_\+int} (x, name, fil, ilev, ierr, mode, rlen)
+\begin{DoxyCompactList}\small\item\em precte vektor ze souboru \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+
+
+Definition at line 22 of file mtxiotools.\+f90.
+
+
+
+\subsection{Member Function/\+Subroutine Documentation}
+\index{mtxiotools\+::read\+\_\+vector@{mtxiotools\+::read\+\_\+vector}!read\+\_\+vector\+\_\+int@{read\+\_\+vector\+\_\+int}}
+\index{read\+\_\+vector\+\_\+int@{read\+\_\+vector\+\_\+int}!mtxiotools\+::read\+\_\+vector@{mtxiotools\+::read\+\_\+vector}}
+\subsubsection[{read\+\_\+vector\+\_\+int(x, name, fil, ilev, ierr, mode, rlen)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine mtxiotools\+::read\+\_\+vector\+::read\+\_\+vector\+\_\+int (
+\begin{DoxyParamCaption}
+\item[{integer(kind=ikind), dimension(\+:), intent(inout)}]{x, }
+\item[{character(len=$\ast$), intent(in), optional}]{name, }
+\item[{integer, intent(in), optional}]{fil, }
+\item[{integer, intent(in), optional}]{ilev, }
+\item[{integer, intent(in), optional}]{ierr, }
+\item[{integer, intent(in), optional}]{mode, }
+\item[{integer(kind=ikind), intent(out), optional}]{rlen}
+\end{DoxyParamCaption}
+)}\label{interfacemtxiotools_1_1read__vector_ad8c01181c78e97635bd631a30b5a809f}
+
+
+precte vektor ze souboru 
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in,out}  & {\em x} & vektor\\
+\hline
+\mbox{\tt in}  & {\em name} & jmeno souboru, je-\/li zadano name i fil musi identifikovat totez\\
+\hline
+\mbox{\tt in}  & {\em fil} & identifikator kanalu, je-\/li zadano name i fil musi identifikovat totez\\
+\hline
+\mbox{\tt in}  & {\em ilev} & stupen podrobnosti informaci\\
+\hline
+\mbox{\tt in}  & {\em ierr} & chybovy kod\\
+\hline
+\mbox{\tt in}  & {\em mode} & operacni mod
+\begin{DoxyItemize}
+\item 0 ... tise a v pripade problemu je ignoruj a zapis hlasku do ierr
+\item 1 ... problem se soubory znamena interaktivni dotaz
+\item 2 ... problem se soubory -\/ uprednostni fil a pripadne zhavaruj
+\item 3 ... problem se soubory -\/ uprednostni name a pripadne zhavaruj
+\item 4 ... problem se soubory -\/ zhavaruj
+\end{DoxyItemize}\\
+\hline
+\mbox{\tt out}  & {\em rlen} & skutecna delka dat pokud delka vektoru a dat nesouhlasi a rlen neni zadano, dojde k ukonceni \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 178 of file mtxiotools.\+f90.
+
+
+\begin{DoxyCode}
+178         \textcolor{keywordtype}{use }typy
+179         \textcolor{keywordtype}{use }mtx
+180         \textcolor{keywordtype}{implicit none}
+182         \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{intent(inout)} :: x
+184         \textcolor{keywordtype}{character(len=*)}, \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional} ::name
+186         \textcolor{keywordtype}{integer}, \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional} :: fil
+188         \textcolor{keywordtype}{integer}, \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional} :: ilev
+190         \textcolor{keywordtype}{integer}, \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional} :: ierr
+198         \textcolor{keywordtype}{integer}, \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional} :: mode
+202         \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(out)}, \textcolor{keywordtype}{optional} :: rlen
+\end{DoxyCode}
+\index{mtxiotools\+::read\+\_\+vector@{mtxiotools\+::read\+\_\+vector}!read\+\_\+vector\+\_\+real@{read\+\_\+vector\+\_\+real}}
+\index{read\+\_\+vector\+\_\+real@{read\+\_\+vector\+\_\+real}!mtxiotools\+::read\+\_\+vector@{mtxiotools\+::read\+\_\+vector}}
+\subsubsection[{read\+\_\+vector\+\_\+real(x, name, fil, ilev, ierr, mode, rlen)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine mtxiotools\+::read\+\_\+vector\+::read\+\_\+vector\+\_\+real (
+\begin{DoxyParamCaption}
+\item[{real(kind=rkind), dimension(\+:), intent(inout)}]{x, }
+\item[{character(len=$\ast$), intent(in), optional}]{name, }
+\item[{integer, intent(in), optional}]{fil, }
+\item[{integer, intent(in), optional}]{ilev, }
+\item[{integer, intent(in), optional}]{ierr, }
+\item[{integer, intent(in), optional}]{mode, }
+\item[{integer(kind=ikind), intent(out), optional}]{rlen}
+\end{DoxyParamCaption}
+)}\label{interfacemtxiotools_1_1read__vector_afae711dcc13e253bcc12ea6442a752d8}
+
+
+precte vektor ze souboru 
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in,out}  & {\em x} & vektor\\
+\hline
+\mbox{\tt in}  & {\em name} & jmeno souboru, je-\/li zadano name i fil musi identifikovat totez\\
+\hline
+\mbox{\tt in}  & {\em fil} & identifikator kanalu, je-\/li zadano name i fil musi identifikovat totez\\
+\hline
+\mbox{\tt in}  & {\em ilev} & stupen podrobnosti informaci\\
+\hline
+\mbox{\tt in}  & {\em ierr} & chybovy kod\\
+\hline
+\mbox{\tt in}  & {\em mode} & operacni mod
+\begin{DoxyItemize}
+\item 0 ... tise a v pripade problemu je ignoruj a zapis hlasku do ierr
+\item 1 ... problem se soubory znamena interaktivni dotaz
+\item 2 ... problem se soubory -\/ uprednostni fil a pripadne zhavaruj
+\item 3 ... problem se soubory -\/ uprednostni name a pripadne zhavaruj
+\item 4 ... problem se soubory -\/ zhavaruj
+\end{DoxyItemize}\\
+\hline
+\mbox{\tt out}  & {\em rlen} & skutecna delka dat pokud delka vektoru a dat nesouhlasi a rlen neni zadano, dojde k ukonceni \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 124 of file mtxiotools.\+f90.
+
+
+\begin{DoxyCode}
+124         \textcolor{keywordtype}{use }typy
+125         \textcolor{keywordtype}{use }mtx
+126         \textcolor{keywordtype}{implicit none}
+128         \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{intent(inout)} :: x
+130         \textcolor{keywordtype}{character(len=*)}, \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional} ::name
+132         \textcolor{keywordtype}{integer}, \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional} :: fil
+134         \textcolor{keywordtype}{integer}, \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional} :: ilev
+136         \textcolor{keywordtype}{integer}, \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional} :: ierr
+144         \textcolor{keywordtype}{integer}, \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional} :: mode
+148         \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(out)}, \textcolor{keywordtype}{optional} :: rlen
+\end{DoxyCode}
+
+
+The documentation for this interface was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+src/pma++/{\bf mtxiotools.\+f90}\end{DoxyCompactItemize}

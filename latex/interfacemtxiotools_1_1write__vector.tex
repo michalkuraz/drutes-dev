@@ -1,0 +1,135 @@
+\section{mtxiotools\+:\+:write\+\_\+vector Interface Reference}
+\label{interfacemtxiotools_1_1write__vector}\index{mtxiotools\+::write\+\_\+vector@{mtxiotools\+::write\+\_\+vector}}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+subroutine {\bf write\+\_\+vector\+\_\+real} (x, name, fil, ilev, ierr, mode)
+\begin{DoxyCompactList}\small\item\em zapise vektor do souboru \end{DoxyCompactList}\item 
+subroutine {\bf write\+\_\+vector\+\_\+int} (x, name, fil, ilev, ierr, mode)
+\begin{DoxyCompactList}\small\item\em zapise vektor do souboru \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+
+
+Definition at line 27 of file mtxiotools.\+f90.
+
+
+
+\subsection{Member Function/\+Subroutine Documentation}
+\index{mtxiotools\+::write\+\_\+vector@{mtxiotools\+::write\+\_\+vector}!write\+\_\+vector\+\_\+int@{write\+\_\+vector\+\_\+int}}
+\index{write\+\_\+vector\+\_\+int@{write\+\_\+vector\+\_\+int}!mtxiotools\+::write\+\_\+vector@{mtxiotools\+::write\+\_\+vector}}
+\subsubsection[{write\+\_\+vector\+\_\+int(x, name, fil, ilev, ierr, mode)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine mtxiotools\+::write\+\_\+vector\+::write\+\_\+vector\+\_\+int (
+\begin{DoxyParamCaption}
+\item[{integer(kind=ikind), dimension(\+:), intent(in)}]{x, }
+\item[{character(len=$\ast$), intent(in), optional}]{name, }
+\item[{integer, intent(in), optional}]{fil, }
+\item[{integer, intent(in), optional}]{ilev, }
+\item[{integer, intent(in), optional}]{ierr, }
+\item[{integer, intent(in), optional}]{mode}
+\end{DoxyParamCaption}
+)}\label{interfacemtxiotools_1_1write__vector_ae0d6398cec348113b401811d6a0c90d7}
+
+
+zapise vektor do souboru 
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em x} & vektor\\
+\hline
+\mbox{\tt in}  & {\em name} & jmeno souboru, je-\/li zadano name i fil musi identifikovat totez\\
+\hline
+\mbox{\tt in}  & {\em fil} & identifikator kanalu, je-\/li zadano name i fil musi identifikovat totez\\
+\hline
+\mbox{\tt in}  & {\em ilev} & stupen podrobnosti informaci\\
+\hline
+\mbox{\tt in}  & {\em ierr} & chybovy kod\\
+\hline
+\mbox{\tt in}  & {\em mode} & operacni mod
+\begin{DoxyItemize}
+\item 0 ... tise a v pripade problemu je ignoruj a zapis hlasku do ierr
+\item 1 ... problem se soubory znamena interaktivni dotaz
+\item 2 ... problem se soubory -\/ uprednostni fil a pripadne zhavaruj
+\item 3 ... problem se soubory -\/ uprednostni name a pripadne zhavaruj
+\item 4 ... problem se soubory -\/ zhavaruj 
+\end{DoxyItemize}\\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 207 of file mtxiotools.\+f90.
+
+
+\begin{DoxyCode}
+207         \textcolor{keywordtype}{use }typy
+208         \textcolor{keywordtype}{use }mtx
+209         \textcolor{keywordtype}{use }pmatools
+210         \textcolor{keywordtype}{implicit none}
+212         \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{intent(in)} :: x
+214         \textcolor{keywordtype}{character(len=*)}, \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional} ::name
+216         \textcolor{keywordtype}{integer}, \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional} :: fil
+218         \textcolor{keywordtype}{integer}, \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional} :: ilev
+220         \textcolor{keywordtype}{integer}, \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional} :: ierr
+228         \textcolor{keywordtype}{integer}, \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional} :: mode
+229 
+230         \textcolor{comment}{!call safe\_open\_write(name1,fil1,mode1)}
+\end{DoxyCode}
+\index{mtxiotools\+::write\+\_\+vector@{mtxiotools\+::write\+\_\+vector}!write\+\_\+vector\+\_\+real@{write\+\_\+vector\+\_\+real}}
+\index{write\+\_\+vector\+\_\+real@{write\+\_\+vector\+\_\+real}!mtxiotools\+::write\+\_\+vector@{mtxiotools\+::write\+\_\+vector}}
+\subsubsection[{write\+\_\+vector\+\_\+real(x, name, fil, ilev, ierr, mode)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine mtxiotools\+::write\+\_\+vector\+::write\+\_\+vector\+\_\+real (
+\begin{DoxyParamCaption}
+\item[{real(kind=rkind), dimension(\+:), intent(in)}]{x, }
+\item[{character(len=$\ast$), intent(in), optional}]{name, }
+\item[{integer, intent(in), optional}]{fil, }
+\item[{integer, intent(in), optional}]{ilev, }
+\item[{integer, intent(in), optional}]{ierr, }
+\item[{integer, intent(in), optional}]{mode}
+\end{DoxyParamCaption}
+)}\label{interfacemtxiotools_1_1write__vector_a290bee6760f7f8e99acca56623d9742a}
+
+
+zapise vektor do souboru 
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em x} & vektor\\
+\hline
+\mbox{\tt in}  & {\em name} & jmeno souboru, je-\/li zadano name i fil musi identifikovat totez\\
+\hline
+\mbox{\tt in}  & {\em fil} & identifikator kanalu, je-\/li zadano name i fil musi identifikovat totez\\
+\hline
+\mbox{\tt in}  & {\em ilev} & stupen podrobnosti informaci\\
+\hline
+\mbox{\tt in}  & {\em ierr} & chybovy kod\\
+\hline
+\mbox{\tt in}  & {\em mode} & operacni mod
+\begin{DoxyItemize}
+\item 0 ... tise a v pripade problemu je ignoruj a zapis hlasku do ierr
+\item 1 ... problem se soubory znamena interaktivni dotaz
+\item 2 ... problem se soubory -\/ uprednostni fil a pripadne zhavaruj
+\item 3 ... problem se soubory -\/ uprednostni name a pripadne zhavaruj
+\item 4 ... problem se soubory -\/ zhavaruj 
+\end{DoxyItemize}\\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 153 of file mtxiotools.\+f90.
+
+
+\begin{DoxyCode}
+153         \textcolor{keywordtype}{use }typy
+154         \textcolor{keywordtype}{use }mtx
+155         \textcolor{keywordtype}{implicit none}
+157         \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{intent(in)} :: x
+159         \textcolor{keywordtype}{character(len=*)}, \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional} ::name
+161         \textcolor{keywordtype}{integer}, \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional} :: fil
+163         \textcolor{keywordtype}{integer}, \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional} :: ilev
+165         \textcolor{keywordtype}{integer}, \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional} :: ierr
+173         \textcolor{keywordtype}{integer}, \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional} :: mode
+\end{DoxyCode}
+
+
+The documentation for this interface was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+src/pma++/{\bf mtxiotools.\+f90}\end{DoxyCompactItemize}

@@ -1,0 +1,148 @@
+\section{re\+\_\+globals Module Reference}
+\label{namespacere__globals}\index{re\+\_\+globals@{re\+\_\+globals}}
+\subsection*{Data Types}
+\begin{DoxyCompactItemize}
+\item 
+type {\bf rcza}
+\begin{DoxyCompactList}\small\item\em rcza structure \end{DoxyCompactList}\item 
+type {\bf soilpar}
+\end{DoxyCompactItemize}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+type({\bf soilpar}), dimension(\+:), allocatable, target, public {\bf vgmatrix}
+\begin{DoxyCompactList}\small\item\em soil and layer parameters \end{DoxyCompactList}\item 
+integer(kind=ikind), public {\bf retc\+\_\+method}
+\begin{DoxyCompactList}\small\item\em formula of the retention curve \end{DoxyCompactList}\item 
+real(kind=rkind), dimension(\+:,\+:), allocatable, public {\bf dual\+\_\+prop}
+\begin{DoxyCompactList}\small\item\em an array with values of dual richards equation coupling term and the fast domain ratio dual\+\_\+prop(i,1) = layer i, parameter\+: omega\+\_\+f ~\newline
+ dual\+\_\+prop(i,2) = layer i, parameter\+: \end{DoxyCompactList}\item 
+type({\bf soilpar}), dimension(\+:), allocatable, target, public {\bf vgfractures}
+\begin{DoxyCompactList}\small\item\em soil and layer parameters \end{DoxyCompactList}\item 
+integer(kind=ikind), public {\bf retc\+\_\+method\+\_\+f}
+\begin{DoxyCompactList}\small\item\em formula of the retention curve \end{DoxyCompactList}\item 
+type({\bf soilpar}), dimension(\+:), pointer, public {\bf vgset}
+\begin{DoxyCompactList}\small\item\em depending on current domain, this pointer is pointed to current parameters as if (domain == matrix) vgset =$>$ vgmatrix if (domain == fractures) vgset =$>$ vgfractures \end{DoxyCompactList}\item 
+integer, public {\bf file\+\_\+waterm}
+\end{DoxyCompactItemize}
+
+
+\subsection{Variable Documentation}
+\index{re\+\_\+globals@{re\+\_\+globals}!dual\+\_\+prop@{dual\+\_\+prop}}
+\index{dual\+\_\+prop@{dual\+\_\+prop}!re\+\_\+globals@{re\+\_\+globals}}
+\subsubsection[{dual\+\_\+prop}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind), dimension(\+:,\+:), allocatable, public re\+\_\+globals\+::dual\+\_\+prop}\label{namespacere__globals_a81b64a1b388cc6d0d607c6d4b982388a}
+
+
+an array with values of dual richards equation coupling term and the fast domain ratio dual\+\_\+prop(i,1) = layer i, parameter\+: omega\+\_\+f ~\newline
+ dual\+\_\+prop(i,2) = layer i, parameter\+: 
+
+
+
+Definition at line 46 of file re\+\_\+globals.\+f90.
+
+
+\begin{DoxyCode}
+46   \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:,:)}, \textcolor{keywordtype}{allocatable}, \textcolor{keywordtype}{public} :: dual_prop
+\end{DoxyCode}
+\index{re\+\_\+globals@{re\+\_\+globals}!file\+\_\+waterm@{file\+\_\+waterm}}
+\index{file\+\_\+waterm@{file\+\_\+waterm}!re\+\_\+globals@{re\+\_\+globals}}
+\subsubsection[{file\+\_\+waterm}]{\setlength{\rightskip}{0pt plus 5cm}integer, public re\+\_\+globals\+::file\+\_\+waterm}\label{namespacere__globals_a130d2d25b205b284dba8dc59cf47d6ba}
+
+
+Definition at line 57 of file re\+\_\+globals.\+f90.
+
+
+
+Referenced by re\+\_\+reader\+::res\+\_\+read().
+
+
+\begin{DoxyCode}
+57    \textcolor{keywordtype}{integer}, \textcolor{keywordtype}{public} :: file_waterm
+\end{DoxyCode}
+\index{re\+\_\+globals@{re\+\_\+globals}!retc\+\_\+method@{retc\+\_\+method}}
+\index{retc\+\_\+method@{retc\+\_\+method}!re\+\_\+globals@{re\+\_\+globals}}
+\subsubsection[{retc\+\_\+method}]{\setlength{\rightskip}{0pt plus 5cm}integer(kind=ikind), public re\+\_\+globals\+::retc\+\_\+method}\label{namespacere__globals_a8e3cdee0b30d0ad78b779f6f1bc42328}
+
+
+formula of the retention curve 
+
+
+
+Definition at line 35 of file re\+\_\+globals.\+f90.
+
+
+\begin{DoxyCode}
+35   \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{public} :: retc_method
+\end{DoxyCode}
+\index{re\+\_\+globals@{re\+\_\+globals}!retc\+\_\+method\+\_\+f@{retc\+\_\+method\+\_\+f}}
+\index{retc\+\_\+method\+\_\+f@{retc\+\_\+method\+\_\+f}!re\+\_\+globals@{re\+\_\+globals}}
+\subsubsection[{retc\+\_\+method\+\_\+f}]{\setlength{\rightskip}{0pt plus 5cm}integer(kind=ikind), public re\+\_\+globals\+::retc\+\_\+method\+\_\+f}\label{namespacere__globals_adf6e9e681d9d10303a07fd39ad02d5bd}
+
+
+formula of the retention curve 
+
+
+
+Definition at line 50 of file re\+\_\+globals.\+f90.
+
+
+\begin{DoxyCode}
+50   \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{public} :: retc_method_f
+\end{DoxyCode}
+\index{re\+\_\+globals@{re\+\_\+globals}!vgfractures@{vgfractures}}
+\index{vgfractures@{vgfractures}!re\+\_\+globals@{re\+\_\+globals}}
+\subsubsection[{vgfractures}]{\setlength{\rightskip}{0pt plus 5cm}type({\bf soilpar}), dimension(\+:), allocatable, target, public re\+\_\+globals\+::vgfractures}\label{namespacere__globals_ad6f10c7933dfd444cdff9577510ed21b}
+
+
+soil and layer parameters 
+
+
+
+Definition at line 48 of file re\+\_\+globals.\+f90.
+
+
+
+Referenced by re\+\_\+constitutive\+::domainswitch().
+
+
+\begin{DoxyCode}
+48   \textcolor{keywordtype}{type}(soilpar), \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable}, \textcolor{keywordtype}{target}, \textcolor{keywordtype}{public} :: vgfractures
+\end{DoxyCode}
+\index{re\+\_\+globals@{re\+\_\+globals}!vgmatrix@{vgmatrix}}
+\index{vgmatrix@{vgmatrix}!re\+\_\+globals@{re\+\_\+globals}}
+\subsubsection[{vgmatrix}]{\setlength{\rightskip}{0pt plus 5cm}type({\bf soilpar}), dimension(\+:), allocatable, target, public re\+\_\+globals\+::vgmatrix}\label{namespacere__globals_ac218648bc51273025654afb2c7dbdc78}
+
+
+soil and layer parameters 
+
+
+
+Definition at line 33 of file re\+\_\+globals.\+f90.
+
+
+
+Referenced by re\+\_\+pointers\+::allrepointers(), re\+\_\+constitutive\+::domainswitch(), re\+\_\+reader\+::res\+\_\+read(), and re\+\_\+constitutive\+::tabvalues().
+
+
+\begin{DoxyCode}
+33   \textcolor{keywordtype}{type}(soilpar), \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable}, \textcolor{keywordtype}{target}, \textcolor{keywordtype}{public} :: vgmatrix
+\end{DoxyCode}
+\index{re\+\_\+globals@{re\+\_\+globals}!vgset@{vgset}}
+\index{vgset@{vgset}!re\+\_\+globals@{re\+\_\+globals}}
+\subsubsection[{vgset}]{\setlength{\rightskip}{0pt plus 5cm}type({\bf soilpar}), dimension(\+:), pointer, public re\+\_\+globals\+::vgset}\label{namespacere__globals_a8282c0352c56a66d819c88b9a4a84c34}
+
+
+depending on current domain, this pointer is pointed to current parameters as if (domain == matrix) vgset =$>$ vgmatrix if (domain == fractures) vgset =$>$ vgfractures 
+
+
+
+Definition at line 55 of file re\+\_\+globals.\+f90.
+
+
+
+Referenced by ade\+\_\+fnc\+::adedispersion(), re\+\_\+constitutive\+::dmualem\+\_\+dh(), re\+\_\+constitutive\+::dmualem\+\_\+dh\+\_\+tab(), re\+\_\+constitutive\+::domainswitch(), re\+\_\+constitutive\+::gardner\+\_\+elast(), re\+\_\+constitutive\+::gardner\+\_\+ks(), re\+\_\+constitutive\+::gardner\+\_\+wc(), re\+\_\+total\+::getval\+\_\+retot(), re\+\_\+constitutive\+::init\+\_\+zones(), re\+\_\+constitutive\+::inverse\+\_\+vangen(), re\+\_\+constitutive\+::mualem(), re\+\_\+constitutive\+::mualem\+\_\+tab(), re\+\_\+constitutive\+::rcza\+\_\+check(), re\+\_\+constitutive\+::rcza\+\_\+check\+\_\+old(), re\+\_\+constitutive\+::re\+\_\+initcond(), re\+\_\+total\+::retot\+\_\+initcond(), re\+\_\+constitutive\+::secondder\+\_\+retc(), re\+\_\+constitutive\+::sinkterm(), re\+\_\+constitutive\+::tabvalues(), re\+\_\+analytical\+::tracy\+\_\+bc(), re\+\_\+constitutive\+::vangen(), re\+\_\+constitutive\+::vangen\+\_\+elast(), re\+\_\+constitutive\+::vangen\+\_\+elast\+\_\+tab(), and re\+\_\+constitutive\+::vangen\+\_\+tab().
+
+
+\begin{DoxyCode}
+55    \textcolor{keywordtype}{type}(soilpar), \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{pointer}, \textcolor{keywordtype}{public} :: vgset
+\end{DoxyCode}

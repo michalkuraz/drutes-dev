@@ -1,0 +1,730 @@
+\section{schwarz\+\_\+dd Module Reference}
+\label{namespaceschwarz__dd}\index{schwarz\+\_\+dd@{schwarz\+\_\+dd}}
+\subsection*{Functions/\+Subroutines}
+\begin{DoxyCompactItemize}
+\item 
+subroutine, public {\bf schwarz\+\_\+picard} (ierr, itcount, success)
+\begin{DoxyCompactList}\small\item\em solves the problem using Picard method with Schwarz multiplicative domain decomposition reflecting the nonlinear problem \end{DoxyCompactList}\item 
+subroutine, private {\bf build\+\_\+xvect} ()
+\item 
+subroutine, private {\bf search\+\_\+error\+\_\+cluster} (sub, itcount)
+\item 
+subroutine, private {\bf results\+\_\+extractor} ()
+\item 
+integer(kind=ikind) function, private {\bf domains\+\_\+solved} ()
+\begin{DoxyCompactList}\small\item\em counts number of solved subdomains \end{DoxyCompactList}\item 
+integer(kind=ikind) function {\bf ndofs\+\_\+solved} ()
+\begin{DoxyCompactList}\small\item\em counts number of solved subdomains \end{DoxyCompactList}\item 
+subroutine, private {\bf locmat\+\_\+assembler} (domain, ierr, kde)
+\end{DoxyCompactItemize}
+
+
+\subsection{Function/\+Subroutine Documentation}
+\index{schwarz\+\_\+dd@{schwarz\+\_\+dd}!build\+\_\+xvect@{build\+\_\+xvect}}
+\index{build\+\_\+xvect@{build\+\_\+xvect}!schwarz\+\_\+dd@{schwarz\+\_\+dd}}
+\subsubsection[{build\+\_\+xvect()}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, private schwarz\+\_\+dd\+::build\+\_\+xvect (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [private]}}\label{namespaceschwarz__dd_a88d6b767a669a2fefeed3e3409c4a861}
+
+
+Definition at line 255 of file schwarz\+\_\+dd.\+f90.
+
+
+
+References pde\+\_\+objs\+::pde\+\_\+common, decomp\+\_\+vars\+::prolong\+\_\+mtx, and decomp\+\_\+vars\+::subdomain.
+
+
+
+Referenced by schwarz\+\_\+picard(), and subcycling\+::subcyc\+\_\+schwarz().
+
+
+\begin{DoxyCode}
+255         \textcolor{keywordtype}{use }typy
+256         \textcolor{keywordtype}{use }globals
+257         \textcolor{keywordtype}{use }global_objs
+258         \textcolor{keywordtype}{use }pde_objs
+259         \textcolor{keywordtype}{use }decomp_vars
+260         \textcolor{keywordtype}{use }debug_tools
+261         
+262         \textcolor{keywordtype}{integer(kind=ikind)} :: i, glob, loc, subcrit
+263 
+264 
+265         pde_common%xvect(:,2:3) = 0.0\_rkind
+266         
+267         
+268         \textcolor{keywordflow}{do} i = 1, ubound(subdomain,1)
+269           \textcolor{keywordflow}{do} loc = 1, subdomain(i)%ndof
+270             glob =  subdomain(i)%permut(loc)
+271             pde_common%xvect(glob,2:3) = pde_common%xvect(glob,2:3) + subdomain(i)%xvect(loc,2:3)*
+      prolong_mtx%get(glob,i)
+272 \textcolor{keywordflow}{          end do}
+273 \textcolor{keywordflow}{        end do}
+274         
+275 
+\end{DoxyCode}
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespaceschwarz__dd_a88d6b767a669a2fefeed3e3409c4a861_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{schwarz\+\_\+dd@{schwarz\+\_\+dd}!domains\+\_\+solved@{domains\+\_\+solved}}
+\index{domains\+\_\+solved@{domains\+\_\+solved}!schwarz\+\_\+dd@{schwarz\+\_\+dd}}
+\subsubsection[{domains\+\_\+solved()}]{\setlength{\rightskip}{0pt plus 5cm}integer(kind=ikind) function, private schwarz\+\_\+dd\+::domains\+\_\+solved (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [private]}}\label{namespaceschwarz__dd_a474f0f5db10187f0762f91d2afbcf5da}
+
+
+counts number of solved subdomains 
+
+
+
+Definition at line 348 of file schwarz\+\_\+dd.\+f90.
+
+
+
+References decomp\+\_\+vars\+::subdomain.
+
+
+
+Referenced by schwarz\+\_\+picard(), and subcycling\+::subcyc\+\_\+schwarz().
+
+
+\begin{DoxyCode}
+348         \textcolor{keywordtype}{use }typy
+349         \textcolor{keywordtype}{use }globals
+350         \textcolor{keywordtype}{use }global_objs
+351         \textcolor{keywordtype}{use }decomp_vars
+352         
+353         \textcolor{keywordtype}{integer(kind=ikind)} :: no
+354 
+355         \textcolor{keywordtype}{integer(kind=ikind)} :: i
+356 
+357         no = 0
+358 
+359         \textcolor{keywordflow}{do} i=1, ubound(subdomain,1)
+360           \textcolor{keywordflow}{if} (subdomain(i)%solved) \textcolor{keywordflow}{then}
+361             no = no + 1
+362 \textcolor{keywordflow}{          end if}
+363 \textcolor{keywordflow}{        end do}
+364 
+\end{DoxyCode}
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespaceschwarz__dd_a474f0f5db10187f0762f91d2afbcf5da_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{schwarz\+\_\+dd@{schwarz\+\_\+dd}!locmat\+\_\+assembler@{locmat\+\_\+assembler}}
+\index{locmat\+\_\+assembler@{locmat\+\_\+assembler}!schwarz\+\_\+dd@{schwarz\+\_\+dd}}
+\subsubsection[{locmat\+\_\+assembler(domain, ierr, kde)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, private schwarz\+\_\+dd\+::locmat\+\_\+assembler (
+\begin{DoxyParamCaption}
+\item[{type({\bf subdomain\+\_\+str}), intent(inout)}]{domain, }
+\item[{integer, intent(out)}]{ierr, }
+\item[{integer(kind=ikind), intent(in)}]{kde}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [private]}}\label{namespaceschwarz__dd_a153ede1ee63fff0d346fe7699b46f76a}
+
+
+Definition at line 389 of file schwarz\+\_\+dd.\+f90.
+
+
+
+References stiffmat\+::build\+\_\+bvect(), stiffmat\+::build\+\_\+stiff\+\_\+np(), globals\+::cap\+\_\+mat, globals\+::elements, globals\+::elnode\+\_\+prev, fem\+\_\+tools\+::in2global(), globals\+::nodes, solver\+\_\+interfaces\+::null\+\_\+problem(), pde\+\_\+objs\+::pde, pde\+\_\+objs\+::pde\+\_\+common, and globals\+::stiff\+\_\+mat.
+
+
+
+Referenced by schwarz\+\_\+picard(), schwarz\+\_\+dd\+\_\+time\+\_\+test\+::schwarzloc(), and subcycling\+::subcyc\+\_\+schwarz().
+
+
+\begin{DoxyCode}
+389       \textcolor{keywordtype}{use }typy
+390       \textcolor{keywordtype}{use }globals
+391       \textcolor{keywordtype}{use }global_objs
+392       \textcolor{keywordtype}{use }pde_objs
+393       \textcolor{keywordtype}{use }capmat
+394       \textcolor{keywordtype}{use }stiffmat
+395       \textcolor{keywordtype}{use }feminittools
+396       \textcolor{keywordtype}{use }geom_tools
+397       \textcolor{keywordtype}{use }fem_tools
+398       \textcolor{keywordtype}{use }re_constitutive
+399       \textcolor{keywordtype}{use }linalg
+400       \textcolor{keywordtype}{use }solver_interfaces
+401       \textcolor{keywordtype}{use }debug_tools     
+402       \textcolor{keywordtype}{use }decomp_vars
+403       
+404       \textcolor{keywordtype}{type}(subdomain_str), \textcolor{keywordtype}{intent(in out)} :: domain 
+405       \textcolor{keywordtype}{integer}, \textcolor{keywordtype}{intent(out)} :: ierr
+406       \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(in)} :: kde
+407       \textcolor{keywordtype}{integer(kind=ikind)} :: el,j,k,l, proc, ll, limits, nd, ii, pnd, jaj\textcolor{comment}{, joj}
+408 \textcolor{comment}{      }\textcolor{keywordtype}{logical}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable}, \textcolor{keywordtype}{save} :: elsolved
+409       \textcolor{keywordtype}{type}(integpnt_str) :: quadpnt
+410       \textcolor{keywordtype}{real(kind=rkind)} :: value
+411 
+412       
+413       \textcolor{keywordflow}{if} (.not. \textcolor{keyword}{allocated}(elsolved)) \textcolor{keywordflow}{then}
+414         \textcolor{keyword}{allocate}(elsolved(elements%kolik))
+415 \textcolor{keywordflow}{      end if}
+416       
+417       
+418       \textcolor{keyword}{call }null_problem(domain%matrix, domain%bvect)
+419 
+420       
+421       elsolved = .false. 
+422       
+423 \textcolor{comment}{!       limits = ubound(stiff\_mat,1)/ubound(pde,1)}
+424       
+425       proc = 1
+426 
+427       loop\_nodes: \textcolor{keywordflow}{do} pnd=1, ubound(domain%permut,1)
+428 
+429                       \textcolor{keywordflow}{if} (domain%permut(pnd) == 0) \textcolor{keywordflow}{then}
+430                         \textcolor{keywordflow}{EXIT} loop\_nodes
+431 \textcolor{keywordflow}{                      end if}
+432 
+433                       nd = domain%permut(pnd)
+434 
+435                       nd = pde_common%invpermut(nd)
+436 
+437 
+438                       \textcolor{keywordflow}{do} ii=1,nodes%el2integ(nd)%pos
+439 
+440                         el = nodes%el2integ(nd)%data(ii)
+441 
+442                         \textcolor{keywordflow}{if} (.not. elsolved(el)) \textcolor{keywordflow}{then}
+443 
+444                           quadpnt%type\_pnt = \textcolor{stringliteral}{"ndpt"}
+445                           quadpnt%column = 1                      
+446                           \textcolor{keywordflow}{do} k = 1, ubound(elements%data,2)                           
+447                             quadpnt%order = elements%data(el,k)
+448                             elnode_prev(k) = pde(1)%getval(quadpnt)
+449 \textcolor{keywordflow}{                          end do}  
+450 
+451                           
+452                           
+453                           \textcolor{keyword}{call }build_bvect(el, domain%time\_step)
+454 
+455                           \textcolor{keyword}{call }build_stiff_np(el, domain%time\_step)
+456 
+457                           \textcolor{keyword}{call }pde_common%time\_integ(el)
+458 
+459                           stiff_mat = stiff_mat + cap_mat
+460 
+461                           \textcolor{keyword}{call }in2global(el,domain%matrix, domain%bvect,\textcolor{comment}{ domain%invpermut)}
+462 \textcolor{comment}{                          }
+463 \textcolor{comment}{                          elsolved(el) = .true.}
+464 \textcolor{comment}{}\textcolor{keywordflow}{                        end if}
+465 \textcolor{keywordflow}{                      end do}
+466 \textcolor{keywordflow}{      end do} loop\_nodes
+467 
+\end{DoxyCode}
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=297pt]{namespaceschwarz__dd_a153ede1ee63fff0d346fe7699b46f76a_cgraph}
+\end{center}
+\end{figure}
+
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespaceschwarz__dd_a153ede1ee63fff0d346fe7699b46f76a_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{schwarz\+\_\+dd@{schwarz\+\_\+dd}!ndofs\+\_\+solved@{ndofs\+\_\+solved}}
+\index{ndofs\+\_\+solved@{ndofs\+\_\+solved}!schwarz\+\_\+dd@{schwarz\+\_\+dd}}
+\subsubsection[{ndofs\+\_\+solved()}]{\setlength{\rightskip}{0pt plus 5cm}integer(kind=ikind) function schwarz\+\_\+dd\+::ndofs\+\_\+solved (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}\label{namespaceschwarz__dd_aab12e9b58c489ca7ab88b9ce58777a6b}
+
+
+counts number of solved subdomains 
+
+
+
+Definition at line 369 of file schwarz\+\_\+dd.\+f90.
+
+
+
+References decomp\+\_\+vars\+::subdomain.
+
+
+
+Referenced by schwarz\+\_\+picard().
+
+
+\begin{DoxyCode}
+369         \textcolor{keywordtype}{use }typy
+370         \textcolor{keywordtype}{use }globals
+371         \textcolor{keywordtype}{use }global_objs
+372         \textcolor{keywordtype}{use }decomp_vars
+373         
+374         \textcolor{keywordtype}{integer(kind=ikind)} :: no
+375 
+376         \textcolor{keywordtype}{integer(kind=ikind)} :: i
+377 
+378         no = 0
+379 
+380         \textcolor{keywordflow}{do} i=1, ubound(subdomain,1)
+381           \textcolor{keywordflow}{if} (subdomain(i)%solved) \textcolor{keywordflow}{then}
+382             no = no + subdomain(i)%ndof
+383 \textcolor{keywordflow}{          end if}
+384 \textcolor{keywordflow}{        end do}
+385 
+\end{DoxyCode}
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespaceschwarz__dd_aab12e9b58c489ca7ab88b9ce58777a6b_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{schwarz\+\_\+dd@{schwarz\+\_\+dd}!results\+\_\+extractor@{results\+\_\+extractor}}
+\index{results\+\_\+extractor@{results\+\_\+extractor}!schwarz\+\_\+dd@{schwarz\+\_\+dd}}
+\subsubsection[{results\+\_\+extractor()}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, private schwarz\+\_\+dd\+::results\+\_\+extractor (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [private]}}\label{namespaceschwarz__dd_a3e775206de7d599c20cf9daecd8e5e94}
+
+
+Definition at line 317 of file schwarz\+\_\+dd.\+f90.
+
+
+
+References globals\+::nodes, pde\+\_\+objs\+::pde, and pde\+\_\+objs\+::pde\+\_\+common.
+
+
+
+Referenced by schwarz\+\_\+picard().
+
+
+\begin{DoxyCode}
+317           \textcolor{keywordtype}{use }typy
+318           \textcolor{keywordtype}{use }globals
+319           \textcolor{keywordtype}{use }global_objs
+320           \textcolor{keywordtype}{use }debug_tools
+321           \textcolor{keywordtype}{use }pde_objs
+322 
+323           \textcolor{keywordtype}{integer(kind=ikind)} :: i, j, proc
+324 
+325 
+326           \textcolor{keywordflow}{do} proc=1, ubound(pde,1)
+327               \textcolor{keywordflow}{do} i=1, nodes%kolik
+328                   \textcolor{keywordflow}{if} (pde(proc)%permut(i) > 0) \textcolor{keywordflow}{then}
+329                       pde(proc)%solution(i) = pde_common%xvect(pde(proc)%permut(i),3)
+330                   \textcolor{keywordflow}{else}
+331                       j = nodes%edge(i)
+332                       pde(proc)%solution(i) = pde(proc)%bc(j)%value
+333 \textcolor{keywordflow}{                  end if}
+334 \textcolor{keywordflow}{              end do}
+335 \textcolor{keywordflow}{          end do}
+336           
+337 
+338           pde_common%xvect(:,4) = pde_common%xvect(:,1)
+339           pde_common%xvect(:,1) = pde_common%xvect(:,3)
+340           pde_common%xvect(:,2) = pde_common%xvect(:,3)
+341           
+342 
+\end{DoxyCode}
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespaceschwarz__dd_a3e775206de7d599c20cf9daecd8e5e94_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{schwarz\+\_\+dd@{schwarz\+\_\+dd}!schwarz\+\_\+picard@{schwarz\+\_\+picard}}
+\index{schwarz\+\_\+picard@{schwarz\+\_\+picard}!schwarz\+\_\+dd@{schwarz\+\_\+dd}}
+\subsubsection[{schwarz\+\_\+picard(ierr, itcount, success)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, public schwarz\+\_\+dd\+::schwarz\+\_\+picard (
+\begin{DoxyParamCaption}
+\item[{integer, intent(out)}]{ierr, }
+\item[{integer(kind=ikind), intent(out)}]{itcount, }
+\item[{logical, intent(out)}]{success}
+\end{DoxyParamCaption}
+)}\label{namespaceschwarz__dd_a5e1abf918f5afac4e96fa81e0cfa5f7a}
+
+
+solves the problem using Picard method with Schwarz multiplicative domain decomposition reflecting the nonlinear problem 
+
+
+
+Definition at line 14 of file schwarz\+\_\+dd.\+f90.
+
+
+
+References decomp\+\_\+vars\+::bcoarse, decomp\+\_\+tools\+::build\+\_\+coarsemtx(), build\+\_\+xvect(), decomp\+\_\+vars\+::coarse\+\_\+mtx, decomp\+\_\+vars\+::ddcoarse\+\_\+mesh, decomp\+\_\+vars\+::ddinfo, simplelinalg\+::diag\+\_\+precond(), domains\+\_\+solved(), decomp\+\_\+vars\+::file\+\_\+ddinfo, decomp\+\_\+tools\+::get\+\_\+residual(), decomp\+\_\+vars\+::inner\+\_\+criterion, globals\+::iter\+\_\+criterion, locmat\+\_\+assembler(), globals\+::max\+\_\+itcount, ndofs\+\_\+solved(), typy\+::norm2(), pde\+\_\+objs\+::pde, pde\+\_\+objs\+::pde\+\_\+common, printtools\+::printtime(), printtools\+::progressbar(), decomp\+\_\+vars\+::prolong\+\_\+mtx, results\+\_\+extractor(), search\+\_\+error\+\_\+cluster(), decomposer\+::set\+\_\+subdomains(), pde\+\_\+objs\+::solve\+\_\+matrix, decomp\+\_\+vars\+::subdomain, globals\+::terminal, globals\+::time, globals\+::time\+\_\+step, decomp\+\_\+vars\+::use\+\_\+coarselev, and decomp\+\_\+vars\+::xcoarse.
+
+
+
+Referenced by manage\+\_\+pointers\+::set\+\_\+pointers().
+
+
+\begin{DoxyCode}
+14         \textcolor{keywordtype}{use }typy
+15         \textcolor{keywordtype}{use }globals
+16         \textcolor{keywordtype}{use }global_objs
+17         \textcolor{keywordtype}{use }pde_objs
+18         \textcolor{keywordtype}{use }feminittools
+19         \textcolor{keywordtype}{use }fem_tools
+20         \textcolor{keywordtype}{use }linalg
+21         \textcolor{keywordtype}{use }debug_tools
+22         \textcolor{keywordtype}{use }sparsematrix
+23         \textcolor{keywordtype}{use }decomp_vars
+24         \textcolor{keywordtype}{use }decomp_tools
+25         \textcolor{keywordtype}{use }decomposer
+26         \textcolor{keywordtype}{use }postpro
+27         \textcolor{keywordtype}{use }femmat
+28         \textcolor{keywordtype}{use }core_tools
+29         \textcolor{keywordtype}{use }simplelinalg
+30         \textcolor{keywordtype}{use }printtools
+31         \textcolor{keywordtype}{use }debug_tools
+32 
+33         \textcolor{keywordtype}{integer}, \textcolor{keywordtype}{intent(out)} :: ierr
+34         \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(out)} :: itcount
+35         \textcolor{keywordtype}{integer(kind=ikind)} ::  fin, pcg\_it, subfin
+36         \textcolor{keywordtype}{logical}, \textcolor{keywordtype}{intent(out)} :: success
+37         \textcolor{keywordtype}{integer(kind=ikind)} :: i, proc,j, m, l, k, ii, nd
+38         \textcolor{keywordtype}{real(kind=rkind)} :: error, loc\_error, res\_error, reps, cumerr
+39         \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable}, \textcolor{keywordtype}{save} :: coarse2fine
+40         \textcolor{keywordtype}{logical} :: dt\_fine, first\_run, picard\_done, reset\_domains
+41         \textcolor{keywordtype}{integer} :: ierr\_loc
+42         \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable}, \textcolor{keywordtype}{save} :: resvct, corrvct
+43         \textcolor{keywordtype}{character(len=128)} :: text
+44         \textcolor{keywordtype}{real(4)}, \textcolor{keywordtype}{dimension(2,2)} :: taaray
+45         \textcolor{keywordtype}{real(4)}, \textcolor{keywordtype}{dimension(2)} :: rslt
+46 
+47 
+48         \textcolor{keyword}{call }etime(taaray(1,:), rslt(1))
+49         proc = ubound(pde,1)
+50         fin = maxval(pde(proc)%permut(:))
+51         itcount = 0
+52         inner_criterion = 1e-4
+53 
+54         \textcolor{comment}{!reset local-local cluster iteration count}
+55         ddcoarse_mesh(:)%iter\_count = 2
+56         
+57         \textcolor{comment}{!the residual vector is not allocated, thus we are at the beginning}
+58         \textcolor{keywordflow}{if} (.not. \textcolor{keyword}{allocated}(resvct)) \textcolor{keywordflow}{then}
+59           first\_run = .true.
+60           \textcolor{keyword}{allocate}(resvct(fin))
+61           \textcolor{keyword}{allocate}(corrvct(fin))          
+62           \textcolor{keyword}{call }set_subdomains()
+63           subdomain(:)%time = 0
+64         \textcolor{keywordflow}{else}
+65           first\_run = .false.
+66 \textcolor{keywordflow}{        end if}
+67 
+68         subdomain(:)%time\_step = time_step
+69 
+70                 
+71         \textcolor{comment}{!reset local subdomain iteration count}
+72         subdomain(:)%itcount = 0                
+73 
+74         \textcolor{comment}{!reset successes on domains}
+75         subdomain(:)%solved = .false.
+76         
+77         picard\_done = .false.
+78         
+79 
+80         \textcolor{keyword}{write}(unit=terminal, fmt=\textcolor{stringliteral}{"(a)"}) \textcolor{stringliteral}{"  "}
+81         \textcolor{keyword}{write}(unit=terminal, fmt=\textcolor{stringliteral}{"(a, I4,a)"}) \textcolor{stringliteral}{" Solving"}, ubound(subdomain,1),  \textcolor{stringliteral}{" subdomains .... "}
+82 
+83         picard\_loop: \textcolor{keywordflow}{do}
+84         
+85           itcount = itcount + 1
+86           
+87 
+88   \textcolor{comment}{!       !compute the local residuum}
+89   \textcolor{comment}{!       !and create the local matrices}
+90           \textcolor{keywordflow}{do} i=1, ubound(subdomain,1)
+91             subdomain(i)%xvect(:,1:3) = pde_common%xvect(subdomain(i)%permut(1:
+      subdomain(i)%ndof),1:3)
+92             \textcolor{keywordflow}{if} (.not. subdomain(i)%solved) \textcolor{keywordflow}{then}
+93               \textcolor{keyword}{call }locmat_assembler(subdomain(i), ierr, i)
+94 \textcolor{keywordflow}{            end if}
+95 \textcolor{keywordflow}{          end do}
+96 
+97                   
+98           \textcolor{keyword}{call }get_residual(resvct)
+99 
+100 
+101           \textcolor{keywordflow}{if} (use_coarselev .and. ubound(subdomain,1) > 3) \textcolor{keywordflow}{then}
+102             \textcolor{keyword}{call }build_coarsemtx(resvct)
+103             xcoarse = 0
+104 
+105 
+106             \textcolor{keyword}{call }solve_matrix(coarse_mtx, bcoarse, xcoarse, ilev1=0, itmax1=1\_ikind*ubound(
+      subdomain,1), reps1=1e-20\_rkind)
+107             
+108             \textcolor{keywordflow}{if} (.not. \textcolor{keyword}{allocated}(coarse2fine) ) \textcolor{keywordflow}{then}
+109               \textcolor{keyword}{allocate}(coarse2fine(fin))
+110 \textcolor{keywordflow}{            end if}
+111             
+112             coarse2fine = prolong_mtx%mul(xcoarse)
+113             
+114             \textcolor{keywordflow}{do} i=1, ubound(subdomain,1)
+115               \textcolor{keywordflow}{if} (subdomain(i)%critical) \textcolor{keywordflow}{then}
+116                 \textcolor{keywordflow}{do} j= 1, subdomain(i)%ndof
+117                   nd = subdomain(i)%permut(j)
+118                   pde_common%xvect(nd,2) = pde_common%xvect(nd,2) + prolong_mtx%get(nd,i) * coarse2fine(nd)
+119 \textcolor{keywordflow}{                end do}
+120 \textcolor{keywordflow}{              end if}
+121 \textcolor{keywordflow}{            end do}
+122               
+123 
+124             pde_common%xvect(:,3) = pde_common%xvect(:,2) 
+125 
+126             \textcolor{keywordflow}{do} i=1, ubound(subdomain,1)
+127               subdomain(i)%xvect(:,1:3) = pde_common%xvect(subdomain(i)%permut(1:
+      subdomain(i)%ndof),1:3)
+128               \textcolor{keyword}{call }locmat_assembler(subdomain(i), ierr, i)
+129 \textcolor{keywordflow}{            end do}
+130 
+131             \textcolor{keyword}{call }get_residual(resvct)
+132 
+133 \textcolor{keywordflow}{          end if}
+134           
+135           cumerr = 0
+136           subdoms:  \textcolor{keywordflow}{do} i=1, ubound(subdomain,1)
+137 
+138             subfin = subdomain(i)%ndof
+139                 \textcolor{comment}{! check local residuum}
+140             res\_error = norm2(resvct(subdomain(i)%permut(1:subfin)))
+141     \textcolor{comment}{!                   res\_error = maxval(resvct(subdomain(i)%permut(1:subfin)))}
+142 
+143             \textcolor{keywordflow}{if} (res\_error > inner_criterion) \textcolor{keywordflow}{then}
+144               subdomain(i)%solved = .false.
+145             \textcolor{keywordflow}{else}
+146               subdomain(i)%solved = .true.
+147 \textcolor{keywordflow}{            end if}
+148             
+149             \textcolor{keywordflow}{if} (.not. subdomain(i)%solved) \textcolor{keywordflow}{then}
+150 
+151               corrvct(1:subfin) = 0.0
+152 
+153               \textcolor{keywordflow}{if} (subdomain(i)%critical) \textcolor{keywordflow}{then}
+154                 reps = 1e-10
+155               \textcolor{keywordflow}{else}
+156                 reps = 1e-10
+157 \textcolor{keywordflow}{              end if}
+158 
+159               \textcolor{keyword}{call }diag_precond(a=subdomain(i)%matrix, prmt=subdomain(i)%permut,  mode=1)
+160               
+161 
+162               \textcolor{keyword}{call }solve_matrix(subdomain(i)%matrix, resvct, corrvct(1:subfin), ilev1=0, itmax1=subfin, 
+      reps1=reps)
+163 
+164               
+165               \textcolor{keyword}{call }diag_precond(a=subdomain(i)%matrix, x=corrvct(1:subfin), mode=-1)
+166               
+167               
+168               error = maxval(abs(corrvct(1:subfin)))
+169               
+170               cumerr = cumerr + error
+171 
+172               subdomain(i)%xvect(:,3) = subdomain(i)%xvect(:,2) + corrvct(1:subfin)
+173               
+174 
+175               \textcolor{keyword}{call }search_error_cluster(subdomain(i), itcount) 
+176               
+177               subdomain(i)%xvect(:,2) = subdomain(i)%xvect(:,3)
+178 
+179               subdomain(i)%itcount = itcount
+180 
+181               
+182               \textcolor{keywordflow}{if} (error <= iter_criterion .and. norm2(resvct(subdomain(i)%permut(1:subfin))) < 
+      inner_criterion) \textcolor{keywordflow}{then} 
+183                 subdomain(i)%solved = .true.
+184                 subdomain(i)%time  = subdomain(i)%time + subdomain(i)%time\_step
+185 \textcolor{keywordflow}{              end if}
+186 \textcolor{keywordflow}{            end if}
+187                                         
+188 \textcolor{keywordflow}{          end do} subdoms
+189           
+190                     
+191           \textcolor{keyword}{call }progressbar( int(100*ndofs_solved()/(1.0*ddinfo%ndofs\_tot)))
+192 
+193           \textcolor{keyword}{call }build_xvect()
+194           
+195 
+196           \textcolor{keywordflow}{if} (domains_solved() == ubound(subdomain,1)) \textcolor{keywordflow}{then}
+197             
+198             dt\_fine = pde(proc)%dt\_check()
+199             
+200             \textcolor{keywordflow}{if} (.not.(dt\_fine)) \textcolor{keywordflow}{then}
+201               ierr = 2
+202               success = .false.
+203               \textcolor{keywordflow}{RETURN}
+204 \textcolor{keywordflow}{            end if}
+205             
+206             \textcolor{keyword}{call }etime(taaray(2,:), rslt(2))
+207             \textcolor{keywordflow}{do} i=1, ubound(subdomain,1)
+208               \textcolor{keywordflow}{if} (.not. subdomain(i)%critical .and. subdomain(i)%itcount>1 ) \textcolor{keywordflow}{then}
+209                 reset\_domains = .true.
+210                 \textcolor{keywordflow}{EXIT}
+211               \textcolor{keywordflow}{else}
+212                 reset\_domains = .false.
+213 \textcolor{keywordflow}{              end if}
+214 \textcolor{keywordflow}{            end do}
+215 
+216            
+217             \textcolor{keyword}{call }printtime(\textcolor{stringliteral}{"Time spent on iterations: "}, rslt(2)-rslt(1))
+218             \textcolor{keywordflow}{if} (reset\_domains) \textcolor{keyword}{call }set_subdomains()
+219             success = .true.
+220             ierr = 0
+221             \textcolor{keyword}{write}(unit=file_ddinfo, fmt=*) time, itcount, \textcolor{stringliteral}{"|"}, subdomain(:)%ndof
+222             \textcolor{keyword}{call }flush(file_ddinfo)
+223             \textcolor{keywordflow}{EXIT} picard\_loop
+224 \textcolor{keywordflow}{          end if}
+225 
+226           \textcolor{keywordflow}{if} (itcount > max_itcount) \textcolor{keywordflow}{then}
+227             \textcolor{keyword}{call }set_subdomains()
+228             success = .false.
+229             ierr = 1
+230             \textcolor{keywordflow}{RETURN}
+231 \textcolor{keywordflow}{          end if}
+232 
+233 \textcolor{keywordflow}{        end do} picard\_loop
+234 
+235 
+236 
+237         \textcolor{keywordflow}{do} proc=1, ubound(pde,1)
+238           \textcolor{keywordflow}{do} i=1, ubound(subdomain,1)
+239             dt\_fine = pde(proc)%dt\_check()
+240 \textcolor{keywordflow}{          end do}
+241 \textcolor{keywordflow}{        end do}
+242         
+243         \textcolor{keywordflow}{if} (.not.(dt\_fine)) \textcolor{keywordflow}{then}
+244           ierr = 2
+245           success = .false.
+246           \textcolor{keywordflow}{RETURN}
+247         \textcolor{keywordflow}{else}
+248           ierr = 0
+249           \textcolor{keyword}{call }results_extractor()
+250 \textcolor{keywordflow}{        end if}
+251 
+\end{DoxyCode}
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespaceschwarz__dd_a5e1abf918f5afac4e96fa81e0cfa5f7a_cgraph}
+\end{center}
+\end{figure}
+
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespaceschwarz__dd_a5e1abf918f5afac4e96fa81e0cfa5f7a_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{schwarz\+\_\+dd@{schwarz\+\_\+dd}!search\+\_\+error\+\_\+cluster@{search\+\_\+error\+\_\+cluster}}
+\index{search\+\_\+error\+\_\+cluster@{search\+\_\+error\+\_\+cluster}!schwarz\+\_\+dd@{schwarz\+\_\+dd}}
+\subsubsection[{search\+\_\+error\+\_\+cluster(sub, itcount)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, private schwarz\+\_\+dd\+::search\+\_\+error\+\_\+cluster (
+\begin{DoxyParamCaption}
+\item[{type({\bf subdomain\+\_\+str}), intent(in)}]{sub, }
+\item[{integer(kind=ikind), intent(in)}]{itcount}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [private]}}\label{namespaceschwarz__dd_a61d339e34b15f9787c35b202ad97ae71}
+
+
+Definition at line 279 of file schwarz\+\_\+dd.\+f90.
+
+
+
+References decomp\+\_\+vars\+::ddcoarse\+\_\+mesh, globals\+::elements, globals\+::iter\+\_\+criterion, and pde\+\_\+objs\+::pde.
+
+
+
+Referenced by schwarz\+\_\+picard(), and subcycling\+::subcyc\+\_\+schwarz().
+
+
+\begin{DoxyCode}
+279         \textcolor{keywordtype}{use }typy
+280         \textcolor{keywordtype}{use }globals
+281         \textcolor{keywordtype}{use }global_objs
+282         \textcolor{keywordtype}{use }decomp_vars
+283         \textcolor{keywordtype}{use }debug_tools
+284         \textcolor{keywordtype}{use }pde_objs
+285 
+286         \textcolor{keywordtype}{type}(subdomain_str), \textcolor{keywordtype}{intent(in)} :: sub
+287         \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(in)} :: itcount
+288 
+289         \textcolor{keywordtype}{integer(kind=ikind)} :: i, j, ii, jj, el, nd, xpos, xpos\_loc
+290         \textcolor{keywordtype}{real(kind=rkind)} :: loc\_error
+291         
+292 
+293         \textcolor{keywordflow}{do} i=1, ubound(sub%coarse\_el,1)
+294           j = sub%coarse\_el(i)
+295           loc\_error = 0
+296           \textcolor{keywordflow}{do} ii=1, ubound(ddcoarse_mesh(j)%elements,1)
+297             el = ddcoarse_mesh(j)%elements(ii)
+298             \textcolor{keywordflow}{do} jj = 1, ubound(elements%data,2)
+299               nd = elements%data(el,jj)
+300               xpos = pde(1)%permut(nd)
+301               \textcolor{keywordflow}{if} (xpos > 0) \textcolor{keywordflow}{then}
+302                 xpos\_loc = sub%invpermut(xpos)
+303                 loc\_error = max(loc\_error, abs(sub%xvect(xpos\_loc,3)-sub%xvect(xpos\_loc,2)) )
+304 \textcolor{keywordflow}{              end if}
+305 \textcolor{keywordflow}{            end do}
+306 \textcolor{keywordflow}{          end do}
+307           \textcolor{keywordflow}{if} (loc\_error > iter_criterion) \textcolor{keywordflow}{then}
+308             ddcoarse_mesh(j)%iter\_count = ddcoarse_mesh(j)%iter\_count + 1
+309 \textcolor{keywordflow}{          end if}
+310 \textcolor{keywordflow}{        end do}
+311   
+312 
+\end{DoxyCode}
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespaceschwarz__dd_a61d339e34b15f9787c35b202ad97ae71_icgraph}
+\end{center}
+\end{figure}
+
+

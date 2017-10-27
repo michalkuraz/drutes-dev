@@ -1,0 +1,68 @@
+\section{pde\+\_\+objs\+:\+:tensor\+\_\+fnc Interface Reference}
+\label{interfacepde__objs_1_1tensor__fnc}\index{pde\+\_\+objs\+::tensor\+\_\+fnc@{pde\+\_\+objs\+::tensor\+\_\+fnc}}
+
+
+abstract interface for vector function  
+
+
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+subroutine {\bf tensor\+\_\+fnc} (pde\+\_\+loc, layer, quadpnt, x, tensor, scalar)
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+abstract interface for vector function 
+
+Definition at line 224 of file pde\+\_\+objs.\+f90.
+
+
+
+\subsection{Constructor \& Destructor Documentation}
+\index{pde\+\_\+objs\+::tensor\+\_\+fnc@{pde\+\_\+objs\+::tensor\+\_\+fnc}!tensor\+\_\+fnc@{tensor\+\_\+fnc}}
+\index{tensor\+\_\+fnc@{tensor\+\_\+fnc}!pde\+\_\+objs\+::tensor\+\_\+fnc@{pde\+\_\+objs\+::tensor\+\_\+fnc}}
+\subsubsection[{tensor\+\_\+fnc(pde\+\_\+loc, layer, quadpnt, x, tensor, scalar)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine pde\+\_\+objs\+::tensor\+\_\+fnc\+::tensor\+\_\+fnc (
+\begin{DoxyParamCaption}
+\item[{class({\bf pde\+\_\+str}), intent(in)}]{pde\+\_\+loc, }
+\item[{integer(kind=ikind), intent(in)}]{layer, }
+\item[{type({\bf integpnt\+\_\+str}), intent(in), optional}]{quadpnt, }
+\item[{real(kind=rkind), dimension(\+:), intent(in), optional}]{x, }
+\item[{real(kind=rkind), dimension(\+:,\+:), intent(out), optional}]{tensor, }
+\item[{real(kind=rkind), intent(out), optional}]{scalar}
+\end{DoxyParamCaption}
+)}\label{interfacepde__objs_1_1tensor__fnc_a0c5413a4392ef15ac6b0923eb9005379}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em x} & value of the nonlinear function\\
+\hline
+\mbox{\tt in}  & {\em quadpnt} & Gauss quadrature point structure (element number and rank of Gauss quadrature point)\\
+\hline
+\mbox{\tt in}  & {\em layer} & material ID\\
+\hline
+\mbox{\tt out}  & {\em tensor} & return tensor\\
+\hline
+\mbox{\tt out}  & {\em scalar} & relative scalar value of the nonlinear function \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 225 of file pde\+\_\+objs.\+f90.
+
+
+\begin{DoxyCode}
+225       \textcolor{keywordtype}{use }typy
+226       \textcolor{keywordtype}{use }global_objs
+227       \textcolor{keywordtype}{import }:: pde_str
+228       \textcolor{keywordtype}{class}(pde_str), \textcolor{keywordtype}{intent(in)} :: pde\_loc
+230       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional}    :: x
+232       \textcolor{keywordtype}{type}(integpnt_str), \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional} :: quadpnt
+234       \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(in)} :: layer
+236       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:,:)}, \textcolor{keywordtype}{intent(out)}, \textcolor{keywordtype}{optional} :: tensor
+238       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{intent(out)}, \textcolor{keywordtype}{optional}                 :: scalar
+\end{DoxyCode}
+
+
+The documentation for this interface was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+src/core/{\bf pde\+\_\+objs.\+f90}\end{DoxyCompactItemize}

@@ -1,0 +1,93 @@
+\section{boussglob Module Reference}
+\label{namespaceboussglob}\index{boussglob@{boussglob}}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+type({\bf smartarray\+\_\+real}), dimension(2), public {\bf bouss\+\_\+slopes}
+\item 
+type({\bf smartarray\+\_\+real}), dimension(2), public {\bf bouss\+\_\+k}
+\item 
+type({\bf smartarray\+\_\+real}), dimension(2), public {\bf bouss\+\_\+rain}
+\item 
+real(kind=rkind), public {\bf bouss\+\_\+por}
+\item 
+real(kind=rkind), public {\bf bouss\+\_\+icond}
+\end{DoxyCompactItemize}
+
+
+\subsection{Variable Documentation}
+\index{boussglob@{boussglob}!bouss\+\_\+icond@{bouss\+\_\+icond}}
+\index{bouss\+\_\+icond@{bouss\+\_\+icond}!boussglob@{boussglob}}
+\subsubsection[{bouss\+\_\+icond}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind), public boussglob\+::bouss\+\_\+icond}\label{namespaceboussglob_ae5f470c00fdc9fc870c35e9bf5286c9f}
+
+
+Definition at line 9 of file boussglob.\+f90.
+
+
+
+Referenced by boussfnc\+::boussicond(), and boussread\+::boussreader().
+
+
+\begin{DoxyCode}
+9   \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{public} :: bouss_icond
+\end{DoxyCode}
+\index{boussglob@{boussglob}!bouss\+\_\+k@{bouss\+\_\+k}}
+\index{bouss\+\_\+k@{bouss\+\_\+k}!boussglob@{boussglob}}
+\subsubsection[{bouss\+\_\+k}]{\setlength{\rightskip}{0pt plus 5cm}type({\bf smartarray\+\_\+real}), dimension(2), public boussglob\+::bouss\+\_\+k}\label{namespaceboussglob_a4b547b1281175037fcf8625db6be6110}
+
+
+Definition at line 6 of file boussglob.\+f90.
+
+
+
+Referenced by boussfnc\+::bouss\+\_\+cond(), and boussread\+::boussreader().
+
+
+\begin{DoxyCode}
+6   \textcolor{keywordtype}{type}(smartarray_real), \textcolor{keywordtype}{dimension(2)}, \textcolor{keywordtype}{public} :: bouss_k
+\end{DoxyCode}
+\index{boussglob@{boussglob}!bouss\+\_\+por@{bouss\+\_\+por}}
+\index{bouss\+\_\+por@{bouss\+\_\+por}!boussglob@{boussglob}}
+\subsubsection[{bouss\+\_\+por}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind), public boussglob\+::bouss\+\_\+por}\label{namespaceboussglob_a22f276259c3f43d3bfde4ee94bb0046a}
+
+
+Definition at line 8 of file boussglob.\+f90.
+
+
+
+Referenced by boussfnc\+::bouss\+\_\+elast(), and boussread\+::boussreader().
+
+
+\begin{DoxyCode}
+8   \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{public} :: bouss_por
+\end{DoxyCode}
+\index{boussglob@{boussglob}!bouss\+\_\+rain@{bouss\+\_\+rain}}
+\index{bouss\+\_\+rain@{bouss\+\_\+rain}!boussglob@{boussglob}}
+\subsubsection[{bouss\+\_\+rain}]{\setlength{\rightskip}{0pt plus 5cm}type({\bf smartarray\+\_\+real}), dimension(2), public boussglob\+::bouss\+\_\+rain}\label{namespaceboussglob_abfa33c9e10e3d3209b4885cbaf2f91a4}
+
+
+Definition at line 7 of file boussglob.\+f90.
+
+
+
+Referenced by boussfnc\+::bouss\+\_\+adv(), boussfnc\+::boussreact(), and boussread\+::boussreader().
+
+
+\begin{DoxyCode}
+7   \textcolor{keywordtype}{type}(smartarray_real), \textcolor{keywordtype}{dimension(2)}, \textcolor{keywordtype}{public} :: bouss_rain
+\end{DoxyCode}
+\index{boussglob@{boussglob}!bouss\+\_\+slopes@{bouss\+\_\+slopes}}
+\index{bouss\+\_\+slopes@{bouss\+\_\+slopes}!boussglob@{boussglob}}
+\subsubsection[{bouss\+\_\+slopes}]{\setlength{\rightskip}{0pt plus 5cm}type({\bf smartarray\+\_\+real}), dimension(2), public boussglob\+::bouss\+\_\+slopes}\label{namespaceboussglob_a7d82925866b8a3f55db46859dc95922b}
+
+
+Definition at line 5 of file boussglob.\+f90.
+
+
+
+Referenced by boussfnc\+::bouss\+\_\+adv(), boussfnc\+::bouss\+\_\+elast(), boussread\+::boussreader(), and boussfnc\+::darcy4bouss().
+
+
+\begin{DoxyCode}
+5   \textcolor{keywordtype}{type}(smartarray_real), \textcolor{keywordtype}{dimension(2)}, \textcolor{keywordtype}{public} :: bouss_slopes
+\end{DoxyCode}

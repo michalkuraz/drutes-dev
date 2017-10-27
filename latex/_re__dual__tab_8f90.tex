@@ -1,0 +1,40 @@
+\section{src/models/\+R\+E\+\_\+dual/\+Re\+\_\+dual\+\_\+tab.f90 File Reference}
+\label{_re__dual__tab_8f90}\index{src/models/\+R\+E\+\_\+dual/\+Re\+\_\+dual\+\_\+tab.\+f90@{src/models/\+R\+E\+\_\+dual/\+Re\+\_\+dual\+\_\+tab.\+f90}}
+\subsection*{Modules}
+\begin{DoxyCompactItemize}
+\item 
+module {\bf dual\+\_\+tab}
+\begin{DoxyCompactList}\small\item\em This module writes tabular versions of main functions to enhance computation. ~\newline
+ Tabular versions dispersion\+: mualem\+\_\+tab; elastisticty\+: dual\+\_\+ret; mass= vangen\+\_\+tab. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Functions/\+Subroutines}
+\begin{DoxyCompactItemize}
+\item 
+subroutine, public {\bf dual\+\_\+tab\+::dual\+\_\+mualem\+\_\+tab} (pde\+\_\+loc, layer, quadpnt, x, tensor, scalar)
+\begin{DoxyCompactList}\small\item\em Tabular versions of dispersion. \end{DoxyCompactList}\item 
+real(kind=rkind) function, public {\bf dual\+\_\+tab\+::vangen\+\_\+d\+\_\+tab} (pde\+\_\+loc, layer, quadpnt, x)
+\begin{DoxyCompactList}\small\item\em Tabular versions of mass. \end{DoxyCompactList}\item 
+real(kind=rkind) function, public {\bf dual\+\_\+tab\+::dual\+\_\+ret\+\_\+cap\+\_\+tab} (pde\+\_\+loc, layer, quadpnt, x)
+\begin{DoxyCompactList}\small\item\em Tabular versions of elastiocity. \end{DoxyCompactList}\item 
+real(kind=rkind) function, public {\bf dual\+\_\+tab\+::dual\+\_\+coupling\+\_\+tab} (pde\+\_\+loc, layer, quadpnt, x)
+\begin{DoxyCompactList}\small\item\em Tabular versions of coupling term for case(1) and case(2) \end{DoxyCompactList}\item 
+real(kind=rkind) function, public {\bf dual\+\_\+tab\+::dual\+\_\+coupling\+\_\+neg\+\_\+tab} (pde\+\_\+loc, layer, quadpnt, x)
+\item 
+subroutine, public {\bf dual\+\_\+tab\+::dual\+\_\+tabvalues} (pde\+\_\+loc, Kfnc, Cfnc, thetafnc, ex\+\_\+\+K\+\_\+fnc)
+\begin{DoxyCompactList}\small\item\em creates a table of values of constitutive functions for the Richards equation to be linearly approximated \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+real(kind=rkind), dimension(\+:,\+:), allocatable, public {\bf dual\+\_\+tab\+::ktab\+\_\+dm}
+\item 
+real(kind=rkind), dimension(\+:,\+:), allocatable, public {\bf dual\+\_\+tab\+::watcontab\+\_\+dm}
+\item 
+real(kind=rkind), dimension(\+:,\+:), allocatable, public {\bf dual\+\_\+tab\+::warecatab\+\_\+dm}
+\item 
+real(kind=rkind), dimension(\+:,\+:), allocatable, public {\bf dual\+\_\+tab\+::couptab}
+\item 
+real(kind=rkind), dimension(\+:,\+:), allocatable, public {\bf dual\+\_\+tab\+::ktab\+\_\+df}
+\item 
+real(kind=rkind), dimension(\+:,\+:), allocatable, public {\bf dual\+\_\+tab\+::watcontab\+\_\+df}
+\item 
+real(kind=rkind), dimension(\+:,\+:), allocatable, public {\bf dual\+\_\+tab\+::warecatab\+\_\+df}
+\end{DoxyCompactItemize}

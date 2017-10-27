@@ -1,0 +1,22 @@
+\section{src/femtools/feminittools.f90 File Reference}
+\label{feminittools_8f90}\index{src/femtools/feminittools.\+f90@{src/femtools/feminittools.\+f90}}
+\subsection*{Modules}
+\begin{DoxyCompactItemize}
+\item 
+module {\bf feminittools}
+\end{DoxyCompactItemize}
+\subsection*{Functions/\+Subroutines}
+\begin{DoxyCompactItemize}
+\item 
+subroutine, public {\bf feminittools\+::feminit} ()
+\item 
+subroutine, private {\bf feminittools\+::init\+\_\+integ} ()
+\begin{DoxyCompactList}\small\item\em set ups integration nodes and weights \end{DoxyCompactList}\item 
+subroutine, private {\bf feminittools\+::reorder} ()
+\item 
+subroutine, private {\bf feminittools\+::surface\+\_\+integ} ()
+\begin{DoxyCompactList}\small\item\em evaluates an array that contains length of the element edge, if the element edge is boundary edge, if the element edge is apart the boundary, zero value is supplied \end{DoxyCompactList}\item 
+subroutine, private {\bf feminittools\+::search\+\_\+bnd\+\_\+nodes} (id, found)
+\begin{DoxyCompactList}\small\item\em this procedure identifies boundary nodes on 2D mesh only. The method searches for all surrounding nodes and evaluates angles. If the angle is lower then 360dg, then this particular node must be the boundary node. \end{DoxyCompactList}\item 
+subroutine, private {\bf feminittools\+::set\+\_\+boundary} ()
+\end{DoxyCompactItemize}

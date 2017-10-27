@@ -1,0 +1,6 @@
+<map id="femmat::assemble_mat" name="femmat::assemble_mat">
+<area shape="rect" id="node2" href="$namespacestiffmat.html#a31243094e6fbabfb25e1e1939b133899" title="stiffmat::build_bvect" alt="" coords="217,5,357,32"/>
+<area shape="rect" id="node3" href="$namespacestiffmat.html#ae46961e6784b8661f5fa07d7b6bed25a" title="build local stifness matrix for nonlinear problems and Picard method " alt="" coords="212,56,363,83"/>
+<area shape="rect" id="node4" href="$namespacefem__tools.html#a70a2c3916a63fabc299dbbb53741e122" title="procedure to put local stiffness matrix into the global stiffness matrix " alt="" coords="218,107,357,133"/>
+<area shape="rect" id="node5" href="$namespacesolver__interfaces.html#abd70a6e039e5f2f62c473d9afbe90cc2" title="solver_interfaces::\lnull_problem" alt="" coords="223,158,352,199"/>
+</map>

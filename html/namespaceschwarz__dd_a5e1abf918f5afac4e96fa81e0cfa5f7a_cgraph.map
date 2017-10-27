@@ -1,0 +1,25 @@
+<map id="schwarz_dd::schwarz_picard" name="schwarz_dd::schwarz_picard">
+<area shape="rect" id="node2" href="$namespacedecomp__tools.html#ac3dffa95121aa59d12a617f71d43f193" title="decomp_tools::build\l_coarsemtx" alt="" coords="231,5,370,47"/>
+<area shape="rect" id="node4" href="$namespaceschwarz__dd.html#a88d6b767a669a2fefeed3e3409c4a861" title="schwarz_dd::build_xvect" alt="" coords="217,71,384,98"/>
+<area shape="rect" id="node5" href="$namespacesimplelinalg.html#a991176c9132fd1f9a1e494dfe43be159" title="right hand side diagonal preconditioner &#45; preprocessor and postprocesor preforms the diagonal matrix ..." alt="" coords="239,123,362,164"/>
+<area shape="rect" id="node6" href="$namespaceschwarz__dd.html#a474f0f5db10187f0762f91d2afbcf5da" title="counts number of solved subdomains " alt="" coords="226,188,375,229"/>
+<area shape="rect" id="node7" href="$namespacedecomp__tools.html#ac18f0d14ca31ab08c7a84b1667c12cfa" title="decomp_tools::get_residual" alt="" coords="210,254,391,281"/>
+<area shape="rect" id="node8" href="$namespaceschwarz__dd.html#a153ede1ee63fff0d346fe7699b46f76a" title="schwarz_dd::locmat\l_assembler" alt="" coords="231,305,370,347"/>
+<area shape="rect" id="node13" href="$namespaceschwarz__dd.html#aab12e9b58c489ca7ab88b9ce58777a6b" title="counts number of solved subdomains " alt="" coords="212,371,389,398"/>
+<area shape="rect" id="node14" href="$namespacetypy.html#ad5f707f5192c4a743f7da534989ceb19" title="spocte L2 normu vektoru " alt="" coords="255,422,346,449"/>
+<area shape="rect" id="node15" href="$namespaceprinttools.html#a7f7f505eb110ff0f4d983bb8f0f968b2" title="printtools::printtime" alt="" coords="234,473,367,499"/>
+<area shape="rect" id="node16" href="$namespaceprinttools.html#ac71e43f1627ed0239558720411181068" title="if default output is stdout, then this procedure prints nice progress bar " alt="" coords="225,523,376,550"/>
+<area shape="rect" id="node17" href="$namespaceschwarz__dd.html#a3e775206de7d599c20cf9daecd8e5e94" title="schwarz_dd::results\l_extractor" alt="" coords="231,575,370,616"/>
+<area shape="rect" id="node18" href="$namespaceschwarz__dd.html#a61d339e34b15f9787c35b202ad97ae71" title="schwarz_dd::search\l_error_cluster" alt="" coords="231,640,370,681"/>
+<area shape="rect" id="node19" href="$namespacedecomposer.html#abbcc7a95b77ad1dbec2b528470df7daf" title="the subdomains are combined based on the gradients of the solution and the Picard iterations ..." alt="" coords="203,706,399,733"/>
+<area shape="rect" id="node3" href="$namespacedecomp__tools.html#a7d2344442769179cf7904faece138daf" title="decomp_tools::mulax_dd" alt="" coords="463,113,629,139"/>
+<area shape="rect" id="node9" href="$namespacestiffmat.html#a31243094e6fbabfb25e1e1939b133899" title="stiffmat::build_bvect" alt="" coords="476,262,616,289"/>
+<area shape="rect" id="node10" href="$namespacestiffmat.html#ae46961e6784b8661f5fa07d7b6bed25a" title="build local stifness matrix for nonlinear problems and Picard method " alt="" coords="471,313,621,339"/>
+<area shape="rect" id="node11" href="$namespacefem__tools.html#a70a2c3916a63fabc299dbbb53741e122" title="procedure to put local stiffness matrix into the global stiffness matrix " alt="" coords="477,363,615,390"/>
+<area shape="rect" id="node12" href="$namespacesolver__interfaces.html#abd70a6e039e5f2f62c473d9afbe90cc2" title="solver_interfaces::\lnull_problem" alt="" coords="700,527,829,568"/>
+<area shape="rect" id="node20" href="$namespacedecomp__tools.html#a3f8c4deab864942b308de6e8ddc31849" title="decomp_tools::addlevel" alt="" coords="467,579,625,606"/>
+<area shape="rect" id="node21" href="$namespacedecomposer.html#a87f6f57c647e1ad908958389ba844b86" title="decomposer::clear_subdomain" alt="" coords="447,630,645,657"/>
+<area shape="rect" id="node22" href="$namespacecore__tools.html#abe09f9b4dc2abc5384a24020c5031e95" title="core_tools::write_log" alt="" coords="693,655,836,682"/>
+<area shape="rect" id="node23" href="$namespacedecomposer.html#ab3c22185fa432d9d3ca309ce5042f9b9" title="decomposer::init_subdomain" alt="" coords="452,731,640,758"/>
+<area shape="rect" id="node24" href="$namespacegeom__tools.html#a1e93d0ec91a9f2fcc7573e6347a9f9ef" title="specify the x and y derivates of a plane defined by three points " alt="" coords="451,782,641,809"/>
+</map>

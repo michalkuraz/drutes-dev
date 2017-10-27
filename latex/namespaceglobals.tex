@@ -1,0 +1,1184 @@
+\section{globals Module Reference}
+\label{namespaceglobals}\index{globals@{globals}}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+type({\bf version}), public {\bf version\+\_\+id}
+\begin{DoxyCompactList}\small\item\em version id variable \end{DoxyCompactList}\item 
+integer, public {\bf file\+\_\+global}
+\begin{DoxyCompactList}\small\item\em file units -\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/--- \end{DoxyCompactList}\item 
+integer, public {\bf file\+\_\+mesh}
+\item 
+integer, public {\bf file\+\_\+itcg}
+\item 
+integer, public {\bf file\+\_\+wwwglob}
+\item 
+integer, public {\bf logfile}
+\begin{DoxyCompactList}\small\item\em log file unit \end{DoxyCompactList}\item 
+integer, public {\bf debugfile}
+\begin{DoxyCompactList}\small\item\em debug file unit (put there whatever you like) \end{DoxyCompactList}\item 
+integer, public {\bf terminal} = 6
+\begin{DoxyCompactList}\small\item\em terminal ID, the print\+\_\+level sets its value \end{DoxyCompactList}\item 
+logical, public {\bf terminal\+\_\+assigned} = .false.
+\item 
+real(kind=rkind), dimension(\+:,\+:), allocatable, public {\bf gauss\+\_\+integ}
+\begin{DoxyCompactList}\small\item\em array of the gauss quadrature formula roots \end{DoxyCompactList}\item 
+type({\bf configuration}), public {\bf drutes\+\_\+config}
+\begin{DoxyCompactList}\small\item\em program configuration \end{DoxyCompactList}\item 
+integer(kind=ikind), public {\bf max\+\_\+itcount}
+\begin{DoxyCompactList}\small\item\em maximal number of iterations of Picard method for nonlinear problems \end{DoxyCompactList}\item 
+real(kind=rkind), public {\bf iter\+\_\+criterion}
+\begin{DoxyCompactList}\small\item\em Picard iteration threshold value. \end{DoxyCompactList}\item 
+real(kind=rkind), public {\bf init\+\_\+dt}
+\begin{DoxyCompactList}\small\item\em an intial dt \end{DoxyCompactList}\item 
+real(kind=rkind), public {\bf end\+\_\+time}
+\begin{DoxyCompactList}\small\item\em simulation end time \end{DoxyCompactList}\item 
+real(kind=rkind), public {\bf dtmin}
+\begin{DoxyCompactList}\small\item\em minimal dt \end{DoxyCompactList}\item 
+real(kind=rkind), public {\bf dtmax}
+\begin{DoxyCompactList}\small\item\em maximal dt \end{DoxyCompactList}\item 
+character(len=5), public {\bf time\+\_\+units}
+\begin{DoxyCompactList}\small\item\em time units \end{DoxyCompactList}\item 
+real(kind=rkind), public {\bf maxpress}
+\begin{DoxyCompactList}\small\item\em maximal pressure to precalculate (tabelarise) the unsaturated hydraulic conductivity value \end{DoxyCompactList}\item 
+integer(kind=ikind) {\bf outer\+\_\+boundaries}
+\begin{DoxyCompactList}\small\item\em number of outer boundaries \end{DoxyCompactList}\item 
+integer(kind=ikind), public {\bf print\+\_\+level}
+\begin{DoxyCompactList}\small\item\em output print level 0 = standard output 1 = screen goes to out/screen.\+log -\/1 = does goes to /dev/null, not suitable for m\$ hell \end{DoxyCompactList}\item 
+integer, public {\bf info\+\_\+level}
+\begin{DoxyCompactList}\small\item\em level of informations that are supplied to the user 0 the default level, only information about the time step solution is displayed 1 the detailed information about each iteration is displayed 2 extra detailed, even the information about the iterations of the conjugate gradient solver is displayed \end{DoxyCompactList}\item 
+type({\bf observe\+\_\+time\+\_\+str}), dimension(\+:), allocatable, public {\bf observe\+\_\+time}
+\begin{DoxyCompactList}\small\item\em observation time array \end{DoxyCompactList}\item 
+type({\bf observe\+\_\+info\+\_\+str}), public {\bf observe\+\_\+info}
+\item 
+type({\bf observation}), dimension(\+:), allocatable, public {\bf observation\+\_\+array}
+\begin{DoxyCompactList}\small\item\em the number of observation points each row defines each point, the row is labeled in [observation] structure as [xyz] each row has an integer value, this value defines the element number to which this observation point belongs \end{DoxyCompactList}\item 
+type({\bf measured}), dimension(\+:), allocatable, public {\bf measured\+\_\+pts}
+\begin{DoxyCompactList}\small\item\em the number of points with observation data \end{DoxyCompactList}\item 
+real(kind=rkind), public {\bf backup\+\_\+time}
+\begin{DoxyCompactList}\small\item\em code defining the example type in format X\+YZ 10 -\/ Richards equation in single regime and 1D 11 -\/ Richards equation in dual regime and 1D 20 -\/ Richards equation in single regime and 2D 21 -\/ Richards equation in dual regime and 2D 100 -\/ Richards equation and transport A\+DE equation in single regime and 1D 110 -\/ Richards equation and transport A\+DE equation in dual regime and 1D 200 -\/ Richards equation and transport A\+DE equation in single regime and 2D 210 -\/ Richards equation and transport A\+DE equation in dual regime and 2D \end{DoxyCompactList}\item 
+integer(kind=ikind), public {\bf backup\+\_\+runs}
+\begin{DoxyCompactList}\small\item\em stores the number of performed backups \end{DoxyCompactList}\item 
+character(len=256), public {\bf dir\+\_\+name}
+\begin{DoxyCompactList}\small\item\em current directory name \end{DoxyCompactList}\item 
+real, public {\bf start\+\_\+time}
+\begin{DoxyCompactList}\small\item\em C\+PU start time value. \end{DoxyCompactList}\item 
+integer(kind=ikind), public {\bf solver\+\_\+call}
+\begin{DoxyCompactList}\small\item\em number of linear algebra solver calls \end{DoxyCompactList}\item 
+type({\bf node}), public {\bf nodes}
+\item 
+type({\bf element}), public {\bf elements}
+\item 
+real(kind=rkind), dimension(\+:,\+:), allocatable, public {\bf cap\+\_\+mat}
+\begin{DoxyCompactList}\small\item\em local capacity matrix and local stiffness matrix \end{DoxyCompactList}\item 
+real(kind=rkind), dimension(\+:,\+:), allocatable, public {\bf stiff\+\_\+mat}
+\item 
+real(kind=rkind), dimension(\+:), allocatable, public {\bf bside}
+\begin{DoxyCompactList}\small\item\em local matrix vector \end{DoxyCompactList}\item 
+type({\bf integnodes}), public {\bf gauss\+\_\+points}
+\begin{DoxyCompactList}\small\item\em points for gauss quadrature on line ~\newline
+ component point is node\textquotesingle{}s coordinate ~\newline
+ component weight is gaussian weight ~\newline
+ this array is derived for the unit length 1 and interval $<$0,1$>$, thus it differs from the init\+\_\+gauss procedure, see init\+\_\+gauss documentation \end{DoxyCompactList}\item 
+integer(kind=ikind), public {\bf integ\+\_\+method}
+\begin{DoxyCompactList}\small\item\em code defining gauss quadrature integration method 10 -\/ 1 point formula, 20 -\/ 2 point formula 30 -\/ 3 point formula 40 -\/ 4 point formula 50 -\/ 5 point formula 60 -\/ 6 point formula 70 -\/ 7 point formula 90 -\/ 9 point formula (in 2-\/dimensions derived from 3 point formula, ask Michal Kuraz \+:) ) 120 -\/ 12 point formula \end{DoxyCompactList}\item 
+type({\bf dirglob\+\_\+str}), public {\bf dirglob}
+\begin{DoxyCompactList}\small\item\em defines directory with global configuration files \end{DoxyCompactList}\item 
+real(kind=rkind), dimension(\+:,\+:), allocatable, public {\bf base\+\_\+fnc}
+\begin{DoxyCompactList}\small\item\em values of base function on gauss quadrature nodes \end{DoxyCompactList}\item 
+real(kind=rkind), public {\bf time}
+\begin{DoxyCompactList}\small\item\em the total time value \end{DoxyCompactList}\item 
+real(kind=rkind), public {\bf time\+\_\+step}
+\begin{DoxyCompactList}\small\item\em time step value \end{DoxyCompactList}\item 
+real(kind=rkind), public {\bf time4solve}
+\begin{DoxyCompactList}\small\item\em equals to the actual time level plus time step which is being processed \end{DoxyCompactList}\item 
+real(kind=rkind), public {\bf dtprev}
+\begin{DoxyCompactList}\small\item\em previous time step \end{DoxyCompactList}\item 
+real(kind=rkind), public {\bf minimal\+\_\+dt}
+\begin{DoxyCompactList}\small\item\em minimal adjusted time step \end{DoxyCompactList}\item 
+type({\bf extsmtx}), save, public {\bf spmatrix}
+\begin{DoxyCompactList}\small\item\em sparse matrix \end{DoxyCompactList}\item 
+type({\bf extsmtx}), save, public {\bf spmatrix2}
+\begin{DoxyCompactList}\small\item\em sparse matrix \end{DoxyCompactList}\item 
+integer(kind=ikind), public {\bf global\+\_\+row\+\_\+id}
+\begin{DoxyCompactList}\small\item\em current position in the global stiffness matrix \end{DoxyCompactList}\item 
+logical, public {\bf debug\+\_\+print} =.false.
+\item 
+logical, public {\bf debugmode}
+\item 
+logical, public {\bf coupled\+\_\+problem}
+\item 
+integer(kind=ikind), public {\bf postpro\+\_\+run}
+\begin{DoxyCompactList}\small\item\em the amount of postprocess runs \end{DoxyCompactList}\item 
+integer(kind=ikind), public {\bf postpro\+\_\+dec}
+\begin{DoxyCompactList}\small\item\em the amount of decimal numbers in postproces runs \end{DoxyCompactList}\item 
+character(len=1024), public {\bf backup\+\_\+file}
+\item 
+real(kind=rkind), dimension(\+:,\+:), allocatable {\bf integnode\+\_\+now}
+\item 
+real(kind=rkind), dimension(\+:,\+:), allocatable {\bf integnode\+\_\+prev}
+\item 
+real(kind=rkind), dimension(\+:), allocatable {\bf elnode\+\_\+prev}
+\item 
+logical, public {\bf www} = .false.
+\item 
+logical, public {\bf optim} =.false.
+\item 
+real(kind=rkind), public {\bf cpu\+\_\+max\+\_\+time}
+\item 
+logical, public {\bf cpu\+\_\+time\+\_\+limit} = .false.
+\item 
+integer(kind=ikind), public {\bf itcum}
+\end{DoxyCompactItemize}
+
+
+\subsection{Variable Documentation}
+\index{globals@{globals}!backup\+\_\+file@{backup\+\_\+file}}
+\index{backup\+\_\+file@{backup\+\_\+file}!globals@{globals}}
+\subsubsection[{backup\+\_\+file}]{\setlength{\rightskip}{0pt plus 5cm}character(len=1024), public globals\+::backup\+\_\+file}\label{namespaceglobals_a1d00e237c85f5a84f170add9a927149a}
+
+
+Definition at line 172 of file globals.\+f90.
+
+
+
+Referenced by feminittools\+::feminit(), and read\+\_\+inputs\+::read\+\_\+global().
+
+
+\begin{DoxyCode}
+172   \textcolor{keywordtype}{character(len=1024)}, \textcolor{keywordtype}{public} :: backup_file
+\end{DoxyCode}
+\index{globals@{globals}!backup\+\_\+runs@{backup\+\_\+runs}}
+\index{backup\+\_\+runs@{backup\+\_\+runs}!globals@{globals}}
+\subsubsection[{backup\+\_\+runs}]{\setlength{\rightskip}{0pt plus 5cm}integer(kind=ikind), public globals\+::backup\+\_\+runs}\label{namespaceglobals_a1c7b2194ec62acb4222f9bb1a66db53d}
+
+
+stores the number of performed backups 
+
+
+
+Definition at line 97 of file globals.\+f90.
+
+
+
+Referenced by drutes\+\_\+init\+::set\+\_\+global\+\_\+vars().
+
+
+\begin{DoxyCode}
+97   \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{public} :: backup_runs
+\end{DoxyCode}
+\index{globals@{globals}!backup\+\_\+time@{backup\+\_\+time}}
+\index{backup\+\_\+time@{backup\+\_\+time}!globals@{globals}}
+\subsubsection[{backup\+\_\+time}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind), public globals\+::backup\+\_\+time}\label{namespaceglobals_aebf3cf621f33866c0c846fc17491261e}
+
+
+code defining the example type in format X\+YZ 10 -\/ Richards equation in single regime and 1D 11 -\/ Richards equation in dual regime and 1D 20 -\/ Richards equation in single regime and 2D 21 -\/ Richards equation in dual regime and 2D 100 -\/ Richards equation and transport A\+DE equation in single regime and 1D 110 -\/ Richards equation and transport A\+DE equation in dual regime and 1D 200 -\/ Richards equation and transport A\+DE equation in single regime and 2D 210 -\/ Richards equation and transport A\+DE equation in dual regime and 2D 
+
+the time period in hours between each backup 
+
+Definition at line 95 of file globals.\+f90.
+
+
+\begin{DoxyCode}
+95   \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{public} :: backup_time
+\end{DoxyCode}
+\index{globals@{globals}!base\+\_\+fnc@{base\+\_\+fnc}}
+\index{base\+\_\+fnc@{base\+\_\+fnc}!globals@{globals}}
+\subsubsection[{base\+\_\+fnc}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind), dimension(\+:,\+:), allocatable, public globals\+::base\+\_\+fnc}\label{namespaceglobals_a426c66e7799b0f7227ecd856e7c825df}
+
+
+values of base function on gauss quadrature nodes 
+
+
+
+Definition at line 135 of file globals.\+f90.
+
+
+
+Referenced by stiffmat\+::build\+\_\+stiff\+\_\+np(), capmat\+::impl\+\_\+euler\+\_\+np\+\_\+diag(), capmat\+::impl\+\_\+euler\+\_\+np\+\_\+nondiag(), and feminittools\+::init\+\_\+integ().
+
+
+\begin{DoxyCode}
+135   \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:,:)}, \textcolor{keywordtype}{allocatable}, \textcolor{keywordtype}{public} :: base_fnc
+\end{DoxyCode}
+\index{globals@{globals}!bside@{bside}}
+\index{bside@{bside}!globals@{globals}}
+\subsubsection[{bside}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind), dimension(\+:), allocatable, public globals\+::bside}\label{namespaceglobals_a343ddd5ea0dc6a9653f63a2512d68061}
+
+
+local matrix vector 
+
+
+
+Definition at line 110 of file globals.\+f90.
+
+
+
+Referenced by stiffmat\+::build\+\_\+bvect(), feminittools\+::feminit(), capmat\+::impl\+\_\+euler\+\_\+np\+\_\+diag(), capmat\+::impl\+\_\+euler\+\_\+np\+\_\+nondiag(), and fem\+\_\+tools\+::in2global().
+
+
+\begin{DoxyCode}
+110   \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable}, \textcolor{keywordtype}{public} :: bside 
+\end{DoxyCode}
+\index{globals@{globals}!cap\+\_\+mat@{cap\+\_\+mat}}
+\index{cap\+\_\+mat@{cap\+\_\+mat}!globals@{globals}}
+\subsubsection[{cap\+\_\+mat}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind), dimension(\+:,\+:), allocatable, public globals\+::cap\+\_\+mat}\label{namespaceglobals_a97246adf6af4727e372394e0ff93e3c7}
+
+
+local capacity matrix and local stiffness matrix 
+
+
+
+Definition at line 108 of file globals.\+f90.
+
+
+
+Referenced by femmat\+::assemble\+\_\+mat(), feminittools\+::feminit(), capmat\+::impl\+\_\+euler\+\_\+np\+\_\+diag(), capmat\+::impl\+\_\+euler\+\_\+np\+\_\+nondiag(), schwarz\+\_\+dd\+::locmat\+\_\+assembler(), schwarz\+\_\+dd2subcyc\+::locmat\+\_\+assembler(), and capmat\+::steady\+\_\+state\+\_\+int().
+
+
+\begin{DoxyCode}
+108   \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:,:)}, \textcolor{keywordtype}{allocatable}, \textcolor{keywordtype}{public} :: cap_mat, stiff_mat
+\end{DoxyCode}
+\index{globals@{globals}!coupled\+\_\+problem@{coupled\+\_\+problem}}
+\index{coupled\+\_\+problem@{coupled\+\_\+problem}!globals@{globals}}
+\subsubsection[{coupled\+\_\+problem}]{\setlength{\rightskip}{0pt plus 5cm}logical, public globals\+::coupled\+\_\+problem}\label{namespaceglobals_a46b207ec976261c6b4256183224c6e5f}
+
+
+Definition at line 164 of file globals.\+f90.
+
+
+\begin{DoxyCode}
+164   \textcolor{keywordtype}{logical}, \textcolor{keywordtype}{public} :: coupled_problem
+\end{DoxyCode}
+\index{globals@{globals}!cpu\+\_\+max\+\_\+time@{cpu\+\_\+max\+\_\+time}}
+\index{cpu\+\_\+max\+\_\+time@{cpu\+\_\+max\+\_\+time}!globals@{globals}}
+\subsubsection[{cpu\+\_\+max\+\_\+time}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind), public globals\+::cpu\+\_\+max\+\_\+time}\label{namespaceglobals_a969b0d7935a884135f6709a2e26cec56}
+
+
+Definition at line 178 of file globals.\+f90.
+
+
+
+Referenced by drutes\+\_\+init\+::get\+\_\+cmd\+\_\+options(), and fem\+::solve\+\_\+pde().
+
+
+\begin{DoxyCode}
+178   \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{public} :: cpu_max_time
+\end{DoxyCode}
+\index{globals@{globals}!cpu\+\_\+time\+\_\+limit@{cpu\+\_\+time\+\_\+limit}}
+\index{cpu\+\_\+time\+\_\+limit@{cpu\+\_\+time\+\_\+limit}!globals@{globals}}
+\subsubsection[{cpu\+\_\+time\+\_\+limit}]{\setlength{\rightskip}{0pt plus 5cm}logical, public globals\+::cpu\+\_\+time\+\_\+limit = .false.}\label{namespaceglobals_afe6ac7dd3036ae8ad216c8a0132d42df}
+
+
+Definition at line 179 of file globals.\+f90.
+
+
+
+Referenced by drutes\+\_\+init\+::get\+\_\+cmd\+\_\+options(), and fem\+::solve\+\_\+pde().
+
+
+\begin{DoxyCode}
+179   \textcolor{keywordtype}{logical}, \textcolor{keywordtype}{public} :: cpu_time_limit = .false.
+\end{DoxyCode}
+\index{globals@{globals}!debug\+\_\+print@{debug\+\_\+print}}
+\index{debug\+\_\+print@{debug\+\_\+print}!globals@{globals}}
+\subsubsection[{debug\+\_\+print}]{\setlength{\rightskip}{0pt plus 5cm}logical, public globals\+::debug\+\_\+print =.false.}\label{namespaceglobals_afcd04bca186edf2a074b2a36e42625cb}
+
+
+Definition at line 160 of file globals.\+f90.
+
+
+\begin{DoxyCode}
+160   \textcolor{keywordtype}{logical}, \textcolor{keywordtype}{public} :: debug_print=.false.
+\end{DoxyCode}
+\index{globals@{globals}!debugfile@{debugfile}}
+\index{debugfile@{debugfile}!globals@{globals}}
+\subsubsection[{debugfile}]{\setlength{\rightskip}{0pt plus 5cm}integer, public globals\+::debugfile}\label{namespaceglobals_abcb2fc9fcd8a8ed0153e3be76f6134a6}
+
+
+debug file unit (put there whatever you like) 
+
+
+
+Definition at line 29 of file globals.\+f90.
+
+
+
+Referenced by drutes\+\_\+init\+::parse\+\_\+globals().
+
+
+\begin{DoxyCode}
+29   \textcolor{keywordtype}{integer}, \textcolor{keywordtype}{public} :: debugfile
+\end{DoxyCode}
+\index{globals@{globals}!debugmode@{debugmode}}
+\index{debugmode@{debugmode}!globals@{globals}}
+\subsubsection[{debugmode}]{\setlength{\rightskip}{0pt plus 5cm}logical, public globals\+::debugmode}\label{namespaceglobals_aa071415dc7c18cea7a261a352314622c}
+
+
+Definition at line 162 of file globals.\+f90.
+
+
+
+Referenced by drutes\+\_\+init\+::parse\+\_\+globals(), and read\+\_\+inputs\+::read\+\_\+global().
+
+
+\begin{DoxyCode}
+162   \textcolor{keywordtype}{logical}, \textcolor{keywordtype}{public} :: debugmode
+\end{DoxyCode}
+\index{globals@{globals}!dir\+\_\+name@{dir\+\_\+name}}
+\index{dir\+\_\+name@{dir\+\_\+name}!globals@{globals}}
+\subsubsection[{dir\+\_\+name}]{\setlength{\rightskip}{0pt plus 5cm}character(len=256), public globals\+::dir\+\_\+name}\label{namespaceglobals_a7742ac7444be0d59ea2df1d66b8aa2ee}
+
+
+current directory name 
+
+
+
+Definition at line 99 of file globals.\+f90.
+
+
+
+Referenced by drutes\+\_\+init\+::get\+\_\+cmd\+\_\+options(), main(), and fem\+::terminal\+\_\+info().
+
+
+\begin{DoxyCode}
+99   \textcolor{keywordtype}{character(len=256)}, \textcolor{keywordtype}{public} :: dir_name
+\end{DoxyCode}
+\index{globals@{globals}!dirglob@{dirglob}}
+\index{dirglob@{dirglob}!globals@{globals}}
+\subsubsection[{dirglob}]{\setlength{\rightskip}{0pt plus 5cm}type({\bf dirglob\+\_\+str}), public globals\+::dirglob}\label{namespaceglobals_a410a929a83ed0affdb292c261514f3c3}
+
+
+defines directory with global configuration files 
+
+
+
+Definition at line 132 of file globals.\+f90.
+
+
+
+Referenced by drutes\+\_\+init\+::get\+\_\+cmd\+\_\+options(), and drutes\+\_\+init\+::parse\+\_\+globals().
+
+
+\begin{DoxyCode}
+132   \textcolor{keywordtype}{type}(dirglob_str), \textcolor{keywordtype}{public} :: dirglob
+\end{DoxyCode}
+\index{globals@{globals}!drutes\+\_\+config@{drutes\+\_\+config}}
+\index{drutes\+\_\+config@{drutes\+\_\+config}!globals@{globals}}
+\subsubsection[{drutes\+\_\+config}]{\setlength{\rightskip}{0pt plus 5cm}type({\bf configuration}), public globals\+::drutes\+\_\+config}\label{namespaceglobals_a76491724ea1ced217a173cbc1d4443c7}
+
+
+program configuration 
+
+
+
+Definition at line 39 of file globals.\+f90.
+
+
+
+Referenced by decomp\+\_\+tools\+::addlevel(), ade\+\_\+fnc\+::ade\+\_\+icond(), ade\+\_\+reader\+::ade\+\_\+read(), ade\+\_\+fnc\+::adedispersion(), re\+\_\+pointers\+::allrepointers(), stiffmat\+::build\+\_\+stiff\+\_\+np(), re\+\_\+constitutive\+::convection\+\_\+rerot(), simplelinalg\+::diag\+\_\+precond(), geom\+\_\+tools\+::dist(), re\+\_\+constitutive\+::dmualem\+\_\+dh(), re\+\_\+constitutive\+::dmualem\+\_\+dh\+\_\+tab(), re\+\_\+dual\+\_\+bc\+::dual\+\_\+freedrainage(), dual\+\_\+por\+::dual\+\_\+inicond(), dual\+\_\+tab\+::dual\+\_\+tabvalues(), feminittools\+::feminit(), geom\+\_\+tools\+::find\+\_\+neighbours(), geom\+\_\+tools\+::getcoor(), pde\+\_\+objs\+::getgradp1(), geom\+\_\+tools\+::getnormal(), pde\+\_\+objs\+::getvalp1loc(), heat\+\_\+fnc\+::heat\+\_\+conduct(), heat\+\_\+reader\+::heat\+\_\+read(), fem\+\_\+tools\+::icond4neumann(), fem\+\_\+tools\+::in2global(), decomposer\+::init\+\_\+decomp(), feminittools\+::init\+\_\+integ(), drutes\+\_\+init\+::init\+\_\+observe(), decomposer\+::init\+\_\+subdomain(), re\+\_\+constitutive\+::init\+\_\+zones(), geom\+\_\+tools\+::inside(), geom\+\_\+tools\+::interpolate(), main(), postpro\+::make\+\_\+print(), geom\+\_\+tools\+::map1d2dj(), core\+\_\+tools\+::mesh\+\_\+allocater(), drutes\+\_\+init\+::open\+\_\+obs\+\_\+unit(), drutes\+\_\+init\+::parse\+\_\+globals(), decomp\+\_\+tools\+::print\+\_\+domains(), decomp\+\_\+tools\+::print\+\_\+elements\+\_\+dd(), postpro\+::print\+\_\+scilab(), re\+\_\+constitutive\+::rcza\+\_\+check(), re\+\_\+constitutive\+::rcza\+\_\+check\+\_\+old(), re\+\_\+constitutive\+::re\+\_\+atmospheric(), re\+\_\+constitutive\+::re\+\_\+dirichlet\+\_\+height\+\_\+bc(), re\+\_\+dual\+\_\+reader\+::re\+\_\+dual\+\_\+var(), re\+\_\+dual\+\_\+pointers\+::re\+\_\+fracture(), re\+\_\+constitutive\+::re\+\_\+initcond(), re\+\_\+dual\+\_\+pointers\+::re\+\_\+matrix(), re\+\_\+constitutive\+::re\+\_\+neumann\+\_\+bc(), re\+\_\+pointers\+::re\+\_\+rot(), re\+\_\+pointers\+::re\+\_\+std(), read\+\_\+inputs\+::read\+\_\+global(), objfnc\+::reader(), re\+\_\+reader\+::res\+\_\+read(), re\+\_\+total\+::retot\+\_\+dirichlet\+\_\+bc(), re\+\_\+total\+::retot\+\_\+dirichlet\+\_\+height\+\_\+bc(), re\+\_\+total\+::retot\+\_\+freedrainage(), re\+\_\+total\+::retot\+\_\+initcond(), re\+\_\+total\+::retot\+\_\+seepage(), drutes\+\_\+init\+::set\+\_\+global\+\_\+vars(), manage\+\_\+pointers\+::set\+\_\+pointers(), readtools\+::set\+\_\+tensor(), fem\+::solve\+\_\+pde(), femmat\+::solve\+\_\+picard(), feminittools\+::surface\+\_\+integ(), re\+\_\+constitutive\+::tabvalues(), and postpro\+::write\+\_\+obs().
+
+
+\begin{DoxyCode}
+39   \textcolor{keywordtype}{type}(configuration), \textcolor{keywordtype}{public} :: drutes_config
+\end{DoxyCode}
+\index{globals@{globals}!dtmax@{dtmax}}
+\index{dtmax@{dtmax}!globals@{globals}}
+\subsubsection[{dtmax}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind), public globals\+::dtmax}\label{namespaceglobals_a5db64d024c9cba2b5b9b2fe31ee25565}
+
+
+maximal dt 
+
+
+
+Definition at line 51 of file globals.\+f90.
+
+
+
+Referenced by fem\+::evol\+\_\+dt(), fem\+::exitme(), read\+\_\+inputs\+::read\+\_\+global(), schwarz\+\_\+dd\+\_\+time\+\_\+test\+::schwarz\+\_\+picard\+\_\+tt(), and fem\+::solve\+\_\+pde().
+
+
+\begin{DoxyCode}
+51   \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{public} :: dtmax
+\end{DoxyCode}
+\index{globals@{globals}!dtmin@{dtmin}}
+\index{dtmin@{dtmin}!globals@{globals}}
+\subsubsection[{dtmin}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind), public globals\+::dtmin}\label{namespaceglobals_a5875ff05da92d701a300a494d6de9aee}
+
+
+minimal dt 
+
+
+
+Definition at line 49 of file globals.\+f90.
+
+
+
+Referenced by fem\+::evol\+\_\+dt(), fem\+::exitme(), read\+\_\+inputs\+::read\+\_\+global(), and schwarz\+\_\+dd\+\_\+time\+\_\+test\+::schwarz\+\_\+picard\+\_\+tt().
+
+
+\begin{DoxyCode}
+49   \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{public} :: dtmin
+\end{DoxyCode}
+\index{globals@{globals}!dtprev@{dtprev}}
+\index{dtprev@{dtprev}!globals@{globals}}
+\subsubsection[{dtprev}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind), public globals\+::dtprev}\label{namespaceglobals_afd3b963da85bd63772a7064c3cb0447a}
+
+
+previous time step 
+
+
+
+Definition at line 143 of file globals.\+f90.
+
+
+
+Referenced by fem\+::evol\+\_\+dt(), and fem\+::terminal\+\_\+info().
+
+
+\begin{DoxyCode}
+143   \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{public} :: dtprev
+\end{DoxyCode}
+\index{globals@{globals}!elements@{elements}}
+\index{elements@{elements}!globals@{globals}}
+\subsubsection[{elements}]{\setlength{\rightskip}{0pt plus 5cm}type({\bf element}), public globals\+::elements}\label{namespaceglobals_a120091f0ef12f971ed2c64514ea3ef2a}
+
+
+Definition at line 106 of file globals.\+f90.
+
+
+
+Referenced by decomp\+\_\+tools\+::addlevel(), ade\+\_\+fnc\+::ade\+\_\+dirichlet(), ade\+\_\+fnc\+::ade\+\_\+icond(), ade\+\_\+fnc\+::ade\+\_\+neumann(), ade\+\_\+reader\+::ade\+\_\+read(), femmat\+::assemble\+\_\+mat(), boussfnc\+::bouss\+\_\+bc(), boussfnc\+::boussicond(), stiffmat\+::build\+\_\+bvect(), stiffmat\+::build\+\_\+stiff\+\_\+np(), re\+\_\+dual\+\_\+bc\+::dual\+\_\+atmospheric(), re\+\_\+dual\+\_\+bc\+::dual\+\_\+freedrainage(), dual\+\_\+por\+::dual\+\_\+inicond(), re\+\_\+dual\+\_\+bc\+::dual\+\_\+neumann\+\_\+bc(), feminittools\+::feminit(), geom\+\_\+tools\+::find\+\_\+neighbours(), geom\+\_\+tools\+::get\+\_\+layer(), geom\+\_\+tools\+::get\+\_\+nz(), geom\+\_\+tools\+::getcoor(), pde\+\_\+objs\+::getgradp1(), pde\+\_\+objs\+::getvalp1loc(), heat\+\_\+fnc\+::heat\+\_\+dirichlet(), heat\+\_\+fnc\+::heat\+\_\+icond(), heat\+\_\+fnc\+::heat\+\_\+neumann(), heat\+\_\+reader\+::heat\+\_\+read(), fem\+\_\+tools\+::icond4neumann(), capmat\+::impl\+\_\+euler\+\_\+np\+\_\+diag(), capmat\+::impl\+\_\+euler\+\_\+np\+\_\+nondiag(), fem\+\_\+tools\+::in2global(), re\+\_\+dual\+\_\+bc\+::inf\+\_\+neumann\+\_\+bc(), decomp\+\_\+tools\+::init\+\_\+addlevel(), decomposer\+::init\+\_\+decomp(), drutes\+\_\+init\+::init\+\_\+observe(), decomposer\+::init\+\_\+subdomain(), schwarz\+\_\+dd\+::locmat\+\_\+assembler(), schwarz\+\_\+dd2subcyc\+::locmat\+\_\+assembler(), main(), geom\+\_\+tools\+::map1d2d(), geom\+\_\+tools\+::map1d2dj(), core\+\_\+tools\+::mesh\+\_\+allocater(), decomp\+\_\+tools\+::print\+\_\+domains(), decomp\+\_\+tools\+::print\+\_\+elements\+\_\+dd(), postpro\+::print\+\_\+gmsh(), postpro\+::print\+\_\+pure(), postpro\+::print\+\_\+scilab(), re\+\_\+constitutive\+::rcza\+\_\+check(), re\+\_\+constitutive\+::re\+\_\+atmospheric(), re\+\_\+constitutive\+::re\+\_\+dirichlet\+\_\+bc(), re\+\_\+constitutive\+::re\+\_\+dirichlet\+\_\+height\+\_\+bc(), re\+\_\+constitutive\+::re\+\_\+initcond(), re\+\_\+constitutive\+::re\+\_\+neumann\+\_\+bc(), read\+\_\+inputs\+::read\+\_\+2dmesh\+\_\+gmsh(), read\+\_\+inputs\+::read\+\_\+2dmesh\+\_\+t3d(), read\+\_\+inputs\+::read\+\_\+scilab(), re\+\_\+reader\+::res\+\_\+read(), femmat\+::results\+\_\+extractor(), re\+\_\+total\+::retot\+\_\+atmospheric(), re\+\_\+total\+::retot\+\_\+dirichlet\+\_\+bc(), re\+\_\+total\+::retot\+\_\+dirichlet\+\_\+height\+\_\+bc(), re\+\_\+total\+::retot\+\_\+freedrainage(), re\+\_\+total\+::retot\+\_\+initcond(), re\+\_\+total\+::retot\+\_\+neumann\+\_\+bc(), re\+\_\+total\+::retot\+\_\+seepage(), re\+\_\+total\+::retot\+\_\+seepageface(), feminittools\+::search\+\_\+bnd\+\_\+nodes(), subcycling\+::search\+\_\+error\+\_\+cluster(), schwarz\+\_\+dd\+::search\+\_\+error\+\_\+cluster(), schwarz\+\_\+dd2subcyc\+::search\+\_\+error\+\_\+cluster(), schwarz\+\_\+dd\+\_\+time\+\_\+test\+::search\+\_\+error\+\_\+cluster\+\_\+tt(), feminittools\+::set\+\_\+boundary(), decomposer\+::set\+\_\+subdomains(), re\+\_\+constitutive\+::setmatflux(), simegen\+::simegen1d(), simegen\+::simegen2d(), feminittools\+::surface\+\_\+integ(), and postpro\+::write\+\_\+obs().
+
+
+\begin{DoxyCode}
+106   \textcolor{keywordtype}{type}(element),  \textcolor{keywordtype}{public} :: elements
+\end{DoxyCode}
+\index{globals@{globals}!elnode\+\_\+prev@{elnode\+\_\+prev}}
+\index{elnode\+\_\+prev@{elnode\+\_\+prev}!globals@{globals}}
+\subsubsection[{elnode\+\_\+prev}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind), dimension(\+:), allocatable globals\+::elnode\+\_\+prev}\label{namespaceglobals_a2480f74b9fe7a63101d1f1b6380c0f14}
+
+
+Definition at line 175 of file globals.\+f90.
+
+
+
+Referenced by femmat\+::assemble\+\_\+mat(), feminittools\+::feminit(), capmat\+::impl\+\_\+euler\+\_\+np\+\_\+diag(), capmat\+::impl\+\_\+euler\+\_\+np\+\_\+nondiag(), schwarz\+\_\+dd\+::locmat\+\_\+assembler(), and schwarz\+\_\+dd2subcyc\+::locmat\+\_\+assembler().
+
+
+\begin{DoxyCode}
+175   \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable} :: elnode_prev
+\end{DoxyCode}
+\index{globals@{globals}!end\+\_\+time@{end\+\_\+time}}
+\index{end\+\_\+time@{end\+\_\+time}!globals@{globals}}
+\subsubsection[{end\+\_\+time}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind), public globals\+::end\+\_\+time}\label{namespaceglobals_aae1a93edf28eef71d60b8617914ffc78}
+
+
+simulation end time 
+
+
+
+Definition at line 47 of file globals.\+f90.
+
+
+
+Referenced by drutes\+\_\+init\+::init\+\_\+obstimes(), read\+\_\+inputs\+::read\+\_\+global(), readtools\+::readbcvals(), fem\+::solve\+\_\+pde(), and printtools\+::time2finish().
+
+
+\begin{DoxyCode}
+47   \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{public} :: end_time
+\end{DoxyCode}
+\index{globals@{globals}!file\+\_\+global@{file\+\_\+global}}
+\index{file\+\_\+global@{file\+\_\+global}!globals@{globals}}
+\subsubsection[{file\+\_\+global}]{\setlength{\rightskip}{0pt plus 5cm}integer, public globals\+::file\+\_\+global}\label{namespaceglobals_abb24fe7a6f6f433d0534c735cc26364b}
+
+
+file units -\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/--- 
+
+
+
+Definition at line 25 of file globals.\+f90.
+
+
+
+Referenced by drutes\+\_\+init\+::parse\+\_\+globals(), and read\+\_\+inputs\+::read\+\_\+global().
+
+
+\begin{DoxyCode}
+25   \textcolor{keywordtype}{integer}, \textcolor{keywordtype}{public} :: file_global,  file_mesh, file_itcg, file_wwwglob
+\end{DoxyCode}
+\index{globals@{globals}!file\+\_\+itcg@{file\+\_\+itcg}}
+\index{file\+\_\+itcg@{file\+\_\+itcg}!globals@{globals}}
+\subsubsection[{file\+\_\+itcg}]{\setlength{\rightskip}{0pt plus 5cm}integer, public globals\+::file\+\_\+itcg}\label{namespaceglobals_aca27199acfcaba80ac631f89cc9a44c9}
+
+
+Definition at line 25 of file globals.\+f90.
+
+
+
+Referenced by drutes\+\_\+init\+::parse\+\_\+globals(), and femmat\+::solve\+\_\+picard().
+
+\index{globals@{globals}!file\+\_\+mesh@{file\+\_\+mesh}}
+\index{file\+\_\+mesh@{file\+\_\+mesh}!globals@{globals}}
+\subsubsection[{file\+\_\+mesh}]{\setlength{\rightskip}{0pt plus 5cm}integer, public globals\+::file\+\_\+mesh}\label{namespaceglobals_a9dc29542694be5bc91cd8b23a300ab13}
+
+
+Definition at line 25 of file globals.\+f90.
+
+
+
+Referenced by drutes\+\_\+init\+::parse\+\_\+globals(), read\+\_\+inputs\+::read\+\_\+1dmesh\+\_\+int(), read\+\_\+inputs\+::read\+\_\+2dmesh\+\_\+gmsh(), read\+\_\+inputs\+::read\+\_\+2dmesh\+\_\+int(), read\+\_\+inputs\+::read\+\_\+2dmesh\+\_\+t3d(), and simegen\+::simegen1d().
+
+\index{globals@{globals}!file\+\_\+wwwglob@{file\+\_\+wwwglob}}
+\index{file\+\_\+wwwglob@{file\+\_\+wwwglob}!globals@{globals}}
+\subsubsection[{file\+\_\+wwwglob}]{\setlength{\rightskip}{0pt plus 5cm}integer, public globals\+::file\+\_\+wwwglob}\label{namespaceglobals_a4b888a57182c0304bc39d119765d954a}
+
+
+Definition at line 25 of file globals.\+f90.
+
+
+
+Referenced by drutes\+\_\+init\+::parse\+\_\+globals(), and read\+\_\+inputs\+::read\+\_\+global().
+
+\index{globals@{globals}!gauss\+\_\+integ@{gauss\+\_\+integ}}
+\index{gauss\+\_\+integ@{gauss\+\_\+integ}!globals@{globals}}
+\subsubsection[{gauss\+\_\+integ}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind), dimension(\+:,\+:), allocatable, public globals\+::gauss\+\_\+integ}\label{namespaceglobals_a7f4ba768c80911b99b2a184281753b19}
+
+
+array of the gauss quadrature formula roots 
+
+
+
+Definition at line 34 of file globals.\+f90.
+
+
+\begin{DoxyCode}
+34   \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:,:)}, \textcolor{keywordtype}{allocatable}, \textcolor{keywordtype}{public} :: gauss_integ
+\end{DoxyCode}
+\index{globals@{globals}!gauss\+\_\+points@{gauss\+\_\+points}}
+\index{gauss\+\_\+points@{gauss\+\_\+points}!globals@{globals}}
+\subsubsection[{gauss\+\_\+points}]{\setlength{\rightskip}{0pt plus 5cm}type({\bf integnodes}), public globals\+::gauss\+\_\+points}\label{namespaceglobals_aabb888860f571ef59f1687fda09a6de8}
+
+
+points for gauss quadrature on line ~\newline
+ component point is node\textquotesingle{}s coordinate ~\newline
+ component weight is gaussian weight ~\newline
+ this array is derived for the unit length 1 and interval $<$0,1$>$, thus it differs from the init\+\_\+gauss procedure, see init\+\_\+gauss documentation 
+
+
+
+Definition at line 116 of file globals.\+f90.
+
+
+
+Referenced by stiffmat\+::build\+\_\+bvect(), stiffmat\+::build\+\_\+stiff\+\_\+np(), geom\+\_\+tools\+::getcoor(), pde\+\_\+objs\+::getvalp1loc(), capmat\+::impl\+\_\+euler\+\_\+np\+\_\+diag(), capmat\+::impl\+\_\+euler\+\_\+np\+\_\+nondiag(), feminittools\+::init\+\_\+integ(), geom\+\_\+tools\+::interpolate(), and postpro\+::print\+\_\+scilab().
+
+
+\begin{DoxyCode}
+116   \textcolor{keywordtype}{type}(integnodes),  \textcolor{keywordtype}{public} :: gauss_points
+\end{DoxyCode}
+\index{globals@{globals}!global\+\_\+row\+\_\+id@{global\+\_\+row\+\_\+id}}
+\index{global\+\_\+row\+\_\+id@{global\+\_\+row\+\_\+id}!globals@{globals}}
+\subsubsection[{global\+\_\+row\+\_\+id}]{\setlength{\rightskip}{0pt plus 5cm}integer(kind=ikind), public globals\+::global\+\_\+row\+\_\+id}\label{namespaceglobals_a8e84a59697d0e67889b563a541c8016f}
+
+
+current position in the global stiffness matrix 
+
+
+
+Definition at line 157 of file globals.\+f90.
+
+
+\begin{DoxyCode}
+157   \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{public} :: global_row_id
+\end{DoxyCode}
+\index{globals@{globals}!info\+\_\+level@{info\+\_\+level}}
+\index{info\+\_\+level@{info\+\_\+level}!globals@{globals}}
+\subsubsection[{info\+\_\+level}]{\setlength{\rightskip}{0pt plus 5cm}integer, public globals\+::info\+\_\+level}\label{namespaceglobals_a2802bf59caeb18483b4d360d6ef94fc4}
+
+
+level of informations that are supplied to the user 0 the default level, only information about the time step solution is displayed 1 the detailed information about each iteration is displayed 2 extra detailed, even the information about the iterations of the conjugate gradient solver is displayed 
+
+
+
+Definition at line 69 of file globals.\+f90.
+
+
+\begin{DoxyCode}
+69   \textcolor{keywordtype}{integer}, \textcolor{keywordtype}{public} :: info_level
+\end{DoxyCode}
+\index{globals@{globals}!init\+\_\+dt@{init\+\_\+dt}}
+\index{init\+\_\+dt@{init\+\_\+dt}!globals@{globals}}
+\subsubsection[{init\+\_\+dt}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind), public globals\+::init\+\_\+dt}\label{namespaceglobals_a4c3a5850893cc47448134de52206d94b}
+
+
+an intial dt 
+
+
+
+Definition at line 45 of file globals.\+f90.
+
+
+
+Referenced by read\+\_\+inputs\+::read\+\_\+global(), and fem\+::solve\+\_\+pde().
+
+
+\begin{DoxyCode}
+45   \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{public} :: init_dt
+\end{DoxyCode}
+\index{globals@{globals}!integ\+\_\+method@{integ\+\_\+method}}
+\index{integ\+\_\+method@{integ\+\_\+method}!globals@{globals}}
+\subsubsection[{integ\+\_\+method}]{\setlength{\rightskip}{0pt plus 5cm}integer(kind=ikind), public globals\+::integ\+\_\+method}\label{namespaceglobals_a9de75cbf3826403f05a61d7aaea842d2}
+
+
+code defining gauss quadrature integration method 10 -\/ 1 point formula, 20 -\/ 2 point formula 30 -\/ 3 point formula 40 -\/ 4 point formula 50 -\/ 5 point formula 60 -\/ 6 point formula 70 -\/ 7 point formula 90 -\/ 9 point formula (in 2-\/dimensions derived from 3 point formula, ask Michal Kuraz \+:) ) 120 -\/ 12 point formula 
+
+
+
+Definition at line 128 of file globals.\+f90.
+
+
+
+Referenced by feminittools\+::init\+\_\+integ(), and read\+\_\+inputs\+::read\+\_\+global().
+
+
+\begin{DoxyCode}
+128   \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{public} :: integ_method
+\end{DoxyCode}
+\index{globals@{globals}!integnode\+\_\+now@{integnode\+\_\+now}}
+\index{integnode\+\_\+now@{integnode\+\_\+now}!globals@{globals}}
+\subsubsection[{integnode\+\_\+now}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind), dimension(\+:,\+:), allocatable globals\+::integnode\+\_\+now}\label{namespaceglobals_a831c887b696920b02f532c5bf249c891}
+
+
+Definition at line 174 of file globals.\+f90.
+
+
+
+Referenced by feminittools\+::init\+\_\+integ().
+
+
+\begin{DoxyCode}
+174   \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:,:)}, \textcolor{keywordtype}{allocatable} :: integnode_now, integnode_prev
+\end{DoxyCode}
+\index{globals@{globals}!integnode\+\_\+prev@{integnode\+\_\+prev}}
+\index{integnode\+\_\+prev@{integnode\+\_\+prev}!globals@{globals}}
+\subsubsection[{integnode\+\_\+prev}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind), dimension(\+:,\+:), allocatable globals\+::integnode\+\_\+prev}\label{namespaceglobals_a38ae115fe3f788f393d55fcca4c2a5f8}
+
+
+Definition at line 174 of file globals.\+f90.
+
+
+
+Referenced by feminittools\+::init\+\_\+integ().
+
+\index{globals@{globals}!itcum@{itcum}}
+\index{itcum@{itcum}!globals@{globals}}
+\subsubsection[{itcum}]{\setlength{\rightskip}{0pt plus 5cm}integer(kind=ikind), public globals\+::itcum}\label{namespaceglobals_aa6a4a5d76861365119310181f470d399}
+
+
+Definition at line 182 of file globals.\+f90.
+
+
+
+Referenced by fem\+::solve\+\_\+pde(), and fem\+::terminal\+\_\+info().
+
+
+\begin{DoxyCode}
+182   \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{public} :: itcum
+\end{DoxyCode}
+\index{globals@{globals}!iter\+\_\+criterion@{iter\+\_\+criterion}}
+\index{iter\+\_\+criterion@{iter\+\_\+criterion}!globals@{globals}}
+\subsubsection[{iter\+\_\+criterion}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind), public globals\+::iter\+\_\+criterion}\label{namespaceglobals_ab18ffdecee93d35e7c9afd3416908ff7}
+
+
+Picard iteration threshold value. 
+
+
+
+Definition at line 43 of file globals.\+f90.
+
+
+
+Referenced by fem\+::exitme(), read\+\_\+inputs\+::read\+\_\+global(), schwarz\+\_\+dd\+::schwarz\+\_\+picard(), schwarz\+\_\+dd\+\_\+time\+\_\+test\+::schwarz\+\_\+picard\+\_\+tt(), schwarz\+\_\+dd\+\_\+time\+\_\+test\+::schwarzloc(), subcycling\+::search\+\_\+error\+\_\+cluster(), schwarz\+\_\+dd\+::search\+\_\+error\+\_\+cluster(), schwarz\+\_\+dd2subcyc\+::search\+\_\+error\+\_\+cluster(), schwarz\+\_\+dd\+\_\+time\+\_\+test\+::search\+\_\+error\+\_\+cluster\+\_\+tt(), femmat\+::solve\+\_\+picard(), and subcycling\+::subcyc\+\_\+schwarz().
+
+
+\begin{DoxyCode}
+43   \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{public} :: iter_criterion
+\end{DoxyCode}
+\index{globals@{globals}!logfile@{logfile}}
+\index{logfile@{logfile}!globals@{globals}}
+\subsubsection[{logfile}]{\setlength{\rightskip}{0pt plus 5cm}integer, public globals\+::logfile}\label{namespaceglobals_aa5e82611bacbca955f6008aeddf268ae}
+
+
+log file unit 
+
+
+
+Definition at line 27 of file globals.\+f90.
+
+
+
+Referenced by drutes\+\_\+init\+::parse\+\_\+globals(), and core\+\_\+tools\+::write\+\_\+log().
+
+
+\begin{DoxyCode}
+27   \textcolor{keywordtype}{integer}, \textcolor{keywordtype}{public} :: logfile
+\end{DoxyCode}
+\index{globals@{globals}!max\+\_\+itcount@{max\+\_\+itcount}}
+\index{max\+\_\+itcount@{max\+\_\+itcount}!globals@{globals}}
+\subsubsection[{max\+\_\+itcount}]{\setlength{\rightskip}{0pt plus 5cm}integer(kind=ikind), public globals\+::max\+\_\+itcount}\label{namespaceglobals_ab17b0f4671b7706b61608d0377cf95cb}
+
+
+maximal number of iterations of Picard method for nonlinear problems 
+
+
+
+Definition at line 41 of file globals.\+f90.
+
+
+
+Referenced by fem\+::evol\+\_\+dt(), fem\+::exitme(), read\+\_\+inputs\+::read\+\_\+global(), schwarz\+\_\+dd\+::schwarz\+\_\+picard(), schwarz\+\_\+dd\+\_\+time\+\_\+test\+::schwarzloc(), femmat\+::solve\+\_\+picard(), and subcycling\+::subcyc\+\_\+schwarz().
+
+
+\begin{DoxyCode}
+41   \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{public} :: max_itcount
+\end{DoxyCode}
+\index{globals@{globals}!maxpress@{maxpress}}
+\index{maxpress@{maxpress}!globals@{globals}}
+\subsubsection[{maxpress}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind), public globals\+::maxpress}\label{namespaceglobals_af4312280ad8218c6bd8a99046af454aa}
+
+
+maximal pressure to precalculate (tabelarise) the unsaturated hydraulic conductivity value 
+
+
+
+Definition at line 55 of file globals.\+f90.
+
+
+
+Referenced by dual\+\_\+tab\+::dual\+\_\+tabvalues(), re\+\_\+constitutive\+::init\+\_\+zones(), re\+\_\+dual\+\_\+reader\+::re\+\_\+dual\+\_\+var(), re\+\_\+reader\+::res\+\_\+read(), and re\+\_\+constitutive\+::tabvalues().
+
+
+\begin{DoxyCode}
+55   \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{public} :: maxpress
+\end{DoxyCode}
+\index{globals@{globals}!measured\+\_\+pts@{measured\+\_\+pts}}
+\index{measured\+\_\+pts@{measured\+\_\+pts}!globals@{globals}}
+\subsubsection[{measured\+\_\+pts}]{\setlength{\rightskip}{0pt plus 5cm}type({\bf measured}), dimension(\+:), allocatable, public globals\+::measured\+\_\+pts}\label{namespaceglobals_ac2391ac68800c102dcd71b053b7f47e6}
+
+
+the number of points with observation data 
+
+
+
+Definition at line 82 of file globals.\+f90.
+
+
+
+Referenced by drutes\+\_\+init\+::init\+\_\+measured(), read\+\_\+inputs\+::read\+\_\+global(), and readtools\+::readbcvals().
+
+
+\begin{DoxyCode}
+82   \textcolor{keywordtype}{type}(measured), \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable}, \textcolor{keywordtype}{public} :: measured_pts
+\end{DoxyCode}
+\index{globals@{globals}!minimal\+\_\+dt@{minimal\+\_\+dt}}
+\index{minimal\+\_\+dt@{minimal\+\_\+dt}!globals@{globals}}
+\subsubsection[{minimal\+\_\+dt}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind), public globals\+::minimal\+\_\+dt}\label{namespaceglobals_a27b58eb7dc03899591de12275bd61fd7}
+
+
+minimal adjusted time step 
+
+
+
+Definition at line 146 of file globals.\+f90.
+
+
+
+Referenced by main(), and fem\+::solve\+\_\+pde().
+
+
+\begin{DoxyCode}
+146   \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{public} :: minimal_dt
+\end{DoxyCode}
+\index{globals@{globals}!nodes@{nodes}}
+\index{nodes@{nodes}!globals@{globals}}
+\subsubsection[{nodes}]{\setlength{\rightskip}{0pt plus 5cm}type({\bf node}), public globals\+::nodes}\label{namespaceglobals_a3e4ae1cd4085ab497e8b6f1890326d4f}
+
+
+Definition at line 105 of file globals.\+f90.
+
+
+
+Referenced by decomp\+\_\+tools\+::addlevel(), ade\+\_\+fnc\+::ade\+\_\+dirichlet(), ade\+\_\+fnc\+::ade\+\_\+icond(), ade\+\_\+fnc\+::ade\+\_\+neumann(), femmat\+::assemble\+\_\+mat(), boussfnc\+::bouss\+\_\+bc(), boussfnc\+::boussicond(), re\+\_\+dual\+\_\+bc\+::dual\+\_\+atmospheric(), dual\+\_\+por\+::dual\+\_\+inicond(), re\+\_\+dual\+\_\+bc\+::dual\+\_\+neumann\+\_\+bc(), feminittools\+::feminit(), geom\+\_\+tools\+::get\+\_\+layer(), geom\+\_\+tools\+::get\+\_\+nz(), geom\+\_\+tools\+::getcoor(), pde\+\_\+objs\+::getgradp1(), pde\+\_\+objs\+::getvalp1loc(), heat\+\_\+fnc\+::heat\+\_\+dirichlet(), heat\+\_\+fnc\+::heat\+\_\+icond(), heat\+\_\+fnc\+::heat\+\_\+neumann(), heat\+\_\+reader\+::heat\+\_\+read(), fem\+\_\+tools\+::icond4neumann(), re\+\_\+total\+::iconddebouss(), fem\+\_\+tools\+::in2global(), re\+\_\+dual\+\_\+bc\+::inf\+\_\+neumann\+\_\+bc(), decomposer\+::init\+\_\+decomp(), drutes\+\_\+init\+::init\+\_\+measured(), drutes\+\_\+init\+::init\+\_\+observe(), schwarz\+\_\+dd\+::locmat\+\_\+assembler(), schwarz\+\_\+dd2subcyc\+::locmat\+\_\+assembler(), main(), decomposer\+::make\+\_\+quadmesh(), geom\+\_\+tools\+::map1d2d(), geom\+\_\+tools\+::map1d2dj(), core\+\_\+tools\+::mesh\+\_\+allocater(), drutes\+\_\+init\+::pde\+\_\+constructor(), decomp\+\_\+tools\+::print\+\_\+domains(), decomp\+\_\+tools\+::print\+\_\+elements\+\_\+dd(), postpro\+::print\+\_\+gmsh(), postpro\+::print\+\_\+pure(), postpro\+::print\+\_\+scilab(), re\+\_\+constitutive\+::rcza\+\_\+check(), re\+\_\+constitutive\+::re\+\_\+atmospheric(), re\+\_\+constitutive\+::re\+\_\+dirichlet\+\_\+bc(), re\+\_\+constitutive\+::re\+\_\+dirichlet\+\_\+height\+\_\+bc(), re\+\_\+constitutive\+::re\+\_\+initcond(), re\+\_\+constitutive\+::re\+\_\+neumann\+\_\+bc(), read\+\_\+inputs\+::read\+\_\+2dmesh\+\_\+gmsh(), read\+\_\+inputs\+::read\+\_\+2dmesh\+\_\+t3d(), read\+\_\+inputs\+::read\+\_\+scilab(), readtools\+::readbcvals(), feminittools\+::reorder(), femmat\+::results\+\_\+extractor(), subcycling\+::results\+\_\+extractor(), schwarz\+\_\+dd\+::results\+\_\+extractor(), schwarz\+\_\+dd\+\_\+time\+\_\+test\+::results\+\_\+extractor(), re\+\_\+total\+::retot\+\_\+atmospheric(), re\+\_\+total\+::retot\+\_\+dirichlet\+\_\+bc(), re\+\_\+total\+::retot\+\_\+dirichlet\+\_\+height\+\_\+bc(), re\+\_\+total\+::retot\+\_\+initcond(), re\+\_\+total\+::retot\+\_\+neumann\+\_\+bc(), re\+\_\+total\+::retot\+\_\+seepage(), feminittools\+::search\+\_\+bnd\+\_\+nodes(), feminittools\+::set\+\_\+boundary(), decomposer\+::set\+\_\+subdomains(), re\+\_\+constitutive\+::setmatflux(), simegen\+::simegen1d(), simegen\+::simegen2d(), and feminittools\+::surface\+\_\+integ().
+
+
+\begin{DoxyCode}
+105   \textcolor{keywordtype}{type}(node), \textcolor{keywordtype}{public} :: nodes
+\end{DoxyCode}
+\index{globals@{globals}!observation\+\_\+array@{observation\+\_\+array}}
+\index{observation\+\_\+array@{observation\+\_\+array}!globals@{globals}}
+\subsubsection[{observation\+\_\+array}]{\setlength{\rightskip}{0pt plus 5cm}type({\bf observation}), dimension(\+:), allocatable, public globals\+::observation\+\_\+array}\label{namespaceglobals_a4dd71ee8c2e6e8e237f73545278811b7}
+
+
+the number of observation points each row defines each point, the row is labeled in [observation] structure as [xyz] each row has an integer value, this value defines the element number to which this observation point belongs 
+
+
+
+Definition at line 80 of file globals.\+f90.
+
+
+
+Referenced by geom\+\_\+tools\+::getcoor(), pde\+\_\+objs\+::getgradp1(), pde\+\_\+objs\+::getvalp1loc(), drutes\+\_\+init\+::init\+\_\+observe(), drutes\+\_\+init\+::pde\+\_\+constructor(), read\+\_\+inputs\+::read\+\_\+global(), objfnc\+::reader(), and postpro\+::write\+\_\+obs().
+
+
+\begin{DoxyCode}
+80   \textcolor{keywordtype}{type}(observation),  \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable}, \textcolor{keywordtype}{public} :: observation_array
+\end{DoxyCode}
+\index{globals@{globals}!observe\+\_\+info@{observe\+\_\+info}}
+\index{observe\+\_\+info@{observe\+\_\+info}!globals@{globals}}
+\subsubsection[{observe\+\_\+info}]{\setlength{\rightskip}{0pt plus 5cm}type({\bf observe\+\_\+info\+\_\+str}), public globals\+::observe\+\_\+info}\label{namespaceglobals_afeed5705141157c5ff38122ac6983db3}
+
+
+Definition at line 73 of file globals.\+f90.
+
+
+
+Referenced by fem\+::evol\+\_\+dt(), drutes\+\_\+init\+::init\+\_\+obstimes(), postpro\+::make\+\_\+print(), and read\+\_\+inputs\+::read\+\_\+global().
+
+
+\begin{DoxyCode}
+73   \textcolor{keywordtype}{type}(observe_info_str), \textcolor{keywordtype}{public} :: observe_info
+\end{DoxyCode}
+\index{globals@{globals}!observe\+\_\+time@{observe\+\_\+time}}
+\index{observe\+\_\+time@{observe\+\_\+time}!globals@{globals}}
+\subsubsection[{observe\+\_\+time}]{\setlength{\rightskip}{0pt plus 5cm}type({\bf observe\+\_\+time\+\_\+str}), dimension(\+:), allocatable, public globals\+::observe\+\_\+time}\label{namespaceglobals_a43d9fbed99bd1d36702524d59ca31dbe}
+
+
+observation time array 
+
+
+
+Definition at line 71 of file globals.\+f90.
+
+
+
+Referenced by fem\+::evol\+\_\+dt(), drutes\+\_\+init\+::init\+\_\+obstimes(), read\+\_\+inputs\+::read\+\_\+global(), and fem\+::solve\+\_\+pde().
+
+
+\begin{DoxyCode}
+71   \textcolor{keywordtype}{type}(observe_time_str), \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable}, \textcolor{keywordtype}{public} :: observe_time
+\end{DoxyCode}
+\index{globals@{globals}!optim@{optim}}
+\index{optim@{optim}!globals@{globals}}
+\subsubsection[{optim}]{\setlength{\rightskip}{0pt plus 5cm}logical, public globals\+::optim =.false.}\label{namespaceglobals_aa18232935315cb2c3932fc4722697677}
+
+
+Definition at line 177 of file globals.\+f90.
+
+
+
+Referenced by fem\+::exitme(), and drutes\+\_\+init\+::get\+\_\+cmd\+\_\+options().
+
+
+\begin{DoxyCode}
+177   \textcolor{keywordtype}{logical}, \textcolor{keywordtype}{public} :: optim=.false.
+\end{DoxyCode}
+\index{globals@{globals}!outer\+\_\+boundaries@{outer\+\_\+boundaries}}
+\index{outer\+\_\+boundaries@{outer\+\_\+boundaries}!globals@{globals}}
+\subsubsection[{outer\+\_\+boundaries}]{\setlength{\rightskip}{0pt plus 5cm}integer(kind=ikind) globals\+::outer\+\_\+boundaries}\label{namespaceglobals_a322f0275e66840bf00bce456eea53f13}
+
+
+number of outer boundaries 
+
+
+
+Definition at line 57 of file globals.\+f90.
+
+
+
+Referenced by drutes\+\_\+init\+::init\+\_\+measured().
+
+
+\begin{DoxyCode}
+57   \textcolor{keywordtype}{integer(kind=ikind)} :: outer_boundaries
+\end{DoxyCode}
+\index{globals@{globals}!postpro\+\_\+dec@{postpro\+\_\+dec}}
+\index{postpro\+\_\+dec@{postpro\+\_\+dec}!globals@{globals}}
+\subsubsection[{postpro\+\_\+dec}]{\setlength{\rightskip}{0pt plus 5cm}integer(kind=ikind), public globals\+::postpro\+\_\+dec}\label{namespaceglobals_ad684efaf7b03940e98e0a9b09aab7c3e}
+
+
+the amount of decimal numbers in postproces runs 
+
+
+
+Definition at line 170 of file globals.\+f90.
+
+
+
+Referenced by postpro\+::make\+\_\+print(), and drutes\+\_\+init\+::set\+\_\+global\+\_\+vars().
+
+
+\begin{DoxyCode}
+170   \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{public} :: postpro_dec
+\end{DoxyCode}
+\index{globals@{globals}!postpro\+\_\+run@{postpro\+\_\+run}}
+\index{postpro\+\_\+run@{postpro\+\_\+run}!globals@{globals}}
+\subsubsection[{postpro\+\_\+run}]{\setlength{\rightskip}{0pt plus 5cm}integer(kind=ikind), public globals\+::postpro\+\_\+run}\label{namespaceglobals_a1c3c76bd629062125abbfbccdafb6487}
+
+
+the amount of postprocess runs 
+
+
+
+Definition at line 168 of file globals.\+f90.
+
+
+
+Referenced by postpro\+::make\+\_\+print(), postpro\+::print\+\_\+gmsh(), and drutes\+\_\+init\+::set\+\_\+global\+\_\+vars().
+
+
+\begin{DoxyCode}
+168   \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{public} :: postpro_run
+\end{DoxyCode}
+\index{globals@{globals}!print\+\_\+level@{print\+\_\+level}}
+\index{print\+\_\+level@{print\+\_\+level}!globals@{globals}}
+\subsubsection[{print\+\_\+level}]{\setlength{\rightskip}{0pt plus 5cm}integer(kind=ikind), public globals\+::print\+\_\+level}\label{namespaceglobals_a982ca49c21157dbed9c9881aaa5ef08d}
+
+
+output print level 0 = standard output 1 = screen goes to out/screen.\+log -\/1 = does goes to /dev/null, not suitable for m\$ hell 
+
+
+
+Definition at line 63 of file globals.\+f90.
+
+
+
+Referenced by read\+\_\+inputs\+::read\+\_\+global(), and drutes\+\_\+init\+::set\+\_\+global\+\_\+vars().
+
+
+\begin{DoxyCode}
+63   \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{public} :: print_level
+\end{DoxyCode}
+\index{globals@{globals}!solver\+\_\+call@{solver\+\_\+call}}
+\index{solver\+\_\+call@{solver\+\_\+call}!globals@{globals}}
+\subsubsection[{solver\+\_\+call}]{\setlength{\rightskip}{0pt plus 5cm}integer(kind=ikind), public globals\+::solver\+\_\+call}\label{namespaceglobals_a0233facb5d9b029962dad5619fbafe49}
+
+
+number of linear algebra solver calls 
+
+
+
+Definition at line 104 of file globals.\+f90.
+
+
+
+Referenced by drutes\+\_\+init\+::set\+\_\+global\+\_\+vars().
+
+
+\begin{DoxyCode}
+104   \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{public} :: solver_call
+\end{DoxyCode}
+\index{globals@{globals}!spmatrix@{spmatrix}}
+\index{spmatrix@{spmatrix}!globals@{globals}}
+\subsubsection[{spmatrix}]{\setlength{\rightskip}{0pt plus 5cm}type({\bf extsmtx}), save, public globals\+::spmatrix}\label{namespaceglobals_a7185f37319968ff53d8ce3378dcea8e4}
+
+
+sparse matrix 
+
+
+
+Definition at line 152 of file globals.\+f90.
+
+
+
+Referenced by femmat\+::assemble\+\_\+mat(), feminittools\+::feminit(), and femmat\+::solve\+\_\+picard().
+
+
+\begin{DoxyCode}
+152   \textcolor{keywordtype}{type}(extsmtx), \textcolor{keywordtype}{public}, \textcolor{keywordtype}{save} :: spmatrix
+\end{DoxyCode}
+\index{globals@{globals}!spmatrix2@{spmatrix2}}
+\index{spmatrix2@{spmatrix2}!globals@{globals}}
+\subsubsection[{spmatrix2}]{\setlength{\rightskip}{0pt plus 5cm}type({\bf extsmtx}), save, public globals\+::spmatrix2}\label{namespaceglobals_a37297558557adee7c2968a3d59a968b9}
+
+
+sparse matrix 
+
+
+
+Definition at line 154 of file globals.\+f90.
+
+
+\begin{DoxyCode}
+154   \textcolor{keywordtype}{type}(extsmtx), \textcolor{keywordtype}{public}, \textcolor{keywordtype}{save} :: spmatrix2
+\end{DoxyCode}
+\index{globals@{globals}!start\+\_\+time@{start\+\_\+time}}
+\index{start\+\_\+time@{start\+\_\+time}!globals@{globals}}
+\subsubsection[{start\+\_\+time}]{\setlength{\rightskip}{0pt plus 5cm}real, public globals\+::start\+\_\+time}\label{namespaceglobals_a8feef69a944786f4f7c1838121a1eaff}
+
+
+C\+PU start time value. 
+
+
+
+Definition at line 101 of file globals.\+f90.
+
+
+
+Referenced by main(), and printtools\+::time2finish().
+
+
+\begin{DoxyCode}
+101   \textcolor{keywordtype}{real}, \textcolor{keywordtype}{public} :: start_time
+\end{DoxyCode}
+\index{globals@{globals}!stiff\+\_\+mat@{stiff\+\_\+mat}}
+\index{stiff\+\_\+mat@{stiff\+\_\+mat}!globals@{globals}}
+\subsubsection[{stiff\+\_\+mat}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind), dimension(\+:,\+:), allocatable, public globals\+::stiff\+\_\+mat}\label{namespaceglobals_a3fbc98376e8fe4a4597adda7583a86f6}
+
+
+Definition at line 108 of file globals.\+f90.
+
+
+
+Referenced by femmat\+::assemble\+\_\+mat(), stiffmat\+::build\+\_\+bvect(), stiffmat\+::build\+\_\+stiff\+\_\+np(), feminittools\+::feminit(), fem\+\_\+tools\+::in2global(), schwarz\+\_\+dd\+::locmat\+\_\+assembler(), and schwarz\+\_\+dd2subcyc\+::locmat\+\_\+assembler().
+
+\index{globals@{globals}!terminal@{terminal}}
+\index{terminal@{terminal}!globals@{globals}}
+\subsubsection[{terminal}]{\setlength{\rightskip}{0pt plus 5cm}integer, public globals\+::terminal = 6}\label{namespaceglobals_aee7d7e51108301fe95e24ec0d8e3a437}
+
+
+terminal ID, the print\+\_\+level sets its value 
+
+
+
+Definition at line 31 of file globals.\+f90.
+
+
+
+Referenced by ade\+\_\+reader\+::ade\+\_\+read(), readtools\+::file\+\_\+error(), drutes\+\_\+init\+::get\+\_\+cmd\+\_\+options(), postpro\+::get\+\_\+ram\+\_\+use(), re\+\_\+constitutive\+::init\+\_\+zones(), main(), drutes\+\_\+init\+::parse\+\_\+globals(), debug\+\_\+tools\+::print\+\_\+int\+\_\+matrix(), debug\+\_\+tools\+::print\+\_\+int\+\_\+vector(), debug\+\_\+tools\+::print\+\_\+logical\+\_\+array(), debug\+\_\+tools\+::print\+\_\+quadpnt(), debug\+\_\+tools\+::print\+\_\+real\+\_\+matrix(), debug\+\_\+tools\+::print\+\_\+real\+\_\+vector(), debug\+\_\+tools\+::print\+\_\+real\+\_\+vector4(), debug\+\_\+tools\+::print\+\_\+smartarray\+\_\+i(), debug\+\_\+tools\+::print\+\_\+smartmatrix\+\_\+i(), debug\+\_\+tools\+::print\+\_\+sparse\+\_\+matrix(), printtools\+::printtime(), printtools\+::progressbar(), readtools\+::read\+\_\+int(), readtools\+::read\+\_\+int\+\_\+array(), readtools\+::read\+\_\+int\+\_\+std(), readtools\+::read\+\_\+logical(), readtools\+::read\+\_\+real(), readtools\+::read\+\_\+real\+\_\+array(), schwarz\+\_\+dd\+::schwarz\+\_\+picard(), schwarz\+\_\+dd\+\_\+time\+\_\+test\+::schwarz\+\_\+picard\+\_\+tt(), schwarz\+\_\+dd2subcyc\+::schwarz\+\_\+subcyc(), schwarz\+\_\+dd\+\_\+time\+\_\+test\+::schwarzloc(), drutes\+\_\+init\+::set\+\_\+global\+\_\+vars(), fem\+::solve\+\_\+pde(), subcycling\+::subcyc\+\_\+schwarz(), fem\+::terminal\+\_\+info(), printtools\+::time2finish(), debug\+\_\+tools\+::wait(), and core\+\_\+tools\+::write\+\_\+log().
+
+
+\begin{DoxyCode}
+31   \textcolor{keywordtype}{integer}, \textcolor{keywordtype}{public} :: terminal = 6
+\end{DoxyCode}
+\index{globals@{globals}!terminal\+\_\+assigned@{terminal\+\_\+assigned}}
+\index{terminal\+\_\+assigned@{terminal\+\_\+assigned}!globals@{globals}}
+\subsubsection[{terminal\+\_\+assigned}]{\setlength{\rightskip}{0pt plus 5cm}logical, public globals\+::terminal\+\_\+assigned = .false.}\label{namespaceglobals_a2a52a2212371059ce5658d11600f6ad8}
+
+
+Definition at line 32 of file globals.\+f90.
+
+
+
+Referenced by drutes\+\_\+init\+::get\+\_\+cmd\+\_\+options(), and drutes\+\_\+init\+::set\+\_\+global\+\_\+vars().
+
+
+\begin{DoxyCode}
+32   \textcolor{keywordtype}{logical}, \textcolor{keywordtype}{public} :: terminal_assigned = .false.
+\end{DoxyCode}
+\index{globals@{globals}!time@{time}}
+\index{time@{time}!globals@{globals}}
+\subsubsection[{time}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind), public globals\+::time}\label{namespaceglobals_a2df3573bca73071127516bac8a69d587}
+
+
+the total time value 
+
+
+
+Definition at line 137 of file globals.\+f90.
+
+
+
+Referenced by ade\+\_\+fnc\+::ade\+\_\+dirichlet(), ade\+\_\+fnc\+::ade\+\_\+neumann(), boussfnc\+::bouss\+\_\+adv(), boussfnc\+::bouss\+\_\+bc(), subcycling\+::domains\+\_\+solved(), re\+\_\+dual\+\_\+bc\+::dual\+\_\+atmospheric(), re\+\_\+dual\+\_\+bc\+::dual\+\_\+neumann\+\_\+bc(), fem\+::evol\+\_\+dt(), pde\+\_\+objs\+::getvalp1(), heat\+\_\+fnc\+::heat\+\_\+dirichlet(), heat\+\_\+fnc\+::heat\+\_\+neumann(), re\+\_\+dual\+\_\+bc\+::inf\+\_\+neumann\+\_\+bc(), postpro\+::make\+\_\+print(), postpro\+::print\+\_\+gmsh(), postpro\+::print\+\_\+scilab(), re\+\_\+constitutive\+::re\+\_\+atmospheric(), re\+\_\+constitutive\+::re\+\_\+dirichlet\+\_\+bc(), re\+\_\+constitutive\+::re\+\_\+dirichlet\+\_\+height\+\_\+bc(), re\+\_\+constitutive\+::re\+\_\+neumann\+\_\+bc(), read\+\_\+inputs\+::read\+\_\+scilab(), re\+\_\+total\+::retot\+\_\+atmospheric(), re\+\_\+total\+::retot\+\_\+dirichlet\+\_\+bc(), re\+\_\+total\+::retot\+\_\+dirichlet\+\_\+height\+\_\+bc(), re\+\_\+total\+::retot\+\_\+neumann\+\_\+bc(), schwarz\+\_\+dd\+::schwarz\+\_\+picard(), schwarz\+\_\+dd2subcyc\+::schwarz\+\_\+subcyc(), schwarz\+\_\+dd\+\_\+time\+\_\+test\+::schwarzloc(), decomposer\+::set\+\_\+subdomains(), fem\+::solve\+\_\+pde(), femmat\+::solve\+\_\+picard(), subcycling\+::subcyc\+\_\+schwarz(), fem\+::terminal\+\_\+info(), printtools\+::time2finish(), and postpro\+::write\+\_\+obs().
+
+
+\begin{DoxyCode}
+137   \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{public} :: time
+\end{DoxyCode}
+\index{globals@{globals}!time4solve@{time4solve}}
+\index{time4solve@{time4solve}!globals@{globals}}
+\subsubsection[{time4solve}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind), public globals\+::time4solve}\label{namespaceglobals_acae54674e5a9f90e2fb2ab0ae022e49b}
+
+
+equals to the actual time level plus time step which is being processed 
+
+
+
+Definition at line 141 of file globals.\+f90.
+
+
+\begin{DoxyCode}
+141   \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{public} :: time4solve
+\end{DoxyCode}
+\index{globals@{globals}!time\+\_\+step@{time\+\_\+step}}
+\index{time\+\_\+step@{time\+\_\+step}!globals@{globals}}
+\subsubsection[{time\+\_\+step}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind), public globals\+::time\+\_\+step}\label{namespaceglobals_a415e4646993ceb3c3fa844b1a0868992}
+
+
+time step value 
+
+
+
+Definition at line 139 of file globals.\+f90.
+
+
+
+Referenced by femmat\+::assemble\+\_\+mat(), subcycling\+::domains\+\_\+solved(), fem\+::evol\+\_\+dt(), fem\+::exitme(), pde\+\_\+objs\+::getvalp1(), fem\+\_\+tools\+::in2global(), schwarz\+\_\+dd\+::schwarz\+\_\+picard(), schwarz\+\_\+dd\+\_\+time\+\_\+test\+::schwarz\+\_\+picard\+\_\+tt(), schwarz\+\_\+dd2subcyc\+::schwarz\+\_\+subcyc(), schwarz\+\_\+dd\+\_\+time\+\_\+test\+::schwarzloc(), fem\+::solve\+\_\+pde(), subcycling\+::subcyc\+\_\+schwarz(), fem\+::terminal\+\_\+info(), and postpro\+::write\+\_\+obs().
+
+
+\begin{DoxyCode}
+139   \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{public} :: time_step
+\end{DoxyCode}
+\index{globals@{globals}!time\+\_\+units@{time\+\_\+units}}
+\index{time\+\_\+units@{time\+\_\+units}!globals@{globals}}
+\subsubsection[{time\+\_\+units}]{\setlength{\rightskip}{0pt plus 5cm}character(len=5), public globals\+::time\+\_\+units}\label{namespaceglobals_a9b6e5780b5e94cf5d7dbb768fedac60d}
+
+
+time units 
+
+
+
+Definition at line 53 of file globals.\+f90.
+
+
+
+Referenced by postpro\+::print\+\_\+scilab(), and read\+\_\+inputs\+::read\+\_\+global().
+
+
+\begin{DoxyCode}
+53   \textcolor{keywordtype}{character(len=5)}, \textcolor{keywordtype}{public} :: time_units
+\end{DoxyCode}
+\index{globals@{globals}!version\+\_\+id@{version\+\_\+id}}
+\index{version\+\_\+id@{version\+\_\+id}!globals@{globals}}
+\subsubsection[{version\+\_\+id}]{\setlength{\rightskip}{0pt plus 5cm}type({\bf version}), public globals\+::version\+\_\+id}\label{namespaceglobals_ad74d7a48f287287c17ef36720d1579d5}
+
+
+version id variable 
+
+
+
+Definition at line 23 of file globals.\+f90.
+
+
+
+Referenced by drutes\+\_\+init\+::get\+\_\+cmd\+\_\+options(), and main().
+
+
+\begin{DoxyCode}
+23   \textcolor{keywordtype}{type}(version), \textcolor{keywordtype}{public} :: version_id   
+\end{DoxyCode}
+\index{globals@{globals}!www@{www}}
+\index{www@{www}!globals@{globals}}
+\subsubsection[{www}]{\setlength{\rightskip}{0pt plus 5cm}logical, public globals\+::www = .false.}\label{namespaceglobals_a9fdc0884cd3e883289e14207ab17ba82}
+
+
+Definition at line 176 of file globals.\+f90.
+
+
+
+Referenced by fem\+::exitme(), drutes\+\_\+init\+::get\+\_\+cmd\+\_\+options(), postpro\+::make\+\_\+print(), drutes\+\_\+init\+::parse\+\_\+globals(), read\+\_\+inputs\+::read\+\_\+global(), re\+\_\+reader\+::res\+\_\+read(), fem\+::terminal\+\_\+info(), and printtools\+::time2finish().
+
+
+\begin{DoxyCode}
+176   \textcolor{keywordtype}{logical}, \textcolor{keywordtype}{public} :: www = .false.
+\end{DoxyCode}

@@ -1,0 +1,304 @@
+\section{src/pma++/solvers.f90 File Reference}
+\label{solvers_8f90}\index{src/pma++/solvers.\+f90@{src/pma++/solvers.\+f90}}
+
+
+ruzne resice soustav linearnich rovnic  
+
+
+\subsection*{Data Types}
+\begin{DoxyCompactItemize}
+\item 
+type {\bf solvers\+::vrstvy}
+\end{DoxyCompactItemize}
+\subsection*{Modules}
+\begin{DoxyCompactItemize}
+\item 
+module {\bf solvers}
+\begin{DoxyCompactList}\small\item\em resice soustav \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Functions/\+Subroutines}
+\begin{DoxyCompactItemize}
+\item 
+subroutine, public {\bf solvers\+::jacobi} (a, b, x, maxit1, reps1, it, repsfin, l1, l2, countop, ilev1)
+\begin{DoxyCompactList}\small\item\em Jacobiova metoda. \end{DoxyCompactList}\item 
+subroutine, public {\bf solvers\+::gs} (a, b, x, maxit, reps, it, repsfin, l1, l2, countop, ilev)
+\begin{DoxyCompactList}\small\item\em Gauss-\/\+Seidelova metoda. \end{DoxyCompactList}\item 
+subroutine, public {\bf solvers\+::ldu} (A, LU, info, pivtype, ilev, perm1, perm2)
+\begin{DoxyCompactList}\small\item\em nedestruktivni L\+DU rozklad \end{DoxyCompactList}\item 
+subroutine, public {\bf solvers\+::ldud} (A, info, pivtype, ilev, perm1, perm2)
+\begin{DoxyCompactList}\small\item\em destruktivni L\+DU rozklad \end{DoxyCompactList}\item 
+subroutine {\bf adddegree} (row, deg)
+\begin{DoxyCompactList}\small\item\em vlozi informaci o stupni do seznamu \end{DoxyCompactList}\item 
+subroutine {\bf deldegree} (row)
+\begin{DoxyCompactList}\small\item\em vyjme informaci o stupni ze zasobniku \end{DoxyCompactList}\item 
+subroutine {\bf findpivot}
+\begin{DoxyCompactList}\small\item\em vybere pivota a zaznemena to v permutacich \end{DoxyCompactList}\item 
+subroutine, public {\bf solvers\+::split} (L\+DU, L, D, U, p1, p2)
+\begin{DoxyCompactList}\small\item\em rozdeli matici s L\+DU rozkladem na jednotlive komponenty \end{DoxyCompactList}\item 
+subroutine, public {\bf solvers\+::lduback} (L\+DU, b, x, p1, p2, oc1, ilevel, errcode)
+\begin{DoxyCompactList}\small\item\em Zpetny chod po L\+DU dekompozici. Predpoklada se, ze matice je ctvercova. \end{DoxyCompactList}\item 
+subroutine, public {\bf solvers\+::sd} (A, b, x, itmax1, reps1, ilev1, itfin1, repsfin1, ll1, ll2, cond1, opcnt1, errcode1)
+\begin{DoxyCompactList}\small\item\em metoda nejvetsiho spadu ( Steepest descent) podrobnosti viz \doxyref{\char`\"{}\+Metoda nejvetsiho spadu\char`\"{}}{p.}{sd} \end{DoxyCompactList}\item 
+subroutine, public {\bf solvers\+::sdnormal}
+\item 
+subroutine, public {\bf solvers\+::cg} (A, b, x, itmax1, reps1, ilev1, itfin1, repsfin1, ll1, ll2, cond1, opcnt1, errcode1)
+\begin{DoxyCompactList}\small\item\em metoda sdruzenych gradientu \doxyref{Metoda sdruzenych gradientu}{p.}{cg} \end{DoxyCompactList}\item 
+subroutine, public {\bf solvers\+::cgnormal} (A, b, x, itmax1, reps1, ilev1, itfin1, repsfin1, ll1, ll2, cond1, opcnt1, errcode1)
+\begin{DoxyCompactList}\small\item\em metoda sdruzenych gradientu pro normalni rovnice \doxyref{Metoda sdruzenych gradientu pro normalni rovnice}{p.}{cgn} \end{DoxyCompactList}\item 
+subroutine, public {\bf solvers\+::pcg} (A, Minv, b, x, itmax1, reps1, ilev1, itfin1, repsfin1, ll1, ll2, cond1, opcnt1, errcode1)
+\begin{DoxyCompactList}\small\item\em metoda sdruzenych gradientu \doxyref{Metoda predpodminenych sdruzenych gradientu}{p.}{pcg} \end{DoxyCompactList}\item 
+subroutine, public {\bf solvers\+::pcgnormal}
+\item 
+real(kind=rkind) function, private {\bf solvers\+::vycdet} (x, a, b, n)
+\item 
+subroutine, private {\bf solvers\+::esteig} (l1, l2, n, alfa, beta)
+\item 
+subroutine {\bf solvers\+::inivrstvy} (levelset, A)
+\begin{DoxyCompactList}\small\item\em inicializuje vrstvy \end{DoxyCompactList}\item 
+subroutine {\bf solvers\+::firstpoint} (levelset, point)
+\begin{DoxyCompactList}\small\item\em vlozi prvni vrchol, v tomto pripade nepotrebuje matici \end{DoxyCompactList}\item 
+subroutine {\bf solvers\+::addlevel} (A, mapa, levelset)
+\begin{DoxyCompactList}\small\item\em prida vrstvu, predpoklada se, ze aspon jedna tam uz je \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+ruzne resice soustav linearnich rovnic 
+
+
+
+\subsection{Function/\+Subroutine Documentation}
+\index{solvers.\+f90@{solvers.\+f90}!adddegree@{adddegree}}
+\index{adddegree@{adddegree}!solvers.\+f90@{solvers.\+f90}}
+\subsubsection[{adddegree(row, deg)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine ldud\+::adddegree (
+\begin{DoxyParamCaption}
+\item[{integer(kind=ikind)}]{row, }
+\item[{integer(kind=ikind)}]{deg}
+\end{DoxyParamCaption}
+)}\label{solvers_8f90_a6725199f29e190b60497398939897fbe}
+
+
+vlozi informaci o stupni do seznamu 
+
+
+
+Definition at line 641 of file solvers.\+f90.
+
+
+
+Referenced by solvers\+::ldud().
+
+
+\begin{DoxyCode}
+641             \textcolor{keywordtype}{implicit none}
+642             \textcolor{keywordtype}{integer(kind=ikind)} :: row, deg
+643             degs(row) = deg
+644             \textcolor{comment}{! zjisti jestli existuje odpovidajici stupen}
+645             \textcolor{keywordflow}{if} (dstart(deg) > 0) then
+646                 \textcolor{comment}{! pokud ano, zarad na zacatek seznamu}
+647                 dnext(row) = dstart(deg)
+648                 dprev(row) = -1
+649                 dprev(dstart(deg)) = row
+650             dstart(deg) = row
+651             else
+652                 \textcolor{comment}{! pokud ne, vytvor novy seznam a uprav ukazatel}
+653                 \textcolor{comment}{! na nejnizsi stupen}
+654                 dstart(deg) = row
+655                 dnext(row)  = -1
+656                 dprev(row) = -1
+657                 degsmin = deg
+658 \textcolor{keyword}{            end }if
+\end{DoxyCode}
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{solvers_8f90_a6725199f29e190b60497398939897fbe_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{solvers.\+f90@{solvers.\+f90}!deldegree@{deldegree}}
+\index{deldegree@{deldegree}!solvers.\+f90@{solvers.\+f90}}
+\subsubsection[{deldegree(row)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine ldud\+::deldegree (
+\begin{DoxyParamCaption}
+\item[{integer(kind=ikind)}]{row}
+\end{DoxyParamCaption}
+)}\label{solvers_8f90_ab458625a1319f3a4377818aa39177015}
+
+
+vyjme informaci o stupni ze zasobniku 
+
+
+
+Definition at line 663 of file solvers.\+f90.
+
+
+\begin{DoxyCode}
+663             \textcolor{keywordtype}{implicit none}
+664             \textcolor{keywordtype}{integer(kind=ikind)} :: row
+665 
+666             \textcolor{keywordflow}{if} (dprev(row) == -1 ) then
+667                 \textcolor{comment}{! pokud jsi na zacatku seznamu}
+668                 \textcolor{keywordflow}{if} (dnext(row) == -1) then
+669                     \textcolor{comment}{! pokud jsi jediny, tak se odstran a ukld v seznamech}
+670                     \textcolor{keywordflow}{if} ( degs(row) == degsmin) then
+671                     \textcolor{comment}{! uvolnuje se nejnizi stupen}
+672                     else
+673                         \textcolor{comment}{! uvolnuje se uprostred}
+674 \textcolor{keyword}{                    end }if
+675                 else
+676                     \textcolor{comment}{! jinak se jen odeber, nic pred, neco za}
+677                     \textcolor{comment}{! nutno upravit zacatk stupne}
+678                     dstart(degs(row)) = dnext(row)
+679                     degs(row) = -1
+680                     dprev(dnext(row)) = -1
+681                     dnext(row) = -1
+682                     dprev(row) = -1
+683 \textcolor{keyword}{                end }if
+684             else
+685                 \textcolor{comment}{! pokud ne, jen se odeber, neco je pred, mozna neco za}
+686                 dnext(dprev(row)) = dnext(row)
+687                 \textcolor{keywordflow}{if} (dnext(row) > 0 ) then
+688                     \textcolor{comment}{! neco ja za tebou}
+689                     dprev(dnext(row)) = dprev(row)
+690 \textcolor{keyword}{                end }if
+691                 dnext(row) = -1
+692                 dprev(row) = -1
+693                 degs(row)  = -1
+694 \textcolor{keyword}{            end }if
+\end{DoxyCode}
+\index{solvers.\+f90@{solvers.\+f90}!findpivot@{findpivot}}
+\index{findpivot@{findpivot}!solvers.\+f90@{solvers.\+f90}}
+\subsubsection[{findpivot}]{\setlength{\rightskip}{0pt plus 5cm}subroutine ldud\+::findpivot (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}\label{solvers_8f90_a4773d97418706c50f6832edd10604b92}
+
+
+vybere pivota a zaznemena to v permutacich 
+
+orientuje se podle promenne pt1 -\/ ta se nastavuje podle pivtype 
+
+Definition at line 704 of file solvers.\+f90.
+
+
+
+Referenced by solvers\+::ldud().
+
+
+\begin{DoxyCode}
+704             \textcolor{keywordtype}{implicit none}
+705             \textcolor{keywordtype}{integer(kind=ikind)} :: wrk, i1, j1, mi, mj,i2,i3,md
+706             \textcolor{keywordtype}{real(kind=rkind)} :: w1, mx
+707             \textcolor{keywordflow}{select case}(pt1)
+708                     \textcolor{keywordflow}{case} (0)
+709                         piv1 = i
+710                     piv2 = i
+711                     \textcolor{keywordflow}{case} (1)
+712                         \textcolor{keywordflow}{if} (il1 > 10) print *, \textcolor{stringliteral}{"piv1 i="},i
+713                         mx = 0
+714                         mi = 0
+715                         mj = 0
+716                         \textcolor{comment}{!do i1 = i, a%getn()}
+717                         \textcolor{keywordflow}{do} i3 = i, a%getn()
+718                             i1 = p1(i3)
+719                             i2 = i1
+720                             \textcolor{keywordflow}{if} ( .not. mp1(i2) ) stop \textcolor{stringliteral}{"probem v uv"}
+721                             \textcolor{keyword}{call }a%getrow(i2,pivval,pivjj,&
+722                             pivnelem,mp2)
+723                             \textcolor{keywordflow}{do} j1=1,pivnelem
+724                                 w1 = abs(pivval(j1))
+725                                 \textcolor{keywordflow}{if} (w1 > mx) then
+726                                     \textcolor{keywordflow}{if} (il1>10) print *, \textcolor{stringliteral}{"menim"}
+727                                     mx = w1
+728                                     mi = i2
+729                                     mj = pivjj(j1)
+730 \textcolor{keyword}{                                end }if
+731 \textcolor{keyword}{                            end }do
+732 \textcolor{keyword}{                        end }do
+733                         piv1 = mi
+734                     piv2 = mj
+735                     \textcolor{keywordflow}{case} (2)
+736                         \textcolor{comment}{! sloupcovy vyber}
+737                         piv2 = i
+738                         \textcolor{keyword}{call }a%getcol(i,pivval,pivjj, &
+739                         pivnelem,mp1)
+740                         mx = 0
+741                         mi = 0
+742                         mj = i
+743                         \textcolor{keywordflow}{do} i1=1,pivnelem
+744                             w1 = abs(pivval(i1))
+745                             \textcolor{keywordflow}{if} ( w1 > mx ) then
+746                                 mx = w1
+747                                 mi = pivjj(i1)
+748 \textcolor{keyword}{                            end }if
+749 \textcolor{keyword}{                        end }do
+750                     piv1 = mi
+751                     \textcolor{keywordflow}{case} (3)
+752                         piv1 = i
+753                         \textcolor{keyword}{call }a%getrow(i,pivval,pivjj, &
+754                         pivnelem,mp2)
+755                         mx = 0
+756                         mi = i
+757                         mj = 0
+758                         \textcolor{keywordflow}{do} i1=1,pivnelem
+759                             w1 = abs(pivval(i1))
+760                             \textcolor{keywordflow}{if} ( w1 > mx ) then
+761                                 mx = w1
+762                                 mj = pivjj(i1)
+763 \textcolor{keyword}{                            end }if
+764 \textcolor{keyword}{                        end }do
+765                     piv2 = mj
+766                     \textcolor{keywordflow}{case} (4)
+767                     continue
+768                     \textcolor{keywordflow}{case} (5)
+769                         \textcolor{comment}{! symetricke minimal degree}
+770                         \textcolor{comment}{!! napred jem primitivne}
+771                         md = a%getn() + 1
+772                         mi = 0
+773                         mj = 0
+774                         \textcolor{comment}{!                    do i1 = 1,a%getn()}
+775                         \textcolor{comment}{!                        if (.not. mp1(i1)) cycle}
+776                         \textcolor{comment}{!                        call a%getrow(i1,pivval,pivjj,&}
+777                         \textcolor{comment}{!                                      pivnelem,mp2)}
+778                         \textcolor{comment}{!                        if (pivnelem < md) then}
+779                         \textcolor{comment}{!                            md = pivnelem}
+780                         \textcolor{comment}{!                            mi = i1}
+781                         \textcolor{comment}{!                            mj = i1}
+782                         \textcolor{comment}{!                        end if}
+783                         \textcolor{comment}{!                    end do}
+784                         \textcolor{comment}{! ted trochu lepe}
+785                         \textcolor{keywordflow}{do} j1=i, a%getn()
+786                             i1 = p1(j1)
+787                             \textcolor{keywordflow}{if} (.not. mp1(i1)) stop \textcolor{stringliteral}{"potiz v MD"}
+788                             \textcolor{keywordflow}{if} (degs(i1) < md) then
+789                                 md = degs(i1)
+790                                 mi = i1
+791                                 mj = i1
+792                                 \textcolor{keywordflow}{if} (md <= lastmin) exit
+793 \textcolor{keyword}{                            end }if
+794 \textcolor{keyword}{                        end }do
+795                         piv1 = mi
+796                         piv2 = mj
+797                     lastmin = md
+798                     \textcolor{keywordflow}{case} (6)
+799                         piv1 = p1(i)
+800                     piv2 = p2(i)
+801 \textcolor{keywordflow}{                    case default}
+802                         stop \textcolor{stringliteral}{"chybna volba pivotaze - tady bych nemel nikdy byt"}
+803 \textcolor{keyword}{                    end }select
+804 \textcolor{keyword}{        end subroutine }findpivot
+\end{DoxyCode}
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{solvers_8f90_a4773d97418706c50f6832edd10604b92_icgraph}
+\end{center}
+\end{figure}
+
+

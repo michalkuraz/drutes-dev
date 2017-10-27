@@ -1,0 +1,6 @@
+<map id="decomp_tools::getres_loc" name="decomp_tools::getres_loc">
+<area shape="rect" id="node2" href="$namespaceschwarz__dd2subcyc.html#a332b28ddec42b6b80a856199f23d4355" title="schwarz_dd2subcyc::\lsolve_subdomain" alt="" coords="224,5,373,47"/>
+<area shape="rect" id="node3" href="$namespaceschwarz__dd2subcyc.html#a1172bd9a4c93b3862894cf530bff7fea" title="solves the problem using Picard method with Schwarz multiplicative domain decomposition reflecting th..." alt="" coords="421,5,571,47"/>
+<area shape="rect" id="node4" href="$namespacemanage__pointers.html#a8275d1f0bd8032fa68b910b70058a4cf" title="set pointers for the entire problem, except the file read pointers " alt="" coords="619,5,765,47"/>
+<area shape="rect" id="node5" href="$main_8f90.html#a8ec2266d83cd6c0b762cbcbc92c0af3d" title="main" alt="" coords="813,13,864,39"/>
+</map>

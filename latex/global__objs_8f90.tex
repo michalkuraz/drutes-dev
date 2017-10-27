@@ -1,0 +1,55 @@
+\section{src/core/global\+\_\+objs.f90 File Reference}
+\label{global__objs_8f90}\index{src/core/global\+\_\+objs.\+f90@{src/core/global\+\_\+objs.\+f90}}
+\subsection*{Data Types}
+\begin{DoxyCompactItemize}
+\item 
+type {\bf global\+\_\+objs\+::integpnt\+\_\+str}
+\begin{DoxyCompactList}\small\item\em structure that specifies the point \end{DoxyCompactList}\item 
+type {\bf global\+\_\+objs\+::smartarray\+\_\+int}
+\begin{DoxyCompactList}\small\item\em smart array, you don\textquotesingle{}t need to allocate -- usefull if you don\textquotesingle{}t know how many data you will write in, it is simply smart enough, it does all allocations automatically. By default the array data allocates on dimension 2, if the data doesn\textquotesingle{}t fit into this array, then the array is reallocated for a double of its original size \end{DoxyCompactList}\item 
+type {\bf global\+\_\+objs\+::smartarray\+\_\+real}
+\begin{DoxyCompactList}\small\item\em For comments and description see \doxyref{smartarray\+\_\+int}{p.}{structglobal__objs_1_1smartarray__int}. \end{DoxyCompactList}\item 
+type {\bf global\+\_\+objs\+::extsmtx}
+\item 
+type {\bf global\+\_\+objs\+::dirglob\+\_\+str}
+\item 
+type {\bf global\+\_\+objs\+::version}
+\item 
+type {\bf global\+\_\+objs\+::configuration}
+\begin{DoxyCompactList}\small\item\em structure with basic model configuration \end{DoxyCompactList}\item 
+type {\bf global\+\_\+objs\+::observation}
+\begin{DoxyCompactList}\small\item\em structure to define observation points \end{DoxyCompactList}\item 
+type {\bf global\+\_\+objs\+::observe\+\_\+time\+\_\+str}
+\item 
+type {\bf global\+\_\+objs\+::observe\+\_\+info\+\_\+str}
+\item 
+type {\bf global\+\_\+objs\+::measured}
+\item 
+type {\bf global\+\_\+objs\+::node}
+\begin{DoxyCompactList}\small\item\em mesh array type for node kolik = number of nodes id = id number of node, equal to position data = x,y coordinates bc = boundary condition for current node edge = boundary id number, if the node lies apart from any boundary, default value is 0 results = final iteration at each time step will be copied into this vector \end{DoxyCompactList}\item 
+type {\bf global\+\_\+objs\+::element}
+\begin{DoxyCompactList}\small\item\em mesh array type for elements \end{DoxyCompactList}\item 
+type {\bf global\+\_\+objs\+::integnodes}
+\end{DoxyCompactItemize}
+\subsection*{Modules}
+\begin{DoxyCompactItemize}
+\item 
+module {\bf global\+\_\+objs}
+\end{DoxyCompactItemize}
+\subsection*{Functions/\+Subroutines}
+\begin{DoxyCompactItemize}
+\item 
+subroutine, private {\bf global\+\_\+objs\+::ismartfill} (array, input, info)
+\item 
+subroutine, private {\bf global\+\_\+objs\+::ismartfill\+\_\+norepeat} (array, input, info)
+\item 
+subroutine, private {\bf global\+\_\+objs\+::ismartclear} (array, full)
+\item 
+logical function, private {\bf global\+\_\+objs\+::ismartexist} (array, value)
+\item 
+subroutine, private {\bf global\+\_\+objs\+::rsmartfill} (array, input, info)
+\item 
+subroutine, private {\bf global\+\_\+objs\+::rsmartfill\+\_\+norepeat} (array, input, info)
+\item 
+subroutine, private {\bf global\+\_\+objs\+::rsmartclear} (array, full)
+\end{DoxyCompactItemize}

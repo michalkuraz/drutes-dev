@@ -1,0 +1,3343 @@
+\section{re\+\_\+constitutive Module Reference}
+\label{namespacere__constitutive}\index{re\+\_\+constitutive@{re\+\_\+constitutive}}
+\subsection*{Functions/\+Subroutines}
+\begin{DoxyCompactItemize}
+\item 
+subroutine, private {\bf intoverflow} ()
+\item 
+real(kind=rkind) function, public {\bf vangen} (pde\+\_\+loc, layer, quadpnt, x)
+\begin{DoxyCompactList}\small\item\em Van Genuchten relation \[ \theta = f(pressure) \] \[ \theta_e = \frac{1}{(1+(\alpha*h)^n)^m} \] water content is considered as absolute value not the relative one ~\newline
+ see \[ \theta_e = \frac{\theta - \theta_r}{\theta_s-\theta_r} \]. \end{DoxyCompactList}\item 
+real(kind=rkind) function, public {\bf gardner\+\_\+wc} (pde\+\_\+loc, layer, quadpnt, x)
+\begin{DoxyCompactList}\small\item\em Gardner relation \[ \theta = f(pressure) \] \[ \theta = \frac{1}{(1+(\alpha*h)^n)^m} \]. \end{DoxyCompactList}\item 
+real(kind=rkind) function, public {\bf inverse\+\_\+vangen} (pde\+\_\+loc, layer, quadpnt, x)
+\item 
+real(kind=rkind) function, public {\bf vangen\+\_\+tab} (pde\+\_\+loc, layer, quadpnt, x)
+\item 
+real(kind=rkind) function, public {\bf vangen\+\_\+elast} (pde\+\_\+loc, layer, quadpnt, x)
+\begin{DoxyCompactList}\small\item\em so-\/called retention water capacity, it is a derivative to retention curve function  E(h) = C(h) + \{(h)\}\{\}S\+\_\+s ] where \[ C(h) = \left\{ \begin{array}{l l}\frac{m n \alpha (-h \alpha )^{-1+n}}{\left(1+(-h \alpha )^n\right)^{1+m}}(\theta_s - \theta_r) , & \quad \mbox{$\forall$ $h \in (-\infty, 0 )$}\\ 0, & \quad \mbox{$\forall$ $h \in \langle 0, + \infty )$}\\ \end{array} \right. \] and \[ \theta(h) = \left\{ \begin{array}{l l} \frac{\theta_s -\theta_r}{(1+(-\alpha h)^n_{vg})^m_{vg}} + \theta_r, & \quad \mbox{$\forall$ $h \in (-\infty, 0 )$}\\ \theta_S, & \quad \mbox{$\forall$ $h \in \langle 0, + \infty )$}\\ \end{array} \right. \] \end{DoxyCompactList}\item 
+real(kind=rkind) function, public {\bf gardner\+\_\+elast} (pde\+\_\+loc, layer, quadpnt, x)
+\begin{DoxyCompactList}\small\item\em so-\/called retention water capacity, it is a derivative to retention curve function \[ E(h) = \left\{ \begin{array}{l l} \alpha (\theta_s - \theta_r) exp(\alpha h) , & \quad \mbox{$\forall$ $h \in (-\infty, 0 )$}\\ 0, & \quad \mbox{$\forall$ $h \in \langle 0, + \infty )$}\\ \end{array} \right. \] \end{DoxyCompactList}\item 
+real(kind=rkind) function, public {\bf vangen\+\_\+elast\+\_\+tab} (pde\+\_\+loc, layer, quadpnt, x)
+\item 
+subroutine, public {\bf mualem} (pde\+\_\+loc, layer, quadpnt, x, tensor, scalar)
+\begin{DoxyCompactList}\small\item\em Mualem\textquotesingle{}s fucntion for unsaturated hydraulic conductivity with van Genuchten\textquotesingle{}s water content substitution \[ K(h) = \left\{ \begin{array}{l l} K_s\frac{\left( 1- (-\alpha h)^{n_{vg}m_{vg}} \left( 1+ (-\alpha h)^{n_{vg}} \right)^{-m_{vg}} \right)^2}{\left(1+(-\alpha h)^{n_{vg}} \right)^{\frac{m_{vg}}{2}}}, & \mbox{$\forall$ $h \in$ $(-\infty,0)$}\\ K_s, \mbox{$\forall$ $h \in$ $\langle 0, +\infty)$}\\ \end{array} \right. \]. \end{DoxyCompactList}\item 
+subroutine, public {\bf gardner\+\_\+ks} (pde\+\_\+loc, layer, quadpnt, x, tensor, scalar)
+\begin{DoxyCompactList}\small\item\em Gardner\textquotesingle{}s fucntion for unsaturated hydraulic conductivity \[ K(h) = K_s exp(\alpha h), \mbox{$\forall$ $h \in$ $(-\infty,0)$}\\ K_s, \mbox{$\forall$ $h \in$ $\langle 0, +\infty)$}. \]. \end{DoxyCompactList}\item 
+subroutine, public {\bf mualem\+\_\+tab} (pde\+\_\+loc, layer, quadpnt, x, tensor, scalar)
+\item 
+subroutine, public {\bf dmualem\+\_\+dh} (pde\+\_\+loc, layer, quadpnt, x, vector\+\_\+in, vector\+\_\+out, scalar)
+\begin{DoxyCompactList}\small\item\em derivative of Mualem\textquotesingle{}s function with van Genuchten\textquotesingle{}s substitution for water content function \[ \frac{\textrm{d} K(h)}{\textrm{d} h} = \left\{ \begin{array}{l l} K_s \frac{1}{2} \alpha (-\alpha h)^{(-1 + n)} (1 + (-\alpha h)^n)^{(-1 - m/ 2)} (1 - (-\alpha h)^{(m n)} (1 + (-\alpha h)^n)^{-m})^2 m n + 2 (1 + (-\alpha h)^n)^{(-m/2)} (1 - (-\alpha h)^{(m n)} (1 + (-\alpha h)^n)^{-m}) (-\alpha (-\alpha h)^{(-1 + n + m n)} (1 + (-\alpha h)^n)^{(-1 - m)} m n + \alpha (-\alpha h)^{(-1 + m n)} (1 + (-a h)^n)^{-m} m n), \quad \mbox{$\forall$ $h \in$ $(-\infty,0)$}\\ 0, \quad \mbox{$\forall$ $h \in$ $\langle 0, +\infty)$}\\ \end{array} \right. \] \end{DoxyCompactList}\item 
+real(kind=rkind) function, public {\bf derkz} (pde\+\_\+loc, layer, quadpnt, x)
+\item 
+subroutine, public {\bf convection\+\_\+rerot} (pde\+\_\+loc, layer, quadpnt, x, vector\+\_\+in, vector\+\_\+out, scalar)
+\begin{DoxyCompactList}\small\item\em convection term for the Richards equation for axisymmetric problems the vertical convection is equal as for the Richards equatio in standard coordinates, the horizontal convection equals [\textbackslash{} \{1\}\{r\}K(h) \end{DoxyCompactList}\item 
+real(kind=rkind) function, public {\bf sinkterm} (pde\+\_\+loc, layer, quadpnt, x)
+\item 
+subroutine, public {\bf dmualem\+\_\+dh\+\_\+tab} (pde\+\_\+loc, layer, quadpnt, x, vector\+\_\+in, vector\+\_\+out, scalar)
+\item 
+subroutine, public {\bf darcy\+\_\+law} (pde\+\_\+loc, layer, quadpnt, x, grad, flux, flux\+\_\+length)
+\item 
+subroutine {\bf tabvalues} (pde\+\_\+loc, Kfnc, d\+Kdhfnc, Cfnc, thetafnc)
+\begin{DoxyCompactList}\small\item\em creates a table of values of constitutive functions for the Richards equation to be linearly approximated \end{DoxyCompactList}\item 
+subroutine, public {\bf domainswitch} (domain)
+\item 
+subroutine, public {\bf init\+\_\+zones} (vg)
+\item 
+real(kind=rkind) function, private {\bf zone\+\_\+error\+\_\+val} (h, htest, taylor\+\_\+max)
+\item 
+pure real(kind=rkind) function, private {\bf secondder\+\_\+retc} (h)
+\item 
+logical function, private {\bf rcza\+\_\+check\+\_\+old} ()
+\item 
+logical function, public {\bf rcza\+\_\+check} (pde\+\_\+loc)
+\item 
+subroutine, public {\bf re\+\_\+dirichlet\+\_\+bc} (pde\+\_\+loc, el\+\_\+id, node\+\_\+order, value, code)
+\item 
+subroutine, public {\bf re\+\_\+null\+\_\+bc} (pde\+\_\+loc, el\+\_\+id, node\+\_\+order, value, code)
+\item 
+subroutine, public {\bf re\+\_\+dirichlet\+\_\+height\+\_\+bc} (pde\+\_\+loc, el\+\_\+id, node\+\_\+order, value, code)
+\item 
+subroutine, public {\bf re\+\_\+neumann\+\_\+bc} (pde\+\_\+loc, el\+\_\+id, node\+\_\+order, value, code)
+\item 
+subroutine {\bf re\+\_\+atmospheric} (pde\+\_\+loc, el\+\_\+id, node\+\_\+order, value, code)
+\item 
+subroutine, public {\bf re\+\_\+initcond} (pde\+\_\+loc)
+\item 
+subroutine, private {\bf setmatflux} ()
+\end{DoxyCompactItemize}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+real(kind=rkind), dimension(\+:,\+:), pointer, public {\bf ktab}
+\item 
+real(kind=rkind), dimension(\+:,\+:), pointer, public {\bf dkdhtab}
+\item 
+real(kind=rkind), dimension(\+:,\+:), pointer, public {\bf warecatab}
+\item 
+real(kind=rkind), dimension(\+:,\+:), pointer, public {\bf watcontab}
+\item 
+real(kind=rkind), dimension(\+:,\+:,\+:), allocatable, target, public {\bf ktab\+\_\+all}
+\item 
+real(kind=rkind), dimension(\+:,\+:,\+:), allocatable, target, public {\bf dkdhtab\+\_\+all}
+\item 
+real(kind=rkind), dimension(\+:,\+:,\+:), allocatable, target, public {\bf warecatab\+\_\+all}
+\item 
+real(kind=rkind), dimension(\+:,\+:,\+:), allocatable, target, public {\bf watcontab\+\_\+all}
+\item 
+type({\bf soilpar}), private {\bf van\+\_\+gen\+\_\+coeff}
+\item 
+integer(kind=ikind), private {\bf this\+\_\+layer}
+\item 
+logical, private {\bf tabwarning} = .false.
+\item 
+character(len=4096), private {\bf tabmsg} = \char`\"{}D\+R\+Ut\+ES requested values of the constitutive functions out of the range of your precalculated table, the function will be evaluated directly, it will slow down your computation, is everything ok? If yes, increase the length of interval for precaculating the constitutive functions in your config files\char`\"{}
+\item 
+logical, private {\bf intwarning} = .false.
+\end{DoxyCompactItemize}
+
+
+\subsection{Function/\+Subroutine Documentation}
+\index{re\+\_\+constitutive@{re\+\_\+constitutive}!convection\+\_\+rerot@{convection\+\_\+rerot}}
+\index{convection\+\_\+rerot@{convection\+\_\+rerot}!re\+\_\+constitutive@{re\+\_\+constitutive}}
+\subsubsection[{convection\+\_\+rerot(pde\+\_\+loc, layer, quadpnt, x, vector\+\_\+in, vector\+\_\+out, scalar)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, public re\+\_\+constitutive\+::convection\+\_\+rerot (
+\begin{DoxyParamCaption}
+\item[{class({\bf pde\+\_\+str}), intent(in)}]{pde\+\_\+loc, }
+\item[{integer(kind=ikind), intent(in)}]{layer, }
+\item[{type({\bf integpnt\+\_\+str}), intent(in), optional}]{quadpnt, }
+\item[{real(kind=rkind), dimension(\+:), intent(in), optional}]{x, }
+\item[{real(kind=rkind), dimension(\+:), intent(in), optional}]{vector\+\_\+in, }
+\item[{real(kind=rkind), dimension(\+:), intent(out), optional}]{vector\+\_\+out, }
+\item[{real(kind=rkind), intent(out), optional}]{scalar}
+\end{DoxyParamCaption}
+)}\label{namespacere__constitutive_a060c1f794f98499dd22932984f0b97e8}
+
+
+convection term for the Richards equation for axisymmetric problems the vertical convection is equal as for the Richards equatio in standard coordinates, the horizontal convection equals [\textbackslash{} \{1\}\{r\}K(h) 
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em x} & pressure head\\
+\hline
+\mbox{\tt in}  & {\em vector\+\_\+in} & this argument is required by the global vector\+\_\+fnc procedure pointer, unused in this procedure\\
+\hline
+\mbox{\tt out}  & {\em scalar} & relative unsaturated hydraulic conductivity derivative in respect to h, scalar value \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 963 of file re\+\_\+constitutive.\+f90.
+
+
+
+References dmualem\+\_\+dh(), dmualem\+\_\+dh\+\_\+tab(), globals\+::drutes\+\_\+config, and geom\+\_\+tools\+::getcoor().
+
+
+
+Referenced by re\+\_\+pointers\+::re\+\_\+rot(), and re\+\_\+pointers\+::reroth().
+
+
+\begin{DoxyCode}
+963       \textcolor{keywordtype}{use }typy
+964       \textcolor{keywordtype}{use }globals
+965       \textcolor{keywordtype}{use }global_objs
+966       \textcolor{keywordtype}{use }pde_objs
+967       \textcolor{keywordtype}{use }re_globals
+968       \textcolor{keywordtype}{use }geom_tools
+969       \textcolor{keywordtype}{use }debug_tools
+970 
+971       \textcolor{keywordtype}{class}(pde_str), \textcolor{keywordtype}{intent(in)} :: pde\_loc
+972       \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(in)} :: layer
+973       \textcolor{keywordtype}{type}(integpnt_str), \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional} :: quadpnt    
+975       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional} :: x
+977       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional} :: vector\_in
+981       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{intent(out)}, \textcolor{keywordtype}{optional} :: vector\_out
+983       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{intent(out)}, \textcolor{keywordtype}{optional} :: scalar
+984       
+985       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(2)} :: coord
+986 
+987       \textcolor{keywordtype}{real(kind=rkind)} :: a,n,m, tmp, h, k, flux
+988       \textcolor{keywordtype}{integer} :: proc
+989       \textcolor{keywordtype}{type}(integpnt_str) :: quadpnt\_loc    
+990       
+991 
+992       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(quadpnt) .and. \textcolor{keyword}{present}(x)) \textcolor{keywordflow}{then}
+993         print *, \textcolor{stringliteral}{"ERROR: the function can be called either with integ point or x value definition, not both
+       of them"}
+994         print *, \textcolor{stringliteral}{"exited from re\_constitutive::dmualem\_dh"}
+995         error stop
+996       \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (.not. \textcolor{keyword}{present}(quadpnt) .and. .not. \textcolor{keyword}{present}(x)) \textcolor{keywordflow}{then}
+997         print *, \textcolor{stringliteral}{"ERROR: you have not specified either integ point or x value"}
+998         print *, \textcolor{stringliteral}{"exited from re\_constitutive::dmualem\_dh"}
+999         error stop
+1000 \textcolor{keywordflow}{      end if}
+1001       
+1002       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(quadpnt)) \textcolor{keywordflow}{then}
+1003         quadpnt\_loc=quadpnt
+1004         quadpnt\_loc%preproc=.true.
+1005         h = pde\_loc%getval(quadpnt\_loc)
+1006       \textcolor{keywordflow}{else}
+1007         \textcolor{keywordflow}{if} (ubound(x,1) /=1) \textcolor{keywordflow}{then}
+1008           print *, \textcolor{stringliteral}{"ERROR: van Genuchten function is a function of a single variable h"}
+1009           print *, \textcolor{stringliteral}{"       your input data has:"}, ubound(x,1), \textcolor{stringliteral}{"variables"}
+1010           print *, \textcolor{stringliteral}{"exited from re\_constitutive::dmualem\_dh"}
+1011           error stop
+1012 \textcolor{keywordflow}{        end if}
+1013         h = x(1)
+1014 \textcolor{keywordflow}{      end if}
+1015       
+1016 
+1017       \textcolor{keywordflow}{select case} (drutes_config%name)
+1018         \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"RE\_rot"})
+1019           \textcolor{keywordflow}{if} (drutes_config%fnc\_method == 0) \textcolor{keywordflow}{then}
+1020             \textcolor{keyword}{call }dmualem_dh(pde\_loc, layer, x=(/h/), vector\_out = vector\_out)
+1021           \textcolor{keywordflow}{else}
+1022             \textcolor{keyword}{call }dmualem_dh_tab(pde\_loc, layer, x=(/h/), vector\_out = vector\_out\textcolor{comment}{)}
+1023 \textcolor{comment}{}\textcolor{keywordflow}{          end if}
+1024         \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"RErotH"})
+1025           vector\_out = 0
+1026 \textcolor{keywordflow}{      end select}
+1027       
+1028       tmp = vector\_out(2)
+1029       
+1030       \textcolor{keyword}{call }getcoor(quadpnt, coord)
+1031       
+1032       \textcolor{keyword}{call }pde\_loc%flux(layer, quadpnt, vector\_out=vector\_out)
+1033       
+1034       vector\_out(2) = tmp
+1035       
+1036 \textcolor{comment}{!       if (abs(coord(2)) < -12.5 ) then}
+1037         vector\_out(1) =  1.0\_rkind/coord(1)*vector\_out(1)       
+1038 \textcolor{comment}{!       else}
+1039 \textcolor{comment}{!       vector\_out(1) = 0}
+1040 \textcolor{comment}{!       end if}
+1041 
+\end{DoxyCode}
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacere__constitutive_a060c1f794f98499dd22932984f0b97e8_cgraph}
+\end{center}
+\end{figure}
+
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacere__constitutive_a060c1f794f98499dd22932984f0b97e8_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{re\+\_\+constitutive@{re\+\_\+constitutive}!darcy\+\_\+law@{darcy\+\_\+law}}
+\index{darcy\+\_\+law@{darcy\+\_\+law}!re\+\_\+constitutive@{re\+\_\+constitutive}}
+\subsubsection[{darcy\+\_\+law(pde\+\_\+loc, layer, quadpnt, x, grad, flux, flux\+\_\+length)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, public re\+\_\+constitutive\+::darcy\+\_\+law (
+\begin{DoxyParamCaption}
+\item[{class({\bf pde\+\_\+str}), intent(in)}]{pde\+\_\+loc, }
+\item[{integer(kind=ikind), intent(in)}]{layer, }
+\item[{type({\bf integpnt\+\_\+str}), intent(in), optional}]{quadpnt, }
+\item[{real(kind=rkind), dimension(\+:), intent(in), optional}]{x, }
+\item[{real(kind=rkind), dimension(\+:), intent(in), optional}]{grad, }
+\item[{real(kind=rkind), dimension(\+:), intent(out), optional}]{flux, }
+\item[{real(kind=rkind), intent(out), optional}]{flux\+\_\+length}
+\end{DoxyParamCaption}
+)}\label{namespacere__constitutive_a8629cd60bc0294376447af90a09dc2e3}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em grad} & this value is optional, because it is required by the vector\+\_\+fnc procedure pointer global definition \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 1161 of file re\+\_\+constitutive.\+f90.
+
+
+
+Referenced by re\+\_\+pointers\+::re\+\_\+rot(), and re\+\_\+pointers\+::re\+\_\+std().
+
+
+\begin{DoxyCode}
+1161       \textcolor{keywordtype}{use }typy
+1162       \textcolor{keywordtype}{use }pde_objs
+1163       \textcolor{keywordtype}{use }global_objs
+1164        
+1165       \textcolor{keywordtype}{class}(pde_str), \textcolor{keywordtype}{intent(in)} :: pde\_loc
+1166       \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(in)}                          :: layer
+1167       \textcolor{keywordtype}{type}(integpnt_str), \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional} :: quadpnt    
+1168       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{optional}              \textcolor{comment}{     :: x}
+1170       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional}     :: grad
+1171       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{intent(out)}, \textcolor{keywordtype}{optional}    :: flux
+1172       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{intent(out)}, \textcolor{keywordtype}{optional}                  :: flux\_length
+1173 
+1174       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(3,3)}  :: k
+1175       \textcolor{keywordtype}{integer}                           :: d
+1176       \textcolor{keywordtype}{integer(kind=ikind)}               :: i
+1177       \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{dimension(3)} :: nablaz
+1178       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(3)}  :: gradh
+1179       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(3)}  :: vct
+1180       \textcolor{keywordtype}{real(kind=rkind)} :: h
+1181       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable} :: gradient
+1182       \textcolor{keywordtype}{type}(integpnt_str) :: quadpnt\_loc
+1183       
+1184 
+1185       
+1186       
+1187       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(quadpnt) .and. (\textcolor{keyword}{present}(grad) .or. \textcolor{keyword}{present}(x))) \textcolor{keywordflow}{then}
+1188         print *, \textcolor{stringliteral}{"ERROR: the function can be called either with integ point or x value definition and
+       gradient, not both of them"}
+1189         error stop
+1190       \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} ((.not. \textcolor{keyword}{present}(grad) .or. .not. \textcolor{keyword}{present}(x)) .and. .not. \textcolor{keyword}{present}\textcolor{comment}{(quadpnt)) }\textcolor{keywordflow}{then}
+1191         print *, \textcolor{stringliteral}{"ERROR: you have not specified either integ point or x value"}
+1192         print *, \textcolor{stringliteral}{"exited from re\_constitutive::darcy\_law"}
+1193         error stop
+1194 \textcolor{keywordflow}{      end if}
+1195       
+1196       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(quadpnt)) \textcolor{keywordflow}{then}
+1197         quadpnt\_loc=quadpnt
+1198         quadpnt\_loc%preproc=.true.
+1199         h = pde\_loc%getval(quadpnt\_loc)
+1200         \textcolor{keyword}{call }pde\_loc%getgrad(quadpnt, gradient)
+1201       \textcolor{keywordflow}{else}
+1202         \textcolor{keywordflow}{if} (ubound(x,1) /=1) \textcolor{keywordflow}{then}
+1203           print *, \textcolor{stringliteral}{"ERROR: van Genuchten function is a function of a single variable h"}
+1204           print *, \textcolor{stringliteral}{"       your input data has:"}, ubound(x,1), \textcolor{stringliteral}{"variables"}
+1205           print *, \textcolor{stringliteral}{"exited from re\_constitutive::darcy\_law"}
+1206           error stop
+1207 \textcolor{keywordflow}{        end if}
+1208         h = x(1)
+1209         \textcolor{keyword}{allocate}(gradient(ubound(grad,1)))
+1210         gradient = grad
+1211 \textcolor{keywordflow}{      end if}
+1212       
+1213       d = drutes_config%dimen
+1214 
+1215       nablaz = 0
+1216       nablaz(d) = 1
+1217       
+1218       gradh(1:d) = gradient(1:d) + nablaz(1:d)
+1219 
+1220       \textcolor{keyword}{call }pde\_loc%pde\_fnc(1)%dispersion(pde\_loc, layer, x=(/h/), tensor\textcolor{comment}{=k(1:d, 1:d))}
+1221 \textcolor{comment}{     }
+1222 \textcolor{comment}{      }
+1223 \textcolor{comment}{      vct(1:d) = matmul(-k(1:d,1:d), gradh(1:d))}
+1224 \textcolor{comment}{}
+1225 \textcolor{comment}{}
+1226 \textcolor{comment}{      }\textcolor{keywordflow}{if} (\textcolor{keyword}{present}(flux\_length)) \textcolor{keywordflow}{then}
+1227         \textcolor{keywordflow}{select case}(d)
+1228           \textcolor{keywordflow}{case}(1)
+1229                 flux\_length = vct(1)
+1230           \textcolor{keywordflow}{case}(2)
+1231                 flux\_length = sqrt(vct(1)*vct(1) + vct(2)*vct(2))
+1232           \textcolor{keywordflow}{case}(3)
+1233                 flux\_length = sqrt(vct(1)*vct(1) + vct(2)*vct(2) + vct(3\textcolor{comment}{)*vct(3))}
+1234 \textcolor{comment}{}\textcolor{keywordflow}{        end select}
+1235 \textcolor{keywordflow}{      end if}
+1236 
+1237 
+1238       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(flux)) \textcolor{keywordflow}{then}
+1239         flux(1:d) = vct(1:d)
+1240 \textcolor{keywordflow}{      end if}
+1241 
+\end{DoxyCode}
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacere__constitutive_a8629cd60bc0294376447af90a09dc2e3_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{re\+\_\+constitutive@{re\+\_\+constitutive}!derkz@{derkz}}
+\index{derkz@{derkz}!re\+\_\+constitutive@{re\+\_\+constitutive}}
+\subsubsection[{derkz(pde\+\_\+loc, layer, quadpnt, x)}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind) function, public re\+\_\+constitutive\+::derkz (
+\begin{DoxyParamCaption}
+\item[{class({\bf pde\+\_\+str}), intent(in)}]{pde\+\_\+loc, }
+\item[{integer(kind=ikind), intent(in)}]{layer, }
+\item[{type({\bf integpnt\+\_\+str}), intent(in), optional}]{quadpnt, }
+\item[{real(kind=rkind), dimension(\+:), intent(in), optional}]{x}
+\end{DoxyParamCaption}
+)}\label{namespacere__constitutive_a36094a3f7331f94d2c895ef3e442d39d}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em x} & pressure head\\
+\hline
+\mbox{\tt in}  & {\em quadpnt} & Gauss quadrature point structure (element number and rank of Gauss quadrature point)\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+resulting system elasticity 
+\end{DoxyReturn}
+
+
+Definition at line 859 of file re\+\_\+constitutive.\+f90.
+
+
+
+References geom\+\_\+tools\+::plane\+\_\+derivative().
+
+
+\begin{DoxyCode}
+859       \textcolor{keywordtype}{use }typy
+860       \textcolor{keywordtype}{use }re_globals
+861       \textcolor{keywordtype}{use }pde_objs
+862       \textcolor{keywordtype}{use }geom_tools
+863       \textcolor{keywordtype}{use }debug_tools
+864 
+865       \textcolor{keywordtype}{class}(pde_str), \textcolor{keywordtype}{intent(in)} :: pde\_loc 
+866       \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(in)} :: layer
+868       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{dimension(:)},  \textcolor{keywordtype}{optional} :: x
+870       \textcolor{keywordtype}{type}(integpnt_str), \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional} :: quadpnt
+871       \textcolor{keywordtype}{real(kind=rkind)} :: h
+873       \textcolor{keywordtype}{real(kind=rkind)} :: dkdz
+874       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(3,3)} :: ktmp
+875       
+876       
+877       \textcolor{keywordtype}{real(kind=rkind)} :: dkdx
+878       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:,:)}, \textcolor{keywordtype}{allocatable}, \textcolor{keywordtype}{save} :: pts
+879       \textcolor{keywordtype}{type}(integpnt_str) :: quadpnt\_loc
+880       \textcolor{keywordtype}{integer(kind=ikind)} :: layer\_loc, vecino, i, d   
+881 
+882 
+883       
+884       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(quadpnt) .and. \textcolor{keyword}{present}(x)) \textcolor{keywordflow}{then}
+885         print *, \textcolor{stringliteral}{"ERROR: the function can be called either with integ point or x value definition, not both
+       of them"}
+886         print *, \textcolor{stringliteral}{"exited from re\_constitutive::vangen\_elast"}
+887         error stop
+888       \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (.not. \textcolor{keyword}{present}(quadpnt) .and. .not. \textcolor{keyword}{present}(x)) \textcolor{keywordflow}{then}
+889         print *, \textcolor{stringliteral}{"ERROR: you have not specified either integ point or x value"}
+890         print *, \textcolor{stringliteral}{"exited from re\_constitutive::vangen\_elast"}
+891         error stop
+892 \textcolor{keywordflow}{      end if}
+893       
+894       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(quadpnt)) \textcolor{keywordflow}{then}
+895         quadpnt\_loc=quadpnt
+896         quadpnt\_loc%preproc=.true.
+897         h = pde\_loc%getval(quadpnt\_loc)
+898       \textcolor{keywordflow}{else}
+899         \textcolor{keywordflow}{if} (ubound(x,1) /=1) \textcolor{keywordflow}{then}
+900           print *, \textcolor{stringliteral}{"ERROR: van Genuchten function is a function of a single variable h"}
+901           print *, \textcolor{stringliteral}{"       your input data has:"}, ubound(x,1), \textcolor{stringliteral}{"variables"}
+902           error stop
+903 \textcolor{keywordflow}{        end if}
+904         \textcolor{keywordflow}{if} (ubound(x,1) /=1) \textcolor{keywordflow}{then}
+905           print *, \textcolor{stringliteral}{"ERROR: van Genuchten function is a function of a single variable h"}
+906           print *, \textcolor{stringliteral}{"       your input data has:"}, ubound(x,1), \textcolor{stringliteral}{"variables"}
+907           print *, \textcolor{stringliteral}{"exited from re\_constitutive::vangen\_elast"}
+908           error stop
+909 \textcolor{keywordflow}{        end if}
+910         h = x(1)
+911 \textcolor{keywordflow}{      end if}
+912       
+913       
+914       \textcolor{keywordflow}{if} (.not. \textcolor{keyword}{allocated}(pts) ) \textcolor{keywordflow}{then}
+915         \textcolor{keyword}{allocate}(pts(drutes_config%dimen+1, ubound(elements%data,2)))
+916 \textcolor{keywordflow}{      end if}
+917       
+918       quadpnt\_loc%type\_pnt = \textcolor{stringliteral}{"ndpt"}
+919       quadpnt\_loc%element = quadpnt%element
+920       quadpnt\_loc%column = 2
+921       d = drutes_config%dimen
+922      
+923       \textcolor{keywordflow}{do} i=1, ubound(elements%data,2)
+924         quadpnt\_loc%order = elements%data(quadpnt%element,i)
+925         vecino = elements%neighbours(quadpnt%element,i)
+926         \textcolor{keywordflow}{if} (vecino > 0) \textcolor{keywordflow}{then}
+927           layer\_loc = elements%material(vecino,1)
+928         \textcolor{keywordflow}{else}
+929           layer\_loc = elements%material(quadpnt%element,1)
+930 \textcolor{keywordflow}{        end if} 
+931         quadpnt\_loc%order = elements%data(quadpnt%element, i)
+932         \textcolor{keyword}{call }pde\_loc%pde\_fnc(1)%dispersion(pde\_loc, layer\_loc, quadpnt\_loc, tensor\textcolor{comment}{=ktmp(1:d, 1:d))}
+933 \textcolor{comment}{        pts(d+1, i) = ktmp(d,d)}
+934 \textcolor{comment}{        pts(1:d,i) = nodes%data(elements%data(quadpnt%element,i),1:d)}
+935 \textcolor{comment}{}\textcolor{keywordflow}{      end do}
+936       
+937       
+938       
+939       \textcolor{keywordflow}{select case}(drutes_config%dimen)
+940         \textcolor{keywordflow}{case}(1)
+941           \textcolor{keywordflow}{if} (pts(1,2)-pts(1,1) > 0) \textcolor{keywordflow}{then}
+942             dkdz = (pts(2,2)-pts(2,1))/(pts(1,2)-pts(1,1))
+943           \textcolor{keywordflow}{else}
+944             dkdz = (pts(2,1)-pts(2,2))/(pts(1,1)-pts(1,2))
+945 \textcolor{keywordflow}{          end if}
+946         \textcolor{keywordflow}{case}(2)
+947           \textcolor{keyword}{call }plane_derivative(pts(1,:), pts(2,:), pts(3,:), dkdx, dkdz)
+948 \textcolor{keywordflow}{      end select}
+949       
+950       dkdz = -dkdz
+951         
+952       
+953     
+\end{DoxyCode}
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=333pt]{namespacere__constitutive_a36094a3f7331f94d2c895ef3e442d39d_cgraph}
+\end{center}
+\end{figure}
+
+
+\index{re\+\_\+constitutive@{re\+\_\+constitutive}!dmualem\+\_\+dh@{dmualem\+\_\+dh}}
+\index{dmualem\+\_\+dh@{dmualem\+\_\+dh}!re\+\_\+constitutive@{re\+\_\+constitutive}}
+\subsubsection[{dmualem\+\_\+dh(pde\+\_\+loc, layer, quadpnt, x, vector\+\_\+in, vector\+\_\+out, scalar)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, public re\+\_\+constitutive\+::dmualem\+\_\+dh (
+\begin{DoxyParamCaption}
+\item[{class({\bf pde\+\_\+str}), intent(in)}]{pde\+\_\+loc, }
+\item[{integer(kind=ikind), intent(in)}]{layer, }
+\item[{type({\bf integpnt\+\_\+str}), intent(in), optional}]{quadpnt, }
+\item[{real(kind=rkind), dimension(\+:), intent(in), optional}]{x, }
+\item[{real(kind=rkind), dimension(\+:), intent(in), optional}]{vector\+\_\+in, }
+\item[{real(kind=rkind), dimension(\+:), intent(out), optional}]{vector\+\_\+out, }
+\item[{real(kind=rkind), intent(out), optional}]{scalar}
+\end{DoxyParamCaption}
+)}\label{namespacere__constitutive_a69e92c71f9859f011cbf34e28dc8922c}
+
+
+derivative of Mualem\textquotesingle{}s function with van Genuchten\textquotesingle{}s substitution for water content function \[ \frac{\textrm{d} K(h)}{\textrm{d} h} = \left\{ \begin{array}{l l} K_s \frac{1}{2} \alpha (-\alpha h)^{(-1 + n)} (1 + (-\alpha h)^n)^{(-1 - m/ 2)} (1 - (-\alpha h)^{(m n)} (1 + (-\alpha h)^n)^{-m})^2 m n + 2 (1 + (-\alpha h)^n)^{(-m/2)} (1 - (-\alpha h)^{(m n)} (1 + (-\alpha h)^n)^{-m}) (-\alpha (-\alpha h)^{(-1 + n + m n)} (1 + (-\alpha h)^n)^{(-1 - m)} m n + \alpha (-\alpha h)^{(-1 + m n)} (1 + (-a h)^n)^{-m} m n), \quad \mbox{$\forall$ $h \in$ $(-\infty,0)$}\\ 0, \quad \mbox{$\forall$ $h \in$ $\langle 0, +\infty)$}\\ \end{array} \right. \] 
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em x} & pressure head\\
+\hline
+\mbox{\tt in}  & {\em vector\+\_\+in} & this argument is required by the global vector\+\_\+fnc procedure pointer, unused in this procedure\\
+\hline
+\mbox{\tt out}  & {\em scalar} & relative unsaturated hydraulic conductivity derivative in respect to h, scalar value \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 783 of file re\+\_\+constitutive.\+f90.
+
+
+
+References globals\+::drutes\+\_\+config, and re\+\_\+globals\+::vgset.
+
+
+
+Referenced by re\+\_\+pointers\+::allrepointers(), convection\+\_\+rerot(), dmualem\+\_\+dh\+\_\+tab(), re\+\_\+pointers\+::re\+\_\+rot(), and re\+\_\+pointers\+::re\+\_\+std().
+
+
+\begin{DoxyCode}
+783       \textcolor{keywordtype}{use }typy
+784       \textcolor{keywordtype}{use }globals
+785       \textcolor{keywordtype}{use }pde_objs
+786       \textcolor{keywordtype}{use }re_globals
+787 
+788       \textcolor{keywordtype}{class}(pde_str), \textcolor{keywordtype}{intent(in)} :: pde\_loc
+789       \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(in)} :: layer
+790       \textcolor{keywordtype}{type}(integpnt_str), \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional} :: quadpnt    
+792       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional} :: x
+794       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional} :: vector\_in
+798       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{intent(out)}, \textcolor{keywordtype}{optional} :: vector\_out
+800       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{intent(out)}, \textcolor{keywordtype}{optional} :: scalar
+801 
+802       \textcolor{keywordtype}{real(kind=rkind)} :: a,n,m, tmp, h
+803       \textcolor{keywordtype}{type}(integpnt_str) :: quadpnt\_loc     
+804       
+805          
+806       
+807       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(quadpnt) .and. \textcolor{keyword}{present}(x)) \textcolor{keywordflow}{then}
+808         print *, \textcolor{stringliteral}{"ERROR: the function can be called either with integ point or x value definition, not both
+       of them"}
+809         print *, \textcolor{stringliteral}{"exited from re\_constitutive::dmualem\_dh"}
+810         error stop
+811       \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (.not. \textcolor{keyword}{present}(quadpnt) .and. .not. \textcolor{keyword}{present}(x)) \textcolor{keywordflow}{then}
+812         print *, \textcolor{stringliteral}{"ERROR: you have not specified either integ point or x value"}
+813         print *, \textcolor{stringliteral}{"exited from re\_constitutive::dmualem\_dh"}
+814         error stop
+815 \textcolor{keywordflow}{      end if}
+816       
+817       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(quadpnt)) \textcolor{keywordflow}{then}
+818         quadpnt\_loc=quadpnt
+819         quadpnt\_loc%preproc=.true.
+820         h = pde\_loc%getval(quadpnt\_loc)
+821       \textcolor{keywordflow}{else}
+822         \textcolor{keywordflow}{if} (ubound(x,1) /=1) \textcolor{keywordflow}{then}
+823           print *, \textcolor{stringliteral}{"ERROR: van Genuchten function is a function of a single variable h"}
+824           print *, \textcolor{stringliteral}{"       your input data has:"}, ubound(x,1), \textcolor{stringliteral}{"variables"}
+825           print *, \textcolor{stringliteral}{"exited from re\_constitutive::dmualem\_dh"}
+826           error stop
+827 \textcolor{keywordflow}{        end if}
+828         h = x(1)
+829 \textcolor{keywordflow}{      end if}
+830       
+831 
+832       \textcolor{keywordflow}{if} (h < 0) \textcolor{keywordflow}{then}
+833         a = vgset(layer)%alpha
+834         n = vgset(layer)%n
+835         m = vgset(layer)%m
+836         tmp = (    (a*(-(a*h))**(-1 + n)*(1 + (-(a*h))**n)**(-1 - m/2.0)* &
+837             (1 - (-(a*h))**(m*n)/(1 + (-(a*h))**n)**m)**2*m*n)/2.0 + &
+838          (2*(1 - (-(a*h))**(m*n)/(1 + (-(a*h))**n)**m)* &
+839             (-(a*(-(a*h))**(-1 + n + m*n)*(1 + (-(a*h))**n)**(-1 - m)*m*n) + &
+840               (a*(-(a*h))**(-1 + m*n)*m*n)/(1 + (-(a*h))**n)**m))/ &
+841           (1 + (-(a*h))**n)**(m/2.0))
+842       \textcolor{keywordflow}{else}
+843         tmp = 0
+844 \textcolor{keywordflow}{      end if}
+845 
+846       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(vector\_out)) \textcolor{keywordflow}{then}
+847         \textcolor{comment}{! must be negative, because the commnon scheme of the CDE problem has negative convection, but RE
+       has positive convection}
+848         vector\_out = -vgset(layer)%Ks(drutes_config%dimen,:) * tmp
+849 \textcolor{keywordflow}{      end if}
+850 
+851       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(scalar)) \textcolor{keywordflow}{then}
+852         scalar = tmp
+853 \textcolor{keywordflow}{      end if}
+854 
+\end{DoxyCode}
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacere__constitutive_a69e92c71f9859f011cbf34e28dc8922c_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{re\+\_\+constitutive@{re\+\_\+constitutive}!dmualem\+\_\+dh\+\_\+tab@{dmualem\+\_\+dh\+\_\+tab}}
+\index{dmualem\+\_\+dh\+\_\+tab@{dmualem\+\_\+dh\+\_\+tab}!re\+\_\+constitutive@{re\+\_\+constitutive}}
+\subsubsection[{dmualem\+\_\+dh\+\_\+tab(pde\+\_\+loc, layer, quadpnt, x, vector\+\_\+in, vector\+\_\+out, scalar)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, public re\+\_\+constitutive\+::dmualem\+\_\+dh\+\_\+tab (
+\begin{DoxyParamCaption}
+\item[{class({\bf pde\+\_\+str}), intent(in)}]{pde\+\_\+loc, }
+\item[{integer(kind=ikind), intent(in)}]{layer, }
+\item[{type({\bf integpnt\+\_\+str}), intent(in), optional}]{quadpnt, }
+\item[{real(kind=rkind), dimension(\+:), intent(in), optional}]{x, }
+\item[{real(kind=rkind), dimension(\+:), intent(in), optional}]{vector\+\_\+in, }
+\item[{real(kind=rkind), dimension(\+:), intent(out), optional}]{vector\+\_\+out, }
+\item[{real(kind=rkind), intent(out), optional}]{scalar}
+\end{DoxyParamCaption}
+)}\label{namespacere__constitutive_a3f619b615de841ad748f42a738bb8ff4}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em x} & pressure head\\
+\hline
+\mbox{\tt in}  & {\em vector\+\_\+in} & this argument is required by the global vector\+\_\+fnc procedure pointer, unused in this procedure\\
+\hline
+\mbox{\tt out}  & {\em scalar} & relative unsaturated hydraulic conductivity derivative in respect to h \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 1068 of file re\+\_\+constitutive.\+f90.
+
+
+
+References dkdhtab, dmualem\+\_\+dh(), globals\+::drutes\+\_\+config, intoverflow(), intwarning, tabmsg, tabwarning, re\+\_\+globals\+::vgset, and core\+\_\+tools\+::write\+\_\+log().
+
+
+
+Referenced by convection\+\_\+rerot(), re\+\_\+pointers\+::re\+\_\+rot(), and re\+\_\+pointers\+::re\+\_\+std().
+
+
+\begin{DoxyCode}
+1068       \textcolor{keywordtype}{use }typy
+1069       \textcolor{keywordtype}{use }globals
+1070       \textcolor{keywordtype}{use }pde_objs
+1071       \textcolor{keywordtype}{use }re_globals
+1072       \textcolor{keywordtype}{use }core_tools
+1073 
+1074       \textcolor{keywordtype}{class}(pde_str), \textcolor{keywordtype}{intent(in)} :: pde\_loc
+1075       \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(in)} :: layer
+1076       \textcolor{keywordtype}{type}(integpnt_str), \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional} :: quadpnt    
+1078       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional} :: x
+1080       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional} :: vector\_in
+1084       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{intent(out)}, \textcolor{keywordtype}{optional} :: vector\_out
+1086       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{intent(out)}, \textcolor{keywordtype}{optional} :: scalar
+1087 
+1088 
+1089       \textcolor{keywordtype}{integer(kind=ikind)} :: pos
+1090       \textcolor{keywordtype}{real(kind=rkind)} :: res, dist, tmp, h
+1091       \textcolor{keywordtype}{type}(integpnt_str) :: quadpnt\_loc     
+1092       
+1093     
+1094       
+1095       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(quadpnt) .and. \textcolor{keyword}{present}(x)) \textcolor{keywordflow}{then}
+1096         print *, \textcolor{stringliteral}{"ERROR: the function can be called either with integ point or x value definition, not both
+       of them"}
+1097         print *, \textcolor{stringliteral}{"exited from re\_constitutive::vangen\_tab"}
+1098         error stop
+1099       \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (.not. \textcolor{keyword}{present}(quadpnt) .and. .not. \textcolor{keyword}{present}(x)) \textcolor{keywordflow}{then}
+1100         print *, \textcolor{stringliteral}{"ERROR: you have not specified either integ point or x value"}
+1101         print *, \textcolor{stringliteral}{"exited from re\_constitutive::dmualem\_dh\_tab"}
+1102         error stop
+1103 \textcolor{keywordflow}{      end if}
+1104       
+1105       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(quadpnt)) \textcolor{keywordflow}{then}
+1106         quadpnt\_loc=quadpnt
+1107         quadpnt\_loc%preproc=.true.
+1108         h = pde\_loc%getval(quadpnt\_loc)
+1109       \textcolor{keywordflow}{else}
+1110         \textcolor{keywordflow}{if} (ubound(x,1) /=1) \textcolor{keywordflow}{then}
+1111           print *, \textcolor{stringliteral}{"ERROR: van Genuchten function is a function of a single variable h"}
+1112           print *, \textcolor{stringliteral}{"       your input data has:"}, ubound(x,1), \textcolor{stringliteral}{"variables"}
+1113           print *, \textcolor{stringliteral}{"exited from re\_constitutive::dmualem\_dh\_tab"}
+1114           error stop
+1115 \textcolor{keywordflow}{        end if}
+1116         h = x(1)
+1117 \textcolor{keywordflow}{      end if}      
+1118       
+1119       \textcolor{keywordflow}{if} (h<0) \textcolor{keywordflow}{then}
+1120         \textcolor{keywordflow}{if} (h/drutes_config%fnc\_discr\_length < 0.1*huge(1) ) \textcolor{keywordflow}{then}
+1121         
+1122           pos = int(-h/drutes_config%fnc\_discr\_length)+1
+1123           \textcolor{keywordflow}{if} (pos <= ubound(dkdhtab,2)-1) \textcolor{keywordflow}{then}
+1124             dist = -h - (pos - 1)*drutes_config%fnc\_discr\_length
+1125             tmp = (dkdhtab(layer,pos+1)-dkdhtab(layer,pos))/drutes_config%fnc\_discr\_length\textcolor{comment}{*
+      dist + dkdhtab(layer,pos)}
+1126 \textcolor{comment}{          }\textcolor{keywordflow}{else}
+1127             \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(quadpnt)) \textcolor{keyword}{call }dmualem_dh(pde\_loc, layer, quadpnt, scalar\textcolor{comment}{=tmp)}
+1128 \textcolor{comment}{            }\textcolor{keywordflow}{if} (\textcolor{keyword}{present}(x)) \textcolor{keyword}{call }dmualem_dh(pde\_loc, layer, x=x, scalar=tmp)
+1129             \textcolor{keywordflow}{if} (.not. tabwarning) \textcolor{keywordflow}{then}
+1130               \textcolor{keyword}{call }write_log(trim(tabmsg))
+1131               tabwarning = .true.
+1132 \textcolor{keywordflow}{            end if}
+1133 \textcolor{keywordflow}{          end if}
+1134         \textcolor{keywordflow}{else}
+1135           \textcolor{keywordflow}{if} (.not. intwarning) \textcolor{keywordflow}{then}
+1136             \textcolor{keyword}{call }intoverflow()
+1137             intwarning = .true.
+1138 \textcolor{keywordflow}{          end if}
+1139           \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(quadpnt))\textcolor{keyword}{call }dmualem_dh(pde\_loc, layer, quadpnt\_loc, scalar\textcolor{comment}{=tmp)}
+1140 \textcolor{comment}{          }\textcolor{keywordflow}{if} (\textcolor{keyword}{present}(x))\textcolor{keyword}{call }dmualem_dh(pde\_loc, layer, x=x, scalar=tmp)
+1141 \textcolor{keywordflow}{        end if}
+1142           
+1143       \textcolor{keywordflow}{else}
+1144         tmp = 0
+1145 \textcolor{keywordflow}{      end if}
+1146       
+1147 
+1148       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(vector\_out)) \textcolor{keywordflow}{then}
+1149         \textcolor{comment}{! must be negative, because the commnon scheme of the CDE problem has negative convection, but RE
+       has positive convection}
+1150         vector\_out = -vgset(layer)%Ks(drutes_config%dimen,:) * tmp
+1151 \textcolor{keywordflow}{      end if}
+1152 
+1153       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(scalar)) \textcolor{keywordflow}{then}
+1154         scalar = tmp
+1155 \textcolor{keywordflow}{      end if}
+1156 
+\end{DoxyCode}
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacere__constitutive_a3f619b615de841ad748f42a738bb8ff4_cgraph}
+\end{center}
+\end{figure}
+
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacere__constitutive_a3f619b615de841ad748f42a738bb8ff4_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{re\+\_\+constitutive@{re\+\_\+constitutive}!domainswitch@{domainswitch}}
+\index{domainswitch@{domainswitch}!re\+\_\+constitutive@{re\+\_\+constitutive}}
+\subsubsection[{domainswitch(domain)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, public re\+\_\+constitutive\+::domainswitch (
+\begin{DoxyParamCaption}
+\item[{character(len=1), intent(in)}]{domain}
+\end{DoxyParamCaption}
+)}\label{namespacere__constitutive_a4902efda05309f68b332f0ff35b701ac}
+
+
+Definition at line 1367 of file re\+\_\+constitutive.\+f90.
+
+
+
+References dkdhtab, dkdhtab\+\_\+all, ktab, ktab\+\_\+all, re\+\_\+globals\+::vgfractures, re\+\_\+globals\+::vgmatrix, re\+\_\+globals\+::vgset, warecatab, warecatab\+\_\+all, watcontab, and watcontab\+\_\+all.
+
+
+
+Referenced by re\+\_\+pointers\+::allrepointers(), and tabvalues().
+
+
+\begin{DoxyCode}
+1367       \textcolor{keywordtype}{use }re_globals
+1368  
+1369       \textcolor{keywordtype}{character(len=1)}, \textcolor{keywordtype}{intent(in)} :: domain
+1370 
+1371 
+1372       \textcolor{keywordflow}{if} (domain == \textcolor{stringliteral}{"m"}) \textcolor{keywordflow}{then}
+1373         vgset => vgmatrix
+1374         ktab => ktab_all(1,:,:)
+1375         dkdhtab => dkdhtab_all(1,:,:)
+1376         warecatab => warecatab_all(1,:,:)
+1377         watcontab => watcontab_all(1,:,:)
+1378       \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (domain == \textcolor{stringliteral}{"f"}) \textcolor{keywordflow}{then}
+1379         vgset => vgfractures
+1380         ktab => ktab_all(2,:,:)
+1381         dkdhtab => dkdhtab_all(2,:,:)
+1382         warecatab => warecatab_all(2,:,:)
+1383         watcontab => watcontab_all(2,:,:)
+1384       \textcolor{keywordflow}{else}
+1385         error stop \textcolor{stringliteral}{"runtime error, invalid argument in RE\_constitutive::domainswitch() procedure"}
+1386 \textcolor{keywordflow}{      end if}
+1387         
+1388 
+1389 
+\end{DoxyCode}
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacere__constitutive_a4902efda05309f68b332f0ff35b701ac_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{re\+\_\+constitutive@{re\+\_\+constitutive}!gardner\+\_\+elast@{gardner\+\_\+elast}}
+\index{gardner\+\_\+elast@{gardner\+\_\+elast}!re\+\_\+constitutive@{re\+\_\+constitutive}}
+\subsubsection[{gardner\+\_\+elast(pde\+\_\+loc, layer, quadpnt, x)}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind) function, public re\+\_\+constitutive\+::gardner\+\_\+elast (
+\begin{DoxyParamCaption}
+\item[{class({\bf pde\+\_\+str}), intent(in)}]{pde\+\_\+loc, }
+\item[{integer(kind=ikind), intent(in)}]{layer, }
+\item[{type({\bf integpnt\+\_\+str}), intent(in), optional}]{quadpnt, }
+\item[{real(kind=rkind), dimension(\+:), intent(in), optional}]{x}
+\end{DoxyParamCaption}
+)}\label{namespacere__constitutive_aabb36bb0f05ceb1d2dba49663c5959d1}
+
+
+so-\/called retention water capacity, it is a derivative to retention curve function \[ E(h) = \left\{ \begin{array}{l l} \alpha (\theta_s - \theta_r) exp(\alpha h) , & \quad \mbox{$\forall$ $h \in (-\infty, 0 )$}\\ 0, & \quad \mbox{$\forall$ $h \in \langle 0, + \infty )$}\\ \end{array} \right. \] 
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em x} & pressure head\\
+\hline
+\mbox{\tt in}  & {\em quadpnt} & Gauss quadrature point structure (element number and rank of Gauss quadrature point)\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+resulting system elasticity 
+\end{DoxyReturn}
+
+
+Definition at line 408 of file re\+\_\+constitutive.\+f90.
+
+
+
+References re\+\_\+globals\+::vgset.
+
+
+\begin{DoxyCode}
+408       \textcolor{keywordtype}{use }typy
+409       \textcolor{keywordtype}{use }re_globals
+410       \textcolor{keywordtype}{use }pde_objs
+411       \textcolor{keywordtype}{use }core_tools
+412 
+413       \textcolor{keywordtype}{class}(pde_str), \textcolor{keywordtype}{intent(in)} :: pde\_loc 
+414       \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(in)} :: layer
+416       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{dimension(:)},  \textcolor{keywordtype}{optional} :: x
+418       \textcolor{keywordtype}{type}(integpnt_str), \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional} :: quadpnt
+419       \textcolor{keywordtype}{real(kind=rkind)} :: h
+421       \textcolor{keywordtype}{real(kind=rkind)} :: e
+422 
+423       \textcolor{keywordtype}{real(kind=rkind)} :: c, a,  tr, ts 
+424       \textcolor{keywordtype}{type}(integpnt_str) :: quadpnt\_loc      
+425           
+426       
+427       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(quadpnt) .and. \textcolor{keyword}{present}(x)) \textcolor{keywordflow}{then}
+428         print *, \textcolor{stringliteral}{"ERROR: the function can be called either with integ point or x value definition, not both
+       of them"}
+429         print *, \textcolor{stringliteral}{"exited from re\_constitutive::vangen\_elast"}
+430         error stop
+431       \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (.not. \textcolor{keyword}{present}(quadpnt) .and. .not. \textcolor{keyword}{present}(x)) \textcolor{keywordflow}{then}
+432         print *, \textcolor{stringliteral}{"ERROR: you have not specified either integ point or x value"}
+433         print *, \textcolor{stringliteral}{"exited from re\_constitutive::gardner\_elast"}
+434         error stop
+435 \textcolor{keywordflow}{      end if}
+436       
+437       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(quadpnt)) \textcolor{keywordflow}{then}
+438         quadpnt\_loc=quadpnt
+439         quadpnt\_loc%preproc=.true.
+440         h = pde\_loc%getval(quadpnt\_loc)
+441       \textcolor{keywordflow}{else}
+442         \textcolor{keywordflow}{if} (ubound(x,1) /=1) \textcolor{keywordflow}{then}
+443           print *, \textcolor{stringliteral}{"ERROR: Gardner function is a function of a single variable h"}
+444           print *, \textcolor{stringliteral}{"       your input data has:"}, ubound(x,1), \textcolor{stringliteral}{"variables"}
+445           error stop
+446 \textcolor{keywordflow}{        end if}
+447         \textcolor{keywordflow}{if} (ubound(x,1) /=1) \textcolor{keywordflow}{then}
+448           print *, \textcolor{stringliteral}{"ERROR: Gardner function is a function of a single variable h"}
+449           print *, \textcolor{stringliteral}{"       your input data has:"}, ubound(x,1), \textcolor{stringliteral}{"variables"}
+450           print *, \textcolor{stringliteral}{"exited from re\_constitutive::gardner\_elast"}
+451           error stop
+452 \textcolor{keywordflow}{        end if}
+453         h = x(1)
+454 \textcolor{keywordflow}{      end if}
+455 
+456       \textcolor{keywordflow}{if} (h < 0) \textcolor{keywordflow}{then}
+457         a = vgset(layer)%alpha
+458         tr = vgset(layer)%Thr
+459         ts = vgset(layer)%Ths
+460         e = a*(-tr + ts)*exp(a*h)
+461       \textcolor{keywordflow}{else}
+462         e = 0
+463         \textcolor{keywordflow}{RETURN}
+464 \textcolor{keywordflow}{      end if}
+465 
+466 
+\end{DoxyCode}
+\index{re\+\_\+constitutive@{re\+\_\+constitutive}!gardner\+\_\+ks@{gardner\+\_\+ks}}
+\index{gardner\+\_\+ks@{gardner\+\_\+ks}!re\+\_\+constitutive@{re\+\_\+constitutive}}
+\subsubsection[{gardner\+\_\+ks(pde\+\_\+loc, layer, quadpnt, x, tensor, scalar)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, public re\+\_\+constitutive\+::gardner\+\_\+ks (
+\begin{DoxyParamCaption}
+\item[{class({\bf pde\+\_\+str}), intent(in)}]{pde\+\_\+loc, }
+\item[{integer(kind=ikind), intent(in)}]{layer, }
+\item[{type({\bf integpnt\+\_\+str}), intent(in), optional}]{quadpnt, }
+\item[{real(kind=rkind), dimension(\+:), intent(in), optional}]{x, }
+\item[{real(kind=rkind), dimension(\+:,\+:), intent(out), optional}]{tensor, }
+\item[{real(kind=rkind), intent(out), optional}]{scalar}
+\end{DoxyParamCaption}
+)}\label{namespacere__constitutive_a833a9b8fca8180958235983135010424}
+
+
+Gardner\textquotesingle{}s fucntion for unsaturated hydraulic conductivity \[ K(h) = K_s exp(\alpha h), \mbox{$\forall$ $h \in$ $(-\infty,0)$}\\ K_s, \mbox{$\forall$ $h \in$ $\langle 0, +\infty)$}. \]. 
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em x} & pressure head\\
+\hline
+\mbox{\tt in}  & {\em quadpnt} & Gauss quadrature point structure (element number and rank of Gauss quadrature point)\\
+\hline
+\mbox{\tt out}  & {\em tensor} & second order tensor of the unsaturated hydraulic conductivity\\
+\hline
+\mbox{\tt out}  & {\em scalar} & relative hydraulic conductivity, (scalar value) \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 623 of file re\+\_\+constitutive.\+f90.
+
+
+
+References re\+\_\+globals\+::vgset.
+
+
+\begin{DoxyCode}
+623       \textcolor{keywordtype}{use }typy
+624       \textcolor{keywordtype}{use }re_globals
+625       \textcolor{keywordtype}{use }pde_objs
+626 
+627       \textcolor{keywordtype}{class}(pde_str), \textcolor{keywordtype}{intent(in)} :: pde\_loc
+628       \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(in)} :: layer
+630       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional} :: x
+632       \textcolor{keywordtype}{type}(integpnt_str), \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional} :: quadpnt      
+634       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:,:)}, \textcolor{keywordtype}{intent(out)}, \textcolor{keywordtype}{optional} :: tensor
+635       \textcolor{keywordtype}{real(kind=rkind)} :: h
+637       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{intent(out)}, \textcolor{keywordtype}{optional} :: scalar
+638 
+639       \textcolor{keywordtype}{real(kind=rkind)} :: tmp
+640       \textcolor{keywordtype}{type}(integpnt_str) :: quadpnt\_loc
+641       
+642   
+643 
+644       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(quadpnt) .and. \textcolor{keyword}{present}(x)) \textcolor{keywordflow}{then}
+645         print *, \textcolor{stringliteral}{"ERROR: the function can be called either with integ point or x value definition, not both
+       of them"}
+646         print *, \textcolor{stringliteral}{"exited from re\_constitutive::gardner\_ks"}
+647         error stop
+648       \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (.not. \textcolor{keyword}{present}(quadpnt) .and. .not. \textcolor{keyword}{present}(x)) \textcolor{keywordflow}{then}
+649         print *, \textcolor{stringliteral}{"ERROR: you have not specified either integ point or x value"}
+650         print *, \textcolor{stringliteral}{"exited from re\_constitutive::gardner\_ks"}
+651         error stop
+652 \textcolor{keywordflow}{      end if}
+653       
+654       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(quadpnt)) \textcolor{keywordflow}{then}
+655         quadpnt\_loc=quadpnt
+656         quadpnt\_loc%preproc=.true.
+657         h = pde\_loc%getval(quadpnt\_loc)
+658       \textcolor{keywordflow}{else}
+659         \textcolor{keywordflow}{if} (ubound(x,1) /=1) \textcolor{keywordflow}{then}
+660           print *, \textcolor{stringliteral}{"ERROR: van Genuchten function is a function of a single variable h"}
+661           print *, \textcolor{stringliteral}{"       your input data has:"}, ubound(x,1), \textcolor{stringliteral}{"variables"}
+662           print *, \textcolor{stringliteral}{"exited from re\_constitutive::gardner\_ks"}
+663           error stop
+664 \textcolor{keywordflow}{        end if}
+665         h = x(1)
+666 \textcolor{keywordflow}{      end if}
+667       
+668       
+669       \textcolor{keywordflow}{if} (h >= 0) \textcolor{keywordflow}{then}
+670         tmp = 1
+671       \textcolor{keywordflow}{else}
+672 
+673         tmp = exp(vgset(layer)%alpha*h)
+674 \textcolor{keywordflow}{      end if}
+675         
+676       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(tensor)) \textcolor{keywordflow}{then}
+677         tensor = tmp* vgset(layer)%Ks
+678 \textcolor{keywordflow}{      end if}
+679 
+680       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(scalar)) \textcolor{keywordflow}{then}
+681         scalar = tmp
+682 \textcolor{keywordflow}{      end if}
+\end{DoxyCode}
+\index{re\+\_\+constitutive@{re\+\_\+constitutive}!gardner\+\_\+wc@{gardner\+\_\+wc}}
+\index{gardner\+\_\+wc@{gardner\+\_\+wc}!re\+\_\+constitutive@{re\+\_\+constitutive}}
+\subsubsection[{gardner\+\_\+wc(pde\+\_\+loc, layer, quadpnt, x)}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind) function, public re\+\_\+constitutive\+::gardner\+\_\+wc (
+\begin{DoxyParamCaption}
+\item[{class({\bf pde\+\_\+str}), intent(in)}]{pde\+\_\+loc, }
+\item[{integer(kind=ikind), intent(in)}]{layer, }
+\item[{type({\bf integpnt\+\_\+str}), intent(in), optional}]{quadpnt, }
+\item[{real(kind=rkind), dimension(\+:), intent(in), optional}]{x}
+\end{DoxyParamCaption}
+)}\label{namespacere__constitutive_ab020b89b03d67d1e1689a79b2d8b387b}
+
+
+Gardner relation \[ \theta = f(pressure) \] \[ \theta = \frac{1}{(1+(\alpha*h)^n)^m} \]. 
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em x} & pressure head\\
+\hline
+\mbox{\tt in}  & {\em quadpnt} & Gauss quadrature point structure (element number and rank of Gauss quadrature point)\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+resulting water content 
+\end{DoxyReturn}
+
+
+Definition at line 126 of file re\+\_\+constitutive.\+f90.
+
+
+
+References re\+\_\+globals\+::vgset.
+
+
+\begin{DoxyCode}
+126       \textcolor{keywordtype}{use }typy
+127       \textcolor{keywordtype}{use }re_globals
+128       \textcolor{keywordtype}{use }pde_objs
+129       \textcolor{keywordtype}{class}(pde_str), \textcolor{keywordtype}{intent(in)} :: pde\_loc
+130       \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(in)} :: layer
+132       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{optional} :: x
+134       \textcolor{keywordtype}{type}(integpnt_str), \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional} :: quadpnt
+135       \textcolor{keywordtype}{real(kind=rkind)} :: h
+137       \textcolor{keywordtype}{real(kind=rkind)} :: theta
+138 
+139       \textcolor{keywordtype}{type}(integpnt_str) :: quadpnt\_loc
+140       
+141 
+142       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(quadpnt) .and. \textcolor{keyword}{present}(x)) \textcolor{keywordflow}{then}
+143         print *, \textcolor{stringliteral}{"ERROR: the function can be called either with integ point or x value definition, not both
+       of them"}
+144         print *, \textcolor{stringliteral}{"exited from re\_constitutive::gardner\_wc"}
+145         error stop
+146       \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (.not. \textcolor{keyword}{present}(quadpnt) .and. .not. \textcolor{keyword}{present}(x)) \textcolor{keywordflow}{then}
+147         print *, \textcolor{stringliteral}{"ERROR: you have not specified either integ point or x value"}
+148         print *, \textcolor{stringliteral}{"exited from re\_constitutive::gardner\_wc"}
+149         error stop
+150 \textcolor{keywordflow}{      end if}
+151       
+152       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(quadpnt)) \textcolor{keywordflow}{then}
+153         quadpnt\_loc=quadpnt
+154         quadpnt\_loc%preproc=.true.
+155         h = pde\_loc%getval(quadpnt\_loc)
+156       \textcolor{keywordflow}{else}
+157         \textcolor{keywordflow}{if} (ubound(x,1) /=1) \textcolor{keywordflow}{then}
+158           print *, \textcolor{stringliteral}{"ERROR: van Genuchten function is a function of a single variable h"}
+159           print *, \textcolor{stringliteral}{"       your input data has:"}, ubound(x,1), \textcolor{stringliteral}{"variables"}
+160           print *, \textcolor{stringliteral}{"exited from re\_constitutive::gardner\_wc"}
+161           error stop
+162 \textcolor{keywordflow}{        end if}
+163         h = x(1)
+164 \textcolor{keywordflow}{      end if}
+165       
+166       
+167 
+168 
+169 
+170       \textcolor{keywordflow}{if} (h >=0.0\_rkind) \textcolor{keywordflow}{then}
+171           theta = vgset(layer)%Ths
+172           \textcolor{keywordflow}{RETURN}
+173       \textcolor{keywordflow}{else}
+174           theta = vgset(layer)%Thr+(vgset(layer)%Ths - vgset(layer)%Thr)*exp(
+      vgset\textcolor{comment}{(layer)%alpha*h)}
+175 \textcolor{comment}{}\textcolor{keywordflow}{      end if}
+176 
+\end{DoxyCode}
+\index{re\+\_\+constitutive@{re\+\_\+constitutive}!init\+\_\+zones@{init\+\_\+zones}}
+\index{init\+\_\+zones@{init\+\_\+zones}!re\+\_\+constitutive@{re\+\_\+constitutive}}
+\subsubsection[{init\+\_\+zones(vg)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, public re\+\_\+constitutive\+::init\+\_\+zones (
+\begin{DoxyParamCaption}
+\item[{type({\bf soilpar}), dimension(\+:), intent(inout)}]{vg}
+\end{DoxyParamCaption}
+)}\label{namespacere__constitutive_a3c7de19cd5e93ba8f0f4bb821e87790c}
+
+
+Definition at line 1394 of file re\+\_\+constitutive.\+f90.
+
+
+
+References globals\+::drutes\+\_\+config, globals\+::maxpress, printtools\+::progressbar(), secondder\+\_\+retc(), geom\+\_\+tools\+::solve\+\_\+bisect(), globals\+::terminal, this\+\_\+layer, re\+\_\+globals\+::vgset, and zone\+\_\+error\+\_\+val().
+
+
+
+Referenced by re\+\_\+pointers\+::allrepointers().
+
+
+\begin{DoxyCode}
+1394       \textcolor{keywordtype}{use }typy
+1395       \textcolor{keywordtype}{use }globals
+1396       \textcolor{keywordtype}{use }re_globals
+1397       \textcolor{keywordtype}{use }geom_tools
+1398       \textcolor{keywordtype}{use }printtools
+1399       \textcolor{keywordtype}{use }debug_tools
+1400       
+1401       
+1402       
+1403       \textcolor{keywordtype}{type}(soilpar), \textcolor{keywordtype}{intent(in out)}, \textcolor{keywordtype}{dimension(:)} :: vg
+1404       \textcolor{keywordtype}{integer(kind=ikind)} :: i, j, k, l
+1405       \textcolor{keywordtype}{integer} :: i\_err
+1406       \textcolor{keywordtype}{logical} :: increased, overzero
+1407       \textcolor{keywordtype}{real(kind=rkind)} :: theta, htest, htest2, h, hprev, tmp1, tmp2, m,\textcolor{comment}{ inflex\_point}
+1408 \textcolor{comment}{      }\textcolor{keywordtype}{integer}, \textcolor{keywordtype}{dimension(:,:)}, \textcolor{keywordtype}{allocatable} :: images\_run
+1409       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:,:,:)}, \textcolor{keywordtype}{allocatable} :: cotable[:]
+1410       \textcolor{keywordtype}{character(len=7)} :: procentas
+1411       \textcolor{keywordtype}{integer(kind=ikind)} :: n
+1412       \textcolor{keywordtype}{logical} :: backward
+1413 
+1414       n = int(maxpress/drutes_config%fnc\_discr\_length)+1    
+1415 
+1416 
+1417 
+1418       \textcolor{keywordflow}{do} i=1, ubound(vg,1)
+1419         \textcolor{keywordflow}{if} (vg(i)%rcza\_set%use) \textcolor{keywordflow}{then}
+1420          \textcolor{keyword}{allocate}(vg(i)%rcza\_set%tab(n, 3))
+1421          vg(i)%rcza\_set%tab = 0
+1422 \textcolor{keywordflow}{        end if}
+1423 \textcolor{keywordflow}{      end do}
+1424 
+1425       i\_err = 0
+1426       htest = 0.0
+1427     
+1428 
+1429         
+1430       \textcolor{keyword}{allocate}(images\_run(num\_images(),2))
+1431       
+1432       images\_run(1,1) = 1
+1433       images\_run(1,2) = int(ubound(vgset,1)/num\_images()) + modulo(ubound\textcolor{comment}{(vgset,1), num\_images())}
+1434 \textcolor{comment}{}
+1435 \textcolor{comment}{      }\textcolor{keyword}{allocate}(cotable(images\_run(1,2), n, 3)[*])
+1436 
+1437 \textcolor{comment}{!       do i=2, NUM\_IMAGES()}
+1438 \textcolor{comment}{!       images\_run(i,1) = images\_run(i-1,2) + 1}
+1439 \textcolor{comment}{!       if (images\_run(i,1) + int(ubound(vgset,1)/NUM\_IMAGES()) <= ubound(vgset,1) ) then}
+1440 \textcolor{comment}{!         images\_run(i,2) = images\_run(i,1) + int(ubound(vgset,1)/NUM\_IMAGES())}
+1441 \textcolor{comment}{!       else}
+1442 \textcolor{comment}{!         images\_run(i,2) = images\_run(i,1)}
+1443 \textcolor{comment}{!       end if}
+1444 \textcolor{comment}{!       end do}
+1445 
+1446 
+1447     
+1448 
+1449       layers: \textcolor{keywordflow}{do} j=images\_run(this\_image(),1), images\_run(this\_image(),2\textcolor{comment}{)}
+1450 \textcolor{comment}{                }\textcolor{keywordflow}{if} (vgset(j)%rcza\_set%use) \textcolor{keywordflow}{then}
+1451                   k = j - images\_run(this\_image(),1) + 1
+1452                   \textcolor{comment}{!backward}
+1453                   \textcolor{keyword}{write}(unit=terminal, fmt=*) \textcolor{stringliteral}{"preparing layer:"}, j
+1454                   this_layer = j
+1455                   \textcolor{keyword}{call }solve_bisect(-epsilon(h), -maxpress, secondder_retc, 0.001\_rkind\textcolor{comment}{, i\_err, 
+      inflex\_point)}
+1456 \textcolor{comment}{}
+1457 \textcolor{comment}{                  print *, }\textcolor{stringliteral}{"inflex point of the layer:"}, j, \textcolor{stringliteral}{"found at:"}, inflex\_point
+1458                   
+1459 
+1460                   levels: \textcolor{keywordflow}{do} i=1, ubound(cotable,2)
+1461                             \textcolor{keywordflow}{if} (this\_image() == 1) \textcolor{keywordflow}{then}
+1462                               \textcolor{keyword}{call }progressbar(int(50*i/ubound(cotable,2)))
+1463 \textcolor{keywordflow}{                            end if}
+1464                             h = -drutes_config%fnc\_discr\_length*i
+1465                             \textcolor{keywordflow}{if} (i < 2) \textcolor{keywordflow}{then}
+1466                               htest = -drutes_config%fnc\_discr\_length
+1467                               hprev = -drutes_config%fnc\_discr\_length
+1468                             \textcolor{keywordflow}{else}
+1469                               htest = cotable(k,i-1,2)[this\_image()]
+1470                               hprev = htest
+1471 \textcolor{keywordflow}{                            end if}
+1472                             rough: \textcolor{keywordflow}{do}
+1473                                     \textcolor{keywordflow}{if} (zone_error_val(h, htest, vgset(j)%rcza\_set%val) > 0) \textcolor{keywordflow}{then}
+1474                                                   cotable(k,i,1)[this\_image()] = h
+1475                                                   cotable(k,i,2)[this\_image()] = htest
+1476                                                   \textcolor{keywordflow}{exit} rough
+1477                                     \textcolor{keywordflow}{else}
+1478                                       htest = htest - drutes_config%fnc\_discr\_length
+1479                                       \textcolor{keywordflow}{if} (htest < -2*maxpress) \textcolor{keywordflow}{then}
+1480                                         cotable(k,i:ubound(cotable,2),2)[this\_image()] = htest
+1481                                         \textcolor{keywordflow}{do} l= i, ubound(cotable,2)
+1482                                           cotable(k,l,1)[this\_image()] = -
+      drutes_config%fnc\_discr\_length*l
+1483 \textcolor{keywordflow}{                                        end do}
+1484                                         \textcolor{keywordflow}{exit} levels
+1485 \textcolor{keywordflow}{                                      end if}
+1486 \textcolor{keywordflow}{                                    end if}
+1487 \textcolor{keywordflow}{                            end do} rough
+1488 \textcolor{keywordflow}{                  end do} levels
+1489 
+1490     \textcolor{comment}{!             !forward}
+1491                   levels2: \textcolor{keywordflow}{do} i=1, ubound(cotable,2)
+1492                             \textcolor{keywordflow}{if} (this\_image() == 1) \textcolor{keywordflow}{then}
+1493                               \textcolor{keyword}{call }progressbar(int(50*i/ubound(cotable,2)+50))
+1494 \textcolor{keywordflow}{                            end if}
+1495                             h = -drutes_config%fnc\_discr\_length*i
+1496                             \textcolor{keywordflow}{if} (i < 2) \textcolor{keywordflow}{then}
+1497                               htest = -drutes_config%fnc\_discr\_length
+1498                               hprev = -drutes_config%fnc\_discr\_length
+1499                               backward = .false.
+1500                             \textcolor{keywordflow}{else}
+1501                               \textcolor{keywordflow}{if} (cotable(k,i-1,3)[this\_image()] > inflex\_point-5*
+      drutes_config%fnc\_discr\_length\textcolor{comment}{) }\textcolor{keywordflow}{then}
+1502                                 htest = h
+1503                                 hprev = h
+1504                                 backward = .false.
+1505                               \textcolor{keywordflow}{else}
+1506                                 htest = cotable(k,i-1,3)[this\_image()]
+1507                                 hprev = htest
+1508                                 backward = .true.
+1509 \textcolor{keywordflow}{                              end if}
+1510 \textcolor{keywordflow}{                            end if}
+1511                             rough2: \textcolor{keywordflow}{do}
+1512                                       \textcolor{keywordflow}{if} ((zone_error_val(h, htest, vgset(j)%rcza\_set%val) > epsilon\textcolor{comment}{(0.0
+      \_rkind) .and. .not.(backward)) .or. &}
+1513 \textcolor{comment}{                                        (zone_error_val(h, htest, vgset(j)%rcza\_set%val) < 0 .and. backward
+      ))      }\textcolor{keywordflow}{then}
+1514                                       cotable(k,i,3)[this\_image()] = htest
+1515                                       \textcolor{keywordflow}{exit} rough2
+1516                                     \textcolor{keywordflow}{else}
+1517                                         \textcolor{keywordflow}{if} (htest < 0) \textcolor{keywordflow}{then}
+1518                                           \textcolor{keywordflow}{if} (backward) \textcolor{keywordflow}{then}
+1519                                             l = -1
+1520                                           \textcolor{keywordflow}{else} 
+1521                                             l = 1
+1522 \textcolor{keywordflow}{                                          end if}
+1523                                           htest = htest + l*drutes_config%fnc\_discr\_length
+1524                                         \textcolor{keywordflow}{else}
+1525                                           cotable(k,i,3)[this\_image()] = huge(1.0\_rkind)
+1526                                           \textcolor{keywordflow}{exit} rough2
+1527 \textcolor{keywordflow}{                                        end if}
+1528 \textcolor{keywordflow}{                                      end if}
+1529 \textcolor{keywordflow}{                                    end do} rough2
+1530 \textcolor{keywordflow}{                  end do} levels2 
+1531                   \textcolor{keywordflow}{if} (this\_image() == 1) \textcolor{keywordflow}{then}
+1532                     print *, \textcolor{stringliteral}{" "}
+1533                     \textcolor{keyword}{call }flush(6)
+1534 \textcolor{keywordflow}{                  end if}
+1535 \textcolor{keywordflow}{          end if}
+1536 \textcolor{keywordflow}{        end do} layers
+1537 
+1538         \textcolor{comment}{! sync data}
+1539         sync all
+1540         
+1541           
+1542         \textcolor{keywordflow}{do} i=1, ubound(images\_run,1)
+1543           \textcolor{keywordflow}{do} j=images\_run(i,1), images\_run(i,2)
+1544             vg(j)%rcza\_set%tab = cotable(j,:,:)[i]
+1545 \textcolor{keywordflow}{          end do}
+1546 \textcolor{keywordflow}{        end do}
+1547 
+1548 
+1549 
+1550          sync all 
+1551 
+1552 
+1553 
+1554 
+1555         
+1556 
+1557         \textcolor{keyword}{deallocate}(images\_run)
+1558         \textcolor{keyword}{deallocate}(cotable)
+1559 
+1560 
+1561 
+1562 
+\end{DoxyCode}
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacere__constitutive_a3c7de19cd5e93ba8f0f4bb821e87790c_cgraph}
+\end{center}
+\end{figure}
+
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacere__constitutive_a3c7de19cd5e93ba8f0f4bb821e87790c_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{re\+\_\+constitutive@{re\+\_\+constitutive}!intoverflow@{intoverflow}}
+\index{intoverflow@{intoverflow}!re\+\_\+constitutive@{re\+\_\+constitutive}}
+\subsubsection[{intoverflow()}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, private re\+\_\+constitutive\+::intoverflow (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [private]}}\label{namespacere__constitutive_aaab88fb88c11ce508ad8240a96275a6b}
+
+
+Definition at line 39 of file re\+\_\+constitutive.\+f90.
+
+
+
+References postpro\+::make\+\_\+print(), and core\+\_\+tools\+::write\+\_\+log().
+
+
+
+Referenced by dmualem\+\_\+dh\+\_\+tab(), mualem\+\_\+tab(), vangen\+\_\+elast\+\_\+tab(), and vangen\+\_\+tab().
+
+
+\begin{DoxyCode}
+39       \textcolor{keywordtype}{use }core_tools
+40       \textcolor{keywordtype}{use }postpro
+41       \textcolor{keywordtype}{character(len=4096)} :: msg
+42       
+43       \textcolor{keyword}{write}(msg, fmt=*) \textcolor{stringliteral}{"You are probably experiencing oscilations"}, & 
+44               \textcolor{stringliteral}{"(probably convective dominance), I will print your data. Your computation (just for a case)
+       is not"}\textcolor{comment}{, &}
+45 \textcolor{comment}{              }\textcolor{stringliteral}{"interrupted, but the results are probably not reliable anymore."}\textcolor{comment}{,  & }
+46 \textcolor{comment}{              }\textcolor{stringliteral}{"We will probably experience a crash soon.:) Check your model configuration to avoid"}\textcolor{comment}{, &}
+47 \textcolor{comment}{              }\textcolor{stringliteral}{"convective dominant problems."}
+48               
+49       \textcolor{keyword}{call }write_log(msg)
+50       
+51       \textcolor{keyword}{call }make_print(\textcolor{stringliteral}{"separately"})
+52               
+53       
+\end{DoxyCode}
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacere__constitutive_aaab88fb88c11ce508ad8240a96275a6b_cgraph}
+\end{center}
+\end{figure}
+
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacere__constitutive_aaab88fb88c11ce508ad8240a96275a6b_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{re\+\_\+constitutive@{re\+\_\+constitutive}!inverse\+\_\+vangen@{inverse\+\_\+vangen}}
+\index{inverse\+\_\+vangen@{inverse\+\_\+vangen}!re\+\_\+constitutive@{re\+\_\+constitutive}}
+\subsubsection[{inverse\+\_\+vangen(pde\+\_\+loc, layer, quadpnt, x)}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind) function, public re\+\_\+constitutive\+::inverse\+\_\+vangen (
+\begin{DoxyParamCaption}
+\item[{class({\bf pde\+\_\+str}), intent(in)}]{pde\+\_\+loc, }
+\item[{integer(kind=ikind), intent(in)}]{layer, }
+\item[{type({\bf integpnt\+\_\+str}), intent(in), optional}]{quadpnt, }
+\item[{real(kind=rkind), dimension(\+:), intent(in), optional}]{x}
+\end{DoxyParamCaption}
+)}\label{namespacere__constitutive_a6cc0f4bc06a19ad696d83967878a54fb}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em x} & water content\\
+\hline
+\mbox{\tt in}  & {\em quadpnt} & Gauss quadrature point structure (element number and rank of Gauss quadrature point)\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+resulting pressure head 
+\end{DoxyReturn}
+
+
+Definition at line 182 of file re\+\_\+constitutive.\+f90.
+
+
+
+References re\+\_\+globals\+::vgset, and core\+\_\+tools\+::write\+\_\+log().
+
+
+
+Referenced by re\+\_\+initcond(), and re\+\_\+total\+::retot\+\_\+initcond().
+
+
+\begin{DoxyCode}
+182       \textcolor{keywordtype}{use }typy
+183       \textcolor{keywordtype}{use }re_globals
+184       \textcolor{keywordtype}{use }pde_objs
+185       \textcolor{keywordtype}{use }core_tools
+186       \textcolor{keywordtype}{class}(pde_str), \textcolor{keywordtype}{intent(in)} :: pde\_loc
+187       \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(in)} :: layer
+189       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{optional} :: x
+191       \textcolor{keywordtype}{type}(integpnt_str), \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional} :: quadpnt
+192       \textcolor{keywordtype}{real(kind=rkind)} :: theta
+194       \textcolor{keywordtype}{real(kind=rkind)} :: hpress
+195       
+196       
+197       \textcolor{keywordtype}{real(kind=rkind)} :: a,n,m
+198       \textcolor{keywordtype}{type}(integpnt_str) :: quadpnt\_loc
+199       
+200  
+201 
+202       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(quadpnt) .and. \textcolor{keyword}{present}(x)) \textcolor{keywordflow}{then}
+203         print *, \textcolor{stringliteral}{"ERROR: the function can be called either with integ point or x value definition, not both
+       of them"}
+204         print *, \textcolor{stringliteral}{"exited from re\_constitutive::vangen"}
+205         error stop
+206       \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (.not. \textcolor{keyword}{present}(quadpnt) .and. .not. \textcolor{keyword}{present}(x)) \textcolor{keywordflow}{then}
+207         print *, \textcolor{stringliteral}{"ERROR: you have not specified either integ point or x value"}
+208         print *, \textcolor{stringliteral}{"exited from re\_constitutive::vangen"}
+209         error stop
+210 \textcolor{keywordflow}{      end if}
+211       
+212       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(quadpnt)) \textcolor{keywordflow}{then}
+213         quadpnt\_loc=quadpnt
+214         quadpnt\_loc%preproc=.true.
+215         theta = pde\_loc%getval(quadpnt\_loc)
+216       \textcolor{keywordflow}{else}
+217         \textcolor{keywordflow}{if} (ubound(x,1) /=1) \textcolor{keywordflow}{then}
+218           print *, \textcolor{stringliteral}{"ERROR: van Genuchten function is a function of a single variable h"}
+219           print *, \textcolor{stringliteral}{"       your input data has:"}, ubound(x,1), \textcolor{stringliteral}{"variables"}
+220           print *, \textcolor{stringliteral}{"exited from re\_constitutive::vangen"}
+221           error stop
+222 \textcolor{keywordflow}{        end if}
+223         theta = x(1)
+224 \textcolor{keywordflow}{      end if}
+225       
+226       
+227       
+228       a = vgset(layer)%alpha
+229       n = vgset(layer)%n
+230       m = vgset(layer)%m
+231       
+232       \textcolor{keywordflow}{if} (abs(theta - vgset(layer)%Ths) < epsilon(theta)) \textcolor{keywordflow}{then}
+233         hpress = 0
+234       \textcolor{keywordflow}{else}
+235         \textcolor{keywordflow}{if} (theta >  vgset(layer)%Ths + 10*epsilon(theta)) \textcolor{keywordflow}{then}
+236           \textcolor{keyword}{call }write_log(\textcolor{stringliteral}{"theta is greater then theta\_s, exiting"})
+237           print *, \textcolor{stringliteral}{"called from re\_constitutive::inverse\_vangen"}
+238           error stop
+239         \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (theta < 0) \textcolor{keywordflow}{then}
+240           \textcolor{keyword}{call }write_log(\textcolor{stringliteral}{"theta is negative strange, exiting"})
+241           print *, \textcolor{stringliteral}{"called from re\_constitutive::inverse\_vangen"}
+242           error stop 
+243 \textcolor{keywordflow}{        end if}
+244         hpress = ((((vgset(layer)%Ths - vgset(layer)%Thr)/(theta-vgset(layer)%Thr\textcolor{comment}{))**(1.0\_rkind/m)-1) &  }
+245 \textcolor{comment}{        **(1.0\_rkind/n))/(-a)}
+246 \textcolor{comment}{}\textcolor{keywordflow}{      end if}
+247       
+\end{DoxyCode}
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=305pt]{namespacere__constitutive_a6cc0f4bc06a19ad696d83967878a54fb_cgraph}
+\end{center}
+\end{figure}
+
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacere__constitutive_a6cc0f4bc06a19ad696d83967878a54fb_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{re\+\_\+constitutive@{re\+\_\+constitutive}!mualem@{mualem}}
+\index{mualem@{mualem}!re\+\_\+constitutive@{re\+\_\+constitutive}}
+\subsubsection[{mualem(pde\+\_\+loc, layer, quadpnt, x, tensor, scalar)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, public re\+\_\+constitutive\+::mualem (
+\begin{DoxyParamCaption}
+\item[{class({\bf pde\+\_\+str}), intent(in)}]{pde\+\_\+loc, }
+\item[{integer(kind=ikind), intent(in)}]{layer, }
+\item[{type({\bf integpnt\+\_\+str}), intent(in), optional}]{quadpnt, }
+\item[{real(kind=rkind), dimension(\+:), intent(in), optional}]{x, }
+\item[{real(kind=rkind), dimension(\+:,\+:), intent(out), optional}]{tensor, }
+\item[{real(kind=rkind), intent(out), optional}]{scalar}
+\end{DoxyParamCaption}
+)}\label{namespacere__constitutive_a350f561bf6541e41a24b80a1dafdfad0}
+
+
+Mualem\textquotesingle{}s fucntion for unsaturated hydraulic conductivity with van Genuchten\textquotesingle{}s water content substitution \[ K(h) = \left\{ \begin{array}{l l} K_s\frac{\left( 1- (-\alpha h)^{n_{vg}m_{vg}} \left( 1+ (-\alpha h)^{n_{vg}} \right)^{-m_{vg}} \right)^2}{\left(1+(-\alpha h)^{n_{vg}} \right)^{\frac{m_{vg}}{2}}}, & \mbox{$\forall$ $h \in$ $(-\infty,0)$}\\ K_s, \mbox{$\forall$ $h \in$ $\langle 0, +\infty)$}\\ \end{array} \right. \]. 
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em x} & pressure head\\
+\hline
+\mbox{\tt in}  & {\em quadpnt} & Gauss quadrature point structure (element number and rank of Gauss quadrature point)\\
+\hline
+\mbox{\tt out}  & {\em tensor} & second order tensor of the unsaturated hydraulic conductivity\\
+\hline
+\mbox{\tt out}  & {\em scalar} & relative hydraulic conductivity, (scalar value) \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 552 of file re\+\_\+constitutive.\+f90.
+
+
+
+References re\+\_\+globals\+::vgset.
+
+
+
+Referenced by re\+\_\+pointers\+::allrepointers(), and mualem\+\_\+tab().
+
+
+\begin{DoxyCode}
+552       \textcolor{keywordtype}{use }typy
+553       \textcolor{keywordtype}{use }re_globals
+554       \textcolor{keywordtype}{use }pde_objs
+555 
+556       \textcolor{keywordtype}{class}(pde_str), \textcolor{keywordtype}{intent(in)} :: pde\_loc
+557       \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(in)} :: layer
+559       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional} :: x
+561       \textcolor{keywordtype}{type}(integpnt_str), \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional} :: quadpnt      
+563       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:,:)}, \textcolor{keywordtype}{intent(out)}, \textcolor{keywordtype}{optional} :: tensor
+564       \textcolor{keywordtype}{real(kind=rkind)} :: h
+566       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{intent(out)}, \textcolor{keywordtype}{optional} :: scalar
+567 
+568       \textcolor{keywordtype}{real(kind=rkind)} :: a,n,m, tmp
+569       \textcolor{keywordtype}{type}(integpnt_str) :: quadpnt\_loc
+570       
+571   
+572 
+573       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(quadpnt) .and. \textcolor{keyword}{present}(x)) \textcolor{keywordflow}{then}
+574         print *, \textcolor{stringliteral}{"ERROR: the function can be called either with integ point or x value definition, not both
+       of them"}
+575         print *, \textcolor{stringliteral}{"exited from re\_constitutive::mualem"}
+576         error stop
+577       \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (.not. \textcolor{keyword}{present}(quadpnt) .and. .not. \textcolor{keyword}{present}(x)) \textcolor{keywordflow}{then}
+578         print *, \textcolor{stringliteral}{"ERROR: you have not specified either integ point or x value"}
+579         print *, \textcolor{stringliteral}{"exited from re\_constitutive::mualem"}
+580         error stop
+581 \textcolor{keywordflow}{      end if}
+582       
+583       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(quadpnt)) \textcolor{keywordflow}{then}
+584         quadpnt\_loc=quadpnt
+585         quadpnt\_loc%preproc=.true.
+586         h = pde\_loc%getval(quadpnt\_loc)
+587       \textcolor{keywordflow}{else}
+588         \textcolor{keywordflow}{if} (ubound(x,1) /=1) \textcolor{keywordflow}{then}
+589           print *, \textcolor{stringliteral}{"ERROR: van Genuchten function is a function of a single variable h"}
+590           print *, \textcolor{stringliteral}{"       your input data has:"}, ubound(x,1), \textcolor{stringliteral}{"variables"}
+591           print *, \textcolor{stringliteral}{"exited from re\_constitutive::mualem"}
+592           error stop
+593 \textcolor{keywordflow}{        end if}
+594         h = x(1)
+595 \textcolor{keywordflow}{      end if}
+596       
+597       
+598       \textcolor{keywordflow}{if} (h >= 0) \textcolor{keywordflow}{then}
+599         tmp = 1
+600       \textcolor{keywordflow}{else}
+601         a = vgset(layer)%alpha
+602         n = vgset(layer)%n
+603         m = vgset(layer)%m
+604 
+605         tmp =  (1 - (-(a*h))**(m*n)/(1 + (-(a*h))**n)**m)**2/(1 + (-(a*h))**n)*\textcolor{comment}{*(m/2.0\_rkind)}
+606 \textcolor{comment}{}\textcolor{keywordflow}{      end if}
+607         
+608       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(tensor)) \textcolor{keywordflow}{then}
+609         tensor = tmp* vgset(layer)%Ks
+610 \textcolor{keywordflow}{      end if}
+611 
+612       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(scalar)) \textcolor{keywordflow}{then}
+613         scalar = tmp
+614 \textcolor{keywordflow}{      end if}
+\end{DoxyCode}
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacere__constitutive_a350f561bf6541e41a24b80a1dafdfad0_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{re\+\_\+constitutive@{re\+\_\+constitutive}!mualem\+\_\+tab@{mualem\+\_\+tab}}
+\index{mualem\+\_\+tab@{mualem\+\_\+tab}!re\+\_\+constitutive@{re\+\_\+constitutive}}
+\subsubsection[{mualem\+\_\+tab(pde\+\_\+loc, layer, quadpnt, x, tensor, scalar)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, public re\+\_\+constitutive\+::mualem\+\_\+tab (
+\begin{DoxyParamCaption}
+\item[{class({\bf pde\+\_\+str}), intent(in)}]{pde\+\_\+loc, }
+\item[{integer(kind=ikind), intent(in)}]{layer, }
+\item[{type({\bf integpnt\+\_\+str}), intent(in), optional}]{quadpnt, }
+\item[{real(kind=rkind), dimension(\+:), intent(in), optional}]{x, }
+\item[{real(kind=rkind), dimension(\+:,\+:), intent(out), optional}]{tensor, }
+\item[{real(kind=rkind), intent(out), optional}]{scalar}
+\end{DoxyParamCaption}
+)}\label{namespacere__constitutive_a8923c35fda157f8198854a3afadd1f99}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em x} & pressure head\\
+\hline
+\mbox{\tt in}  & {\em quadpnt} & Gauss quadrature point structure (element number and rank of Gauss quadrature point)\\
+\hline
+\mbox{\tt out}  & {\em tensor} & second order tensor of the unsaturated hydraulic conductivity\\
+\hline
+\mbox{\tt out}  & {\em scalar} & relative hydraulic conductivity, (scalar value) \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 687 of file re\+\_\+constitutive.\+f90.
+
+
+
+References intoverflow(), intwarning, ktab, mualem(), tabmsg, tabwarning, re\+\_\+globals\+::vgset, and core\+\_\+tools\+::write\+\_\+log().
+
+
+
+Referenced by re\+\_\+pointers\+::allrepointers().
+
+
+\begin{DoxyCode}
+687       \textcolor{keywordtype}{use }typy
+688       \textcolor{keywordtype}{use }re_globals
+689       \textcolor{keywordtype}{use }pde_objs
+690       \textcolor{keywordtype}{use }core_tools
+691       \textcolor{keywordtype}{use }debug_tools
+692 
+693       \textcolor{keywordtype}{class}(pde_str), \textcolor{keywordtype}{intent(in)} :: pde\_loc
+694       \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(in)} :: layer
+696       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional} :: x
+698       \textcolor{keywordtype}{type}(integpnt_str), \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional} :: quadpnt      
+700       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:,:)}, \textcolor{keywordtype}{intent(out)}, \textcolor{keywordtype}{optional} :: tensor \textcolor{comment}{        }
+702       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{intent(out)}, \textcolor{keywordtype}{optional} :: scalar
+703 
+704       \textcolor{keywordtype}{real(kind=rkind)} :: h
+705       \textcolor{keywordtype}{integer(kind=ikind)} :: pos
+706       \textcolor{keywordtype}{real(kind=rkind)} :: res, dist, tmp
+707       \textcolor{keywordtype}{type}(integpnt_str) :: quadpnt\_loc      
+708       
+709    
+710       
+711       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(quadpnt) .and. \textcolor{keyword}{present}(x)) \textcolor{keywordflow}{then}
+712         print *, \textcolor{stringliteral}{"ERROR: the function can be called either with integ point or x value definition, not both
+       of them"}
+713         print *, \textcolor{stringliteral}{"exited from re\_constitutive::mualem\_tab"}
+714         error stop
+715       \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (.not. \textcolor{keyword}{present}(quadpnt) .and. .not. \textcolor{keyword}{present}(x)) \textcolor{keywordflow}{then}
+716         print *, \textcolor{stringliteral}{"ERROR: you have not specified either integ point or x value"}
+717         print *, \textcolor{stringliteral}{"exited from re\_constitutive::mualem\_tab"}
+718         error stop
+719 \textcolor{keywordflow}{      end if}
+720       
+721       
+722 
+723       
+724       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(quadpnt)) \textcolor{keywordflow}{then}
+725         quadpnt\_loc=quadpnt
+726         quadpnt\_loc%preproc=.true.
+727         h = pde\_loc%getval(quadpnt\_loc)
+728       \textcolor{keywordflow}{else}
+729         \textcolor{keywordflow}{if} (ubound(x,1) /=1) \textcolor{keywordflow}{then}
+730           print *, \textcolor{stringliteral}{"ERROR: van Genuchten function is a function of a single variable h"}
+731           print *, \textcolor{stringliteral}{"       your input data has:"}, ubound(x,1), \textcolor{stringliteral}{"variables"}
+732           print *, \textcolor{stringliteral}{"exited from re\_constitutive::mualem\_tab"}
+733           error stop
+734 \textcolor{keywordflow}{        end if}
+735         h = x(1)
+736 \textcolor{keywordflow}{      end if}
+737       
+738       
+739 
+740 
+741       
+742       \textcolor{keywordflow}{if} (h<0) \textcolor{keywordflow}{then}
+743         \textcolor{keywordflow}{if} (-h/drutes_config%fnc\_discr\_length < 0.1*huge(1) ) \textcolor{keywordflow}{then}
+744           pos = int(-h/drutes_config%fnc\_discr\_length)+1
+745           \textcolor{keywordflow}{if} (pos <= ubound(ktab,2)-1) \textcolor{keywordflow}{then}
+746             dist = -h - (pos - 1)*drutes_config%fnc\_discr\_length
+747             tmp = (ktab(layer,pos+1)-ktab(layer,pos))/drutes_config%fnc\_discr\_length\textcolor{comment}{*
+      dist + ktab(layer,pos)}
+748 \textcolor{comment}{          }\textcolor{keywordflow}{else}
+749             \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(quadpnt)) \textcolor{keyword}{call }mualem(pde\_loc, layer, quadpnt, scalar =\textcolor{comment}{ tmp)}
+750 \textcolor{comment}{            }\textcolor{keywordflow}{if} (\textcolor{keyword}{present}(x)) \textcolor{keyword}{call }mualem(pde\_loc, layer, x=x, scalar = tmp)
+751             \textcolor{keywordflow}{if} (.not. tabwarning) \textcolor{keywordflow}{then}
+752               \textcolor{keyword}{call }write_log(trim(tabmsg))
+753               tabwarning = .true.
+754 \textcolor{keywordflow}{            end if}
+755 \textcolor{keywordflow}{          end if}
+756         \textcolor{keywordflow}{else}
+757           \textcolor{keywordflow}{if} (.not. intwarning) \textcolor{keywordflow}{then}
+758             \textcolor{keyword}{call }intoverflow()
+759             intwarning = .true.
+760 \textcolor{keywordflow}{          end if}
+761           \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(quadpnt)) \textcolor{keyword}{call }mualem(pde\_loc, layer, quadpnt\_loc, scalar\textcolor{comment}{ = tmp)}
+762 \textcolor{comment}{          }\textcolor{keywordflow}{if} (\textcolor{keyword}{present}(x)) \textcolor{keyword}{call }mualem(pde\_loc, layer, x=x, scalar = tmp)
+763 \textcolor{keywordflow}{        end if} 
+764          
+765       \textcolor{keywordflow}{else}
+766         tmp = 1
+767 \textcolor{keywordflow}{      end if}
+768 
+769       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(tensor)) \textcolor{keywordflow}{then}
+770         tensor = tmp* vgset(layer)%Ks
+771 \textcolor{keywordflow}{      end if}
+772 
+773       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(scalar)) \textcolor{keywordflow}{then}
+774         scalar = tmp
+775 \textcolor{keywordflow}{      end if}
+\end{DoxyCode}
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacere__constitutive_a8923c35fda157f8198854a3afadd1f99_cgraph}
+\end{center}
+\end{figure}
+
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacere__constitutive_a8923c35fda157f8198854a3afadd1f99_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{re\+\_\+constitutive@{re\+\_\+constitutive}!rcza\+\_\+check@{rcza\+\_\+check}}
+\index{rcza\+\_\+check@{rcza\+\_\+check}!re\+\_\+constitutive@{re\+\_\+constitutive}}
+\subsubsection[{rcza\+\_\+check(pde\+\_\+loc)}]{\setlength{\rightskip}{0pt plus 5cm}logical function, public re\+\_\+constitutive\+::rcza\+\_\+check (
+\begin{DoxyParamCaption}
+\item[{class({\bf pde\+\_\+str}), intent(in)}]{pde\+\_\+loc}
+\end{DoxyParamCaption}
+)}\label{namespacere__constitutive_a9868257a176611d41d573f6fb131fc70}
+
+
+Definition at line 1666 of file re\+\_\+constitutive.\+f90.
+
+
+
+References globals\+::drutes\+\_\+config, globals\+::elements, globals\+::nodes, and re\+\_\+globals\+::vgset.
+
+
+
+Referenced by re\+\_\+pointers\+::allrepointers().
+
+
+\begin{DoxyCode}
+1666         \textcolor{keywordtype}{use }typy
+1667         \textcolor{keywordtype}{use }globals
+1668         \textcolor{keywordtype}{use }global_objs
+1669         \textcolor{keywordtype}{use }re_globals
+1670         \textcolor{keywordtype}{use }pde_objs
+1671 
+1672         \textcolor{keywordtype}{class}(pde_str),\textcolor{keywordtype}{intent(in)} :: pde\_loc
+1673         \textcolor{keywordtype}{integer(kind=ikind)} :: el, pos, mat
+1674         \textcolor{keywordtype}{logical} :: passed
+1675         \textcolor{keywordtype}{integer(kind=ikind)} :: i, position, nd
+1676         \textcolor{keywordtype}{real(kind=rkind)} :: low, high, hprev, h
+1677         \textcolor{keywordtype}{type}(integpnt_str) :: quadpnt
+1678         
+1679         quadpnt%type\_pnt = \textcolor{stringliteral}{"ndpt"}
+1680                
+1681 
+1682         \textcolor{keywordflow}{do} i=1, ubound(pde\_loc%solution,1)
+1683           el = nodes%element(i)%data(1)
+1684           mat = elements%material(el,1)
+1685             
+1686           quadpnt%order = i
+1687           quadpnt%column = 1
+1688           quadpnt%preproc=.true.
+1689           hprev = pde\_loc%getval(quadpnt)
+1690           quadpnt%column = 2
+1691           h = pde\_loc%getval(quadpnt)
+1692           \textcolor{keywordflow}{if} (vgset(mat)%rcza\_set%use) \textcolor{keywordflow}{then}
+1693             \textcolor{keywordflow}{if} ( hprev<0 ) \textcolor{keywordflow}{then}
+1694               position = int(-hprev/drutes_config%fnc\_discr\_length)+1
+1695               low = vgset(mat)%rcza\_set%tab(position,2)
+1696               high = vgset(mat)%rcza\_set%tab(position,3)
+1697               \textcolor{keywordflow}{if} (h < low .or. h > high) \textcolor{keywordflow}{then}
+1698                 passed = .false.
+1699                 \textcolor{keywordflow}{RETURN}
+1700 \textcolor{keywordflow}{              end if}
+1701 \textcolor{keywordflow}{              end if}
+1702 \textcolor{keywordflow}{           end if}
+1703 \textcolor{keywordflow}{         end do}
+1704 
+1705         passed = .true.
+1706 
+1707 
+\end{DoxyCode}
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacere__constitutive_a9868257a176611d41d573f6fb131fc70_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{re\+\_\+constitutive@{re\+\_\+constitutive}!rcza\+\_\+check\+\_\+old@{rcza\+\_\+check\+\_\+old}}
+\index{rcza\+\_\+check\+\_\+old@{rcza\+\_\+check\+\_\+old}!re\+\_\+constitutive@{re\+\_\+constitutive}}
+\subsubsection[{rcza\+\_\+check\+\_\+old()}]{\setlength{\rightskip}{0pt plus 5cm}logical function, private re\+\_\+constitutive\+::rcza\+\_\+check\+\_\+old (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [private]}}\label{namespacere__constitutive_abd7a060b46a0b04f5e8a971a8a947d82}
+
+
+Definition at line 1627 of file re\+\_\+constitutive.\+f90.
+
+
+
+References globals\+::drutes\+\_\+config, pde\+\_\+objs\+::pde, pde\+\_\+objs\+::pde\+\_\+common, and re\+\_\+globals\+::vgset.
+
+
+\begin{DoxyCode}
+1627         \textcolor{keywordtype}{use }typy
+1628         \textcolor{keywordtype}{use }globals
+1629         \textcolor{keywordtype}{use }global_objs
+1630         \textcolor{keywordtype}{use }re_globals
+1631         \textcolor{keywordtype}{use }pde_objs
+1632 
+1633         \textcolor{keywordtype}{integer(kind=ikind)} :: process
+1634         \textcolor{keywordtype}{logical} :: passed
+1635         \textcolor{keywordtype}{integer(kind=ikind)} :: i, j, position
+1636         \textcolor{keywordtype}{real(kind=rkind)} :: low, high, hprev, h
+1637 
+1638         process = pde_common%current\_proc
+1639 
+1640         \textcolor{keywordflow}{do} i=1, ubound(vgset,1)
+1641           \textcolor{keywordflow}{if} (vgset(i)%rcza\_set%use) \textcolor{keywordflow}{then}
+1642             \textcolor{keywordflow}{do} j=pde(process)%procbase\_fnc(1), pde(process)%procbase\_fnc(2)
+1643               hprev = pde_common%xvect(j,1)
+1644               h = pde_common%xvect(j,3)
+1645               \textcolor{keywordflow}{if} ( h<0 ) \textcolor{keywordflow}{then}
+1646                 position = int(-hprev/drutes_config%fnc\_discr\_length)+1
+1647                 low = vgset(i)%rcza\_set%tab(position,2)
+1648                 high = vgset(i)%rcza\_set%tab(position,3)
+1649 \textcolor{comment}{!                 print *, low, h, high}
+1650                 \textcolor{keywordflow}{if} (h < low .or. h > high) \textcolor{keywordflow}{then}
+1651                   passed = .false.
+1652                   \textcolor{keywordflow}{RETURN}
+1653 \textcolor{keywordflow}{                end if}
+1654 \textcolor{keywordflow}{              end if}
+1655 \textcolor{keywordflow}{            end do}
+1656 \textcolor{keywordflow}{          end if}
+1657 \textcolor{keywordflow}{        end do}
+1658 
+1659 
+1660         passed = .true.
+1661 
+1662 
+\end{DoxyCode}
+\index{re\+\_\+constitutive@{re\+\_\+constitutive}!re\+\_\+atmospheric@{re\+\_\+atmospheric}}
+\index{re\+\_\+atmospheric@{re\+\_\+atmospheric}!re\+\_\+constitutive@{re\+\_\+constitutive}}
+\subsubsection[{re\+\_\+atmospheric(pde\+\_\+loc, el\+\_\+id, node\+\_\+order, value, code)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine re\+\_\+constitutive\+::re\+\_\+atmospheric (
+\begin{DoxyParamCaption}
+\item[{class({\bf pde\+\_\+str}), intent(in)}]{pde\+\_\+loc, }
+\item[{integer(kind=ikind), intent(in)}]{el\+\_\+id, }
+\item[{integer(kind=ikind), intent(in)}]{node\+\_\+order, }
+\item[{real(kind=rkind), intent(out), optional}]{value, }
+\item[{integer(kind=ikind), intent(out), optional}]{code}
+\end{DoxyParamCaption}
+)}\label{namespacere__constitutive_a166877d8a0dc103b834bbfdda11e5c0e}
+
+
+Definition at line 1896 of file re\+\_\+constitutive.\+f90.
+
+
+
+References globals\+::drutes\+\_\+config, globals\+::elements, globals\+::nodes, pde\+\_\+objs\+::pde\+\_\+common, and globals\+::time.
+
+
+\begin{DoxyCode}
+1896       \textcolor{keywordtype}{use }typy
+1897       \textcolor{keywordtype}{use }globals
+1898       \textcolor{keywordtype}{use }global_objs
+1899       \textcolor{keywordtype}{use }pde_objs
+1900 
+1901       \textcolor{keywordtype}{class}(pde_str), \textcolor{keywordtype}{intent(in)} :: pde\_loc
+1902       \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(in)}  :: el\_id, node\_order
+1903       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{intent(out)}, \textcolor{keywordtype}{optional}    :: value
+1904       \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(out)}, \textcolor{keywordtype}{optional} :: code
+1905       
+1906       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(3,3)} :: k
+1907       
+1908       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(3)} :: gravflux, bcflux
+1909       
+1910       \textcolor{keywordtype}{type}(integpnt_str) :: quadpnt
+1911       \textcolor{keywordtype}{integer(kind=ikind)} :: layer
+1912       \textcolor{keywordtype}{real(kind=rkind)} :: theta, bcval
+1913       \textcolor{keywordtype}{integer(kind=ikind)} :: i, edge\_id, j
+1914   
+1915   
+1916       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(code)) \textcolor{keywordflow}{then}
+1917         code = 2
+1918 \textcolor{keywordflow}{      end if}
+1919       
+1920       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(\textcolor{keywordtype}{value})) \textcolor{keywordflow}{then}
+1921         edge\_id = nodes%edge(elements%data(el\_id, node\_order))
+1922 
+1923         i = pde\_loc%permut(elements%data(el\_id, node\_order))
+1924 
+1925         \textcolor{keyword}{call }pde\_loc%pde\_fnc(1)%dispersion(pde\_loc, elements%material(el\_id,1),\textcolor{comment}{ x=(/
+      pde_common%xvect(i,2)/), &}
+1926 \textcolor{comment}{                              tensor=k(1:drutes_config%dimen, 1:drutes_config%dimen))}
+1927 \textcolor{comment}{}
+1928 \textcolor{comment}{        gravflux(1:drutes_config%dimen) = k(drutes_config%dimen, 1:drutes_config%dimen)*
+      elements%nvect\_z(el\_id, node\_order)}
+1929 \textcolor{comment}{        }
+1930 \textcolor{comment}{}
+1931 \textcolor{comment}{        }\textcolor{keywordflow}{if} (pde\_loc%bc(edge\_id)%file) \textcolor{keywordflow}{then}
+1932           \textcolor{keywordflow}{do} i=1, ubound(pde\_loc%bc(edge\_id)%series,1)
+1933             \textcolor{keywordflow}{if} (pde\_loc%bc(edge\_id)%series(i,1) > time) \textcolor{keywordflow}{then}
+1934               \textcolor{keywordflow}{if} (i > 1) \textcolor{keywordflow}{then}
+1935                 j = i-1
+1936               \textcolor{keywordflow}{else}
+1937                 j = i
+1938 \textcolor{keywordflow}{              end if}
+1939               bcval = pde\_loc%bc(edge\_id)%series(j,2)
+1940               \textcolor{keywordflow}{EXIT}
+1941 \textcolor{keywordflow}{            end if}
+1942 \textcolor{keywordflow}{          end do}
+1943         \textcolor{keywordflow}{else}
+1944           bcval = pde\_loc%bc(edge\_id)%value
+1945 \textcolor{keywordflow}{        end if}
+1946         
+1947         \textcolor{keywordflow}{if} (bcval < 0) \textcolor{keywordflow}{then}
+1948           quadpnt%type\_pnt = \textcolor{stringliteral}{"ndpt"}
+1949           quadpnt%order = elements%data(el\_id,node\_order)
+1950           layer = elements%material(el\_id,1)
+1951           theta =  pde\_loc%mass(layer, quadpnt)
+1952           bcval = bcval*(theta*theta)**(1.0\_rkind/3.0\_rkind)
+1953 \textcolor{keywordflow}{        end if}
+1954           
+1955           
+1956          \textcolor{keywordflow}{select case}(drutes_config%dimen)
+1957             \textcolor{keywordflow}{case}(1)
+1958               \textcolor{keywordtype}{value} = bcval - gravflux(1)
+1959             \textcolor{keywordflow}{case}(2)
+1960               bcflux(1) = sqrt(1-elements%nvect\_z(el\_id, node\_order)*elements%nvect\_z\textcolor{comment}{(el\_id, node\_order))*
+      bcval}
+1961 \textcolor{comment}{              bcflux(2) = elements%nvect\_z(el\_id, node\_order)*bcval}
+1962 \textcolor{comment}{              bcflux = bcflux + gravflux}
+1963 \textcolor{comment}{              }\textcolor{keywordtype}{value} = sqrt(bcflux(1)*bcflux(1) + bcflux(2)*bcflux(2))
+1964   \textcolor{comment}{!         print *, value, gravflux, el\_id, elements%data(el\_id,:) ; stop }
+1965 \textcolor{keywordflow}{          end select} 
+1966         
+1967         
+1968 
+1969 \textcolor{keywordflow}{      end if}
+1970       
+1971       
+\end{DoxyCode}
+\index{re\+\_\+constitutive@{re\+\_\+constitutive}!re\+\_\+dirichlet\+\_\+bc@{re\+\_\+dirichlet\+\_\+bc}}
+\index{re\+\_\+dirichlet\+\_\+bc@{re\+\_\+dirichlet\+\_\+bc}!re\+\_\+constitutive@{re\+\_\+constitutive}}
+\subsubsection[{re\+\_\+dirichlet\+\_\+bc(pde\+\_\+loc, el\+\_\+id, node\+\_\+order, value, code)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, public re\+\_\+constitutive\+::re\+\_\+dirichlet\+\_\+bc (
+\begin{DoxyParamCaption}
+\item[{class({\bf pde\+\_\+str}), intent(in)}]{pde\+\_\+loc, }
+\item[{integer(kind=ikind), intent(in)}]{el\+\_\+id, }
+\item[{integer(kind=ikind), intent(in)}]{node\+\_\+order, }
+\item[{real(kind=rkind), intent(out), optional}]{value, }
+\item[{integer(kind=ikind), intent(out), optional}]{code}
+\end{DoxyParamCaption}
+)}\label{namespacere__constitutive_a95e6667a128b87ca0a7781209e30b1ac}
+
+
+Definition at line 1712 of file re\+\_\+constitutive.\+f90.
+
+
+
+References globals\+::elements, globals\+::nodes, and globals\+::time.
+
+
+
+Referenced by re\+\_\+pointers\+::re\+\_\+pressheadbc().
+
+
+\begin{DoxyCode}
+1712         \textcolor{keywordtype}{use }typy
+1713         \textcolor{keywordtype}{use }globals
+1714         \textcolor{keywordtype}{use }global_objs
+1715         \textcolor{keywordtype}{use }pde_objs
+1716 
+1717         \textcolor{keywordtype}{class}(pde_str), \textcolor{keywordtype}{intent(in)} :: pde\_loc
+1718         \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(in)}  :: el\_id, node\_order
+1719         \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{intent(out)}, \textcolor{keywordtype}{optional}    :: value
+1720         \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(out)}, \textcolor{keywordtype}{optional} :: code
+1721 
+1722         \textcolor{keywordtype}{integer(kind=ikind)} :: edge\_id, i, j
+1723 
+1724         
+1725         edge\_id = nodes%edge(elements%data(el\_id, node\_order))
+1726 
+1727         \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(\textcolor{keywordtype}{value})) \textcolor{keywordflow}{then}
+1728           \textcolor{keywordflow}{if} (pde\_loc%bc(edge\_id)%file) \textcolor{keywordflow}{then}
+1729             \textcolor{keywordflow}{do} i=1, ubound(pde\_loc%bc(edge\_id)%series,1)
+1730               \textcolor{keywordflow}{if} (pde\_loc%bc(edge\_id)%series(i,1) > time) \textcolor{keywordflow}{then}
+1731                 \textcolor{keywordflow}{if} (i > 1) \textcolor{keywordflow}{then}
+1732                   j = i-1
+1733                 \textcolor{keywordflow}{else}
+1734                   j = i
+1735 \textcolor{keywordflow}{                end if}
+1736                 \textcolor{keywordtype}{value} = pde\_loc%bc(edge\_id)%series(j,2)
+1737                 \textcolor{keywordflow}{EXIT}
+1738 \textcolor{keywordflow}{              end if}
+1739 \textcolor{keywordflow}{            end do}
+1740           \textcolor{keywordflow}{else}
+1741             \textcolor{keywordtype}{value} = pde\_loc%bc(edge\_id)%value
+1742 \textcolor{keywordflow}{          end if}
+1743 \textcolor{keywordflow}{        end if}
+1744 
+1745         \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(code)) \textcolor{keywordflow}{then}
+1746           code = 1
+1747 \textcolor{keywordflow}{        end if}
+\end{DoxyCode}
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacere__constitutive_a95e6667a128b87ca0a7781209e30b1ac_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{re\+\_\+constitutive@{re\+\_\+constitutive}!re\+\_\+dirichlet\+\_\+height\+\_\+bc@{re\+\_\+dirichlet\+\_\+height\+\_\+bc}}
+\index{re\+\_\+dirichlet\+\_\+height\+\_\+bc@{re\+\_\+dirichlet\+\_\+height\+\_\+bc}!re\+\_\+constitutive@{re\+\_\+constitutive}}
+\subsubsection[{re\+\_\+dirichlet\+\_\+height\+\_\+bc(pde\+\_\+loc, el\+\_\+id, node\+\_\+order, value, code)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, public re\+\_\+constitutive\+::re\+\_\+dirichlet\+\_\+height\+\_\+bc (
+\begin{DoxyParamCaption}
+\item[{class({\bf pde\+\_\+str}), intent(in)}]{pde\+\_\+loc, }
+\item[{integer(kind=ikind), intent(in)}]{el\+\_\+id, }
+\item[{integer(kind=ikind), intent(in)}]{node\+\_\+order, }
+\item[{real(kind=rkind), intent(out), optional}]{value, }
+\item[{integer(kind=ikind), intent(out), optional}]{code}
+\end{DoxyParamCaption}
+)}\label{namespacere__constitutive_a3166c88db2634fc8fcc9d579358676d0}
+
+
+Definition at line 1775 of file re\+\_\+constitutive.\+f90.
+
+
+
+References globals\+::drutes\+\_\+config, globals\+::elements, globals\+::nodes, and globals\+::time.
+
+
+
+Referenced by re\+\_\+pointers\+::re\+\_\+pressheadbc().
+
+
+\begin{DoxyCode}
+1775         \textcolor{keywordtype}{use }typy
+1776         \textcolor{keywordtype}{use }globals
+1777         \textcolor{keywordtype}{use }global_objs
+1778         \textcolor{keywordtype}{use }pde_objs
+1779         \textcolor{keywordtype}{use }debug_tools
+1780         
+1781         \textcolor{keywordtype}{class}(pde_str), \textcolor{keywordtype}{intent(in)} :: pde\_loc
+1782         \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(in)}  :: el\_id, node\_order
+1783         \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{intent(out)}, \textcolor{keywordtype}{optional}    :: value
+1784         \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(out)}, \textcolor{keywordtype}{optional} :: code
+1785 
+1786         
+1787         \textcolor{keywordtype}{integer(kind=ikind)} :: edge\_id, i, j
+1788         \textcolor{keywordtype}{real(kind=rkind)} :: tempval, node\_height
+1789         
+1790 
+1791         \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(\textcolor{keywordtype}{value})) \textcolor{keywordflow}{then}
+1792           edge\_id = nodes%edge(elements%data(el\_id, node\_order))
+1793           node\_height = nodes%data(elements%data(el\_id, node\_order), 
+      drutes_config%dimen)
+1794 
+1795           \textcolor{keywordflow}{if} (pde\_loc%bc(edge\_id)%file) \textcolor{keywordflow}{then}
+1796             \textcolor{keywordflow}{do} i=1, ubound(pde\_loc%bc(edge\_id)%series,1)
+1797               \textcolor{keywordflow}{if} (pde\_loc%bc(edge\_id)%series(i,1) > time) \textcolor{keywordflow}{then}
+1798                 \textcolor{keywordflow}{if} (i > 1) \textcolor{keywordflow}{then}
+1799                   j = i-1
+1800                 \textcolor{keywordflow}{else}
+1801                   j = i
+1802 \textcolor{keywordflow}{                end if}
+1803                 tempval = pde\_loc%bc(edge\_id)%series(j,2)
+1804                 \textcolor{keywordflow}{EXIT}
+1805 \textcolor{keywordflow}{              end if}
+1806 \textcolor{keywordflow}{            end do}
+1807           \textcolor{keywordflow}{else}
+1808             tempval =  pde\_loc%bc(edge\_id)%value
+1809 \textcolor{keywordflow}{          end if}
+1810 
+1811           
+1812           \textcolor{keywordtype}{value} = tempval - node\_height
+1813 \textcolor{keywordflow}{        end if}
+1814 
+1815         
+1816         \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(code)) \textcolor{keywordflow}{then}
+1817           code = 1
+1818 \textcolor{keywordflow}{        end if}
+1819         
+\end{DoxyCode}
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacere__constitutive_a3166c88db2634fc8fcc9d579358676d0_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{re\+\_\+constitutive@{re\+\_\+constitutive}!re\+\_\+initcond@{re\+\_\+initcond}}
+\index{re\+\_\+initcond@{re\+\_\+initcond}!re\+\_\+constitutive@{re\+\_\+constitutive}}
+\subsubsection[{re\+\_\+initcond(pde\+\_\+loc)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, public re\+\_\+constitutive\+::re\+\_\+initcond (
+\begin{DoxyParamCaption}
+\item[{class({\bf pde\+\_\+str}), intent(inout)}]{pde\+\_\+loc}
+\end{DoxyParamCaption}
+)}\label{namespacere__constitutive_a7a0c1ec8d57856234ae33b61eab450f2}
+
+
+Definition at line 1976 of file re\+\_\+constitutive.\+f90.
+
+
+
+References globals\+::drutes\+\_\+config, globals\+::elements, inverse\+\_\+vangen(), geom\+\_\+tools\+::map1d2dj(), globals\+::nodes, and re\+\_\+globals\+::vgset.
+
+
+
+Referenced by re\+\_\+pointers\+::re\+\_\+rot(), and re\+\_\+pointers\+::re\+\_\+std().
+
+
+\begin{DoxyCode}
+1976         \textcolor{keywordtype}{use }typy
+1977         \textcolor{keywordtype}{use }globals
+1978         \textcolor{keywordtype}{use }global_objs
+1979         \textcolor{keywordtype}{use }pde_objs
+1980         \textcolor{keywordtype}{use }re_globals
+1981         \textcolor{keywordtype}{use }geom_tools
+1982         
+1983         \textcolor{keywordtype}{class}(pde_str), \textcolor{keywordtype}{intent(in out)} :: pde\_loc
+1984         \textcolor{keywordtype}{integer(kind=ikind)} :: i, j, k,l, m, layer, d
+1985         \textcolor{keywordtype}{real(kind=rkind)} :: value
+1986         
+1987         d = drutes_config%dimen
+1988         \textcolor{keywordflow}{select case} (vgset(1\_ikind)%icondtype)
+1989           \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"input"})
+1990             \textcolor{keyword}{call }map1d2dj(pde\_loc,\textcolor{stringliteral}{"drutes.conf/water.conf/hini.in"})
+1991 \textcolor{keywordflow}{        end select}
+1992         
+1993         \textcolor{keywordflow}{do} i=1, elements%kolik
+1994           layer = elements%material(i,1)
+1995           \textcolor{keywordflow}{do} j=1, ubound(elements%data,2)
+1996             k = elements%data(i,j)
+1997             l = nodes%edge(k)
+1998             m = pde\_loc%permut(k)
+1999             \textcolor{keywordflow}{if} (m == 0) \textcolor{keywordflow}{then}
+2000               \textcolor{keyword}{call }pde\_loc%bc(l)%value\_fnc(pde\_loc, i, j, \textcolor{keywordtype}{value})
+2001               pde\_loc%solution(k) =  \textcolor{keywordtype}{value} 
+2002             \textcolor{keywordflow}{else}
+2003               \textcolor{keywordflow}{select case} (vgset(layer)%icondtype)
+2004                 \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"H\_tot"})
+2005                   pde\_loc%solution(k) = vgset(layer)%initcond - nodes%data(k,d)
+2006                 \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"hpres"})
+2007                   pde\_loc%solution(k) = vgset(layer)%initcond 
+2008                 \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"theta"})
+2009                   \textcolor{keywordtype}{value} = inverse_vangen(pde\_loc, layer, x=(/vgset(layer)%initcond/))
+2010                   pde\_loc%solution(k) = \textcolor{keywordtype}{value}
+2011 \textcolor{keywordflow}{              end select}
+2012 \textcolor{keywordflow}{            end if}
+2013 \textcolor{keywordflow}{          end do}   
+2014 \textcolor{keywordflow}{        end do}
+2015         
+2016         
+2017 
+2018 
+2019 
+\end{DoxyCode}
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacere__constitutive_a7a0c1ec8d57856234ae33b61eab450f2_cgraph}
+\end{center}
+\end{figure}
+
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacere__constitutive_a7a0c1ec8d57856234ae33b61eab450f2_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{re\+\_\+constitutive@{re\+\_\+constitutive}!re\+\_\+neumann\+\_\+bc@{re\+\_\+neumann\+\_\+bc}}
+\index{re\+\_\+neumann\+\_\+bc@{re\+\_\+neumann\+\_\+bc}!re\+\_\+constitutive@{re\+\_\+constitutive}}
+\subsubsection[{re\+\_\+neumann\+\_\+bc(pde\+\_\+loc, el\+\_\+id, node\+\_\+order, value, code)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, public re\+\_\+constitutive\+::re\+\_\+neumann\+\_\+bc (
+\begin{DoxyParamCaption}
+\item[{class({\bf pde\+\_\+str}), intent(in)}]{pde\+\_\+loc, }
+\item[{integer(kind=ikind), intent(in)}]{el\+\_\+id, }
+\item[{integer(kind=ikind), intent(in)}]{node\+\_\+order, }
+\item[{real(kind=rkind), intent(out), optional}]{value, }
+\item[{integer(kind=ikind), intent(out), optional}]{code}
+\end{DoxyParamCaption}
+)}\label{namespacere__constitutive_a1067d48cafe8d4463ae78102b1e01b84}
+
+
+Definition at line 1827 of file re\+\_\+constitutive.\+f90.
+
+
+
+References globals\+::drutes\+\_\+config, globals\+::elements, globals\+::nodes, pde\+\_\+objs\+::pde\+\_\+common, and globals\+::time.
+
+
+
+Referenced by re\+\_\+pointers\+::re\+\_\+pressheadbc().
+
+
+\begin{DoxyCode}
+1827         \textcolor{keywordtype}{use }typy
+1828         \textcolor{keywordtype}{use }globals
+1829         \textcolor{keywordtype}{use }global_objs
+1830         \textcolor{keywordtype}{use }pde_objs
+1831 
+1832         \textcolor{keywordtype}{class}(pde_str), \textcolor{keywordtype}{intent(in)} :: pde\_loc
+1833         \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(in)}  :: el\_id, node\_order
+1834         \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{intent(out)}, \textcolor{keywordtype}{optional}    :: value
+1835         \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(out)}, \textcolor{keywordtype}{optional} :: code
+1836         
+1837         \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(3,3)} :: k
+1838 
+1839         \textcolor{keywordtype}{integer(kind=ikind)} :: i, edge\_id, j
+1840         \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(3)} :: gravflux, bcflux
+1841         \textcolor{keywordtype}{real(kind=rkind)} :: bcval, gfluxval
+1842         \textcolor{keywordtype}{integer} :: i1
+1843 
+1844       
+1845         \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(\textcolor{keywordtype}{value})) \textcolor{keywordflow}{then}
+1846           edge\_id = nodes%edge(elements%data(el\_id, node\_order))
+1847 
+1848           i = pde\_loc%permut(elements%data(el\_id, node\_order))
+1849 
+1850           \textcolor{keyword}{call }pde\_loc%pde\_fnc(1)%dispersion(pde\_loc, elements%material(el\_id,1), x=(/
+      pde_common%xvect(i,2)/), &
+1851                               tensor=k(1:drutes_config%dimen, 1:drutes_config%dimen))
+1852 
+1853           gravflux(1:drutes_config%dimen) = k(drutes_config%dimen, 1:
+      drutes_config%dimen)*elements%nvect\_z(el\_id, node\_order)
+1854           
+1855 
+1856           \textcolor{keywordflow}{if} (pde\_loc%bc(edge\_id)%file) \textcolor{keywordflow}{then}
+1857             \textcolor{keywordflow}{do} i=1, ubound(pde\_loc%bc(edge\_id)%series,1)
+1858               \textcolor{keywordflow}{if} (pde\_loc%bc(edge\_id)%series(i,1) > time) \textcolor{keywordflow}{then}
+1859                 \textcolor{keywordflow}{if} (i > 1) \textcolor{keywordflow}{then}
+1860                   j = i-1
+1861                 \textcolor{keywordflow}{else}
+1862                   j = i
+1863 \textcolor{keywordflow}{                end if}
+1864                 bcval = pde\_loc%bc(edge\_id)%series(j,2)
+1865                 \textcolor{keywordflow}{EXIT}
+1866 \textcolor{keywordflow}{              end if}
+1867 \textcolor{keywordflow}{            end do}
+1868           \textcolor{keywordflow}{else}
+1869             bcval = pde\_loc%bc(edge\_id)%value
+1870 \textcolor{keywordflow}{          end if}
+1871           
+1872 
+1873           
+1874 
+1875 
+1876           \textcolor{keywordflow}{select case}(drutes_config%dimen)
+1877             \textcolor{keywordflow}{case}(1)
+1878               \textcolor{keywordtype}{value} = bcval - gravflux(1)
+1879             \textcolor{keywordflow}{case}(2)
+1880               bcflux(1) = sqrt(1-elements%nvect\_z(el\_id, node\_order)*elements%nvect\_z(el\_id, node\_order))*
+      bcval
+1881               bcflux(2) = elements%nvect\_z(el\_id, node\_order)*bcval
+1882               bcflux = bcflux + gravflux
+1883               \textcolor{keywordtype}{value} = sqrt(bcflux(1)*bcflux(1) + bcflux(2)*bcflux(2))
+1884   \textcolor{comment}{!         print *, value, gravflux, el\_id, elements%data(el\_id,:) ; stop }
+1885 \textcolor{keywordflow}{          end select}
+1886 \textcolor{keywordflow}{        end if}
+1887         
+1888        \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(code)) \textcolor{keywordflow}{then}
+1889           code = 2
+1890 \textcolor{keywordflow}{        end if}
+1891 
+\end{DoxyCode}
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacere__constitutive_a1067d48cafe8d4463ae78102b1e01b84_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{re\+\_\+constitutive@{re\+\_\+constitutive}!re\+\_\+null\+\_\+bc@{re\+\_\+null\+\_\+bc}}
+\index{re\+\_\+null\+\_\+bc@{re\+\_\+null\+\_\+bc}!re\+\_\+constitutive@{re\+\_\+constitutive}}
+\subsubsection[{re\+\_\+null\+\_\+bc(pde\+\_\+loc, el\+\_\+id, node\+\_\+order, value, code)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, public re\+\_\+constitutive\+::re\+\_\+null\+\_\+bc (
+\begin{DoxyParamCaption}
+\item[{class({\bf pde\+\_\+str}), intent(in)}]{pde\+\_\+loc, }
+\item[{integer(kind=ikind), intent(in)}]{el\+\_\+id, }
+\item[{integer(kind=ikind), intent(in)}]{node\+\_\+order, }
+\item[{real(kind=rkind), intent(out), optional}]{value, }
+\item[{integer(kind=ikind), intent(out), optional}]{code}
+\end{DoxyParamCaption}
+)}\label{namespacere__constitutive_aaf76632a958340d25d948fafea6a16c9}
+
+
+Definition at line 1752 of file re\+\_\+constitutive.\+f90.
+
+
+
+Referenced by re\+\_\+dual\+\_\+pointers\+::re\+\_\+fracture(), re\+\_\+dual\+\_\+pointers\+::re\+\_\+matrix(), re\+\_\+pointers\+::re\+\_\+pressheadbc(), and re\+\_\+pointers\+::re\+\_\+totheadbc().
+
+
+\begin{DoxyCode}
+1752         \textcolor{keywordtype}{use }typy
+1753         \textcolor{keywordtype}{use }globals
+1754         \textcolor{keywordtype}{use }global_objs
+1755         \textcolor{keywordtype}{use }pde_objs
+1756         
+1757         \textcolor{keywordtype}{class}(pde_str), \textcolor{keywordtype}{intent(in)} :: pde\_loc
+1758         \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(in)}  :: el\_id, node\_order
+1759         \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{intent(out)}, \textcolor{keywordtype}{optional}    :: value
+1760         \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(out)}, \textcolor{keywordtype}{optional} :: code
+1761 
+1762         \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(\textcolor{keywordtype}{value})) \textcolor{keywordflow}{then}
+1763           \textcolor{keywordtype}{value} = 0.0\_rkind
+1764 \textcolor{keywordflow}{        end if}
+1765 
+1766         \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(code)) \textcolor{keywordflow}{then}
+1767           code = 2
+1768 \textcolor{keywordflow}{        end if}
+1769         
+\end{DoxyCode}
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacere__constitutive_aaf76632a958340d25d948fafea6a16c9_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{re\+\_\+constitutive@{re\+\_\+constitutive}!secondder\+\_\+retc@{secondder\+\_\+retc}}
+\index{secondder\+\_\+retc@{secondder\+\_\+retc}!re\+\_\+constitutive@{re\+\_\+constitutive}}
+\subsubsection[{secondder\+\_\+retc(h)}]{\setlength{\rightskip}{0pt plus 5cm}pure real(kind=rkind) function, private re\+\_\+constitutive\+::secondder\+\_\+retc (
+\begin{DoxyParamCaption}
+\item[{real(kind=rkind), intent(in)}]{h}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [private]}}\label{namespacere__constitutive_ade7567448cbab0c91885d4d3f48e03a2}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em h} & input pressure head, van genuchten\textquotesingle{}s parameters are obtained from variable van\+\_\+gen\+\_\+coeff\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+resulting curvature 
+\end{DoxyReturn}
+
+
+Definition at line 1595 of file re\+\_\+constitutive.\+f90.
+
+
+
+References this\+\_\+layer, and re\+\_\+globals\+::vgset.
+
+
+
+Referenced by init\+\_\+zones().
+
+
+\begin{DoxyCode}
+1595         \textcolor{keywordtype}{use }typy
+1596         \textcolor{keywordtype}{use }re_globals
+1597 
+1599         \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{intent(in)} :: h
+1601         \textcolor{keywordtype}{real(kind=rkind)} :: curvature
+1602 
+1603         \textcolor{comment}{!!!!--local variables------}
+1604         \textcolor{keywordtype}{real(kind=rkind)} :: a, n, m, tr, ts
+1605 
+1606         a = vgset(this_layer)%alpha
+1607         n = vgset(this_layer)%n
+1608         m = vgset(this_layer)%m
+1609         tr = vgset(this_layer)%Thr
+1610         ts = vgset(this_layer)%Ths
+1611 
+1612 
+1613         \textcolor{keywordflow}{if}( h < 0.0\_rkind) \textcolor{keywordflow}{then}
+1614           curvature = -(a**2*(-(a*h))**(-2 + n)*(1 + (-(a*h))**n)**(-1 - m)*m*(-1 + n)*n* &
+1615               (-tr + ts)) - a**2*(-(a*h))**(-2 + 2*n)*(1 + (-(a*h))**n)**(-2 - m)*(-1 - m)* &
+1616             m*n**2*(-tr + ts)
+1617         \textcolor{keywordflow}{else}
+1618           curvature = 0.0\_rkind
+1619 \textcolor{keywordflow}{        end if}
+1620 
+1621         
+1622 
+\end{DoxyCode}
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacere__constitutive_ade7567448cbab0c91885d4d3f48e03a2_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{re\+\_\+constitutive@{re\+\_\+constitutive}!setmatflux@{setmatflux}}
+\index{setmatflux@{setmatflux}!re\+\_\+constitutive@{re\+\_\+constitutive}}
+\subsubsection[{setmatflux()}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, private re\+\_\+constitutive\+::setmatflux (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [private]}}\label{namespacere__constitutive_aeb4dd7b9faf9bb8efaa4b60cfb5fc722}
+
+
+Definition at line 2023 of file re\+\_\+constitutive.\+f90.
+
+
+
+References globals\+::elements, and globals\+::nodes.
+
+
+\begin{DoxyCode}
+2023         \textcolor{keywordtype}{use }typy
+2024         \textcolor{keywordtype}{use }globals
+2025         \textcolor{keywordtype}{use }global_objs
+2026         \textcolor{keywordtype}{use }pde_objs
+2027         \textcolor{keywordtype}{use }debug_tools
+2028         
+2029         \textcolor{keywordtype}{integer(kind=ikind)} :: i, j, vecino, id, k, l, nd, ndvec
+2030         
+2031         id = maxval(nodes%edge) + 100
+2032         \textcolor{keywordflow}{do} i=1, elements%kolik
+2033           \textcolor{keywordflow}{do} j=1, ubound(elements%neighbours,2)
+2034             vecino = elements%neighbours(i,j)
+2035             \textcolor{keywordflow}{if} (vecino /= 0) \textcolor{keywordflow}{then}
+2036               \textcolor{keywordflow}{if} (elements%material(i,1) /= elements%material(vecino,1)) \textcolor{keywordflow}{then}
+2037                 \textcolor{keywordflow}{do} k=1, ubound(elements%data,2)
+2038                   nd = elements%data(i, k)
+2039                   \textcolor{keywordflow}{do} l=1, ubound(elements%data,2)
+2040                     ndvec = elements%data(vecino, l)
+2041                     \textcolor{keywordflow}{if} (nd == ndvec) \textcolor{keywordflow}{then}
+2042                       nodes%edge(nd) = -id
+2043 \textcolor{keywordflow}{                    end if}
+2044 \textcolor{keywordflow}{                  end do}
+2045 \textcolor{keywordflow}{                end do}
+2046 \textcolor{keywordflow}{              end if}
+2047 \textcolor{keywordflow}{            end if}
+2048 \textcolor{keywordflow}{          end do}
+2049 \textcolor{keywordflow}{        end do}
+2050         
+2051 
+2052       
+\end{DoxyCode}
+\index{re\+\_\+constitutive@{re\+\_\+constitutive}!sinkterm@{sinkterm}}
+\index{sinkterm@{sinkterm}!re\+\_\+constitutive@{re\+\_\+constitutive}}
+\subsubsection[{sinkterm(pde\+\_\+loc, layer, quadpnt, x)}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind) function, public re\+\_\+constitutive\+::sinkterm (
+\begin{DoxyParamCaption}
+\item[{class({\bf pde\+\_\+str}), intent(in)}]{pde\+\_\+loc, }
+\item[{integer(kind=ikind), intent(in)}]{layer, }
+\item[{type({\bf integpnt\+\_\+str}), intent(in), optional}]{quadpnt, }
+\item[{real(kind=rkind), dimension(\+:), intent(in), optional}]{x}
+\end{DoxyParamCaption}
+)}\label{namespacere__constitutive_a33a509607909bb5e6b33c6d2ba2247e2}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em x} & value of the nonlinear function\\
+\hline
+\mbox{\tt in}  & {\em quadpnt} & Gauss quadrature point structure (element number and rank of Gauss quadrature point)\\
+\hline
+\mbox{\tt in}  & {\em layer} & material ID\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+return value 
+\end{DoxyReturn}
+
+
+Definition at line 1045 of file re\+\_\+constitutive.\+f90.
+
+
+
+References re\+\_\+globals\+::vgset.
+
+
+
+Referenced by re\+\_\+pointers\+::allrepointers().
+
+
+\begin{DoxyCode}
+1045       \textcolor{keywordtype}{use }typy
+1046       \textcolor{keywordtype}{use }global_objs
+1047       \textcolor{keywordtype}{use }pde_objs
+1048       
+1049       \textcolor{keywordtype}{class}(pde_str), \textcolor{keywordtype}{intent(in)} :: pde\_loc
+1051       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional}    :: x
+1053       \textcolor{keywordtype}{type}(integpnt_str), \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional} :: quadpnt
+1055       \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(in)} :: layer
+1057       \textcolor{keywordtype}{real(kind=rkind)}                :: val
+1058       
+1059       
+1060       val = vgset(layer)%sinkterm
+1061      
+1062     
+1063     
+\end{DoxyCode}
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacere__constitutive_a33a509607909bb5e6b33c6d2ba2247e2_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{re\+\_\+constitutive@{re\+\_\+constitutive}!tabvalues@{tabvalues}}
+\index{tabvalues@{tabvalues}!re\+\_\+constitutive@{re\+\_\+constitutive}}
+\subsubsection[{tabvalues(pde\+\_\+loc, Kfnc, d\+Kdhfnc, Cfnc, thetafnc)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine re\+\_\+constitutive\+::tabvalues (
+\begin{DoxyParamCaption}
+\item[{class({\bf pde\+\_\+str}), intent(in)}]{pde\+\_\+loc, }
+\item[{}]{Kfnc, }
+\item[{}]{d\+Kdhfnc, }
+\item[{}]{Cfnc, }
+\item[{}]{thetafnc}
+\end{DoxyParamCaption}
+)}\label{namespacere__constitutive_a6bfdd98c01994ec23b252bfb214199bd}
+
+
+creates a table of values of constitutive functions for the Richards equation to be linearly approximated 
+
+
+
+Definition at line 1249 of file re\+\_\+constitutive.\+f90.
+
+
+
+References dkdhtab, dkdhtab\+\_\+all, domainswitch(), globals\+::drutes\+\_\+config, ktab, ktab\+\_\+all, globals\+::maxpress, printtools\+::progressbar(), re\+\_\+globals\+::vgmatrix, re\+\_\+globals\+::vgset, warecatab, warecatab\+\_\+all, watcontab, watcontab\+\_\+all, and core\+\_\+tools\+::write\+\_\+log().
+
+
+
+Referenced by re\+\_\+pointers\+::allrepointers().
+
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacere__constitutive_a6bfdd98c01994ec23b252bfb214199bd_cgraph}
+\end{center}
+\end{figure}
+
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacere__constitutive_a6bfdd98c01994ec23b252bfb214199bd_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{re\+\_\+constitutive@{re\+\_\+constitutive}!vangen@{vangen}}
+\index{vangen@{vangen}!re\+\_\+constitutive@{re\+\_\+constitutive}}
+\subsubsection[{vangen(pde\+\_\+loc, layer, quadpnt, x)}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind) function, public re\+\_\+constitutive\+::vangen (
+\begin{DoxyParamCaption}
+\item[{class({\bf pde\+\_\+str}), intent(in)}]{pde\+\_\+loc, }
+\item[{integer(kind=ikind), intent(in)}]{layer, }
+\item[{type({\bf integpnt\+\_\+str}), intent(in), optional}]{quadpnt, }
+\item[{real(kind=rkind), dimension(\+:), intent(in), optional}]{x}
+\end{DoxyParamCaption}
+)}\label{namespacere__constitutive_a5a331b5dac127bd2b449ffdecf9e3714}
+
+
+Van Genuchten relation \[ \theta = f(pressure) \] \[ \theta_e = \frac{1}{(1+(\alpha*h)^n)^m} \] water content is considered as absolute value not the relative one ~\newline
+ see \[ \theta_e = \frac{\theta - \theta_r}{\theta_s-\theta_r} \]. 
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em x} & pressure head\\
+\hline
+\mbox{\tt in}  & {\em quadpnt} & Gauss quadrature point structure (element number and rank of Gauss quadrature point)\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+resulting water content 
+\end{DoxyReturn}
+
+
+Definition at line 62 of file re\+\_\+constitutive.\+f90.
+
+
+
+References re\+\_\+globals\+::vgset.
+
+
+
+Referenced by re\+\_\+pointers\+::allrepointers(), vangen\+\_\+elast(), vangen\+\_\+tab(), and zone\+\_\+error\+\_\+val().
+
+
+\begin{DoxyCode}
+62       \textcolor{keywordtype}{use }typy
+63       \textcolor{keywordtype}{use }re_globals
+64       \textcolor{keywordtype}{use }pde_objs
+65       \textcolor{keywordtype}{class}(pde_str), \textcolor{keywordtype}{intent(in)} :: pde\_loc
+66       \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(in)} :: layer
+68       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{optional} :: x
+70       \textcolor{keywordtype}{type}(integpnt_str), \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional} :: quadpnt
+71       \textcolor{keywordtype}{real(kind=rkind)} :: h
+73       \textcolor{keywordtype}{real(kind=rkind)} :: theta
+74 
+75       \textcolor{keywordtype}{real(kind=rkind)} :: a,n,m, theta\_e
+76       \textcolor{keywordtype}{type}(integpnt_str) :: quadpnt\_loc
+77       
+78 
+79       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(quadpnt) .and. \textcolor{keyword}{present}(x)) \textcolor{keywordflow}{then}
+80         print *, \textcolor{stringliteral}{"ERROR: the function can be called either with integ point or x value definition, not both
+       of them"}
+81         print *, \textcolor{stringliteral}{"exited from re\_constitutive::vangen"}
+82         error stop
+83       \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (.not. \textcolor{keyword}{present}(quadpnt) .and. .not. \textcolor{keyword}{present}(x)) \textcolor{keywordflow}{then}
+84         print *, \textcolor{stringliteral}{"ERROR: you have not specified either integ point or x value"}
+85         print *, \textcolor{stringliteral}{"exited from re\_constitutive::vangen"}
+86         error stop
+87 \textcolor{keywordflow}{      end if}
+88       
+89       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(quadpnt)) \textcolor{keywordflow}{then}
+90         quadpnt\_loc=quadpnt
+91         quadpnt\_loc%preproc=.true.
+92         h = pde\_loc%getval(quadpnt\_loc)
+93       \textcolor{keywordflow}{else}
+94         \textcolor{keywordflow}{if} (ubound(x,1) /=1) \textcolor{keywordflow}{then}
+95           print *, \textcolor{stringliteral}{"ERROR: van Genuchten function is a function of a single variable h"}
+96           print *, \textcolor{stringliteral}{"       your input data has:"}, ubound(x,1), \textcolor{stringliteral}{"variables"}
+97           print *, \textcolor{stringliteral}{"exited from re\_constitutive::vangen"}
+98           error stop
+99 \textcolor{keywordflow}{        end if}
+100         h = x(1)
+101 \textcolor{keywordflow}{      end if}
+102       
+103       
+104       
+105       a = vgset(layer)%alpha
+106       n = vgset(layer)%n
+107       m = vgset(layer)%m
+108       
+109 
+110       \textcolor{keywordflow}{if} (h >=0.0\_rkind) \textcolor{keywordflow}{then}
+111           theta = vgset(layer)%Ths
+112           \textcolor{keywordflow}{RETURN}
+113       \textcolor{keywordflow}{else}
+114           theta\_e = 1/(1+(a*(abs(h)))**n)**m
+115           theta = theta\_e*(vgset(layer)%Ths-vgset(layer)%Thr)+vgset(layer)%Thr
+116 \textcolor{keywordflow}{      end if}
+117 
+\end{DoxyCode}
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacere__constitutive_a5a331b5dac127bd2b449ffdecf9e3714_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{re\+\_\+constitutive@{re\+\_\+constitutive}!vangen\+\_\+elast@{vangen\+\_\+elast}}
+\index{vangen\+\_\+elast@{vangen\+\_\+elast}!re\+\_\+constitutive@{re\+\_\+constitutive}}
+\subsubsection[{vangen\+\_\+elast(pde\+\_\+loc, layer, quadpnt, x)}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind) function, public re\+\_\+constitutive\+::vangen\+\_\+elast (
+\begin{DoxyParamCaption}
+\item[{class({\bf pde\+\_\+str}), intent(in)}]{pde\+\_\+loc, }
+\item[{integer(kind=ikind), intent(in)}]{layer, }
+\item[{type({\bf integpnt\+\_\+str}), intent(in), optional}]{quadpnt, }
+\item[{real(kind=rkind), dimension(\+:), intent(in), optional}]{x}
+\end{DoxyParamCaption}
+)}\label{namespacere__constitutive_a36b172485f285a7c37b92d738eb21029}
+
+
+so-\/called retention water capacity, it is a derivative to retention curve function  E(h) = C(h) + \{(h)\}\{\}S\+\_\+s ] where \[ C(h) = \left\{ \begin{array}{l l}\frac{m n \alpha (-h \alpha )^{-1+n}}{\left(1+(-h \alpha )^n\right)^{1+m}}(\theta_s - \theta_r) , & \quad \mbox{$\forall$ $h \in (-\infty, 0 )$}\\ 0, & \quad \mbox{$\forall$ $h \in \langle 0, + \infty )$}\\ \end{array} \right. \] and \[ \theta(h) = \left\{ \begin{array}{l l} \frac{\theta_s -\theta_r}{(1+(-\alpha h)^n_{vg})^m_{vg}} + \theta_r, & \quad \mbox{$\forall$ $h \in (-\infty, 0 )$}\\ \theta_S, & \quad \mbox{$\forall$ $h \in \langle 0, + \infty )$}\\ \end{array} \right. \] 
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em x} & pressure head\\
+\hline
+\mbox{\tt in}  & {\em quadpnt} & Gauss quadrature point structure (element number and rank of Gauss quadrature point)\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+resulting system elasticity 
+\end{DoxyReturn}
+
+
+Definition at line 338 of file re\+\_\+constitutive.\+f90.
+
+
+
+References vangen(), and re\+\_\+globals\+::vgset.
+
+
+
+Referenced by re\+\_\+pointers\+::allrepointers(), vangen\+\_\+elast\+\_\+tab(), and zone\+\_\+error\+\_\+val().
+
+
+\begin{DoxyCode}
+338       \textcolor{keywordtype}{use }typy
+339       \textcolor{keywordtype}{use }re_globals
+340       \textcolor{keywordtype}{use }pde_objs
+341       \textcolor{keywordtype}{use }core_tools
+342 
+343       \textcolor{keywordtype}{class}(pde_str), \textcolor{keywordtype}{intent(in)} :: pde\_loc 
+344       \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(in)} :: layer
+346       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{dimension(:)},  \textcolor{keywordtype}{optional} :: x
+348       \textcolor{keywordtype}{type}(integpnt_str), \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional} :: quadpnt
+349       \textcolor{keywordtype}{real(kind=rkind)} :: h
+351       \textcolor{keywordtype}{real(kind=rkind)} :: e
+352 
+353       \textcolor{keywordtype}{real(kind=rkind)} :: c, a, m, n, tr, ts 
+354       \textcolor{keywordtype}{type}(integpnt_str) :: quadpnt\_loc      
+355           
+356       
+357       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(quadpnt) .and. \textcolor{keyword}{present}(x)) \textcolor{keywordflow}{then}
+358         print *, \textcolor{stringliteral}{"ERROR: the function can be called either with integ point or x value definition, not both
+       of them"}
+359         print *, \textcolor{stringliteral}{"exited from re\_constitutive::vangen\_elast"}
+360         error stop
+361       \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (.not. \textcolor{keyword}{present}(quadpnt) .and. .not. \textcolor{keyword}{present}(x)) \textcolor{keywordflow}{then}
+362         print *, \textcolor{stringliteral}{"ERROR: you have not specified either integ point or x value"}
+363         print *, \textcolor{stringliteral}{"exited from re\_constitutive::vangen\_elast"}
+364         error stop
+365 \textcolor{keywordflow}{      end if}
+366       
+367       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(quadpnt)) \textcolor{keywordflow}{then}
+368         quadpnt\_loc=quadpnt
+369         quadpnt\_loc%preproc=.true.
+370         h = pde\_loc%getval(quadpnt\_loc)
+371       \textcolor{keywordflow}{else}
+372         \textcolor{keywordflow}{if} (ubound(x,1) /=1) \textcolor{keywordflow}{then}
+373           print *, \textcolor{stringliteral}{"ERROR: van Genuchten function is a function of a single variable h"}
+374           print *, \textcolor{stringliteral}{"       your input data has:"}, ubound(x,1), \textcolor{stringliteral}{"variables"}
+375           error stop
+376 \textcolor{keywordflow}{        end if}
+377         \textcolor{keywordflow}{if} (ubound(x,1) /=1) \textcolor{keywordflow}{then}
+378           print *, \textcolor{stringliteral}{"ERROR: van Genuchten function is a function of a single variable h"}
+379           print *, \textcolor{stringliteral}{"       your input data has:"}, ubound(x,1), \textcolor{stringliteral}{"variables"}
+380           print *, \textcolor{stringliteral}{"exited from re\_constitutive::vangen\_elast"}
+381           error stop
+382 \textcolor{keywordflow}{        end if}
+383         h = x(1)
+384 \textcolor{keywordflow}{      end if}
+385 
+386       \textcolor{keywordflow}{if} (h < 0) \textcolor{keywordflow}{then}
+387         a = vgset(layer)%alpha
+388         n = vgset(layer)%n
+389         m = vgset(layer)%m
+390         tr = vgset(layer)%Thr
+391         ts = vgset(layer)%Ths
+392         c = a*m*n*(-tr + ts)*(-(a*h))**(-1 + n)*(1 + (-(a*h))**n)**(-1 - m)
+393       \textcolor{keywordflow}{else}
+394         e = vgset(layer)%Ss
+395         \textcolor{keywordflow}{RETURN}
+396 \textcolor{keywordflow}{      end if}
+397 
+398       e = c + vangen(pde\_loc, layer, x=(/h/))/vgset(layer)%Ths*vgset(layer\textcolor{comment}{)%Ss}
+399 \textcolor{comment}{      }
+400 \textcolor{comment}{}
+\textcolor{comment}{\end{DoxyCode}
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=316pt]{namespacere__constitutive_a36b172485f285a7c37b92d738eb21029_cgraph}
+\end{center}
+\end{figure}
+
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacere__constitutive_a36b172485f285a7c37b92d738eb21029_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{re\+\_\+constitutive@{re\+\_\+constitutive}!vangen\+\_\+elast\+\_\+tab@{vangen\+\_\+elast\+\_\+tab}}
+\index{vangen\+\_\+elast\+\_\+tab@{vangen\+\_\+elast\+\_\+tab}!re\+\_\+constitutive@{re\+\_\+constitutive}}
+\subsubsection[{vangen\+\_\+elast\+\_\+tab(pde\+\_\+loc, layer, quadpnt, x)}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind) function, public re\+\_\+constitutive\+::vangen\+\_\+elast\+\_\+tab (
+\begin{DoxyParamCaption}
+\item[{class({\bf pde\+\_\+str}), intent(in)}]{pde\+\_\+loc, }
+\item[{integer(kind=ikind), intent(in)}]{layer, }
+\item[{type({\bf integpnt\+\_\+str}), intent(in), optional}]{quadpnt, }
+\item[{real(kind=rkind), dimension(\+:), intent(in), optional}]{x}
+\end{DoxyParamCaption}
+)}\label{namespacere__constitutive_aa39d302eed50bc490b34dd310caf7ed8}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em x} & pressure head\\
+\hline
+\mbox{\tt in}  & {\em quadpnt} & Gauss quadrature point structure (element number and rank of Gauss quadrature point)\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+resulting system elasticity 
+\end{DoxyReturn}
+
+
+Definition at line 471 of file re\+\_\+constitutive.\+f90.
+
+
+
+References intoverflow(), intwarning, tabmsg, tabwarning, vangen\+\_\+elast(), re\+\_\+globals\+::vgset, warecatab, and core\+\_\+tools\+::write\+\_\+log().
+
+
+
+Referenced by re\+\_\+pointers\+::allrepointers().
+
+
+\begin{DoxyCode}
+471       \textcolor{keywordtype}{use }typy
+472       \textcolor{keywordtype}{use }re_globals
+473       \textcolor{keywordtype}{use }pde_objs
+474       \textcolor{keywordtype}{use }core_tools
+475 
+476       \textcolor{keywordtype}{class}(pde_str), \textcolor{keywordtype}{intent(in)} :: pde\_loc 
+477       \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(in)} :: layer
+479       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional} :: x
+481       \textcolor{keywordtype}{type}(integpnt_str), \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional} :: quadpnt
+482       \textcolor{keywordtype}{real(kind=rkind)} :: h
+484       \textcolor{keywordtype}{real(kind=rkind)} :: e
+485 
+486       \textcolor{keywordtype}{integer(kind=ikind)} :: pos
+487       \textcolor{keywordtype}{real(kind=rkind)} :: res, dist
+488       \textcolor{keywordtype}{type}(integpnt_str) :: quadpnt\_loc     
+489          
+490       
+491       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(quadpnt) .and. \textcolor{keyword}{present}(x)) \textcolor{keywordflow}{then}
+492         print *, \textcolor{stringliteral}{"ERROR: the function can be called either with integ point or x value definition, not both
+       of them"}
+493         print *, \textcolor{stringliteral}{"exited from re\_constitutive::vangen\_elast\_tab"}
+494         error stop
+495       \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (.not. \textcolor{keyword}{present}(quadpnt) .and. .not. \textcolor{keyword}{present}(x)) \textcolor{keywordflow}{then}
+496         print *, \textcolor{stringliteral}{"ERROR: you have not specified either integ point or x value"}
+497         print *, \textcolor{stringliteral}{"exited from re\_constitutive::vangen\_elast\_tab"}
+498         error stop
+499 \textcolor{keywordflow}{      end if}
+500       
+501       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(quadpnt)) \textcolor{keywordflow}{then}
+502         quadpnt\_loc=quadpnt
+503         quadpnt\_loc%preproc=.true.
+504         h = pde\_loc%getval(quadpnt\_loc)
+505       \textcolor{keywordflow}{else}
+506         \textcolor{keywordflow}{if} (ubound(x,1) /=1) \textcolor{keywordflow}{then}
+507           print *, \textcolor{stringliteral}{"ERROR: van Genuchten function is a function of a single variable h"}
+508           print *, \textcolor{stringliteral}{"       your input data has:"}, ubound(x,1), \textcolor{stringliteral}{"variables"}
+509           print *, \textcolor{stringliteral}{"exited from re\_constitutive::vangen\_elast\_tab"}
+510           error stop
+511 \textcolor{keywordflow}{        end if}
+512         h = x(1)
+513 \textcolor{keywordflow}{      end if}
+514 
+515       \textcolor{keywordflow}{if} (h<0) \textcolor{keywordflow}{then}
+516         \textcolor{keywordflow}{if} ( h/drutes_config%fnc\_discr\_length < 0.1*huge(1)) \textcolor{keywordflow}{then}
+517           pos = int(-h/drutes_config%fnc\_discr\_length)+1
+518           \textcolor{keywordflow}{if} (pos <= ubound(warecatab,2)-1) \textcolor{keywordflow}{then}
+519             dist = -h - (pos - 1)*drutes_config%fnc\_discr\_length
+520             e = (warecatab(layer,pos+1)-warecatab(layer,pos))/drutes_config%fnc\_discr\_length\textcolor{comment}{*
+      dist + warecatab(layer,pos)}
+521 \textcolor{comment}{          }\textcolor{keywordflow}{else}
+522             \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(quadpnt)) e = vangen_elast(pde\_loc, layer, quadpnt)
+523             \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(x)) e = vangen_elast(pde\_loc, layer, x=x)
+524             \textcolor{keywordflow}{if} (.not. tabwarning) \textcolor{keywordflow}{then}
+525               \textcolor{keyword}{call }write_log(trim(tabmsg))
+526               tabwarning = .true.
+527 \textcolor{keywordflow}{            end if}
+528 \textcolor{keywordflow}{          end if}
+529         \textcolor{keywordflow}{else}
+530          
+531           \textcolor{keywordflow}{if} (.not. intwarning) \textcolor{keywordflow}{then}
+532             \textcolor{keyword}{call }intoverflow()
+533             intwarning = .true.
+534 \textcolor{keywordflow}{          end if}
+535           \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(quadpnt)) e = vangen_elast(pde\_loc, layer, quadpnt\_loc)
+536           \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(x)) e = vangen_elast(pde\_loc, layer, x=x)   
+537         
+538 \textcolor{keywordflow}{        end if} 
+539       \textcolor{keywordflow}{else}
+540         e = vgset(layer)%Ss     
+541 \textcolor{keywordflow}{      end if}
+542 
+543 
+\end{DoxyCode}
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacere__constitutive_aa39d302eed50bc490b34dd310caf7ed8_cgraph}
+\end{center}
+\end{figure}
+
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacere__constitutive_aa39d302eed50bc490b34dd310caf7ed8_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{re\+\_\+constitutive@{re\+\_\+constitutive}!vangen\+\_\+tab@{vangen\+\_\+tab}}
+\index{vangen\+\_\+tab@{vangen\+\_\+tab}!re\+\_\+constitutive@{re\+\_\+constitutive}}
+\subsubsection[{vangen\+\_\+tab(pde\+\_\+loc, layer, quadpnt, x)}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind) function, public re\+\_\+constitutive\+::vangen\+\_\+tab (
+\begin{DoxyParamCaption}
+\item[{class({\bf pde\+\_\+str}), intent(in)}]{pde\+\_\+loc, }
+\item[{integer(kind=ikind), intent(in)}]{layer, }
+\item[{type({\bf integpnt\+\_\+str}), intent(in), optional}]{quadpnt, }
+\item[{real(kind=rkind), dimension(\+:), intent(in), optional}]{x}
+\end{DoxyParamCaption}
+)}\label{namespacere__constitutive_a21d8dd738d02ef5a1501b79f7b80f50b}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em x} & pressure head\\
+\hline
+\mbox{\tt in}  & {\em quadpnt} & Gauss quadrature point structure (element number and rank of Gauss quadrature point)\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+resulting water content 
+\end{DoxyReturn}
+
+
+Definition at line 251 of file re\+\_\+constitutive.\+f90.
+
+
+
+References intoverflow(), intwarning, tabmsg, tabwarning, vangen(), re\+\_\+globals\+::vgset, watcontab, and core\+\_\+tools\+::write\+\_\+log().
+
+
+
+Referenced by re\+\_\+pointers\+::allrepointers().
+
+
+\begin{DoxyCode}
+251       \textcolor{keywordtype}{use }typy
+252       \textcolor{keywordtype}{use }re_globals
+253       \textcolor{keywordtype}{use }pde_objs
+254       \textcolor{keywordtype}{use }core_tools
+255       
+256       \textcolor{keywordtype}{class}(pde_str), \textcolor{keywordtype}{intent(in)} :: pde\_loc
+257       \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(in)} :: layer
+259       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{optional} :: x
+261       \textcolor{keywordtype}{type}(integpnt_str), \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional} :: quadpnt
+262       \textcolor{keywordtype}{real(kind=rkind)} :: h
+264       \textcolor{keywordtype}{real(kind=rkind)} :: theta
+265 
+266       \textcolor{keywordtype}{integer(kind=ikind)} :: pos
+267       \textcolor{keywordtype}{real(kind=rkind)} :: res, dist
+268       \textcolor{keywordtype}{type}(integpnt_str) :: quadpnt\_loc      
+269 
+270       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(quadpnt) .and. \textcolor{keyword}{present}(x)) \textcolor{keywordflow}{then}
+271         print *, \textcolor{stringliteral}{"ERROR: the function can be called either with integ point or x value definition, not both
+       of them"}
+272         print *, \textcolor{stringliteral}{"exited from re\_constitutive::vangen\_tab"}
+273         error stop
+274       \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (.not. \textcolor{keyword}{present}(quadpnt) .and. .not. \textcolor{keyword}{present}(x)) \textcolor{keywordflow}{then}
+275         print *, \textcolor{stringliteral}{"ERROR: you have not specified either integ point or x value"}
+276         print *, \textcolor{stringliteral}{"exited from re\_constitutive::vangen\_tab"}
+277         error stop
+278 \textcolor{keywordflow}{      end if}
+279       
+280       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(quadpnt)) \textcolor{keywordflow}{then}
+281         quadpnt\_loc=quadpnt
+282         quadpnt\_loc%preproc=.true.
+283         h = pde\_loc%getval(quadpnt\_loc)
+284       \textcolor{keywordflow}{else}
+285         \textcolor{keywordflow}{if} (ubound(x,1) /=1) \textcolor{keywordflow}{then}
+286           print *, \textcolor{stringliteral}{"ERROR: van Genuchten function is a function of a single variable h"}
+287           print *, \textcolor{stringliteral}{"       your input data has:"}, ubound(x,1), \textcolor{stringliteral}{"variables"}
+288           print *, \textcolor{stringliteral}{"exited from re\_constitutive::vangen\_tab"}
+289           error stop
+290 \textcolor{keywordflow}{        end if}
+291         h = x(1)
+292 \textcolor{keywordflow}{      end if}
+293 
+294       \textcolor{keywordflow}{if} (h<0) \textcolor{keywordflow}{then}
+295         \textcolor{keywordflow}{if} ( h/drutes_config%fnc\_discr\_length < 0.1*huge(1)) \textcolor{keywordflow}{then}
+296           
+297           pos = int(-h/drutes_config%fnc\_discr\_length)+1
+298           \textcolor{keywordflow}{if} (pos <= ubound(watcontab,2)-1) \textcolor{keywordflow}{then}
+299             dist = -h - (pos - 1)*drutes_config%fnc\_discr\_length
+300             theta = (watcontab(layer,pos+1)-watcontab(layer,pos))/drutes_config%fnc\_discr\_length\textcolor{comment}{*
+      dist + watcontab(layer,pos)}
+301 \textcolor{comment}{          }\textcolor{keywordflow}{else}
+302             \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(quadpnt)) theta = vangen(pde\_loc, layer, quadpnt)
+303             \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(x)) theta = vangen(pde\_loc, layer, x=x)
+304             \textcolor{keywordflow}{if} (.not. tabwarning) \textcolor{keywordflow}{then}
+305               \textcolor{keyword}{call }write_log(trim(tabmsg))
+306               tabwarning = .true.
+307 \textcolor{keywordflow}{            end if}
+308 \textcolor{keywordflow}{          end if}
+309         \textcolor{keywordflow}{else}
+310         
+311           \textcolor{keywordflow}{if} (.not. intwarning) \textcolor{keywordflow}{then}
+312             \textcolor{keyword}{call }intoverflow()
+313             intwarning = .true.
+314 \textcolor{keywordflow}{          end if}
+315         
+316           \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(quadpnt)) theta = vangen(pde\_loc, layer, quadpnt)
+317           \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(x)) theta = vangen(pde\_loc, layer, x=x)
+318           
+319 \textcolor{keywordflow}{        end if}
+320         
+321       \textcolor{keywordflow}{else}
+322         theta = vgset(layer)%Ths        
+323 \textcolor{keywordflow}{      end if}
+324       
+325       
+326 
+\end{DoxyCode}
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacere__constitutive_a21d8dd738d02ef5a1501b79f7b80f50b_cgraph}
+\end{center}
+\end{figure}
+
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacere__constitutive_a21d8dd738d02ef5a1501b79f7b80f50b_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{re\+\_\+constitutive@{re\+\_\+constitutive}!zone\+\_\+error\+\_\+val@{zone\+\_\+error\+\_\+val}}
+\index{zone\+\_\+error\+\_\+val@{zone\+\_\+error\+\_\+val}!re\+\_\+constitutive@{re\+\_\+constitutive}}
+\subsubsection[{zone\+\_\+error\+\_\+val(h, htest, taylor\+\_\+max)}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind) function, private re\+\_\+constitutive\+::zone\+\_\+error\+\_\+val (
+\begin{DoxyParamCaption}
+\item[{real(kind=rkind), intent(in)}]{h, }
+\item[{real(kind=rkind), intent(in)}]{htest, }
+\item[{real(kind=rkind), intent(in)}]{taylor\+\_\+max}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [private]}}\label{namespacere__constitutive_a6c717771e468878eec01e1aa2a27ba7a}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em h} & starting point\\
+\hline
+\mbox{\tt in}  & {\em htest} & point to be evaluated\\
+\hline
+\mbox{\tt in}  & {\em taylor\+\_\+max} & maximal error of taylor series\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+error value of first order taylor approximation starting at point h and evaluating at point htest 
+\end{DoxyReturn}
+
+
+Definition at line 1570 of file re\+\_\+constitutive.\+f90.
+
+
+
+References pde\+\_\+objs\+::pde, this\+\_\+layer, vangen(), and vangen\+\_\+elast().
+
+
+
+Referenced by init\+\_\+zones().
+
+
+\begin{DoxyCode}
+1570         \textcolor{keywordtype}{use }typy
+1571         \textcolor{keywordtype}{use }pde_objs
+1572 
+1574         \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{intent(in)} :: h
+1576         \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{intent(in)} :: htest
+1578         \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{intent(in)} :: taylor\_max
+1580         \textcolor{keywordtype}{real(kind=rkind)} :: err\_val
+1581 
+1582         err\_val=abs(vangen(pde(1), this_layer, x=(/h/)) + vangen_elast(pde(1), 
+      this_layer, x=(/htest/))*(htest-h)- &
+1583                 vangen(pde(1), this_layer, x=(/htest/))) - taylor\_max
+1584 
+1585 
+1586 
+1587 
+1588 
+\end{DoxyCode}
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacere__constitutive_a6c717771e468878eec01e1aa2a27ba7a_cgraph}
+\end{center}
+\end{figure}
+
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacere__constitutive_a6c717771e468878eec01e1aa2a27ba7a_icgraph}
+\end{center}
+\end{figure}
+
+
+
+
+\subsection{Variable Documentation}
+\index{re\+\_\+constitutive@{re\+\_\+constitutive}!dkdhtab@{dkdhtab}}
+\index{dkdhtab@{dkdhtab}!re\+\_\+constitutive@{re\+\_\+constitutive}}
+\subsubsection[{dkdhtab}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind), dimension(\+:,\+:), pointer, public re\+\_\+constitutive\+::dkdhtab}\label{namespacere__constitutive_a208992652d12a3b477dff42e9df5be7f}
+
+
+Definition at line 21 of file re\+\_\+constitutive.\+f90.
+
+
+
+Referenced by dmualem\+\_\+dh\+\_\+tab(), domainswitch(), and tabvalues().
+
+\index{re\+\_\+constitutive@{re\+\_\+constitutive}!dkdhtab\+\_\+all@{dkdhtab\+\_\+all}}
+\index{dkdhtab\+\_\+all@{dkdhtab\+\_\+all}!re\+\_\+constitutive@{re\+\_\+constitutive}}
+\subsubsection[{dkdhtab\+\_\+all}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind), dimension(\+:,\+:,\+:), allocatable, target, public re\+\_\+constitutive\+::dkdhtab\+\_\+all}\label{namespacere__constitutive_aef95ec1b86499eb41011942a9cf53ce8}
+
+
+Definition at line 22 of file re\+\_\+constitutive.\+f90.
+
+
+
+Referenced by domainswitch(), and tabvalues().
+
+\index{re\+\_\+constitutive@{re\+\_\+constitutive}!intwarning@{intwarning}}
+\index{intwarning@{intwarning}!re\+\_\+constitutive@{re\+\_\+constitutive}}
+\subsubsection[{intwarning}]{\setlength{\rightskip}{0pt plus 5cm}logical, private re\+\_\+constitutive\+::intwarning = .false.\hspace{0.3cm}{\ttfamily [private]}}\label{namespacere__constitutive_aa375bb88f1a33731026e0fd7b7c195c6}
+
+
+Definition at line 32 of file re\+\_\+constitutive.\+f90.
+
+
+
+Referenced by dmualem\+\_\+dh\+\_\+tab(), mualem\+\_\+tab(), vangen\+\_\+elast\+\_\+tab(), and vangen\+\_\+tab().
+
+
+\begin{DoxyCode}
+32   \textcolor{keywordtype}{logical}, \textcolor{keywordtype}{private} :: intwarning = .false.
+\end{DoxyCode}
+\index{re\+\_\+constitutive@{re\+\_\+constitutive}!ktab@{ktab}}
+\index{ktab@{ktab}!re\+\_\+constitutive@{re\+\_\+constitutive}}
+\subsubsection[{ktab}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind), dimension(\+:,\+:), pointer, public re\+\_\+constitutive\+::ktab}\label{namespacere__constitutive_a26f9eee4bd880098c0ac3bf055da68db}
+
+
+Definition at line 21 of file re\+\_\+constitutive.\+f90.
+
+
+
+Referenced by domainswitch(), mualem\+\_\+tab(), and tabvalues().
+
+
+\begin{DoxyCode}
+21   \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:,:)}, \textcolor{keywordtype}{pointer}, \textcolor{keywordtype}{public} :: ktab, dkdhtab, warecatab, 
+      watcontab
+\end{DoxyCode}
+\index{re\+\_\+constitutive@{re\+\_\+constitutive}!ktab\+\_\+all@{ktab\+\_\+all}}
+\index{ktab\+\_\+all@{ktab\+\_\+all}!re\+\_\+constitutive@{re\+\_\+constitutive}}
+\subsubsection[{ktab\+\_\+all}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind), dimension(\+:,\+:,\+:), allocatable, target, public re\+\_\+constitutive\+::ktab\+\_\+all}\label{namespacere__constitutive_afe17d121c5500a37fef85872e51138ff}
+
+
+Definition at line 22 of file re\+\_\+constitutive.\+f90.
+
+
+
+Referenced by domainswitch(), and tabvalues().
+
+
+\begin{DoxyCode}
+22   \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:,:,:)}, \textcolor{keywordtype}{allocatable}, \textcolor{keywordtype}{target}, \textcolor{keywordtype}{public} :: ktab_all, 
+      dkdhtab_all, warecatab_all, watcontab_all
+\end{DoxyCode}
+\index{re\+\_\+constitutive@{re\+\_\+constitutive}!tabmsg@{tabmsg}}
+\index{tabmsg@{tabmsg}!re\+\_\+constitutive@{re\+\_\+constitutive}}
+\subsubsection[{tabmsg}]{\setlength{\rightskip}{0pt plus 5cm}character(len=4096), private re\+\_\+constitutive\+::tabmsg = \char`\"{}D\+R\+Ut\+ES requested values of the constitutive functions out of the range of your precalculated table, the function will be evaluated directly, it will slow down your computation, is everything ok? If yes, increase the length of interval for precaculating the constitutive functions in your config files\char`\"{}\hspace{0.3cm}{\ttfamily [private]}}\label{namespacere__constitutive_a44ecaf75690494449561f9c55f1a142d}
+
+
+Definition at line 27 of file re\+\_\+constitutive.\+f90.
+
+
+
+Referenced by dmualem\+\_\+dh\+\_\+tab(), mualem\+\_\+tab(), vangen\+\_\+elast\+\_\+tab(), and vangen\+\_\+tab().
+
+
+\begin{DoxyCode}
+27   \textcolor{keywordtype}{character(len=4096)}, \textcolor{keywordtype}{private} :: tabmsg = \textcolor{stringliteral}{"DRUtES requested values of the constitutive functions out of
+       the range of &}
+28 \textcolor{stringliteral}{}\textcolor{stringliteral}{                                            your precalculated table, the function will be evaluated
+       directly, it will & }
+29 \textcolor{stringliteral}{}\textcolor{stringliteral}{                                            slow down your computation, is everything ok? If yes, increase
+       the &}
+30 \textcolor{stringliteral}{}\textcolor{stringliteral}{                                            length of interval for precaculating the constitutive functions
+       in your config files"}   
+\end{DoxyCode}
+\index{re\+\_\+constitutive@{re\+\_\+constitutive}!tabwarning@{tabwarning}}
+\index{tabwarning@{tabwarning}!re\+\_\+constitutive@{re\+\_\+constitutive}}
+\subsubsection[{tabwarning}]{\setlength{\rightskip}{0pt plus 5cm}logical, private re\+\_\+constitutive\+::tabwarning = .false.\hspace{0.3cm}{\ttfamily [private]}}\label{namespacere__constitutive_a732d67fdcdd4cdc0fb573d3c9e96ba85}
+
+
+Definition at line 26 of file re\+\_\+constitutive.\+f90.
+
+
+
+Referenced by dmualem\+\_\+dh\+\_\+tab(), mualem\+\_\+tab(), vangen\+\_\+elast\+\_\+tab(), and vangen\+\_\+tab().
+
+
+\begin{DoxyCode}
+26   \textcolor{keywordtype}{logical}, \textcolor{keywordtype}{private} :: tabwarning = .false.
+\end{DoxyCode}
+\index{re\+\_\+constitutive@{re\+\_\+constitutive}!this\+\_\+layer@{this\+\_\+layer}}
+\index{this\+\_\+layer@{this\+\_\+layer}!re\+\_\+constitutive@{re\+\_\+constitutive}}
+\subsubsection[{this\+\_\+layer}]{\setlength{\rightskip}{0pt plus 5cm}integer(kind=ikind), private re\+\_\+constitutive\+::this\+\_\+layer\hspace{0.3cm}{\ttfamily [private]}}\label{namespacere__constitutive_a957329345fdf54666f10d5a560c219db}
+
+
+Definition at line 24 of file re\+\_\+constitutive.\+f90.
+
+
+
+Referenced by init\+\_\+zones(), secondder\+\_\+retc(), and zone\+\_\+error\+\_\+val().
+
+
+\begin{DoxyCode}
+24   \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{private} :: this_layer
+\end{DoxyCode}
+\index{re\+\_\+constitutive@{re\+\_\+constitutive}!van\+\_\+gen\+\_\+coeff@{van\+\_\+gen\+\_\+coeff}}
+\index{van\+\_\+gen\+\_\+coeff@{van\+\_\+gen\+\_\+coeff}!re\+\_\+constitutive@{re\+\_\+constitutive}}
+\subsubsection[{van\+\_\+gen\+\_\+coeff}]{\setlength{\rightskip}{0pt plus 5cm}type({\bf soilpar}), private re\+\_\+constitutive\+::van\+\_\+gen\+\_\+coeff\hspace{0.3cm}{\ttfamily [private]}}\label{namespacere__constitutive_ac6e1df1932a050970ae8b9c032047ad7}
+
+
+Definition at line 23 of file re\+\_\+constitutive.\+f90.
+
+
+\begin{DoxyCode}
+23   \textcolor{keywordtype}{type}(soilpar), \textcolor{keywordtype}{private} :: van_gen_coeff
+\end{DoxyCode}
+\index{re\+\_\+constitutive@{re\+\_\+constitutive}!warecatab@{warecatab}}
+\index{warecatab@{warecatab}!re\+\_\+constitutive@{re\+\_\+constitutive}}
+\subsubsection[{warecatab}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind), dimension(\+:,\+:), pointer, public re\+\_\+constitutive\+::warecatab}\label{namespacere__constitutive_a97cae19740749808642dcd2fb326ddb1}
+
+
+Definition at line 21 of file re\+\_\+constitutive.\+f90.
+
+
+
+Referenced by domainswitch(), tabvalues(), and vangen\+\_\+elast\+\_\+tab().
+
+\index{re\+\_\+constitutive@{re\+\_\+constitutive}!warecatab\+\_\+all@{warecatab\+\_\+all}}
+\index{warecatab\+\_\+all@{warecatab\+\_\+all}!re\+\_\+constitutive@{re\+\_\+constitutive}}
+\subsubsection[{warecatab\+\_\+all}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind), dimension(\+:,\+:,\+:), allocatable, target, public re\+\_\+constitutive\+::warecatab\+\_\+all}\label{namespacere__constitutive_a5b2162aa59a163afc487ea11d76326d5}
+
+
+Definition at line 22 of file re\+\_\+constitutive.\+f90.
+
+
+
+Referenced by domainswitch(), and tabvalues().
+
+\index{re\+\_\+constitutive@{re\+\_\+constitutive}!watcontab@{watcontab}}
+\index{watcontab@{watcontab}!re\+\_\+constitutive@{re\+\_\+constitutive}}
+\subsubsection[{watcontab}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind), dimension(\+:,\+:), pointer, public re\+\_\+constitutive\+::watcontab}\label{namespacere__constitutive_a3d4ff1bd9e37d274bb888db1d630ddbb}
+
+
+Definition at line 21 of file re\+\_\+constitutive.\+f90.
+
+
+
+Referenced by domainswitch(), tabvalues(), and vangen\+\_\+tab().
+
+\index{re\+\_\+constitutive@{re\+\_\+constitutive}!watcontab\+\_\+all@{watcontab\+\_\+all}}
+\index{watcontab\+\_\+all@{watcontab\+\_\+all}!re\+\_\+constitutive@{re\+\_\+constitutive}}
+\subsubsection[{watcontab\+\_\+all}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind), dimension(\+:,\+:,\+:), allocatable, target, public re\+\_\+constitutive\+::watcontab\+\_\+all}\label{namespacere__constitutive_a3249b973baf1fa0d41eb4cd2784a384b}
+
+
+Definition at line 22 of file re\+\_\+constitutive.\+f90.
+
+
+
+Referenced by domainswitch(), and tabvalues().
+

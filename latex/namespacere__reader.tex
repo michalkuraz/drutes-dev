@@ -1,0 +1,284 @@
+\section{re\+\_\+reader Module Reference}
+\label{namespacere__reader}\index{re\+\_\+reader@{re\+\_\+reader}}
+\subsection*{Functions/\+Subroutines}
+\begin{DoxyCompactItemize}
+\item 
+subroutine, public {\bf res\+\_\+read} (pde\+\_\+loc)
+\begin{DoxyCompactList}\small\item\em opens and reads water.\+conf/matrix.conf, input data for the Richards equation in single mode, Richards equation with the dual porosity regime -\/ matrix domain \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Function/\+Subroutine Documentation}
+\index{re\+\_\+reader@{re\+\_\+reader}!res\+\_\+read@{res\+\_\+read}}
+\index{res\+\_\+read@{res\+\_\+read}!re\+\_\+reader@{re\+\_\+reader}}
+\subsubsection[{res\+\_\+read(pde\+\_\+loc)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, public re\+\_\+reader\+::res\+\_\+read (
+\begin{DoxyParamCaption}
+\item[{class({\bf pde\+\_\+str}), intent(inout)}]{pde\+\_\+loc}
+\end{DoxyParamCaption}
+)}\label{namespacere__reader_abee07a4923b280459f7a1b135cc70346}
+
+
+opens and reads water.\+conf/matrix.conf, input data for the Richards equation in single mode, Richards equation with the dual porosity regime -\/ matrix domain 
+
+
+
+Definition at line 9 of file re\+\_\+reader.\+f90.
+
+
+
+References readtools\+::comment(), globals\+::drutes\+\_\+config, globals\+::elements, readtools\+::file\+\_\+error(), re\+\_\+globals\+::file\+\_\+waterm, core\+\_\+tools\+::find\+\_\+unit(), globals\+::maxpress, readtools\+::readbcvals(), readtools\+::set\+\_\+tensor(), re\+\_\+globals\+::vgmatrix, and globals\+::www.
+
+
+
+Referenced by re\+\_\+pointers\+::allrepointers().
+
+
+\begin{DoxyCode}
+9       \textcolor{keywordtype}{use }typy
+10       \textcolor{keywordtype}{use }global_objs
+11       \textcolor{keywordtype}{use }pde_objs
+12       \textcolor{keywordtype}{use }globals
+13       \textcolor{keywordtype}{use }re_globals
+14       \textcolor{keywordtype}{use }core_tools
+15       \textcolor{keywordtype}{use }readtools
+16       
+17       \textcolor{keywordtype}{class}(pde_str), \textcolor{keywordtype}{intent(in out)} :: pde\_loc
+18       \textcolor{keywordtype}{integer} :: ierr, i, j, filewww
+19       \textcolor{keywordtype}{integer(kind=ikind)} :: n
+20       \textcolor{keywordtype}{character(len=1)} :: yn
+21       \textcolor{keywordtype}{character(len=4096)} :: msg
+22       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable} :: tmpdata
+23 
+24       pde\_loc%problem\_name(1) = \textcolor{stringliteral}{"RE\_matrix"}
+25       pde\_loc%problem\_name(2) = \textcolor{stringliteral}{"Richards' equation"}
+26 
+27       pde\_loc%solution\_name(1) = \textcolor{stringliteral}{"press\_head"} \textcolor{comment}{!nazev vystupnich souboru}
+28       pde\_loc%solution\_name(2) = \textcolor{stringliteral}{"h  [L]"} \textcolor{comment}{!popisek grafu}
+29 
+30       pde\_loc%flux\_name(1) = \textcolor{stringliteral}{"flux"}  
+31       pde\_loc%flux\_name(2) = \textcolor{stringliteral}{"Darcian flow [L.T^\{-1\}]"}
+32 
+33       pde\_loc%mass\_name(1) = \textcolor{stringliteral}{"theta"}
+34       pde\_loc%mass\_name(2) = \textcolor{stringliteral}{"theta [-]"}
+35 
+36       \textcolor{comment}{!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!}
+37       \textcolor{comment}{!water.conf/matrix.conf}
+38       \textcolor{keyword}{call }find_unit(file_waterm, 200)
+39 
+40       \textcolor{keyword}{open}(unit=file_waterm, file=\textcolor{stringliteral}{"drutes.conf/water.conf/matrix.conf"}, action\textcolor{comment}{=}\textcolor{stringliteral}{"read"}\textcolor{comment}{, status=}\textcolor{stringliteral}{"old"}\textcolor{comment}{, iostat
+       = ierr)}
+41 \textcolor{comment}{}
+42 \textcolor{comment}{      }
+43 \textcolor{comment}{      }\textcolor{keywordflow}{if} (ierr /= 0) \textcolor{keywordflow}{then}
+44         print *, \textcolor{stringliteral}{"missing drutes.conf/water.conf/matrix.conf file"}
+45         error stop
+46 \textcolor{keywordflow}{      end if}
+47       
+48       \textcolor{keyword}{write}(msg, *) \textcolor{stringliteral}{"define method of evaluation of constitutive functions for the Richards equation"}\textcolor{comment}{, 
+      new\_line(}\textcolor{stringliteral}{"a"}\textcolor{comment}{), &}
+49 \textcolor{comment}{        }\textcolor{stringliteral}{"   0 - direct evaluation (not recommended, extremely resources consuming due to complicated
+       exponential functions)"}\textcolor{comment}{, &}
+50 \textcolor{comment}{        new\_line(}\textcolor{stringliteral}{"a"}), &
+51         \textcolor{stringliteral}{"   1 - function values are precalculated in program initialization and values between are linearly
+       approximated"}
+52       
+53       \textcolor{keyword}{call }fileread(drutes_config%fnc\_method, file_waterm, ranges=(/0\_ikind\textcolor{comment}{,1\_ikind/),errmsg=msg)}
+54 \textcolor{comment}{      }
+55 \textcolor{comment}{      }\textcolor{keyword}{call }fileread(maxpress, file_waterm, ranges=(/-huge(0.0\_rkind), huge\textcolor{comment}{(0.0\_rkind)/), &}
+56 \textcolor{comment}{        errmsg=}\textcolor{stringliteral}{"set some positive nonzero limit for maximal suction pressure (think in absolute values) "}\textcolor{comment}{)}
+57 \textcolor{comment}{        maxpress = abs(maxpress)}
+58 \textcolor{comment}{      }
+59 \textcolor{comment}{      }\textcolor{keyword}{call }fileread(drutes_config%fnc\_discr\_length, file_waterm, ranges=\textcolor{comment}{(/tiny(0.0\_rkind), 
+      maxpress/),  &}
+60 \textcolor{comment}{        errmsg=}\textcolor{stringliteral}{"the discretization step for precalculating constitutive functions must be positive and
+       smaller &}
+61 \textcolor{stringliteral}{}\textcolor{stringliteral}{        then the bc"})
+62 
+63       
+64       \textcolor{keyword}{call }fileread(n, file_waterm)
+65       
+66       \textcolor{keyword}{write}(msg, fmt=*) \textcolor{stringliteral}{"ERROR!! incorrect number of materials in drutes.conf/water.conf/matrix.conf  &}
+67 \textcolor{stringliteral}{}\textcolor{stringliteral}{        the mesh defines"}, maxval(elements%material)  , \textcolor{stringliteral}{"materials, and your input file defines"}\textcolor{comment}{, n, }\textcolor{stringliteral}{
+      "material(s)."}
+68         
+69       backspace(file_waterm)
+70      
+71       \textcolor{keyword}{call }fileread(n, file_waterm, ranges=(/1\_ikind*maxval(elements%material\textcolor{comment}{),1\_ikind*maxval(
+      elements%material)/),&}
+72 \textcolor{comment}{        errmsg=trim(msg))}
+73 \textcolor{comment}{}
+74 \textcolor{comment}{}
+75 \textcolor{comment}{}
+76 \textcolor{comment}{ }
+77 \textcolor{comment}{      }\textcolor{keywordflow}{if} (.not. \textcolor{keyword}{allocated}(vgmatrix)) \textcolor{keywordflow}{then}
+78         \textcolor{keyword}{allocate} (vgmatrix(n))
+79         \textcolor{keywordflow}{do} i=1, ubound(vgmatrix,1)
+80           \textcolor{keyword}{allocate}(vgmatrix(i)%Ks\_local(drutes_config%dimen))
+81           \textcolor{keyword}{allocate}(vgmatrix(i)%Ks(drutes_config%dimen, drutes_config%dimen))
+82           j = max(1,drutes_config%dimen-1)
+83           \textcolor{keyword}{allocate}(vgmatrix(i)%anisoangle(j))
+84 \textcolor{keywordflow}{        end do}
+85 \textcolor{keywordflow}{      end if}
+86 
+87       \textcolor{keyword}{write}(msg, *) \textcolor{stringliteral}{"HINT 1 : check number of layers in matrix"}, new\_line\textcolor{comment}{(}\textcolor{stringliteral}{"a"}\textcolor{comment}{), &}
+88 \textcolor{comment}{         }\textcolor{stringliteral}{"   HINT 2 : have you specified all values in the following order: "}\textcolor{comment}{, new\_line(}\textcolor{stringliteral}{"a"}\textcolor{comment}{), &}
+89 \textcolor{comment}{         }\textcolor{stringliteral}{"         alpha   n   m   theta\_r   theta\_s   S\_s "}
+90       \textcolor{keyword}{allocate}(tmpdata(6))
+91       \textcolor{keywordflow}{do} i = 1, ubound(vgmatrix,1)
+92         \textcolor{keyword}{call }fileread(tmpdata, errmsg=msg, fileid=file_waterm, checklen=\textcolor{comment}{.true.)}
+93 \textcolor{comment}{        vgmatrix(i)%alpha=tmpdata(1)}
+94 \textcolor{comment}{        vgmatrix(i)%n=tmpdata(2)}
+95 \textcolor{comment}{        vgmatrix(i)%m=tmpdata(3)}
+96 \textcolor{comment}{        vgmatrix(i)%thr=tmpdata(4)}
+97 \textcolor{comment}{        vgmatrix(i)%ths=tmpdata(5)}
+98 \textcolor{comment}{        vgmatrix(i)%Ss=tmpdata(6)}
+99 \textcolor{comment}{}\textcolor{keywordflow}{      end do}
+100       
+101      
+102 
+103 
+104       \textcolor{keyword}{write}(msg, *) \textcolor{stringliteral}{"HINT: check number of records of anisothropy description in water.conf/matrix.conf!!"}\textcolor{comment}{,
+       &}
+105 \textcolor{comment}{        new\_line(}\textcolor{stringliteral}{"a"}) ,  &
+106         \textcolor{stringliteral}{"      for 3D problem you must specify exactly Kxx, Kyy and Kzz values."}\textcolor{comment}{, new\_line(}\textcolor{stringliteral}{"a"}\textcolor{comment}{), &}
+107 \textcolor{comment}{        }\textcolor{stringliteral}{"       Obviously for 2D problem there must be exactly only Kxx and Kzz value, analogicaly for 1D
+       problem"}\textcolor{comment}{, &}
+108 \textcolor{comment}{        new\_line(}\textcolor{stringliteral}{"a"}) , &
+109         \textcolor{stringliteral}{"       for 2D problem supply only 1 angle, for 3D problem supply 2 angles, and"}\textcolor{comment}{, new\_line(}\textcolor{stringliteral}{"a"}\textcolor{comment}{), &}
+110 \textcolor{comment}{        }\textcolor{stringliteral}{"       for 1D problem the angle value defines the angle between the VERTICAL and the flow
+       trajectory"}\textcolor{comment}{, new\_line(}\textcolor{stringliteral}{"a"}\textcolor{comment}{), &}
+111 \textcolor{comment}{        }\textcolor{stringliteral}{"       (carefull some other softwares consider HORIZONTAL!!)"}
+112         
+113       \textcolor{keyword}{deallocate}(tmpdata)
+114       
+115       \textcolor{keywordflow}{select case}(drutes_config%dimen)
+116         \textcolor{keywordflow}{case}(1,2)
+117           \textcolor{keyword}{allocate}(tmpdata(drutes_config%dimen+1))
+118         \textcolor{keywordflow}{case}(3)
+119           \textcolor{keyword}{allocate}(tmpdata(drutes_config%dimen+2))
+120 \textcolor{keywordflow}{      end select}
+121       
+122       \textcolor{keywordflow}{do} i = 1, ubound(vgmatrix,1)
+123         \textcolor{keyword}{call }fileread(tmpdata, file_waterm, errmsg=msg, checklen=.true.)
+124         
+125         \textcolor{keywordflow}{if} (drutes_config%dimen > 1) \textcolor{keywordflow}{then}
+126           vgmatrix(i)%anisoangle(:) = tmpdata(1:drutes_config%dimen-1)
+127         \textcolor{keywordflow}{else}
+128           vgmatrix(i)%anisoangle(:) = tmpdata(1)
+129 \textcolor{keywordflow}{        end if}
+130         
+131         \textcolor{keywordflow}{select case}(drutes_config%dimen)
+132           \textcolor{keywordflow}{case}(1)
+133             vgmatrix(i)%Ks\_local(:) = tmpdata(2)
+134           \textcolor{keywordflow}{case}(2)
+135             vgmatrix(i)%Ks\_local(:) = tmpdata(2:3)
+136           \textcolor{keywordflow}{case}(3)
+137             vgmatrix(i)%Ks\_local(:) = tmpdata(3:5)
+138 \textcolor{keywordflow}{        end select}
+139 
+140         \textcolor{keyword}{call }set_tensor(vgmatrix(i)%Ks\_local(:), vgmatrix(i)%anisoangle(\textcolor{comment}{:),  
+      vgmatrix(i)%Ks)}
+141 \textcolor{comment}{}\textcolor{keywordflow}{      end do}
+142 
+143       
+144       \textcolor{keywordflow}{do} i=1, ubound(vgmatrix,1)
+145         \textcolor{keyword}{call }fileread(vgmatrix(i)%sinkterm, file_waterm,  errmsg=\textcolor{stringliteral}{"Have you defined sink term for each
+       layer?"}\textcolor{comment}{)}
+146 \textcolor{comment}{}\textcolor{keywordflow}{      end do}
+147       
+148       \textcolor{keywordflow}{if} (.not. www) \textcolor{keywordflow}{then}
+149         \textcolor{keywordflow}{do} i=1, ubound(vgmatrix,1)
+150           \textcolor{keyword}{call }comment(file_waterm)
+151           \textcolor{keyword}{read}(unit=file_waterm, fmt= *, iostat=ierr) vgmatrix(i)%initcond, 
+      vgmatrix\textcolor{comment}{(i)%icondtype, &}
+152 \textcolor{comment}{                                                        yn, vgmatrix(i)%rcza\_set%val}
+153 \textcolor{comment}{          }\textcolor{keywordflow}{select case}(yn)
+154             \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"y"})
+155               vgmatrix(i)%rcza\_set%use = .true.
+156             \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"n"})
+157               vgmatrix(i)%rcza\_set%use = .false.
+158 \textcolor{keywordflow}{            case default}
+159               \textcolor{keyword}{write}(msg, fmt=*) \textcolor{stringliteral}{"type [y/n] value for using the retention curve zone approach at layer:"}\textcolor{comment}{, i}
+160 \textcolor{comment}{              }\textcolor{keyword}{call }file_error(file_waterm, msg)
+161 \textcolor{keywordflow}{          end select}
+162           \textcolor{keywordflow}{select case}(vgmatrix(i)%icondtype)
+163             \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"H\_tot"}, \textcolor{stringliteral}{"hpres"}, \textcolor{stringliteral}{"theta"},\textcolor{stringliteral}{"input"})
+164               \textcolor{keywordflow}{CONTINUE}
+165 \textcolor{keywordflow}{            case default}
+166               print *, \textcolor{stringliteral}{"you have specified wrong initial condition type keyword"}
+167               print *, \textcolor{stringliteral}{"the allowed options are:"}
+168               print *, \textcolor{stringliteral}{"                        H\_tot = total hydraulic head"}
+169               print *, \textcolor{stringliteral}{"                        hpres = pressure head"}
+170               print *, \textcolor{stringliteral}{"                        theta = water content"}
+171               print *, \textcolor{stringliteral}{"                        input = read from input file (drutes output file)"}
+172               \textcolor{keyword}{call }file_error(file_waterm)
+173 \textcolor{keywordflow}{          end select}
+174           \textcolor{keywordflow}{if} (ierr /= 0) \textcolor{keywordflow}{then}
+175             print *, \textcolor{stringliteral}{"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"}
+176             print *, \textcolor{stringliteral}{"HINT: check number of line records of initial conditions in water.conf/matrix.conf!"}
+177             print *, \textcolor{stringliteral}{"----------------------------------------"}
+178             \textcolor{keyword}{call }file_error(file_waterm)
+179 \textcolor{keywordflow}{          end if}
+180 \textcolor{keywordflow}{        end do}
+181       \textcolor{keywordflow}{else}
+182         \textcolor{keywordflow}{do} i=1, ubound(vgmatrix,1)
+183           \textcolor{keyword}{call }comment(file_waterm)
+184           \textcolor{keyword}{read}(unit=file_waterm, fmt= *, iostat=ierr) vgmatrix(i)%initcond, 
+      vgmatrix\textcolor{comment}{(i)%icondtype}
+185 \textcolor{comment}{          vgmatrix(i)%rcza\_set%use = .false.}
+186 \textcolor{comment}{          }\textcolor{keywordflow}{select case}(vgmatrix(i)%icondtype)
+187             \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"H\_tot"}, \textcolor{stringliteral}{"hpres"}, \textcolor{stringliteral}{"theta"},\textcolor{stringliteral}{"input"})
+188               \textcolor{keywordflow}{CONTINUE}
+189 \textcolor{keywordflow}{            case default}
+190               print *, \textcolor{stringliteral}{"you have specified wrong initial condition type keyword"}
+191               print *, \textcolor{stringliteral}{"the allowed options are:"}
+192               print *, \textcolor{stringliteral}{"                        H\_tot = total hydraulic head"}
+193               print *, \textcolor{stringliteral}{"                        hpres = pressure head"}
+194               print *, \textcolor{stringliteral}{"                        theta = water content"}
+195               print *, \textcolor{stringliteral}{"                        input = read from input file (drutes output file)"}
+196               \textcolor{keyword}{call }file_error(file_waterm)
+197 \textcolor{keywordflow}{          end select}
+198           \textcolor{keywordflow}{if} (ierr /= 0) \textcolor{keywordflow}{then}
+199             print *, \textcolor{stringliteral}{"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"}
+200             print *, \textcolor{stringliteral}{"HINT: check number of line records of initial conditions in water.conf/matrix.conf!"}
+201             print *, \textcolor{stringliteral}{"----------------------------------------"}
+202             \textcolor{keyword}{call }file_error(file_waterm)
+203 \textcolor{keywordflow}{          end if}
+204 \textcolor{keywordflow}{        end do}
+205 \textcolor{keywordflow}{      end if}
+206 
+207    
+208         
+209         
+210       \textcolor{keyword}{call }fileread(n, file_waterm, ranges=(/1\_ikind, huge(1\_ikind)/), &
+211         errmsg=\textcolor{stringliteral}{"at least one boundary must be specified (and no negative values here)"}\textcolor{comment}{)}
+212 \textcolor{comment}{      }
+213 \textcolor{comment}{}
+214 \textcolor{comment}{      }\textcolor{keyword}{call }readbcvals(unitw=file_waterm, struct=pde\_loc%bc, dimen=n, &
+215                       dirname=\textcolor{stringliteral}{"drutes.conf/water.conf/"})
+216 
+217                       
+218         \textcolor{keyword}{close}(file_waterm)            
+219 
+\end{DoxyCode}
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacere__reader_abee07a4923b280459f7a1b135cc70346_cgraph}
+\end{center}
+\end{figure}
+
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacere__reader_abee07a4923b280459f7a1b135cc70346_icgraph}
+\end{center}
+\end{figure}
+
+

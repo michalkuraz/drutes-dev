@@ -1,0 +1,702 @@
+\section{dual\+\_\+por Module Reference}
+\label{namespacedual__por}\index{dual\+\_\+por@{dual\+\_\+por}}
+
+
+This module contains governing functions of the dual permeability model and main functions and subroutines.  
+
+
+\subsection*{Functions/\+Subroutines}
+\begin{DoxyCompactItemize}
+\item 
+real(kind=rkind) function, public {\bf getval\+\_\+retot\+\_\+dual} (pde\+\_\+loc, quadpnt)
+\begin{DoxyCompactList}\small\item\em specific function for Richards equation in H-\/form (total hydraulic head form), replaces \doxyref{pde\+\_\+objs\+::getvalp1}{p.}{namespacepde__objs_aece3def127980c03c455456068cb3e48} in order to distinguish between H and h pointers point to this with pde\+\_\+locgetval \end{DoxyCompactList}\item 
+subroutine, public {\bf dual\+\_\+inicond} (pde\+\_\+loc)
+\begin{DoxyCompactList}\small\item\em assigns initial condition \end{DoxyCompactList}\item 
+subroutine, public {\bf dual\+\_\+mualem} (pde\+\_\+loc, layer, quadpnt, x, tensor, scalar)
+\begin{DoxyCompactList}\small\item\em defines dispersion functiona according to van Genuchten Mualem model (1980) \end{DoxyCompactList}\item 
+real(kind=rkind) function, public {\bf dual\+\_\+ret\+\_\+cap} (pde\+\_\+loc, layer, quadpnt, x)
+\begin{DoxyCompactList}\small\item\em defines elasticity or retention functiona according to van Genuchten Mualem model (1980) \end{DoxyCompactList}\item 
+real(kind=rkind) function, public {\bf vangen\+\_\+d} (pde\+\_\+loc, layer, quadpnt, x)
+\begin{DoxyCompactList}\small\item\em defines mass functiona according to van Genuchten Mualem model (1980) \end{DoxyCompactList}\item 
+subroutine, public {\bf darcy\+\_\+law\+\_\+d} (pde\+\_\+loc, layer, quadpnt, x, grad, flux, flux\+\_\+length)
+\begin{DoxyCompactList}\small\item\em defines flux function according to Darcy Law (valid for laminar flow) \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+This module contains governing functions of the dual permeability model and main functions and subroutines. 
+
+\subsection{Function/\+Subroutine Documentation}
+\index{dual\+\_\+por@{dual\+\_\+por}!darcy\+\_\+law\+\_\+d@{darcy\+\_\+law\+\_\+d}}
+\index{darcy\+\_\+law\+\_\+d@{darcy\+\_\+law\+\_\+d}!dual\+\_\+por@{dual\+\_\+por}}
+\subsubsection[{darcy\+\_\+law\+\_\+d(pde\+\_\+loc, layer, quadpnt, x, grad, flux, flux\+\_\+length)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, public dual\+\_\+por\+::darcy\+\_\+law\+\_\+d (
+\begin{DoxyParamCaption}
+\item[{class({\bf pde\+\_\+str}), intent(in)}]{pde\+\_\+loc, }
+\item[{integer(kind=ikind), intent(in)}]{layer, }
+\item[{type({\bf integpnt\+\_\+str}), intent(in), optional}]{quadpnt, }
+\item[{real(kind=rkind), dimension(\+:), intent(in), optional}]{x, }
+\item[{real(kind=rkind), dimension(\+:), intent(in), optional}]{grad, }
+\item[{real(kind=rkind), dimension(\+:), intent(out), optional}]{flux, }
+\item[{real(kind=rkind), intent(out), optional}]{flux\+\_\+length}
+\end{DoxyParamCaption}
+)}\label{namespacedual__por_a4233fa8c59b20267b6821a289f8bf98e}
+
+
+defines flux function according to Darcy Law (valid for laminar flow) 
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em grad} & this value is optional, because it is required by the vector\+\_\+fnc procedure pointer global definition \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 349 of file Re\+\_\+dual\+\_\+tot\+H.\+f90.
+
+
+
+Referenced by re\+\_\+dual\+\_\+pointers\+::re\+\_\+fracture(), and re\+\_\+dual\+\_\+pointers\+::re\+\_\+matrix().
+
+
+\begin{DoxyCode}
+349       \textcolor{keywordtype}{use }typy
+350       \textcolor{keywordtype}{use }pde_objs
+351       \textcolor{keywordtype}{use }global_objs
+352        
+353       \textcolor{keywordtype}{class}(pde_str), \textcolor{keywordtype}{intent(in)} :: pde\_loc
+354       \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(in)}                          :: layer
+355       \textcolor{keywordtype}{type}(integpnt_str), \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional} :: quadpnt    
+356       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{optional}              \textcolor{comment}{     :: x}
+358       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional}     :: grad
+359       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{intent(out)}, \textcolor{keywordtype}{optional}    :: flux
+360       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{intent(out)}, \textcolor{keywordtype}{optional}                  :: flux\_length\textcolor{comment}{}
+361 \textcolor{comment}{}
+362 \textcolor{comment}{      }\textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(3,3)}  :: k
+363       \textcolor{keywordtype}{integer(kind=ikind)}               :: d
+364       \textcolor{keywordtype}{integer(kind=ikind)}               :: i
+365       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable}, \textcolor{keywordtype}{save}  :: gradh
+366       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable}, \textcolor{keywordtype}{save}  :: vct
+367       \textcolor{keywordtype}{real(kind=rkind)} :: h
+368       \textcolor{keywordtype}{type}(integpnt_str) :: quadpnt\_loc
+369       
+370       d = drutes_config%dimen
+371 
+372       \textcolor{keywordflow}{if} (.not.(\textcolor{keyword}{allocated}(gradh))) then
+373             \textcolor{keyword}{allocate}(gradh(1:d))
+374             \textcolor{keyword}{allocate}(vct(1:d))
+375 \textcolor{keyword}{      end }if
+376 
+377       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(quadpnt) .and. (\textcolor{keyword}{present}(grad) .or. \textcolor{keyword}{present}(x))) then
+378         print *, \textcolor{stringliteral}{"ERROR: the function can be called either with integ point or x value definition and
+       gradient, not both of them"}\textcolor{comment}{}
+379 \textcolor{comment}{        print *, }\textcolor{stringliteral}{"exited from Re\_dual\_totH::darcy\_law"}
+380         error stop
+381       \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} ((.not. \textcolor{keyword}{present}(grad) .or. .not. \textcolor{keyword}{present}(x)) .and. .not. \textcolor{keyword}{present}\textcolor{comment}{(quadpnt)) then}
+382 \textcolor{comment}{        print *, }\textcolor{stringliteral}{"ERROR: you have not specified either integ point or x value"}
+383         print *, \textcolor{stringliteral}{"exited from Re\_dual\_totH::darcy\_law"}
+384         error stop
+385 \textcolor{keyword}{      end }if
+386       
+387       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(quadpnt)) then
+388         quadpnt\_loc=quadpnt
+389         quadpnt\_loc%preproc=.true.
+390         h = pde\_loc%getval(quadpnt\_loc)
+391         \textcolor{keyword}{call }pde\_loc%getgrad(quadpnt, gradh)
+392       else
+393         \textcolor{keywordflow}{if} (ubound(x,1) /=1) then
+394           print *, \textcolor{stringliteral}{"ERROR: van Genuchten function is a function of a single variable h"}\textcolor{comment}{}
+395 \textcolor{comment}{          print *, }\textcolor{stringliteral}{"       your input data has:"}, ubound(x,1), \textcolor{stringliteral}{"variables"}
+396           print *, \textcolor{stringliteral}{"exited from Re\_dual\_totH::darcy\_law"}
+397           error stop
+398 \textcolor{keyword}{        end }if
+399         h = x(1)
+400         gradh(1:d) = grad
+401 \textcolor{keyword}{      end }if
+402       
+403       \textcolor{keyword}{call }pde\_loc%pde\_fnc(pde\_loc%order)%dispersion(pde\_loc, layer, x=(\textcolor{comment}{/h/), tensor=k(1:d, 1:d))}
+404 \textcolor{comment}{     }
+405 \textcolor{comment}{      }
+406 \textcolor{comment}{      vct(1:d) = matmul(-k(1:d,1:d), gradh(1:d))}
+407 \textcolor{comment}{}
+408 \textcolor{comment}{         !print*,vct}
+409       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(flux\_length)) then
+410         \textcolor{keywordflow}{select case}(d)
+411           \textcolor{keywordflow}{case}(1)
+412                 flux\_length = vct(1)
+413           \textcolor{keywordflow}{case}(2)
+414                 flux\_length = sqrt(vct(1)*vct(1) + vct(2)*vct(2))
+415           \textcolor{keywordflow}{case}(3)
+416                 flux\_length = sqrt(vct(1)*vct(1) + vct(2)*vct(2) + vct(3\textcolor{comment}{)*vct(3))}
+417 \textcolor{comment}{}\textcolor{keyword}{        end }select
+418 \textcolor{keyword}{      end }if
+419 
+420 
+421       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(flux)) then
+422         flux(1:d) = vct(1:d)
+423 \textcolor{keyword}{      end }if
+424 
+\end{DoxyCode}
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacedual__por_a4233fa8c59b20267b6821a289f8bf98e_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{dual\+\_\+por@{dual\+\_\+por}!dual\+\_\+inicond@{dual\+\_\+inicond}}
+\index{dual\+\_\+inicond@{dual\+\_\+inicond}!dual\+\_\+por@{dual\+\_\+por}}
+\subsubsection[{dual\+\_\+inicond(pde\+\_\+loc)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, public dual\+\_\+por\+::dual\+\_\+inicond (
+\begin{DoxyParamCaption}
+\item[{class({\bf pde\+\_\+str}), intent(inout)}]{pde\+\_\+loc}
+\end{DoxyParamCaption}
+)}\label{namespacedual__por_a56d450c18eee19012cb05d2b1dd008e1}
+
+
+assigns initial condition 
+
+
+
+Definition at line 49 of file Re\+\_\+dual\+\_\+tot\+H.\+f90.
+
+
+
+References dual\+\_\+globals\+::disttozero, globals\+::drutes\+\_\+config, globals\+::elements, geom\+\_\+tools\+::map1d2dj(), globals\+::nodes, dual\+\_\+globals\+::vgfracture, and dual\+\_\+globals\+::vgmatrix.
+
+
+
+Referenced by re\+\_\+dual\+\_\+pointers\+::re\+\_\+fracture(), and re\+\_\+dual\+\_\+pointers\+::re\+\_\+matrix().
+
+
+\begin{DoxyCode}
+49         \textcolor{keywordtype}{use }typy
+50         \textcolor{keywordtype}{use }globals
+51         \textcolor{keywordtype}{use }global_objs
+52         \textcolor{keywordtype}{use }pde_objs
+53         \textcolor{keywordtype}{use }dual_globals
+54         \textcolor{keywordtype}{use }debug_tools
+55         \textcolor{keywordtype}{use }geom_tools
+56         
+57         \textcolor{keywordtype}{class}(pde_str), \textcolor{keywordtype}{intent(in out)} :: pde\_loc
+58         \textcolor{keywordtype}{integer(kind=ikind)} :: i, j, k,l, m, layer, d,n
+59         \textcolor{keywordtype}{real(kind=rkind)} :: value
+60         
+61         d = drutes_config%dimen
+62         \textcolor{keywordflow}{select case} (pde\_loc%mfswitch)
+63         \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"m"})
+64           \textcolor{keywordflow}{select case} (vgmatrix(1\_ikind)%icondtype)
+65               \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"input"})
+66                 \textcolor{keyword}{call }map1d2dj(pde\_loc,\textcolor{stringliteral}{"drutes.conf/REdual/hinim.in"})
+67 \textcolor{keyword}{          end }select
+68           \textcolor{keywordflow}{do} i=1, elements%kolik
+69             layer = elements%material(i,1)
+70 
+71             \textcolor{keywordflow}{do} j=1, ubound(elements%data,2)
+72               k = elements%data(i,j)
+73               l = nodes%edge(k)
+74               m = pde\_loc%permut(k)
+75               \textcolor{keywordflow}{if} (m == 0) then
+76                 \textcolor{keyword}{call }pde\_loc%bc(l)%value\_fnc(pde\_loc, i, j, \textcolor{keywordtype}{value})
+77                 pde\_loc%solution(k) =  \textcolor{keywordtype}{value} 
+78               else
+79                 \textcolor{keywordflow}{select case} (vgmatrix(layer)%icondtype)
+80                   \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"H\_tot"})
+81                     pde\_loc%solution(k) = vgmatrix(layer)%initcond+disttozero\textcolor{comment}{ ! nodes%data(k,D)}
+82                   \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"hpres"})
+83                     pde\_loc%solution(k) = vgmatrix(layer)%initcond+nodes%data\textcolor{comment}{(k,d)}
+84 \textcolor{comment}{}\textcolor{keyword}{                end }select
+85 \textcolor{keyword}{              end }if
+86 \textcolor{keywordflow}{            end do}   
+87 \textcolor{keyword}{          end }do
+88         \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"f"})
+89           \textcolor{keywordflow}{select case} (vgfracture(1\_ikind)%icondtype)
+90             \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"input"})
+91               \textcolor{keyword}{call }map1d2dj(pde\_loc,\textcolor{stringliteral}{"drutes.conf/REdual/hinif.in"})
+92 \textcolor{keyword}{            end }select
+93 
+94           \textcolor{keywordflow}{do} i=1, elements%kolik
+95             layer = elements%material(i,1)
+96 
+97             \textcolor{keywordflow}{do} j=1, ubound(elements%data,2)
+98               k = elements%data(i,j)
+99               l = nodes%edge(k)
+100               m = pde\_loc%permut(k)
+101               \textcolor{keywordflow}{if} (m == 0) then
+102                 \textcolor{keyword}{call }pde\_loc%bc(l)%value\_fnc(pde\_loc, i, j, \textcolor{keywordtype}{value})
+103                 pde\_loc%solution(k) =  \textcolor{keywordtype}{value} 
+104               else
+105                 \textcolor{keywordflow}{select case} (vgfracture(layer)%icondtype)
+106                   \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"H\_tot"})
+107                     pde\_loc%solution(k) = vgfracture(layer)%initcond+disttozero\textcolor{comment}{ !- nodes%data(k,D)}
+108                   \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"hpres"})
+109                     pde\_loc%solution(k) = vgfracture(layer)%initcond+nodes%data\textcolor{comment}{(k,d)}
+110 \textcolor{comment}{}\textcolor{keyword}{                  end }select
+111 \textcolor{keyword}{              end }if
+112 \textcolor{keywordflow}{            end do}   
+113 \textcolor{keyword}{          end }do
+114 \textcolor{keywordflow}{         case default}
+115                 print *, \textcolor{stringliteral}{"ERROR! Something is wrong"}
+116                 print *, \textcolor{stringliteral}{"the error is in dual\_por::dual\_inicond"}
+117                 error stop
+118 \textcolor{keyword}{        end }select
+\end{DoxyCode}
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacedual__por_a56d450c18eee19012cb05d2b1dd008e1_cgraph}
+\end{center}
+\end{figure}
+
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacedual__por_a56d450c18eee19012cb05d2b1dd008e1_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{dual\+\_\+por@{dual\+\_\+por}!dual\+\_\+mualem@{dual\+\_\+mualem}}
+\index{dual\+\_\+mualem@{dual\+\_\+mualem}!dual\+\_\+por@{dual\+\_\+por}}
+\subsubsection[{dual\+\_\+mualem(pde\+\_\+loc, layer, quadpnt, x, tensor, scalar)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, public dual\+\_\+por\+::dual\+\_\+mualem (
+\begin{DoxyParamCaption}
+\item[{class({\bf pde\+\_\+str}), intent(in)}]{pde\+\_\+loc, }
+\item[{integer(kind=ikind), intent(in)}]{layer, }
+\item[{type({\bf integpnt\+\_\+str}), intent(in), optional}]{quadpnt, }
+\item[{real(kind=rkind), dimension(\+:), intent(in), optional}]{x, }
+\item[{real(kind=rkind), dimension(\+:,\+:), intent(out), optional}]{tensor, }
+\item[{real(kind=rkind), intent(out), optional}]{scalar}
+\end{DoxyParamCaption}
+)}\label{namespacedual__por_aae8823c30cb66137867252e7604745de}
+
+
+defines dispersion functiona according to van Genuchten Mualem model (1980) 
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em x} & value of the nonlinear function\\
+\hline
+\mbox{\tt in}  & {\em quadpnt} & Gauss quadrature point structure (element number and rank of Gauss quadrature point)\\
+\hline
+\mbox{\tt in}  & {\em layer} & material ID\\
+\hline
+\mbox{\tt out}  & {\em tensor} & return tensor\\
+\hline
+\mbox{\tt out}  & {\em scalar} & relative scalar value of the nonlinear function \\
+\hline
+\end{DoxyParams}
+vg parameters, later from conf file 
+
+Definition at line 122 of file Re\+\_\+dual\+\_\+tot\+H.\+f90.
+
+
+
+References dual\+\_\+globals\+::exchange, dual\+\_\+globals\+::vgfracture, and dual\+\_\+globals\+::vgmatrix.
+
+
+
+Referenced by dual\+\_\+coup\+::dual\+\_\+coup\+\_\+min(), dual\+\_\+tab\+::dual\+\_\+coupling\+\_\+tab(), dual\+\_\+tab\+::dual\+\_\+mualem\+\_\+tab(), re\+\_\+dual\+\_\+pointers\+::re\+\_\+fracture(), and re\+\_\+dual\+\_\+pointers\+::re\+\_\+matrix().
+
+
+\begin{DoxyCode}
+122       \textcolor{keywordtype}{use }typy
+123       \textcolor{keywordtype}{use }global_objs
+124       \textcolor{keywordtype}{use }pde_objs
+125       \textcolor{keywordtype}{use }globals
+126       \textcolor{keywordtype}{use }debug_tools
+127       \textcolor{keywordtype}{use }dual_globals
+128       \textcolor{keywordtype}{use }re_dual_reader
+129           
+130       \textcolor{keywordtype}{class}(pde_str), \textcolor{keywordtype}{intent(in)} :: pde\_loc
+132       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional}    :: x
+134       \textcolor{keywordtype}{type}(integpnt_str), \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional} :: quadpnt
+136       \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(in)} :: layer
+138       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:,:)}, \textcolor{keywordtype}{intent(out)}, \textcolor{keywordtype}{optional} :: tensor
+140       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{intent(out)}, \textcolor{keywordtype}{optional}                 :: scalar
+142       \textcolor{keywordtype}{real(kind=rkind)}::n,m,alpha, weight       
+143       \textcolor{keywordtype}{real(kind=rkind)} :: h,kr,one
+144       \textcolor{keywordtype}{type}(integpnt_str) :: quadpnt\_loc
+145         
+146 
+147           
+148         \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(quadpnt)) then
+149           quadpnt\_loc=quadpnt
+150           quadpnt\_loc%preproc=.true.
+151          h = pde\_loc%getval(quadpnt\_loc)
+152         else
+153           \textcolor{keywordflow}{if} (ubound(x,1) /=1) then
+154                 print *, \textcolor{stringliteral}{"ERROR: van Genuchten function is a function of a single variable h"}\textcolor{comment}{}
+155 \textcolor{comment}{                print *, }\textcolor{stringliteral}{"       your input data has:"}, ubound(x,1), \textcolor{stringliteral}{"variables"}
+156                 print *, \textcolor{stringliteral}{"exited from RE\_dual::dual\_mualemm"}
+157                 error stop
+158 \textcolor{keyword}{              end }if
+159             h = x(1)
+160 \textcolor{keyword}{        end }if
+161         \textcolor{keywordflow}{select case} (pde\_loc%mfswitch)
+162           \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"m"})
+163             alpha=vgmatrix(layer)%alpha
+164             n=vgmatrix(layer)%n
+165             m=vgmatrix(layer)%m
+166             weight=exchange(layer)%weightm
+167           \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"f"})  
+168             alpha=vgfracture(layer)%alpha
+169             n=vgfracture(layer)%n
+170             m=vgfracture(layer)%m
+171             weight=exchange(layer)%weightf
+172 \textcolor{keywordflow}{          case default}
+173             print *, \textcolor{stringliteral}{"ERROR! Something is wrong"}
+174             print *, \textcolor{stringliteral}{"the error is in dual\_por::dual\_mualem"}
+175             error stop
+176 \textcolor{keyword}{        end }select
+177         
+178         one=1.0\_rkind    
+179         \textcolor{keywordflow}{if}(h < 0.0\_rkind) then
+180           kr=(one-(alpha*abs(h))**(n*m)*(one+(alpha*abs(h))**n)**(-m))**2/(one+\textcolor{comment}{(alpha*abs(h))**n)**(m/2)}
+181 \textcolor{comment}{        else}
+182 \textcolor{comment}{          kr=1.0\_rkind}
+183 \textcolor{comment}{}\textcolor{keyword}{        end }if
+184         
+185         \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(tensor)) then
+186           \textcolor{keywordflow}{select case} (pde\_loc%mfswitch)
+187             \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"m"})
+188               tensor=vgmatrix(layer)%KS*kr*weight
+189             \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"f"})
+190               tensor=vgfracture(layer)%KS*kr*weight
+191 \textcolor{keyword}{          end }select
+192 \textcolor{keyword}{        end }if
+193 
+194         
+195         \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(scalar)) then
+196           scalar=kr*weight
+197 \textcolor{keyword}{        end }if
+\end{DoxyCode}
+
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacedual__por_aae8823c30cb66137867252e7604745de_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{dual\+\_\+por@{dual\+\_\+por}!dual\+\_\+ret\+\_\+cap@{dual\+\_\+ret\+\_\+cap}}
+\index{dual\+\_\+ret\+\_\+cap@{dual\+\_\+ret\+\_\+cap}!dual\+\_\+por@{dual\+\_\+por}}
+\subsubsection[{dual\+\_\+ret\+\_\+cap(pde\+\_\+loc, layer, quadpnt, x)}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind) function, public dual\+\_\+por\+::dual\+\_\+ret\+\_\+cap (
+\begin{DoxyParamCaption}
+\item[{class({\bf pde\+\_\+str}), intent(in)}]{pde\+\_\+loc, }
+\item[{integer(kind=ikind), intent(in)}]{layer, }
+\item[{type({\bf integpnt\+\_\+str}), intent(in), optional}]{quadpnt, }
+\item[{real(kind=rkind), dimension(\+:), intent(in), optional}]{x}
+\end{DoxyParamCaption}
+)}\label{namespacedual__por_aa4ffcdb25d45c5fe70242f0a40eb9916}
+
+
+defines elasticity or retention functiona according to van Genuchten Mualem model (1980) 
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em x} & pressure head\\
+\hline
+\mbox{\tt in}  & {\em quadpnt} & Gauss quadrature point structure (element number and rank of Gauss quadrature point) \\
+\hline
+\end{DoxyParams}
+vg parameters, later from conf file 
+
+Definition at line 201 of file Re\+\_\+dual\+\_\+tot\+H.\+f90.
+
+
+
+References dual\+\_\+globals\+::exchange, dual\+\_\+globals\+::vgfracture, and dual\+\_\+globals\+::vgmatrix.
+
+
+
+Referenced by dual\+\_\+tab\+::dual\+\_\+ret\+\_\+cap\+\_\+tab(), re\+\_\+dual\+\_\+pointers\+::re\+\_\+fracture(), and re\+\_\+dual\+\_\+pointers\+::re\+\_\+matrix().
+
+
+\begin{DoxyCode}
+201       \textcolor{keywordtype}{use }typy
+202       \textcolor{keywordtype}{use }pde_objs
+203       \textcolor{keywordtype}{use }core_tools
+204       \textcolor{keywordtype}{use }dual_globals
+205       \textcolor{keywordtype}{use }re_dual_reader
+206       \textcolor{keywordtype}{use }debug_tools
+207       
+208       \textcolor{keywordtype}{class}(pde_str), \textcolor{keywordtype}{intent(in)} :: pde\_loc 
+209       \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(in)} :: layer
+211       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{dimension(:)},  \textcolor{keywordtype}{optional} :: x
+213       \textcolor{keywordtype}{type}(integpnt_str), \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional} :: quadpnt
+215       \textcolor{keywordtype}{real(kind=rkind)}::n,m,alpha,thetas,thetar,weight
+216       \textcolor{keywordtype}{real(kind=rkind)}::e,h,c
+217       \textcolor{keywordtype}{type}(integpnt_str) :: quadpnt\_loc
+218       
+219       
+220       
+221       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(quadpnt)) then
+222         quadpnt\_loc=quadpnt
+223         quadpnt\_loc%preproc=.true.
+224         h = pde\_loc%getval(quadpnt\_loc)
+225       else
+226         \textcolor{keywordflow}{if} (ubound(x,1) /=1) then
+227               print *, \textcolor{stringliteral}{"ERROR: van Genuchten function is a function of a single variable h"}\textcolor{comment}{}
+228 \textcolor{comment}{              print *, }\textcolor{stringliteral}{"       your input data has:"}, ubound(x,1), \textcolor{stringliteral}{"variables"}
+229               error stop
+230 \textcolor{keywordflow}{            end if}      
+231         \textcolor{keywordflow}{if} (ubound(x,1) /=1) then
+232               print *, \textcolor{stringliteral}{"ERROR: van Genuchten function is a function of a single variable h"}\textcolor{comment}{}
+233 \textcolor{comment}{              print *, }\textcolor{stringliteral}{"       your input data has:"}, ubound(x,1), \textcolor{stringliteral}{"variables"}
+234               print *, \textcolor{stringliteral}{"exited from RE\_dual::dual\_ret\_capm"}
+235               error stop
+236 \textcolor{keyword}{            end }if
+237             h = x(1)
+238 \textcolor{keyword}{      end }if
+239       
+240         \textcolor{keywordflow}{select case} (pde\_loc%mfswitch)
+241           \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"m"})
+242             thetas=vgmatrix(layer)%ThS
+243             thetar=vgmatrix(layer)%ThR
+244             alpha=vgmatrix(layer)%alpha
+245             n=vgmatrix(layer)%n
+246             m=vgmatrix(layer)%m
+247             weight=exchange(layer)%weightm
+248           \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"f"})  
+249             thetas=vgfracture(layer)%ThS
+250             thetar=vgfracture(layer)%ThR
+251             alpha=vgfracture(layer)%alpha
+252             n=vgfracture(layer)%n
+253             m=vgfracture(layer)%m
+254             weight=exchange(layer)%weightf
+255 \textcolor{keywordflow}{          case default}
+256             print *, \textcolor{stringliteral}{"ERROR! Something is wrong"}
+257             print *, \textcolor{stringliteral}{"the error is in dual\_por::dual\_ret\_cap"}
+258             error stop
+259 \textcolor{keyword}{        end }select
+260 
+261      
+262 
+263      
+264      \textcolor{keywordflow}{if}(h<0.0\_rkind) then
+265        c=(thetas-thetar)*alpha*m*n*(alpha*abs(h))**(n-1)*((alpha*abs(h))\textcolor{comment}{**n+1)**(-m-1)}
+266 \textcolor{comment}{     else}
+267 \textcolor{comment}{        }\textcolor{keywordflow}{select case} (pde\_loc%mfswitch)
+268           \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"m"})
+269             e=vgmatrix(layer)%Ss*weight
+270           \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"f"})  
+271             e=vgfracture(layer)%Ss*weight
+272 \textcolor{keyword}{        end }select
+273        return
+274 \textcolor{keyword}{     end }if
+275      
+276      e=c*weight
+277 
+\end{DoxyCode}
+
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacedual__por_aa4ffcdb25d45c5fe70242f0a40eb9916_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{dual\+\_\+por@{dual\+\_\+por}!getval\+\_\+retot\+\_\+dual@{getval\+\_\+retot\+\_\+dual}}
+\index{getval\+\_\+retot\+\_\+dual@{getval\+\_\+retot\+\_\+dual}!dual\+\_\+por@{dual\+\_\+por}}
+\subsubsection[{getval\+\_\+retot\+\_\+dual(pde\+\_\+loc, quadpnt)}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind) function, public dual\+\_\+por\+::getval\+\_\+retot\+\_\+dual (
+\begin{DoxyParamCaption}
+\item[{class({\bf pde\+\_\+str}), intent(in)}]{pde\+\_\+loc, }
+\item[{type({\bf integpnt\+\_\+str}), intent(in)}]{quadpnt}
+\end{DoxyParamCaption}
+)}\label{namespacedual__por_ae77ab5b0b843109d82c589c9ac537062}
+
+
+specific function for Richards equation in H-\/form (total hydraulic head form), replaces \doxyref{pde\+\_\+objs\+::getvalp1}{p.}{namespacepde__objs_aece3def127980c03c455456068cb3e48} in order to distinguish between H and h pointers point to this with pde\+\_\+locgetval 
+
+
+
+Definition at line 20 of file Re\+\_\+dual\+\_\+tot\+H.\+f90.
+
+
+
+References geom\+\_\+tools\+::getcoor(), and pde\+\_\+objs\+::getvalp1().
+
+
+
+Referenced by re\+\_\+dual\+\_\+pointers\+::re\+\_\+fracture(), and re\+\_\+dual\+\_\+pointers\+::re\+\_\+matrix().
+
+
+\begin{DoxyCode}
+20       \textcolor{keywordtype}{use }typy
+21       \textcolor{keywordtype}{use }pde_objs
+22       \textcolor{keywordtype}{use }geom_tools
+23       \textcolor{keywordtype}{use }dual_globals
+24       
+25       \textcolor{keywordtype}{class}(pde_str), \textcolor{keywordtype}{intent(in)} :: pde\_loc
+26       \textcolor{keywordtype}{type}(integpnt_str), \textcolor{keywordtype}{intent(in)} :: quadpnt
+27       \textcolor{keywordtype}{real(kind=rkind)} :: val
+28       
+29       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(3)} :: xyz
+30       \textcolor{keywordtype}{integer(kind=ikind)} :: d
+31       
+32           
+33       \textcolor{keywordflow}{if} (quadpnt%preproc) then
+34       
+35         d = drutes_config%dimen
+36       
+37         \textcolor{keyword}{call }getcoor(quadpnt, xyz(1:d))
+38 
+39         val = getvalp1(pde\_loc, quadpnt) - xyz(d)
+40       else
+41         val = getvalp1(pde\_loc, quadpnt)
+42 \textcolor{keyword}{      end }if
+43 
+44       
+45         
+\end{DoxyCode}
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacedual__por_ae77ab5b0b843109d82c589c9ac537062_cgraph}
+\end{center}
+\end{figure}
+
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacedual__por_ae77ab5b0b843109d82c589c9ac537062_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{dual\+\_\+por@{dual\+\_\+por}!vangen\+\_\+d@{vangen\+\_\+d}}
+\index{vangen\+\_\+d@{vangen\+\_\+d}!dual\+\_\+por@{dual\+\_\+por}}
+\subsubsection[{vangen\+\_\+d(pde\+\_\+loc, layer, quadpnt, x)}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind) function, public dual\+\_\+por\+::vangen\+\_\+d (
+\begin{DoxyParamCaption}
+\item[{class({\bf pde\+\_\+str}), intent(in)}]{pde\+\_\+loc, }
+\item[{integer(kind=ikind), intent(in)}]{layer, }
+\item[{type({\bf integpnt\+\_\+str}), intent(in), optional}]{quadpnt, }
+\item[{real(kind=rkind), dimension(\+:), intent(in), optional}]{x}
+\end{DoxyParamCaption}
+)}\label{namespacedual__por_a37908a4269cdf910f57dcaa8b557a741}
+
+
+defines mass functiona according to van Genuchten Mualem model (1980) 
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em x} & pressure head\\
+\hline
+\mbox{\tt in}  & {\em quadpnt} & Gauss quadrature point structure (element number and rank of Gauss quadrature point)\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+resulting water content 
+\end{DoxyReturn}
+
+
+Definition at line 281 of file Re\+\_\+dual\+\_\+tot\+H.\+f90.
+
+
+
+References dual\+\_\+globals\+::exchange, dual\+\_\+globals\+::vgfracture, and dual\+\_\+globals\+::vgmatrix.
+
+
+
+Referenced by re\+\_\+dual\+\_\+pointers\+::re\+\_\+fracture(), re\+\_\+dual\+\_\+pointers\+::re\+\_\+matrix(), and dual\+\_\+tab\+::vangen\+\_\+d\+\_\+tab().
+
+
+\begin{DoxyCode}
+281   
+282         \textcolor{keywordtype}{use }typy
+283         \textcolor{keywordtype}{use }dual_globals
+284         \textcolor{keywordtype}{use }pde_objs
+285         \textcolor{keywordtype}{class}(pde_str), \textcolor{keywordtype}{intent(in)} :: pde\_loc
+286         \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(in)} :: layer
+288         \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{optional} :: x
+290         \textcolor{keywordtype}{type}(integpnt_str), \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional} :: quadpnt
+291         \textcolor{keywordtype}{real(kind=rkind)} :: h
+293         \textcolor{keywordtype}{real(kind=rkind)} :: theta
+294 
+295         \textcolor{keywordtype}{real(kind=rkind)}::n,m,alpha,thetas,thetar,weight, theta\_e
+296         \textcolor{keywordtype}{type}(integpnt_str) :: quadpnt\_loc
+297         
+298       
+299         \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(quadpnt)) then
+300             quadpnt\_loc=quadpnt
+301             quadpnt\_loc%preproc=.true.
+302             h = pde\_loc%getval(quadpnt\_loc)
+303         else
+304             \textcolor{keywordflow}{if} (ubound(x,1) /=1) then
+305             print *, \textcolor{stringliteral}{"ERROR: van Genuchten function is a function of a single variable h"}
+306             print *, \textcolor{stringliteral}{"       your input data has:"}, ubound(x,1), \textcolor{stringliteral}{"variables"}
+307             print *, \textcolor{stringliteral}{"exited from RE\_dual::vangen\_d\_m"}
+308             error stop
+309 \textcolor{keyword}{            end }if
+310             h = x(1)
+311 \textcolor{keywordflow}{        end if}    
+312         \textcolor{keywordflow}{select case} (pde\_loc%mfswitch)
+313         \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"m"})
+314             thetas=vgmatrix(layer)%ThS
+315             thetar=vgmatrix(layer)%ThR
+316             alpha=vgmatrix(layer)%alpha
+317             n=vgmatrix(layer)%n
+318             m=vgmatrix(layer)%m
+319             weight=exchange(layer)%weightm
+320         \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"f"})  
+321             thetas=vgfracture(layer)%ThS
+322             thetar=vgfracture(layer)%ThR
+323             alpha=vgfracture(layer)%alpha
+324             n=vgfracture(layer)%n
+325             m=vgfracture(layer)%m
+326             weight=exchange(layer)%weightf
+327 \textcolor{keywordflow}{        case default}
+328             print *, \textcolor{stringliteral}{"ERROR! Something is wrong"}
+329             print *, \textcolor{stringliteral}{"the error is in dual\_por::dual\_ret\_cap"}
+330             error stop
+331 \textcolor{keyword}{        end }select
+332         
+333         \textcolor{keywordflow}{if} (h >=0.0\_rkind) then
+334         \textcolor{keywordflow}{select case} (pde\_loc%mfswitch)
+335             \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"m"})
+336                 theta = vgmatrix(layer)%Ths
+337             \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"f"})  
+338                 theta = vgfracture(layer)%Ths
+339 \textcolor{keyword}{            end }select
+340 
+341             return
+342         else
+343                 theta\_e = 1/(1+(alpha*(abs(h)))**n)**m
+344                 theta = theta\_e*(thetas- thetar)+ thetar
+345 \textcolor{keyword}{        end }if
+\end{DoxyCode}
+
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacedual__por_a37908a4269cdf910f57dcaa8b557a741_icgraph}
+\end{center}
+\end{figure}
+
+

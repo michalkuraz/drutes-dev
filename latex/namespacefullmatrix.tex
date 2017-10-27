@@ -1,0 +1,133 @@
+\section{fullmatrix Module Reference}
+\label{namespacefullmatrix}\index{fullmatrix@{fullmatrix}}
+\subsection*{Data Types}
+\begin{DoxyCompactItemize}
+\item 
+type {\bf fullmtx}
+\begin{DoxyCompactList}\small\item\em plna matice \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Functions/\+Subroutines}
+\begin{DoxyCompactItemize}
+\item 
+real(kind=rkind) function {\bf getfull} (a, i, j)
+\begin{DoxyCompactList}\small\item\em ziska prvek z plne matice \end{DoxyCompactList}\item 
+subroutine {\bf setfull} (r, a, i, j)
+\begin{DoxyCompactList}\small\item\em vlozi prvek do matice \end{DoxyCompactList}\item 
+subroutine {\bf initfull} (a, n, m)
+\begin{DoxyCompactList}\small\item\em inicializace plne matice \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Function/\+Subroutine Documentation}
+\index{fullmatrix@{fullmatrix}!getfull@{getfull}}
+\index{getfull@{getfull}!fullmatrix@{fullmatrix}}
+\subsubsection[{getfull(a, i, j)}]{\setlength{\rightskip}{0pt plus 5cm}real(kind=rkind) function fullmatrix\+::getfull (
+\begin{DoxyParamCaption}
+\item[{class({\bf fullmtx}), intent(in)}]{a, }
+\item[{integer(kind=ikind), intent(in)}]{i, }
+\item[{integer(kind=ikind), intent(in)}]{j}
+\end{DoxyParamCaption}
+)}\label{namespacefullmatrix_a1d3fabd7a2a0b9a04e8b0315a7a30228}
+
+
+ziska prvek z plne matice 
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em a} & matice\\
+\hline
+\mbox{\tt in}  & {\em i} & souradnice\\
+\hline
+\mbox{\tt in}  & {\em j} & souradnice \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 33 of file fullmatrix.\+f90.
+
+
+\begin{DoxyCode}
+33 
+34         \textcolor{keywordtype}{class}(fullmtx), \textcolor{keywordtype}{intent(in)} :: a
+36         \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(in)} :: i,j
+37         \textcolor{keywordtype}{real(kind=rkind)} :: r
+38         \textcolor{keywordflow}{if} ((i<1) .or. (j<1) .or. (i>a%getn()) .or. (j>a%getm())) &
+39             stop \textcolor{stringliteral}{"chybne indexy v get plna matice"}
+40         r = a%val(i,j)
+\end{DoxyCode}
+\index{fullmatrix@{fullmatrix}!initfull@{initfull}}
+\index{initfull@{initfull}!fullmatrix@{fullmatrix}}
+\subsubsection[{initfull(a, n, m)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine fullmatrix\+::initfull (
+\begin{DoxyParamCaption}
+\item[{class({\bf fullmtx}), intent(inout)}]{a, }
+\item[{integer(kind=ikind), intent(in)}]{n, }
+\item[{integer(kind=ikind), intent(in)}]{m}
+\end{DoxyParamCaption}
+)}\label{namespacefullmatrix_ab30e333eef2dadf6b733735bcbc92cf0}
+
+
+inicializace plne matice 
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in,out}  & {\em a} & matice\\
+\hline
+\mbox{\tt in}  & {\em n} & rozmery matice\\
+\hline
+\mbox{\tt in}  & {\em m} & rozmery matice \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 59 of file fullmatrix.\+f90.
+
+
+\begin{DoxyCode}
+59         \textcolor{keywordtype}{use }typy
+60         \textcolor{keywordtype}{implicit none}
+62         \textcolor{keywordtype}{class}(fullmtx), \textcolor{keywordtype}{intent(in out)}  :: a
+64         \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(in)} :: n,m
+65         \textcolor{keyword}{call }a%resize(n,m)
+66         print *,\textcolor{stringliteral}{"po resize"}
+67         \textcolor{keywordflow}{if} (\textcolor{keyword}{allocated}(a%val)) \textcolor{keyword}{deallocate}(a%val)
+68         \textcolor{keyword}{allocate}(a%val(n,m))
+69         print *,\textcolor{stringliteral}{"initfull: menim velikost"}
+70         a%val = 0
+\end{DoxyCode}
+\index{fullmatrix@{fullmatrix}!setfull@{setfull}}
+\index{setfull@{setfull}!fullmatrix@{fullmatrix}}
+\subsubsection[{setfull(r, a, i, j)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine fullmatrix\+::setfull (
+\begin{DoxyParamCaption}
+\item[{real(kind=rkind), intent(in)}]{r, }
+\item[{class({\bf fullmtx}), intent(inout)}]{a, }
+\item[{integer(kind=ikind), intent(in)}]{i, }
+\item[{integer(kind=ikind), intent(in)}]{j}
+\end{DoxyParamCaption}
+)}\label{namespacefullmatrix_a6b4765762fe6f9c10efae50463bd1e9f}
+
+
+vlozi prvek do matice 
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em r} & hodnota\\
+\hline
+\mbox{\tt in,out}  & {\em a} & matice\\
+\hline
+\mbox{\tt in}  & {\em i} & souradnice\\
+\hline
+\mbox{\tt in}  & {\em j} & souradnice \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 45 of file fullmatrix.\+f90.
+
+
+\begin{DoxyCode}
+45         \textcolor{keywordtype}{implicit none}
+47         \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{intent(in)} :: r
+49         \textcolor{keywordtype}{class}(fullmtx), \textcolor{keywordtype}{intent(in out)}  :: a
+51         \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(in)} :: i,j
+52         \textcolor{keywordflow}{if} ((i<1) .or. (j<1) .or. (i>a%getn()) .or. (j>a%getm())) &
+53             stop \textcolor{stringliteral}{"chybne indexy v set plna matice"}
+54         a%val(i,j) = r
+\end{DoxyCode}

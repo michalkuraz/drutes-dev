@@ -1,0 +1,87 @@
+\section{ade\+\_\+globals Module Reference}
+\label{namespaceade__globals}\index{ade\+\_\+globals@{ade\+\_\+globals}}
+\subsection*{Data Types}
+\begin{DoxyCompactItemize}
+\item 
+type {\bf solutexsoil}
+\begin{DoxyCompactList}\small\item\em A\+DE solute/material parameters array. \end{DoxyCompactList}\item 
+type {\bf sorption\+\_\+str}
+\begin{DoxyCompactList}\small\item\em parameters of sorption model \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+type({\bf solutexsoil}), dimension(\+:), allocatable, public {\bf adepar}
+\begin{DoxyCompactList}\small\item\em structure of solute parameters \end{DoxyCompactList}\item 
+integer(kind=ikind), public {\bf isotherm}
+\begin{DoxyCompactList}\small\item\em type of used sorption isotherm 0 -\/ linear 1 -\/ Friedrich exponential 2 -\/ Langmuir \end{DoxyCompactList}\item 
+logical, public {\bf with\+\_\+richards}
+\item 
+integer, public {\bf file\+\_\+contaminant}
+\end{DoxyCompactItemize}
+
+
+\subsection{Variable Documentation}
+\index{ade\+\_\+globals@{ade\+\_\+globals}!adepar@{adepar}}
+\index{adepar@{adepar}!ade\+\_\+globals@{ade\+\_\+globals}}
+\subsubsection[{adepar}]{\setlength{\rightskip}{0pt plus 5cm}type({\bf solutexsoil}), dimension(\+:), allocatable, public ade\+\_\+globals\+::adepar}\label{namespaceade__globals_a2034a22816b8b2fa3499cd571f6a097b}
+
+
+structure of solute parameters 
+
+
+
+Definition at line 39 of file A\+D\+E\+\_\+globals.\+f90.
+
+
+
+Referenced by ade\+\_\+fnc\+::ade\+\_\+convection(), ade\+\_\+fnc\+::ade\+\_\+cscl\+\_\+react(), ade\+\_\+fnc\+::ade\+\_\+cscs\+\_\+react(), ade\+\_\+fnc\+::ade\+\_\+flux(), ade\+\_\+fnc\+::ade\+\_\+icond(), ade\+\_\+fnc\+::ade\+\_\+mass(), ade\+\_\+fnc\+::ade\+\_\+reaction(), ade\+\_\+reader\+::ade\+\_\+read(), ade\+\_\+fnc\+::ade\+\_\+tder\+\_\+coef(), ade\+\_\+fnc\+::ade\+\_\+tder\+\_\+cscl(), ade\+\_\+fnc\+::ade\+\_\+zerorder(), ade\+\_\+fnc\+::adecs\+\_\+mass(), ade\+\_\+fnc\+::adedispersion(), and heat\+\_\+pointers\+::heat\+\_\+source().
+
+
+\begin{DoxyCode}
+39   \textcolor{keywordtype}{type}(solutexsoil), \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable}, \textcolor{keywordtype}{public} :: adepar
+\end{DoxyCode}
+\index{ade\+\_\+globals@{ade\+\_\+globals}!file\+\_\+contaminant@{file\+\_\+contaminant}}
+\index{file\+\_\+contaminant@{file\+\_\+contaminant}!ade\+\_\+globals@{ade\+\_\+globals}}
+\subsubsection[{file\+\_\+contaminant}]{\setlength{\rightskip}{0pt plus 5cm}integer, public ade\+\_\+globals\+::file\+\_\+contaminant}\label{namespaceade__globals_a288cade4dba3ff8724e3910ad442d26c}
+
+
+Definition at line 52 of file A\+D\+E\+\_\+globals.\+f90.
+
+
+
+Referenced by ade\+\_\+reader\+::ade\+\_\+read().
+
+
+\begin{DoxyCode}
+52   \textcolor{keywordtype}{integer}, \textcolor{keywordtype}{public} :: file_contaminant
+\end{DoxyCode}
+\index{ade\+\_\+globals@{ade\+\_\+globals}!isotherm@{isotherm}}
+\index{isotherm@{isotherm}!ade\+\_\+globals@{ade\+\_\+globals}}
+\subsubsection[{isotherm}]{\setlength{\rightskip}{0pt plus 5cm}integer(kind=ikind), public ade\+\_\+globals\+::isotherm}\label{namespaceade__globals_aaba7d43398b447a5a65c143034f023fb}
+
+
+type of used sorption isotherm 0 -\/ linear 1 -\/ Friedrich exponential 2 -\/ Langmuir 
+
+
+
+Definition at line 47 of file A\+D\+E\+\_\+globals.\+f90.
+
+
+\begin{DoxyCode}
+47   \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{public} :: isotherm
+\end{DoxyCode}
+\index{ade\+\_\+globals@{ade\+\_\+globals}!with\+\_\+richards@{with\+\_\+richards}}
+\index{with\+\_\+richards@{with\+\_\+richards}!ade\+\_\+globals@{ade\+\_\+globals}}
+\subsubsection[{with\+\_\+richards}]{\setlength{\rightskip}{0pt plus 5cm}logical, public ade\+\_\+globals\+::with\+\_\+richards}\label{namespaceade__globals_a1073a745bb8f75538a92005806222d03}
+
+
+Definition at line 49 of file A\+D\+E\+\_\+globals.\+f90.
+
+
+
+Referenced by ade\+\_\+reader\+::ade\+\_\+read().
+
+
+\begin{DoxyCode}
+49   \textcolor{keywordtype}{logical}, \textcolor{keywordtype}{public} :: with_richards
+\end{DoxyCode}

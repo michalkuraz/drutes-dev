@@ -1,0 +1,18 @@
+\section{src/femtools/capmat.f90 File Reference}
+\label{capmat_8f90}\index{src/femtools/capmat.\+f90@{src/femtools/capmat.\+f90}}
+\subsection*{Modules}
+\begin{DoxyCompactItemize}
+\item 
+module {\bf capmat}
+\end{DoxyCompactItemize}
+\subsection*{Functions/\+Subroutines}
+\begin{DoxyCompactItemize}
+\item 
+subroutine, public {\bf capmat\+::impl\+\_\+euler\+\_\+np\+\_\+nondiag} (el\+\_\+id, domain\+\_\+id, quadpnt\+\_\+in)
+\begin{DoxyCompactList}\small\item\em implicit Euler for nonlinear problem and Picard iteration method, nondiagonal capacity matrix \end{DoxyCompactList}\item 
+subroutine, public {\bf capmat\+::impl\+\_\+euler\+\_\+np\+\_\+diag} (el\+\_\+id, domain\+\_\+id, quadpnt\+\_\+in)
+\begin{DoxyCompactList}\small\item\em implicit euler method, nonlinear problem Picard iteration method -\/ diagonal capacity matrix \end{DoxyCompactList}\item 
+subroutine, public {\bf capmat\+::steady\+\_\+state\+\_\+int} (el\+\_\+id, domain\+\_\+id, quadpnt\+\_\+in)
+\item 
+subroutine, private {\bf capmat\+::diagonalizer} (a)
+\begin{DoxyCompactList}\small\item\em routine that diagonalizes matrix -\/ it lumps consistent capacity matrices \end{DoxyCompactList}\end{DoxyCompactItemize}

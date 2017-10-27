@@ -1,0 +1,25 @@
+<map id="schwarz_dd_time_test::schwarz_picard_tt" name="schwarz_dd_time_test::schwarz_picard_tt">
+<area shape="rect" id="node2" href="$namespaceschwarz__dd__time__test.html#ac055f89162bd3f14323b125cdd0253a6" title="solves the problem using Picard method with Schwarz multiplicative domain decomposition reflecting th..." alt="" coords="228,495,381,537"/>
+<area shape="rect" id="node18" href="$namespacedecomposer.html#abbcc7a95b77ad1dbec2b528470df7daf" title="the subdomains are combined based on the gradients of the solution and the Picard iterations ..." alt="" coords="207,113,403,140"/>
+<area shape="rect" id="node24" href="$namespaceschwarz__dd__time__test.html#a25f98453f72bb54e1bfbcf1339bd6692" title="schwarz_dd_time_test\l::vyreseno" alt="" coords="228,561,381,602"/>
+<area shape="rect" id="node3" href="$namespaceschwarz__dd.html#a153ede1ee63fff0d346fe7699b46f76a" title="schwarz_dd::locmat\l_assembler" alt="" coords="481,241,619,282"/>
+<area shape="rect" id="node8" href="$namespacedecomp__tools.html#ac18f0d14ca31ab08c7a84b1667c12cfa" title="decomp_tools::get_residual" alt="" coords="459,620,641,647"/>
+<area shape="rect" id="node10" href="$namespacesimplelinalg.html#a991176c9132fd1f9a1e494dfe43be159" title="right hand side diagonal preconditioner &#45; preprocessor and postprocesor preforms the diagonal matrix ..." alt="" coords="489,671,611,713"/>
+<area shape="rect" id="node11" href="$namespaceschwarz__dd__time__test.html#a7bde386ee530d07dc024487cc43e0e23" title="schwarz_dd_time_test\l::search_error_cluster_tt" alt="" coords="469,737,631,778"/>
+<area shape="rect" id="node12" href="$namespaceprinttools.html#ac71e43f1627ed0239558720411181068" title="if default output is stdout, then this procedure prints nice progress bar " alt="" coords="475,803,625,829"/>
+<area shape="rect" id="node13" href="$namespaceschwarz__dd__time__test.html#a43f903666f3ea6580be2b268ec684c99" title="counts number of solved subdomains " alt="" coords="473,306,627,347"/>
+<area shape="rect" id="node14" href="$namespaceschwarz__dd__time__test.html#a1bcd2b4474e16444beb716dbfa0f8fc6" title="schwarz_dd_time_test\l::build_xvect" alt="" coords="473,371,627,413"/>
+<area shape="rect" id="node15" href="$namespaceschwarz__dd__time__test.html#a2e1aaa197d03df66e433a4ef06780620" title="counts number of solved subdomains " alt="" coords="473,437,627,478"/>
+<area shape="rect" id="node16" href="$namespaceprinttools.html#a7f7f505eb110ff0f4d983bb8f0f968b2" title="printtools::printtime" alt="" coords="483,503,617,529"/>
+<area shape="rect" id="node17" href="$namespaceschwarz__dd__time__test.html#a17aa5ab15ef249e3df241cb890ed955d" title="schwarz_dd_time_test\l::results_extractor" alt="" coords="473,554,627,595"/>
+<area shape="rect" id="node4" href="$namespacestiffmat.html#a31243094e6fbabfb25e1e1939b133899" title="stiffmat::build_bvect" alt="" coords="711,248,851,275"/>
+<area shape="rect" id="node5" href="$namespacestiffmat.html#ae46961e6784b8661f5fa07d7b6bed25a" title="build local stifness matrix for nonlinear problems and Picard method " alt="" coords="705,299,856,325"/>
+<area shape="rect" id="node6" href="$namespacefem__tools.html#a70a2c3916a63fabc299dbbb53741e122" title="procedure to put local stiffness matrix into the global stiffness matrix " alt="" coords="711,197,850,224"/>
+<area shape="rect" id="node7" href="$namespacesolver__interfaces.html#abd70a6e039e5f2f62c473d9afbe90cc2" title="solver_interfaces::\lnull_problem" alt="" coords="716,85,845,126"/>
+<area shape="rect" id="node9" href="$namespacedecomp__tools.html#a7d2344442769179cf7904faece138daf" title="decomp_tools::mulax_dd" alt="" coords="697,620,864,647"/>
+<area shape="rect" id="node19" href="$namespacedecomp__tools.html#a3f8c4deab864942b308de6e8ddc31849" title="decomp_tools::addlevel" alt="" coords="471,88,629,115"/>
+<area shape="rect" id="node20" href="$namespacedecomposer.html#a87f6f57c647e1ad908958389ba844b86" title="decomposer::clear_subdomain" alt="" coords="451,37,649,64"/>
+<area shape="rect" id="node21" href="$namespacecore__tools.html#abe09f9b4dc2abc5384a24020c5031e95" title="core_tools::write_log" alt="" coords="709,12,852,39"/>
+<area shape="rect" id="node22" href="$namespacedecomposer.html#ab3c22185fa432d9d3ca309ce5042f9b9" title="decomposer::init_subdomain" alt="" coords="456,139,644,165"/>
+<area shape="rect" id="node23" href="$namespacegeom__tools.html#a1e93d0ec91a9f2fcc7573e6347a9f9ef" title="specify the x and y derivates of a plane defined by three points " alt="" coords="455,189,645,216"/>
+</map>

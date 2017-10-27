@@ -1,0 +1,48 @@
+\section{pde\+\_\+objs\+:\+:timeint\+\_\+fnc Interface Reference}
+\label{interfacepde__objs_1_1timeint__fnc}\index{pde\+\_\+objs\+::timeint\+\_\+fnc@{pde\+\_\+objs\+::timeint\+\_\+fnc}}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+subroutine {\bf timeint\+\_\+fnc} (el\+\_\+id, domain\+\_\+id, quadpnt\+\_\+in)
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+
+
+Definition at line 244 of file pde\+\_\+objs.\+f90.
+
+
+
+\subsection{Constructor \& Destructor Documentation}
+\index{pde\+\_\+objs\+::timeint\+\_\+fnc@{pde\+\_\+objs\+::timeint\+\_\+fnc}!timeint\+\_\+fnc@{timeint\+\_\+fnc}}
+\index{timeint\+\_\+fnc@{timeint\+\_\+fnc}!pde\+\_\+objs\+::timeint\+\_\+fnc@{pde\+\_\+objs\+::timeint\+\_\+fnc}}
+\subsubsection[{timeint\+\_\+fnc(el\+\_\+id, domain\+\_\+id, quadpnt\+\_\+in)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine pde\+\_\+objs\+::timeint\+\_\+fnc\+::timeint\+\_\+fnc (
+\begin{DoxyParamCaption}
+\item[{integer(kind=ikind), intent(in)}]{el\+\_\+id, }
+\item[{integer(kind=ikind), intent(in), optional}]{domain\+\_\+id, }
+\item[{type({\bf integpnt\+\_\+str}), intent(inout), optional}]{quadpnt\+\_\+in}
+\end{DoxyParamCaption}
+)}\label{interfacepde__objs_1_1timeint__fnc_aad4b4043471ab3bc029688a07f549f33}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em domain\+\_\+id} & subdomain number (inserted only if domain decomposition used and if only local data needed) \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 245 of file pde\+\_\+objs.\+f90.
+
+
+\begin{DoxyCode}
+245       \textcolor{keywordtype}{use }typy
+246       \textcolor{keywordtype}{use }global_objs
+247       \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(in)} :: el\_id
+249       \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional} :: domain\_id
+250       \textcolor{keywordtype}{type}(integpnt_str), \textcolor{keywordtype}{intent(in out)}, \textcolor{keywordtype}{optional} :: quadpnt\_in
+\end{DoxyCode}
+
+
+The documentation for this interface was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+src/core/{\bf pde\+\_\+objs.\+f90}\end{DoxyCompactItemize}

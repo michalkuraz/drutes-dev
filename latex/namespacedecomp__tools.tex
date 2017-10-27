@@ -1,0 +1,1497 @@
+\section{decomp\+\_\+tools Module Reference}
+\label{namespacedecomp__tools}\index{decomp\+\_\+tools@{decomp\+\_\+tools}}
+\subsection*{Functions/\+Subroutines}
+\begin{DoxyCompactItemize}
+\item 
+subroutine, public {\bf getres\+\_\+loc} (subdom, debugme)
+\item 
+subroutine, public {\bf mulax\+\_\+dd} (x, vct)
+\item 
+subroutine, public {\bf get\+\_\+residual} (resvct)
+\item 
+subroutine, public {\bf get\+\_\+residual\+\_\+old} (resvct)
+\item 
+subroutine, public {\bf collect\+\_\+matrices} (a)
+\item 
+subroutine, public {\bf addlevel} ()
+\item 
+subroutine, public {\bf build\+\_\+coarsemtx} (resvct)
+\item 
+subroutine, public {\bf init\+\_\+addlevel} ()
+\item 
+logical function, private {\bf add\+\_\+el} (coarse\+\_\+el, level, el)
+\item 
+subroutine, public {\bf print\+\_\+domains} (behavior)
+\item 
+subroutine, public {\bf print\+\_\+elements\+\_\+dd} (behavior)
+\end{DoxyCompactItemize}
+
+
+\subsection{Function/\+Subroutine Documentation}
+\index{decomp\+\_\+tools@{decomp\+\_\+tools}!add\+\_\+el@{add\+\_\+el}}
+\index{add\+\_\+el@{add\+\_\+el}!decomp\+\_\+tools@{decomp\+\_\+tools}}
+\subsubsection[{add\+\_\+el(coarse\+\_\+el, level, el)}]{\setlength{\rightskip}{0pt plus 5cm}logical function, private decomp\+\_\+tools\+::add\+\_\+el (
+\begin{DoxyParamCaption}
+\item[{integer(kind=ikind), intent(in)}]{coarse\+\_\+el, }
+\item[{integer(kind=ikind), intent(in)}]{level, }
+\item[{integer(kind=ikind), intent(in)}]{el}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [private]}}\label{namespacedecomp__tools_a0d2d17ba77983f7a1b437f7dc6e180b5}
+
+
+Definition at line 670 of file decomp\+\_\+tools.\+f90.
+
+
+
+References decomp\+\_\+vars\+::ddcoarse\+\_\+mesh.
+
+
+
+Referenced by init\+\_\+addlevel().
+
+
+\begin{DoxyCode}
+670       \textcolor{keywordtype}{use }typy
+671       \textcolor{keywordtype}{use }globals
+672       \textcolor{keywordtype}{use }global_objs
+673       \textcolor{keywordtype}{use }decomp_vars
+674       \textcolor{keywordtype}{use }debug_tools
+675       
+676       \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(in)} :: coarse\_el, level, el
+677       \textcolor{keywordtype}{logical} :: add
+678       
+679       \textcolor{keywordtype}{integer(kind=ikind)} :: i,j
+680       
+681       add = .true.
+682       
+683       \textcolor{keywordflow}{do} i=0, level-1
+684 \textcolor{comment}{!       call printmtx(ddcoarse\_mesh(coarse\_el)%overlap\_el(i)) ; call wait()}
+685         \textcolor{keywordflow}{do} j=1, ddcoarse_mesh(coarse\_el)%overlap\_el(i)%pos
+686 \textcolor{comment}{!         print *, level-1, el ; stop}
+687           \textcolor{keywordflow}{if} (\textcolor{keyword}{allocated}(ddcoarse_mesh(coarse\_el)%overlap\_el(i)%data)) \textcolor{keywordflow}{then}
+688             \textcolor{keywordflow}{if} (ddcoarse_mesh(coarse\_el)%overlap\_el(i)%data(j) == el) \textcolor{keywordflow}{then}
+689               add = .false.
+690               \textcolor{keywordflow}{RETURN}
+691 \textcolor{keywordflow}{            end if}
+692 \textcolor{keywordflow}{          end if}
+693 \textcolor{keywordflow}{        end do}
+694 \textcolor{keywordflow}{      end do}
+695     
+\end{DoxyCode}
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacedecomp__tools_a0d2d17ba77983f7a1b437f7dc6e180b5_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{decomp\+\_\+tools@{decomp\+\_\+tools}!addlevel@{addlevel}}
+\index{addlevel@{addlevel}!decomp\+\_\+tools@{decomp\+\_\+tools}}
+\subsubsection[{addlevel()}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, public decomp\+\_\+tools\+::addlevel (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}\label{namespacedecomp__tools_a3f8c4deab864942b308de6e8ddc31849}
+an array that describes the element that was already inserted into subdomain 
+
+Definition at line 257 of file decomp\+\_\+tools.\+f90.
+
+
+
+References decomp\+\_\+vars\+::coarse\+\_\+elements, decomp\+\_\+vars\+::ddcoarse\+\_\+mesh, decomp\+\_\+vars\+::ddinfo, globals\+::drutes\+\_\+config, globals\+::elements, globals\+::nodes, pde\+\_\+objs\+::pde, decomp\+\_\+vars\+::prolong\+\_\+mtx, and decomp\+\_\+vars\+::subdomain.
+
+
+
+Referenced by decomposer\+::set\+\_\+subdomains().
+
+
+\begin{DoxyCode}
+257       \textcolor{keywordtype}{use }typy
+258       \textcolor{keywordtype}{use }decomp_vars
+259       \textcolor{keywordtype}{use }debug_tools
+260       \textcolor{keywordtype}{use }globals
+261       \textcolor{keywordtype}{use }global_objs
+262       \textcolor{keywordtype}{use }pde_objs
+263       
+264       \textcolor{keywordtype}{integer(kind=ikind)} :: sub, coarse\_el, j, i, vecino, el, elsub, k,\textcolor{comment}{ level, l, nd, ii, vecsub, pnd, nd2}
+265 \textcolor{comment}{      }\textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable}, \textcolor{keywordtype}{save} :: weight
+267       \textcolor{keywordtype}{logical}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable}, \textcolor{keywordtype}{save} :: el\_inserted
+268       \textcolor{keywordtype}{logical}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable}, \textcolor{keywordtype}{save} :: nd\_inserted
+269       \textcolor{keywordtype}{logical}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable}, \textcolor{keywordtype}{save} :: nd\_bellow
+270       \textcolor{keywordtype}{logical} :: insert
+271       \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable} :: indexes
+272       \textcolor{keywordtype}{real(kind=rkind)} :: tmp
+273       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable} :: tmprow, tmpvct
+274       
+275       \textcolor{keywordflow}{if} (.not. \textcolor{keyword}{allocated}(el\_inserted)) \textcolor{keywordflow}{then}
+276         \textcolor{keyword}{allocate}(el\_inserted(elements%kolik))
+277         \textcolor{keyword}{allocate}(nd\_inserted(nodes%kolik))
+278         \textcolor{keyword}{allocate}(nd\_bellow(nodes%kolik))
+279         \textcolor{keyword}{allocate}(weight(nodes%kolik))
+280 \textcolor{keywordflow}{      end if}
+281       
+282       el\_inserted = .false.
+283       nd\_inserted = .false.
+284       nd\_bellow = .false.
+285       
+286       weight = 0
+287       
+288       i = ubound(pde,1)
+289       \textcolor{keyword}{call }prolong_mtx%init(maxval(pde(i)%permut(:)), 1\_ikind*ubound(subdomain\textcolor{comment}{,1))}
+290 \textcolor{comment}{            }
+291 \textcolor{comment}{      }\textcolor{keywordflow}{do} sub=1, ubound(subdomain,1)
+292         \textcolor{keywordflow}{do} j=1, ubound(subdomain(sub)%coarse\_el,1)
+293           coarse\_el = subdomain(sub)%coarse\_el(j)
+294           ddinfo%coarseinsub(coarse\_el) = sub
+295 \textcolor{keywordflow}{        end do}
+296 \textcolor{keywordflow}{      end do}
+297       
+298      
+299      !searching for boundary clusters at subdomain boundary
+300       sub\_loop: \textcolor{keywordflow}{do} sub = 1, ubound(subdomain,1)
+301         \textcolor{keyword}{allocate}(subdomain(sub)%olayers(0:ddinfo%overlaps))
+302         coarse\_loop: \textcolor{keywordflow}{do} i=1,  ubound(subdomain(sub)%coarse\_el,1)
+303           coarse\_el = subdomain(sub)%coarse\_el(i)
+304           coarse\_vecino: \textcolor{keywordflow}{do} j=1, ubound(coarse_elements%neighbours,2)
+305             vecino = coarse_elements%neighbours(coarse\_el,j)
+306             \textcolor{keywordflow}{if} (vecino > 0) \textcolor{keywordflow}{then}
+307               \textcolor{keywordflow}{if} (ddinfo%coarseinsub(vecino) /= sub) \textcolor{keywordflow}{then} \textcolor{comment}{!nasel jsem krajni cluster}
+308                 \textcolor{keyword}{call }subdomain(sub)%bcluster%fill(coarse\_el)
+309                 \textcolor{keywordflow}{EXIT} coarse\_vecino
+310 \textcolor{keywordflow}{              end if}
+311 \textcolor{keywordflow}{            end if}
+312 \textcolor{keywordflow}{          end do} coarse\_vecino
+313 \textcolor{keywordflow}{        end do} coarse\_loop
+314 \textcolor{keywordflow}{      end do} sub\_loop
+315         
+316                         
+317       sub\_loop2: \textcolor{keywordflow}{do} sub=1, ubound(subdomain,1)
+318         j = subdomain(sub)%elsub%pos
+319         el\_inserted(subdomain(sub)%elsub%data(1:j)) = .true.
+320         level\_loop: \textcolor{keywordflow}{do} level=0, ddinfo%overlaps
+321           \textcolor{keywordflow}{do} i=1, subdomain(sub)%bcluster%pos
+322             coarse\_el = subdomain(sub)%bcluster%data(i)
+323             bound\_loop: \textcolor{keywordflow}{do} k=1, ddcoarse_mesh(coarse\_el)%overlap\_el(level)%pos
+324               el = ddcoarse_mesh(coarse\_el)%overlap\_el(level)%data(k)
+325               elsub = ddinfo%coarseinsub(ddinfo%elincoarse(el)) 
+326               \textcolor{keywordflow}{if} (level > 0) \textcolor{keywordflow}{then}
+327                 \textcolor{keywordflow}{if} (elsub /= sub) \textcolor{keywordflow}{then}
+328                   insert = .true.
+329                 \textcolor{keywordflow}{else}
+330                   insert = .false.
+331 \textcolor{keywordflow}{                end if}
+332               \textcolor{keywordflow}{else}
+333                 insert = .false.
+334                 \textcolor{keywordflow}{do} ii = 1, ubound(elements%neighbours,2)
+335                   vecino = elements%neighbours(el,ii)
+336                   \textcolor{keywordflow}{if} (vecino > 0) \textcolor{keywordflow}{then}
+337                     vecsub = ddinfo%coarseinsub(ddinfo%elincoarse(vecino))
+338                   \textcolor{keywordflow}{else}
+339                     vecsub = 0
+340 \textcolor{keywordflow}{                  end if}
+341                   \textcolor{keywordflow}{if} (vecsub /= sub .and. vecsub /= 0) \textcolor{keywordflow}{then}
+342                     insert = .true.
+343                     \textcolor{keywordflow}{EXIT}
+344 \textcolor{keywordflow}{                  end if}
+345 \textcolor{keywordflow}{                end do}
+346 \textcolor{keywordflow}{              end if}
+347               \textcolor{keywordflow}{if} (level > 0 .and. insert .and. .not. el\_inserted(el)) \textcolor{keywordflow}{then}
+348                 \textcolor{keyword}{call }subdomain(sub)%elsub%fill(el)
+349                 \textcolor{keyword}{call }subdomain(sub)%olayers(level)%fill(el)
+350                 el\_inserted(el) = .true.
+351               \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (level == 0 .and. insert) \textcolor{keywordflow}{then}
+352                 \textcolor{keyword}{call }subdomain(sub)%olayers(level)%fill(el)
+353 \textcolor{keywordflow}{              end if}
+354 \textcolor{keywordflow}{            end do} bound\_loop
+355 \textcolor{keywordflow}{          end do}
+356 \textcolor{keywordflow}{        end do} level\_loop
+357         
+358         \textcolor{comment}{!-------}
+359         \textcolor{comment}{! i f   s u b c y c l i n g }
+360         \textcolor{comment}{!-------}
+361         \textcolor{comment}{!add an extra level including all neighbour nodes, here we start with adding an extra layer with
+       elements, the neighbourhood elements are all elements that share at least a single node (different approach
+       compared to the overlap construction, where the neighborhood elements are elements that share TWO nodes
+       (edge))}
+362         \textcolor{keywordflow}{if} (drutes_config%it\_method == 2) \textcolor{keywordflow}{then}
+363           \textcolor{keywordflow}{do} level=0, ddinfo%overlaps
+364             \textcolor{keywordflow}{do} i=1, subdomain(sub)%olayers(level)%pos
+365               el = subdomain(sub)%olayers(level)%data(i)
+366               \textcolor{keywordflow}{do} j = 1, ubound(elements%data,2)
+367                 nd = elements%data(el,j)
+368                 \textcolor{keywordflow}{do} k=1, nodes%el2integ(nd)%pos
+369                   vecino = nodes%el2integ(nd)%data(k)
+370                   \textcolor{keywordflow}{if} (vecino > 0) \textcolor{keywordflow}{then}
+371                     \textcolor{keywordflow}{if} (.not. el\_inserted(vecino)) \textcolor{keywordflow}{then}
+372                       \textcolor{keyword}{call }subdomain(sub)%elextra%fill(vecino)
+373                       el\_inserted(vecino) = .true.
+374 \textcolor{keywordflow}{                    end if}
+375 \textcolor{keywordflow}{                  end if}
+376 \textcolor{keywordflow}{                end do}
+377 \textcolor{keywordflow}{              end do}
+378 \textcolor{keywordflow}{            end do}
+379 \textcolor{keywordflow}{          end do}
+380           j = subdomain(sub)%elextra%pos
+381           el\_inserted(subdomain(sub)%elextra%data(1:j)) = .false.
+382 \textcolor{keywordflow}{        end if}
+383         
+384         
+385         j = subdomain(sub)%elsub%pos
+386         el\_inserted(subdomain(sub)%elsub%data(1:j)) = .false.
+387 
+388 \textcolor{keywordflow}{      end do} sub\_loop2
+389 
+390         
+391             
+392       \textcolor{keywordflow}{do} sub=1, ubound(subdomain,1)
+393         \textcolor{keyword}{allocate}(subdomain(sub)%ondlayers(0:ddinfo%overlaps))
+394         \textcolor{keywordflow}{do} level=0, ddinfo%overlaps-1
+395           \textcolor{keywordflow}{do} i=1, subdomain(sub)%olayers(level)%pos
+396             el = subdomain(sub)%olayers(level)%data(i)
+397             \textcolor{keywordflow}{do} j=1, ubound(elements%data,2)
+398               nd = elements%data(el, j)
+399               nd\_bellow(nd) = .true.
+400 \textcolor{keywordflow}{            end do}
+401 \textcolor{keywordflow}{          end do}
+402           \textcolor{keywordflow}{do} i=1, subdomain(sub)%olayers(level+1)%pos
+403             el = subdomain(sub)%olayers(level+1)%data(i)
+404             \textcolor{keywordflow}{do} j=1, ubound(elements%data,2)
+405               nd = elements%data(el, j)
+406               \textcolor{keywordflow}{if} (.not. nd\_inserted(nd) .and. nd\_bellow(nd) ) \textcolor{keywordflow}{then}
+407                 \textcolor{keyword}{call }subdomain(sub)%ondlayers(level)%fill(nd)
+408                 nd\_inserted(nd) = .true.
+409 \textcolor{keywordflow}{              end if}
+410 \textcolor{keywordflow}{            end do}
+411 \textcolor{keywordflow}{          end do}
+412 \textcolor{keywordflow}{        end do}
+413         
+414         \textcolor{comment}{! fill the last level}
+415         level = ddinfo%overlaps
+416         \textcolor{keywordflow}{do} i=1, subdomain(sub)%olayers(level)%pos
+417           el = subdomain(sub)%olayers(level)%data(i)
+418           \textcolor{keywordflow}{do} j=1, ubound(elements%data,2)
+419             nd = elements%data(el, j)
+420             \textcolor{keywordflow}{if} (.not. nd\_inserted(nd)) \textcolor{keywordflow}{then}
+421               \textcolor{keyword}{call }subdomain(sub)%ondlayers(level)%fill(nd)
+422               nd\_inserted(nd) = .true.
+423 \textcolor{keywordflow}{            end if}
+424 \textcolor{keywordflow}{          end do}
+425 \textcolor{keywordflow}{        end do}
+426 
+427         
+428        \textcolor{comment}{! if subcycling, add nodes, that lie out of the domain, but still have a graph connection to the
+       nodes, that lie inside the domain}
+429         \textcolor{keywordflow}{if} (drutes_config%it\_method == 2) \textcolor{keywordflow}{then}
+430           \textcolor{keywordflow}{do} i = 1, subdomain(sub)%elextra%pos
+431             el = subdomain(sub)%elextra%data(i)
+432             \textcolor{keywordflow}{do} j=1, ubound(elements%data,2)
+433               nd = elements%data(el, j)
+434               \textcolor{keyword}{call }ddinfo%nodesinextsub(nd)%nrfill(sub)
+435               \textcolor{keywordflow}{if} (.not. nd\_inserted(nd)) \textcolor{keywordflow}{then}
+436                 \textcolor{keyword}{call }subdomain(sub)%ndextra%fill(nd)
+437                 nd\_inserted(nd) = .true.
+438 \textcolor{keywordflow}{              end if}
+439 \textcolor{keywordflow}{            end do}
+440 \textcolor{keywordflow}{          end do}
+441          
+442           j = subdomain(sub)%elextra%pos
+443           el\_inserted(subdomain(sub)%elextra%data(1:j)) = .true.
+444          
+445           j = subdomain(sub)%ndextra%pos
+446           \textcolor{keywordflow}{do} i = 1, j
+447             nd = subdomain(sub)%ndextra%data(i)
+448             \textcolor{keywordflow}{do} k = 1, nodes%el2integ(nd)%pos
+449               el = nodes%el2integ(nd)%data(k)
+450               \textcolor{keywordflow}{if} (.not. el\_inserted(el)) \textcolor{keywordflow}{then}
+451                 \textcolor{keywordflow}{do} l=1, ubound(elements%data,2)
+452                   nd2 = elements%data(el,l)
+453                   \textcolor{keywordflow}{if} (.not. nd\_inserted(nd2)) \textcolor{keywordflow}{then}
+454                     \textcolor{keyword}{call }subdomain(sub)%ndextra%fill(nd2)
+455                     nd\_inserted(nd2) = .true.
+456 \textcolor{keywordflow}{                  end if}
+457 \textcolor{keywordflow}{                end do}
+458 \textcolor{keywordflow}{              end if}
+459 \textcolor{keywordflow}{            end do}
+460 \textcolor{keywordflow}{          end do}
+461           
+462           j = subdomain(sub)%ndextra%pos
+463           nd\_inserted(subdomain(sub)%ndextra%data(1:j)) = .false.
+464           
+465           j = subdomain(sub)%elextra%pos
+466           el\_inserted(subdomain(sub)%elextra%data(1:j)) = .false.
+467 \textcolor{keywordflow}{        end if}
+468           
+469 
+470 
+471         \textcolor{comment}{! set everywhere in nd\_inserted .false.}
+472         \textcolor{keywordflow}{do} level = 0, ddinfo%overlaps
+473           j = subdomain(sub)%ondlayers(level)%pos
+474           \textcolor{keywordflow}{if} (\textcolor{keyword}{allocated}(subdomain(sub)%ondlayers(level)%data)) \textcolor{keywordflow}{then}
+475             nd\_inserted(subdomain(sub)%ondlayers(level)%data(1:j)) = .false.
+476             nd\_bellow(subdomain(sub)%ondlayers(level)%data(1:j)) = .false.
+477 \textcolor{keywordflow}{          end if}
+478 \textcolor{keywordflow}{        end do}
+479         
+480 
+481         \textcolor{comment}{!create the prolongator matrix, set everywhere just ones }
+482         \textcolor{keywordflow}{do} i=1, subdomain(sub)%elsub%pos
+483           el = subdomain(sub)%elsub%data(i)
+484           \textcolor{keywordflow}{do} j=1, ubound(elements%data,2)
+485             nd = elements%data(el, j)
+486             pnd = pde(1)%permut(nd)
+487             \textcolor{keywordflow}{if} (pnd > 0 .and. .not. nd\_inserted(nd)) \textcolor{keywordflow}{then}
+488               \textcolor{keyword}{call }prolong_mtx%set(1.0\_rkind, pnd, sub)
+489               nd\_inserted(nd) = .true.
+490 \textcolor{keywordflow}{            end if}
+491 \textcolor{keywordflow}{          end do}
+492 \textcolor{keywordflow}{        end do}
+493 \textcolor{comment}{!       if (.not. subdomain(sub)%critical) then}
+494 \textcolor{comment}{!         nd\_inserted = .false.}
+495 \textcolor{comment}{!       else}
+496           \textcolor{keywordflow}{do} i=1, subdomain(sub)%elsub%pos
+497             el = subdomain(sub)%elsub%data(i)
+498             nd\_inserted(elements%data(el,:)) = .false.
+499 \textcolor{keywordflow}{          end do}
+500 \textcolor{comment}{!         end if}
+501 \textcolor{keywordflow}{      end do}
+502       
+503 
+504       
+505       \textcolor{comment}{!adjust the prolongator matrix}
+506       
+507       \textcolor{keywordflow}{do} sub=1, ubound(subdomain,1)
+508         \textcolor{keywordflow}{do} level = 1, ddinfo%overlaps
+509           \textcolor{keywordflow}{do} j=1, subdomain(sub)%ondlayers(level)%pos
+510             nd = subdomain(sub)%ondlayers(level)%data(j)
+511             pnd = pde(1)%permut(nd)
+512             \textcolor{keywordflow}{if} (pnd > 0) \textcolor{keywordflow}{then}
+513               \textcolor{keyword}{call }prolong_mtx%set((ddinfo%overlaps-level)*1.0\_rkind/ddinfo%overlaps\textcolor{comment}{, pnd, sub)}
+514 \textcolor{comment}{}\textcolor{keywordflow}{            end if}
+515 \textcolor{keywordflow}{          end do}
+516 \textcolor{keywordflow}{        end do}
+517 \textcolor{keywordflow}{      end do}
+518       
+519       \textcolor{keywordflow}{do} i=1, prolong_mtx%getn()
+520         \textcolor{keyword}{call }prolong_mtx%getrow(i=i, v=tmprow, jj=indexes, nelem=ii)
+521         \textcolor{keywordflow}{if} (ii > 1) \textcolor{keywordflow}{then}
+522           tmp = 0.0\_rkind
+523           \textcolor{keywordflow}{do} j=1,ii
+524             tmp = tmp + tmprow(j)
+525 \textcolor{keywordflow}{          end do}
+526           tmprow = tmprow / tmp
+527           \textcolor{keywordflow}{do} j=1, ii
+528             \textcolor{keyword}{call }prolong_mtx%set(tmprow(j), i, indexes(j))
+529 \textcolor{keywordflow}{          end do}
+530 \textcolor{keywordflow}{        end if}
+531 \textcolor{keywordflow}{      end do}
+532       
+533 
+534       
+535 
+536 
+537           
+538     
+\end{DoxyCode}
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacedecomp__tools_a3f8c4deab864942b308de6e8ddc31849_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{decomp\+\_\+tools@{decomp\+\_\+tools}!build\+\_\+coarsemtx@{build\+\_\+coarsemtx}}
+\index{build\+\_\+coarsemtx@{build\+\_\+coarsemtx}!decomp\+\_\+tools@{decomp\+\_\+tools}}
+\subsubsection[{build\+\_\+coarsemtx(resvct)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, public decomp\+\_\+tools\+::build\+\_\+coarsemtx (
+\begin{DoxyParamCaption}
+\item[{real(kind=rkind), dimension(\+:), allocatable}]{resvct}
+\end{DoxyParamCaption}
+)}\label{namespacedecomp__tools_ac3dffa95121aa59d12a617f71d43f193}
+
+
+Definition at line 542 of file decomp\+\_\+tools.\+f90.
+
+
+
+References decomp\+\_\+vars\+::bcoarse, decomp\+\_\+vars\+::coarse\+\_\+mtx, mulax\+\_\+dd(), pde\+\_\+objs\+::pde, decomp\+\_\+vars\+::prolong\+\_\+mtx, decomp\+\_\+vars\+::subdomain, and decomp\+\_\+vars\+::xcoarse.
+
+
+
+Referenced by schwarz\+\_\+dd\+::schwarz\+\_\+picard().
+
+
+\begin{DoxyCode}
+542       \textcolor{keywordtype}{use }typy
+543       \textcolor{keywordtype}{use }globals
+544       \textcolor{keywordtype}{use }global_objs
+545       \textcolor{keywordtype}{use }pde_objs
+546       \textcolor{keywordtype}{use }decomp_vars
+547       \textcolor{keywordtype}{use }debug_tools
+548       
+549       
+550       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable} :: resvct
+551       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:,:)}, \textcolor{keywordtype}{allocatable} ::  axcol
+552       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable} :: column
+553       \textcolor{keywordtype}{integer(kind=ikind)} :: fin, i, sub, j
+554       \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable} :: indexes
+555       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable} :: tmpdata
+556       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable} :: coarsecol
+557       \textcolor{keywordtype}{real(kind=rkind)} :: tmp
+558       
+559       fin = maxval(pde(1)%permut(:))
+560       
+561       \textcolor{keyword}{allocate}(axcol(fin, ubound(subdomain,1)))
+562       \textcolor{keyword}{allocate}(column(fin))
+563                   
+564       \textcolor{keywordflow}{do} sub=1, ubound(subdomain,1)
+565         \textcolor{keyword}{call }prolong_mtx%getcol(sub, tmpdata, indexes, i)
+566         column = 0
+567         column(indexes(1:i)) = tmpdata(1:i)
+568         \textcolor{keyword}{call }mulax\_dd(column, axcol(:,sub))
+569 \textcolor{keywordflow}{      end do}
+570       
+571       i = ubound(subdomain,1)
+572       \textcolor{keyword}{call }coarse_mtx%init(i,i)
+573       
+574       \textcolor{keyword}{allocate}(coarsecol(ubound(subdomain,1)))
+575       
+576       \textcolor{keywordflow}{do} sub=1, ubound(subdomain,1)
+577         coarsecol = prolong_mtx%mulT(axcol(:,sub))
+578         \textcolor{keywordflow}{do} i=1, ubound(coarsecol,1)
+579           \textcolor{keywordflow}{if} (abs(coarsecol(i)) > epsilon(coarsecol(i))) \textcolor{keywordflow}{then}
+580             \textcolor{keyword}{call }coarse_mtx%set(coarsecol(i), i, sub)
+581 \textcolor{keywordflow}{          end if}
+582 \textcolor{keywordflow}{        end do}
+583 \textcolor{keywordflow}{      end do}
+584       
+585       \textcolor{keywordflow}{if} (.not. \textcolor{keyword}{allocated}(bcoarse)) \textcolor{keywordflow}{then}
+586         \textcolor{keyword}{allocate}(bcoarse(ubound(subdomain,1)))
+587         \textcolor{keyword}{allocate}(xcoarse(ubound(subdomain,1)))
+588       \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (ubound(bcoarse,1) /= ubound(subdomain,1)) \textcolor{keywordflow}{then}
+589         \textcolor{keyword}{deallocate}(bcoarse)
+590         \textcolor{keyword}{allocate}(bcoarse(ubound(subdomain,1)))
+591         \textcolor{keyword}{deallocate}(xcoarse)
+592         \textcolor{keyword}{allocate}(xcoarse(ubound(subdomain,1)))
+593 \textcolor{keywordflow}{      end if}
+594       
+595       bcoarse = prolong_mtx%mult(resvct)
+596 
+597     
+598       
+599     
+\end{DoxyCode}
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=309pt]{namespacedecomp__tools_ac3dffa95121aa59d12a617f71d43f193_cgraph}
+\end{center}
+\end{figure}
+
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacedecomp__tools_ac3dffa95121aa59d12a617f71d43f193_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{decomp\+\_\+tools@{decomp\+\_\+tools}!collect\+\_\+matrices@{collect\+\_\+matrices}}
+\index{collect\+\_\+matrices@{collect\+\_\+matrices}!decomp\+\_\+tools@{decomp\+\_\+tools}}
+\subsubsection[{collect\+\_\+matrices(a)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, public decomp\+\_\+tools\+::collect\+\_\+matrices (
+\begin{DoxyParamCaption}
+\item[{class({\bf extsmtx}), intent(out)}]{a}
+\end{DoxyParamCaption}
+)}\label{namespacedecomp__tools_a457d3b4a5024e094b0f32669c38b26cb}
+
+
+Definition at line 218 of file decomp\+\_\+tools.\+f90.
+
+
+
+References pde\+\_\+objs\+::pde, pde\+\_\+objs\+::pde\+\_\+common, and decomp\+\_\+vars\+::subdomain.
+
+
+\begin{DoxyCode}
+218       \textcolor{keywordtype}{use }typy
+219       \textcolor{keywordtype}{use }globals
+220       \textcolor{keywordtype}{use }global_objs
+221       \textcolor{keywordtype}{use }pde_objs
+222       \textcolor{keywordtype}{use }mtx
+223       \textcolor{keywordtype}{use }decomp_vars
+224       
+225       \textcolor{keywordtype}{class}(extsmtx), \textcolor{keywordtype}{intent(out)} :: a
+226       \textcolor{keywordtype}{integer(kind=ikind)} :: i, ii, jj, col
+227       \textcolor{keywordtype}{real(kind=rkind)} :: val
+228       
+229       i = ubound(pde,1)
+230       
+231       \textcolor{keyword}{call }a%init(maxval(pde(i)%permut(:)),maxval(pde(i)%permut(:)))
+232       
+233       \textcolor{keywordflow}{do} i=1, ubound(subdomain,1)
+234         \textcolor{keywordflow}{do} ii=1, subdomain(i)%matrix%getn()
+235           \textcolor{keywordflow}{do} jj = 1, subdomain(i)%matrix%getm()
+236             val = subdomain(i)%matrix%get(ii,jj)
+237             \textcolor{keywordflow}{if} (abs(val) > epsilon(val) ) \textcolor{keywordflow}{then}
+238               col = subdomain(i)%permut(jj)
+239               \textcolor{keyword}{call }a%set(val, ii, col)
+240 \textcolor{keywordflow}{            end if}
+241 \textcolor{keywordflow}{          end do}
+242 \textcolor{keywordflow}{        end do}
+243 \textcolor{keywordflow}{      end do}
+244       
+245       \textcolor{keywordflow}{if} (.not. \textcolor{keyword}{allocated}(pde_common%bvect)) \textcolor{keyword}{allocate}(pde_common%bvect(maxval\textcolor{comment}{(
+      pde(1)%permut(:))))}
+246 \textcolor{comment}{      }
+247 \textcolor{comment}{      }\textcolor{keywordflow}{do} i=1, ubound(subdomain,1)
+248         pde_common%bvect(subdomain(i)%permut(1:subdomain(i)%ndof)) = subdomain(i\textcolor{comment}{)%bvect(1:
+      subdomain(i)%ndof)}
+249 \textcolor{comment}{}\textcolor{keywordflow}{      end do}
+250       
+251     
+252         
+\end{DoxyCode}
+\index{decomp\+\_\+tools@{decomp\+\_\+tools}!get\+\_\+residual@{get\+\_\+residual}}
+\index{get\+\_\+residual@{get\+\_\+residual}!decomp\+\_\+tools@{decomp\+\_\+tools}}
+\subsubsection[{get\+\_\+residual(resvct)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, public decomp\+\_\+tools\+::get\+\_\+residual (
+\begin{DoxyParamCaption}
+\item[{real(kind=rkind), dimension(\+:), intent(out)}]{resvct}
+\end{DoxyParamCaption}
+)}\label{namespacedecomp__tools_ac18f0d14ca31ab08c7a84b1667c12cfa}
+
+
+Definition at line 129 of file decomp\+\_\+tools.\+f90.
+
+
+
+References mulax\+\_\+dd(), pde\+\_\+objs\+::pde\+\_\+common, and decomp\+\_\+vars\+::subdomain.
+
+
+
+Referenced by schwarz\+\_\+dd\+::schwarz\+\_\+picard(), and schwarz\+\_\+dd\+\_\+time\+\_\+test\+::schwarzloc().
+
+
+\begin{DoxyCode}
+129       \textcolor{keywordtype}{use }typy
+130       \textcolor{keywordtype}{use }global_objs
+131       \textcolor{keywordtype}{use }pde_objs
+132       \textcolor{keywordtype}{use }globals
+133       \textcolor{keywordtype}{use }decomp_vars
+134       \textcolor{keywordtype}{use }debug_tools
+135 
+136       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{intent(out)} :: resvct
+137       
+138       \textcolor{keywordtype}{integer(kind=ikind)} :: i, j, fin, posglob, posloc, subfin
+139       \textcolor{keywordtype}{integer} :: ierr
+140       \textcolor{keywordtype}{logical} :: skip\_solved=.false.
+141      
+142       \textcolor{keyword}{call }mulax\_dd(pde_common%xvect(:,2), resvct)    
+143       
+144 
+145       \textcolor{comment}{!loop for b-(A.x) , where the vector (A.x) was calculated in the code above  }
+146       \textcolor{keywordflow}{do} i=1, ubound(subdomain,1)
+147         \textcolor{keywordflow}{if} ( (.not. skip\_solved) .or.  (.not. subdomain(i)%solved) ) \textcolor{keywordflow}{then}
+148           fin = subdomain(i)%disjoint%pos
+149           \textcolor{keywordflow}{do} j=1, fin
+150             posglob = subdomain(i)%disjoint%data(j)
+151             posloc = subdomain(i)%invpermut(posglob)
+152             resvct(posglob) = subdomain(i)%bvect(posloc) - resvct(posglob) 
+153 \textcolor{keywordflow}{          end do}
+154 \textcolor{keywordflow}{        end if}
+155 \textcolor{keywordflow}{      end do}
+156       
+157 
+158 
+159 
+\end{DoxyCode}
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=341pt]{namespacedecomp__tools_ac18f0d14ca31ab08c7a84b1667c12cfa_cgraph}
+\end{center}
+\end{figure}
+
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacedecomp__tools_ac18f0d14ca31ab08c7a84b1667c12cfa_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{decomp\+\_\+tools@{decomp\+\_\+tools}!get\+\_\+residual\+\_\+old@{get\+\_\+residual\+\_\+old}}
+\index{get\+\_\+residual\+\_\+old@{get\+\_\+residual\+\_\+old}!decomp\+\_\+tools@{decomp\+\_\+tools}}
+\subsubsection[{get\+\_\+residual\+\_\+old(resvct)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, public decomp\+\_\+tools\+::get\+\_\+residual\+\_\+old (
+\begin{DoxyParamCaption}
+\item[{real(kind=rkind), dimension(\+:), intent(out)}]{resvct}
+\end{DoxyParamCaption}
+)}\label{namespacedecomp__tools_ad0648d056fc7e281cf122308a9e8dc28}
+
+
+Definition at line 164 of file decomp\+\_\+tools.\+f90.
+
+
+
+References pde\+\_\+objs\+::pde\+\_\+common, and decomp\+\_\+vars\+::subdomain.
+
+
+\begin{DoxyCode}
+164       \textcolor{keywordtype}{use }typy
+165       \textcolor{keywordtype}{use }global_objs
+166       \textcolor{keywordtype}{use }pde_objs
+167       \textcolor{keywordtype}{use }globals
+168       \textcolor{keywordtype}{use }decomp_vars
+169       \textcolor{keywordtype}{use }debug_tools
+170 
+171       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{intent(out)} :: resvct
+172       
+173       \textcolor{keywordtype}{integer(kind=ikind)} :: i, j, fin, posglob, posloc, subfin
+174       \textcolor{keywordtype}{integer} :: ierr
+175       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable} :: vectorin
+176       \textcolor{keywordtype}{type}(extsmtx) :: mat
+177       \textcolor{keywordtype}{logical} :: skip\_solved=.false.
+178 
+179       
+180 
+181       resvct = 0.0\_rkind
+182       \textcolor{keywordflow}{do} i=1, ubound(subdomain,1)
+183         \textcolor{comment}{!loop for A.x}
+184         \textcolor{keywordflow}{if} ( (.not. skip\_solved) .or.  (.not. subdomain(i)%solved) ) \textcolor{keywordflow}{then}
+185           \textcolor{keyword}{allocate}(vectorin(subdomain(i)%ndof))
+186           vectorin = 0
+187           fin = subdomain(i)%disjoint%pos
+188           \textcolor{keywordflow}{do} j=1, fin
+189             posglob = subdomain(i)%disjoint%data(j)
+190             posloc = subdomain(i)%invpermut(posglob)
+191             vectorin(posloc) = pde_common%xvect(posglob,2)
+192 \textcolor{keywordflow}{          end do}
+193           resvct = resvct +  subdomain(i)%matrix%mul(vectorin)
+194           \textcolor{keyword}{deallocate}(vectorin)
+195 \textcolor{keywordflow}{        end if}
+196 \textcolor{keywordflow}{      end do}
+197       
+198      
+199       
+200 
+201       \textcolor{comment}{!loop for b-(A.x) , where the vector (A.x) was calculated in the code above  }
+202       \textcolor{keywordflow}{do} i=1, ubound(subdomain,1)
+203         \textcolor{keywordflow}{if} ( (.not. skip\_solved) .or.  (.not. subdomain(i)%solved) ) \textcolor{keywordflow}{then}
+204           fin = subdomain(i)%disjoint%pos
+205           \textcolor{keywordflow}{do} j=1, fin
+206             posglob = subdomain(i)%disjoint%data(j)
+207             posloc = subdomain(i)%invpermut(posglob)
+208             resvct(posglob) = subdomain(i)%bvect(posloc) - resvct(posglob) 
+209 \textcolor{keywordflow}{          end do}
+210 \textcolor{keywordflow}{        end if}
+211 \textcolor{keywordflow}{      end do}
+212 
+213 \textcolor{comment}{!}
+\end{DoxyCode}
+\index{decomp\+\_\+tools@{decomp\+\_\+tools}!getres\+\_\+loc@{getres\+\_\+loc}}
+\index{getres\+\_\+loc@{getres\+\_\+loc}!decomp\+\_\+tools@{decomp\+\_\+tools}}
+\subsubsection[{getres\+\_\+loc(subdom, debugme)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, public decomp\+\_\+tools\+::getres\+\_\+loc (
+\begin{DoxyParamCaption}
+\item[{type({\bf subdomain\+\_\+str}), intent(inout)}]{subdom, }
+\item[{logical, intent(in), optional}]{debugme}
+\end{DoxyParamCaption}
+)}\label{namespacedecomp__tools_a93ac6a9a59bab2d830d3cd1b8732c356}
+
+
+Definition at line 17 of file decomp\+\_\+tools.\+f90.
+
+
+
+Referenced by schwarz\+\_\+dd2subcyc\+::solve\+\_\+subdomain().
+
+
+\begin{DoxyCode}
+17       \textcolor{keywordtype}{use }typy 
+18       \textcolor{keywordtype}{use }globals
+19       \textcolor{keywordtype}{use }global_objs
+20       \textcolor{keywordtype}{use }pde_objs
+21       \textcolor{keywordtype}{use }decomp_vars
+22       \textcolor{keywordtype}{use }debug_tools
+23       
+24       \textcolor{keywordtype}{type}(subdomain_str), \textcolor{keywordtype}{intent(in out)} :: subdom
+25       \textcolor{keywordtype}{logical}, \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional} :: debugme
+26       \textcolor{keywordtype}{integer(kind=ikind)} :: i, nd, domain\_id, ndloc, ndpt
+27             
+28       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable} :: arow
+29       \textcolor{keywordtype}{logical}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable}, \textcolor{keywordtype}{save} :: coltrue
+30       \textcolor{keywordtype}{logical}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable}, \textcolor{keywordtype}{save} :: extcoltrue
+31       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable}, \textcolor{keywordtype}{save} :: colvals, extcolvals
+32       \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable}, \textcolor{keywordtype}{save} :: jjvals, extjjvals
+33       \textcolor{keywordtype}{integer(kind=ikind)} :: numbers, row, rowperm, extrowperm, j
+34       
+35       
+36       
+37       subdom%resvct%main=subdom%bvect
+38       subdom%resvct%ext=subdom%extbvect
+39       
+40 
+41       \textcolor{comment}{! build resvct main}
+42       \textcolor{keywordflow}{do} i=1, subdom%matrix%rowsfilled%pos
+43         row = subdom%matrix%rowsfilled%data(i)
+44         
+45 
+46         
+47         \textcolor{keywordflow}{if} (subdom%invpermut(row) /= 0) \textcolor{keywordflow}{then}
+48           rowperm=subdom%invpermut(row)
+49           
+50           \textcolor{keyword}{call }subdom%matrix%getrow(i=row, v=colvals, jj=jjvals, nelem=numbers\textcolor{comment}{)}
+51 \textcolor{comment}{      }
+52 \textcolor{comment}{          }
+53 \textcolor{comment}{          subdom%resvct%main(rowperm) = subdom%resvct%main(rowperm) - dot\_product(colvals(1:numbers), &}
+54 \textcolor{comment}{            subdom%xvect(jjvals(1:numbers), 2))}
+55 \textcolor{comment}{            }
+56 \textcolor{comment}{            }
+57 \textcolor{comment}{          }\textcolor{keyword}{call }subdom%extmatrix%getrow(i=row, v=colvals, jj=jjvals, nelem\textcolor{comment}{=numbers)}
+58 \textcolor{comment}{          }
+59 \textcolor{comment}{          }\textcolor{keywordflow}{if} (numbers > 0) \textcolor{keywordflow}{then}
+60             subdom%resvct%main(rowperm) = subdom%resvct%main(rowperm) - dot\_product\textcolor{comment}{(colvals(1:numbers), &}
+61 \textcolor{comment}{            subdom%extxvect(jjvals(1:numbers), 2))}
+62 \textcolor{comment}{}\textcolor{keywordflow}{          end if}
+63           
+64 
+65 \textcolor{keywordflow}{        end if}   
+66         
+67 \textcolor{keywordflow}{      end do}
+68       
+69       \textcolor{comment}{! build resvct ext  }
+70       \textcolor{keywordflow}{do} i=1, subdom%extmatrix%rowsfilled%pos
+71         row = subdom%extmatrix%rowsfilled%data(i)
+72         
+73         \textcolor{keywordflow}{if} (subdom%extinvpermut(row) /= 0) \textcolor{keywordflow}{then}
+74           rowperm=subdom%extinvpermut(row)
+75           
+76           \textcolor{keyword}{call }subdom%extmatrix%getrow(i=row, v=colvals, jj=jjvals, nelem\textcolor{comment}{=numbers)      }
+77 \textcolor{comment}{                    }
+78 \textcolor{comment}{          subdom%resvct%ext(rowperm) = subdom%resvct%ext(rowperm) - dot\_product(colvals(1:numbers), &}
+79 \textcolor{comment}{            subdom%extxvect(jjvals(1:numbers), 2))}
+80 \textcolor{comment}{            }
+81 \textcolor{comment}{          }\textcolor{keyword}{call }subdom%matrix%getrow(i=row, v=colvals, jj=jjvals, nelem=numbers\textcolor{comment}{) }
+82 \textcolor{comment}{          }
+83 \textcolor{comment}{          }
+84 \textcolor{comment}{          }\textcolor{keywordflow}{if} (numbers > 0) \textcolor{keywordflow}{then}
+85             subdom%resvct%ext(rowperm) = subdom%resvct%ext(rowperm) - dot\_product\textcolor{comment}{(colvals(1:numbers), &}
+86 \textcolor{comment}{            subdom%xvect(jjvals(1:numbers), 2))}
+87 \textcolor{comment}{}\textcolor{keywordflow}{          end if}         
+88 \textcolor{keywordflow}{        end if} 
+89         
+90 \textcolor{keywordflow}{      end do}    
+91       
+92      
+93             
+\end{DoxyCode}
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacedecomp__tools_a93ac6a9a59bab2d830d3cd1b8732c356_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{decomp\+\_\+tools@{decomp\+\_\+tools}!init\+\_\+addlevel@{init\+\_\+addlevel}}
+\index{init\+\_\+addlevel@{init\+\_\+addlevel}!decomp\+\_\+tools@{decomp\+\_\+tools}}
+\subsubsection[{init\+\_\+addlevel()}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, public decomp\+\_\+tools\+::init\+\_\+addlevel (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}\label{namespacedecomp__tools_a41644413ba4175d7d78e741e2f367bc2}
+
+
+Definition at line 604 of file decomp\+\_\+tools.\+f90.
+
+
+
+References add\+\_\+el(), decomp\+\_\+vars\+::coarse\+\_\+elements, decomp\+\_\+vars\+::ddcoarse\+\_\+mesh, decomp\+\_\+vars\+::ddinfo, and globals\+::elements.
+
+
+
+Referenced by decomposer\+::init\+\_\+decomp().
+
+
+\begin{DoxyCode}
+604       \textcolor{keywordtype}{use }typy
+605       \textcolor{keywordtype}{use }decomp_vars
+606       \textcolor{keywordtype}{use }global_objs
+607       \textcolor{keywordtype}{use }globals
+608       \textcolor{keywordtype}{use }debug_tools
+609       
+610       \textcolor{keywordtype}{integer(kind=ikind)} :: i, coarse\_el, j, el, vecino, level
+611       \textcolor{keywordtype}{logical} :: border
+612       \textcolor{keywordtype}{type}(smartarray_int) :: tmp\_arrays
+613       
+614       \textcolor{keyword}{allocate}(ddinfo%elincoarse(elements%kolik))      
+615         
+616       \textcolor{keywordflow}{do} coarse\_el=1, ubound(ddcoarse_mesh,1)
+617         \textcolor{keywordflow}{do} i=1, ubound(ddcoarse_mesh(coarse\_el)%elements,1)
+618           el = ddcoarse_mesh(coarse\_el)%elements(i)
+619           ddinfo%elincoarse(el) = coarse\_el
+620 \textcolor{keywordflow}{        end do}
+621         \textcolor{keyword}{allocate}(ddcoarse_mesh(coarse\_el)%overlap\_el(0:ddinfo%overlaps))
+622 \textcolor{keywordflow}{      end do}
+623         
+624 
+625       \textcolor{keywordflow}{do} coarse\_el=1, ubound(ddcoarse_mesh,1)
+626         \textcolor{keywordflow}{do} i=1, ubound(ddcoarse_mesh(coarse\_el)%elements,1)
+627           el = ddcoarse_mesh(coarse\_el)%elements(i)
+628           border = .false.
+629           vecino\_loop: \textcolor{keywordflow}{do} j=1, ubound(elements%data,2)
+630                         vecino = elements%neighbours(el, j)
+631                         \textcolor{keywordflow}{if} (vecino > 0) \textcolor{keywordflow}{then}
+632                           \textcolor{keywordflow}{if} (ddinfo%elincoarse(el) /= ddinfo%elincoarse(vecino)) \textcolor{keywordflow}{then}
+633                             border = .true.
+634                             \textcolor{keywordflow}{EXIT} vecino\_loop
+635 \textcolor{keywordflow}{                          end if}
+636 \textcolor{keywordflow}{                        end if}
+637 \textcolor{keywordflow}{          end do} vecino\_loop
+638           \textcolor{keywordflow}{if} (border) \textcolor{keywordflow}{then}
+639             \textcolor{keyword}{call }ddcoarse_mesh(coarse\_el)%overlap\_el(0)%fill(el)
+640 \textcolor{keywordflow}{          end if}
+641 \textcolor{keywordflow}{        end do}
+642 \textcolor{keywordflow}{      end do}
+643       
+644       
+645       \textcolor{keywordflow}{do} level = 1, ddinfo%overlaps
+646         \textcolor{keywordflow}{do} coarse\_el=1, coarse_elements%kolik
+647           border\_loop: \textcolor{keywordflow}{do} i=1, ddcoarse_mesh(coarse\_el)%overlap\_el(level-1)%pos
+648                           el = ddcoarse_mesh(coarse\_el)%overlap\_el(level-1)%data(i)
+649                           \textcolor{keywordflow}{do} j=1, ubound(elements%data,2)       
+650                             vecino = elements%neighbours(el, j)
+651                             \textcolor{keywordflow}{if} (vecino > 0) \textcolor{keywordflow}{then}
+652                               \textcolor{keywordflow}{if} (coarse\_el /= ddinfo%elincoarse(vecino)) \textcolor{keywordflow}{then}
+653                                 \textcolor{keywordflow}{if} (add\_el(coarse\_el, level, vecino)) \textcolor{keywordflow}{then}
+654                                   \textcolor{keyword}{call }ddcoarse_mesh(coarse\_el)%overlap\_el(level)%nrfill(vecino)
+655 \textcolor{keywordflow}{                                end if}
+656 \textcolor{keywordflow}{                              end if}
+657 \textcolor{keywordflow}{                            end if}
+658 \textcolor{keywordflow}{                          end do} 
+659 \textcolor{keywordflow}{          end do} border\_loop
+660 \textcolor{keywordflow}{        end do}
+661 \textcolor{keywordflow}{      end do}
+662       
+663  
+664  
+665       \textcolor{keyword}{allocate}(ddinfo%coarseinsub(coarse_elements%kolik))
+666 
+\end{DoxyCode}
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=288pt]{namespacedecomp__tools_a41644413ba4175d7d78e741e2f367bc2_cgraph}
+\end{center}
+\end{figure}
+
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacedecomp__tools_a41644413ba4175d7d78e741e2f367bc2_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{decomp\+\_\+tools@{decomp\+\_\+tools}!mulax\+\_\+dd@{mulax\+\_\+dd}}
+\index{mulax\+\_\+dd@{mulax\+\_\+dd}!decomp\+\_\+tools@{decomp\+\_\+tools}}
+\subsubsection[{mulax\+\_\+dd(x, vct)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, public decomp\+\_\+tools\+::mulax\+\_\+dd (
+\begin{DoxyParamCaption}
+\item[{real(kind=rkind), dimension(\+:), intent(in)}]{x, }
+\item[{real(kind=rkind), dimension(\+:), intent(out)}]{vct}
+\end{DoxyParamCaption}
+)}\label{namespacedecomp__tools_a7d2344442769179cf7904faece138daf}
+
+
+Definition at line 97 of file decomp\+\_\+tools.\+f90.
+
+
+
+References decomp\+\_\+vars\+::subdomain.
+
+
+
+Referenced by build\+\_\+coarsemtx(), and get\+\_\+residual().
+
+
+\begin{DoxyCode}
+97       \textcolor{keywordtype}{use }typy 
+98       \textcolor{keywordtype}{use }globals
+99       \textcolor{keywordtype}{use }global_objs
+100       \textcolor{keywordtype}{use }decomp_vars
+101       
+102       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{intent(in)} :: x
+103       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{intent(out)} :: vct
+104       \textcolor{keywordtype}{integer(kind=ikind)} :: i, j, fin, posglob, posloc, subfin
+105       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable} :: vectorin
+106 
+107       \textcolor{keywordtype}{logical} :: skip\_solved=.false.
+108       
+109       vct = 0.0\_rkind
+110       \textcolor{keywordflow}{do} i=1, ubound(subdomain,1)
+111         \textcolor{comment}{!loop for A.x}
+112         \textcolor{keywordflow}{if} ( (.not. skip\_solved) .or.  (.not. subdomain(i)%solved) ) \textcolor{keywordflow}{then}
+113           \textcolor{keyword}{allocate}(vectorin(subdomain(i)%ndof))
+114           vectorin = 0
+115           fin = subdomain(i)%disjoint%pos
+116           \textcolor{keywordflow}{do} j=1, fin
+117             posglob = subdomain(i)%disjoint%data(j)
+118             posloc = subdomain(i)%invpermut(posglob)
+119             vectorin(posloc) = x(posglob)
+120 \textcolor{keywordflow}{          end do}
+121           vct = vct +  subdomain(i)%matrix%mul(vectorin)
+122           \textcolor{keyword}{deallocate}(vectorin)
+123 \textcolor{keywordflow}{        end if}
+124 \textcolor{keywordflow}{      end do}
+125 
+\end{DoxyCode}
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{namespacedecomp__tools_a7d2344442769179cf7904faece138daf_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{decomp\+\_\+tools@{decomp\+\_\+tools}!print\+\_\+domains@{print\+\_\+domains}}
+\index{print\+\_\+domains@{print\+\_\+domains}!decomp\+\_\+tools@{decomp\+\_\+tools}}
+\subsubsection[{print\+\_\+domains(behavior)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, public decomp\+\_\+tools\+::print\+\_\+domains (
+\begin{DoxyParamCaption}
+\item[{character(len=$\ast$), intent(in), optional}]{behavior}
+\end{DoxyParamCaption}
+)}\label{namespacedecomp__tools_aef49ee81f8302b95a60c0ed57b240866}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em behavior} & behavior specifies the behavior of this printing tool, it is a character behavior == \char`\"{}all\+\_\+in\+\_\+one\char`\"{} everythink is written into a single scilab exec file, scilab generates png files from all print levels behavior == \char`\"{}separately\char`\"{}, each plot is written into different scilab exec file \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 701 of file decomp\+\_\+tools.\+f90.
+
+
+
+References decomp\+\_\+vars\+::coarse\+\_\+elements, decomp\+\_\+vars\+::coarse\+\_\+nodes, decomp\+\_\+vars\+::ddcoarse\+\_\+mesh, decomp\+\_\+vars\+::ddinfo, globals\+::drutes\+\_\+config, globals\+::elements, core\+\_\+tools\+::find\+\_\+unit(), globals\+::nodes, pde\+\_\+objs\+::pde, pde\+\_\+objs\+::pde\+\_\+common, and decomp\+\_\+vars\+::subdomain.
+
+
+
+Referenced by fem\+::solve\+\_\+pde().
+
+
+\begin{DoxyCode}
+701       \textcolor{keywordtype}{use }typy 
+702       \textcolor{keywordtype}{use }decomp_vars
+703       \textcolor{keywordtype}{use }globals
+704       \textcolor{keywordtype}{use }global_objs
+705       \textcolor{keywordtype}{use }core_tools
+706       \textcolor{keywordtype}{use }geom_tools
+707       \textcolor{keywordtype}{use }pde_objs
+708       \textcolor{keywordtype}{use }debug_tools
+709 
+714       \textcolor{keywordtype}{character(len=*)}, \textcolor{keywordtype}{optional} , \textcolor{keywordtype}{intent(in)}               :: behavior
+715       \textcolor{keywordtype}{integer(kind=ikind)}                                   :: mode
+716       \textcolor{keywordtype}{character(len=256)}, \textcolor{keywordtype}{dimension(-1:6)}                   :: filenames
+717       \textcolor{keywordtype}{integer(kind=ikind)}                                   :: i, i\_err,\textcolor{comment}{ j, layer, dec, row, k, l, n, 
+      npoints, sub}
+718 \textcolor{comment}{      }\textcolor{keywordtype}{character(len=64)}                                     :: forma
+719       \textcolor{keywordtype}{integer}, \textcolor{keywordtype}{dimension(-1:6)}, \textcolor{keywordtype}{save}                        :: ids
+720       \textcolor{keywordtype}{character(len=4)}                                      :: extension
+721       \textcolor{keywordtype}{real(kind=rkind)}                                      :: distance,\textcolor{comment}{ avgval, val1, val2, val3, tmp}
+722 \textcolor{comment}{      }\textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable}, \textcolor{keywordtype}{save}     :: deriv
+723       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(4,8)}                      :: body
+724       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(2)}                        :: vct1, vct2
+725       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(8)}                        :: vct\_tmp
+726       \textcolor{keywordtype}{type}(smartarray_int)                                  :: nodes\_domain
+727       \textcolor{keywordtype}{type}(smartarray_int)                                  :: nodes\_domain\_invprmt
+728       \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{save}                             :: decomp\_print
+729       \textcolor{keywordtype}{integer} :: ierr
+730 
+731 
+732       \textcolor{keywordflow}{if} (\textcolor{keyword}{present}(behavior)) \textcolor{keywordflow}{then}
+733         \textcolor{keywordflow}{select case}(behavior)
+734           \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"all\_in\_one"})
+735                 mode = 0
+736           \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"separately"})
+737                 mode = 1
+738           \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"domains\_only"})
+739                 mode = 2
+740 \textcolor{keywordflow}{          case default}
+741                 print *, \textcolor{stringliteral}{"incorrect argument of function decomp\_tools::print\_domains"}
+742                 error stop
+743 \textcolor{keywordflow}{        end select}
+744       \textcolor{keywordflow}{else}
+745         mode = 0
+746 \textcolor{keywordflow}{      end if}
+747       
+748       \textcolor{keywordflow}{if} (.not. \textcolor{keyword}{allocated}(deriv)) \textcolor{keywordflow}{then}
+749         \textcolor{keyword}{allocate}(deriv(drutes_config%dimen))
+750         decomp\_print = 0
+751 \textcolor{keywordflow}{      end if}
+752 
+753       decomp\_print = decomp\_print + 1
+754 
+755       dec = 1
+756 
+757       \textcolor{keyword}{write}(unit=forma, fmt=\textcolor{stringliteral}{"(a)"}) \textcolor{stringliteral}{"(a,  I6.6 , a)"}
+758 
+759       \textcolor{keyword}{write}(unit=filenames(0), fmt=forma) \textcolor{stringliteral}{"out/dd/subiters-"},  decomp\_print\textcolor{comment}{, }\textcolor{stringliteral}{".sci"}
+760 
+761       \textcolor{keyword}{write}(unit=filenames(1), fmt=forma) \textcolor{stringliteral}{"out/dd/subdomain-"},  decomp\_print\textcolor{comment}{, }\textcolor{stringliteral}{".sci"}
+762       
+763       \textcolor{keyword}{write}(unit=filenames(2), fmt=forma) \textcolor{stringliteral}{"out/dd/petr/bside-"}, decomp\_print\textcolor{comment}{, }\textcolor{stringliteral}{".strana"}
+764 
+765       \textcolor{keyword}{write}(unit=filenames(3), fmt=forma) \textcolor{stringliteral}{"out/dd/domeny-"}, decomp\_print\textcolor{comment}{, }\textcolor{stringliteral}{".domeny"}
+766 
+767       \textcolor{keyword}{write}(unit=filenames(4), fmt=forma) \textcolor{stringliteral}{"out/dd/petr/matice-"}, decomp\_print\textcolor{comment}{, }\textcolor{stringliteral}{".matice"}
+768 
+769       \textcolor{keyword}{write}(unit=filenames(5), fmt=forma) \textcolor{stringliteral}{"out/dd/petr/prcd\_matice-"}, decomp\_print\textcolor{comment}{, }\textcolor{stringliteral}{".matice"}
+770       
+771       \textcolor{keyword}{write}(unit=filenames(6), fmt=forma) \textcolor{stringliteral}{"out/dd/nodes-doms-"}, decomp\_print\textcolor{comment}{, }\textcolor{stringliteral}{".dat"}
+772       
+773       \textcolor{keyword}{write}(unit=filenames(-1), fmt=forma) \textcolor{stringliteral}{"out/dd/timestep-"}, decomp\_print\textcolor{comment}{, }\textcolor{stringliteral}{".sci"}\textcolor{comment}{ }
+774 \textcolor{comment}{}
+775 \textcolor{comment}{      npoints = ubound(coarse_elements%data,2)}
+776 \textcolor{comment}{      }
+777 \textcolor{comment}{      }\textcolor{keywordflow}{if} (mode == 1 .or. decomp\_print == 1) \textcolor{keywordflow}{then}
+778         \textcolor{keywordflow}{do} i=lbound(ids,1), ubound(ids,1)
+779           \textcolor{keyword}{call }find_unit(ids(i), 6000)
+780           \textcolor{keyword}{open}(unit=ids(i), file=trim(filenames(i)), action=\textcolor{stringliteral}{"write"}, status=\textcolor{stringliteral}{"replace"}\textcolor{comment}{, iostat=ierr)}
+781 \textcolor{comment}{          }\textcolor{keywordflow}{if} (ierr /= 0) \textcolor{keywordflow}{then}
+782             i\_err=system(\textcolor{stringliteral}{"mkdir out/dd/petr"}) 
+783             \textcolor{keywordflow}{if} (i\_err /= 0) \textcolor{keywordflow}{then}
+784               i\_err=system(\textcolor{stringliteral}{"mkdir out/dd/"})
+785               i\_err=system(\textcolor{stringliteral}{"mkdir out/dd/petr"})
+786               \textcolor{keyword}{open}(unit=ids(i), file=trim(filenames(i)), action=\textcolor{stringliteral}{"write"}, status\textcolor{comment}{=}\textcolor{stringliteral}{"replace"}\textcolor{comment}{, iostat=ierr)}
+787 \textcolor{comment}{              }\textcolor{keywordflow}{if} (i\_err /=0 ) \textcolor{keywordflow}{then}
+788                 print *, \textcolor{stringliteral}{"unable to open and create directory out/dd (is it UN*X type os?), called  from
+       decomp\_tools::print\_domains"}
+789                 error stop
+790 \textcolor{keywordflow}{              end if}
+791 \textcolor{keywordflow}{            end if}
+792             \textcolor{keyword}{open}(unit=ids(i), file=trim(filenames(i)), action=\textcolor{stringliteral}{"write"}, status=\textcolor{stringliteral}{"replace"}\textcolor{comment}{, iostat=ierr)}
+793 \textcolor{comment}{}\textcolor{keywordflow}{          end if}
+794 \textcolor{keywordflow}{        end do}  
+795 \textcolor{keywordflow}{      end if}
+796 
+797      \textcolor{keywordflow}{do} l=-1,1    
+798         \textcolor{keyword}{write}(unit=ids(l), fmt=*) \textcolor{stringliteral}{"nt ="}, coarse_elements%kolik, \textcolor{stringliteral}{";"}
+799         \textcolor{keyword}{write}(unit=ids(l), fmt=*) \textcolor{stringliteral}{"x=zeros(nt,"}, npoints,\textcolor{stringliteral}{");"}
+800         \textcolor{keyword}{write}(unit=ids(l), fmt=*) \textcolor{stringliteral}{"y=zeros(nt,"}, npoints ,\textcolor{stringliteral}{");"}
+801         \textcolor{keyword}{write}(unit=ids(l), fmt=*) \textcolor{stringliteral}{"z=zeros(nt,"}, npoints, \textcolor{stringliteral}{");"}
+802 
+803 
+804         \textcolor{keywordflow}{do} i=1, coarse_elements%kolik
+805           n = npoints + 1
+806           \textcolor{keywordflow}{do} j=1,ubound(coarse_elements%data,2)
+807             body(j,1:2) = coarse_nodes%data(coarse_elements%data(i,n-j),:)
+808             body(j,4) = ddcoarse_mesh(i)%subdomain 
+809             body(j,3) = ddcoarse_mesh(i)%iter\_count
+810             sub = ddinfo%coarseinsub(i)
+811             body(j,5) = subdomain(sub)%tmpval
+812 \textcolor{keywordflow}{          end do}
+813           
+814         
+815 
+816           
+817           vct1 = body(3, 1:2) - body(1, 1:2) 
+818           vct2 = body(3, 1:2) - body(2, 1:2)
+819           
+820           \textcolor{keywordflow}{if} ( (vct1(1)*vct2(2)-vct1(2)*vct2(1)) > 0.0\_rkind) \textcolor{keywordflow}{then}
+821             vct\_tmp = body(3,:)
+822             body(3,:) = body(2,:)
+823             body(2,:) = vct\_tmp
+824           \textcolor{keywordflow}{else}
+825             \textcolor{keywordflow}{CONTINUE}
+826 \textcolor{keywordflow}{          end if}
+827 
+828 
+829           \textcolor{keyword}{write}(unit=ids(l), fmt=*) \textcolor{stringliteral}{"x("}, i, \textcolor{stringliteral}{",1) ="}, body(1,1), \textcolor{stringliteral}{";"}
+830           \textcolor{keyword}{write}(unit=ids(l), fmt=*) \textcolor{stringliteral}{"x("}, i, \textcolor{stringliteral}{",2) ="}, body(2,1), \textcolor{stringliteral}{";"}
+831           \textcolor{keyword}{write}(unit=ids(l), fmt=*) \textcolor{stringliteral}{"x("}, i, \textcolor{stringliteral}{",3) ="}, body(3,1), \textcolor{stringliteral}{";"}
+832           \textcolor{keywordflow}{if} (npoints == 4) \textcolor{keyword}{write}(unit=ids(l), fmt=*) \textcolor{stringliteral}{"x("}, i, \textcolor{stringliteral}{",4) ="}, body\textcolor{comment}{(4,1), }\textcolor{stringliteral}{";"}
+833 
+834 
+835           \textcolor{keyword}{write}(unit=ids(l), fmt=*) \textcolor{stringliteral}{"y("}, i, \textcolor{stringliteral}{",1) ="}, body(1,2), \textcolor{stringliteral}{";"}
+836           \textcolor{keyword}{write}(unit=ids(l), fmt=*) \textcolor{stringliteral}{"y("}, i, \textcolor{stringliteral}{",2) ="}, body(2,2), \textcolor{stringliteral}{";"}
+837           \textcolor{keyword}{write}(unit=ids(l), fmt=*) \textcolor{stringliteral}{"y("}, i, \textcolor{stringliteral}{",3) ="}, body(3,2), \textcolor{stringliteral}{";"}
+838           \textcolor{keywordflow}{if} (npoints == 4) \textcolor{keyword}{write}(unit=ids(l), fmt=*) \textcolor{stringliteral}{"y("}, i, \textcolor{stringliteral}{",4) ="}, body(4,\textcolor{comment}{2), }\textcolor{stringliteral}{";"}
+839 
+840           \textcolor{keywordflow}{if} (l>=0) \textcolor{keywordflow}{then}
+841               \textcolor{keyword}{write}(unit=ids(l), fmt=*) \textcolor{stringliteral}{"z("}, i, \textcolor{stringliteral}{",1) ="}, body(1,3+l), \textcolor{stringliteral}{";"}
+842               \textcolor{keyword}{write}(unit=ids(l), fmt=*) \textcolor{stringliteral}{"z("}, i, \textcolor{stringliteral}{",2) ="}, body(2,3+l), \textcolor{stringliteral}{";"}
+843               \textcolor{keyword}{write}(unit=ids(l), fmt=*) \textcolor{stringliteral}{"z("}, i, \textcolor{stringliteral}{",3) ="}, body(3,3+l), \textcolor{stringliteral}{";"}
+844             \textcolor{keywordflow}{if} (npoints == 4) \textcolor{keyword}{write}(unit=ids(l), fmt=*) \textcolor{stringliteral}{"z("}, i, \textcolor{stringliteral}{",4) ="}, body(\textcolor{comment}{4,3+l), }\textcolor{stringliteral}{";"}
+845           \textcolor{keywordflow}{else}
+846             \textcolor{keyword}{write}(unit=ids(l), fmt=*) \textcolor{stringliteral}{"z("}, i, \textcolor{stringliteral}{",1) ="}, body(1,5), \textcolor{stringliteral}{";"}
+847             \textcolor{keyword}{write}(unit=ids(l), fmt=*) \textcolor{stringliteral}{"z("}, i, \textcolor{stringliteral}{",2) ="}, body(2,5), \textcolor{stringliteral}{";"}
+848             \textcolor{keyword}{write}(unit=ids(l), fmt=*) \textcolor{stringliteral}{"z("}, i, \textcolor{stringliteral}{",3) ="}, body(3,5), \textcolor{stringliteral}{";"}
+849             \textcolor{keywordflow}{if} (npoints == 4) \textcolor{keyword}{write}(unit=ids(l), fmt=*) \textcolor{stringliteral}{"z("}, i, \textcolor{stringliteral}{",4) ="}, body(\textcolor{comment}{4,5), }\textcolor{stringliteral}{";"}
+850 \textcolor{keywordflow}{          end if}
+851 
+852 \textcolor{keywordflow}{        end do}
+853         
+854     
+855         \textcolor{keywordflow}{if} (l > -1) \textcolor{keywordflow}{then}
+856           \textcolor{keyword}{write}(unit=ids(l), fmt=*) \textcolor{stringliteral}{"f=gcf();"}
+857           \textcolor{keyword}{write}(unit=ids(l), fmt=*) \textcolor{stringliteral}{"clf(f,'reset');"}
+858     \textcolor{comment}{! !       write(unit=ids(1), fmt=*) "f.color\_map=jetcolormap(max(z));"}
+859           \textcolor{keyword}{write}(unit=ids(l), fmt=*) \textcolor{stringliteral}{"n=ceil(max(z));"}
+860           \textcolor{keyword}{write}(unit=ids(l), fmt=*)  \textcolor{stringliteral}{"r=linspace(0,1,n)';"}
+861           \textcolor{keyword}{write}(unit=ids(l), fmt=*)  \textcolor{stringliteral}{"g=linspace(1,0,n)';"}
+862           \textcolor{keyword}{write}(unit=ids(l), fmt=*)  \textcolor{stringliteral}{" b=ones(r);"}
+863 
+864           \textcolor{keyword}{write}(unit=ids(l), fmt=*) \textcolor{stringliteral}{"for i=1,n;"}
+865           \textcolor{keyword}{write}(unit=ids(l), fmt=*) \textcolor{stringliteral}{"    if (i>1) then;"}
+866           \textcolor{keyword}{write}(unit=ids(l), fmt=*) \textcolor{stringliteral}{"        if (b(i-1) > 0) then;"}
+867           \textcolor{keyword}{write}(unit=ids(l), fmt=*) \textcolor{stringliteral}{"            b(i) = -1;"}
+868           \textcolor{keyword}{write}(unit=ids(l), fmt=*) \textcolor{stringliteral}{"        else;"}
+869           \textcolor{keyword}{write}(unit=ids(l), fmt=*) \textcolor{stringliteral}{"            b(i)=1;"}
+870           \textcolor{keyword}{write}(unit=ids(l), fmt=*) \textcolor{stringliteral}{"        end;"}
+871           \textcolor{keyword}{write}(unit=ids(l), fmt=*) \textcolor{stringliteral}{"    else;"}
+872           \textcolor{keyword}{write}(unit=ids(l), fmt=*) \textcolor{stringliteral}{"        b(i) = 0;"}
+873           \textcolor{keyword}{write}(unit=ids(l), fmt=*) \textcolor{stringliteral}{"    end;"}
+874           \textcolor{keyword}{write}(unit=ids(l), fmt=*) \textcolor{stringliteral}{"end;"}
+875           \textcolor{keyword}{write}(unit=ids(l), fmt=*) \textcolor{stringliteral}{"cmap=[r g b];"}
+876           \textcolor{keyword}{write}(unit=ids(l), fmt=*) \textcolor{stringliteral}{"f=gcf();"}
+877           \textcolor{keyword}{write}(unit=ids(l), fmt=*) \textcolor{stringliteral}{"f.color\_map=cmap;"}
+878 
+879           \textcolor{keyword}{write}(unit=ids(l), fmt=*) \textcolor{stringliteral}{"colorbar(floor(min(z)),ceil(max(z)),colminmax=[floor(min(z))
+       ceil(max(z))], fmt='%.0f');"}
+880           \textcolor{keyword}{write}(unit=ids(l), fmt=*) \textcolor{stringliteral}{"plot3d1(x',y',z',alpha=0, theta=-90);"}
+881           \textcolor{comment}{! syntax from scilab manual:  xs2png(0, 'foo.png')}
+882           \textcolor{keyword}{write}(unit=ids(l), fmt=\textcolor{stringliteral}{"(a,I6.6,a)"} ) \textcolor{stringliteral}{"xs2png(0, 'domains-"}, decomp\_print\textcolor{comment}{ , }\textcolor{stringliteral}{".png');"}\textcolor{comment}{ }
+883 \textcolor{comment}{        }\textcolor{keywordflow}{else}
+884           \textcolor{keyword}{write}(unit=ids(l), fmt=*) \textcolor{stringliteral}{"f=gcf();"}
+885           \textcolor{keyword}{write}(unit=ids(l), fmt=*) \textcolor{stringliteral}{"clf(f,'reset');"}
+886           \textcolor{keyword}{write}(unit=ids(l), fmt=*) \textcolor{stringliteral}{"colorbar(min(z),max(z));"}
+887           \textcolor{keyword}{write}(unit=ids(l), fmt=*) \textcolor{stringliteral}{"plot3d1(x',y',z',alpha=0, theta=-90);"}
+888           \textcolor{keyword}{write}(unit=ids(l), fmt=\textcolor{stringliteral}{"(a,I6.6,a)"} ) \textcolor{stringliteral}{"xs2png(0, 'domains\_dt-"}, decomp\_print\textcolor{comment}{ , }\textcolor{stringliteral}{".png');"}
+889 \textcolor{keywordflow}{        end if}
+890 
+891 \textcolor{keywordflow}{      end do}
+892 
+893       \textcolor{keywordflow}{select case}(mode)
+894         \textcolor{keywordflow}{case}(0)
+895           \textcolor{keywordflow}{do} l=lbound(ids,1), ubound(ids,1)
+896             \textcolor{keyword}{write}(unit=ids(l), fmt=*) \textcolor{stringliteral}{"clear;"}
+897             \textcolor{keyword}{call }flush(ids(l))
+898 \textcolor{keywordflow}{          end do}
+899 
+900         \textcolor{keywordflow}{case}(2)
+901           \textcolor{keywordflow}{do} l=-1,1
+902             \textcolor{keyword}{close}(ids(l))
+903 \textcolor{keywordflow}{          end do}
+904 
+905         \textcolor{keywordflow}{case}(1)
+906 
+907           \textcolor{keywordflow}{do} i=1, ubound(pde_common%bvect,1)
+908             \textcolor{keyword}{write}(unit=ids(2), fmt=*) pde_common%bvect(i)
+909 \textcolor{keywordflow}{          end do}
+910 
+911           \textcolor{keyword}{write}(unit=ids(3), fmt=*) \textcolor{stringliteral}{"#--node id (permutated in stiff. mtx)----node id
+       (physical)---coordinates--------subdomain id----"}
+912           \textcolor{keyword}{write}(unit=ids(3), fmt=*) \textcolor{stringliteral}{
+      "#-----------------------------------------------------------------------------------------"}
+913 
+914           \textcolor{keywordflow}{do} i=1, coarse_elements%kolik
+915             row = 0
+916             \textcolor{keywordflow}{do} j=1,ubound(ddcoarse_mesh(i)%elements,1)
+917               \textcolor{keywordflow}{do} k=1,3
+918                 \textcolor{keyword}{call }nodes\_domain%fill(pde(1)%permut(elements%data(ddcoarse_mesh(i)%elements\textcolor{comment}{(j),k)))}
+919 \textcolor{comment}{                }\textcolor{keyword}{call }nodes\_domain\_invprmt%fill(elements%data(ddcoarse_mesh(i)%elements\textcolor{comment}{(j),k))}
+920 \textcolor{comment}{!                     nodes\_domain(row) = pde(1)%permut(elements%data(ddcoarse\_mesh(i)%elements(j),k), 2)}
+921 \textcolor{keywordflow}{              end do}
+922 \textcolor{keywordflow}{            end do}  
+923 
+924             \textcolor{keywordflow}{do} j=1, nodes\_domain%pos
+925               \textcolor{keyword}{write}(ids(3), fmt=*)  nodes\_domain%data(j), nodes\_domain\_invprmt%data\textcolor{comment}{(j), &}
+926 \textcolor{comment}{               nodes%data(nodes\_domain\_invprmt%data(j),:), ddcoarse_mesh(i)%subdomain}
+927 \textcolor{comment}{}\textcolor{keywordflow}{            end do}
+928 \textcolor{keywordflow}{          end do}
+929 
+930           \textcolor{keyword}{call }nodes\_domain%clear(full = .true.)
+931           \textcolor{keyword}{call }nodes\_domain\_invprmt%clear(full = .true.)
+932           
+933           \textcolor{keywordflow}{do} i=1, nodes%kolik
+934             \textcolor{keyword}{write}(unit = ids(6), fmt=*) i, pde(1)%solution(i)
+935 \textcolor{keywordflow}{          end do}
+936               
+937           \textcolor{keywordflow}{do} i=lbound(ids,1), ubound(ids,1)
+938             \textcolor{keyword}{close}(ids(i))
+939 \textcolor{keywordflow}{          end do}
+940  
+941 \textcolor{keywordflow}{      end select}
+942 
+943 
+\end{DoxyCode}
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=286pt]{namespacedecomp__tools_aef49ee81f8302b95a60c0ed57b240866_cgraph}
+\end{center}
+\end{figure}
+
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=339pt]{namespacedecomp__tools_aef49ee81f8302b95a60c0ed57b240866_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{decomp\+\_\+tools@{decomp\+\_\+tools}!print\+\_\+elements\+\_\+dd@{print\+\_\+elements\+\_\+dd}}
+\index{print\+\_\+elements\+\_\+dd@{print\+\_\+elements\+\_\+dd}!decomp\+\_\+tools@{decomp\+\_\+tools}}
+\subsubsection[{print\+\_\+elements\+\_\+dd(behavior)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, public decomp\+\_\+tools\+::print\+\_\+elements\+\_\+dd (
+\begin{DoxyParamCaption}
+\item[{character(len=$\ast$), intent(in)}]{behavior}
+\end{DoxyParamCaption}
+)}\label{namespacedecomp__tools_ac9168a06ac9d73a41c3340a06f160b0f}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em behavior} & behavior specifies the behavior of this printing tool, it is a character behavior == \char`\"{}all\+\_\+in\+\_\+one\char`\"{} everythink is written into a single scilab exec file, scilab generates png files from all print levels behavior == \char`\"{}separately\char`\"{}, each plot is written into different scilab exec file \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 947 of file decomp\+\_\+tools.\+f90.
+
+
+
+References decomp\+\_\+vars\+::coarse\+\_\+elements, decomp\+\_\+vars\+::ddcoarse\+\_\+mesh, globals\+::drutes\+\_\+config, globals\+::elements, core\+\_\+tools\+::find\+\_\+unit(), and globals\+::nodes.
+
+
+
+Referenced by fem\+::solve\+\_\+pde().
+
+
+\begin{DoxyCode}
+947       \textcolor{keywordtype}{use }typy 
+948       \textcolor{keywordtype}{use }decomp_vars
+949       \textcolor{keywordtype}{use }globals
+950       \textcolor{keywordtype}{use }global_objs
+951       \textcolor{keywordtype}{use }core_tools
+952       \textcolor{keywordtype}{use }geom_tools
+953       \textcolor{keywordtype}{use }debug_tools
+954 
+959       \textcolor{keywordtype}{character(len=*)}, \textcolor{keywordtype}{intent(in)}                          :: behavior
+960       \textcolor{keywordtype}{integer(kind=ikind)}                                   :: mode
+961       \textcolor{keywordtype}{character(len=256)}, \textcolor{keywordtype}{dimension(0:1)}                    :: filenames
+962       \textcolor{keywordtype}{integer(kind=ikind)}                                   :: i, i\_err,\textcolor{comment}{ j, layer, dec, row, k, l, n, 
+      npoints, el}
+963 \textcolor{comment}{      }\textcolor{keywordtype}{character(len=64)}                                     :: forma
+964       \textcolor{keywordtype}{integer}, \textcolor{keywordtype}{dimension(0:1)}, \textcolor{keywordtype}{save}                         :: ids
+965       \textcolor{keywordtype}{character(len=4)}                                      :: extension
+966       \textcolor{keywordtype}{real(kind=rkind)}                                      :: distance,\textcolor{comment}{ avgval, val1, val2, val3, tmp}
+967 \textcolor{comment}{      }\textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable}, \textcolor{keywordtype}{save}     :: deriv
+968       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(4,8)}                      :: body
+969       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(2)}                        :: vct1, vct2
+970       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(8)}                        :: vct\_tmp
+971       \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable}        :: nodes\_domain
+972       \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{save}                             :: decomp\_print
+973 
+974 
+975       \textcolor{keywordflow}{if} (drutes_config%it\_method /= 1) \textcolor{keywordflow}{RETURN}
+976       
+977       \textcolor{keywordflow}{select case}(behavior)
+978         \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"all\_in\_one"})
+979               mode = 0
+980               \textcolor{keywordflow}{RETURN}
+981         \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"separately"})
+982               mode = 1
+983         \textcolor{keywordflow}{case}(\textcolor{stringliteral}{"domains\_only"})
+984               mode = 2
+985 \textcolor{keywordflow}{        case default}
+986               print *, \textcolor{stringliteral}{"incorrect argument of function decomp\_tools::print\_domains"}
+987               error stop
+988 \textcolor{keywordflow}{      end select}
+989       
+990       \textcolor{keywordflow}{if} (.not. \textcolor{keyword}{allocated}(deriv)) \textcolor{keywordflow}{then}
+991         \textcolor{keyword}{allocate}(deriv(drutes_config%dimen))
+992         decomp\_print = 0
+993 \textcolor{keywordflow}{      end if}
+994 
+995       decomp\_print = decomp\_print + 1
+996 
+997       dec = 1
+998 
+999       \textcolor{keyword}{allocate}(nodes\_domain(nodes%kolik))  
+1000 
+1001       \textcolor{keyword}{write}(unit=forma, fmt=\textcolor{stringliteral}{"(a)"}) \textcolor{stringliteral}{"(a,  I6.6 , a)"}
+1002 
+1003       \textcolor{keyword}{write}(unit=filenames(0), fmt=forma) \textcolor{stringliteral}{"out/dd/subiters\_el-"},  decomp\_print\textcolor{comment}{, }\textcolor{stringliteral}{".sci"}
+1004 
+1005       \textcolor{keyword}{write}(unit=filenames(1), fmt=forma) \textcolor{stringliteral}{"out/dd/subdomain\_el-"},  decomp\_print\textcolor{comment}{, }\textcolor{stringliteral}{".sci"}
+1006 
+1007       npoints = ubound(elements%data,2)
+1008       
+1009       \textcolor{keywordflow}{if} (mode == 1 .or. decomp\_print == 1) \textcolor{keywordflow}{then}
+1010         \textcolor{keywordflow}{do} i = lbound(ids,1), ubound(ids,1)
+1011           \textcolor{keyword}{call }find_unit(ids(i), 6000)
+1012           \textcolor{keyword}{open}(unit=ids(i), file=trim(filenames(i)), action=\textcolor{stringliteral}{"write"}, status\textcolor{comment}{=}\textcolor{stringliteral}{"replace"}\textcolor{comment}{)}
+1013 \textcolor{comment}{}\textcolor{keywordflow}{        end do}
+1014 \textcolor{keywordflow}{      end if}
+1015 
+1016       \textcolor{keywordflow}{do} l=lbound(ids,1), ubound(ids,1)   
+1017         \textcolor{keyword}{write}(unit=ids(l), fmt=*) \textcolor{stringliteral}{"nt ="}, elements%kolik, \textcolor{stringliteral}{";"}
+1018         \textcolor{keyword}{write}(unit=ids(l), fmt=*) \textcolor{stringliteral}{"x=zeros(nt,"}, npoints,\textcolor{stringliteral}{");"}
+1019         \textcolor{keyword}{write}(unit=ids(l), fmt=*) \textcolor{stringliteral}{"y=zeros(nt,"}, npoints ,\textcolor{stringliteral}{");"}
+1020         \textcolor{keyword}{write}(unit=ids(l), fmt=*) \textcolor{stringliteral}{"z=zeros(nt,"}, npoints, \textcolor{stringliteral}{");"}
+1021     
+1022 
+1023  
+1024         \textcolor{keywordflow}{do} i=1, coarse_elements%kolik
+1025           \textcolor{keywordflow}{do} k=1, ddcoarse_mesh(i)%el\_count
+1026             el = ddcoarse_mesh(i)%elements(k)
+1027             n = npoints + 1
+1028             \textcolor{keywordflow}{do} j=1,ubound(elements%data,2)
+1029               body(j,1:2) = nodes%data(elements%data(el,n-j),:)
+1030               body(j,4) = ddcoarse_mesh(i)%subdomain 
+1031               body(j,3) = ddcoarse_mesh(i)%iter\_count
+1032 \textcolor{keywordflow}{            end do}
+1033             
+1034             vct1 = body(3, 1:2) - body(1, 1:2) 
+1035             vct2 = body(3, 1:2) - body(2, 1:2)
+1036             
+1037             \textcolor{keywordflow}{if} ( (vct1(1)*vct2(2)-vct1(2)*vct2(1)) > 0.0\_rkind) \textcolor{keywordflow}{then}
+1038               vct\_tmp = body(3,:)
+1039               body(3,:) = body(2,:)
+1040               body(2,:) = vct\_tmp
+1041             \textcolor{keywordflow}{else}
+1042               \textcolor{keywordflow}{CONTINUE}
+1043 \textcolor{keywordflow}{            end if}
+1044 
+1045 
+1046             \textcolor{keyword}{write}(unit=ids(l), fmt=*) \textcolor{stringliteral}{"x("}, el, \textcolor{stringliteral}{",1) ="}, body(1,1), \textcolor{stringliteral}{";"}
+1047             \textcolor{keyword}{write}(unit=ids(l), fmt=*) \textcolor{stringliteral}{"x("}, el, \textcolor{stringliteral}{",2) ="}, body(2,1), \textcolor{stringliteral}{";"}
+1048             \textcolor{keyword}{write}(unit=ids(l), fmt=*) \textcolor{stringliteral}{"x("}, el, \textcolor{stringliteral}{",3) ="}, body(3,1), \textcolor{stringliteral}{";"}
+1049             \textcolor{keywordflow}{if} (npoints == 4) \textcolor{keyword}{write}(unit=ids(l), fmt=*) \textcolor{stringliteral}{"x("}, el, \textcolor{stringliteral}{",4) ="}\textcolor{comment}{, body(4,1), }\textcolor{stringliteral}{";"}
+1050 
+1051 
+1052             \textcolor{keyword}{write}(unit=ids(l), fmt=*) \textcolor{stringliteral}{"y("}, el, \textcolor{stringliteral}{",1) ="}, body(1,2), \textcolor{stringliteral}{";"}
+1053             \textcolor{keyword}{write}(unit=ids(l), fmt=*) \textcolor{stringliteral}{"y("}, el, \textcolor{stringliteral}{",2) ="}, body(2,2), \textcolor{stringliteral}{";"}
+1054             \textcolor{keyword}{write}(unit=ids(l), fmt=*) \textcolor{stringliteral}{"y("}, el, \textcolor{stringliteral}{",3) ="}, body(3,2), \textcolor{stringliteral}{";"}
+1055             \textcolor{keywordflow}{if} (npoints == 4) \textcolor{keyword}{write}(unit=ids(l), fmt=*) \textcolor{stringliteral}{"y("}, el, \textcolor{stringliteral}{",4) ="}\textcolor{comment}{, body(4,2), }\textcolor{stringliteral}{";"}
+1056 
+1057             \textcolor{keyword}{write}(unit=ids(l), fmt=*) \textcolor{stringliteral}{"z("}, el, \textcolor{stringliteral}{",1) ="}, body(1,3+l), \textcolor{stringliteral}{";"}
+1058             \textcolor{keyword}{write}(unit=ids(l), fmt=*) \textcolor{stringliteral}{"z("}, el, \textcolor{stringliteral}{",2) ="}, body(2,3+l), \textcolor{stringliteral}{";"}
+1059             \textcolor{keyword}{write}(unit=ids(l), fmt=*) \textcolor{stringliteral}{"z("}, el, \textcolor{stringliteral}{",3) ="}, body(3,3+l), \textcolor{stringliteral}{";"}
+1060             \textcolor{keywordflow}{if} (npoints == 4) \textcolor{keyword}{write}(unit=ids(l), fmt=*) \textcolor{stringliteral}{"z("}, el, \textcolor{stringliteral}{",4) ="}\textcolor{comment}{, body(4,3+l), }\textcolor{stringliteral}{";"}
+1061 \textcolor{keywordflow}{        end do}
+1062 \textcolor{keywordflow}{      end do}
+1063       
+1064     
+1065       
+1066 
+1067       \textcolor{keyword}{write}(unit=ids(l), fmt=*) \textcolor{stringliteral}{"f=gcf();"}
+1068       \textcolor{keyword}{write}(unit=ids(l), fmt=*) \textcolor{stringliteral}{"clf(f,'reset');"}
+1069 \textcolor{comment}{! !       write(unit=ids(1), fmt=*) "f.color\_map=jetcolormap(max(z));"}
+1070       \textcolor{keyword}{write}(unit=ids(l), fmt=*) \textcolor{stringliteral}{"n=max(z);"}
+1071       \textcolor{keyword}{write}(unit=ids(l), fmt=*)  \textcolor{stringliteral}{"r=linspace(0,1,n)';"}
+1072       \textcolor{keyword}{write}(unit=ids(l), fmt=*)  \textcolor{stringliteral}{"g=linspace(1,0,n)';"}
+1073       \textcolor{keyword}{write}(unit=ids(l), fmt=*)  \textcolor{stringliteral}{" b=ones(r);"}
+1074 
+1075       \textcolor{keyword}{write}(unit=ids(l), fmt=*) \textcolor{stringliteral}{"for i=1,n;"}
+1076       \textcolor{keyword}{write}(unit=ids(l), fmt=*) \textcolor{stringliteral}{"    if (i>1) then;"}
+1077       \textcolor{keyword}{write}(unit=ids(l), fmt=*) \textcolor{stringliteral}{"        if (b(i-1) > 0) then;"}
+1078       \textcolor{keyword}{write}(unit=ids(l), fmt=*) \textcolor{stringliteral}{"            b(i) = -1;"}
+1079       \textcolor{keyword}{write}(unit=ids(l), fmt=*) \textcolor{stringliteral}{"        else;"}
+1080       \textcolor{keyword}{write}(unit=ids(l), fmt=*) \textcolor{stringliteral}{"            b(i)=1;"}
+1081       \textcolor{keyword}{write}(unit=ids(l), fmt=*) \textcolor{stringliteral}{"        end;"}
+1082       \textcolor{keyword}{write}(unit=ids(l), fmt=*) \textcolor{stringliteral}{"    else;"}
+1083       \textcolor{keyword}{write}(unit=ids(l), fmt=*) \textcolor{stringliteral}{"        b(i) = 0;"}
+1084       \textcolor{keyword}{write}(unit=ids(l), fmt=*) \textcolor{stringliteral}{"    end;"}
+1085       \textcolor{keyword}{write}(unit=ids(l), fmt=*) \textcolor{stringliteral}{"end;"}
+1086       \textcolor{keyword}{write}(unit=ids(l), fmt=*) \textcolor{stringliteral}{"cmap=[r g b];"}
+1087       \textcolor{keyword}{write}(unit=ids(l), fmt=*) \textcolor{stringliteral}{"f=gcf();"}
+1088       \textcolor{keyword}{write}(unit=ids(l), fmt=*) \textcolor{stringliteral}{"f.color\_map=cmap;"}
+1089 
+1090       \textcolor{keyword}{write}(unit=ids(l), fmt=*) \textcolor{stringliteral}{"colorbar(int(min(z)),int(max(z)),colminmax=[min(z) max(z)], fmt='%.0f');"}
+1091       \textcolor{keyword}{write}(unit=ids(l), fmt=*) \textcolor{stringliteral}{"plot3d1(x',y',z',alpha=0, theta=-90);"}
+1092       \textcolor{comment}{! syntax from scilab manual:  xs2png(0, 'foo.png')}
+1093       \textcolor{keyword}{write}(unit=ids(l), fmt=\textcolor{stringliteral}{"(a,I6.6,a)"} ) \textcolor{stringliteral}{"xs2png(0, 'domains-"}, decomp\_print\textcolor{comment}{ , }\textcolor{stringliteral}{".png');"}\textcolor{comment}{ }
+1094 \textcolor{comment}{}\textcolor{keywordflow}{    end do}
+1095 
+1096       \textcolor{keywordflow}{select case}(mode)
+1097         \textcolor{keywordflow}{case}(0)
+1098           \textcolor{keywordflow}{do} l=0,1
+1099             \textcolor{keyword}{write}(unit=ids(l), fmt=*) \textcolor{stringliteral}{"clear;"}
+1100             \textcolor{keyword}{call }flush(ids(l))
+1101 \textcolor{keywordflow}{          end do}
+1102 
+1103         \textcolor{keywordflow}{case}(2)
+1104           \textcolor{keywordflow}{do} l=0,1
+1105             \textcolor{keyword}{close}(ids(l))
+1106 \textcolor{keywordflow}{          end do}
+1107 
+1108         \textcolor{keywordflow}{case}(1)         
+1109               \textcolor{keywordflow}{do} i=lbound(ids,1), ubound(ids,1)
+1110                 \textcolor{keyword}{close}(ids(i))
+1111 \textcolor{keywordflow}{              end do}
+1112               
+1113 
+1114               \textcolor{keyword}{deallocate}(nodes\_domain)
+1115 \textcolor{keywordflow}{      end select}
+1116 
+1117 
+1118 
+\end{DoxyCode}
+
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=286pt]{namespacedecomp__tools_ac9168a06ac9d73a41c3340a06f160b0f_cgraph}
+\end{center}
+\end{figure}
+
+
+
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=339pt]{namespacedecomp__tools_ac9168a06ac9d73a41c3340a06f160b0f_icgraph}
+\end{center}
+\end{figure}
+
+

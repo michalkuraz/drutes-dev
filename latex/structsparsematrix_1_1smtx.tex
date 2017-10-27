@@ -1,0 +1,297 @@
+\section{sparsematrix\+:\+:smtx Type Reference}
+\label{structsparsematrix_1_1smtx}\index{sparsematrix\+::smtx@{sparsematrix\+::smtx}}
+
+
+ridka matice  
+
+
+
+
+Inheritance diagram for sparsematrix\+:\+:smtx\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=151pt]{structsparsematrix_1_1smtx__inherit__graph}
+\end{center}
+\end{figure}
+
+
+Collaboration diagram for sparsematrix\+:\+:smtx\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=232pt]{structsparsematrix_1_1smtx__coll__graph}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+procedure {\bf init} =$>$ {\bf initsp}
+\item 
+procedure {\bf get} =$>$ {\bf getsp}
+\item 
+procedure, pass(a) {\bf set} =$>$ {\bf setsp}
+\item 
+procedure {\bf print} =$>$ {\bf sparseprint}
+\item 
+procedure {\bf dump} =$>$ {\bf sparsedump}
+\item 
+procedure {\bf nonzero} =$>$ {\bf sparsenz}
+\item 
+procedure {\bf getcol} =$>$ {\bf getcolsparse}
+\item 
+procedure {\bf getrow} =$>$ {\bf getrowsparse}
+\end{DoxyCompactItemize}
+\subsection*{Private Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+procedure, private {\bf findelem} =$>$ {\bf felem}
+\item 
+procedure, private {\bf insert} =$>$ {\bf insertsp}
+\item 
+procedure, private {\bf remove} =$>$ {\bf removesp}
+\end{DoxyCompactItemize}
+\subsection*{Private Attributes}
+\begin{DoxyCompactItemize}
+\item 
+integer(kind=ikind), private {\bf nz} = 0
+\begin{DoxyCompactList}\small\item\em pocet nenul \end{DoxyCompactList}\item 
+integer(kind=ikind), private {\bf aloc} = 0
+\begin{DoxyCompactList}\small\item\em pocet alokovanych prvku \end{DoxyCompactList}\item 
+type({\bf elemt}), dimension(\+:), allocatable, private {\bf v}
+\begin{DoxyCompactList}\small\item\em hodnoty prvku \end{DoxyCompactList}\item 
+integer(kind=ikind), dimension(\+:), allocatable, private {\bf rowstart}
+\begin{DoxyCompactList}\small\item\em zacatky radku -\/ pokud prazdny = -\/1 \end{DoxyCompactList}\item 
+integer(kind=ikind), dimension(\+:), allocatable, private {\bf colstart}
+\begin{DoxyCompactList}\small\item\em zacatky sloupcu -\/ pokud prazdny = -\/1 \end{DoxyCompactList}\item 
+integer(kind=ikind), private {\bf firstfree}
+\begin{DoxyCompactList}\small\item\em index prvniho volneho prvku, pokud neni = -\/1 \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+ridka matice 
+
+Definition at line 32 of file sparsematrix.\+f90.
+
+
+
+\subsection{Member Function/\+Subroutine Documentation}
+\index{sparsematrix\+::smtx@{sparsematrix\+::smtx}!dump@{dump}}
+\index{dump@{dump}!sparsematrix\+::smtx@{sparsematrix\+::smtx}}
+\subsubsection[{dump=$>$ sparsedump}]{\setlength{\rightskip}{0pt plus 5cm}procedure sparsematrix\+::smtx\+::dump (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}\label{structsparsematrix_1_1smtx_ad3e4c1236bd4d88ba9ee2015bfd80e76}
+
+
+Definition at line 50 of file sparsematrix.\+f90.
+
+\index{sparsematrix\+::smtx@{sparsematrix\+::smtx}!findelem@{findelem}}
+\index{findelem@{findelem}!sparsematrix\+::smtx@{sparsematrix\+::smtx}}
+\subsubsection[{findelem=$>$ felem}]{\setlength{\rightskip}{0pt plus 5cm}procedure, private sparsematrix\+::smtx\+::findelem (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [private]}}\label{structsparsematrix_1_1smtx_a60f3b2487424bc4af2949e095207da6d}
+
+
+Definition at line 54 of file sparsematrix.\+f90.
+
+\index{sparsematrix\+::smtx@{sparsematrix\+::smtx}!get@{get}}
+\index{get@{get}!sparsematrix\+::smtx@{sparsematrix\+::smtx}}
+\subsubsection[{get=$>$ getsp}]{\setlength{\rightskip}{0pt plus 5cm}procedure sparsematrix\+::smtx\+::get (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}\label{structsparsematrix_1_1smtx_a3fef018d4f6979fd1a0fbaeabb19805d}
+
+
+Definition at line 47 of file sparsematrix.\+f90.
+
+\index{sparsematrix\+::smtx@{sparsematrix\+::smtx}!getcol@{getcol}}
+\index{getcol@{getcol}!sparsematrix\+::smtx@{sparsematrix\+::smtx}}
+\subsubsection[{getcol=$>$ getcolsparse}]{\setlength{\rightskip}{0pt plus 5cm}procedure sparsematrix\+::smtx\+::getcol (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}\label{structsparsematrix_1_1smtx_a75f95f0c0ebaa11ea98e00cdee957480}
+
+
+Definition at line 52 of file sparsematrix.\+f90.
+
+\index{sparsematrix\+::smtx@{sparsematrix\+::smtx}!getrow@{getrow}}
+\index{getrow@{getrow}!sparsematrix\+::smtx@{sparsematrix\+::smtx}}
+\subsubsection[{getrow=$>$ getrowsparse}]{\setlength{\rightskip}{0pt plus 5cm}procedure sparsematrix\+::smtx\+::getrow (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}\label{structsparsematrix_1_1smtx_abb155b58a25cb7cce5d0b5cdefa5ca5a}
+
+
+Definition at line 53 of file sparsematrix.\+f90.
+
+\index{sparsematrix\+::smtx@{sparsematrix\+::smtx}!init@{init}}
+\index{init@{init}!sparsematrix\+::smtx@{sparsematrix\+::smtx}}
+\subsubsection[{init=$>$ initsp}]{\setlength{\rightskip}{0pt plus 5cm}procedure sparsematrix\+::smtx\+::init (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}\label{structsparsematrix_1_1smtx_af02f1a5325896c156c205a9dc4c445d2}
+
+
+Definition at line 46 of file sparsematrix.\+f90.
+
+\index{sparsematrix\+::smtx@{sparsematrix\+::smtx}!insert@{insert}}
+\index{insert@{insert}!sparsematrix\+::smtx@{sparsematrix\+::smtx}}
+\subsubsection[{insert=$>$ insertsp}]{\setlength{\rightskip}{0pt plus 5cm}procedure, private sparsematrix\+::smtx\+::insert (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [private]}}\label{structsparsematrix_1_1smtx_aabf389794704fdc8fcdb16a763cec21b}
+
+
+Definition at line 55 of file sparsematrix.\+f90.
+
+\index{sparsematrix\+::smtx@{sparsematrix\+::smtx}!nonzero@{nonzero}}
+\index{nonzero@{nonzero}!sparsematrix\+::smtx@{sparsematrix\+::smtx}}
+\subsubsection[{nonzero=$>$ sparsenz}]{\setlength{\rightskip}{0pt plus 5cm}procedure sparsematrix\+::smtx\+::nonzero (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}\label{structsparsematrix_1_1smtx_ab3cf3479ff310b02522d2eb15067e9a9}
+
+
+Definition at line 51 of file sparsematrix.\+f90.
+
+\index{sparsematrix\+::smtx@{sparsematrix\+::smtx}!print@{print}}
+\index{print@{print}!sparsematrix\+::smtx@{sparsematrix\+::smtx}}
+\subsubsection[{print=$>$ sparseprint}]{\setlength{\rightskip}{0pt plus 5cm}procedure sparsematrix\+::smtx\+::print (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}\label{structsparsematrix_1_1smtx_ae6169840cfc626a70e94c1aa95ac6c30}
+
+
+Definition at line 49 of file sparsematrix.\+f90.
+
+\index{sparsematrix\+::smtx@{sparsematrix\+::smtx}!remove@{remove}}
+\index{remove@{remove}!sparsematrix\+::smtx@{sparsematrix\+::smtx}}
+\subsubsection[{remove=$>$ removesp}]{\setlength{\rightskip}{0pt plus 5cm}procedure, private sparsematrix\+::smtx\+::remove (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [private]}}\label{structsparsematrix_1_1smtx_ab146a97c9163f60a1c98b661d2f099f8}
+
+
+Definition at line 56 of file sparsematrix.\+f90.
+
+\index{sparsematrix\+::smtx@{sparsematrix\+::smtx}!set@{set}}
+\index{set@{set}!sparsematrix\+::smtx@{sparsematrix\+::smtx}}
+\subsubsection[{set=$>$ setsp}]{\setlength{\rightskip}{0pt plus 5cm}procedure, pass(a) sparsematrix\+::smtx\+::set (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}\label{structsparsematrix_1_1smtx_a32a22258fd2e9e60add041c66fc88a3d}
+
+
+Definition at line 48 of file sparsematrix.\+f90.
+
+
+
+\subsection{Member Data Documentation}
+\index{sparsematrix\+::smtx@{sparsematrix\+::smtx}!aloc@{aloc}}
+\index{aloc@{aloc}!sparsematrix\+::smtx@{sparsematrix\+::smtx}}
+\subsubsection[{aloc}]{\setlength{\rightskip}{0pt plus 5cm}integer(kind=ikind), private sparsematrix\+::smtx\+::aloc = 0\hspace{0.3cm}{\ttfamily [private]}}\label{structsparsematrix_1_1smtx_a43eef4c434ec3d060bd32d8f5745b500}
+
+
+pocet alokovanych prvku 
+
+
+
+Definition at line 36 of file sparsematrix.\+f90.
+
+
+\begin{DoxyCode}
+36         \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{private} :: aloc = 0
+\end{DoxyCode}
+\index{sparsematrix\+::smtx@{sparsematrix\+::smtx}!colstart@{colstart}}
+\index{colstart@{colstart}!sparsematrix\+::smtx@{sparsematrix\+::smtx}}
+\subsubsection[{colstart}]{\setlength{\rightskip}{0pt plus 5cm}integer(kind=ikind), dimension(\+:), allocatable, private sparsematrix\+::smtx\+::colstart\hspace{0.3cm}{\ttfamily [private]}}\label{structsparsematrix_1_1smtx_a7ea7f26c64b66583a62d6b10094708e3}
+
+
+zacatky sloupcu -\/ pokud prazdny = -\/1 
+
+
+
+Definition at line 42 of file sparsematrix.\+f90.
+
+
+\begin{DoxyCode}
+42         \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable}, \textcolor{keywordtype}{private} :: colstart
+\end{DoxyCode}
+\index{sparsematrix\+::smtx@{sparsematrix\+::smtx}!firstfree@{firstfree}}
+\index{firstfree@{firstfree}!sparsematrix\+::smtx@{sparsematrix\+::smtx}}
+\subsubsection[{firstfree}]{\setlength{\rightskip}{0pt plus 5cm}integer(kind=ikind), private sparsematrix\+::smtx\+::firstfree\hspace{0.3cm}{\ttfamily [private]}}\label{structsparsematrix_1_1smtx_a766d2c4014cea3ba785b8dc6cfde8b08}
+
+
+index prvniho volneho prvku, pokud neni = -\/1 
+
+
+
+Definition at line 44 of file sparsematrix.\+f90.
+
+
+\begin{DoxyCode}
+44         \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{private} :: firstfree
+\end{DoxyCode}
+\index{sparsematrix\+::smtx@{sparsematrix\+::smtx}!nz@{nz}}
+\index{nz@{nz}!sparsematrix\+::smtx@{sparsematrix\+::smtx}}
+\subsubsection[{nz}]{\setlength{\rightskip}{0pt plus 5cm}integer(kind=ikind), private sparsematrix\+::smtx\+::nz = 0\hspace{0.3cm}{\ttfamily [private]}}\label{structsparsematrix_1_1smtx_aa58ec39c3f86f13053d12d41c8631c86}
+
+
+pocet nenul 
+
+
+
+Definition at line 34 of file sparsematrix.\+f90.
+
+
+\begin{DoxyCode}
+34         \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{private} :: nz = 0
+\end{DoxyCode}
+\index{sparsematrix\+::smtx@{sparsematrix\+::smtx}!rowstart@{rowstart}}
+\index{rowstart@{rowstart}!sparsematrix\+::smtx@{sparsematrix\+::smtx}}
+\subsubsection[{rowstart}]{\setlength{\rightskip}{0pt plus 5cm}integer(kind=ikind), dimension(\+:), allocatable, private sparsematrix\+::smtx\+::rowstart\hspace{0.3cm}{\ttfamily [private]}}\label{structsparsematrix_1_1smtx_a47062ce7daa32001da708625ec97429b}
+
+
+zacatky radku -\/ pokud prazdny = -\/1 
+
+
+
+Definition at line 40 of file sparsematrix.\+f90.
+
+
+\begin{DoxyCode}
+40         \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable}, \textcolor{keywordtype}{private} :: rowstart
+\end{DoxyCode}
+\index{sparsematrix\+::smtx@{sparsematrix\+::smtx}!v@{v}}
+\index{v@{v}!sparsematrix\+::smtx@{sparsematrix\+::smtx}}
+\subsubsection[{v}]{\setlength{\rightskip}{0pt plus 5cm}type({\bf elemt}), dimension(\+:), allocatable, private sparsematrix\+::smtx\+::v\hspace{0.3cm}{\ttfamily [private]}}\label{structsparsematrix_1_1smtx_abe25e59c1c4246f59e56d2fa4b8dd501}
+
+
+hodnoty prvku 
+
+
+
+Definition at line 38 of file sparsematrix.\+f90.
+
+
+\begin{DoxyCode}
+38         \textcolor{keywordtype}{type}(elemt), \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable}, \textcolor{keywordtype}{private} :: v
+\end{DoxyCode}
+
+
+The documentation for this type was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+src/pma++/{\bf sparsematrix.\+f90}\end{DoxyCompactItemize}

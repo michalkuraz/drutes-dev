@@ -1,0 +1,14 @@
+<map id="femmat::solve_picard" name="femmat::solve_picard">
+<area shape="rect" id="node2" href="$namespacefemmat.html#ad353c969789b835fe3ca33d717ca0553" title="femmat::assemble_mat" alt="" coords="210,107,369,133"/>
+<area shape="rect" id="node7" href="$namespacesimplelinalg.html#a991176c9132fd1f9a1e494dfe43be159" title="right hand side diagonal preconditioner &#45; preprocessor and postprocesor preforms the diagonal matrix ..." alt="" coords="228,165,351,206"/>
+<area shape="rect" id="node8" href="$namespacefem__tools.html#aef722f7948c3d119dc3410f572f26821" title="fem_tools::icond4neumann" alt="" coords="200,231,379,257"/>
+<area shape="rect" id="node12" href="$namespacetypy.html#ad5f707f5192c4a743f7da534989ceb19" title="spocte L2 normu vektoru " alt="" coords="244,281,335,308"/>
+<area shape="rect" id="node13" href="$namespacefemmat.html#a6ba01cbc9f5df8ce73824da2b4dee722" title="femmat::results_extractor" alt="" coords="204,332,375,359"/>
+<area shape="rect" id="node3" href="$namespacestiffmat.html#a31243094e6fbabfb25e1e1939b133899" title="stiffmat::build_bvect" alt="" coords="432,5,572,32"/>
+<area shape="rect" id="node4" href="$namespacestiffmat.html#ae46961e6784b8661f5fa07d7b6bed25a" title="build local stifness matrix for nonlinear problems and Picard method " alt="" coords="427,56,577,83"/>
+<area shape="rect" id="node5" href="$namespacefem__tools.html#a70a2c3916a63fabc299dbbb53741e122" title="procedure to put local stiffness matrix into the global stiffness matrix " alt="" coords="433,107,571,133"/>
+<area shape="rect" id="node6" href="$namespacesolver__interfaces.html#abd70a6e039e5f2f62c473d9afbe90cc2" title="solver_interfaces::\lnull_problem" alt="" coords="437,158,567,199"/>
+<area shape="rect" id="node9" href="$namespacesimplelinalg.html#a443d39cabe9830ddbb7e553cb510cad4" title="subroutine, that evaluates inverse matrix up to dimension 3 " alt="" coords="437,223,567,265"/>
+<area shape="rect" id="node11" href="$namespacecore__tools.html#abe09f9b4dc2abc5384a24020c5031e95" title="core_tools::write_log" alt="" coords="431,289,573,316"/>
+<area shape="rect" id="node10" href="$namespacesimplelinalg.html#aff5df8bb70d5cb7a47e0846d391e2dae" title="the matrix dimension must be exactly (2,2) or (3,3) " alt="" coords="625,231,792,257"/>
+</map>
