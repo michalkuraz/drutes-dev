@@ -1,7 +1,0 @@
-<map id="pmatools::getyesno" name="pmatools::getyesno">
-<area shape="rect" id="node2" href="$namespacepmatools.html#a94956a73aafe6a8c31bff6e2d33e0568" title="pozastavi vypocet a pripadne zastavi " alt="" coords="216,5,337,32"/>
-<area shape="rect" id="node4" href="$namespacepmatools.html#a15c0bdc3cabbe05b8c76d56a3f5a83a5" title="Otevre soubor na cteni. " alt="" coords="189,56,364,83"/>
-<area shape="rect" id="node6" href="$namespacepmatools.html#a3d86f9a1f27d00699cf85be5debb0485" title="Otevre soubor k zapisu. " alt="" coords="205,107,348,149"/>
-<area shape="rect" id="node3" href="$namespacemtxiotools.html#a03531e01ee904b60f26175fbe1807d8a" title="precte matici ze souboru " alt="" coords="412,5,571,32"/>
-<area shape="rect" id="node5" href="$namespacepmatools.html#a66bbbfc692affc4c43333fad08fb4ba1" title="pmatools::filetostr" alt="" coords="428,56,555,83"/>
-</map>

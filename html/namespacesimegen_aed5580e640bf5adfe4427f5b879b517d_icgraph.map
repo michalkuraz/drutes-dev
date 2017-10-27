@@ -1,5 +1,0 @@
-<map id="simegen::simegen2d" name="simegen::simegen2d">
-<area shape="rect" id="node2" href="$namespaceread__inputs.html#a16c9c0b91377d9e1ab81e838c6244ada" title="read_inputs::read_2dmesh_int" alt="" coords="196,13,392,39"/>
-<area shape="rect" id="node3" href="$namespacedrutes__init.html#ac0d99b874b2dbf6a5726f534d3ee0943" title="routine to open all files to read and write " alt="" coords="440,5,563,47"/>
-<area shape="rect" id="node4" href="$main_8f90.html#a8ec2266d83cd6c0b762cbcbc92c0af3d" title="main" alt="" coords="611,13,661,39"/>
-</map>

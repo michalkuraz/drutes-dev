@@ -1,8 +1,0 @@
-<map id="read_inputs::read_2dmesh_int" name="read_inputs::read_2dmesh_int">
-<area shape="rect" id="node2" href="$namespacereadtools.html#ab8bc95060d3f5e8bfb8d4e4519c3568a" title="readtools::comment" alt="" coords="252,5,389,32"/>
-<area shape="rect" id="node3" href="$namespacereadtools.html#a9481f44f055c2f4bc518a4b91db43b5c" title="readtools::file_error" alt="" coords="254,56,387,83"/>
-<area shape="rect" id="node4" href="$namespacesimegen.html#aed5580e640bf5adfe4427f5b879b517d" title="simegen::simegen2d" alt="" coords="249,107,392,133"/>
-<area shape="rect" id="node5" href="$namespacecore__tools.html#a05e8cc58b84b9391b49c5070db1160f7" title="allocates structures for nodes and elements " alt="" coords="440,81,619,108"/>
-<area shape="rect" id="node6" href="$namespacegeom__tools.html#a648dcde3507b3b3b66eecaea12b43603" title="function to determine whether the third point is on line formed by the first two points ..." alt="" coords="466,132,593,159"/>
-<area shape="rect" id="node7" href="$namespacegeom__tools.html#a91ddf015e5cea9e21d182b93603f5139" title="geom_tools::dist" alt="" coords="667,132,785,159"/>
-</map>

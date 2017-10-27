@@ -1,8 +1,0 @@
-<map id="decomposer::set_subdomains" name="decomposer::set_subdomains">
-<area shape="rect" id="node2" href="$namespacedecomp__tools.html#a3f8c4deab864942b308de6e8ddc31849" title="decomp_tools::addlevel" alt="" coords="269,5,428,32"/>
-<area shape="rect" id="node3" href="$namespacedecomposer.html#a87f6f57c647e1ad908958389ba844b86" title="decomposer::clear_subdomain" alt="" coords="249,56,448,83"/>
-<area shape="rect" id="node5" href="$namespacecore__tools.html#abe09f9b4dc2abc5384a24020c5031e95" title="core_tools::write_log" alt="" coords="496,107,639,133"/>
-<area shape="rect" id="node6" href="$namespacedecomposer.html#ab3c22185fa432d9d3ca309ce5042f9b9" title="decomposer::init_subdomain" alt="" coords="255,157,443,184"/>
-<area shape="rect" id="node7" href="$namespacegeom__tools.html#a1e93d0ec91a9f2fcc7573e6347a9f9ef" title="specify the x and y derivates of a plane defined by three points " alt="" coords="253,208,444,235"/>
-<area shape="rect" id="node4" href="$namespacesolver__interfaces.html#abd70a6e039e5f2f62c473d9afbe90cc2" title="solver_interfaces::\lnull_problem" alt="" coords="503,41,632,82"/>
-</map>

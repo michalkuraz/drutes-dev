@@ -1,7 +1,0 @@
-<map id="geom_tools::get_layer" name="geom_tools::get_layer">
-<area shape="rect" id="node2" href="$namespacere__total.html#a52ce5b4dd78109c258014d2f601c5d06" title="specific function for Richards equation in H&#45;form (total hydraulic head form), replaces pde_objs::get..." alt="" coords="204,31,345,57"/>
-<area shape="rect" id="node3" href="$namespacere__pointers.html#a2ae8b49e9d185cc91057283c869cb633" title="re_pointers::reroth" alt="" coords="395,5,522,32"/>
-<area shape="rect" id="node6" href="$namespacere__pointers.html#ab30747cb46458aeac12088c565317b00" title="re_pointers::restdh" alt="" coords="393,56,524,83"/>
-<area shape="rect" id="node4" href="$namespacemanage__pointers.html#a8275d1f0bd8032fa68b910b70058a4cf" title="set pointers for the entire problem, except the file read pointers " alt="" coords="572,23,719,65"/>
-<area shape="rect" id="node5" href="$main_8f90.html#a8ec2266d83cd6c0b762cbcbc92c0af3d" title="main" alt="" coords="767,31,817,57"/>
-</map>

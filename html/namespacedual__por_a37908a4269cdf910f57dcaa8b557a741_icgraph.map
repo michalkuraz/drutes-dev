@@ -1,7 +1,0 @@
-<map id="dual_por::vangen_d" name="dual_por::vangen_d">
-<area shape="rect" id="node2" href="$namespacere__dual__pointers.html#a7c3a2d7fee47e270402505ab315ca55d" title="Links to releveant subroutines for fracture domain. " alt="" coords="396,5,532,47"/>
-<area shape="rect" id="node5" href="$namespacere__dual__pointers.html#aa76c31f626d7323a2032a80d6cac5ff6" title="Links to releveant subroutines for matrix domain. " alt="" coords="396,71,532,112"/>
-<area shape="rect" id="node6" href="$namespacedual__tab.html#a4c7205301837b0f1b9b645d4cbb4b6ea" title="Tabular versions of mass. " alt="" coords="188,45,348,71"/>
-<area shape="rect" id="node3" href="$namespacemanage__pointers.html#a8275d1f0bd8032fa68b910b70058a4cf" title="set pointers for the entire problem, except the file read pointers " alt="" coords="580,39,727,80"/>
-<area shape="rect" id="node4" href="$main_8f90.html#a8ec2266d83cd6c0b762cbcbc92c0af3d" title="main" alt="" coords="775,46,825,73"/>
-</map>

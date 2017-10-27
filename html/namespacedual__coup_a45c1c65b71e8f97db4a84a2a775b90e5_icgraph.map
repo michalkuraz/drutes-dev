@@ -1,7 +1,0 @@
-<map id="dual_coup::dual_coupling" name="dual_coup::dual_coupling">
-<area shape="rect" id="node2" href="$namespacedual__coup.html#a392d4e7e0705fd62f272c62ab400ae68" title="neg coupling defined for case(1), case (2) and case (3) for coupled matrix, i.e. matrix part in fract..." alt="" coords="221,45,417,71"/>
-<area shape="rect" id="node3" href="$namespacere__dual__pointers.html#aa76c31f626d7323a2032a80d6cac5ff6" title="Links to releveant subroutines for matrix domain. " alt="" coords="465,5,601,47"/>
-<area shape="rect" id="node6" href="$namespacere__dual__pointers.html#a7c3a2d7fee47e270402505ab315ca55d" title="Links to releveant subroutines for fracture domain. " alt="" coords="465,71,601,112"/>
-<area shape="rect" id="node4" href="$namespacemanage__pointers.html#a8275d1f0bd8032fa68b910b70058a4cf" title="set pointers for the entire problem, except the file read pointers " alt="" coords="649,39,796,80"/>
-<area shape="rect" id="node5" href="$main_8f90.html#a8ec2266d83cd6c0b762cbcbc92c0af3d" title="main" alt="" coords="844,46,895,73"/>
-</map>

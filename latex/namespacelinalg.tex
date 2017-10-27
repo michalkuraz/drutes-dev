@@ -1,483 +1,0 @@
-\section{linalg Module Reference}
-\label{namespacelinalg}\index{linalg@{linalg}}
-
-
-obsahuje\+:  
-
-
-\subsection*{Functions/\+Subroutines}
-\begin{DoxyCompactItemize}
-\item 
-subroutine, public {\bf print\+\_\+matrix} (A, nc, width)
-\begin{DoxyCompactList}\small\item\em vytiskne matici \end{DoxyCompactList}\item 
-subroutine, public {\bf print\+\_\+vector} (V, nc)
-\begin{DoxyCompactList}\small\item\em vytiskne vektor \end{DoxyCompactList}\item 
-subroutine, public {\bf gem} (a, b, x)
-\begin{DoxyCompactList}\small\item\em Gaussova eliminace. \end{DoxyCompactList}\item 
-subroutine, public {\bf ludecomp} (A, p, q)
-\begin{DoxyCompactList}\small\item\em LU rozklad. \end{DoxyCompactList}\item 
-subroutine, private {\bf fmax} (A, i, imax, jmax)
-\item 
-subroutine, public {\bf lumul} (LU, A)
-\end{DoxyCompactItemize}
-
-
-\subsection{Detailed Description}
-obsahuje\+: 
-
-
-\begin{DoxyItemize}
-\item I/O operace pro linearni algebru
-\item reseni soustavy linearnich rovnic 
-\end{DoxyItemize}
-
-\subsection{Function/\+Subroutine Documentation}
-\index{linalg@{linalg}!fmax@{fmax}}
-\index{fmax@{fmax}!linalg@{linalg}}
-\subsubsection[{fmax(\+A, i, imax, jmax)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, private linalg\+::fmax (
-\begin{DoxyParamCaption}
-\item[{real(kind=rkind), dimension(\+:,\+:), intent(in)}]{A, }
-\item[{integer(kind=ikind), intent(in)}]{i, }
-\item[{integer(kind=ikind), intent(out)}]{imax, }
-\item[{integer(kind=ikind), intent(out)}]{jmax}
-\end{DoxyParamCaption}
-)\hspace{0.3cm}{\ttfamily [private]}}\label{namespacelinalg_a7c0cf8014a0c29c559a27cf65aa2585e}
-
-
-Definition at line 289 of file linalg.\+f90.
-
-
-
-Referenced by ludecomp().
-
-
-\begin{DoxyCode}
-289     \textcolor{keywordtype}{use }typy
-290     \textcolor{keywordtype}{Real(kind=rkind)},\textcolor{keywordtype}{dimension(:,:)}, \textcolor{keywordtype}{intent(in)} :: a
-291     \textcolor{keywordtype}{Integer(kind=ikind)}, \textcolor{keywordtype}{intent(in)}             :: i
-292     \textcolor{keywordtype}{Integer(kind=ikind)}, \textcolor{keywordtype}{intent(out)}            :: imax,jmax
-293   
-294     \textcolor{keywordtype}{Real(kind=rkind)}    :: maxv,wrk
-295     \textcolor{keywordtype}{Integer(kind=ikind)} :: j, k, n
-296  
-297     n = ubound(a,1)
-298     maxv =  abs(a(i,i))
-299     imax = i
-300     jmax = i
-301     \textcolor{keywordflow}{do} j=i,n
-302       \textcolor{keywordflow}{do} k=1,n
-303         wrk = abs(a(j,k))
-304         \textcolor{keywordflow}{if} ( wrk > maxv) then
-305           imax = j
-306           jmax = i
-307           maxv = wrk
-308 \textcolor{keyword}{        end }if
-309 \textcolor{keyword}{      end }do
-310 \textcolor{keyword}{    end }do
-\end{DoxyCode}
-
-
-Here is the caller graph for this function\+:\nopagebreak
-\begin{figure}[H]
-\begin{center}
-\leavevmode
-\includegraphics[width=234pt]{namespacelinalg_a7c0cf8014a0c29c559a27cf65aa2585e_icgraph}
-\end{center}
-\end{figure}
-
-
-\index{linalg@{linalg}!gem@{gem}}
-\index{gem@{gem}!linalg@{linalg}}
-\subsubsection[{gem(a, b, x)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, public linalg\+::gem (
-\begin{DoxyParamCaption}
-\item[{real(kind=rkind), dimension(\+:,\+:), intent(in)}]{a, }
-\item[{real(kind=rkind), dimension(\+:), intent(in)}]{b, }
-\item[{real(kind=rkind), dimension(\+:), intent(out)}]{x}
-\end{DoxyParamCaption}
-)}\label{namespacelinalg_a59ec4fd454fde0117c42b153537f53fd}
-
-
-Gaussova eliminace. 
-
-Gaussova eliminace 
-
-Definition at line 136 of file linalg.\+f90.
-
-
-
-Referenced by geom\+\_\+tools\+::gravity\+\_\+center(), and integral\+::setup().
-
-
-\begin{DoxyCode}
-136     \textcolor{keywordtype}{use }typy
-137     \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:,:)}, \textcolor{keywordtype}{intent(in)} :: a
-138     \textcolor{comment}{!realny 2rozmer pole je to parametr a vstupni parametr}
-139     \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{intent(in)} :: b
-140     \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{intent(out)} :: x
-141     \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{allocatable} :: aradek
-142     \textcolor{comment}{!matice a pochazi z main, nemuzu ji tedy menit,}
-143     \textcolor{comment}{!proto si definuju matici aa, do ktery zapisu matici a}
-144     \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:,:)}, \textcolor{keywordtype}{allocatable} :: aa
-145     \textcolor{keywordtype}{real(kind=rkind)} :: wrk
-146 
-147 
-148     \textcolor{keywordtype}{integer} :: asizev, asizeh,i,j
-149     \textcolor{keywordtype}{integer} :: bsize, n,k, maxindex
-150     \textcolor{keywordtype}{integer} :: mm
-151     \textcolor{keywordtype}{integer} :: xsize
-152 
-153     asizev=ubound(a,1)
-154     \textcolor{comment}{!priradi rozmer horizontalni }
-155     asizeh=ubound(a,2)
-156     \textcolor{comment}{!priradi rozmer vertikalni }
-157     bsize=ubound(b,1)
-158     xsize=ubound(x,1)
-159     \textcolor{comment}{!print *, asizeH , asizeV , bsize , xsize}
-160     \textcolor{keywordflow}{if} (asizeh==xsize .AND. asizev==bsize) then
-161       \textcolor{comment}{!    print *, "zatim ok"}
-162       \textcolor{keywordflow}{if} (asizeh/=asizev) then
-163         \textcolor{comment}{!   print *, "matice neni |\_|"}
-164       \textcolor{keywordflow}{else} 
-165         \textcolor{comment}{!    print *, "jdeme pocitat"}
-166         \textcolor{keyword}{allocate}(aa(asizev,asizeh+1))
-167         \textcolor{keyword}{allocate}(aradek(1:asizeh+1))
-168         aa(1:asizeh,1:asizev)=a
-169         aa(:,asizev+1)=b
-170         \textcolor{comment}{!    x=aa(:,asizeV+1) -pokus pro vypis vektoru vysledu}
-171         n=asizeh
-172         \textcolor{keywordflow}{do} i=1,n-1
-173           \textcolor{comment}{!prvni hodnata UDAVA RADKY, DRUHA SLOUPEC}
-174           \textcolor{comment}{!MAXINDEX je poloha max. cisla  z radky i az n a sloupec i}
-175           maxindex = i
-176           wrk = abs(aa(i,i))
-177           \textcolor{keywordflow}{do} j=i+1,n
-178             \textcolor{keywordflow}{if} (abs(aa(j,i)) > wrk ) then
-179               wrk = abs(aa(j,i))
-180               maxindex  = j
-181 \textcolor{keyword}{            end }if
-182 \textcolor{keyword}{          end }do
-183           \textcolor{comment}{!jestlize se maxindex rovna i nic neni treba delat,}
-184           \textcolor{comment}{!je-li ruzny, tzn. > nez i je treba vymenit i radek a maxindex radek}
-185           \textcolor{comment}{!klasicka zamena prvku}
-186           \textcolor{keywordflow}{if} (maxindex > i) then
-187             \textcolor{comment}{!a radek priradim zkoumany radek (pouze uschova)}
-188             aradek=aa(i,:)
-189             \textcolor{comment}{!priradim radek s maximalni hodnoutou do reseneho radku...}
-190             aa(i,:)=aa(maxindex,:)   
-191             aa(maxindex,:)=aradek
-192             \textcolor{keywordflow}{if} (aa(i,i) == 0) then
-193               \textcolor{comment}{!print *,"matice je singularni..."}
-194               return
-195 \textcolor{keyword}{            end}if
-196 \textcolor{keyword}{          end}if
-197           \textcolor{comment}{!vydelim reseny radek hodnotu nejvetsiho prvku }
-198           \textcolor{comment}{!(ktery sme predtim umistili na diagonalu)}
-199           wrk=aa(i,i)
-200           aa(i,i:)=aa(i,i:)/wrk
-201           \textcolor{keywordflow}{do} j= i+1,n
-202             \textcolor{comment}{!vezmu j-ty radek i-ty sloupec}
-203             wrk=aa(j,i)
-204             \textcolor{comment}{!aa(j,:) - vybiram cely j-ty radek}
-205             aa(j,:)=aa(j,:)-wrk*aa(i,:)
-206 \textcolor{keyword}{          end }do
-207           \textcolor{comment}{!call printmatrix(aa)}
-208 \textcolor{keyword}{        end}do
-209         aa(n,n+1)=aa(n,n+1)/aa(n,n)
-210         \textcolor{keywordflow}{do} i=n-1, 1, -1
-211           \textcolor{comment}{!dotproduct - funkce provedejici skalarni soucin}
-212           aa(i,n+1)=(aa(i,n+1)- dot\_product( aa(i,i+1:n),aa(i+1:n,n+1)))/aa(i,i)
-213 \textcolor{keyword}{        end }do
-214         \textcolor{comment}{!aa(:,n+1) je vektor reseni soustavy}
-215         x=aa(:,n+1)
-216         \textcolor{keyword}{deallocate}(aa) 
-217         \textcolor{keyword}{deallocate}(aradek)
-218 \textcolor{keyword}{      end}if
-219     else
-220       \textcolor{comment}{! print *, "co delas??"}
-221 \textcolor{keyword}{    end}if
-\end{DoxyCode}
-
-
-Here is the caller graph for this function\+:\nopagebreak
-\begin{figure}[H]
-\begin{center}
-\leavevmode
-\includegraphics[width=350pt]{namespacelinalg_a59ec4fd454fde0117c42b153537f53fd_icgraph}
-\end{center}
-\end{figure}
-
-
-\index{linalg@{linalg}!ludecomp@{ludecomp}}
-\index{ludecomp@{ludecomp}!linalg@{linalg}}
-\subsubsection[{ludecomp(\+A, p, q)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, public linalg\+::ludecomp (
-\begin{DoxyParamCaption}
-\item[{real(kind=rkind), dimension(\+:,\+:), intent(inout)}]{A, }
-\item[{integer(kind=ikind), dimension(\+:), intent(out)}]{p, }
-\item[{integer(kind=ikind), dimension(\+:), intent(out)}]{q}
-\end{DoxyParamCaption}
-)}\label{namespacelinalg_a9107da1d2e606f47e335aaab8f14823e}
-
-
-LU rozklad. 
-
-LU rozklad s uplnym vyberem hlavniho prvku~\newline
- ! realne behem rozkladu presouva prvky tedy L a U jsou opravdu trojuhelniky
-
-
-\begin{DoxyParams}[1]{Parameters}
-\mbox{\tt in,out}  & {\em a} & ctvercova matice -\/ vstup\+: rozkladana matice~\newline
- ..................vystup\+: LU faktory\\
-\hline
-\mbox{\tt out}  & {\em p} & radkova permutace, vystupni parametr\\
-\hline
-\mbox{\tt out}  & {\em q} & sloupcova permutace, vystupni parametr \\
-\hline
-\end{DoxyParams}
-
-
-Definition at line 234 of file linalg.\+f90.
-
-
-
-References fmax().
-
-
-\begin{DoxyCode}
-234     \textcolor{keywordtype}{use }typy
-238     \textcolor{keywordtype}{Real(kind=rkind)},\textcolor{keywordtype}{dimension(:,:)}, \textcolor{keywordtype}{intent(in out)} :: a
-240     \textcolor{keywordtype}{Integer(kind=ikind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{intent(out)}  :: p
-242     \textcolor{keywordtype}{Integer(kind=ikind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{intent(out)}  :: q
-243     
-244     
-245     \textcolor{keywordtype}{Integer(kind=ikind)}  :: n,n1,n2,i,j,k,imax,jmax
-246     \textcolor{keywordtype}{Real(kind=rkind)} :: wrk
-247 
-248     \textcolor{comment}{! zjistim rozmery matice}
-249     n1 = ubound(a,1)
-250     n2 = ubound(a,2)
-251     \textcolor{comment}{!print *, "n1,n2=", n1,n2}
-252     \textcolor{keywordflow}{if} ( n1 == n2) \textcolor{keywordflow}{then} \textcolor{comment}{! je to ctvercova matice, jdu na to}
-253       n = n1
-254       p = (/ (i,i=1,n) /) \textcolor{comment}{! priprava zaznamu o permutaci}
-255       q = p               \textcolor{comment}{! napred zadna}
-256       \textcolor{comment}{!print *,p}
-257       \textcolor{keywordflow}{do} i=1,n-1
-258         \textcolor{keyword}{call }fmax(a,i,imax,jmax) \textcolor{comment}{! najdi nejvetsi prvek}
-259         n1     = p(imax)         \textcolor{comment}{! zaznamenej presun}
-260         p(imax)= p(i)
-261         p(i)   = n1
-262         n1     = q(jmax)
-263         q(jmax)= q(i)
-264         q(i)   = n1
-265         \textcolor{keywordflow}{do} j=1,n                 \textcolor{comment}{!a opravdu presun}
-266           wrk       = a(i,j)
-267           a(i,j)    = a(imax,j)
-268           a(imax,j) = wrk 
-269 \textcolor{keyword}{        end }do
-270         \textcolor{keywordflow}{do} j=1,n
-271           wrk       = a(j,i)
-272           a(j,i)    = a(j,jmax)
-273           a(j,jmax) = wrk 
-274 \textcolor{keyword}{        end }do
-275         \textcolor{comment}{! ted jiz opravdu rozkladej}
-276         a(i+1:,i) = a(i+1:,i)/a(i,i)
-277         \textcolor{keywordflow}{do} j=i+1,n
-278           a(i+1:,j) = a(i+1:,j) - a(i,j)*a(i+1:,i)
-279 \textcolor{keyword}{        end }do
-280 \textcolor{keyword}{      end }do
-281     else
-282       print *, \textcolor{stringliteral}{"neco divneho"}
-283       stop  
-284 \textcolor{keyword}{    end }if
-\end{DoxyCode}
-
-
-Here is the call graph for this function\+:\nopagebreak
-\begin{figure}[H]
-\begin{center}
-\leavevmode
-\includegraphics[width=234pt]{namespacelinalg_a9107da1d2e606f47e335aaab8f14823e_cgraph}
-\end{center}
-\end{figure}
-
-
-\index{linalg@{linalg}!lumul@{lumul}}
-\index{lumul@{lumul}!linalg@{linalg}}
-\subsubsection[{lumul(\+L\+U, A)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, public linalg\+::lumul (
-\begin{DoxyParamCaption}
-\item[{real(kind=rkind), dimension(\+:,\+:), intent(in)}]{LU, }
-\item[{real(kind=rkind), dimension(\+:,\+:), intent(out)}]{A}
-\end{DoxyParamCaption}
-)}\label{namespacelinalg_a58f13d69270df860cd5f45495c115aee}
-
-
-Definition at line 314 of file linalg.\+f90.
-
-
-\begin{DoxyCode}
-314     \textcolor{keywordtype}{use }typy
-315     \textcolor{keywordtype}{Real(kind=rkind)}, \textcolor{keywordtype}{dimension(:,:)}, \textcolor{keywordtype}{intent(in)} :: lu
-316     \textcolor{keywordtype}{Real(kind=rkind)}, \textcolor{keywordtype}{dimension(:,:)}, \textcolor{keywordtype}{intent(out)} :: a
-317 
-318     \textcolor{keywordtype}{Real(kind=rkind)}    :: wrk
-319     \textcolor{keywordtype}{Integer(kind=ikind)} :: i,j,k,n,kmax
-320 
-321     a = 0    
-322     n = ubound(a,1)
-323     \textcolor{keywordflow}{do} i=1,n
-324       \textcolor{keywordflow}{do} j=1,n
-325         wrk = 0
-326         \textcolor{keywordflow}{if} (i<=j) then
-327           kmax = i-1
-328           wrk = lu(i,j)
-329         else
-330           kmax = j
-331 \textcolor{keyword}{        end }if
-332         \textcolor{keywordflow}{do} k=1,kmax
-333           wrk = wrk + lu(i,k)*lu(k,j)
-334 \textcolor{keyword}{        end }do
-335         a(i,j) = wrk
-336 \textcolor{keyword}{      end }do
-337 \textcolor{keyword}{    end }do
-\end{DoxyCode}
-\index{linalg@{linalg}!print\+\_\+matrix@{print\+\_\+matrix}}
-\index{print\+\_\+matrix@{print\+\_\+matrix}!linalg@{linalg}}
-\subsubsection[{print\+\_\+matrix(\+A, nc, width)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, public linalg\+::print\+\_\+matrix (
-\begin{DoxyParamCaption}
-\item[{real(kind=rkind), dimension(\+:,\+:), intent(in)}]{A, }
-\item[{integer(kind=ikind), intent(in), optional}]{nc, }
-\item[{integer, intent(in), optional}]{width}
-\end{DoxyParamCaption}
-)}\label{namespacelinalg_a920de4aa067c3ee002f3bdb2c03117eb}
-
-
-vytiskne matici 
-
-
-\begin{DoxyParams}[1]{Parameters}
-\mbox{\tt in}  & {\em a} & matice k tisknuti\\
-\hline
-\mbox{\tt in}  & {\em nc} & pocet tistenych sloupcu,nepovinny, default = 6\\
-\hline
-\mbox{\tt in}  & {\em width} & sirka cisel \\
-\hline
-\end{DoxyParams}
-
-
-Definition at line 26 of file linalg.\+f90.
-
-
-\begin{DoxyCode}
-26    \textcolor{comment}{! vytiskne matici, pocet sloupcu tisku je nc}
-27    \textcolor{keywordtype}{use }typy
-28    \textcolor{comment}{!vytiskne matici}
-29    \textcolor{comment}{! simuluje format tisku matic Matlabu}
-30 
-32       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:,:)}, \textcolor{keywordtype}{intent(in)} :: a
-34       \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional}    :: nc
-36       \textcolor{keywordtype}{integer}, \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional}                :: width
-37       \textcolor{comment}{!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!}
-38       \textcolor{comment}{!lokalni promenne}
-39       \textcolor{keywordtype}{integer(kind=ikind)} :: nc1
-40       \textcolor{keywordtype}{integer(kind=ikind)} :: ncol
-41       \textcolor{keywordtype}{integer(kind=ikind)} :: nrow
-42       \textcolor{keywordtype}{integer(kind=ikind)} :: i
-43       \textcolor{keywordtype}{integer(kind=ikind)} :: j
-44       \textcolor{keywordtype}{integer(kind=ikind)} :: col1
-45       \textcolor{keywordtype}{integer(kind=ikind)} :: col2
-46       \textcolor{keywordtype}{integer}                  :: w1
-47       \textcolor{keywordtype}{character(len=200)}:: fm\textcolor{comment}{!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!}
-49       \textcolor{comment}{!vlastni kod}
-50       \textcolor{comment}{!vyridime defaulty}
-51       \textcolor{keywordflow}{if} ( \textcolor{keyword}{present}(nc) ) then
-52         nc1 = nc
-53       else
-54         nc1 = 6
-55 \textcolor{keyword}{      end }if
-56       
-57       \textcolor{keywordflow}{if} ( \textcolor{keyword}{present}(width) ) then
-58          w1 = width
-59       else
-60          w1 = 20
-61 \textcolor{keyword}{      end }if
-62       \textcolor{comment}{!ted opravdu tisknem}
-63       ncol = ubound(a,2)
-64       nrow = ubound(a,1)
-65       \textcolor{keywordflow}{do} i=1,ncol/nc1
-66         col1 = (i-1)*nc1+1
-67         col2 = i*nc1
-68         \textcolor{keyword}{write}(unit=fm,fmt=\textcolor{stringliteral}{"(A1,I0,A2,I0,A1,I0,A1)"})   \textcolor{stringliteral}{"("},nc1,\textcolor{stringliteral}{"Es"},w1+8,\textcolor{stringliteral}{"."},w1,\textcolor{stringliteral}{")"}
-69         print *, \textcolor{stringliteral}{"tisknu sloupce : ("},col1,\textcolor{stringliteral}{","},col2,\textcolor{stringliteral}{")"}
-70         \textcolor{keywordflow}{do} j=1,nrow
-71           print fm, a(j,col1:col2)
-72 \textcolor{keyword}{        end }do
-73         print *, \textcolor{stringliteral}{"  "} 
-74 \textcolor{keyword}{      end }do
-75       \textcolor{keywordflow}{if} (modulo(ncol,nc1) /= 0 ) then
-76         col1 = (ncol/nc1)*nc1+1
-77         col2 = ncol      
-78         print *, \textcolor{stringliteral}{"tisknu sloupce : ("},col1,\textcolor{stringliteral}{","},col2,\textcolor{stringliteral}{")"}
-79         \textcolor{keywordflow}{do} j=1,nrow
-80           print \textcolor{stringliteral}{"(100E30.20)"}, a(j,col1:col2)
-81 \textcolor{keyword}{        end }do
-82         print *, \textcolor{stringliteral}{"  "} 
-83 \textcolor{keyword}{      end }if
-\end{DoxyCode}
-\index{linalg@{linalg}!print\+\_\+vector@{print\+\_\+vector}}
-\index{print\+\_\+vector@{print\+\_\+vector}!linalg@{linalg}}
-\subsubsection[{print\+\_\+vector(\+V, nc)}]{\setlength{\rightskip}{0pt plus 5cm}subroutine, public linalg\+::print\+\_\+vector (
-\begin{DoxyParamCaption}
-\item[{real(kind=rkind), dimension(\+:), intent(in)}]{V, }
-\item[{integer(kind=ikind), intent(in), optional}]{nc}
-\end{DoxyParamCaption}
-)}\label{namespacelinalg_a9fcb33ef2f36230f2c4078a2a3f8e97b}
-
-
-vytiskne vektor 
-
-
-\begin{DoxyParams}[1]{Parameters}
-\mbox{\tt in}  & {\em v} & tisteny vektor\\
-\hline
-\mbox{\tt in}  & {\em nc} & pocet tistenych sloupcu, default = 6 \\
-\hline
-\end{DoxyParams}
-
-
-Definition at line 90 of file linalg.\+f90.
-
-
-\begin{DoxyCode}
-90    \textcolor{comment}{! vytiskne vektor, pocet sloupcu tisku je nc}
-91      \textcolor{keywordtype}{use }typy
-92      \textcolor{comment}{!parametry}
-94       \textcolor{keywordtype}{real(kind=rkind)}, \textcolor{keywordtype}{dimension(:)}, \textcolor{keywordtype}{intent(in)} :: v
-96       \textcolor{keywordtype}{integer(kind=ikind)}, \textcolor{keywordtype}{intent(in)}, \textcolor{keywordtype}{optional}  :: nc 
-97       \textcolor{comment}{!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!}
-98       \textcolor{comment}{!lokalni promenne}
-99       \textcolor{keywordtype}{integer(kind=ikind)} :: nc1, ncol, i, col1, col2
-100       \textcolor{comment}{!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!}
-101       \textcolor{comment}{!vlastni kod}
-102       \textcolor{comment}{!vyridime defaulty}
-103       \textcolor{keywordflow}{if} ( \textcolor{keyword}{present}(nc) ) then
-104         nc1 = nc
-105       else
-106         nc1 = 6
-107 \textcolor{keyword}{      end }if
-108       \textcolor{comment}{!ted opravdu tisknem}
-109       ncol = ubound(v,1)
-110       \textcolor{keywordflow}{do} i=1,ncol/nc1
-111         col1 = (i-1)*nc1+1
-112         col2 = i*nc1
-113         print *, \textcolor{stringliteral}{"tisknu usek : ("},col1,\textcolor{stringliteral}{","},col2,\textcolor{stringliteral}{")"}
-114         print \textcolor{stringliteral}{"(100E30.20)"}, v(col1:col2)
-115         print *, \textcolor{stringliteral}{"  "} 
-116 \textcolor{keyword}{      end }do
-117       \textcolor{keywordflow}{if} (modulo(ncol,nc1) /= 0) then
-118         col1 = (ncol/nc1)*nc1+1
-119         col2 = ncol      
-120         print *, \textcolor{stringliteral}{"tisknu usek : ("},col1,\textcolor{stringliteral}{","},col2,\textcolor{stringliteral}{")"}
-121         print \textcolor{stringliteral}{"(100E30.20)"}, v(col1:col2)
-122         print *, \textcolor{stringliteral}{"  "}    
-123 \textcolor{keywordflow}{      end if}   
-\end{DoxyCode}

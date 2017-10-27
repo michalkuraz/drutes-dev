@@ -1,9 +1,0 @@
-<map id="decomp_tools::mulax_dd" name="decomp_tools::mulax_dd">
-<area shape="rect" id="node2" href="$namespacedecomp__tools.html#ac3dffa95121aa59d12a617f71d43f193" title="decomp_tools::build\l_coarsemtx" alt="" coords="241,5,380,47"/>
-<area shape="rect" id="node6" href="$namespacedecomp__tools.html#ac18f0d14ca31ab08c7a84b1667c12cfa" title="decomp_tools::get_residual" alt="" coords="220,71,401,98"/>
-<area shape="rect" id="node3" href="$namespaceschwarz__dd.html#a5e1abf918f5afac4e96fa81e0cfa5f7a" title="solves the problem using Picard method with Schwarz multiplicative domain decomposition reflecting th..." alt="" coords="451,5,601,47"/>
-<area shape="rect" id="node4" href="$namespacemanage__pointers.html#a8275d1f0bd8032fa68b910b70058a4cf" title="set pointers for the entire problem, except the file read pointers " alt="" coords="654,5,801,47"/>
-<area shape="rect" id="node5" href="$main_8f90.html#a8ec2266d83cd6c0b762cbcbc92c0af3d" title="main" alt="" coords="852,13,903,39"/>
-<area shape="rect" id="node7" href="$namespaceschwarz__dd__time__test.html#ac055f89162bd3f14323b125cdd0253a6" title="solves the problem using Picard method with Schwarz multiplicative domain decomposition reflecting th..." alt="" coords="449,71,603,112"/>
-<area shape="rect" id="node8" href="$namespaceschwarz__dd__time__test.html#a28474cc01fb4558d0a875080f5a52724" title="solves the problem using Picard method with Schwarz multiplicative domain decomposition reflecting th..." alt="" coords="651,71,804,112"/>
-</map>

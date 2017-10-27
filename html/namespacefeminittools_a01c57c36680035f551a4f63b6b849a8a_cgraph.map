@@ -1,5 +1,0 @@
-<map id="feminittools::set_boundary" name="feminittools::set_boundary">
-<area shape="rect" id="node2" href="$namespacefeminittools.html#a419a077d1fcd5cada245669a697e1800" title="this procedure identifies boundary nodes on 2D mesh only. The method searches for all surrounding nod..." alt="" coords="228,5,364,47"/>
-<area shape="rect" id="node3" href="$namespacegeom__tools.html#ac7d40a2d1dba95e3a69c11bb9fa21b2f" title="geom_tools::angle" alt="" coords="412,13,540,39"/>
-<area shape="rect" id="node4" href="$namespacegeom__tools.html#a91ddf015e5cea9e21d182b93603f5139" title="geom_tools::dist" alt="" coords="588,13,707,39"/>
-</map>

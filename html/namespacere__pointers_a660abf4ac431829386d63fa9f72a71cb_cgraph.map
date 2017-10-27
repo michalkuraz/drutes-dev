@@ -1,6 +1,0 @@
-<map id="re_pointers::re_pressheadbc" name="re_pointers::re_pressheadbc">
-<area shape="rect" id="node2" href="$namespacere__constitutive.html#a95e6667a128b87ca0a7781209e30b1ac" title="re_constitutive::re\l_dirichlet_bc" alt="" coords="245,5,372,47"/>
-<area shape="rect" id="node3" href="$namespacere__constitutive.html#a3166c88db2634fc8fcc9d579358676d0" title="re_constitutive::re\l_dirichlet_height_bc" alt="" coords="240,71,377,112"/>
-<area shape="rect" id="node4" href="$namespacere__constitutive.html#a1067d48cafe8d4463ae78102b1e01b84" title="re_constitutive::re\l_neumann_bc" alt="" coords="245,136,372,177"/>
-<area shape="rect" id="node5" href="$namespacere__constitutive.html#aaf76632a958340d25d948fafea6a16c9" title="re_constitutive::re\l_null_bc" alt="" coords="245,201,372,243"/>
-</map>

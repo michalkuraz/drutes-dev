@@ -1,7 +1,0 @@
-<map id="read_inputs::read_1dmesh_int" name="read_inputs::read_1dmesh_int">
-<area shape="rect" id="node2" href="$namespacereadtools.html#ab8bc95060d3f5e8bfb8d4e4519c3568a" title="readtools::comment" alt="" coords="252,5,389,32"/>
-<area shape="rect" id="node3" href="$namespacereadtools.html#a9481f44f055c2f4bc518a4b91db43b5c" title="readtools::file_error" alt="" coords="463,56,596,83"/>
-<area shape="rect" id="node4" href="$namespacesimegen.html#aa20a1b7ef75f108fb29cd787f0cf5d3b" title="simegen::simegen1d" alt="" coords="249,107,392,133"/>
-<area shape="rect" id="node5" href="$namespacecore__tools.html#a05e8cc58b84b9391b49c5070db1160f7" title="allocates structures for nodes and elements " alt="" coords="440,107,619,133"/>
-<area shape="rect" id="node6" href="$namespacecore__tools.html#af0abb0a9edbab36984797ab055df1e0b" title="core_tools::avg" alt="" coords="474,157,585,184"/>
-</map>

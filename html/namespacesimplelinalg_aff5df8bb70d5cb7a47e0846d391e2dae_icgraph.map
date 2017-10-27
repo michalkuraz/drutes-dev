@@ -1,7 +1,0 @@
-<map id="simplelinalg::determinant" name="simplelinalg::determinant">
-<area shape="rect" id="node2" href="$namespacesimplelinalg.html#a443d39cabe9830ddbb7e553cb510cad4" title="subroutine, that evaluates inverse matrix up to dimension 3 " alt="" coords="220,5,351,47"/>
-<area shape="rect" id="node3" href="$namespacefem__tools.html#aef722f7948c3d119dc3410f572f26821" title="fem_tools::icond4neumann" alt="" coords="399,13,577,39"/>
-<area shape="rect" id="node4" href="$namespacefemmat.html#a52b471f60b8aeb92d66b95268970a0ac" title="solves the problem using Picard method " alt="" coords="625,13,772,39"/>
-<area shape="rect" id="node5" href="$namespacemanage__pointers.html#a8275d1f0bd8032fa68b910b70058a4cf" title="set pointers for the entire problem, except the file read pointers " alt="" coords="820,5,967,47"/>
-<area shape="rect" id="node6" href="$main_8f90.html#a8ec2266d83cd6c0b762cbcbc92c0af3d" title="main" alt="" coords="1015,13,1065,39"/>
-</map>

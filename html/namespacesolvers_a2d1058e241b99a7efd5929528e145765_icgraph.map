@@ -1,6 +1,0 @@
-<map id="solvers::vycdet" name="solvers::vycdet">
-<area shape="rect" id="node2" href="$namespacesolvers.html#a02123ec53b1506ac8bf72231f8a96839" title="solvers::esteig" alt="" coords="164,38,271,65"/>
-<area shape="rect" id="node3" href="$namespacesolvers.html#a3f42c7320ceede904a3ea977a89693cf" title="metoda sdruzenych gradientu Metoda sdruzenych gradientu " alt="" coords="322,13,409,39"/>
-<area shape="rect" id="node5" href="$namespacesolvers.html#a8c0a289ad14e4761a2c621b2914fd0aa" title="metoda sdruzenych gradientu Metoda predpodminenych sdruzenych gradientu " alt="" coords="319,63,412,90"/>
-<area shape="rect" id="node4" href="$namespacesolver__interfaces.html#aeddca7240bf222b090a3b7ae08905998" title="solver_interfaces::\lcg_face" alt="" coords="460,5,589,47"/>
-</map>

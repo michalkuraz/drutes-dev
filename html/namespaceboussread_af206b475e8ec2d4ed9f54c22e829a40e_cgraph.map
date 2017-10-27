@@ -1,6 +1,0 @@
-<map id="boussread::boussreader" name="boussread::boussreader">
-<area shape="rect" id="node2" href="$namespacereadtools.html#ab8bc95060d3f5e8bfb8d4e4519c3568a" title="readtools::comment" alt="" coords="410,5,547,32"/>
-<area shape="rect" id="node3" href="$namespacecore__tools.html#a01c1527fcc56448471e2b349571e51ee" title="core_tools::find_unit" alt="" coords="409,107,548,133"/>
-<area shape="rect" id="node4" href="$namespacereadtools.html#a35dde6b411a1476727771fcb8f5d1bc9" title="readtools::readbcvals" alt="" coords="215,56,361,83"/>
-<area shape="rect" id="node5" href="$namespacereadtools.html#a9481f44f055c2f4bc518a4b91db43b5c" title="readtools::file_error" alt="" coords="412,56,545,83"/>
-</map>

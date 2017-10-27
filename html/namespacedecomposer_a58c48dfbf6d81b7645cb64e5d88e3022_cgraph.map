@@ -1,5 +1,0 @@
-<map id="decomposer::make_quadmesh" name="decomposer::make_quadmesh">
-<area shape="rect" id="node2" href="$namespacegeom__tools.html#a28a5bc6f02c538f8998441d9a251a8d0" title="geom_tools::find_neighbours" alt="" coords="253,5,441,32"/>
-<area shape="rect" id="node4" href="$namespacecore__tools.html#abe09f9b4dc2abc5384a24020c5031e95" title="core_tools::write_log" alt="" coords="276,56,419,83"/>
-<area shape="rect" id="node3" href="$namespaceprinttools.html#ac71e43f1627ed0239558720411181068" title="if default output is stdout, then this procedure prints nice progress bar " alt="" coords="489,5,640,32"/>
-</map>

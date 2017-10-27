@@ -1,6 +1,0 @@
-<map id="pde_objs::do_nothing" name="pde_objs::do_nothing">
-<area shape="rect" id="node2" href="$namespacedrutes__init.html#a9acb7782a166647924dd06acb9ab5786" title="drutes_init::pde_constructor" alt="" coords="199,13,381,39"/>
-<area shape="rect" id="node5" href="$interfacepde__objs_1_1treat__pde__subrt.html#a9f5b27926620eb08071cf3c1c49c199b" title="pde_objs::treat_pde\l_subrt::treat_pde_subrt" alt="" coords="212,64,368,105"/>
-<area shape="rect" id="node3" href="$namespacedrutes__init.html#ac0d99b874b2dbf6a5726f534d3ee0943" title="routine to open all files to read and write " alt="" coords="429,5,552,47"/>
-<area shape="rect" id="node4" href="$main_8f90.html#a8ec2266d83cd6c0b762cbcbc92c0af3d" title="main" alt="" coords="600,13,651,39"/>
-</map>

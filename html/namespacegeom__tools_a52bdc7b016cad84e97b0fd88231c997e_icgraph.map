@@ -1,8 +1,0 @@
-<map id="geom_tools::shoot" name="geom_tools::shoot">
-<area shape="rect" id="node2" href="$namespacegeom__tools.html#ad0cfc5aedee571cb83174e83f5d30606" title="geom_tools::inside" alt="" coords="183,56,313,83"/>
-<area shape="rect" id="node3" href="$namespacedecomposer.html#a98718ed1ed87442f86951d651992261d" title="decomposer::init_decomp" alt="" coords="624,5,795,32"/>
-<area shape="rect" id="node5" href="$namespacedrutes__init.html#ad427e6d36ddcd56e4e4c44eb4dee50c5" title="drutes_init::init_observe" alt="" coords="389,56,549,83"/>
-<area shape="rect" id="node6" href="$namespaceread__inputs.html#a29f942f0f7f893e5e5cf1c53fc3ef61f" title="read_inputs::read_2dmesh_gmsh" alt="" coords="361,111,576,137"/>
-<area shape="rect" id="node4" href="$main_8f90.html#a8ec2266d83cd6c0b762cbcbc92c0af3d" title="main" alt="" coords="843,56,893,83"/>
-<area shape="rect" id="node7" href="$namespacedrutes__init.html#ac0d99b874b2dbf6a5726f534d3ee0943" title="routine to open all files to read and write " alt="" coords="648,107,771,149"/>
-</map>

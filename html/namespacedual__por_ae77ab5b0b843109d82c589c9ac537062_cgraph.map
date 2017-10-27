@@ -1,7 +1,0 @@
-<map id="dual_por::getval_retot_dual" name="dual_por::getval_retot_dual">
-<area shape="rect" id="node2" href="$namespacegeom__tools.html#a4c2336f6e1e7d512a9d81acb21c71456" title="geom_tools::getcoor" alt="" coords="232,5,372,32"/>
-<area shape="rect" id="node4" href="$namespacepde__objs.html#aece3def127980c03c455456068cb3e48" title="returns solution value for p1 approximation " alt="" coords="237,56,367,83"/>
-<area shape="rect" id="node3" href="$namespacegeom__tools.html#a91ddf015e5cea9e21d182b93603f5139" title="geom_tools::dist" alt="" coords="435,5,553,32"/>
-<area shape="rect" id="node5" href="$namespacepde__objs.html#ad649cdb29899f292c7702c48fa9a6cf0" title="in case of asynchronyous temporal integration this function is separated from getvalp1, if standard temporal integration used, then this function is called from the first line of getvalp1 " alt="" coords="420,56,568,83"/>
-<area shape="rect" id="node6" href="$namespacepde__objs.html#aafa68686beee7a3cff07efb9febdfae0" title="pde_objs::get2dderivative" alt="" coords="616,56,787,83"/>
-</map>

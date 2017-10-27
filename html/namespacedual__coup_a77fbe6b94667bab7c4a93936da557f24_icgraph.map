@@ -1,8 +1,0 @@
-<map id="dual_coup::dual_coupling_k" name="dual_coup::dual_coupling_k">
-<area shape="rect" id="node2" href="$namespacedual__tab.html#afffe9ba95899c3c5bb0c1d53929c5ed3" title="Tabular versions of coupling term for case(1) and case(2) " alt="" coords="236,58,419,85"/>
-<area shape="rect" id="node3" href="$namespacere__dual__pointers.html#aa76c31f626d7323a2032a80d6cac5ff6" title="Links to releveant subroutines for matrix domain. " alt="" coords="673,96,809,137"/>
-<area shape="rect" id="node6" href="$namespacere__dual__pointers.html#a7c3a2d7fee47e270402505ab315ca55d" title="Links to releveant subroutines for fracture domain. " alt="" coords="673,5,809,47"/>
-<area shape="rect" id="node7" href="$namespacedual__tab.html#afde4065ace745063aac1c62ea6d318f8" title="dual_tab::dual_coupling\l_neg_tab" alt="" coords="467,51,625,92"/>
-<area shape="rect" id="node4" href="$namespacemanage__pointers.html#a8275d1f0bd8032fa68b910b70058a4cf" title="set pointers for the entire problem, except the file read pointers " alt="" coords="857,51,1004,92"/>
-<area shape="rect" id="node5" href="$main_8f90.html#a8ec2266d83cd6c0b762cbcbc92c0af3d" title="main" alt="" coords="1052,58,1103,85"/>
-</map>

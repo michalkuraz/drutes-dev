@@ -1,5 +1,0 @@
-<map id="solvers::lduback" name="solvers::lduback">
-<area shape="rect" id="node2" href="$namespacesolver__interfaces.html#affcc4b462663ec74c63d7318e182ff71" title="solver_interfaces::\lldu_face" alt="" coords="171,5,300,47"/>
-<area shape="rect" id="node3" href="$namespacemanage__pointers.html#a8275d1f0bd8032fa68b910b70058a4cf" title="set pointers for the entire problem, except the file read pointers " alt="" coords="348,5,495,47"/>
-<area shape="rect" id="node4" href="$main_8f90.html#a8ec2266d83cd6c0b762cbcbc92c0af3d" title="main" alt="" coords="543,13,593,39"/>
-</map>

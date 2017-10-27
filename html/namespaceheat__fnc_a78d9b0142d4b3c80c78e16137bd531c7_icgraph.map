@@ -1,5 +1,0 @@
-<map id="heat_fnc::heat_convect" name="heat_fnc::heat_convect">
-<area shape="rect" id="node2" href="$namespaceheat__pointers.html#a722171d0f13e6c6c18092dfdbca69220" title="heat_pointers::heat" alt="" coords="212,13,345,39"/>
-<area shape="rect" id="node3" href="$namespacemanage__pointers.html#a8275d1f0bd8032fa68b910b70058a4cf" title="set pointers for the entire problem, except the file read pointers " alt="" coords="393,5,540,47"/>
-<area shape="rect" id="node4" href="$main_8f90.html#a8ec2266d83cd6c0b762cbcbc92c0af3d" title="main" alt="" coords="588,13,639,39"/>
-</map>
