@@ -1,14 +1,78 @@
 #!/usr/bin/env Rscript
 args = commandArgs(trailingOnly=TRUE)
-# read and plot output with different capacity terms
-plotname=args[1]
-if(is.na(plotname)){
+# read and plot output with SHP
+
+ln_args=length(args)
+isNAmin=T
+isNAmax=T
+isNAplot=T
+isNAleg=T
+legopts=c("bottomright", "bottom", "bottomleft", 
+                       "left", "topleft", "top", "topright", "right", "center","none")
+assign_args=T
+if(ln_args>0){
+  options(warn=-1)
+  i=1
+  while(assign_args){
+    switch(args[i],
+           "-name"={plotname=args[i+1];isNAplot=F},
+           "-legpos"={legpos=args[i+1];isNAleg=F;if(!any(legopts==legpos)){stop(paste("-legpos only takes",legopts," as keyword. You entered:",args[i+1]))}},
+           "-min"={if(is.na(as.numeric(args[i+1])))
+                    {stop(paste("-min only takes numeric values. You entered:",args[i+1]))}
+                  else
+                   {lims_min=as.numeric(args[i+1]);isNAmin=F};
+                  if(lims_min<0){stop(paste("-min only takes positive values. You entered:",args[i+1]))}
+                  if(lims_min%%1!=0){stop(paste("-min only takes integer values. You entered:",args[i+1]))}
+                  },
+           "-max"={if(is.na(as.numeric(args[i+1])))
+                    {stop(paste("-max only takes numeric values. You entered:",args[i+1]))}
+                  else
+                    {lims_max=as.numeric(args[i+1]);isNAmax=F};
+                  if(lims_max<0){stop(paste("-max only takes positive values. You entered:",args[i+1]))}
+                  if(lims_max%%1!=0){stop(paste("-max only integer values. You entered:",args[i+1]))}
+                  },
+           "-man"={readline("Manual:      -name - defines plotname 
+             -min - first index of data to be plotted
+             -max - last index of data to be plotted
+             -legpos - position of legend in the plot"); i=i-1
+             },
+           stop(paste("no valid argument, options are -name, -min, -legpos or -man. You entered:",args[i])))
+    i=i+2
+    if(i>ln_args){
+      assign_args=F
+    }
+  }
+    
+}else{
+  plotname=""
+  lims_min=1
+  lims_max=100
+  isNAmin=T
+  isNAmax=T
+  isNAplot=T
+  legpos="topleft"
+}
+
+if(isNAplot){
   plotname=""
 }
+if(isNAleg){
+  legpos="topleft"
+}
+
+if(isNAmin){
+  lims_min=1
+}
+
+if(isNAmax){
+  lims_max=100
+}
+
+lims=lims_min:lims_max
 
 mycol=colorRampPalette(c("darkred", "darkorange","goldenrod1","deepskyblue","royalblue2","darkblue"))
 
-read_data_plot=function(filedr1,filedr2,ext,col1,col2,xlabs,ylabs,whatisplotted,skip=0,k=0,legpos="topleft",idfix=0,lims=1:1000){
+read_data_plot=function(filedr1,filedr2,ext,col1,col2,xlabs,ylabs,whatisplotted,skip=0,k=0,legpos=legpos,idfix=0,lims=lims){
   allread=F
   obs=list()
   n=1
@@ -41,13 +105,36 @@ read_data_plot=function(filedr1,filedr2,ext,col1,col2,xlabs,ylabs,whatisplotted,
 
   ln_obs=length(obs)
   if(ln_obs>0){
+    if(isNAmax){
+      if(lims_min>1){
+        if(lims[length(lims)]!=length(obs[[1]][,col1])){
+          lims=lims_min:length(obs[[1]][,col1])
+        }
+      }else{
+        if(lims[length(lims)]!=length(obs[[1]][,col1])){
+          lims=1:length(obs[[1]][,col1])
+          print("Entire domain is plotted")
+        }
+      }
+      
+      
+    }
     mycolors=mycol(ln_obs)
-    png(paste("obs_",whatisplotted,"_", plotname,".png",sep=""),width = 800, height = 600, units = "px")
-    par(cex=1.7,mar=c(5,4.5,4,2))
+    pname=paste("obs_",whatisplotted,"_", plotname,".png",sep="")
+    idname=2
+    while(file.exists(pname)){
+      pname2=paste("obs_",whatisplotted,"_", plotname,idname,".png",sep="")
+      #print(paste(pname, " already exists"))
+      pname=pname2
+      idname=idname+1
+    }
+    png(pname,width = 800, height = 600, units = "px")
+    print(paste("plotting", pname))
+    par(cex=1.9,mar=c(5,4.5,4,2))
     leg.txt=c()
     for(i in 1:ln_obs){
       if(i == 1){
-        plot(obs[[i]][lims,col1],obs[[i]][lims,col2],type="l",pch=i,col=mycolors[i],ylab=ylabs,xlab=xlabs,ylim=c(mins,maxs),lwd=1.5)
+        plot(obs[[i]][lims,col1],obs[[i]][lims,col2],type="l",pch=i,col=mycolors[i],ylab=ylabs,xlab=xlabs,ylim=c(mins,maxs),lwd=1.5,main=plotname)
       }else{
         par(new=T)
         plot(obs[[i]][lims,col1],obs[[i]][lims,col2],type="l",pch=i,col=mycolors[i],ylab="",xlab="",ylim=c(mins,maxs),axes=F,lwd=1.5)
@@ -61,7 +148,9 @@ read_data_plot=function(filedr1,filedr2,ext,col1,col2,xlabs,ylabs,whatisplotted,
     if(ln_obs>12){
       ncols=3
     }
-    legend(legpos,leg.txt,ncol=ncols,col=mycolors,seg.len=0.5,lty=1,lwd=2,bty="n")
+    if(legpos!="none"){
+      legend(legpos,leg.txt,ncol=ncols,col=mycolors,seg.len=0.5,lty=1,lwd=2,bty="n")
+    }
     invisible(dev.off())
   }
   return(ln_obs)
@@ -69,13 +158,19 @@ read_data_plot=function(filedr1,filedr2,ext,col1,col2,xlabs,ylabs,whatisplotted,
   
 ln_obs=read_data_plot('out/RE_matrix_theta-','drutes-dev/out/RE_matrix_theta-'
                  ,'.dat',col1=2,col2=3,ylabs=expression(paste("vol. water content [-]",sep=""))
-                 ,xlabs="depth [cm]",'water',idfix=1,lims=300:400)
+                 ,xlabs="depth [cm]",'water',idfix=1,lims=lims,legpos = legpos )
 if(ln_obs>0){
   print(paste("plot of",ln_obs,"observation times created: water content vs. depth"))
 }
 
 ln_obs=read_data_plot('out/RE_matrix_press_head-','drutes-dev/out/RE_matrix_press_head-','.dat',col1=2,col2=3,ylabs="pressure head [cm]"
-                 ,xlabs="depth [cm]",'press_head',idfix=0,lims=300:400)
+                 ,xlabs="depth [cm]",'press_head',idfix=0,lims=lims,legpos = legpos )
 if(ln_obs>0){
   print(paste("plot of",ln_obs,"observation times created: pressure head vs. depth"))
+}
+
+ln_obs=read_data_plot('out/RE_matrix_flux-','drutes-dev/out/RE_matrix_flux-','.dat',col1=2,col2=3,ylabs=expression(paste("flux [cm ",d^-1,"]")),
+                      xlabs="depth [cm]",'flux',idfix=0,lims=lims,legpos = legpos )
+if(ln_obs>0){
+  print(paste("plot of",ln_obs,"observation times created: flux vs. depth"))
 }
