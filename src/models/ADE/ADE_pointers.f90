@@ -59,6 +59,7 @@ module ADE_pointers
       
       if (use_richards) processes = processes + 1
       
+      
     end subroutine ADE_processes
     
     
@@ -116,7 +117,6 @@ module ADE_pointers
         call ADEkinsorb(pde_loc(adepos:no_solids+adepos))
       end if 
       
-
     
     end subroutine ADE
     

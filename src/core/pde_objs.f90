@@ -92,6 +92,8 @@ module pde_objs
     !! procnodes(2) = upper id of the process base function
     integer, dimension(2) :: procbase_fnc
     integer(kind=ikind) :: order
+    !> for some problems mass property differs from the solution (e.g. Richards equation - solution is H or h, but the mass property is theta) and so it makes sense to print the mass property as well. For different problems, such as concentration of solutes, the solution and the mass property is identical.
+    logical :: print_mass=.false.
     procedure(getval_str), pass(pde_loc), pointer :: getval
     contains 
       !> get vector of gradient of the solution
@@ -436,8 +438,6 @@ module pde_objs
     function getvalp1loc(pde_loc, quadpnt, stopme) result(val)
       use typy
       use decomp_vars
-      use debug_tools
-
       
       class(pde_str), intent(in) :: pde_loc
       type(integpnt_str), intent(in) :: quadpnt

@@ -32,6 +32,8 @@ module re_reader
 
       pde_loc%mass_name(1) = "theta"
       pde_loc%mass_name(2) = "theta [-]"
+      
+      pde_loc%print_mass = .true.
 
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       !water.conf/matrix.conf
