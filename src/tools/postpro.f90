@@ -144,9 +144,10 @@ module postpro
                     trim(pde(proc)%solution_name(1)), &
                     "-el_avg-",  run,  trim(extension)
 
-        write(unit=filenames(proc,3), fmt=forma) trim(prefix), trim(pde(proc)%problem_name(1)), "_",  &
-                      trim(pde(proc)%mass_name(1)), "-", & 
-                     run,  trim(extension)
+        if (pde(proc)%print_mass) then
+          write(unit=filenames(proc,3), fmt=forma) trim(prefix), trim(pde(proc)%problem_name(1)), "_",  &
+            trim(pde(proc)%mass_name(1)), "-", run,  trim(extension)
+        end if
 
         write(unit=filenames(proc,4), fmt=forma) trim(prefix), trim(pde(proc)%problem_name(1)), "_", &
                      trim(pde(proc)%flux_name(1)), "-", &
@@ -158,14 +159,16 @@ module postpro
          ( .not. anime .and. (mode == -1 .and. postpro_run == 0 ) ) ) then
 
           do i=1, ubound(filenames,2)
-            call find_unit(ids(proc, i), 6000)
-            open(unit=ids(proc, i), file=trim(filenames(proc,i)), action="write", status="replace", iostat=ierr)
-            if (ierr /= 0) then
-              call system("mkdir out/anime")
+            if (i /= 3 .or. pde(proc)%print_mass) then
+              call find_unit(ids(proc, i), 6000)
               open(unit=ids(proc, i), file=trim(filenames(proc,i)), action="write", status="replace", iostat=ierr)
               if (ierr /= 0) then
-                print *, "unexpected system error, called from postpro::make_print()"
-                error stop
+                call system("mkdir out/anime")
+                open(unit=ids(proc, i), file=trim(filenames(proc,i)), action="write", status="replace", iostat=ierr)
+                if (ierr /= 0) then
+                  print *, "unexpected system error, called from postpro::make_print()"
+                  error stop
+                end if
               end if
             end if
           end do  
@@ -207,20 +210,24 @@ module postpro
       if (.not. anime) then
         do proc=1, ubound(pde,1)
           do i=1,ubound(ids,2)
-            if (mode == 0) then
-              close(ids(proc,i))
-            else
-              call flush(ids(proc,i))
+            if (i /= 3 .or. pde(proc)%print_mass) then
+              if (mode == 0) then
+                close(ids(proc,i))
+              else
+                call flush(ids(proc,i))
+              end if
             end if
           end do
         end do	
       else      
         do proc=1, ubound(pde,1)
           do i=1,ubound(ids,2)
-            write(unit=ids(proc,i), fmt="(a,I6.6,a)" ) "xs2png(0, 'K-", anime_run , ".png');"
-            write(unit=ids(proc,i), fmt=*) "clear"
-            write(unit=ids(proc,i), fmt=*) "   "
-            call flush(ids(proc,i))
+           if (i /= 3 .or. pde(proc)%print_mass) then
+              write(unit=ids(proc,i), fmt="(a,I6.6,a)" ) "xs2png(0, 'K-", anime_run , ".png');"
+              write(unit=ids(proc,i), fmt=*) "clear"
+              write(unit=ids(proc,i), fmt=*) "   "
+              call flush(ids(proc,i))
+            end if
           end do
         end do
 	
@@ -285,322 +292,336 @@ module postpro
     end subroutine write_obs
  
 
-  !> this subroutine parses /proc/[PID]/status file in order to get RAM consumption statistics, it works only under POSIX systems
-  subroutine get_RAM_use()
-    use typy
-    use globals
-    use core_tools
-    integer :: PID, fileid, i, ierr
-    integer(kind=ikind) :: bytes
-    character(len=2) :: byte_unit
-    character(len=7) :: ch
-    character(len=256) :: filename, format
+    !> this subroutine parses /proc/[PID]/status file in order to get RAM consumption statistics, it works Linux only
+    subroutine get_RAM_use()
+      use typy
+      use globals
+      use core_tools
+      integer :: PID, fileid, i, ierr
+      integer(kind=ikind) :: bytes
+      character(len=2) :: byte_unit
+      character(len=7) :: ch
+      character(len=256) :: filename, format
 
-    PID = getpid()
+      PID = getpid()
 
-    call find_unit(fileid)
-
-
-    i = 0
-    do
-      i = i + 1
-      if ((1.0*PID)/(10**i) < 1) then
-      EXIT
-      end if
-    end do
-
-    write(unit=format, fmt="(a, I7, a)") "(a, I", i, ", a)"
-
-!     write(unit=format, fmt = *) "(I.", i, ")"
-
-    write(unit=filename, fmt=format) "/proc/", PID, "/status"
-    
-    open(unit=fileid, file=filename, action="read", status="old", iostat=ierr)
-
-    if (ierr /= 0) then
-      write(unit=terminal) "WARNING! this is not POSIX system, unable to get RAM consumption"
-      RETURN
-    end if
-
-    do 
-      read(unit=fileid, fmt=*, iostat=ierr) ch
-      if (ch == "VmPeak:") then
-      backspace fileid
-      EXIT
-      end if
-
-      if (ierr /=0) then
-        print *, "unable to fetch memory consumption from system files"
-        RETURN
-      end if
-    end do
-
-    read(unit=fileid, fmt=*) ch, bytes, byte_unit
-
-    call write_log(text="Peak RAM  consumption on image", int1=1_ikind*THIS_IMAGE(), text2="was:", int2=bytes, text3=byte_unit)
-
-    do 
-      read(unit=fileid, fmt=*) ch
-      if (ch == "VmSwap:") then
-        backspace fileid
-        EXIT
-      end if
-
-      if (ierr /=0) then
-        print *, "unable to fetch swap consumption from system files"
-        RETURN
-      end if
-    end do
-
-    read(unit=fileid, fmt=*) ch, bytes, byte_unit
-
-    call write_log(text="Peak SWAP consumption on image", int1=1_ikind*THIS_IMAGE(), text2="was:", int2=bytes, text3=byte_unit)
+      call find_unit(fileid)
 
 
-    close(fileid)
-
-  end subroutine get_RAM_use
-  
-  subroutine print_scilab(ids, proc, quadpnt)
-    use typy
-    use globals
-    use global_objs
-    use pde_objs
-    use geom_tools
-    use debug_tools
-    
-    integer, dimension(:), intent(in) :: ids
-    integer(kind=ikind), intent(in) :: proc
-    type(integpnt_str), intent(in out) :: quadpnt
-    integer(kind=ikind) :: i, j, layer
-    real(kind=rkind) :: tmp, totflux
-    real(kind=rkind), dimension(3) :: flux
-    real(kind=rkind), dimension(3,8) :: body
-    real(kind=rkind), dimension(2) :: vct1, vct2
-    real(kind=rkind), dimension(8) :: vct_tmp
-    integer(kind=ikind) :: time_dec
-    real(kind=rkind) :: curtime
-    type(integpnt_str) :: qpntloc
-
-    
-    
-    if (.not. quadpnt%globtime) then
-      curtime = quadpnt%time4eval
-    else
-      curtime = time
-    end if
-  
-    do i=1, ubound(ids,1)
-      write(unit=ids(i), fmt=*) "//", curtime
-      write(unit=ids(i), fmt=*) "nt =", elements%kolik, ";"
-      write(unit=ids(i), fmt=*) "x=zeros(nt,3);"
-      write(unit=ids(i), fmt=*) "y=zeros(nt,3);"
-      write(unit=ids(i), fmt=*) "z=zeros(nt,3);"
-    end do
-
-
-    quadpnt%preproc=.true.
-    do i=1, elements%kolik
-      do j=1,ubound(elements%data,2)
-        body(j,1:2) = nodes%data(elements%data(i,j),:)
-        quadpnt%order = elements%data(i,j)
-        body(j,3) = pde(proc)%getval(quadpnt)
-      end do
-    
-      ! mass (constant over element)
-      layer = elements%material(i)
-      qpntloc%element = i
-      qpntloc%column = 2
-      qpntloc%type_pnt = "gqnd"
-      tmp = 0
-      do j=1, ubound(gauss_points%weight,1)
-        qpntloc%order = j
-        tmp = tmp + pde(proc)%mass(layer, qpntloc)*gauss_points%weight(j)
-      end do
-      
-      body(:,5) = tmp/gauss_points%area
-        
-      if (ubound(gauss_points%weight,1) > 1) then
-        qpntloc%order = nint(ubound(gauss_points%weight,1)/2.0)
-      else
-        qpntloc%order = 1
-      end if
-      
-      call pde(proc)%flux(layer, qpntloc, vector_out=flux(1:drutes_config%dimen), scalar=totflux)
-
-      body(:,6) = totflux
-      
-      vct1 = body(3, 1:2) - body(1, 1:2) 
-      vct2 = body(3, 1:2) - body(2, 1:2)
-      
-      if ( (vct1(1)*vct2(2)-vct1(2)*vct2(1)) > 0.0_rkind) then
-        vct_tmp = body(3,:)
-        body(3,:) = body(2,:)
-        body(2,:) = vct_tmp
-      else
-        CONTINUE
-      end if
-
-      do j=1, ubound(ids,1)
-        write(unit=ids(j), fmt=*) "x(", i, ",1) =", body(1,1), ";"
-        write(unit=ids(j), fmt=*) "x(", i, ",2) =", body(2,1), ";"
-        write(unit=ids(j), fmt=*) "x(", i, ",3) =", body(3,1), ";"
-        
-        write(unit=ids(j), fmt=*) "y(", i, ",1) =", body(1,2), ";"
-        write(unit=ids(j), fmt=*) "y(", i, ",2) =", body(2,2), ";"
-        write(unit=ids(j), fmt=*) "y(", i, ",3) =", body(3,2), ";"
-
-        write(unit=ids(j), fmt=*) "z(", i, ",1) =", body(1,2+j), ";"
-        write(unit=ids(j), fmt=*) "z(", i, ",2) =", body(2,2+j), ";"
-        write(unit=ids(j), fmt=*) "z(", i, ",3) =", body(3,2+j), ";"
-      end do
-
-    end do
-  
-    time_dec = 0
-    if (curtime>epsilon(curtime)) then
+      i = 0
       do
-        if (curtime*10.0_rkind**time_dec > 1) then
-          EXIT 
-        else
-          time_dec = time_dec + 1
+        i = i + 1
+        if ((1.0*PID)/(10**i) < 1) then
+        EXIT
         end if
       end do
-    end if
+
+      write(unit=format, fmt="(a, I7, a)") "(a, I", i, ", a)"
+
+  !     write(unit=format, fmt = *) "(I.", i, ")"
+
+      write(unit=filename, fmt=format) "/proc/", PID, "/status"
+      
+      open(unit=fileid, file=filename, action="read", status="old", iostat=ierr)
+
+      if (ierr /= 0) then
+        write(unit=terminal) "WARNING! this is not POSIX system, unable to get RAM consumption"
+        RETURN
+      end if
+
+      do 
+        read(unit=fileid, fmt=*, iostat=ierr) ch
+        if (ch == "VmPeak:") then
+        backspace fileid
+        EXIT
+        end if
+
+        if (ierr /=0) then
+          print *, "unable to fetch memory consumption from system files"
+          RETURN
+        end if
+      end do
+
+      read(unit=fileid, fmt=*) ch, bytes, byte_unit
+
+      call write_log(text="Peak RAM  consumption on image", int1=1_ikind*THIS_IMAGE(), text2="was:", int2=bytes, text3=byte_unit)
+
+      do 
+        read(unit=fileid, fmt=*) ch
+        if (ch == "VmSwap:") then
+          backspace fileid
+          EXIT
+        end if
+
+        if (ierr /=0) then
+          print *, "unable to fetch swap consumption from system files"
+          RETURN
+        end if
+      end do
+
+      read(unit=fileid, fmt=*) ch, bytes, byte_unit
+
+      call write_log(text="Peak SWAP consumption on image", int1=1_ikind*THIS_IMAGE(), text2="was:", int2=bytes, text3=byte_unit)
+
+
+      close(fileid)
+
+    end subroutine get_RAM_use
     
+    subroutine print_scilab(ids, proc, quadpnt)
+      use typy
+      use globals
+      use global_objs
+      use pde_objs
+      use geom_tools
+      use debug_tools
+      
+      integer, dimension(:), intent(in) :: ids
+      integer(kind=ikind), intent(in) :: proc
+      type(integpnt_str), intent(in) :: quadpnt
+      integer(kind=ikind) :: i, j, layer
+      real(kind=rkind) :: tmp, totflux
+      real(kind=rkind), dimension(3) :: flux
+      real(kind=rkind), dimension(3,8) :: body
+      real(kind=rkind), dimension(2) :: vct1, vct2
+      real(kind=rkind), dimension(8) :: vct_tmp
+      integer(kind=ikind) :: time_dec
+      real(kind=rkind) :: curtime
+      type(integpnt_str) :: qpntloc
+      type(integpnt_str) :: quadpnt_loc
 
-
-    do i=1, ubound(ids,1)
-      write(unit=ids(i), fmt=*) "f=gcf();"
-      write(unit=ids(i), fmt=*) "clf(f,'reset');"
-      write(unit=ids(i), fmt=*) "f.color_map=jetcolormap(256);"
-      write(unit=ids(i), fmt=*) "colorbar(min(z),max(z));"
-      if (time_dec < 2) then
-        write(unit=ids(i), fmt="(a,F10.2,a,a,a,a)")  "xtitle('$\mathbf{\LARGE t= ", curtime,"  ",&
-	      "} \quad \mbox{\Large ",   trim(time_units), "}$')"
+      
+      quadpnt_loc = quadpnt
+      if (.not. quadpnt%globtime) then
+        curtime = quadpnt%time4eval
       else
- !                                                             a	                 F10.2        a
-       write(unit=ids(i), fmt="(a,F10.2,a,a,I16,a,a,a)")  "xtitle('$\mathbf{\LARGE t= ", curtime*10**time_dec,"  ",&
-!                    a            I16         a                         a                a
-	      "\times 10^{-", time_dec,"}} \quad \mbox{\Large ",   trim(time_units), "}$')"
+        curtime = time
+      end if
+    
+      do i=1, ubound(ids,1)
+        write(unit=ids(i), fmt=*) "//", curtime
+        write(unit=ids(i), fmt=*) "nt =", elements%kolik, ";"
+        write(unit=ids(i), fmt=*) "x=zeros(nt,3);"
+        write(unit=ids(i), fmt=*) "y=zeros(nt,3);"
+        write(unit=ids(i), fmt=*) "z=zeros(nt,3);"
+      end do
+
+
+      quadpnt_loc%preproc=.true.
+      do i=1, elements%kolik
+        do j=1,ubound(elements%data,2)
+          body(j,1:2) = nodes%data(elements%data(i,j),:)
+          quadpnt_loc%order = elements%data(i,j)
+          body(j,3) = pde(proc)%getval(quadpnt_loc)
+        end do
+      
+        if (pde(proc)%print_mass) then
+          ! mass (constant over element)
+          layer = elements%material(i)
+          qpntloc%element = i
+          qpntloc%column = 2
+          qpntloc%type_pnt = "gqnd"
+          qpntloc%preproc=.true.
+          tmp = 0
+          do j=1, ubound(gauss_points%weight,1)
+            qpntloc%order = j
+            tmp = tmp + pde(proc)%mass(layer, qpntloc)*gauss_points%weight(j)
+          end do
+          
+          body(:,5) = tmp/gauss_points%area
+        end if
+          
+        if (ubound(gauss_points%weight,1) > 1) then
+          qpntloc%order = nint(ubound(gauss_points%weight,1)/2.0)
+        else
+          qpntloc%order = 1
+        end if
+        
+        call pde(proc)%flux(layer, qpntloc, vector_out=flux(1:drutes_config%dimen), scalar=totflux)
+
+        body(:,6) = totflux
+        
+        vct1 = body(3, 1:2) - body(1, 1:2) 
+        vct2 = body(3, 1:2) - body(2, 1:2)
+        
+        if ( (vct1(1)*vct2(2)-vct1(2)*vct2(1)) > 0.0_rkind) then
+          vct_tmp = body(3,:)
+          body(3,:) = body(2,:)
+          body(2,:) = vct_tmp
+        else
+          CONTINUE
+        end if
+
+        do j=1, ubound(ids,1)
+        
+          ! 3 is for mass
+          if (j /= 3 .or. pde(proc)%print_mass) then
+            write(unit=ids(j), fmt=*) "x(", i, ",1) =", body(1,1), ";"
+            write(unit=ids(j), fmt=*) "x(", i, ",2) =", body(2,1), ";"
+            write(unit=ids(j), fmt=*) "x(", i, ",3) =", body(3,1), ";"
+            
+            write(unit=ids(j), fmt=*) "y(", i, ",1) =", body(1,2), ";"
+            write(unit=ids(j), fmt=*) "y(", i, ",2) =", body(2,2), ";"
+            write(unit=ids(j), fmt=*) "y(", i, ",3) =", body(3,2), ";"
+
+            write(unit=ids(j), fmt=*) "z(", i, ",1) =", body(1,2+j), ";"
+            write(unit=ids(j), fmt=*) "z(", i, ",2) =", body(2,2+j), ";"
+            write(unit=ids(j), fmt=*) "z(", i, ",3) =", body(3,2+j), ";"
+          end if  
+            
+        end do
+
+      end do
+    
+      time_dec = 0
+      if (curtime>epsilon(curtime)) then
+        do
+          if (curtime*10.0_rkind**time_dec > 1) then
+            EXIT 
+          else
+            time_dec = time_dec + 1
+          end if
+        end do
       end if
       
-      
-      write(unit=ids(i), fmt=*) "plot3d1(x',y',z',alpha=0, theta=-90);"
 
-    end do 
-  
-  end subroutine print_scilab
-  
-  
-  subroutine print_pure(ids, proc, quadpnt)
-    use typy
-    use globals
-    use global_objs
-    use pde_objs
-    use debug_tools
+
+      do i=1, ubound(ids,1)
+      
+        if (i /= 3 .or. pde(proc)%print_mass) then
+          write(unit=ids(i), fmt=*) "f=gcf();"
+          write(unit=ids(i), fmt=*) "clf(f,'reset');"
+          write(unit=ids(i), fmt=*) "f.color_map=jetcolormap(256);"
+          write(unit=ids(i), fmt=*) "colorbar(min(z),max(z));"
+          if (time_dec < 2) then
+            write(unit=ids(i), fmt="(a,F10.2,a,a,a,a)")  "xtitle('$\mathbf{\LARGE t= ", curtime,"  ",&
+            "} \quad \mbox{\Large ",   trim(time_units), "}$')"
+          else
+     !                                                             a	                 F10.2        a
+           write(unit=ids(i), fmt="(a,F10.2,a,a,I16,a,a,a)")  "xtitle('$\mathbf{\LARGE t= ", curtime*10**time_dec,"  ",&
+    !                    a            I16         a                         a                a
+            "\times 10^{-", time_dec,"}} \quad \mbox{\Large ",   trim(time_units), "}$')"
+          end if
+          
+          
+          write(unit=ids(i), fmt=*) "plot3d1(x',y',z',alpha=0, theta=-90);"
+        end if
+
+      end do 
     
-    integer, dimension(:), intent(in) :: ids
-    integer(kind=ikind), intent(in) :: proc
-    type(integpnt_str),  intent(in out) :: quadpnt
-    real(kind=rkind) :: curtime
-    integer(kind=ikind) :: i, layer
-    real(kind=rkind) ::  distance, flux, avgval
-    type(integpnt_str) :: qpntloc
-
-
-  
-    do i=1, nodes%kolik
-      quadpnt%order = i
-      quadpnt%preproc=.true.
-
-      write(unit=ids(1), fmt=*) i,  nodes%data(i,:), pde(proc)%getval(quadpnt) 
-      
-      
-      layer = elements%material(nodes%element(i)%data(1))
-
-      call pde(proc)%flux(layer, quadpnt, scalar=flux)
-      
-
-      write(unit=ids(3), fmt=*)  i, nodes%data(i,:), pde(proc)%mass(layer, quadpnt)
-
-      write(unit=ids(4), fmt=*) i, nodes%data(i,:), flux
-    end do
-
-    close(ids(1))
-
-
-  end subroutine print_pure
-  
-  subroutine print_gmsh(ids, proc, quadpnt)
-    use typy
-    use globals
-    use global_objs
-    use pde_objs
-    use debug_tools
-    
-    integer, dimension(:), intent(in) :: ids
-    integer(kind=ikind), intent(in) :: proc
-    type(integpnt_str),  intent(in out) :: quadpnt
-    integer(kind=ikind) :: i
-    logical, dimension(:), allocatable, save :: printed 
-    real(kind=rkind) :: curtime
+    end subroutine print_scilab
     
     
-    if (.not. allocated(printed)) then
-      allocate(printed(ubound(pde,1)))
-      printed = .false.
-    end if
+    subroutine print_pure(ids, proc, quadpnt)
+      use typy
+      use globals
+      use global_objs
+      use pde_objs
+      use debug_tools
+      
+      integer, dimension(:), intent(in) :: ids
+      integer(kind=ikind), intent(in) :: proc
+      type(integpnt_str),  intent(in out) :: quadpnt
+      real(kind=rkind) :: curtime
+      integer(kind=ikind) :: i, layer
+      real(kind=rkind) ::  distance, flux, avgval
+      type(integpnt_str) :: qpntloc
+
+
+    
+      do i=1, nodes%kolik
+        quadpnt%order = i
+        quadpnt%preproc=.true.
+
+        write(unit=ids(1), fmt=*) i,  nodes%data(i,:), pde(proc)%getval(quadpnt) 
         
-    if (.not. quadpnt%globtime) then
-      curtime = quadpnt%time4eval
-    else
-      curtime = time
-    end if
+        
+        ! 3 is for mass
+        if (pde(proc)%print_mass) then
+          layer = elements%material(nodes%element(i)%data(1))
+
+          call pde(proc)%flux(layer, quadpnt, scalar=flux)
+
+          write(unit=ids(3), fmt=*)  i, nodes%data(i,:), pde(proc)%mass(layer, quadpnt)
+        end if
+
+        write(unit=ids(4), fmt=*) i, nodes%data(i,:), flux
+      end do
+
+      close(ids(1))
+
+
+    end subroutine print_pure
     
-    if (.not. printed(proc)) then
-  
-      write(unit=ids(1), fmt="(a)") "$MeshFormat"
-      write(unit=ids(1), fmt="(a)") "2.2 0 8"
-      write(unit=ids(1), fmt="(a)") "$EndMeshFormat"
-      write(unit=ids(1), fmt="(a)") "$Nodes"
+    subroutine print_gmsh(ids, proc, quadpnt)
+      use typy
+      use globals
+      use global_objs
+      use pde_objs
+      use debug_tools
+      
+      integer, dimension(:), intent(in) :: ids
+      integer(kind=ikind), intent(in) :: proc
+      type(integpnt_str),  intent(in out) :: quadpnt
+      integer(kind=ikind) :: i
+      logical, dimension(:), allocatable, save :: printed 
+      real(kind=rkind) :: curtime
+      
+      
+      if (.not. allocated(printed)) then
+        allocate(printed(ubound(pde,1)))
+        printed = .false.
+      end if
+          
+      if (.not. quadpnt%globtime) then
+        curtime = quadpnt%time4eval
+      else
+        curtime = time
+      end if
+      
+      if (.not. printed(proc)) then
+    
+        write(unit=ids(1), fmt="(a)") "$MeshFormat"
+        write(unit=ids(1), fmt="(a)") "2.2 0 8"
+        write(unit=ids(1), fmt="(a)") "$EndMeshFormat"
+        write(unit=ids(1), fmt="(a)") "$Nodes"
+        
+        write(unit=ids(1), fmt=*) nodes%kolik
+        
+        do i=1, nodes%kolik
+          write(unit=ids(1), fmt=*) i,  nodes%data(i,:)
+        end do
+        write(unit=ids(1), fmt="(a)") "$EndNodes"
+        write(unit=ids(1), fmt="(a)") "$Elements"
+        write(unit=ids(1), fmt=*) elements%kolik
+        do i=1, elements%kolik
+          write(unit=ids(1), fmt=*) i,  elements%data(i,:)
+        end do
+        write(unit=ids(1), fmt="(a)") "$EndElements"
+        write(unit=ids(1), fmt="(a)") "$NodeData"
+        
+        printed(proc) = .true.
+      end if
+      
+      write(unit=ids(1), fmt="(a)") "$NodeData"     
+      write(unit=ids(1), fmt=*) "1"
+      write(unit=ids(1), fmt=*) ' " ', trim(pde(proc)%problem_name(2)), " ", trim(pde(proc)%solution_name(1)) , ' " '
+      write(unit=ids(1), fmt=*) "1"
+      write(unit=ids(1), fmt=*) curtime  !///tohle udává čas
+      write(unit=ids(1), fmt=*) "3"
+      write(unit=ids(1), fmt=*) postpro_run
+      write(unit=ids(1), fmt=*) "1"
+        
+
       
       write(unit=ids(1), fmt=*) nodes%kolik
-      
       do i=1, nodes%kolik
-        write(unit=ids(1), fmt=*) i,  nodes%data(i,:)
+        quadpnt%order = i
+        write(unit=ids(1), fmt=*) i, pde(proc)%getval(quadpnt)
       end do
-      write(unit=ids(1), fmt="(a)") "$EndNodes"
-      write(unit=ids(1), fmt="(a)") "$Elements"
-      write(unit=ids(1), fmt=*) elements%kolik
-      do i=1, elements%kolik
-        write(unit=ids(1), fmt=*) i,  elements%data(i,:)
-      end do
-      write(unit=ids(1), fmt="(a)") "$EndElements"
-      write(unit=ids(1), fmt="(a)") "$NodeData"
-      
-      printed(proc) = .true.
-    end if
+      write(unit=ids(1), fmt="(a)") "$EndNodeData"
     
-    write(unit=ids(1), fmt="(a)") "$NodeData"     
-    write(unit=ids(1), fmt=*) "1"
-    write(unit=ids(1), fmt=*) ' " ', trim(pde(proc)%problem_name(2)), " ", trim(pde(proc)%solution_name(1)) , ' " '
-    write(unit=ids(1), fmt=*) "1"
-    write(unit=ids(1), fmt=*) curtime  !///tohle udává čas
-    write(unit=ids(1), fmt=*) "3"
-    write(unit=ids(1), fmt=*) postpro_run
-    write(unit=ids(1), fmt=*) "1"
-      
-
-    
-    write(unit=ids(1), fmt=*) nodes%kolik
-    do i=1, nodes%kolik
-      quadpnt%order = i
-      write(unit=ids(1), fmt=*) i, pde(proc)%getval(quadpnt)
-    end do
-    write(unit=ids(1), fmt="(a)") "$EndNodeData"
-  
-  end subroutine print_gmsh
+    end subroutine print_gmsh
 
   
     

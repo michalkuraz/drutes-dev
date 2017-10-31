@@ -199,6 +199,7 @@ module ADE_fnc
       use global_objs
       use pde_objs
       use ADE_globals
+      use re_globals
       
       class(pde_str), intent(in) :: pde_loc
       !> value of the nonlinear function
@@ -211,17 +212,18 @@ module ADE_fnc
       real(kind=rkind)                :: val
       integer(kind=ikind) :: media_id
       
-      real(kind=rkind) :: theta
+      real(kind=rkind) :: ths
       
       media_id = no_solids - (ubound(pde,1) - pde_loc%order)
       
-      if (pde_loc%order == 2) then
-        theta = pde(1)%mass(layer, quadpnt)
+      if (use_richards) then
+        ths = vgset(layer)%ths
       else
-        theta = adepar(layer)%water_cont
+        ths = adepar(layer)%water_cont
       end if
       
-      val = (1.0_rkind-theta)*sorption(layer, media_id)%ratio
+      print *, media_id, layer, ubound(pde,1), pde_loc%order
+      val = (1 - ths)*sorption(layer, media_id)%ratio
       
     end function ADE_tder_cscl
     

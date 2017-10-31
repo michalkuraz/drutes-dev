@@ -67,6 +67,7 @@ module fem
 
      call make_print("separately")
 
+
      call write_obs()
 
 

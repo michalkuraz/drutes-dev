@@ -138,7 +138,7 @@ module ADE_pointers
       
         pde_loc(i)%pde_fnc(pde_loc(i)%order)%elasticity => ADE_tder_cscs
       
-        pde_loc(i)%pde_fnc(1)%elasticity => ADE_tder_cscl
+        pde_loc(1)%pde_fnc(pde_loc(i)%order)%elasticity => ADE_tder_cscl
       
         pde_loc(i)%pde_fnc(1)%reaction => ADE_cscl_react
       
