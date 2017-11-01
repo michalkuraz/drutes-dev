@@ -248,7 +248,7 @@ module global_objs
     !! thus the line between the nodes 1-2 has order length(1), the line between the nodes 3-1 (or 1-3) has order lenght(3)
     !< 
     real(kind=rkind), dimension(:,:), allocatable   :: length
-    !> vertical component of the boundary normal vector
+    !> vertical component of the inner boundary normal vector
     real(kind=rkind), dimension(:,:), allocatable   :: nvect_z
     !> material = id number of material at current element, a constant material properties are required for each element
     integer(kind=ikind), dimension(:), allocatable   :: material

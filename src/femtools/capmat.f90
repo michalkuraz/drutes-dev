@@ -61,17 +61,18 @@ module capmat
       quadpnt%type_pnt = "gqnd"
       
       if (present(domain_id)) then
-	quadpnt%ddlocal = .true.
-	quadpnt%subdom = domain_id
+        quadpnt%ddlocal = .true.
+        quadpnt%subdom = domain_id
       end if
       
 
       do iproc=1, ubound(pde,1)
         do jproc=1, ubound(pde,1)
+          pde_block_column = jproc
           do l=1,  limits
             do j=1,  limits
               do i=1, ubound(gauss_points%weight,1)
-		quadpnt%order = i
+                quadpnt%order = i
                 tmp =  -pde(iproc)%pde_fnc(jproc)%elasticity(pde(iproc), layer(iproc, jproc), &
                 quadpnt)*base_fnc(j,i)*base_fnc(l,i)*gauss_points%weight(i)
                 ll = l + limits*(iproc-1)
@@ -136,18 +137,19 @@ module capmat
       
       
       if (present(domain_id)) then
-	quadpnt%ddlocal = .true.
-	quadpnt%subdom = domain_id
+        quadpnt%ddlocal = .true.
+        quadpnt%subdom = domain_id
       end if
 
 
 
       do iproc=1, ubound(pde,1)
         do jproc=1, ubound(pde,1)
+          pde_block_column = jproc
           do l=1,  limits
             do j=1,  limits
               do i=1, ubound(gauss_points%weight,1)
-		quadpnt%order = i
+                quadpnt%order = i
                 tmp =  -pde(iproc)%pde_fnc(jproc)%elasticity(pde(iproc), layer(iproc, jproc), &
                 quadpnt)*base_fnc(j,i)*base_fnc(l,i)*gauss_points%weight(i)
                 ll = l + limits*(iproc-1)
@@ -203,20 +205,20 @@ module capmat
       real(kind=rkind) :: tmp
 
       do i=1, ubound(a,1)
-	tmp = 0.0_rkind
-	do j=1, ubound(a,1)
-	  tmp = tmp + a(i,j)
-	end do
+        tmp = 0.0_rkind
+        do j=1, ubound(a,1)
+          tmp = tmp + a(i,j)
+        end do
 	
-	a(i,i) = tmp
+        a(i,i) = tmp
 
-	if (i > 1) then
-	  a(i,1:i-1) = 0
-	end if
+        if (i > 1) then
+          a(i,1:i-1) = 0
+        end if
 
-	if (i < ubound(a,1)) then
-	  a(i, i+1:ubound(a,1)) = 0
-	end if
+        if (i < ubound(a,1)) then
+          a(i, i+1:ubound(a,1)) = 0
+        end if
       end do
     
     end subroutine diagonalizer

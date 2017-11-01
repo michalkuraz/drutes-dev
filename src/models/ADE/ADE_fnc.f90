@@ -200,6 +200,7 @@ module ADE_fnc
       use pde_objs
       use ADE_globals
       use re_globals
+      use globals
       
       class(pde_str), intent(in) :: pde_loc
       !> value of the nonlinear function
@@ -214,7 +215,7 @@ module ADE_fnc
       
       real(kind=rkind) :: ths
       
-      media_id = no_solids - (ubound(pde,1) - pde_loc%order)
+      media_id = pde_block_column - pde_loc%order
       
       if (use_richards) then
         ths = vgset(layer)%ths
@@ -222,7 +223,6 @@ module ADE_fnc
         ths = adepar(layer)%water_cont
       end if
       
-      print *, media_id, layer, ubound(pde,1), pde_loc%order
       val = (1 - ths)*sorption(layer, media_id)%ratio
       
     end function ADE_tder_cscl

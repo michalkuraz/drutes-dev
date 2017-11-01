@@ -625,7 +625,7 @@ module re_total
             
             gravflux(2) = elements%nvect_z(el_id, node_order)*K(2,2)
 
-            value = -sqrt(gravflux(1)*gravflux(1) + gravflux(2)*gravflux(2))
+            value = -sign(1.0_rkind, elements%nvect_z(el_id, node_order))*sqrt(gravflux(1)*gravflux(1) + gravflux(2)*gravflux(2))
         end select
       end if
       
