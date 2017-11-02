@@ -652,6 +652,7 @@ module readtools
       use typy
       use globals
       use global_objs
+
       !>local anisothoropy values with respect to local x, local y and local z
       real(kind=rkind), dimension(:), intent(in) :: values
       !> angle between the local and global system of coordinates
@@ -687,6 +688,7 @@ module readtools
       end do
 
       tensor = matmul(matmul(T, tensor), transpose(T))
+      
 
       deallocate(T)
 

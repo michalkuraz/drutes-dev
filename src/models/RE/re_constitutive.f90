@@ -1842,12 +1842,11 @@ module RE_constitutive
               bcflux(1) = sqrt(1-elements%nvect_z(el_id, node_order)*elements%nvect_z(el_id, node_order))*bcval
               bcflux(2) = elements%nvect_z(el_id, node_order)*bcval
               bcflux = bcflux + gravflux
-              value = sqrt(bcflux(1)*bcflux(1) + bcflux(2)*bcflux(2))
-        ! 	    print *, value, gravflux, el_id, elements%data(el_id,:) ; stop 
+              value = sign(1.0_rkind, bcval)*sqrt(bcflux(1)*bcflux(1) + bcflux(2)*bcflux(2))
           end select
         end if
         
-             if (present(code)) then
+        if (present(code)) then
           code = 2
         end if
 
