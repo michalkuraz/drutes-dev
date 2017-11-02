@@ -71,6 +71,7 @@ module stiffmat
             
       do iproc=1,ubound(pde,1)
         do jproc=1, ubound(pde,1)
+          pde_block_column = jproc
           do i=1, ubound(stiff_mat,1)/ ubound(pde,1)
             do j=1, ubound(stiff_mat,1)/ubound(pde,1)
               dsum = 0

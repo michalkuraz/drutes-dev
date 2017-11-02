@@ -15,8 +15,8 @@ module Re_dual_reader
      
       integer :: i_err, i, j, file_dual
       integer(kind=ikind) :: layers
-	  real(kind=rkind)::inicond
-	  character(len=4096) :: msg	
+      real(kind=rkind)::inicond
+      character(len=4096) :: msg	
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       !input pars
       
@@ -29,20 +29,20 @@ module Re_dual_reader
       end if 
       
       write(msg, *) "define method of evaluation of constitutive functions for the Richards equation", new_line("a"), &
-	"   0 - direct evaluation (not recommended, extremely resources consuming due to complicated exponential functions)", &
-	new_line("a"), &
-	"   1 - function values are precalculated in program initialization and values between are linearly approximated"
+      "   0 - direct evaluation (not recommended, extremely resources consuming due to complicated exponential functions)", &
+      new_line("a"), &
+      "   1 - function values are precalculated in program initialization and values between are linearly approximated"
 
       
       call fileread(drutes_config%fnc_method, file_dual, ranges=(/0_ikind,1_ikind/),errmsg=msg)
       
       call fileread(maxpress, file_dual, ranges=(/-huge(0.0_rkind), huge(0.0_rkind)/), &
-		errmsg="set some positive nonzero limit for maximal suction pressure (think in absolute values) ")
-		maxpress = abs(maxpress)
+      errmsg="set some positive nonzero limit for maximal suction pressure (think in absolute values) ")
+      maxpress = abs(maxpress)
       
       call fileread(drutes_config%fnc_discr_length, file_dual, ranges=(/tiny(0.0_rkind), maxpress/),  &
-		errmsg="the discretization step for precalculating constitutive functions must be positive and smaller &
-		then the bc")
+      errmsg="the discretization step for precalculating constitutive functions must be positive and smaller &
+      then the bc")
 
       call fileread(disttozero,file_dual,ranges=(/-huge(0.0_rkind), huge(0.0_rkind)/)&
       , errmsg="specify distance to origin 0. This can be negative or positive")
@@ -158,7 +158,7 @@ module Re_dual_reader
       
       ! exchange
       call fileread(coup_model, file_dual, ranges=(/1_ikind, 5_ikind/), &
-		errmsg="Select model for exchange term, valid selections are (integer): 1,2,3,4,5 ")
+      errmsg="Select model for exchange term, valid selections are (integer): 1,2,3,4,5 ")
     
       do i=1,layers
         call comment(file_dual)
@@ -283,6 +283,7 @@ module Re_dual_reader
       pde_loc%mass_name(1) = "theta_m"
       pde_loc%mass_name(2) = "theta [-]"
       pde_loc%mfswitch= "m"
+      pde_loc%print_mass = .true.
     ! boundary values
     
             call find_unit(file_bc, 400)
@@ -310,7 +311,7 @@ module Re_dual_reader
       
     end subroutine Re_dual_readm		
 
-subroutine Re_dual_readf(pde_loc)
+    subroutine Re_dual_readf(pde_loc)
       use typy
       use globals
       use global_objs
@@ -333,6 +334,7 @@ subroutine Re_dual_readf(pde_loc)
       pde_loc%mass_name(1) = "theta_f"
       pde_loc%mass_name(2) = "theta [-]"
       pde_loc%mfswitch= "f"
+      pde_loc%print_mass = .true.
     ! boundary values
       call find_unit(file_bc, 400)
       open(unit = file_bc,file = "drutes.conf/REdual/dual_bc.conf", action = "read", status = "old", iostat = i_err)
@@ -346,8 +348,8 @@ subroutine Re_dual_readf(pde_loc)
         ERROR STOP
       end if  
       call fileread(dim_bc, file_bc, ranges=(/1_ikind, huge(1_ikind)/), &
-	  errmsg="at least one boundary must be specified (and no negative values here)")
-	  call comment(file_bc)
+      errmsg="at least one boundary must be specified (and no negative values here)")
+      call comment(file_bc)
       read(unit=file_bc, fmt= *, iostat=i_err) infweight
       if (i_err /= 0) then
         print *, "missing infiltration weight. Needs to be there even if you're not using boundary type 5"
@@ -359,6 +361,6 @@ subroutine Re_dual_readf(pde_loc)
       close(file_bc)
       
       
-    end subroutine Re_dual_readf	
+    end subroutine Re_dual_readf
         
 end module Re_dual_reader
