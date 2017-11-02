@@ -194,7 +194,7 @@ module re_reader
               print *, "                        H_tot = total hydraulic head"
               print *, "                        hpres = pressure head"
               print *, "                        theta = water content"
-                    print *, "                        input = read from input file (drutes output file)"
+              print *, "                        input = read from input file (drutes output file)"
               call file_error(file_waterm)
           end select
           if (ierr /= 0) then

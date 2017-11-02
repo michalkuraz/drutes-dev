@@ -79,7 +79,7 @@ module re_total
 
       if (present(quadpnt) .and. (present(grad) .or. present(x))) then
         print *, "ERROR: the function can be called either with integ point or x value definition and gradient, not both of them"
-              print *, "exited from re_constitutive::darcy_law"
+        print *, "exited from re_constitutive::darcy_law"
         ERROR stop
       else if ((.not. present(grad) .or. .not. present(x)) .and. .not. present(quadpnt)) then
         print *, "ERROR: you have not specified either integ point or x value"
@@ -560,9 +560,9 @@ module re_total
           do i=1, ubound(pde_loc%bc(edge_id)%series,1)
             if (pde_loc%bc(edge_id)%series(i,1) > time) then
               if (i > 1) then
-          j = i-1
+                j = i-1
               else
-          j = i
+                j = i
               end if
               rain = pde_loc%bc(edge_id)%series(j,2)
               evap = pde_loc%bc(edge_id)%series(j,3)
@@ -611,14 +611,14 @@ module re_total
         quadpnt%order = elements%data(el_id, node_order)
         layer = elements%material(el_id)
         D = drutes_config%dimen
-        call pde_loc%pde_fnc(1)%dispersion(pde_loc, layer, quadpnt, tensor=K(1:D,1:D))
+        call pde_loc%pde_fnc(pde_loc%order)%dispersion(pde_loc, layer, quadpnt, tensor=K(1:D,1:D))
     
       	select case(D)
           case(1)
             if (node_order == 1) then
-              value = K(1,1) 
+              value = -K(1,1) 
             else
-              value = -K(1,1)
+              value = K(1,1)
             end if
           case(2)	  
             gravflux(1) = sqrt(1-elements%nvect_z(el_id, node_order)*elements%nvect_z(el_id, node_order))*K(1,2)

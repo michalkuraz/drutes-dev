@@ -213,17 +213,13 @@ module ADE_fnc
       real(kind=rkind)                :: val
       integer(kind=ikind) :: media_id
       
-      real(kind=rkind) :: ths
+      real(kind=rkind) :: bd
       
       media_id = pde_block_column - pde_loc%order
       
-      if (use_richards) then
-        ths = vgset(layer)%ths
-      else
-        ths = adepar(layer)%water_cont
-      end if
+      bd = sorption(layer, media_id)%bd
       
-      val = (1 - ths)*sorption(layer, media_id)%ratio
+      val = bd*sorption(layer, media_id)%ratio
       
     end function ADE_tder_cscl
     
