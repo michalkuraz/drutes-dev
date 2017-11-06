@@ -309,6 +309,7 @@ module fem
       
       integer(kind=ikind) :: selection, i, ii, itold
       real(kind=rkind) :: valold
+      integer :: fileid
     
       
       if (www) then
@@ -317,6 +318,9 @@ module fem
         ERROR STOP
       else if (optim) then
         call write_log("failed to converged, changing to semiexplicit scheme, results are unreliable since now")
+        open(newunit=fileid, file="out/convergefail", action="write", status="replace")
+        write(fileid, *) "true"
+        close(fileid)
         iter_criterion = huge(iter_criterion)
         time_step = dtmax
       else
