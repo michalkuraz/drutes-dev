@@ -199,6 +199,8 @@ module ADE_fnc
       use global_objs
       use pde_objs
       use ADE_globals
+      use re_globals
+      use globals
       
       class(pde_str), intent(in) :: pde_loc
       !> value of the nonlinear function
@@ -211,17 +213,13 @@ module ADE_fnc
       real(kind=rkind)                :: val
       integer(kind=ikind) :: media_id
       
-      real(kind=rkind) :: theta
+      real(kind=rkind) :: bd
       
-      media_id = no_solids - (ubound(pde,1) - pde_loc%order)
+      media_id = pde_block_column - pde_loc%order
       
-      if (pde_loc%order == 2) then
-        theta = pde(1)%mass(layer, quadpnt)
-      else
-        theta = adepar(layer)%water_cont
-      end if
+      bd = sorption(layer, media_id)%bd
       
-      val = (1.0_rkind-theta)*sorption(layer, media_id)%ratio
+      val = bd*sorption(layer, media_id)%ratio
       
     end function ADE_tder_cscl
     
@@ -545,7 +543,13 @@ module ADE_fnc
       if (present(flux)) then
         flux = cmax*matmul(Dhm, gradC) + cmax*q_w*c
       end if
+      
+      if (present(flux_length)) then
+        flux_length = dot_product(cmax*matmul(Dhm, gradC) + cmax*q_w*c, cmax*matmul(Dhm, gradC) + cmax*q_w*c)
+      end if
     
+
+     
     end subroutine ADE_flux
     
     subroutine ADE_icond(pde_loc) 
@@ -718,6 +722,7 @@ module ADE_fnc
       use typy
       use pde_objs
       use ade_globals
+      use debug_tools
 
       
       class(pde_str), intent(in out) :: pde_loc
@@ -735,7 +740,7 @@ module ADE_fnc
         mat = elements%material(el_id)
         pde_loc%solution(i) = sorption(mat, pde_loc%order-adepos)%csinit
       end do
-        
+
     
     end subroutine ADEcs_icond
     

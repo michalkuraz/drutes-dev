@@ -32,6 +32,8 @@ module re_reader
 
       pde_loc%mass_name(1) = "theta"
       pde_loc%mass_name(2) = "theta [-]"
+      
+      pde_loc%print_mass = .true.
 
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       !water.conf/matrix.conf
@@ -192,7 +194,7 @@ module re_reader
               print *, "                        H_tot = total hydraulic head"
               print *, "                        hpres = pressure head"
               print *, "                        theta = water content"
-                    print *, "                        input = read from input file (drutes output file)"
+              print *, "                        input = read from input file (drutes output file)"
               call file_error(file_waterm)
           end select
           if (ierr /= 0) then

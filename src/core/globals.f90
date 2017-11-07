@@ -181,6 +181,8 @@ module globals
   !cummulative iteration count
   integer(kind=ikind), public :: itcum
 
+  !> current block column position in local stiffness and capacity matrix during the evalution of the coefficient value, row is simple, this is always pde(i)%order, but column is not detectable
+  integer(kind=ikind) :: pde_block_column
 
 
 
