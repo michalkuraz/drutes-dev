@@ -611,7 +611,7 @@ module readtools
       end if
 	
       
-      ERROR STOP
+      STOP
 
 
     end subroutine file_error
@@ -652,6 +652,7 @@ module readtools
       use typy
       use globals
       use global_objs
+!       use debug_tools
 
       !>local anisothoropy values with respect to local x, local y and local z
       real(kind=rkind), dimension(:), intent(in) :: values
@@ -689,6 +690,7 @@ module readtools
 
       tensor = matmul(matmul(T, tensor), transpose(T))
       
+!       call printmtx(tensor) ; stop
 
       deallocate(T)
 
