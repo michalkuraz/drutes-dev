@@ -77,10 +77,7 @@ module ADE_fnc
       if (present(tensor)) then
         tensor = theta * (adepar(layer)%diff*q_abs + adepar(layer)%difmol*identity(1:D, 1:D))	
       end if
-      
-
-      
-      
+ 
     
     end subroutine ADEdispersion
     
@@ -425,9 +422,9 @@ module ADE_fnc
           do i=1, ubound(pde_loc%bc(edge_id)%series,1)
             if (pde_loc%bc(edge_id)%series(i,1) > time) then
               if (i > 1) then
-          j = i-1
+                j = i-1
               else
-          j = i
+                j = i
               end if
               tempval = pde_loc%bc(edge_id)%series(j,2)
               EXIT
@@ -623,12 +620,8 @@ module ADE_fnc
           case("freund")
             val = 1.0
         end select
-        
-          
       end if
-        
-
-      
+    
       
   end function ADE_cscs_react
   

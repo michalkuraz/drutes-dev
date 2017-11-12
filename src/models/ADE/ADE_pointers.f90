@@ -1,8 +1,10 @@
 module ADE_pointers
+  use typy
   public :: ADE
   public :: ADEkinsorb
   
   public :: ADE_processes
+  integer(kind=ikind), private :: adepos
   
   contains
   
@@ -139,8 +141,10 @@ module ADE_pointers
         pde_loc(i)%pde_fnc(pde_loc(i)%order)%elasticity => ADE_tder_cscs
       
         pde_loc(1)%pde_fnc(pde_loc(i)%order)%elasticity => ADE_tder_cscl
+        
+        print *, adepos ; stop
       
-        pde_loc(i)%pde_fnc(1)%reaction => ADE_cscl_react
+        pde_loc(i)%pde_fnc(adepos)%reaction => ADE_cscl_react
       
         pde_loc(i)%pde_fnc(pde_loc(i)%order)%reaction => ADE_cscs_react
       
