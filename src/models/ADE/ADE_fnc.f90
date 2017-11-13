@@ -216,7 +216,7 @@ module ADE_fnc
       
       bd = sorption(layer, media_id)%bd
       
-      val = bd*sorption(layer, media_id)%ratio
+      val = bd*sorption(layer, media_id)%ratio*(1-vgset(layer)%ths)
       
     end function ADE_tder_cscl
     
@@ -743,6 +743,7 @@ module ADE_fnc
       use global_objs
       use pde_objs
       use ADE_globals
+      use re_globals
       
       class(pde_str), intent(in) :: pde_loc
       !> value of the nonlinear function
@@ -758,7 +759,7 @@ module ADE_fnc
       if (pde_loc%order == 2) then
         theta = adepar(layer)%water_cont
       else 
-        theta = pde(1)%mass(layer, quadpnt)
+        theta = vgset(layer)%ths
       end if
       
       if (present(quadpnt)) then
