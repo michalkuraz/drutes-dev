@@ -143,12 +143,12 @@ module printtools
         iunit=terminal
       end if
       
-      write(unit=iunit, fmt=*) "#              _____________________  _______________________"
-      write(unit=iunit, fmt=*) "#              ___  __ \__  __ \_  / / /_  /___  ____/_  ___/"
-      write(unit=iunit, fmt=*) "#              __  / / /_  /_/ /  / / /_  __/_  __/  _____ \ "
-      write(unit=iunit, fmt=*) "#              _  /_/ /_  _, _// /_/ / / /_ _  /___  ____/ / "
-      write(unit=iunit, fmt=*) "#              /_____/ /_/ |_| \____/  \__/ /_____/  /____/  "
-      write(unit=iunit, fmt=*) "# "
+      write(unit=iunit, fmt=*) "#              _____________________  _______________________             #"
+      write(unit=iunit, fmt=*) "#              ___  __ \__  __ \_  / / /_  /___  ____/_  ___/             #"
+      write(unit=iunit, fmt=*) "#              __  / / /_  /_/ /  / / /_  __/_  __/  _____ \              #"
+      write(unit=iunit, fmt=*) "#              _  /_/ /_  _, _// /_/ / / /_ _  /___  ____/ /              #"
+      write(unit=iunit, fmt=*) "#              /_____/ /_/ |_| \____/  \__/ /_____/  /____/               #"
+      write(unit=iunit, fmt=*) "#                                                                         #"
       write(unit=iunit, fmt=*) " "
       
   end subroutine print_logo
