@@ -156,21 +156,35 @@ read_data_plot=function(filedr1,filedr2,ext,col1,col2,xlabs,ylabs,whatisplotted,
   return(ln_obs)
   }
   
-ln_obs=read_data_plot('out/RE_matrix_theta-','drutes-dev/out/RE_matrix_theta-'
-                 ,'.dat',col1=2,col2=3,ylabs=expression(paste("vol. water content [-]",sep=""))
-                 ,xlabs="depth [cm]",'water',idfix=1,lims=lims,legpos = legpos )
+ln_obs=read_data_plot('out/obspt_RE_matrix-','drutes-dev/out/obspt_RE_matrix-'
+                      ,'.out',col1=1,col2=3,ylabs=expression(paste("vol. water content [-]",sep=""))
+                      ,xlabs="time [days]",'water_point',idfix=0,lims=lims,legpos = legpos ,skip=5,k=1)
 if(ln_obs>0){
-  print(paste("plot of",ln_obs,"observation times created: water content vs. depth"))
+  print(paste("plot of",ln_obs,"observation points created: water content vs. time"))
 }
 
-ln_obs=read_data_plot('out/RE_matrix_press_head-','drutes-dev/out/RE_matrix_press_head-','.dat',col1=2,col2=3,ylabs="pressure head [cm]"
-                 ,xlabs="depth [cm]",'press_head',idfix=0,lims=lims,legpos = legpos )
+ln_obs=read_data_plot('out/obspt_RE_matrix-','drutes-dev/out/obspt_RE_matrix-'
+                      ,'.out',col1=1,col2=2,ylabs=expression(paste("pressure head [cm]",sep=""))
+                      ,xlabs="time [days]",'press_point',idfix=0,lims=lims,legpos = legpos ,skip=5,k=1)
 if(ln_obs>0){
-  print(paste("plot of",ln_obs,"observation times created: pressure head vs. depth"))
+  print(paste("plot of",ln_obs,"observation points created: pressure head vs. time"))
 }
 
-ln_obs=read_data_plot('out/RE_matrix_flux-','drutes-dev/out/RE_matrix_flux-','.dat',col1=2,col2=3,ylabs=expression(paste("flux [cm ",d^-1,"]")),
-                      xlabs="depth [cm]",'flux',idfix=0,lims=lims,legpos = legpos )
-if(ln_obs>0){
-  print(paste("plot of",ln_obs,"observation times created: flux vs. depth"))
-}
+# ln_obs=read_data_plot('out/RE_matrix_theta-','drutes-dev/out/RE_matrix_theta-'
+#                  ,'.dat',col1=2,col2=3,ylabs=expression(paste("vol. water content [-]",sep=""))
+#                  ,xlabs="depth [cm]",'water',idfix=1,lims=lims,legpos = legpos )
+# if(ln_obs>0){
+#   print(paste("plot of",ln_obs,"observation times created: water content vs. depth"))
+# }
+# 
+# ln_obs=read_data_plot('out/RE_matrix_press_head-','drutes-dev/out/RE_matrix_press_head-','.dat',col1=2,col2=3,ylabs="pressure head [cm]"
+#                  ,xlabs="depth [cm]",'press_head',idfix=0,lims=lims,legpos = legpos )
+# if(ln_obs>0){
+#   print(paste("plot of",ln_obs,"observation times created: pressure head vs. depth"))
+# }
+# 
+# ln_obs=read_data_plot('out/RE_matrix_flux-','drutes-dev/out/RE_matrix_flux-','.dat',col1=2,col2=3,ylabs=expression(paste("flux [cm ",d^-1,"]")),
+#                       xlabs="depth [cm]",'flux',idfix=0,lims=lims,legpos = legpos )
+# if(ln_obs>0){
+#   print(paste("plot of",ln_obs,"observation times created: flux vs. depth"))
+# }
