@@ -134,7 +134,7 @@ module objfnc
                     
       call fileread(no_pdes, fileid, errmsg=msg, ranges=(/1_ikind, 1_ikind*ubound(pde,1)/))
       
-      
+      call read_sep(fileid)
       
       write(msg, *) "The number of PDE component is defined as follows:" , new_line("a"), &
            "      Richards equation - always 1, no other option",  new_line("a"), &
@@ -157,13 +157,15 @@ module objfnc
         call fileread(pde_comp(i), fileid, errmsg=msg, ranges=(/1_ikind, 1_ikind*ubound(pde,1)/))
       end do
            
-      
+      call read_sep(fileid)
       
       write(msg, *) "Check the number of your points for constructing objective function, it should be equal or lower than ", &
           "the number of observation points and at least 1.", new_line("a"), &
           "   Your number of observation points is: ",   ubound(observation_array,1)
       
       call fileread(n, fileid, ranges=(/1_ikind, 1_ikind*ubound(observation_array,1)/), errmsg=msg)
+      
+      call read_sep(fileid)
       
       allocate(obs_ids(n*no_pdes))
       
@@ -173,6 +175,8 @@ module objfnc
         call fileread(obs_ids(i), fileid, ranges=(/1_ikind, 1_ikind*ubound(observation_array,1)/), errmsg=msg)
       end do
 
+      call read_sep(fileid)
+      
       allocate(noprop(n*no_pdes))
       
       write(msg, *) "   For each observation point you must specify number of properties you want to check, &
@@ -183,7 +187,7 @@ module objfnc
         call fileread(noprop(i), fileid, ranges=(/1_ikind, 4_ikind/), errmsg=msg)
       end do 
       
-      
+      call read_sep(fileid)
       allocate(columns(ubound(noprop,1), (maxval(noprop))))
       
       write(msg, *) "Is the number of columns for evaluating your objective function correct?", new_line("a"), &
@@ -196,8 +200,11 @@ module objfnc
         call fileread(columns(i, 1:noprop(i)), fileid, ranges=(/2_ikind, 5_ikind/), errmsg=msg, checklen=.TRUE.)
       end do
       
+      call read_sep(fileid)
       
       call fileread(fileinputs, fileid)  
+      
+      call read_sep(fileid)
       
       call write_log("The file with inputs for inverse modeling is: ", text2=cut(fileinputs))
       
@@ -217,9 +224,15 @@ module objfnc
       
       call fileread(ram_limit%set, fileid)
       
+      call read_sep(fileid)
+      
       call fileread(ram_limit%memsize, fileid)
       
+      call read_sep(fileid)
+      
       call fileread(ram_limit%units, fileid, options=(/"kB", "MB", "GB"/))
+      
+      call read_sep(fileid)
       
       if (ierr /= 0) then
         write(msg, *) "ERROR!, You have specified bad path for input file with experimental data for inverse modeling.", & 
@@ -232,6 +245,7 @@ module objfnc
       
       call fileread(objval%limit_CPU, fileid)
       
+      call read_sep(fileid)
       
       if (objval%limit_CPU) then
         
@@ -323,7 +337,7 @@ module objfnc
   
       deallocate(tmpdata)
       
-    
+
     end subroutine reader
     
     
@@ -343,7 +357,7 @@ module objfnc
       
       do i=1, no_pdes
         do j=1, ubound(obs_ids,1)
-          open(newunit=datafiles((i-1)*ubound(obs_ids,1)+j), file=pde(i)%obspt_filename(obs_ids(j)), action="read", &
+          open(newunit=datafiles((i-1)*ubound(obs_ids,1)+j), file=pde(pde_comp(i))%obspt_filename(obs_ids(j)), action="read", &
                  status="old", iostat=ierr)
           if (ierr/=0) then
             print *, "error opening files with observation points"
