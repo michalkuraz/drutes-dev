@@ -12,7 +12,7 @@ c= gfortran -fimplicit-none  -fcoarray=single -fbounds-check -fbacktrace -g -g3 
 d=drutes_obj-`date -I`
 
 all : main.o $(ALL_objs)
-	    [ -d bin ] || mkdir bin && $c -g -o bin/drutes main.o $(ALL_objs) 
+	    [ -d bin ] || mkdir bin && $c -g -o bin/drutes main.o $(ALL_objs)
 dir="obj"
 
 servers="miguel@neptun01.fsv.cvut.cz:~  miguel@matsrv-lin01.fsv.cvut.cz:~ miguel@cml.fsv.cvut.cz:~"
