@@ -1,6 +1,5 @@
 module ADE_reader
   public :: ADE_read, ADEcs_read
-  private :: read_sep
   
   contains
 
@@ -354,14 +353,7 @@ module ADE_reader
     
     end subroutine ADEcs_read
     
-    subroutine read_sep(fileid)
-      use readtools
-      integer, intent(in) :: fileid
-      character(len=3) :: separator
-      
-      call fileread(separator, fileid, options=(/"---"/), errmsg="Missing block separator. Check your inputs.")
-    
-    end subroutine read_sep
+
 
 
   

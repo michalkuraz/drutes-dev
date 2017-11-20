@@ -5,6 +5,7 @@ module readtools
   public :: comment
   public :: readbcvals
   public :: set_tensor
+  public :: read_sep
 
   interface fileread
     module procedure read_int
@@ -550,6 +551,16 @@ module readtools
 
       
     end subroutine read_logical_array
+    
+    
+    subroutine read_sep(fileid)
+    
+      integer, intent(in) :: fileid
+      character(len=3) :: separator
+      
+      call fileread(separator, fileid, options=(/"---"/), errmsg="Missing block separator. Check your inputs.")
+    
+    end subroutine read_sep
       
       
 
