@@ -782,7 +782,6 @@ module readtools
           call find_unit(fileid)
           write(unit=filename, fmt="(a, I3, a)") trim(dirname), i, ".bc"
           open(unit=fileid, file=adjustl(trim(filename)), action="read", status="old",  iostat=ierr)
-          print *, adjustl(trim(filename))
           if (ierr /= 0) then
             write(unit=msg, fmt=*) "ERROR: if using unsteady boundary value data, you must supply the file with data!", &
             "ERROR: file required:", trim(filename)

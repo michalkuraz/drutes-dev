@@ -66,7 +66,7 @@ module ADE_pointers
     
     
   
-    subroutine ADE(pde_loc)
+    subroutine ADE()
       use typy
       use globals
       use global_objs
@@ -76,7 +76,6 @@ module ADE_pointers
       use ADE_globals
       use RE_pointers
       
-      class(pde_str), intent(in out), dimension(:) :: pde_loc
       integer(kind=ikind) :: i
       real(kind=rkind) :: r
       
@@ -86,37 +85,43 @@ module ADE_pointers
         adepos = 1
       end if
       
-      call ADE_read(pde_loc(adepos))
-	    
-      pde_loc(adepos)%pde_fnc(adepos)%dispersion => ADEdispersion
       
-      pde_loc(adepos)%pde_fnc(adepos)%convection => ADE_convection
+      call ADE_read(pde(adepos))
+ 
+ 
+      pde(adepos)%pde_fnc(adepos)%dispersion => ADEdispersion
+      
+      pde(adepos)%pde_fnc(adepos)%convection => ADE_convection
 
-      pde_loc(adepos)%pde_fnc(adepos)%elasticity => ADE_tder_coef
+      pde(adepos)%pde_fnc(adepos)%elasticity => ADE_tder_coef
+      
+      pde(adepos)%mass => ADE_mass
 
-      pde_loc(adepos)%mass => ADE_mass
-
-      pde_loc(adepos)%pde_fnc(adepos)%reaction => ADE_reaction
+      pde(adepos)%pde_fnc(adepos)%reaction => ADE_reaction
             
-      pde_loc(adepos)%pde_fnc(adepos)%zerord => ADE_zerorder
+            
+      pde(adepos)%pde_fnc(adepos)%zerord => ADE_zerorder
+
 	  
-      do i=lbound(pde_loc(adepos)%bc,1), ubound(pde_loc(adepos)%bc,1)
-        select case(pde_loc(adepos)%bc(i)%code)
+      do i=lbound(pde(adepos)%bc,1), ubound(pde(adepos)%bc,1)
+        select case(pde(adepos)%bc(i)%code)
           case(1)
-            pde_loc(adepos)%bc(i)%value_fnc => ADE_dirichlet
+            pde(adepos)%bc(i)%value_fnc => ADE_dirichlet
           case(2)
-            pde_loc(adepos)%bc(i)%value_fnc => ADE_neumann
+            pde(adepos)%bc(i)%value_fnc => ADE_neumann
         end select
       end do    
 	
-      pde_loc(adepos)%flux => ADE_flux
+      pde(adepos)%flux => ADE_flux
       
-      pde_loc(adepos)%initcond => ADE_icond
+      pde(adepos)%initcond => ADE_icond
+
       
-      if (use_richards) call REstdH(pde_loc(1))
+      if (use_richards) call REstdH(pde(1))
+
 
       if (use_sorption) then 
-        call ADEkinsorb(pde_loc(adepos:no_solids+adepos))
+        call ADEkinsorb(pde(adepos:no_solids+adepos))
       end if 
       
     
@@ -129,7 +134,7 @@ module ADE_pointers
       use pde_objs
       use ADE_fnc
       use ADE_reader
-      use debug_tools
+!       use debug_tools
       
       class(pde_str), intent(in out), dimension(:) :: pde_loc  
       integer(kind=ikind) :: i, j
