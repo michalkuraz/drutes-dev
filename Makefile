@@ -4,15 +4,15 @@ in := cd objs
 out := cd ..
 
 #options for debugging, use for development  
- c= gfortran -fimplicit-none  -fcoarray=single -fbounds-check -fbacktrace -g -g3 -fdefault-real-8 -O0 -finit-real=nan 
+c= gfortran -fimplicit-none  -fcoarray=single -fbounds-check -fbacktrace -g -g3 -fdefault-real-8 -O0 -finit-real=nan 
 
 #options for optimized compilation, use for production purposes on well debugged versions
-#  c=gfortran -fimplicit-none  -fcoarray=single -fdefault-real-8 -O3 -finit-real=nan -ffpe-summary=none 
+#   c=gfortran -fimplicit-none  -fcoarray=single -fdefault-real-8 -O3 -finit-real=nan -ffpe-summary=none 
 
 d=drutes_obj-`date -I`
 
 all : main.o $(ALL_objs)
-	    [ -d bin ] || mkdir bin && $c -g -o bin/drutes main.o $(ALL_objs) 
+	    [ -d bin ] || mkdir bin && $c -g -o bin/drutes main.o $(ALL_objs)
 dir="obj"
 
 servers="miguel@neptun01.fsv.cvut.cz:~  miguel@matsrv-lin01.fsv.cvut.cz:~ miguel@cml.fsv.cvut.cz:~"

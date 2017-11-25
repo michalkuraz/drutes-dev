@@ -65,7 +65,7 @@ module manage_pointers
           call pde_constructor(pde_common%processes)
           write(unit=drutes_config%fullname, fmt=*) " advection-dispersion-reaction equation in", &
                  drutes_config%dimen, "D"
-          call ade(pde(:))
+          call ade()
 
         case("Re_dual")
             write(unit=drutes_config%fullname, fmt=*) " Richards equation ", &

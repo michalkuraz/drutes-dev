@@ -535,15 +535,13 @@ module postpro
 
         write(unit=ids(1), fmt=*) i,  nodes%data(i,:), pde(proc)%getval(quadpnt) 
         
-        
+        layer = elements%material(nodes%element(i)%data(1))
         ! 3 is for mass
         if (pde(proc)%print_mass) then
-          layer = elements%material(nodes%element(i)%data(1))
-
-          call pde(proc)%flux(layer, quadpnt, scalar=flux)
-
           write(unit=ids(3), fmt=*)  i, nodes%data(i,:), pde(proc)%mass(layer, quadpnt)
         end if
+        
+        call pde(proc)%flux(layer, quadpnt, scalar=flux)
 
         write(unit=ids(4), fmt=*) i, nodes%data(i,:), flux
       end do

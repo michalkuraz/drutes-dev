@@ -5,6 +5,7 @@ module readtools
   public :: comment
   public :: readbcvals
   public :: set_tensor
+  public :: read_sep
 
   interface fileread
     module procedure read_int
@@ -550,6 +551,16 @@ module readtools
 
       
     end subroutine read_logical_array
+    
+    
+    subroutine read_sep(fileid)
+    
+      integer, intent(in) :: fileid
+      character(len=3) :: separator
+      
+      call fileread(separator, fileid, options=(/"---"/), errmsg="Missing block separator. Check your inputs.")
+    
+    end subroutine read_sep
       
       
 
@@ -611,7 +622,7 @@ module readtools
       end if
 	
       
-      ERROR STOP
+      STOP
 
 
     end subroutine file_error
@@ -652,6 +663,7 @@ module readtools
       use typy
       use globals
       use global_objs
+!       use debug_tools
 
       !>local anisothoropy values with respect to local x, local y and local z
       real(kind=rkind), dimension(:), intent(in) :: values
@@ -689,6 +701,7 @@ module readtools
 
       tensor = matmul(matmul(T, tensor), transpose(T))
       
+!       call printmtx(tensor) ; stop
 
       deallocate(T)
 
@@ -769,7 +782,6 @@ module readtools
           call find_unit(fileid)
           write(unit=filename, fmt="(a, I3, a)") trim(dirname), i, ".bc"
           open(unit=fileid, file=adjustl(trim(filename)), action="read", status="old",  iostat=ierr)
-          print *, adjustl(trim(filename))
           if (ierr /= 0) then
             write(unit=msg, fmt=*) "ERROR: if using unsteady boundary value data, you must supply the file with data!", &
             "ERROR: file required:", trim(filename)
