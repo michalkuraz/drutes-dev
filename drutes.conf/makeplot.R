@@ -76,6 +76,11 @@ read_data_plot=function(filedr1,filedr2,ext,col1,col2,xlabs,ylabs,whatisplotted,
   allread=F
   obs=list()
   n=1
+  if(any(unlist(strsplit(unlist(strsplit(filedr1,split = "/"))[2],"_"))=="obspt")){
+    legend_entry="obs. point"
+  }else{
+    legend_entry=" obs. time"
+  }
   while(!allread){
     filedr1x=paste(filedr1,k,ext,sep="")
     filedr2x=paste(filedr2,k,ext,sep="")
@@ -139,7 +144,7 @@ read_data_plot=function(filedr1,filedr2,ext,col1,col2,xlabs,ylabs,whatisplotted,
         par(new=T)
         plot(obs[[i]][lims,col1],obs[[i]][lims,col2],type="l",pch=i,col=mycolors[i],ylab="",xlab="",ylim=c(mins,maxs),axes=F,lwd=1.5)
       } 
-      leg.txt[i]=paste("obs. time ",i-idfix)
+      leg.txt[i]=paste(legend_entry,i-idfix)
     }
     ncols=1
     if(ln_obs>8){
@@ -158,7 +163,7 @@ read_data_plot=function(filedr1,filedr2,ext,col1,col2,xlabs,ylabs,whatisplotted,
 
 ln_obs=read_data_plot('out/obspt_RE_matrix-','drutes-dev/out/obspt_RE_matrix-'
                       ,'.out',col1=1,col2=3,ylabs=expression(paste("vol. water content [-]",sep=""))
-                      ,xlabs="time [days]",'water_point',idfix=0,lims=lims,legpos = legpos ,skip=5,k=1)
+                      ,xlabs="time [T]",'water_point',idfix=0,lims=lims,legpos = legpos ,skip=5,k=1)
 if(ln_obs>0){
   print(paste("plot of",ln_obs,"observation points created: water content vs. time"))
 }
@@ -173,14 +178,14 @@ if(ln_obs>0){
 
 ln_obs=read_data_plot('out/RE_matrix_theta-','drutes-dev/out/RE_matrix_theta-'
                        ,'.dat',col1=2,col2=3,ylabs=expression(paste("vol. water content [-]",sep=""))
-                       ,xlabs="depth [cm]",'water',idfix=1,lims=lims,legpos = legpos )
+                       ,xlabs="depth [L]",'water',idfix=1,lims=lims,legpos = legpos )
 if(ln_obs>0){   
   print(paste("plot of",ln_obs,"observation times created: water content vs. depth"))
 }
 
 ln_obs=read_data_plot('out/ADER_in_liquid_solute_concentration-','drutes-dev/out/ADER_in_liquid_solute_concentration-'
                       ,'.dat',col1=2,col2=3,ylabs=expression(paste("concentration in liquid [M ",L^-3,"]",sep=""))
-                      ,xlabs="depth [cm]",'conta',idfix=1,lims=lims,legpos = legpos )
+                      ,xlabs="depth [L]",'conta',idfix=1,lims=lims,legpos = legpos )
 if(ln_obs>0){   
   print(paste("plot of",ln_obs,"observation times created: concentrationvs. depth"))
 }
