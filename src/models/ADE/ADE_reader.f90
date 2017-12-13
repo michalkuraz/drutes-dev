@@ -189,7 +189,7 @@ module ADE_reader
 
     end subroutine ADE_read		
     
-    subroutine ADEcs_read(pde_loc)
+    subroutine ADEcs_read(lb, tb)
       use typy
       use globals
       use global_objs
@@ -198,7 +198,8 @@ module ADE_reader
       use readtools
       use pde_objs
           
-      class(pde_str), intent(in out), dimension(:) :: pde_loc
+      !> lb = low bound, tb = top bound
+      integer(kind=ikind) :: lb, tb
       real(kind=rkind), dimension(:), allocatable :: tmp_array, tmp_array2
       integer(kind=ikind) :: i, j, D
       real(kind=rkind) :: tmp
@@ -215,23 +216,23 @@ module ADE_reader
         ERROR STOP
       end if
       
-      do i=2, ubound(pde_loc,1)
+      do i=lb+1, tb
         write(number, fmt=*) i-1
-        write(pde_loc(i)%problem_name(1), fmt=*) "ADER_in_solid_", cut(number)
-        pde_loc(i)%problem_name(1) = cut(pde_loc(i)%problem_name(1))
-        write(pde_loc(i)%problem_name(2), fmt=*)  "Advection-dispersion-reaction equation (solute concentration adsorbed in &
+        write(pde(i)%problem_name(1), fmt=*) "ADER_in_solid_", cut(number)
+        pde(i)%problem_name(1) = cut(pde(i)%problem_name(1))
+        write(pde(i)%problem_name(2), fmt=*)  "Advection-dispersion-reaction equation (solute concentration adsorbed in &
               solid phase) ", cut(number)
-        pde_loc(i)%problem_name(2) = cut(pde_loc(i)%problem_name(2))
+        pde(i)%problem_name(2) = cut(pde(i)%problem_name(2))
 
-        write(pde_loc(i)%solution_name(1), fmt=*) "solute_concentration_", cut(number) !nazev vystupnich souboru
-        pde_loc(i)%solution_name(1) = cut(pde_loc(i)%solution_name(1))
-        pde_loc(i)%solution_name(2) = "c  [M/M]" !popisek grafu
+        write(pde(i)%solution_name(1), fmt=*) "solute_concentration_", cut(number) !nazev vystupnich souboru
+        pde(i)%solution_name(1) = cut(pde(i)%solution_name(1))
+        pde(i)%solution_name(2) = "c  [M/M]" !popisek grafu
 
-        pde_loc(i)%flux_name(1) = "zero_flux"  
-        pde_loc(i)%flux_name(2) = "zero flux"
+        pde(i)%flux_name(1) = "zero_flux"  
+        pde(i)%flux_name(2) = "zero flux"
 
-        pde_loc(i)%mass_name(1) = "conc_in_solid_phase"
-        pde_loc(i)%mass_name(2) = "concetration [M/M]"
+        pde(i)%mass_name(1) = "conc_in_solid_phase"
+        pde(i)%mass_name(2) = "concetration [M/M]"
       end do
       
       if (no_solids > 0) then
