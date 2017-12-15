@@ -121,13 +121,13 @@ module ADE_pointers
 
 
       if (use_sorption) then 
-        call ADEkinsorb(pde(adepos:no_solids+adepos))
+        call ADEkinsorb(adepos,no_solids+adepos)
       end if 
       
     
     end subroutine ADE
     
-    subroutine ADEkinsorb(pde_loc)
+    subroutine ADEkinsorb(lb, tb)
       use typy
       use globals
       use global_objs
@@ -135,31 +135,32 @@ module ADE_pointers
       use ADE_fnc
       use ADE_reader
 !       use debug_tools
-      
-      class(pde_str), intent(in out), dimension(:) :: pde_loc  
+      !>lb = low bound of pde, tp = top bound of pde to deal with
+      integer(kind=ikind), intent(in) :: lb, tb
       integer(kind=ikind) :: i, j
       
-      call ADEcs_read(pde_loc)
       
-      do i=2, ubound(pde_loc,1)
+      call ADEcs_read(lb, tb)
       
-        pde_loc(i)%pde_fnc(pde_loc(i)%order)%elasticity => ADE_tder_cscs
+      do i=lb+1, tb
       
-        pde_loc(1)%pde_fnc(pde_loc(i)%order)%elasticity => ADE_tder_cscl
+        pde(i)%pde_fnc(i)%elasticity => ADE_tder_cscs
       
-        pde_loc(i)%pde_fnc(adepos)%reaction => ADE_cscl_react
+        pde(lb)%pde_fnc(i)%elasticity => ADE_tder_cscl
       
-        pde_loc(i)%pde_fnc(pde_loc(i)%order)%reaction => ADE_cscs_react
+        pde(i)%pde_fnc(lb)%reaction => ADE_cscl_react
       
-        allocate(pde_loc(i)%bc(lbound(pde_loc(1)%bc,1) : (ubound(pde_loc(1)%bc,1) )  ))
+        pde(i)%pde_fnc(i)%reaction => ADE_cscs_react
+      
+        allocate(pde(i)%bc(lbound(pde(lb)%bc,1) : (ubound(pde(lb)%bc,1) )  ))
         
         
-        do j=lbound(pde_loc(i)%bc,1), ubound(pde_loc(i)%bc,1)
-          pde_loc(i)%bc(j)%code = 0
-          pde_loc(i)%bc(j)%value_fnc => ADE_null_bc
+        do j=lbound(pde(i)%bc,1), ubound(pde(i)%bc,1)
+          pde(i)%bc(j)%code = 0
+          pde(i)%bc(j)%value_fnc => ADE_null_bc
         end do 
       
-        pde_loc(i)%initcond => ADEcs_icond
+        pde(i)%initcond => ADEcs_icond
       end do
 
     
