@@ -422,7 +422,7 @@ module objfnc
       
       close(datafiles(1))
       
-      open(newunit=datafiles(1), file=pde(1)%obspt_filename(obs_ids(1)), action="read", status="old")
+      open(newunit=datafiles(1), file=pde(pde_comp(1))%obspt_filename(obs_ids(1)), action="read", status="old")
       
       if (go4skip) then
         
