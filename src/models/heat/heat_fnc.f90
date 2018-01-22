@@ -325,4 +325,30 @@ module heat_fnc
     
     
 
+      
+    subroutine heat_icondlin(pde_loc)
+      use typy
+      use globals
+      use global_objs
+      use pde_objs
+      use heat_globals
+      
+      class(pde_str), intent(in out) :: pde_loc
+      real(kind=rkind) :: val1, val2
+      integer(kind=ikind) :: i
+      
+      call pde_loc%bc(101)%value_fnc(pde_loc, 1_ikind, 1_ikind, val1)
+      
+      call pde_loc%bc(102)%value_fnc(pde_loc, elements%kolik, 2_ikind, val2)
+      
+      
+      do i=1, ubound(pde_loc%solution,1)
+        pde_loc%solution(i) = val1 + (val2-val1)/ubound(pde_loc%solution,1)*i
+      end do
+      
+    
+    end subroutine heat_icondlin
+    
+    
+
 end module heat_fnc
