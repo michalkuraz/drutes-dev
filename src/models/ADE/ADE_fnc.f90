@@ -198,6 +198,7 @@ module ADE_fnc
       use ADE_globals
       use re_globals
       use globals
+      use debug_tools
       
       class(pde_str), intent(in) :: pde_loc
       !> value of the nonlinear function
@@ -474,6 +475,7 @@ module ADE_fnc
       use global_objs
       use debug_tools
       use ADE_globals
+      use re_globals
        
       class(pde_str), intent(in) :: pde_loc
       integer(kind=ikind), intent(in)                          :: layer
@@ -486,7 +488,7 @@ module ADE_fnc
     
       real(kind=rkind), dimension(:,:), allocatable, save  :: Dhm
       real(kind=rkind), dimension(:), allocatable, save :: q_w, gradC
-      real(kind=rkind) :: c, cmax
+      real(kind=rkind) :: c, cmax, ths
 
       
       if (present(quadpnt) .and. (present(grad) .or. present(x))) then
@@ -505,6 +507,12 @@ module ADE_fnc
       if (.not. allocated(gradC)) allocate(gradC(drutes_config%dimen))
       
       if (.not. allocated(Dhm)) allocate(Dhm(drutes_config%dimen, drutes_config%dimen))
+      
+      if (pde_loc%order > 1) then
+        ths = vgset(layer)%ths
+      else
+        ths = adepar(layer)%water_cont
+      end if
       
       if (present(quadpnt)) then
         c = pde_loc%getval(quadpnt)
@@ -538,11 +546,11 @@ module ADE_fnc
       
       
       if (present(flux)) then
-        flux = cmax*matmul(Dhm, gradC) + cmax*q_w*c
+        flux = cmax*matmul(Dhm, gradC)*ths + cmax*q_w*c
       end if
       
       if (present(flux_length)) then
-        flux_length = dot_product(cmax*matmul(Dhm, gradC) + cmax*q_w*c, cmax*matmul(Dhm, gradC) + cmax*q_w*c)
+        flux_length = dot_product(cmax*matmul(Dhm, gradC)*ths + cmax*q_w*c, cmax*matmul(Dhm, gradC)*ths + cmax*q_w*c)
       end if
     
 

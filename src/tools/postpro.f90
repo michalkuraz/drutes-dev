@@ -162,14 +162,14 @@ module postpro
             if (i /= 3 .or. pde(proc)%print_mass) then
               call find_unit(ids(proc, i), 6000)
               open(unit=ids(proc, i), file=trim(filenames(proc,i)), action="write", status="replace", iostat=ierr)
-              if (ierr /= 0) then
-                call system("mkdir out/anime")
-                open(unit=ids(proc, i), file=trim(filenames(proc,i)), action="write", status="replace", iostat=ierr)
-                if (ierr /= 0) then
-                  print *, "unexpected system error, called from postpro::make_print()"
-                  error stop
-                end if
-              end if
+!               if (ierr /= 0) then
+!                 call system("mkdir out/anime")
+!                 open(unit=ids(proc, i), file=trim(filenames(proc,i)), action="write", status="replace", iostat=ierr)
+!                 if (ierr /= 0) then
+!                   print *, "unexpected system error, called from postpro::make_print()"
+!                   error stop
+!                 end if
+!               end if
             end if
           end do  
         end if
@@ -256,6 +256,7 @@ module postpro
       real(kind=rkind) :: val, massval
       real(kind=rkind), dimension(3) :: advectval
       type(integpnt_str) :: quadpnt
+
       
       quadpnt%type_pnt = "obpt"
       quadpnt%column=3
@@ -280,8 +281,7 @@ module postpro
           
           observation_array(i)%cumflux(proc) = observation_array(i)%cumflux(proc) + &
               sqrt(dot_product(advectval(1:D), advectval(1:D)))*time_step
-                          
-
+              
           write(unit=pde(proc)%obspt_unit(i), fmt="(50E24.12E3)") time, val, massval, advectval(1:D), &
                 observation_array(i)%cumflux(proc)
 
@@ -415,9 +415,9 @@ module postpro
           body(j,3) = pde(proc)%getval(quadpnt_loc)
         end do
       
-        if (pde(proc)%print_mass) then
-          ! mass (constant over element)
-          layer = elements%material(i)
+        ! mass (constant over element)
+        layer = elements%material(i)     
+!         if (pde(proc)%print_mass) then
           qpntloc%element = i
           qpntloc%column = 2
           qpntloc%type_pnt = "gqnd"
@@ -429,7 +429,7 @@ module postpro
           end do
           
           body(:,5) = tmp/gauss_points%area
-        end if
+!         end if
           
         if (ubound(gauss_points%weight,1) > 1) then
           qpntloc%order = nint(ubound(gauss_points%weight,1)/2.0)
@@ -437,7 +437,7 @@ module postpro
           qpntloc%order = 1
         end if
         
-        call pde(proc)%flux(layer, qpntloc, vector_out=flux(1:drutes_config%dimen), scalar=totflux)
+        call pde(proc)%flux(layer, quadpnt_loc, vector_out=flux(1:drutes_config%dimen), scalar=totflux)
 
         body(:,6) = totflux
         
