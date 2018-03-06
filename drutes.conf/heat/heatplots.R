@@ -67,12 +67,12 @@ read_data_plot=function(filedr1,filedr2,ext,col1,col2,xlabs,ylabs,whatisplotted,
   return(ln_obs)
   }
   
-# ln_obs=read_data_plot('out/heat_temperature-','drutes-dev/out/heat_temperature-'
-#                  ,'.dat',col1=2,col2=3,ylabs=expression(paste("temperature [",degree*C,"]",sep=""))
-#                  ,xlabs="wall depth [m]",'time',idfix=1)
-# if(ln_obs>0){
-#   print(paste("plot of",ln_obs,"observation times created: Temperature vs. depth "))
-# }
+ln_obs=read_data_plot('out/heat_temperature-','drutes-dev/out/heat_temperature-'
+                 ,'.dat',col1=2,col2=3,ylabs=expression(paste("temperature [",degree*C,"]",sep=""))
+                 ,xlabs="wall depth [m]",'time',idfix=1)
+if(ln_obs>0){
+  print(paste("plot of",ln_obs,"observation times created: Temperature vs. depth "))
+}
 
 ln_obs=read_data_plot('out/obspt_heat-','drutes-dev/out/obspt_heat-','.out',col1=1,col2=4,ylabs=expression(paste("heat flux [W",~m^-2,"]",sep=""))
                  ,xlabs="time [h]",'point',skip=10,k=1,"topright")

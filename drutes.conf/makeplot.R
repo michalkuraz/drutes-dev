@@ -107,8 +107,8 @@ read_data_plot=function(filedr1,filedr2,ext,col1,col2,xlabs,ylabs,whatisplotted,
     k=k+1
     n=n+1
   }
-  
   ln_obs=length(obs)
+
   if(ln_obs>0){
     if(isNAmax){
       if(lims_min>1){
@@ -124,6 +124,7 @@ read_data_plot=function(filedr1,filedr2,ext,col1,col2,xlabs,ylabs,whatisplotted,
       
       
     }
+
     mycolors=mycol(ln_obs)
     pname=paste("obs_",whatisplotted,"_", plotname,".png",sep="")
     idname=2
@@ -154,12 +155,43 @@ read_data_plot=function(filedr1,filedr2,ext,col1,col2,xlabs,ylabs,whatisplotted,
       ncols=3
     }
     if(legpos!="none"){
-      legend(legpos,leg.txt,ncol=ncols,col=mycolors,seg.len=0.5,lty=1,lwd=2,bty="n")
+      legend(legpos,leg.txt,ncol=ncols,col=mycolors,seg.len=0.5,lty=1,lwd=2,bty="n",cex=0.8)
     }
     invisible(dev.off())
   }
   return(ln_obs)
 }
+
+
+
+ln_obs=read_data_plot('out/heat_temperature-','drutes-dev/out/heat_temperature-'
+                      ,'.dat',col1=2,col2=3,ylabs=expression(paste("temperature [",degree*C,"]",sep=""))
+                      ,xlabs="wall depth [m]",'time',idfix=1,skip=0,k=0,legpos=legpos,lims=lims)
+if(ln_obs>0){
+  print(paste("plot of",ln_obs,"observation times created: Temperature vs. depth "))
+}
+
+ln_obs=read_data_plot('out/obspt_heat-','drutes-dev/out/obspt_heat-'
+                      ,'.out',col1=1,col2=4,ylabs=expression(paste("heat flux [W",~m^-2,"]",sep=""))
+                      ,xlabs="time [h]",'point',skip=10,k=1,legpos="topright",lims=lims)
+if(ln_obs>0){
+  print(paste("plot of",ln_obs,"observation points created: heat flux vs. time"))
+}
+
+# ln_obs=read_data_plot('out/obspt_heat-','drutes-dev/out/obspt_heat-'
+#                       ,'.out',col1=1,col2=2,ylabs=expression(paste("temperature [°C]",sep=""))
+#                       ,xlabs="time [h]",'temp_point',skip=10,k=1,legpos="topright",lims=lims)
+# if(ln_obs>0){
+#   print(paste("plot of",ln_obs,"observation points created: temperature vs. time"))
+# }
+ln_obs=read_data_plot('out/obspt_heat-','drutes-dev/out/obspt_heat-'
+                      ,'.out',col1=1,col2=5,ylabs=expression(paste("cumulative heat flux [W",~m^-2,"]",sep=""))
+                      ,xlabs="time [h]",'point_cum',skip=10,k=1,legpos="topright",lims=lims)
+if(ln_obs>0){
+  print(paste("plot of",ln_obs,"observation points created: cumulative heat flux vs. time"))
+}
+
+
 
 ln_obs=read_data_plot('out/obspt_RE_matrix-','drutes-dev/out/obspt_RE_matrix-'
                       ,'.out',col1=1,col2=3,ylabs=expression(paste("vol. water content [-]",sep=""))
@@ -169,28 +201,27 @@ if(ln_obs>0){
 }
 
 
-ln_obs=read_data_plot('out/obspt_ADER_in_liquid-','drutes-dev/out/obspt_ADER_in_liquid-'
-                      ,'.out',col1=1,col2=3,ylabs=expression(paste("concentration in liquid [M ",L^-3,"]",sep=""))
-                      ,xlabs="time [T]",'conc_point',idfix=0,lims=lims,legpos = legpos ,skip=5,k=1)
-if(ln_obs>0){
-  print(paste("plot of",ln_obs,"observation points created: concentration in liquid vs. time"))
-}
-
-ln_obs=read_data_plot('out/RE_matrix_theta-','drutes-dev/out/RE_matrix_theta-'
-                       ,'.dat',col1=2,col2=3,ylabs=expression(paste("vol. water content [-]",sep=""))
-                       ,xlabs="depth [L]",'water',idfix=1,lims=lims,legpos = legpos )
-if(ln_obs>0){   
-  print(paste("plot of",ln_obs,"observation times created: water content vs. depth"))
-}
-
-ln_obs=read_data_plot('out/ADER_in_liquid_solute_concentration-','drutes-dev/out/ADER_in_liquid_solute_concentration-'
-                      ,'.dat',col1=2,col2=3,ylabs=expression(paste("concentration in liquid [M ",L^-3,"]",sep=""))
-                      ,xlabs="depth [L]",'conta',idfix=1,lims=lims,legpos = legpos )
-if(ln_obs>0){   
-  print(paste("plot of",ln_obs,"observation times created: concentrationvs. depth"))
-}
-
-
+# ln_obs=read_data_plot('out/obspt_ADER_in_liquid-','drutes-dev/out/obspt_ADER_in_liquid-'
+#                       ,'.out',col1=1,col2=3,ylabs=expression(paste("concentration in liquid [M ",L^-3,"]",sep=""))
+#                       ,xlabs="time [T]",'conc_point',idfix=0,lims=lims,legpos = legpos ,skip=5,k=1)
+# if(ln_obs>0){
+#   print(paste("plot of",ln_obs,"observation points created: concentration in liquid vs. time"))
+# }
+# 
+# ln_obs=read_data_plot('out/RE_matrix_theta-','drutes-dev/out/RE_matrix_theta-'
+#                        ,'.dat',col1=2,col2=3,ylabs=expression(paste("vol. water content [-]",sep=""))
+#                        ,xlabs="depth [L]",'water',idfix=1,lims=lims,legpos = legpos )
+# if(ln_obs>0){   
+#   print(paste("plot of",ln_obs,"observation times created: water content vs. depth"))
+# }
+# 
+# ln_obs=read_data_plot('out/ADER_in_liquid_solute_concentration-','drutes-dev/out/ADER_in_liquid_solute_concentration-'
+#                       ,'.dat',col1=2,col2=3,ylabs=expression(paste("concentration in liquid [M ",L^-3,"]",sep=""))
+#                       ,xlabs="depth [L]",'conta',idfix=1,lims=lims,legpos = legpos )
+# if(ln_obs>0){   
+#   print(paste("plot of",ln_obs,"observation times created: concentrationvs. depth"))
+# }
+# 
 # ln_obs=read_data_plot('out/obspt_RE_matrix-','drutes-dev/out/obspt_RE_matrix-'
 #                       ,'.out',col1=1,col2=2,ylabs=expression(paste("pressure head [cm]",sep=""))
 #                       ,xlabs="time [days]",'press_point',idfix=0,lims=lims,legpos = legpos ,skip=5,k=1)
