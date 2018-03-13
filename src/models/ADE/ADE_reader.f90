@@ -1,5 +1,5 @@
 module ADE_reader
-  public :: ADE_read
+  public :: ADE_read, ADEcs_read
   
   contains
 
@@ -21,6 +21,7 @@ module ADE_reader
       character(len=256) :: linetext
       logical :: crelative = .false.
       logical :: with_richards_def
+
       
       
 
@@ -38,17 +39,12 @@ module ADE_reader
       
       
 
-      call find_unit(file_contaminant, 200)
-      open(unit = file_contaminant, file="drutes.conf/ADE/contaminant.conf", action="read", status="old", iostat=i_err)
+      open(newunit = file_contaminant, file="drutes.conf/ADE/contaminant.conf", action="read", status="old", iostat=i_err)
       if (i_err /= 0) then
         print *, "missing drutes.conf/ADE/contaminant.conf file"
         ERROR STOP
       end if
      
-      
-      call fileread(n, file_contaminant)
-      
-      backspace(file_contaminant)
       
       write(msg, fmt=*) "ERROR!! incorrect number of materials in drutes.conf/ADE/contaminant.conf  &
         the mesh defines", maxval(elements%material)  , "materials, and your input file defines", n, "material(s)."
@@ -56,6 +52,8 @@ module ADE_reader
      
       call fileread(n, file_contaminant, ranges=(/1_ikind*maxval(elements%material),1_ikind*maxval(elements%material)/),&
         errmsg=trim(msg))
+        
+      call read_sep(file_contaminant)
       
       write(unit=msg, fmt=*) "HINT 1: Is the molecular diffusion value positive?", new_line("a"), &
 			      "HINT 2 : Is the number of molecular diffusion values corresponding to the amount of layers?"
@@ -64,6 +62,10 @@ module ADE_reader
         call fileread(adepar(i)%difmol, file_contaminant, ranges=(/0.0_rkind, 1.0_rkind*huge(tmp)/), &
           errmsg=trim(msg))
       end do
+      
+      
+      
+      call read_sep(file_contaminant)
  
       write(unit=msg, fmt=*) "HINT 1: Are all values anisotropy defining anisotropical diffusivity positive? ", new_line("a"), &
         "HINT 2 : Have you defined enough values for anisotropy &
@@ -82,6 +84,7 @@ module ADE_reader
         call set_tensor(adepar(i)%diff_loc, (/adepar(i)%anisoangle/), adepar(i)%diff)
       end do
       
+      call read_sep(file_contaminant)
       
       do i=1, ubound(adepar,1)
        call comment(file_contaminant)
@@ -114,7 +117,7 @@ module ADE_reader
          end do
        end if
        
-  
+       call read_sep(file_contaminant)
        
        if (.not. crelative) then
           write(msg, *) "HINT 1: Specify [y/n] to define whether you prefer to compute convection from the Richards equation or", &
@@ -149,7 +152,9 @@ module ADE_reader
            " 0 2 ", new_line("a"), " 1 2 "
        do i=1, ubound(adepar,1)
          allocate(adepar(i)%orders(n))
-         call fileread(adepar(i)%orders, file_contaminant, errmsg=trim(msg))
+         if (n > 0) then
+          call fileread(adepar(i)%orders, file_contaminant, errmsg=trim(msg), checklen=.true.)
+         end if
        end do
        
        write(unit=msg, fmt=*) "You have requested ", n," different orders of reactions.", new_line("a"), &
@@ -165,9 +170,12 @@ module ADE_reader
        
        do i=1, ubound(adepar,1)
          allocate(adepar(i)%lambda(n))
-         call fileread(adepar(i)%lambda, file_contaminant, errmsg=trim(msg))
+         if (n>0) then
+           call fileread(adepar(i)%lambda, file_contaminant, errmsg=trim(msg), checklen=.true.)
+         end if
        end do   
 
+      call read_sep(file_contaminant)
       
       call fileread(n, file_contaminant, ranges=(/1_ikind, huge(n)/), &
       errmsg=trim(msg))
@@ -181,7 +189,7 @@ module ADE_reader
 
     end subroutine ADE_read		
     
-    subroutine ADEcs_read(pde_loc)
+    subroutine ADEcs_read(lb, tb)
       use typy
       use globals
       use global_objs
@@ -190,7 +198,8 @@ module ADE_reader
       use readtools
       use pde_objs
           
-      class(pde_str), intent(in out), dimension(:) :: pde_loc
+      !> lb = low bound, tb = top bound
+      integer(kind=ikind) :: lb, tb
       real(kind=rkind), dimension(:), allocatable :: tmp_array, tmp_array2
       integer(kind=ikind) :: i, j, D
       real(kind=rkind) :: tmp
@@ -207,23 +216,23 @@ module ADE_reader
         ERROR STOP
       end if
       
-      do i=2, ubound(pde_loc,1)
+      do i=lb+1, tb
         write(number, fmt=*) i-1
-        write(pde_loc(i)%problem_name(1), fmt=*) "ADER_in_solid_", cut(number)
-        pde_loc(i)%problem_name(1) = cut(pde_loc(i)%problem_name(1))
-        write(pde_loc(i)%problem_name(2), fmt=*)  "Advection-dispersion-reaction equation (solute concentration adsorbed in &
+        write(pde(i)%problem_name(1), fmt=*) "ADER_in_solid_", cut(number)
+        pde(i)%problem_name(1) = cut(pde(i)%problem_name(1))
+        write(pde(i)%problem_name(2), fmt=*)  "Advection-dispersion-reaction equation (solute concentration adsorbed in &
               solid phase) ", cut(number)
-        pde_loc(i)%problem_name(2) = cut(pde_loc(i)%problem_name(2))
+        pde(i)%problem_name(2) = cut(pde(i)%problem_name(2))
 
-        write(pde_loc(i)%solution_name(1), fmt=*) "solute_concentration_", cut(number) !nazev vystupnich souboru
-        pde_loc(i)%solution_name(1) = cut(pde_loc(i)%solution_name(1))
-        pde_loc(i)%solution_name(2) = "c  [M/M]" !popisek grafu
+        write(pde(i)%solution_name(1), fmt=*) "solute_concentration_", cut(number) !nazev vystupnich souboru
+        pde(i)%solution_name(1) = cut(pde(i)%solution_name(1))
+        pde(i)%solution_name(2) = "c  [M/M]" !popisek grafu
 
-        pde_loc(i)%flux_name(1) = "zero_flux"  
-        pde_loc(i)%flux_name(2) = "zero flux"
+        pde(i)%flux_name(1) = "zero_flux"  
+        pde(i)%flux_name(2) = "zero flux"
 
-        pde_loc(i)%mass_name(1) = "conc_in_solid_phase"
-        pde_loc(i)%mass_name(2) = "concetration [M/M]"
+        pde(i)%mass_name(1) = "conc_in_solid_phase"
+        pde(i)%mass_name(2) = "concetration [M/M]"
       end do
       
       if (no_solids > 0) then
@@ -244,6 +253,8 @@ module ADE_reader
       do i=1, ubound(adepar,1)
         call fileread(sorption(i,:)%kinetic, filesorp, errmsg=msg)
       end do
+      
+      call read_sep(filesorp)
       
       if (no_solids == 0) then
         do i=1, ubound(sorption,1)
@@ -273,7 +284,7 @@ module ADE_reader
         end if
       end do
       
-
+      call read_sep(filesorp)
     
        msg = "Set bulk density (for each material) if your medium scattered into more media provide bulk densities in columns"
        do i=1, ubound(adepar,1)
@@ -281,7 +292,8 @@ module ADE_reader
                ranges=(/epsilon(0.0_rkind), huge(0.0_rkind)/), checklen=.true.)
        end do
        
-  
+       call read_sep(filesorp)
+        
       write(msg, fmt=*) "Set sorption model name", new_line("a"), &
       "-   langmu for Langmuir model", new_line("a"), &
       "-   freund for Freundlich model."
@@ -316,7 +328,7 @@ module ADE_reader
             sorption(i,j)%third=tmp_array(2)
           end if
         end do
-        if (i<ubound(sorption,1)) call fileread(breaker, filesorp, errmsg="Each layer data must be separated by --- ", &
+        if (i<=ubound(sorption,1)) call fileread(breaker, filesorp, errmsg="Each layer data must be separated by --- ", &
         options=(/"---"/))
       end do
       
@@ -336,36 +348,13 @@ module ADE_reader
          end do
        end do
         
-!         adepar(i)%sorption%adsorb=tmp_array(1)
-!         adepar(i)%sorption%desorb=tmp_array(2)
-!         adepar(i)%sorption%third=tmp_array(3)
-!         if (.not. adepar(i)%sorption%kinetic .and. adepar(i)%sorption%desorb < 100*epsilon(1.0_rkind) .and. &
-!         abs(adepar(i)%sorption%adsorb) > 100*epsilon(1.0_rkind)) then
-!           write(msg, *) "This is non-sence!! You have defined zero desorption rate but you want to use equilibrium sorption.", &
-!           new_line("a"), &
-!           "Divisions by zero are in general not accepted in a good society."
-!           call file_error(file_contaminant, message=trim(msg))
-!         end if
-!       end do
-!       
-!       if (drutes_config%name == "ADEwrk" .or. drutes_config%name=="ADEstk") then
-!         do i=1, ubound(adepar,1)
-!           call fileread(adepar(i)%csinit, file_contaminant, errmsg="Have you defined value for c_s_init")
-!         end do
-!       end if
-!       
-!       if (drutes_config%name == "ADEwrk" .or. drutes_config%name=="ADEstk") then
-!         write(msg, *) "HINT 1: You have selected strange number of boundaries for ADE problem.", new_line("a"), &
-!               "  HINT 2: Since you requested nonequilibrium sorption, then you should provide csinit for each material."
-!             else
-!         write(msg, *) "HINT 1: You have selected strange number of boundaries for ADE problem.", new_line("a"), &
-!               "   HINT 2: Since you requested equilibrium sorption, then comment or erase lines with csinit"
-!       end if
-!       
+!
       
       
     
     end subroutine ADEcs_read
+    
+
 
 
   

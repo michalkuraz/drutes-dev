@@ -1,8 +1,10 @@
 module ADE_pointers
+  use typy
   public :: ADE
   public :: ADEkinsorb
   
   public :: ADE_processes
+  integer(kind=ikind), private :: adepos
   
   contains
   
@@ -64,7 +66,7 @@ module ADE_pointers
     
     
   
-    subroutine ADE(pde_loc)
+    subroutine ADE()
       use typy
       use globals
       use global_objs
@@ -74,8 +76,7 @@ module ADE_pointers
       use ADE_globals
       use RE_pointers
       
-      class(pde_str), intent(in out), dimension(:) :: pde_loc
-      integer(kind=ikind) :: i, adepos
+      integer(kind=ikind) :: i
       real(kind=rkind) :: r
       
       if (use_richards) then
@@ -84,75 +85,82 @@ module ADE_pointers
         adepos = 1
       end if
       
-      call ADE_read(pde_loc(adepos))
-	    
-      pde_loc(adepos)%pde_fnc(adepos)%dispersion => ADEdispersion
       
-      pde_loc(adepos)%pde_fnc(adepos)%convection => ADE_convection
+      call ADE_read(pde(adepos))
+ 
+ 
+      pde(adepos)%pde_fnc(adepos)%dispersion => ADEdispersion
+      
+      pde(adepos)%pde_fnc(adepos)%convection => ADE_convection
 
-      pde_loc(adepos)%pde_fnc(adepos)%elasticity => ADE_tder_coef
+      pde(adepos)%pde_fnc(adepos)%elasticity => ADE_tder_coef
+      
+      pde(adepos)%mass => ADE_mass
 
-      pde_loc(adepos)%mass => ADE_mass
-
-      pde_loc(adepos)%pde_fnc(adepos)%reaction => ADE_reaction
+      pde(adepos)%pde_fnc(adepos)%reaction => ADE_reaction
             
-      pde_loc(adepos)%pde_fnc(adepos)%zerord => ADE_zerorder
+            
+      pde(adepos)%pde_fnc(adepos)%zerord => ADE_zerorder
+
 	  
-      do i=lbound(pde_loc(adepos)%bc,1), ubound(pde_loc(adepos)%bc,1)
-        select case(pde_loc(adepos)%bc(i)%code)
+      do i=lbound(pde(adepos)%bc,1), ubound(pde(adepos)%bc,1)
+        select case(pde(adepos)%bc(i)%code)
           case(1)
-            pde_loc(adepos)%bc(i)%value_fnc => ADE_dirichlet
+            pde(adepos)%bc(i)%value_fnc => ADE_dirichlet
           case(2)
-            pde_loc(adepos)%bc(i)%value_fnc => ADE_neumann
+            pde(adepos)%bc(i)%value_fnc => ADE_neumann
         end select
       end do    
 	
-      pde_loc(adepos)%flux => ADE_flux
+      pde(adepos)%flux => ADE_flux
       
-      pde_loc(adepos)%initcond => ADE_icond
+      pde(adepos)%initcond => ADE_icond
+
       
-      if (use_richards) call REstdH(pde_loc(1))
-      
+      if (use_richards) call REstdH(pde(1))
+
+
       if (use_sorption) then 
-        call ADEkinsorb(pde_loc(adepos:no_solids+adepos))
+        call ADEkinsorb(adepos,no_solids+adepos)
       end if 
       
     
     end subroutine ADE
     
-    subroutine ADEkinsorb(pde_loc)
+    subroutine ADEkinsorb(lb, tb)
       use typy
       use globals
       use global_objs
       use pde_objs
       use ADE_fnc
       use ADE_reader
-      use debug_tools
-      
-      class(pde_str), intent(in out), dimension(:) :: pde_loc  
+!       use debug_tools
+      !>lb = low bound of pde, tp = top bound of pde to deal with
+      integer(kind=ikind), intent(in) :: lb, tb
       integer(kind=ikind) :: i, j
       
-      call ADEcs_read(pde_loc)
       
-      do i=2, ubound(pde_loc,1)
+      call ADEcs_read(lb, tb)
       
-        pde_loc(i)%pde_fnc(pde_loc(i)%order)%elasticity => ADE_tder_cscs
+      do i=lb+1, tb
       
-        pde_loc(1)%pde_fnc(pde_loc(i)%order)%elasticity => ADE_tder_cscl
+        pde(i)%pde_fnc(i)%elasticity => ADE_tder_cscs
       
-        pde_loc(i)%pde_fnc(1)%reaction => ADE_cscl_react
+        pde(lb)%pde_fnc(i)%elasticity => ADE_tder_cscl
       
-        pde_loc(i)%pde_fnc(pde_loc(i)%order)%reaction => ADE_cscs_react
+        pde(i)%pde_fnc(lb)%reaction => ADE_cscl_react
       
-        allocate(pde_loc(i)%bc(lbound(pde_loc(1)%bc,1) : (ubound(pde_loc(1)%bc,1) )  ))
+        pde(i)%pde_fnc(i)%reaction => ADE_cscs_react
+      
+        allocate(pde(i)%bc(lbound(pde(lb)%bc,1) : (ubound(pde(lb)%bc,1) )  ))
         
         
-        do j=lbound(pde_loc(i)%bc,1), ubound(pde_loc(i)%bc,1)
-          pde_loc(i)%bc(j)%code = 0
-          pde_loc(i)%bc(j)%value_fnc => ADE_null_bc
+        do j=lbound(pde(i)%bc,1), ubound(pde(i)%bc,1)
+          pde(i)%bc(j)%code = 0
+          pde(i)%bc(j)%value_fnc => ADE_null_bc
         end do 
       
-        pde_loc(i)%initcond => ADEcs_icond
+        pde(i)%initcond => ADEcs_icond
       end do
 
     

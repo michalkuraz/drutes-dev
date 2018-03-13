@@ -77,10 +77,7 @@ module ADE_fnc
       if (present(tensor)) then
         tensor = theta * (adepar(layer)%diff*q_abs + adepar(layer)%difmol*identity(1:D, 1:D))	
       end if
-      
-
-      
-      
+ 
     
     end subroutine ADEdispersion
     
@@ -201,6 +198,7 @@ module ADE_fnc
       use ADE_globals
       use re_globals
       use globals
+      use debug_tools
       
       class(pde_str), intent(in) :: pde_loc
       !> value of the nonlinear function
@@ -219,7 +217,7 @@ module ADE_fnc
       
       bd = sorption(layer, media_id)%bd
       
-      val = bd*sorption(layer, media_id)%ratio
+      val = bd*sorption(layer, media_id)%ratio*(1-vgset(layer)%ths)
       
     end function ADE_tder_cscl
     
@@ -425,9 +423,9 @@ module ADE_fnc
           do i=1, ubound(pde_loc%bc(edge_id)%series,1)
             if (pde_loc%bc(edge_id)%series(i,1) > time) then
               if (i > 1) then
-          j = i-1
+                j = i-1
               else
-          j = i
+                j = i
               end if
               tempval = pde_loc%bc(edge_id)%series(j,2)
               EXIT
@@ -477,6 +475,7 @@ module ADE_fnc
       use global_objs
       use debug_tools
       use ADE_globals
+      use re_globals
        
       class(pde_str), intent(in) :: pde_loc
       integer(kind=ikind), intent(in)                          :: layer
@@ -489,7 +488,7 @@ module ADE_fnc
     
       real(kind=rkind), dimension(:,:), allocatable, save  :: Dhm
       real(kind=rkind), dimension(:), allocatable, save :: q_w, gradC
-      real(kind=rkind) :: c, cmax
+      real(kind=rkind) :: c, cmax, ths
 
       
       if (present(quadpnt) .and. (present(grad) .or. present(x))) then
@@ -508,6 +507,12 @@ module ADE_fnc
       if (.not. allocated(gradC)) allocate(gradC(drutes_config%dimen))
       
       if (.not. allocated(Dhm)) allocate(Dhm(drutes_config%dimen, drutes_config%dimen))
+      
+      if (pde_loc%order > 1) then
+        ths = vgset(layer)%ths
+      else
+        ths = adepar(layer)%water_cont
+      end if
       
       if (present(quadpnt)) then
         c = pde_loc%getval(quadpnt)
@@ -541,11 +546,11 @@ module ADE_fnc
       
       
       if (present(flux)) then
-        flux = cmax*matmul(Dhm, gradC) + cmax*q_w*c
+        flux = cmax*matmul(Dhm, gradC)*ths + cmax*q_w*c
       end if
       
       if (present(flux_length)) then
-        flux_length = dot_product(cmax*matmul(Dhm, gradC) + cmax*q_w*c, cmax*matmul(Dhm, gradC) + cmax*q_w*c)
+        flux_length = dot_product(cmax*matmul(Dhm, gradC)*ths + cmax*q_w*c, cmax*matmul(Dhm, gradC)*ths + cmax*q_w*c)
       end if
     
 
@@ -623,12 +628,8 @@ module ADE_fnc
           case("freund")
             val = 1.0
         end select
-        
-          
       end if
-        
-
-      
+    
       
   end function ADE_cscs_react
   
@@ -750,6 +751,7 @@ module ADE_fnc
       use global_objs
       use pde_objs
       use ADE_globals
+      use re_globals
       
       class(pde_str), intent(in) :: pde_loc
       !> value of the nonlinear function
@@ -765,7 +767,7 @@ module ADE_fnc
       if (pde_loc%order == 2) then
         theta = adepar(layer)%water_cont
       else 
-        theta = pde(1)%mass(layer, quadpnt)
+        theta = vgset(layer)%ths
       end if
       
       if (present(quadpnt)) then
