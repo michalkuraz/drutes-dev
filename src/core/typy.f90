@@ -18,14 +18,14 @@ module typy
 
     integer, parameter, public :: lowikind=selected_int_kind(5)
     
-    integer, parameter, public :: dprec=selected_real_kind(30,99) 
+    integer, parameter, public :: dprec=selected_real_kind(15,99) 
     
     integer, parameter, public :: sprec=selected_real_kind(8,9)
     
     
 
     !> real number specification
-    integer, parameter, public :: rkind = selected_real_kind(30,99)
+    integer, parameter, public :: rkind = selected_real_kind(15,99)
     !> integer number specification
     integer, parameter, public :: ikind = selected_int_kind(10)
     !> long integers
