@@ -253,6 +253,7 @@ module read_inputs
       use core_tools
       use simegen
       use readtools
+      use debug_tools
 
       integer :: ierr
       integer :: n, i, j
@@ -281,14 +282,14 @@ module read_inputs
 
         write(unit=msg, fmt=*)"incorrect definition in either:" , new_line("a"),  &
         "                          - domain length definition" ,  new_line("a") ,&
-       "or" , new_line("a"),  &
-        "                          - the mesh description values" ,  new_line("a"), &
+       "    or" , new_line("a"),  &
+        "                          - the mesh density description values" ,  new_line("a"), &
         " " ,  new_line("a") ,&
         "in file drutes.conf/mesh/drumesh1d.conf" ,  new_line("a") ,&
         " " , new_line("a") , &
-       "the mesh description must cover (and cannot overlap) the entire domain length",  new_line("a"), &
+       "the mesh density description must cover (and cannot overlap) the entire domain length",  new_line("a"), &
         "-----------------------------------------------------------------------------"
-        call file_error(file_mesh)
+        call file_error(file_mesh, msg)
       end if
       
       call comment(file_mesh)
