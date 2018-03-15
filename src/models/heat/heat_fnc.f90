@@ -282,7 +282,7 @@ module heat_fnc
       
       
       if (present(flux)) then
-        flux = matmul(heatpar(layer)%lambda, gradT) 
+        flux = -matmul(heatpar(layer)%lambda, gradT) 
       end if
       
       if (present(flux_length)) then
