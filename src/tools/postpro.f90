@@ -524,8 +524,9 @@ module postpro
       type(integpnt_str),  intent(in out) :: quadpnt
       real(kind=rkind) :: curtime
       integer(kind=ikind) :: i, layer
-      real(kind=rkind) ::  distance, flux, avgval
+      real(kind=rkind) ::  distance,  avgval
       type(integpnt_str) :: qpntloc
+      real(kind=rkind), dimension(3) :: flux
 
 
     
@@ -541,7 +542,7 @@ module postpro
           write(unit=ids(3), fmt=*)  i, nodes%data(i,:), pde(proc)%mass(layer, quadpnt)
         end if
         
-        call pde(proc)%flux(layer, quadpnt, scalar=flux)
+        call pde(proc)%flux(layer, quadpnt, vector_out=flux(1:drutes_config%dimen))
 
         write(unit=ids(4), fmt=*) i, nodes%data(i,:), flux
       end do
