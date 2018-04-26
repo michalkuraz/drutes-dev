@@ -130,17 +130,19 @@ module RE_pointers
       do i=lbound(pde_loc%bc,1), ubound(pde_loc%bc,1)
         select case(pde_loc%bc(i)%code)
           case(-1)
-              pde_loc%bc(i)%value_fnc => retot_dirichlet_height_bc
+            pde_loc%bc(i)%value_fnc => retot_dirichlet_height_bc
           case(0)
-          pde_loc%bc(i)%value_fnc => re_null_bc
+            pde_loc%bc(i)%value_fnc => re_null_bc
           case(1)
-          pde_loc%bc(i)%value_fnc => retot_dirichlet_bc
+            pde_loc%bc(i)%value_fnc => retot_dirichlet_bc
           case(2)
-          pde_loc%bc(i)%value_fnc => retot_neumann_bc
+            pde_loc%bc(i)%value_fnc => retot_neumann_bc
           case(3)
-          pde_loc%bc(i)%value_fnc => retot_freedrainage
+            pde_loc%bc(i)%value_fnc => retot_freedrainage
           case(4)
-                      pde_loc%bc(i)%value_fnc => retot_seepage	
+            pde_loc%bc(i)%value_fnc => retot_seepage	
+          case(5)
+            pde_loc%bc(i)%value_fnc => retot_atmospheric
           case default
           print *, "ERROR! You have specified an unsupported boundary type definition for the Richards equation"
           print *, "the incorrect boundary code specified is:", pde_loc%bc(i)%code
