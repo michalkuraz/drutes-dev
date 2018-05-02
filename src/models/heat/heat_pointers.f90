@@ -66,6 +66,7 @@ module heat_pointers
       use pde_objs
       use heat_fnc
       use heat_reader
+      use re_constitutive
       
       
       class(pde_str),  intent(in out) :: pde_loc
@@ -90,6 +91,8 @@ module heat_pointers
             pde_loc%bc(i)%value_fnc => heat_dirichlet
           case(2)
             pde_loc%bc(i)%value_fnc => heat_neumann
+          case(0)
+            pde_loc%bc(i)%value_fnc => re_null_bc
         end select
       end do    
 	
