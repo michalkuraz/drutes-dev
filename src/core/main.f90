@@ -93,16 +93,15 @@ program main
     call parse_globals() 
     
     call init_measured()
-        
+  
     call write_log("number of nodes:", int1=nodes%kolik, text2="number of elements:", int2=elements%kolik)
         
     call set_pointers()
-    
+ 
     call init_observe()
-        
+   
     call feminit()
     
-        
     if (drutes_config%it_method == 1 .or. drutes_config%it_method == 2) then
       call init_decomp()
     end if

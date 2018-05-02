@@ -75,6 +75,7 @@ module ADE_pointers
       use ADE_reader
       use ADE_globals
       use RE_pointers
+      use re_constitutive
       
       integer(kind=ikind) :: i
       real(kind=rkind) :: r
@@ -105,6 +106,8 @@ module ADE_pointers
 	  
       do i=lbound(pde(adepos)%bc,1), ubound(pde(adepos)%bc,1)
         select case(pde(adepos)%bc(i)%code)
+          case(0)
+            pde(adepos)%bc(i)%value_fnc => re_null_bc
           case(1)
             pde(adepos)%bc(i)%value_fnc => ADE_dirichlet
           case(2)

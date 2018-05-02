@@ -42,6 +42,7 @@ module feminittools
 
       call init_integ()
 
+
       select case(drutes_config%dimen)
         case(1)
           do i=1, elements%kolik
@@ -80,10 +81,9 @@ module feminittools
 
           end do
       end select
-
       
       call reorder()
-   
+      
       i = ubound(pde,1)
       
       if (drutes_config%it_method /= 1) then
@@ -453,15 +453,25 @@ module feminittools
 
       counter = 1
       proc_start = 0
+
         
       do proc=1, ubound(pde,1)
+      
 
         pde(proc)%procbase_fnc(1) = counter
 
         do i=1, nodes%kolik
+
           pde(proc)%permut(i) = i
+
+
           if (nodes%edge(i) /= 0) then
+                    
+        
+          
             call pde(proc)%bc(nodes%edge(i))%value_fnc(pde(proc), 1_ikind,1_ikind, code=bc)
+                      
+ 
           else
             bc = 0
           end if
