@@ -314,7 +314,7 @@ module objfnc
       
       close(expfile)
        
-      open(newunit=expfile, file=cut(fileinputs))
+      open(newunit=expfile, file=cut(fileinputs), status="old", action="read")
       
       write(msg, *) "ERROR! You have either wrong definition in drutes.conf/inverse_modeling/objfnc.conf ", new_line("a") , &
         "or wrong number of columns in", trim(fileinputs), new_line("a"), &
@@ -542,7 +542,7 @@ module objfnc
       end do
         
       do i=1, ubound(errors,1)  
-        errors(i)%val = sqrt(errors(i)%val)
+        errors(i)%val = sqrt(errors(i)%val/pos)
       end do
       
       open(newunit=outfile, file="out/objfnc.val", status="new", action="write")
