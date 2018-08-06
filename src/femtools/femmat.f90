@@ -101,6 +101,8 @@ module femmat
         
           if (ierr /= -1) ierr = 0
           
+          if (drutes_config%check4mass) call do_masscheck()
+          
           call results_extractor()
           
           success = .true.

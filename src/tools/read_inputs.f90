@@ -216,7 +216,10 @@ module read_inputs
       
       call fileread(pde_common%timeint_method, global, ranges=(/0_ikind,2_ikind/), errmsg=msg)
       
-      call fileread(objval%compute, global)
+      call fileread(objval%compute, global, errmsg="Set correct value [y/n] for evaluating objective function")
+      
+      call fileread(drutes_config%check4mass, global, & 
+        errmsg="Set correct value [y/n] for evaluating integral mass balance accuracy")
       
       call fileread(drutes_config%run_from_backup, global, errmsg="specify [y/n] if you want to relaunch your computation")
       

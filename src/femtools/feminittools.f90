@@ -551,11 +551,15 @@ module feminittools
 
           case(2)
           
-            call write_log("creating graph of the discretization mesh, and searching for boundary nodes...")
+            if (drutes_config%check4mass) then
             
-            call find_neighbours(elements, nodes)
-            
-            call set_boundary()
+              call write_log("creating graph of the discretization mesh, and searching for boundary nodes...")
+              
+              call find_neighbours(elements, nodes)
+              
+              call set_boundary()
+              
+            end if
 
             elements%length = 0.0_rkind
 
@@ -570,11 +574,11 @@ module feminittools
                           .and. found /= elements%data(i,j) ) then
 
                       elements%length(i,j) = elements%length(i,j) + &
-                                             dist(nodes%data(elements%data(i,j),:), nodes%data(elements%data(i,k),:))/2
+                                             dist(nodes%data(elements%data(i,j),:), nodes%data(elements%data(i,k),:))/2.0
                       elements%nvect_z(i,j) = get_nz(i,j,k)
 
                       elements%length(i,k) = elements%length(i,k) + &
-                                              dist(nodes%data(elements%data(i,j),:), nodes%data(elements%data(i,k),:))/2
+                                              dist(nodes%data(elements%data(i,j),:), nodes%data(elements%data(i,k),:))/2.0
                       elements%nvect_z(i,k) = get_nz(i, j,k)
 
                       found = elements%data(i,k)
@@ -734,9 +738,12 @@ module feminittools
 	 
         end do
         
+        do i=1, elements%kolik
+          if (elements%border(i)%pos > 0) then
+            call elements%bcel%nrfill(i)
+          end if
+        end do
 
-
-               
 
       end subroutine set_boundary
       

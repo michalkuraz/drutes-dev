@@ -76,17 +76,7 @@ module simplelinalg
               x(1:finm) = x(1:finm)/a%weight(1:finm)
             end if
   
-  !           do i=1, ubound(a%vals,1)
-  !             if (a%jj(i) > 0) then
-  !               a%vals(i) = a%weight(a%jj(i))*a%vals(i)
-  !             end if
-  !           end do
-  
-  ! 
-  !           x(:,4) = x(:,3)/a%weight(1:ubound(x,1))
-              
 
-!         call printmtx(a) ; stop
         case(-1)
           if (.not. a%weighted) then
             error stop "ERROR the matrix was not priorly diagonalized, called from simplelinalg::diag_precond"

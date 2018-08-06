@@ -23,7 +23,7 @@ module global_objs
     !> if true, then the values for quadpnt are returned from the local subdomain data, otherwise (default) the values are returned from the pde_common%xvect array
     logical :: ddlocal = .false.
     integer(kind=ikind) :: subdom
-    !> if true then the values for quadpnt are returned from the exnteded subdomain data, 
+    !> if true then the values for quadpnt are returned from the extended subdomain data, 
     logical :: extended = .false.
     !> if .false. then the solution value will be evaluated for different time than the calculated time 
     logical :: globtime=.true.
@@ -31,6 +31,7 @@ module global_objs
     logical :: debugstop=.false.
     !> use preprocessed values (some PDE problems e.g. Richards equation in total hydraulic head form distiguish between pressure head h and total hydraulic head H, where H is the solution, but e.g. the function for the water content (retention curve) requires h. In this case for evaluating the water content we need to use preprocessed values. The preprocessor could be created as a part of model setup by changing the default pointer pde%getval to your own routine. Because pde%getval is called both from your constitutive functions and from the FEM solver, you should be able to tell your own getval function, which value you want to get H or h? By default it is false.
     logical :: preproc=.false.
+    real(kind=rkind), dimension(2) :: xy
   end type integpnt_str
   
   !> smart array, you don't need to allocate -- usefull if you don't know how many data you will write in, 
@@ -117,7 +118,7 @@ module global_objs
     logical    :: run_from_backup
     !> evaluate constitutive functions from table created at program init or directly?
     !! 0 - for direct evaluation
-    !! 1 - to tabelarise the values and linearly approximate values between
+    !! 1 - to tabelarize the values and linearly approximate values between
     !<
     integer(kind=ikind) :: fnc_method
     !> length of interval in between the values in function table
@@ -134,6 +135,8 @@ module global_objs
     character(len=4096) :: fullname
     !> if .true. then DRUtES solves rotational symmetric flow
     logical :: rotsym=.false.
+    !> if .true. then DRUtES checks for integral mass balance errors, requires more computational power
+    logical :: check4mass=.false.
   end type configuration
 
 
@@ -191,7 +194,7 @@ module global_objs
     real(kind=rkind), dimension(:,:), allocatable  :: data
     integer(kind=ikind), dimension(:), allocatable :: edge
     real(kind=rkind), dimension(:,:), allocatable  :: results
-    !> logical array.if true, then the particular node is the domain boundary node, the domain should be sufficiently Lipshitz type
+    !> logical array.if true, then the particular node is the domain boundary node, the domain should be obviously Lipshitz type
     logical, dimension(:), allocatable             :: boundary
     !> integer array, if the node is a boundary node, then this stores the order of boundary node on the boundary curve (for 2D)
     integer(kind=ikind), dimension(:), allocatable :: boundary_order
@@ -256,6 +259,8 @@ module global_objs
     type(smartarray_int), dimension(:), allocatable :: subdom
     !> if element lies at domain boundary, then this array contains list of nodes at boundary
     type(smartarray_int), dimension(:), allocatable :: border
+    !> list of elements at domain boundary
+    type(smartarray_int) :: bcel
   end type element
 
 
@@ -339,19 +344,20 @@ module global_objs
       integer(kind=ikind), intent(in), optional :: info
       
       integer(kind=ikind) :: i
-      logical :: exist
+!       logical :: exist
+!       
+!       exist = .false.
+!       if (allocated(array%data)) then
+!         do i=1, array%pos
+!           if (array%data(i) == input) then
+!             exist = .true.
+!             EXIT
+!           end if
+!         end do
+!        end if
+
       
-      exist = .false.
-      if (allocated(array%data)) then
-        do i=1, array%pos
-          if (array%data(i) == input) then
-            exist = .true.
-            EXIT
-          end if
-        end do
-       end if
-      
-      if (.not. exist) then
+      if (.not. ismartexist(array,input)) then
         if (present(info)) then
           call ismartfill(array, input, info)
         else
@@ -382,14 +388,12 @@ module global_objs
       
       integer(kind=ikind) :: i
       
-      exist = .false.
+      if (minval (abs(array%data(1:array%pos) - value)) == 0) then
+        exist = .true.
+      else
+        exist = .false.
+      end if
       
-      do i=1, array%pos
-        if (array%data(i) == value) then
-          exist = .true.
-          RETURN
-        end if
-      end do
       
     end function ismartexist
     

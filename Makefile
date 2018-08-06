@@ -5,11 +5,11 @@ out := cd ..
 
 #options for debugging, use for development  
 
-#c= gfortran -fimplicit-none  -fcoarray=single -fbounds-check -fbacktrace -g -g3 -fdefault-real-8 -O0 -finit-real=nan 
+c= gfortran -fimplicit-none  -fcoarray=single -fbounds-check -fbacktrace -g -g3 -fdefault-real-8 -O0 -finit-real=nan 
 
 
 #options for optimized compilation, use for production purposes on well debugged versions
-c=gfortran -fimplicit-none  -fcoarray=single -fdefault-real-8 -O3 -finit-real=nan -ffpe-summary=none 
+#c=gfortran -fimplicit-none  -fcoarray=single -fdefault-real-8 -O3 -finit-real=nan -ffpe-summary=none 
 
 
 d=drutes_obj-`date -I`
@@ -43,7 +43,7 @@ typy.o: src/core/typy.f90
 	$c -c src/core/typy.f90 
 global_objs.o: typy.o $(PMAoo_obj) src/core/global_objs.f90
 	$c -c src/core/global_objs.f90
-pde_objs.o: typy.o global_objs.o $(PMAoo_obj) globals.o decomp_vars.o src/core/pde_objs.f90
+pde_objs.o: typy.o global_objs.o $(PMAoo_obj) globals.o decomp_vars.o  src/core/pde_objs.f90
 	$c -c src/core/pde_objs.f90
 globals.o: typy.o global_objs.o src/core/globals.f90
 	$c -c src/core/globals.f90

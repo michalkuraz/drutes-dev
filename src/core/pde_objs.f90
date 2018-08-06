@@ -316,7 +316,8 @@ module pde_objs
       integer(kind=ikind), dimension(:), allocatable, save :: pts
       real(kind=rkind), dimension(3)    :: a,b,c
       real(kind=rkind) :: dx
-      integer(kind=ikind) :: i, el, top, j
+      integer(kind=ikind) :: i, el, top, j, k
+      real(kind=rkind), dimension(:,:), allocatable, save :: domain
 
       
       if (.not. allocated(grad)) then
@@ -332,7 +333,7 @@ module pde_objs
       end if
       
       select case(quadpnt%type_pnt)
-        case("gqnd", "obpt")
+        case("gqnd", "obpt", "xypt")
           top = 1
         case("ndpt")
           !in case of ndpt the gradient is assumed as an average value of gradients at neighbourhood points
@@ -343,7 +344,6 @@ module pde_objs
           print *, "exited from pde_objs::getgradp1"
           ERROR STOP
           
-      
       end select
       
       gradloc = 0
@@ -351,6 +351,14 @@ module pde_objs
         select case(quadpnt%type_pnt)
           case("gqnd")
             el = quadpnt%element
+          case("xypt")
+            if (quadpnt%element > 0) then
+              el = quadpnt%element
+            else
+              print *, "specify correct value for quadpnt%element"
+              print *, "exited from pde_objs::getgradp1"
+              ERROR STOP
+            end if
           case("obpt")
             el = observation_array(quadpnt%order)%element
           case("ndpt")
@@ -459,7 +467,7 @@ module pde_objs
       
       
       select case(quadpnt%type_pnt)
-        case("gqnd", "obpt")
+        case("gqnd", "obpt", "xypt")
           if (.not. allocated(pts) ) then
             allocate(pts(ubound(elements%data,2)))
             allocate(ppts(ubound(elements%data,2)))
@@ -470,6 +478,14 @@ module pde_objs
           select case(quadpnt%type_pnt)
             case("gqnd")
               el = quadpnt%element
+            case("xypt")
+              if (quadpnt%element > 0) then
+                el = quadpnt%element
+              else
+                print *, "specify correct value for quadpnt%element"
+                print *, "exited from pde_objs::getvalp1loc"
+                ERROR STOP
+              end if
             case("obpt")
               el = observation_array(quadpnt%order)%element
           end select
@@ -539,13 +555,27 @@ module pde_objs
                     a(i,3) = ndvals(i)
                   end do
         
-                call get2dderivative(a(1,:), a(2,:), a(3,:), xder, yder)
+                  call get2dderivative(a(1,:), a(2,:), a(3,:), xder, yder)
                 
-                val = ndvals(1) + xder*(observation_array(quadpnt%order)%xyz(1) - a(1,1)) + &
-                yder * (observation_array(quadpnt%order)%xyz(2) - a(1,2))
-            end select
-          end select
+                  val = ndvals(1) + xder*(observation_array(quadpnt%order)%xyz(1) - a(1,1)) + &
+                  yder * (observation_array(quadpnt%order)%xyz(2) - a(1,2))
+              end select
+            case("xypt")
+              do i=1,3
+                do j=1,2
+                  a(i,j) = nodes%data(pts(i),j)
+                end do
+                a(i,3) = ndvals(i)
+              end do
+
+              call get2dderivative(a(1,:), a(2,:), a(3,:), xder, yder)
             
+              val = ndvals(1) + xder*(quadpnt%xy(1) - a(1,1)) + &
+              yder * (quadpnt%xy(2) - a(1,2)) 
+
+          end select
+                  
+        
         case("ndpt")
           i = pde_loc%permut(quadpnt%order)
 

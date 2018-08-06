@@ -33,6 +33,7 @@ module geom_tools
   public :: map1d2d,map1d2dJ !later modified by J due to laziness
   public :: getnormal
   public :: get_layer
+  public :: gspt2line
   
   contains
   
@@ -87,98 +88,98 @@ module geom_tools
     
     select case(quadpnt%type_pnt)
       case("gqnd")
-	select case (drutes_config%dimen)
-	  case(1)
-	    el = quadpnt%element
-	    nd(1:2) = elements%data(el,1:2)
-	    dist1 = nodes%data(nd(2),1) - nodes%data(nd(1),1)
-	    array(1) = nodes%data(nd(1),1) + dist1*gauss_points%point(quadpnt%order,1)
-	   case(2)
-	   
-! triag scheme	  
-! 	   triag(3)
-!          |\ 
-! 	   | \ 
-! 	   |  \
-! 	   |   \
-! 	   |    \
-! 	   |     \
-! 	   |      \
-! 	   |       \
-! midpnt(1)|...x    \
-! 	   |   .     \
-!      d(1)|   .      \
-! 	   |   . d(2)  \
-! triag(1) -------------\ triag(2)
-! 	       midpnt(2)
-	  
-	  
-	    vert = .false.
-	    el = quadpnt%element
-	    do i=1,3
-	      triagpnt(i,:) = nodes%data(elements%data(el,i),:)
-	    end do
-	    d(1) = dist(triagpnt(1,:), triagpnt(3,:))
-	    d(2) = dist(triagpnt(1,:), triagpnt(2,:))
-	    !z distance on unit triangle
-	    r(1) = gauss_points%point(quadpnt%order,2)
-	    !x distance on unit triangle
-	    r(2) = gauss_points%point(quadpnt%order,1)
-	    
-	    midpnt(1,:) = triagpnt(1,:) + (triagpnt(3,:) - triagpnt(1,:)) * r(1)
-	    
-	    midpnt(2,:) = triagpnt(1,:) + (triagpnt(2,:) - triagpnt(1,:)) * r(2)
-	    
-	    if (abs(midpnt(2,1)-triagpnt(1,1)) > 100*epsilon(k1) ) then
-	      k(1) = (midpnt(2,2) - triagpnt(1,2))/(midpnt(2,1)-triagpnt(1,1))
-	    else
-	      vert(1) = .true.
-	    end if
-	    
-	    if (abs(midpnt(1,1)-triagpnt(1,1)) > 100*epsilon(k1) ) then
-	      k(2) = (midpnt(1,2) - triagpnt(1,2))/(midpnt(1,1)-triagpnt(1,1))
-	    else
-	      vert(2) = .true.
-	    end if
-	    
-	    where (.not.(vert))
-	      q(:) = midpnt(:,2) - k(:)*midpnt(:,1)
-	    end where
-	    
-! 	    print *, "----beg-------"
-! 	    print *, midpnt(1,:)
-! 	    print *, midpnt(2,:)
-! 	    print *, k
-! 	    print *, vert
-! 	    print *, "-----end-----"
-	    
-	    
-	    if (.not. vert(1) .and. .not. vert(2)) then
-	      array(1) = (q(1)- q(2))/(k(2)-k(1))
-	      if (abs(k(1) - k(2)) <= epsilon(k1)) then
-		print *, "there must be a bug, both lines have equal tangent, or your mesh is really bad"
-		print *, "interrupted from geom_tools::getcoor"
-		ERROR STOP
-	      end if
-	      array(2) = k(1)*array(1) + q(1)
-	    else
-	      if (vert(1) .and. .not. (vert(2))) then
-		array(1) = midpnt(1,1)
-		array(2) = midpnt(2,2) + k(2)*(midpnt(1,1)-midpnt(2,1))
-              else if (.not.vert(1) .and. (vert(2))) then
-		array(1) = midpnt(2,1)
-		array(2) = midpnt(1,2) + k(1)*(midpnt(2,1) - midpnt(1,1))
-	      else if ( vert(1) .and. vert(2) ) then
-	        print *, "there must be a bug, both lines are vertical"
-		print *, "interrupted from geom_tools::getcoor"
-		ERROR STOP
-	      end if
-	    end if   
-	end select
+      select case (drutes_config%dimen)
+        case(1)
+          el = quadpnt%element
+          nd(1:2) = elements%data(el,1:2)
+          dist1 = nodes%data(nd(2),1) - nodes%data(nd(1),1)
+          array(1) = nodes%data(nd(1),1) + dist1*gauss_points%point(quadpnt%order,1)
+        case(2)
+         
+          ! triag scheme	  
+          ! 	   triag(3)
+          !          |\ 
+          ! 	       | \ 
+          ! 	       |  \
+          ! 	       |   \
+          ! 	       |    \
+          ! 	       |     \
+          ! 	       |      \
+          ! 	       |       \
+          ! midpnt(1)|...x    \
+          ! 	       |   .     \
+          !      d(1)|   .      \
+          ! 	       |   . d(2)  \
+          ! triag(1) -------------\ triag(2)
+          ! 	       midpnt(2)
+          
+        
+          vert = .false.
+          el = quadpnt%element
+          do i=1,3
+            triagpnt(i,:) = nodes%data(elements%data(el,i),:)
+          end do
+          d(1) = dist(triagpnt(1,:), triagpnt(3,:))
+          d(2) = dist(triagpnt(1,:), triagpnt(2,:))
+          !z distance on unit triangle
+          r(1) = gauss_points%point(quadpnt%order,2)
+          !x distance on unit triangle
+          r(2) = gauss_points%point(quadpnt%order,1)
+          
+          midpnt(1,:) = triagpnt(1,:) + (triagpnt(3,:) - triagpnt(1,:)) * r(1)
+          
+          midpnt(2,:) = triagpnt(1,:) + (triagpnt(2,:) - triagpnt(1,:)) * r(2)
+          
+          if (abs(midpnt(2,1)-triagpnt(1,1)) > 100*epsilon(k1) ) then
+            k(1) = (midpnt(2,2) - triagpnt(1,2))/(midpnt(2,1)-triagpnt(1,1))
+          else
+            vert(1) = .true.
+          end if
+          
+          if (abs(midpnt(1,1)-triagpnt(1,1)) > 100*epsilon(k1) ) then
+            k(2) = (midpnt(1,2) - triagpnt(1,2))/(midpnt(1,1)-triagpnt(1,1))
+          else
+            vert(2) = .true.
+          end if
+          
+          where (.not.(vert))
+            q(:) = midpnt(:,2) - k(:)*midpnt(:,1)
+          end where
+          
+    ! 	    print *, "----beg-------"
+    ! 	    print *, midpnt(1,:)
+    ! 	    print *, midpnt(2,:)
+    ! 	    print *, k
+    ! 	    print *, vert
+    ! 	    print *, "-----end-----"
+          
+          
+          if (.not. vert(1) .and. .not. vert(2)) then
+            array(1) = (q(1)- q(2))/(k(2)-k(1))
+            if (abs(k(1) - k(2)) <= epsilon(k1)) then
+              print *, "there must be a bug, both lines have equal tangent, or your mesh is really bad"
+              print *, "interrupted from geom_tools::getcoor"
+              ERROR STOP
+            end if
+            array(2) = k(1)*array(1) + q(1)
+          else
+            if (vert(1) .and. .not. (vert(2))) then
+              array(1) = midpnt(1,1)
+              array(2) = midpnt(2,2) + k(2)*(midpnt(1,1)-midpnt(2,1))
+            else if (.not.vert(1) .and. (vert(2))) then
+              array(1) = midpnt(2,1)
+              array(2) = midpnt(1,2) + k(1)*(midpnt(2,1) - midpnt(1,1))
+            else if ( vert(1) .and. vert(2) ) then
+              print *, "there must be a bug, both lines are vertical"
+              print *, "interrupted from geom_tools::getcoor"
+              ERROR STOP
+            end if
+          end if   
+        end select
       case("obpt")
         array = observation_array(quadpnt%order)%xyz
       case("ndpt")
-	array = nodes%data(quadpnt%order,:)
+        array = nodes%data(quadpnt%order,:)
     end select
    end subroutine getcoor
 
@@ -196,16 +197,16 @@ module geom_tools
 
     select case(drutes_config%dimen)
       case(1)
-	do i=1, ubound(gauss_points%weight,1)
-	  points(i) = (vals(2) - vals(1))*gauss_points%point(i,1) + vals(1) 
-	end do
+        do i=1, ubound(gauss_points%weight,1)
+          points(i) = (vals(2) - vals(1))*gauss_points%point(i,1) + vals(1) 
+        end do
       case(2)
-	call plane_derivative((/0.0_rkind, 0.0_rkind, vals(1)/), (/1.0_rkind, 0.0_rkind, vals(2)/), (/0.0_rkind, &
-                         1.0_rkind, vals(3)/), xder, yder)
+        call plane_derivative((/0.0_rkind, 0.0_rkind, vals(1)/), (/1.0_rkind, 0.0_rkind, vals(2)/), (/0.0_rkind, &
+                               1.0_rkind, vals(3)/), xder, yder)
 
-	do i=1, ubound(gauss_points%weight,1)
-	  points(i) = vals(1) + xder*gauss_points%point(i,1) + yder*gauss_points%point(i,2)
-	end do
+        do i=1, ubound(gauss_points%weight,1)
+          points(i) = vals(1) + xder*gauss_points%point(i,1) + yder*gauss_points%point(i,2)
+        end do
 
     end select
 
@@ -353,11 +354,11 @@ module geom_tools
 
     select case(order1+order2)
       case(3)
-	order3=3
+        order3=3
       case(4)
-	order3=2
+        order3=2
       case(5)
-	order3=1
+        order3=1
     end select
 
     if (.not. aboveline(bod1, bod2, nodes%data(elements%data(el_id, order3),:))) then
@@ -387,84 +388,83 @@ module geom_tools
     
     select case(drutes_config%dimen)
       case(1)
-	if ((domain(1,1) <= bod(1) .and. domain(2,1) >= bod(1)) .or. &
-	    (domain(1,1) >= bod(1) .and. domain(2,1) <= bod(1)) ) then
-	  true = .true.
-	else
-	  true = .false.
-	end if
+        if ((domain(1,1) <= bod(1) .and. domain(2,1) >= bod(1)) .or. &
+            (domain(1,1) >= bod(1) .and. domain(2,1) <= bod(1)) ) then
+          true = .true.
+        else
+          true = .false.
+        end if
 
       case(2)
 
-	allocate(smer(ubound(domain,1)+1))
-	allocate(inter(ubound(smer,1),ubound(domain,1),2))
-	allocate(valid(ubound(domain,1)))
-	allocate(checked(ubound(smer,1)))
-	checked = 0
+        allocate(smer(ubound(domain,1)+1))
+        allocate(inter(ubound(smer,1),ubound(domain,1),2))
+        allocate(valid(ubound(domain,1)))
+        allocate(checked(ubound(smer,1)))
+        checked = 0
 
 
         do i=1, ubound(domain,1)
-	  if (i < ubound(domain,1)) then
-	    l = i
-	    p = i+1
-	  else
-	    l = i
-	    p = 1
-	  end if
+          if (i < ubound(domain,1)) then
+            l = i
+            p = i+1
+          else
+            l = i
+            p = 1
+          end if
 	  
-	  a = domain(l,:)
-    
-	  b = domain(p,:)
-	  
+          a = domain(l,:)
+          
+          b = domain(p,:)
+          
 
-	  if (inline(domain(l,:), domain(p,:), bod)) then
-	    true = .TRUE.
-	    RETURN
-	  end if
+          if (inline(domain(l,:), domain(p,:), bod)) then
+            true = .TRUE.
+            RETURN
+          end if
 
-	  do j=1, ubound(smer,1)
-	    smer(j) = rand() + 0.25
-	    call shoot(bod, smer(j), domain,  inter(j,:,:), valid)
-	    zasah = 0
-	    do k=1, ubound(domain,1)
-	      if (valid(k)) then
-		if (dist(a,inter(j,k,:)) > 10*epsilon(smer(1)) .and. dist(b,inter(j,k,:)) > 10*epsilon(smer(1))) then
-		  zasah = zasah + 1
-		else
-		  print *, inter(j,k,:), a, b, dist(a,inter(j,k,:)) , dist(b,inter(j,k,:))
-		  checked(j) = -1
-		end if
-	      end if
-	    end do
-	    
-	    if (checked(j) /= -1) then
-	      if (modulo(zasah,2) /= 0 .and. zasah /= ubound(domain,1)) then
-		checked(j) = 1
-	      end if
-	    end if
-		  
-
+          do j=1, ubound(smer,1)
+            smer(j) = rand() + 0.25
+            call shoot(bod, smer(j), domain,  inter(j,:,:), valid)
+            zasah = 0
+            do k=1, ubound(domain,1)
+              if (valid(k)) then
+                if (dist(a,inter(j,k,:)) > 10*epsilon(smer(1)) .and. dist(b,inter(j,k,:)) > 10*epsilon(smer(1))) then
+                  zasah = zasah + 1
+                else
+                  print *, inter(j,k,:), a, b, dist(a,inter(j,k,:)) , dist(b,inter(j,k,:))
+                  checked(j) = -1
+                end if
+              end if
+            end do
+            
+            if (checked(j) /= -1) then
+              if (modulo(zasah,2) /= 0 .and. zasah /= ubound(domain,1)) then
+                checked(j) = 1
+              end if
+            end if
+  
 	      
-	  end do
-	end do
-	j=0
-	do i=1, ubound(checked,1) 
-	  if (checked(i) == 0) then
-	    true = .false.
-	    RETURN
-	  end if
-	  j = j + checked(i)
-	end do
-	
-	if (j == -ubound(checked,1)) then
-	  print *, "bug in geom_tools::inside, contact developer with a full bug report"
-	  ERROR stop
-	end if
-	
-	true = .true.
+          end do
+        end do
+        j=0
+        do i=1, ubound(checked,1) 
+          if (checked(i) == 0) then
+            true = .false.
+            RETURN
+          end if
+          j = j + checked(i)
+        end do
+        
+        if (j == -ubound(checked,1)) then
+          print *, "bug in geom_tools::inside, contact developer with a full bug report"
+          ERROR stop
+        end if
+        
+        true = .true.
       
       case default
-	ERROR stop "generated from geom_tools::inside"
+        ERROR stop "generated from geom_tools::inside"
     end select
 
   end function inside
@@ -485,11 +485,11 @@ module geom_tools
     
     do i=1, ubound(domain,1)
       if (i < ubound(domain,1)) then
-	l = i
-	p = i+1
+        l = i
+        p = i+1
       else
-	l = i
-	p = 1
+        l = i
+        p = 1
       end if 
       
       a = domain(l,:)
@@ -497,30 +497,30 @@ module geom_tools
       b = domain(p,:)
       
       if (abs(a(1)-b(1)) > 10*epsilon(a(1))) then
-	kk = (b(2) - a(2))/(b(1)-a(1))
-	qq = b(2) - b(1)*kk
-	if (abs(k-kk) > 10*epsilon(k)) then
-	  inter(i,1) = (qq-q)/(k-kk)
-	  inter(i,2) = k*inter(i,1) + q
-	else
-	  if (abs(q-qq) > 10*epsilon(q)) then
-	    inter(i,:) = (/huge(k), huge(k)/)
-	  else
-	    if (a(1) > b(1)) then
-	      inter(i,:) = a
-	    else
-	      inter(i,:) = b
-	    end if
-	  end if
-	end if
+        kk = (b(2) - a(2))/(b(1)-a(1))
+        qq = b(2) - b(1)*kk
+        if (abs(k-kk) > 10*epsilon(k)) then
+          inter(i,1) = (qq-q)/(k-kk)
+          inter(i,2) = k*inter(i,1) + q
+        else
+          if (abs(q-qq) > 10*epsilon(q)) then
+            inter(i,:) = (/huge(k), huge(k)/)
+          else
+            if (a(1) > b(1)) then
+              inter(i,:) = a
+            else
+              inter(i,:) = b
+            end if
+          end if
+        end if
       else
-	inter(i,1) = a(1)
-	inter(i,2) = k*inter(i,1) + q
+        inter(i,1) = a(1)
+        inter(i,2) = k*inter(i,1) + q
       end if
       if (inline(a,b, inter(i,:)) .and. inter(i,1) > bod(1)) then
-	valid(i) = .true.
+        valid(i) = .true.
       else
-	valid(i) = .false.
+        valid(i) = .false.
       end if
     end do
     
@@ -557,9 +557,9 @@ module geom_tools
     
     select case(drutes_config%dimen)
       case(1)
-	l = abs(A(1) - B(1))
+        l = abs(A(1) - B(1))
       case(2)
-	l = sqrt((A(1)-B(1))*(A(1)-B(1)) + (A(2)-B(2))*(A(2)-B(2)))
+        l = sqrt((A(1)-B(1))*(A(1)-B(1)) + (A(2)-B(2))*(A(2)-B(2)))
     end select
   
   end function dist
@@ -620,7 +620,6 @@ module geom_tools
       pure function f(x) result(y)
         use typy
         real(kind=rkind), intent(in) :: x
-! 	real(kind=rkind), dimension(:), intent(in) :: parameters
         real(kind=rkind) :: y
       end function
     end interface
@@ -645,28 +644,28 @@ module geom_tools
 
     do 
       if ((f(x1) > 0 .and. f(x2) > 0) .or. (f(x1) < 0 .and. f(x2) < 0)) then
-	ierr = -2
-	call  write_log("WARNING! geom_tools::solve_bisect returned error code -2")
-	RETURN
-      end if
-      if (f(x1) > 0 .and. f(x2) < 0) then
-	if (f(xmid) > 0) then
-	  x1 = xmid
-	else
-	  x2 = xmid
-	end if
-      else
-	if (f(xmid) > 0) then
-	  x2 = xmid
-	else
-	  x1 = xmid
-	end if
-      end if
-      xmid = (x1+x2)/2.0
-      if (abs(x1-x2) < reps) then
-	solution = (x1+x2)/2.0
-	ierr = 1
-	EXIT
+        ierr = -2
+        call  write_log("WARNING! geom_tools::solve_bisect returned error code -2")
+        RETURN
+            end if
+            if (f(x1) > 0 .and. f(x2) < 0) then
+        if (f(xmid) > 0) then
+          x1 = xmid
+        else
+          x2 = xmid
+        end if
+            else
+        if (f(xmid) > 0) then
+          x2 = xmid
+        else
+          x1 = xmid
+        end if
+            end if
+            xmid = (x1+x2)/2.0
+            if (abs(x1-x2) < reps) then
+        solution = (x1+x2)/2.0
+        ierr = 1
+        EXIT
       end if
     end do
 
@@ -729,7 +728,7 @@ module geom_tools
         end if
       end if
     end if
-      
+    
   end function aboveline
   
   
@@ -952,65 +951,65 @@ module geom_tools
       el%neighbours = 0_ikind
       
       select case(drutes_config%dimen)
-	case(1)
-	  do i=1, el%kolik - 1
-	    el%neighbours(i,1) = i-1
-	    el%neighbours(i,2) = i+1
-	   end do
-	   el%neighbours(elements%kolik,1) = elements%kolik - 1
-	   el%neighbours(elements%kolik,2) = 0
-	case(2)
-	    !set neighbours
-	    do i=1, el%kolik
-	      pos = 0
-	      j = i
-	      k = i
+        case(1)
+          do i=1, el%kolik - 1
+            el%neighbours(i,1) = i-1
+            el%neighbours(i,2) = i+1
+           end do
+           el%neighbours(elements%kolik,1) = elements%kolik - 1
+           el%neighbours(elements%kolik,2) = 0
+        case(2)
+            !set neighbours
+            do i=1, el%kolik
+              pos = 0
+              j = i
+              k = i
 
-	      call progressbar(int(100*i/el%kolik))
+              call progressbar(int(100*i/el%kolik))
 
-	      okoli: do 
-			j = min(j+1, el%kolik+1)
-			k = max(k-1, 0_ikind)
+              okoli: do 
+            j = min(j+1, el%kolik+1)
+            k = max(k-1, 0_ikind)
 
-			if (j <= el%kolik) then
-			  upward = 0
-			  moje1: do l=1,ubound(el%data,2)
-				    nasel1: do m=1,ubound(el%data,2)
-					    if (el%data(i,l) == el%data(j,m) .and. i/=j) then
-					      upward = upward + 1
-					      if (upward == 2) then 
-						pos = pos + 1
-						el%neighbours(i,pos) = j
-						EXIT nasel1
-					      end if
-					    end if
-				  end do nasel1
-			  end do moje1
-			end if
+            if (j <= el%kolik) then
+              upward = 0
+              moje1: do l=1,ubound(el%data,2)
+                  nasel1: do m=1,ubound(el%data,2)
+                    if (el%data(i,l) == el%data(j,m) .and. i/=j) then
+                      upward = upward + 1
+                      if (upward == 2) then 
+                  pos = pos + 1
+                  el%neighbours(i,pos) = j
+                  EXIT nasel1
+                      end if
+                    end if
+                end do nasel1
+              end do moje1
+            end if
 
-			if (k > 0) then
-			  downward = 0
-			  moje2: do l=1,ubound(el%data,2)
-				  nasel2: do m=1,ubound(el%data,2)
-					    if (el%data(i,l) == el%data(k,m) .and. i /= k) then
-					      downward = downward + 1
-					      if (downward == 2) then 
-						pos = pos + 1
-						el%neighbours(i,pos) = k
-						EXIT nasel2
-					      end if
-					    end if
-				  end do nasel2 
-			  end do moje2
-			end if
+            if (k > 0) then
+              downward = 0
+              moje2: do l=1,ubound(el%data,2)
+                nasel2: do m=1,ubound(el%data,2)
+                    if (el%data(i,l) == el%data(k,m) .and. i /= k) then
+                      downward = downward + 1
+                      if (downward == 2) then 
+                  pos = pos + 1
+                  el%neighbours(i,pos) = k
+                  EXIT nasel2
+                      end if
+                    end if
+                end do nasel2 
+              end do moje2
+            end if
 
-			if (pos == ubound(el%data,2) .or. (j == el%kolik+1 .and. k == 0_ikind)) then
-			  EXIT okoli
-			end if
-	      end do okoli
-	    end do
-	    
-	end select
+            if (pos == ubound(el%data,2) .or. (j == el%kolik+1 .and. k == 0_ikind)) then
+              EXIT okoli
+            end if
+              end do okoli
+            end do
+            
+      end select
       
 
     end subroutine find_neighbours
@@ -1117,6 +1116,7 @@ module geom_tools
  
       
     end subroutine map1d2d
+    
     
     subroutine map1d2dJ(pde_loc,filename)
       use typy
