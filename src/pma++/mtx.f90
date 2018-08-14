@@ -18,7 +18,7 @@
 !! - \subpage ridka "Ridka matice"
 module mtx
     use typy
-    implicit none
+    implicit none 
     private
 
     !> obecna matice

@@ -3,7 +3,7 @@
 !<
 
 
-!> Module pro matice
+!> Module pro celociselne matice
 !! ==
 !! \page implem Implementace matic
 !! Jde o implementaci abstraktniho typu. Zde je jednak nekolik malo

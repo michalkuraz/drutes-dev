@@ -33,7 +33,6 @@ module geom_tools
   public :: map1d2d,map1d2dJ !later modified by J due to laziness
   public :: getnormal
   public :: get_layer
-  public :: gspt2line
   
   contains
   
