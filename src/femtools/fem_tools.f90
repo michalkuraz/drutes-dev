@@ -16,7 +16,7 @@
 module fem_tools
   public :: in2global
   public :: do_masscheck
-  private :: get_bcflux
+  private :: get_bcflux, get_mass
 
 
   contains
@@ -169,16 +169,31 @@ module fem_tools
     integer, dimension(:), allocatable, save :: fileids
     integer :: i_err
     real(kind=rkind) :: value
+    real(kind=rkind), save :: totvolume
+    real(kind=rkind), dimension(:), allocatable, save :: massdiff, totflux, totdiff
     
     
     if (.not. allocated(fileids)) then
     
       allocate(fileids(ubound(pde,1)))
       
+      allocate(massdiff(ubound(pde,1)))
+      
+      allocate(totflux(ubound(pde,1)))
+      
+      allocate(totdiff(ubound(pde,1)))
+      
+      totdiff = 0
+      
       do proc=1, ubound(pde,1)
         write(namef, *) "out/mass/", cut(pde(proc)%problem_name(1)), "-mass_check.dat"
       
         open(newunit=fileids(proc), file=cut(namef), action="write", status="replace", iostat=i_err)
+        
+        totvolume=0
+        do i=1, elements%kolik
+          totvolume = totvolume + elements%areas(i)
+        end do
         
         if (i_err /= 0) then
           i_err=system("mkdir out/mass")
@@ -199,14 +214,29 @@ module fem_tools
         
         call print_logo(fileids(proc))
         
-        write(unit=fileids(proc), fmt=*) "# time           integral boundary flux [L3]   volume change &
-         [L3]   difference [L3]  difference [%] "
+        write(unit=fileids(proc), fmt=*) " #      time                   time step              integral boundary flux [L3] & 
+        volume change [L3]      difference [L3]            cum. difference [L3]        cum. difference [%]"
+        
+        write(unit=fileids(proc), fmt=*) " #--------------------------------------------------------------------------------&
+        ---------------------------------------------------------------------------------------------- "
         
       end do
     end if
       
-     
-    value = get_bcflux(pde(1)) ; stop
+      
+    do proc = 1, ubound(pde,1)
+      massdiff(proc) =  get_mass(3_ikind, pde(proc)) -  get_mass(1_ikind, pde(proc))
+      totflux(proc) = get_bcflux(pde(proc))
+      totdiff(proc) = totdiff(proc) + massdiff(proc) - totflux(proc)
+      write(unit=fileids(proc), fmt=*) time, time_step, totflux(proc), massdiff(proc), massdiff(proc) - totflux(proc), &
+       totdiff(proc), totdiff/totvolume*100.0
+    end do
+    
+    
+      
+    
+   
+
   
   end subroutine do_masscheck
   
@@ -248,10 +278,14 @@ module fem_tools
       
       call pde_loc%flux(elements%material(1), quadpnt_loc, vector_out=flux)
       
+    
+      
       locval = flux(1)
       quadpnt_loc%order = nodes%kolik
       
       call pde_loc%flux(elements%material(elements%kolik), quadpnt_loc, vector_out=flux)
+      
+      
       
       val = locval + flux(1)
       
@@ -337,6 +371,11 @@ module fem_tools
             flux(1) = flux(1)*nvect(1)
             flux(2) = flux(2)*nvect(2)
             
+            print *, el
+            print *, flux
+            print *, "---"
+            call wait()
+            
             locval = sqrt(flux(1)*flux(1) + flux(2)*flux(2))*weights(pt)
           end do
           
@@ -348,7 +387,11 @@ module fem_tools
         val = val + locval
         
       end do
-    end if  
+    end if 
+    
+    
+    
+     val = val*time_step
     
     
   end function get_bcflux
@@ -368,15 +411,22 @@ module fem_tools
     
     type(integpnt_str) :: quadpnt_loc
     real(kind=rkind) :: locmass
+    integer(kind=ikind) :: i, pt
     
     quadpnt_loc%column=column
     quadpnt_loc%type_pnt="gqnd"
     
+    mass = 0.0
     do i=1, elements%kolik
       quadpnt_loc%element = i
+      locmass = 0.0
       do pt=1, ubound(gauss_points%weight,1)
-       quadpnt%order = i
-      `call pde_loc%mass(
+       quadpnt_loc%order = pt
+       locmass = locmass + pde_loc%mass(elements%material(i), quadpnt_loc)*gauss_points%weight(pt)
+      end do
+      locmass = locmass/gauss_points%area*elements%areas(i)
+      mass = mass + locmass
+    end do
     
   end function get_mass
   

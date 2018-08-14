@@ -62,7 +62,7 @@ module femmat
             reps1=1e-15_rkind, itfin1=pcg_it, repsfin1=reps_err)
             
             
-        if (pcg_it > 0.35*fin) then 
+        if (pcg_it > 0.5*fin) then 
           ierr=-1
         else
           ierr=0
@@ -101,7 +101,11 @@ module femmat
         
           if (ierr /= -1) ierr = 0
           
-          if (drutes_config%check4mass) call do_masscheck()
+          if (drutes_config%check4mass) then
+            call make_print("separately")
+            call do_masscheck()
+            
+          end if
           
           call results_extractor()
           
