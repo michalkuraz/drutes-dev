@@ -1,4 +1,4 @@
-! Copyright 2008 Michal Kuraz, Petr Mayer
+! Copyright 2008 Michal Kuraz, Petr Mayer, Copyright 2016  Michal Kuraz, Petr Mayer, Johanna Bloecher
 
 ! This file is part of DRUtES.
 ! DRUtES is free software: you can redistribute it and/or modify
@@ -11,6 +11,13 @@
 ! GNU General Public License for more details.
 ! You should have received a copy of the GNU General Public License
 ! along with DRUtES. If not, see <http://www.gnu.org/licenses/>.
+
+!> \file geom_tools.f90
+!! \brief Geometrical tools mainly for 2D.
+!<
+
+
+
 
 module geom_tools
 

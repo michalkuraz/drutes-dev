@@ -1,4 +1,4 @@
-! Copyright 2008 Michal Kuraz, Petr Mayer
+! Copyright 2008 Michal Kuraz, Petr Mayer, Copyright 2016  Michal Kuraz, Petr Mayer, Johanna Bloecher
 
 
 ! This file is part of DRUtES.
@@ -13,8 +13,10 @@
 ! You should have received a copy of the GNU General Public License
 ! along with DRUtES. If not, see <http://www.gnu.org/licenses/>.
 
+!> \file globals2D.f90
+!! \brief contains specific variables for 2D problem
+!<
 
-!> contains global variables related to 2D problem
 module globals2D
   use typy
 

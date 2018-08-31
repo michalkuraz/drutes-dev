@@ -1,3 +1,31 @@
+! Copyright 2008 Michal Kuraz, Petr Mayer, Copyright 2016  Michal Kuraz, Petr Mayer, Johanna Bloecher
+
+
+! This file is part of DRUtES.
+! DRUtES is free software: you can redistribute it and/or modify
+! it under the terms of the GNU General Public License as published by
+! the Free Software Foundation, either version 3 of the License, or
+! (at your option) any later version.
+! DRUtES is distributed in the hope that it will be useful,
+! but WITHOUT ANY WARRANTY; without even the implied warranty of
+! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+! GNU General Public License for more details.
+! You should have received a copy of the GNU General Public License
+! along with DRUtES. If not, see <http://www.gnu.org/licenses/>.
+
+!> \file ADE_fnc.f90
+!! \brief functions for advection-reaction-dispersion equation
+!<
+
+!> ADE is solved as follows
+!! \f[ \begin{split}\sum_{i=1}^n \frac{(1-\theta^i_s) \partial c^i_s}{\partial t} + \frac{\partial \theta c_l}{\partial t} &= \nabla \cdot (D \theta \nabla c_l - \nabla \cdot ( \vec{q} c_l ) + \sum_{r=0}^{r_{max}} \lambda_r c_l^r \\\frac{\partial c^1_s}{\partial t} &= f_1(c^1_s, c_l) \\ & \vdots \\ \frac{\partial c^n_s}{\partial t} &= f_2(c^n_s, c_l) \\\end{split} \f] \n
+!! where \f$ c^l\f$ is concentration in liquids, \f$ c^s \f$ is concentration in solids. In our concept the solid can be considered as a superposition of several different solids  with different sorption properties. Sorption at each sorbent can be described by different function. Currently we handle very standard approaches -- Langmuir and Freundlich.
+!! Convection can be user defined or obtained from coupling with Richards equation.
+!<
+
+
+
+
 module ADE_fnc
   public :: ADEdispersion
   public :: ADE_convection

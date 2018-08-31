@@ -1,3 +1,27 @@
+! Copyright 2008 Michal Kuraz, Petr Mayer, Copyright 2016  Michal Kuraz, Petr Mayer, Johanna Bloecher
+
+
+! This file is part of DRUtES.
+! DRUtES is free software: you can redistribute it and/or modify
+! it under the terms of the GNU General Public License as published by
+! the Free Software Foundation, either version 3 of the License, or
+! (at your option) any later version.
+! DRUtES is distributed in the hope that it will be useful,
+! but WITHOUT ANY WARRANTY; without even the implied warranty of
+! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+! GNU General Public License for more details.
+! You should have received a copy of the GNU General Public License
+! along with DRUtES. If not, see <http://www.gnu.org/licenses/>.
+
+
+
+!> \file global_objs.f90
+!! \brief main object definitions
+!<
+
+!> Main objects with global attribute are defined here.
+
+
 module global_objs
   use typy
   use sparsematrix
@@ -79,6 +103,7 @@ module global_objs
       procedure :: nrfill => rsmartfill_norepeat
   end type smartarray_real  
   
+  !> polymorphic extension of sparse matrix
   type, public, extends(smtx) :: extsmtx
     real(kind=rkind), dimension(:), allocatable :: weight
     logical :: weighted
@@ -91,7 +116,7 @@ module global_objs
   end type dirglob_str
   
 
-
+ !> DRUtES version structure
   type, public :: version    
     !> number of version
     character(len=9) :: number
@@ -148,6 +173,7 @@ module global_objs
     integer(kind=ikind) :: element
     real(kind=rkind), dimension(:), allocatable :: cumflux
   end type observation
+  
   
   type, public :: observe_time_str
     real(kind=rkind) :: value
@@ -264,6 +290,7 @@ module global_objs
   end type element
 
 
+  
   type, public :: integnodes
     real(kind=rkind), dimension(:,:), allocatable :: point
     real(kind=rkind), dimension(:), allocatable   :: weight
@@ -274,6 +301,7 @@ module global_objs
   private :: ismartfill, ismartclear, ismartfill_norepeat, rsmartfill, rsmartclear, rsmartfill_norepeat, ismartexist
   
   contains
+    !> writes into smartarray integer vectors
     subroutine ismartfill(array,input, info)
       use typy
       class(smartarray_int), intent(in out) :: array
@@ -336,7 +364,7 @@ module global_objs
    
     
     
-    
+    !> writes into smartarray integer vectors, only if the value is not present in the smartvector
     subroutine ismartfill_norepeat(array, input, info)
       use typy
       class(smartarray_int), intent(in out) :: array
@@ -368,8 +396,10 @@ module global_objs
     
     end subroutine ismartfill_norepeat
     
+    !> clears (deallocates) smart vector
     subroutine ismartclear(array, full)
       class(smartarray_int), intent(in out) :: array
+      !> if present and .true. the smart vector is completely deallocated
       logical, intent(in), optional :: full
       
       if (present(full) .and. full .and. allocated(array%data)) then
@@ -380,6 +410,7 @@ module global_objs
       
     end subroutine ismartclear
     
+    !> checks if the value is present in the vector
     function ismartexist(array, value) result(exist)
       use typy
       class(smartarray_int), intent(in) :: array
@@ -397,7 +428,7 @@ module global_objs
       
     end function ismartexist
     
-
+    !> write real into smartarray vector
     subroutine rsmartfill(array,input, info)
       use typy
       class(smartarray_real), intent(in out) :: array
@@ -460,7 +491,7 @@ module global_objs
    
     
     
-    
+    !> writes real into smartarray vector, only if value sufficiently differ from the values already present. Analogical to smartfill_norepeat for integers
     subroutine rsmartfill_norepeat(array, input, info)
       use typy
       class(smartarray_real), intent(in out) :: array
@@ -491,6 +522,7 @@ module global_objs
     
     end subroutine rsmartfill_norepeat
     
+    !> clears / deallocates real smartarray vector
     subroutine rsmartclear(array, full)
       class(smartarray_real), intent(in out) :: array
       logical, intent(in), optional :: full

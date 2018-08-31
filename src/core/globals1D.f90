@@ -1,4 +1,4 @@
-! Copyright 2008 Michal Kuraz, Petr Mayer
+! Copyright 2008 Michal Kuraz, Petr Mayer, Copyright 2016  Michal Kuraz, Petr Mayer, Johanna Bloecher
 
 
 ! This file is part of DRUtES.
@@ -13,8 +13,9 @@
 ! You should have received a copy of the GNU General Public License
 ! along with DRUtES. If not, see <http://www.gnu.org/licenses/>.
 
-
-!> contains specific variables for 1D problem
+!> \file globals1D.f90
+!! \brief contains specific variables for 1D problem
+!<
 
 module globals1D
   use typy

@@ -1,10 +1,34 @@
+! Copyright 2008 Michal Kuraz, Petr Mayer, Copyright 2016  Michal Kuraz, Petr Mayer, Johanna Bloecher
+
+! This file is part of DRUtES.
+! DRUtES is free software: you can redistribute it and/or modify
+! it under the terms of the GNU General Public License as published by
+! the Free Software Foundation, either version 3 of the License, or
+! (at your option) any later version.
+! DRUtES is distributed in the hope that it will be useful,
+! but WITHOUT ANY WARRANTY; without even the implied warranty of
+! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+! GNU General Public License for more details.
+! You should have received a copy of the GNU General Public License
+! along with DRUtES. If not, see <http://www.gnu.org/licenses/>.
+
+!> \file debug_tools.f90
+!! \brief Debug tools for debugging DRUtES in terminal. 
+!<
+
+!> Contains generic procedure printmtx for printing different types of arrays, and 
+!! substitution for pause (depricated procedure)
+!<
+
+
 module debug_tools
   private :: print_real_matrix, print_int_matrix, print_real_vector, print_int_vector, print_real_vector4
 !   public :: sparse_gem_pig
 !   public :: sparse_gem_pig_AtA
   public :: wait
   private :: print_quadpnt
-    
+  
+  !> generic procedure, can be overloaded with different vector/matrix types
   interface printmtx
     module procedure print_real_matrix
     module procedure print_int_matrix
@@ -21,6 +45,7 @@ module debug_tools
 
   contains
 
+    !> prints integpnt_str
     subroutine print_quadpnt(quadpnt, filunit, name)
       use global_objs
       use core_tools
@@ -93,6 +118,7 @@ module debug_tools
       
     end subroutine print_quadpnt
   
+    !> prints sparse matrix  
     subroutine print_sparse_matrix(A, filunit, name)
       use sparsematrix
       use mtxiotools
@@ -114,14 +140,14 @@ module debug_tools
           error stop
         end if
       else if (present(filunit)) then
-	filloc = filunit
+        filloc = filunit
         inquire(unit=filloc, opened=op)
         if (.not. op) then
           print *, "file not opened, called from debug_tools::printmtx"
           error stop
         end if
       else
-	filloc = terminal
+        filloc = terminal
       end if
       
 
@@ -135,6 +161,7 @@ module debug_tools
 
     end subroutine print_sparse_matrix
 
+    !> prints dense matrix of reals
     subroutine print_real_matrix(a, filunit, name)
       use typy
       use globals
@@ -180,6 +207,7 @@ module debug_tools
       
     end subroutine print_real_matrix
 
+    !> prints dense matrix of integers
     subroutine print_int_matrix(a, filunit, name)
       use typy
       use globals
@@ -225,9 +253,8 @@ module debug_tools
       
     end subroutine print_int_matrix
 
-  !>
-    !! vytiskne vektor
-    !<
+
+    !> prints vector of reals
     subroutine print_real_vector(V, filunit, name)
     ! vytiskne vektor, pocet sloupcu tisku je nc
       use typy
@@ -264,7 +291,7 @@ module debug_tools
      
 
       do i=lbound(V,1),ubound(V,1)
-	 write(unit=filloc, fmt=*) "radek:", i, "hodnota:", V(i)
+       write(unit=filloc, fmt=*) "radek:", i, "hodnota:", V(i)
       end do
 
       if (terminal /= filloc) then
@@ -275,11 +302,9 @@ module debug_tools
   
     end subroutine print_real_vector
 
-  !>
-    !! vytiskne vektor
-    !<
+
+        !> prints vector of single reals
     subroutine print_real_vector4(V, filunit, name)
-    ! vytiskne vektor, pocet sloupcu tisku je nc
       use typy
       use globals
       use core_tools
@@ -314,7 +339,7 @@ module debug_tools
      
 
       do i=lbound(V,1),ubound(V,1)
-	 write(unit=filloc, fmt=*) "radek:", i, "hodnota:", V(i)
+       write(unit=filloc, fmt=*) "radek:", i, "hodnota:", V(i)
       end do
 
       if (terminal /= filloc) then
@@ -325,6 +350,7 @@ module debug_tools
   
     end subroutine print_real_vector4
 
+    !> prints vector of integers
     subroutine print_int_vector(V, filunit, name)
     ! vytiskne vektor, pocet sloupcu tisku je nc
       use typy
@@ -360,7 +386,7 @@ module debug_tools
       end if
 
       do i=lbound(V,1),ubound(V,1)
-	 write(unit=filloc, fmt=*) "radek:", i, "hodnota:", V(i)
+         write(unit=filloc, fmt=*) "radek:", i, "hodnota:", V(i)
       end do
   
       if (terminal /= filloc) then
@@ -372,6 +398,8 @@ module debug_tools
 
     end subroutine print_int_vector
     
+    
+    !> prints smartarray vector of smartarray vectors of integers
     subroutine print_smartmatrix_i(array, filunit, name)
       use typy
       use globals
@@ -406,18 +434,20 @@ module debug_tools
       end if
             
       do i=lbound(array,1),ubound(array,1)
-	if (.not. allocated(array(i)%data)) then
-	  print *, "no values to print at row:", i
-	else
-	  write(unit=filloc, fmt=*) i, "|", array(i)%data(1:array(i)%pos)
-	  write(unit=filloc, fmt=*) "-----------------------------------------------"
-	end if
+        if (.not. allocated(array(i)%data)) then
+          print *, "no values to print at row:", i
+        else
+          write(unit=filloc, fmt=*) i, "|", array(i)%data(1:array(i)%pos)
+          write(unit=filloc, fmt=*) "-----------------------------------------------"
+        end if
       end do
       
       call flush(filloc)
       
     end subroutine print_smartmatrix_i
 
+    
+    !> prints smartarray vector of integers
     subroutine print_smartarray_i(array, filunit, name)
       use typy
       use globals
@@ -460,6 +490,7 @@ module debug_tools
       
     end subroutine print_smartarray_i
     
+    !> prints vector of logicals
     subroutine print_logical_array(array, filunit, name)
       use typy
       use globals
@@ -502,6 +533,7 @@ module debug_tools
 
 
 
+    !> substitution of depricated function pause
     subroutine wait(ch) 
       use globals       
       character(len=*), optional, intent(in) :: ch

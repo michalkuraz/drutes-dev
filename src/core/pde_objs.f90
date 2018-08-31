@@ -1,3 +1,30 @@
+
+! Copyright 2008 Michal Kuraz, Petr Mayer, Copyright 2016  Michal Kuraz, Petr Mayer, Johanna Bloecher
+
+
+! This file is part of DRUtES.
+! DRUtES is free software: you can redistribute it and/or modify
+! it under the terms of the GNU General Public License as published by
+! the Free Software Foundation, either version 3 of the License, or
+! (at your option) any later version.
+! DRUtES is distributed in the hope that it will be useful,
+! but WITHOUT ANY WARRANTY; without even the implied warranty of
+! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+! GNU General Public License for more details.
+! You should have received a copy of the GNU General Public License
+! along with DRUtES. If not, see <http://www.gnu.org/licenses/>.
+
+
+
+!> \file pde_objs.f90
+!! \brief Definition for the PDE object.
+!<
+
+!> The PDE object is defined here -- fundamental object for this code.
+
+
+
+
 module pde_objs
   use typy
   use sparsematrix 
@@ -61,7 +88,7 @@ module pde_objs
 
 
   !> type definition for common quasilinear partial diferential equation in a format
-  !! \f[ E(u)\frac{\partial u}{\partial t} = \nabla . D(u) \nabla u - \nabla . (c(u) u) + r(u) u \f]
+  !! \f[  \begin{split} \sum_{i=1}^n C_{1,i} \frac{\partial p_i}{\partial t} &= \sum_{i=1}^n \left( \nabla \cdot \mathbf{D}_{1,i} \nabla p_i - \nabla  \cdot (\vec{q}_{1,i} p_i) -  \sum_{r=0}^{r_{max}} \lambda_{1,i}p_i^r \right)  \\ \\ & \vdots  \\  \sum_{i=1}^n C_{n,i} \frac{\partial p_i}{\partial t} &= \sum_{i=1}^n \left( \nabla \cdot \mathbf{D}_{n,i} \nabla p_i - \nabla  \cdot (\vec{q}_{n,i} p_i) -  \sum_{r=0}^{r_{max}} \lambda_{n,i}p_i^r \right) \end{split} \f]
   !<
   type, public :: PDE_str
     !> the first item is used for filename 

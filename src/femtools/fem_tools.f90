@@ -1,4 +1,4 @@
-! Copyright 2008 Michal Kuraz, Petr Mayer
+! Copyright 2008 Michal Kuraz, Petr Mayer, Copyright 2016  Michal Kuraz, Petr Mayer, Johanna Bloecher
 
 ! This file is part of DRUtES.
 ! DRUtES is free software: you can redistribute it and/or modify
@@ -12,6 +12,12 @@
 ! You should have received a copy of the GNU General Public License
 ! along with DRUtES. If not, see <http://www.gnu.org/licenses/>.
 
+
+!> \file fem_tools.f90
+!! \brief FEM tools
+!<
+
+!> Main FEM matrix assembling tools. Local matrix to global matrix procedures and mass checks.
 
 module fem_tools
   public :: in2global
@@ -155,6 +161,7 @@ module fem_tools
   end subroutine in2global
   
   
+  !> Get difference between the volume change and boundary fluxes.
   subroutine do_masscheck()
     use typy
     use global_objs
@@ -240,7 +247,7 @@ module fem_tools
   
   end subroutine do_masscheck
   
-  
+  !> Get boundary fluxes.
   function get_bcflux(pde_loc) result(val)
     use typy
     use pde_objs
@@ -397,6 +404,7 @@ module fem_tools
   end function get_bcflux
 
 
+  !> Get mass on domain.
   function get_mass(column, pde_loc) result(mass)
     use typy
     use pde_objs
