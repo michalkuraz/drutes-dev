@@ -42,7 +42,7 @@ module read_inputs
       character(len=4096) :: filename
       character(len=8192) :: msg
       integer :: local, global
-      character(len=256), dimension(8) :: probnames
+      character(len=256), dimension(9) :: probnames
       character(len=2) :: dimensions
       
       if (.not. www) then
@@ -70,6 +70,8 @@ module read_inputs
         new_line("a"),  new_line("a"), &
         "   LTNE = Local Thermal Non-Equilibrium heat transport model", &
         new_line("a"),  new_line("a"), &
+        "   frozen = Local Thermal Non-Equilibrium heat transport model", &
+        new_line("a"),  new_line("a"), &
         new_line("a"),  new_line("a"), new_line("a")
         
 	
@@ -82,6 +84,7 @@ module read_inputs
       probnames(6) = "heat"
       probnames(7) = "REstd" 
       probnames(8) = "LTNE"
+      probnames(9) = "frozen"
 	
       call fileread(drutes_config%name, local, trim(msg), options=probnames)
 
