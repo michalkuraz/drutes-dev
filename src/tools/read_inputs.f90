@@ -42,7 +42,7 @@ module read_inputs
       character(len=4096) :: filename
       character(len=8192) :: msg
       integer :: local, global
-      character(len=256), dimension(7) :: probnames
+      character(len=256), dimension(8) :: probnames
       character(len=2) :: dimensions
       
       if (.not. www) then
@@ -54,7 +54,7 @@ module read_inputs
       end if
 
       
-      write(msg, *) "Incorrect option for problem type, the available options are:", new_line("a"),  new_line("a"), new_line("a"),&
+       write(msg, *) "Incorrect option for problem type, the available options are:", new_line("a"),  new_line("a"), new_line("a"),&
         "   RE = Richards equation, primary solution is total hydraulic head H",&
         new_line("a"), new_line("a"),  &
         "   REstd = Richards equation, primary solution is pressure head h, use for homogeneous porous media only, & 
@@ -68,7 +68,10 @@ module read_inputs
         new_line("a"),  new_line("a"), &
         "   heat = Heat conduction equation (Sophoclea, 1979)", &
         new_line("a"),  new_line("a"), &
+        "   LTNE = Local Thermal Non-Equilibrium heat transport model", &
+        new_line("a"),  new_line("a"), &
         new_line("a"),  new_line("a"), new_line("a")
+        
 	
 
       probnames(1) = "REtest"
@@ -78,6 +81,7 @@ module read_inputs
       probnames(5) = "Re_dual" 
       probnames(6) = "heat"
       probnames(7) = "REstd" 
+      probnames(8) = "LTNE"
 	
       call fileread(drutes_config%name, local, trim(msg), options=probnames)
 

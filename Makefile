@@ -34,8 +34,9 @@ BOUSSINESQ_obj := boussglob.o boussread.o boussfnc.o bousspointers.o
 ADE_obj := ADE_fnc.o ADE_reader.o ADE_globals.o ADE_pointers.o
 REDUAL_obj := Re_dual_totH.o Re_dual_globals.o Re_dual_pointers.o Re_dual_reader.o Re_dual_tab.o Re_dual_coupling.o Re_dual_bc.o
 HEAT_obj := heat_fnc.o heat_pointers.o heat_globals.o heat_reader.o
+LTNE_obj := ltne_fnc.o ltne_globals.o ltne_pointers.o ltne_reader.o
 
-ALL_objs := $(CORE_obj) $(TOOLS_obj) $(POINTERMAN_obj) $(MATHTOOLS_obj) $(FEMTOOLS_obj) $(DECOMPO_obj) $(RE_obj) $(PMAoo_obj) $(BOUSSINESQ_obj) $(ADE_obj) $(REDUAL_obj)  $(HEAT_obj)
+ALL_objs := $(CORE_obj) $(TOOLS_obj) $(POINTERMAN_obj) $(MATHTOOLS_obj) $(FEMTOOLS_obj) $(DECOMPO_obj) $(RE_obj) $(PMAoo_obj) $(BOUSSINESQ_obj) $(ADE_obj) $(REDUAL_obj)  $(HEAT_obj) $(LTNE_obj)
 #-----------------------------------------------------------------
 
 #-------begin CORE_obj--------------------------------
@@ -135,6 +136,21 @@ heat_reader.o: $(CORE_obj) heat_globals.o heat_fnc.o src/models/heat/heat_reader
 heat_pointers.o: $(CORE_obj) $(RE_obj) heat_globals.o heat_fnc.o heat_reader.o $(RE_obj)  src/models/heat/heat_pointers.f90
 	$c -c src/models/heat/heat_pointers.f90
 #------end HEAT_obj-------------------------------------
+
+
+#------begin LTNE_obj -----------------------------------
+ltne_globals.o: $(CORE_obj) src/models/LTNE/ltne_globals.f90
+	$c -c src/models/LTNE/ltne_globals.f90
+ltne_reader.o: $(CORE_obj) src/models/LTNE/ltne_reader.f90
+	$c -c src/models/LTNE/ltne_reader.f90
+ltne_fnc.o: $(CORE_obj) src/models/LTNE/ltne_fnc.f90
+	$c -c src/models/LTNE/ltne_fnc.f90
+ltne_pointers.o: $(CORE_obj) src/models/LTNE/ltne_pointers.f90
+	$c -c src/models/LTNE/ltne_pointers.f90
+#------end LTNE_obj -------------------------------------
+
+
+
 
 
 #-------begin ADE_obj-------------------------------
