@@ -1401,8 +1401,8 @@ module solvers
             opcnt%div = opcnt%div + 1
 
             !! odhadnout vlastni cisla
-            call esteig(l1,l2,cnt,alfa,beta)
-            print *, "odhad vl. cisel:",l1,l2
+!             call esteig(l1,l2,cnt,alfa,beta)
+!             print *, "odhad vl. cisel:",l1,l2
             !! hotovo
 
             cnt = cnt + 1
@@ -1626,8 +1626,8 @@ module solvers
             opcnt%div = opcnt%div + 1
 
             !! odhadnout vlastni cisla
-            call esteig(l1,l2,cnt,alfa,beta)
-            print *, "odhad vl. cisel:",l1,l2
+!             call esteig(l1,l2,cnt,alfa,beta)
+!             print *, "odhad vl. cisel:",l1,l2
             !! hotovo
 
             cnt = cnt + 1
@@ -1873,9 +1873,9 @@ module solvers
             opcnt%mul = opcnt%mul + 4*n   + n
             opcnt%div = opcnt%div + 1
 
-            !! odhadnout vlastni cisla
-            call esteig(l1,l2,cnt,alfa,beta)
-            print *, "odhad vl. cisel:",l1,l2
+             !! odhadnout vlastni cisla
+!             call esteig(l1,l2,cnt,alfa,beta)
+!             print *, "odhad vl. cisel:",l1,l2
             !! hotovo
 
             cnt = cnt + 1

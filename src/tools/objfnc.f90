@@ -243,6 +243,12 @@ module objfnc
       
       if (ierr /= 0) then
         print *, "the file with your inputs doesn't exist"
+        print *, "----------------"
+        print *, "HINT: If this run is not a part of automatic calibration script,"
+        print *, "and you want to avoid this stop, simply define [n] for Do inverse modeling"
+        print *, "in file     d r u t e s . c o n f / g l o b a l . c o n f"
+        print *, "----------------"
+        print *, "----------------"
         ERROR STOP
       end if
       
