@@ -1,3 +1,26 @@
+! Copyright 2008 Michal Kuraz, Petr Mayer, Copyright 2016  Michal Kuraz, Petr Mayer, Johanna Bloecher
+
+
+! This file is part of DRUtES.
+! DRUtES is free software: you can redistribute it and/or modify
+! it under the terms of the GNU General Public License as published by
+! the Free Software Foundation, either version 3 of the License, or
+! (at your option) any later version.
+! DRUtES is distributed in the hope that it will be useful,
+! but WITHOUT ANY WARRANTY; without even the implied warranty of
+! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+! GNU General Public License for more details.
+! You should have received a copy of the GNU General Public License
+! along with DRUtES. If not, see <http://www.gnu.org/licenses/>.
+
+
+
+!> \file femmat.f90
+!! \brief Local FEM matrix assembler.
+!<
+
+
+
 module femmat
   public :: solve_picard
   private :: results_extractor
@@ -62,7 +85,7 @@ module femmat
             reps1=1e-15_rkind, itfin1=pcg_it, repsfin1=reps_err)
             
             
-        if (pcg_it > 0.35*fin) then 
+        if (pcg_it > 0.5*fin) then 
           ierr=-1
         else
           ierr=0
@@ -100,6 +123,12 @@ module femmat
         if (error <= iter_criterion) then
         
           if (ierr /= -1) ierr = 0
+          
+          if (drutes_config%check4mass) then
+            call make_print("separately")
+            call do_masscheck()
+            
+          end if
           
           call results_extractor()
           

@@ -1,3 +1,28 @@
+
+! Copyright 2008 Michal Kuraz, Petr Mayer, Copyright 2016  Michal Kuraz, Petr Mayer, Johanna Bloecher
+
+
+! This file is part of DRUtES.
+! DRUtES is free software: you can redistribute it and/or modify
+! it under the terms of the GNU General Public License as published by
+! the Free Software Foundation, either version 3 of the License, or
+! (at your option) any later version.
+! DRUtES is distributed in the hope that it will be useful,
+! but WITHOUT ANY WARRANTY; without even the implied warranty of
+! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+! GNU General Public License for more details.
+! You should have received a copy of the GNU General Public License
+! along with DRUtES. If not, see <http://www.gnu.org/licenses/>.
+
+
+!> \file simplelinalg.f90
+!! \brief Diagonal preconditioner -- simple but robust for diagonaly dominant problems.
+!<
+
+
+
+
+
 module simplelinalg
   public :: diag_precond
   public :: invert_matrix
@@ -76,17 +101,7 @@ module simplelinalg
               x(1:finm) = x(1:finm)/a%weight(1:finm)
             end if
   
-  !           do i=1, ubound(a%vals,1)
-  !             if (a%jj(i) > 0) then
-  !               a%vals(i) = a%weight(a%jj(i))*a%vals(i)
-  !             end if
-  !           end do
-  
-  ! 
-  !           x(:,4) = x(:,3)/a%weight(1:ubound(x,1))
-              
 
-!         call printmtx(a) ; stop
         case(-1)
           if (.not. a%weighted) then
             error stop "ERROR the matrix was not priorly diagonalized, called from simplelinalg::diag_precond"

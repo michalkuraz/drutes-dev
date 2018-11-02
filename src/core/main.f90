@@ -1,4 +1,4 @@
-! Copyright 2008 Michal Kuraz, Petr Mayer
+! Copyright 2008 Michal Kuraz, Petr Mayer, Copyright 2016  Michal Kuraz, Petr Mayer, Johanna Bloecher
 
 ! This file is part of DRUtES.
 ! DRUtES is free software: you can redistribute it and/or modify
@@ -12,9 +12,18 @@
 ! You should have received a copy of the GNU General Public License
 ! along with DRUtES. If not, see <http://www.gnu.org/licenses/>.
 
+!> \file main.f90
+!! \brief Main program
+!<
+
 !> \mainpage 
-!! \section  Introduction (DRUtES = Dual Richards' Unsaturated Equation Solver)
-!!  Unsaturated flow (moisture movement) equation solver with preferential flow support and convection-dispersion-reaction equation.
+!! \section DRUtES
+!! originally developed as Dual Richards' Unsaturated Equation Solver
+!! currently DRUtES is an object oriented Fortran 2003/2008 library for solving coupled nonlinear convection-diffusion reaction equation in the following format: \n
+!! \f[ \begin{split} \sum_{i=1}^n C_{1,i} \frac{\partial p_i}{\partial t} &= \sum_{i=1}^n \left( \nabla \cdot \mathbf{D}_{1,i} \nabla p_i - \nabla  \cdot (\vec{q}_{1,i} p_i) -  \sum_{r=0}^{r_{max}} \lambda_{1,i}p_i^r \right)  \\ \\ & \vdots  \\  \sum_{i=1}^n C_{n,i} \frac{\partial p_i}{\partial t} &= \sum_{i=1}^n \left( \nabla \cdot \mathbf{D}_{n,i} \nabla p_i - \nabla  \cdot (\vec{q}_{n,i} p_i) -  \sum_{r=0}^{r_{max}} \lambda_{n,i}p_i^r \right) \end{split}   \f]
+!! \n
+!! where \f$n\f$ is allocatable dimension of the PDE problem,  \f$r_{max}\f$ is an arbitrary reaction order, and  \f$p_i\f$ is the  \f$i\f$ component of the solution of the PDE problem.
+!!  
 !<
 
 
@@ -57,7 +66,7 @@ program main
 
 
 
-    version_id%number = "2.0/2017"
+    version_id%number = "8.0/2018"
     version_id%reliability = "beta "
     
     call get_cmd_options()
@@ -67,16 +76,15 @@ program main
     call print_logo()
     
     write(unit=terminal, fmt=*)"---------------------------------------------------------------------------"
-    write(unit=terminal, fmt=*)"This program is free software: you can redistribute it and/or modify"
+    write(unit=terminal, fmt=*)"DRUtES is a free software: you can redistribute it and/or modify"
     write(unit=terminal, fmt=*)"it under the terms of the GNU General Public License as published by"
     write(unit=terminal, fmt=*)"the Free Software Foundation, either version 3 of the License, or"
     write(unit=terminal, fmt=*)"(at your option) any later version."
-    write(unit=terminal, fmt=*)"This program is distributed in the hope that it will be useful,"
+    write(unit=terminal, fmt=*)"DRUtES is distributed in the hope that it will be useful,"
     write(unit=terminal, fmt=*)"but WITHOUT ANY WARRANTY; without even the implied warranty of"
     write(unit=terminal, fmt=*)"MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the"
     write(unit=terminal, fmt=*)"GNU General Public License for more details."
-    write(unit=terminal, fmt=*)"You should have received a copy of the GNU General Public License"
-    write(unit=terminal, fmt=*)"along with this program. If not, see <http://www.gnu.org/licenses/>."
+    write(unit=terminal, fmt=*)"See <http://www.gnu.org/licenses/>."
     write(unit=terminal, fmt=*)"---------------------------------------------------------------------------"
     write(unit=terminal, fmt=*)"---------------------------------------------------------------------------"
     write(unit=terminal, fmt=*)" "

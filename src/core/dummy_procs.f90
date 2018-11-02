@@ -1,10 +1,38 @@
+! Copyright 2008 Michal Kuraz, Petr Mayer, Copyright 2016  Michal Kuraz, Petr Mayer, Johanna Bloecher
+
+
+! This file is part of DRUtES.
+! DRUtES is free software: you can redistribute it and/or modify
+! it under the terms of the GNU General Public License as published by
+! the Free Software Foundation, either version 3 of the License, or
+! (at your option) any later version.
+! DRUtES is distributed in the hope that it will be useful,
+! but WITHOUT ANY WARRANTY; without even the implied warranty of
+! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+! GNU General Public License for more details.
+! You should have received a copy of the GNU General Public License
+! along with DRUtES. If not, see <http://www.gnu.org/licenses/>.
+
+!> \file dummy_procs.f90
+!! \brief subroutines returning always zeroes for scalars, vectors and 2nd order tensors, and some logical functions returning always .TRUE.
+!<
+
+!>  Dummy procs.
+!! DRUtES in general solves fully coupled CDRE equations. Let us consider simple heat equation
+!! \f[ C\partial_t T = \kappa \Delta T. \f] 
+!! this equation has just diffusion term, the other terms (such as convection) are zeroes. This is achieved by linking the convection pointer to this dummy_vector function.
+!<
+
+ 
+
+
 module dummy_procs
 
   public :: dummy_scalar, dummy_vector, dummy_tensor, dummy_logical, time_check_ok
   
   contains
 
-!   subroutine getder
+
 
     !> this function returns zero, in order to null zero terms from some particular PDE problems
     function dummy_scalar(pde_loc,i,quadpnt, r) result(null)

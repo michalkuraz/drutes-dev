@@ -1,3 +1,30 @@
+! Copyright 2008 Michal Kuraz, Petr Mayer, Copyright 2016  Michal Kuraz, Petr Mayer, Johanna Bloecher
+
+
+! This file is part of DRUtES.
+! DRUtES is free software: you can redistribute it and/or modify
+! it under the terms of the GNU General Public License as published by
+! the Free Software Foundation, either version 3 of the License, or
+! (at your option) any later version.
+! DRUtES is distributed in the hope that it will be useful,
+! but WITHOUT ANY WARRANTY; without even the implied warranty of
+! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+! GNU General Public License for more details.
+! You should have received a copy of the GNU General Public License
+! along with DRUtES. If not, see <http://www.gnu.org/licenses/>.
+
+
+
+!> \file feminittools.f90
+!! \brief FEM initialization
+!<
+
+!> Prepares integration nodes, reorders the nodes (Dirichlet boundary is excluded from unknowns), prepares surface integration.
+
+
+
+
+
 module feminittools
   use typy
   use global_objs
@@ -551,11 +578,15 @@ module feminittools
 
           case(2)
           
-            call write_log("creating graph of the discretization mesh, and searching for boundary nodes...")
+            if (drutes_config%check4mass) then
             
-            call find_neighbours(elements, nodes)
-            
-            call set_boundary()
+              call write_log("creating graph of the discretization mesh, and searching for boundary nodes...")
+              
+              call find_neighbours(elements, nodes)
+              
+              call set_boundary()
+              
+            end if
 
             elements%length = 0.0_rkind
 
@@ -570,11 +601,11 @@ module feminittools
                           .and. found /= elements%data(i,j) ) then
 
                       elements%length(i,j) = elements%length(i,j) + &
-                                             dist(nodes%data(elements%data(i,j),:), nodes%data(elements%data(i,k),:))/2
+                                             dist(nodes%data(elements%data(i,j),:), nodes%data(elements%data(i,k),:))/2.0
                       elements%nvect_z(i,j) = get_nz(i,j,k)
 
                       elements%length(i,k) = elements%length(i,k) + &
-                                              dist(nodes%data(elements%data(i,j),:), nodes%data(elements%data(i,k),:))/2
+                                              dist(nodes%data(elements%data(i,j),:), nodes%data(elements%data(i,k),:))/2.0
                       elements%nvect_z(i,k) = get_nz(i, j,k)
 
                       found = elements%data(i,k)
@@ -734,9 +765,12 @@ module feminittools
 	 
         end do
         
+        do i=1, elements%kolik
+          if (elements%border(i)%pos > 0) then
+            call elements%bcel%nrfill(i)
+          end if
+        end do
 
-
-               
 
       end subroutine set_boundary
       

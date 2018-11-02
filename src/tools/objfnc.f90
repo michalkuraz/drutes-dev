@@ -1,3 +1,27 @@
+! Copyright 2008 Michal Kuraz, Petr Mayer, Copyright 2016  Michal Kuraz, Petr Mayer, Johanna Bloecher
+
+! This file is part of DRUtES.
+! DRUtES is free software: you can redistribute it and/or modify
+! it under the terms of the GNU General Public License as published by
+! the Free Software Foundation, either version 3 of the License, or
+! (at your option) any later version.
+! DRUtES is distributed in the hope that it will be useful,
+! but WITHOUT ANY WARRANTY; without even the implied warranty of
+! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+! GNU General Public License for more details.
+! You should have received a copy of the GNU General Public License
+! along with DRUtES. If not, see <http://www.gnu.org/licenses/>.
+
+!> \file objfnc.f90
+!! \brief Use for inverse modeling. 
+!<
+
+!>
+!! Tool for inverse modeling.  User can specify file with experimental data, DRUtES can compute value of objective function
+!<
+
+
+
 module objfnc
   use typy
   
@@ -219,6 +243,12 @@ module objfnc
       
       if (ierr /= 0) then
         print *, "the file with your inputs doesn't exist"
+        print *, "----------------"
+        print *, "HINT: If this run is not a part of automatic calibration script,"
+        print *, "and you want to avoid this stop, simply define [n] for Do inverse modeling"
+        print *, "in file     d r u t e s . c o n f / g l o b a l . c o n f"
+        print *, "----------------"
+        print *, "----------------"
         ERROR STOP
       end if
       
@@ -314,7 +344,7 @@ module objfnc
       
       close(expfile)
        
-      open(newunit=expfile, file=cut(fileinputs))
+      open(newunit=expfile, file=cut(fileinputs), status="old", action="read")
       
       write(msg, *) "ERROR! You have either wrong definition in drutes.conf/inverse_modeling/objfnc.conf ", new_line("a") , &
         "or wrong number of columns in", trim(fileinputs), new_line("a"), &
@@ -542,7 +572,7 @@ module objfnc
       end do
         
       do i=1, ubound(errors,1)  
-        errors(i)%val = sqrt(errors(i)%val)
+        errors(i)%val = sqrt(errors(i)%val/pos)
       end do
       
       open(newunit=outfile, file="out/objfnc.val", status="new", action="write")

@@ -3,7 +3,7 @@
 !<
 
 
-!> Module pro matice
+!> Module pro celociselne matice
 !! ==
 !! \page implem Implementace matic
 !! Jde o implementaci abstraktniho typu. Zde je jednak nekolik malo
@@ -62,7 +62,7 @@ contains
     !> da pocet nenul v matici
     procedure :: nonzero => nzmatrix
     !> textova varianta spy
-    procedure, non_overridable :: spy => spymatrix
+!     procedure, non_overridable :: spy => spymatrix
     !> nasobi vektorem, vrati soucin matice krat vektor
     procedure :: mul => mulmatrix
     !> nasobi vektorem, vrati soucin transponovane matice krat vektor
@@ -356,25 +356,26 @@ subroutine spymatrix(a)
     !> matice
     class(matrix_int), intent(in) :: a
     integer(kind=ikind) :: i,j, nz
-    character(len=a%getm()) :: radek
+!     character(len=a%getm()) :: radek
     character(len=8) :: fmts
+        write(fmts,fmt=*) "function disabled due gcc 8.0 bugs"
 
-    nz = 0
-    write(fmts,fmt="(a2,i5,a1)") "(a",a%m,")"
-    do i=1,a%getn()
-        do j=1,a%getm()
-            if (a%get(i,j) == 0) then
-                radek(j:j) = '.'
-            else
-                radek(j:j) = 'X'
-                nz = nz + 1
-            end if
-        end do
-        print fmts,radek
-    end do
-    print *, " pocet radek=", A%getn()
-    print *, " pocet sloupcu",A%getm()
-    print *,"celkovy pocet nenul=",nz
+!     nz = 0
+! !     write(fmts,fmt="(a2,i5,a1)") "(a",a%m,")"
+!     do i=1,a%getn()
+!         do j=1,a%getm()
+!             if (a%get(i,j) == 0) then
+!                 radek(j:j) = '.'
+!             else
+!                 radek(j:j) = 'X'
+!                 nz = nz + 1
+!             end if
+!         end do
+!         print fmts,radek
+!     end do
+!     print *, " pocet radek=", A%getn()
+!     print *, " pocet sloupcu",A%getm()
+!     print *,"celkovy pocet nenul=",nz
 end subroutine spymatrix
 
 !> vytiskne matici

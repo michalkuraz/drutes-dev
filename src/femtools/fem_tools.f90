@@ -1,4 +1,4 @@
-! Copyright 2008 Michal Kuraz, Petr Mayer
+! Copyright 2008 Michal Kuraz, Petr Mayer, Copyright 2016  Michal Kuraz, Petr Mayer, Johanna Bloecher
 
 ! This file is part of DRUtES.
 ! DRUtES is free software: you can redistribute it and/or modify
@@ -13,8 +13,16 @@
 ! along with DRUtES. If not, see <http://www.gnu.org/licenses/>.
 
 
+!> \file fem_tools.f90
+!! \brief FEM tools
+!<
+
+!> Main FEM matrix assembling tools. Local matrix to global matrix procedures and mass checks.
+
 module fem_tools
   public :: in2global
+  public :: do_masscheck
+  private :: get_bcflux, get_mass
 
 
   contains
@@ -141,12 +149,6 @@ module fem_tools
             end if
           end if
                     
-
-                  !**!
-    ! 	      spmatrix%vals(g_row) = stiff_mat(i,m)
-    ! 	      spmatrix%ii(g_row) = n(i)
-    ! 	      spmatrix%jj(g_row) = n(m)
-    ! 	      g_row = g_row + 1
         end select
       end do
       else
@@ -157,10 +159,284 @@ module fem_tools
 
   
   end subroutine in2global
+  
+  
+  !> Get difference between the volume change and boundary fluxes.
+  subroutine do_masscheck()
+    use typy
+    use global_objs
+    use globals
+    use core_tools
+    use pde_objs
+    use printtools
+    use debug_tools
+    
+    character(len=512) :: namef
+    integer(kind=ikind) :: i, proc
+    integer, dimension(:), allocatable, save :: fileids
+    integer :: i_err
+    real(kind=rkind) :: value
+    real(kind=rkind), save :: totvolume
+    real(kind=rkind), dimension(:), allocatable, save :: massdiff, totflux, totdiff
+    
+    
+    if (.not. allocated(fileids)) then
+    
+      allocate(fileids(ubound(pde,1)))
+      
+      allocate(massdiff(ubound(pde,1)))
+      
+      allocate(totflux(ubound(pde,1)))
+      
+      allocate(totdiff(ubound(pde,1)))
+      
+      totdiff = 0
+      
+      do proc=1, ubound(pde,1)
+        write(namef, *) "out/mass/", cut(pde(proc)%problem_name(1)), "-mass_check.dat"
+      
+        open(newunit=fileids(proc), file=cut(namef), action="write", status="replace", iostat=i_err)
+        
+        totvolume=0
+        do i=1, elements%kolik
+          totvolume = totvolume + elements%areas(i)
+        end do
+        
+        if (i_err /= 0) then
+          i_err=system("mkdir out/mass")
+          
+          if (i_err /= 0) then
+            print *, "Unable to create directory out/mass, maybe disc full??"
+            print *, "or contact Michal -> michalkuraz@gmail.com"
+          end if
+          
+          open(newunit=fileids(proc), file=cut(namef), action="write", status="replace", iostat=i_err)
+          
+          if (i_err /= 0) then
+            print *, "Unable to create new files in directory out/mass, maybe disc full??"
+            print *, "or contact Michal -> michalkuraz@gmail.com"
+          end if
+          
+        end if
+        
+        call print_logo(fileids(proc))
+        
+        write(unit=fileids(proc), fmt=*) " #      time                   time step              integral boundary flux [L3] & 
+        volume change [L3]      difference [L3]            cum. difference [L3]        cum. difference [%]"
+        
+        write(unit=fileids(proc), fmt=*) " #--------------------------------------------------------------------------------&
+        ---------------------------------------------------------------------------------------------- "
+        
+      end do
+    end if
+      
+      
+    do proc = 1, ubound(pde,1)
+      massdiff(proc) =  get_mass(3_ikind, pde(proc)) -  get_mass(1_ikind, pde(proc))
+      totflux(proc) = get_bcflux(pde(proc))
+      totdiff(proc) = totdiff(proc) + massdiff(proc) - totflux(proc)
+      write(unit=fileids(proc), fmt=*) time, time_step, totflux(proc), massdiff(proc), massdiff(proc) - totflux(proc), &
+       totdiff(proc), totdiff/totvolume*100.0
+    end do
+    
+    
+      
+    
+   
+
+  
+  end subroutine do_masscheck
+  
+  !> Get boundary fluxes.
+  function get_bcflux(pde_loc) result(val)
+    use typy
+    use pde_objs
+    use global_objs
+    use globals
+    use geom_tools
+    use integral
+    use debug_tools
+    
+    
+    class(pde_str), intent(in) :: pde_loc
+    real(kind=rkind) :: val
+    
+    
+    integer(kind=ikind) :: i, no_points
+    real(kind=rkind), dimension(:), allocatable, save :: uzly, points
+    real(kind=rkind), dimension(:), allocatable, save :: vahy, weights
+    real(kind=rkind), dimension(2,2) :: bcpoints
+    real(kind=rkind), dimension(2) :: thirdpt
+    real(kind=rkind), dimension(:), allocatable, save :: nvect, flux
+    integer(kind=ikind), dimension(3) :: ellocs
+    integer(kind=ikind) :: el, j, k, pt
+    type(integpnt_str) :: quadpnt_loc
+    real(kind=rkind) :: locval
+    
+    
+    if (.not. allocated(flux)) allocate(flux(drutes_config%dimen))
+    
+    quadpnt_loc%column=3
+    
+    if (drutes_config%dimen == 1) then
+    
+      quadpnt_loc%type_pnt = "ndpt"
+      quadpnt_loc%order = 1
+      
+      call pde_loc%flux(elements%material(1), quadpnt_loc, vector_out=flux)
+      
+    
+      
+      locval = flux(1)
+      quadpnt_loc%order = nodes%kolik
+      
+      call pde_loc%flux(elements%material(elements%kolik), quadpnt_loc, vector_out=flux)
+      
+      
+      
+      val = locval + flux(1)
+      
+    
+    else 
+    
+    
+      quadpnt_loc%type_pnt = "xypt"
+      
+      
+      if (.not. allocated(uzly)) then
+        no_points = int(integ_method/10_ikind)
+        
+        allocate(points(no_points))
+
+        allocate(weights(no_points))
+      
+        
+        if (modulo(no_points,2_ikind) == 0) then
+          allocate(uzly(no_points/2))
+          allocate(vahy(no_points/2))
+        else
+          allocate(uzly(no_points/2+1))
+          allocate(vahy(no_points/2+1))
+        end if
+
+        call getform(no_points, uzly, vahy)
 
 
+        if (modulo(no_points,2_ikind) == 0) then
+
+          do i = 1, ubound(uzly,1) 
+            points(i) = 0.5_rkind - uzly(i)/2.0_rkind
+            points(i+ubound(uzly,1)) = 0.5_rkind + uzly(i)/2.0_rkind
+            weights(i) = vahy(i)/2.0_rkind
+            weights(i+ubound(uzly,1)) = vahy(i)/2.0_rkind
+          end do
+
+        else
+
+          points(ubound(uzly,1)) = 0.5_rkind
+          weights(ubound(uzly,1)) = vahy(ubound(vahy,1))/2.0_rkind
+
+          do i = 1, ubound(uzly,1) - 1 
+            points(i) = 0.5_rkind - uzly(i)/2.0_rkind
+            points(i+ubound(uzly,1)) = 0.5_rkind + uzly(i)/2.0_rkind
+            weights(i) = vahy(i)/2.0_rkind
+            weights(i+ubound(uzly,1)) = vahy(i)/2.0_rkind
+          end do
+
+        end if
+      end if
+        
+      val=0
+      do i=1, elements%bcel%pos
+        el = elements%bcel%data(i)
+        quadpnt_loc%element=el
+        do j=2,elements%border(el)%pos
+          bcpoints(1,:) = nodes%data(elements%border(el)%data(j-1),:)
+          bcpoints(2,:) = nodes%data(elements%border(el)%data(j),:)
+          
+          ellocs=1
+          do k=1, ubound(elements%data,2)
+            if (elements%border(el)%data(j-1) == elements%data(el,k) .or. elements%border(el)%data(j) == elements%data(el,k)) then
+              ellocs(k) = 0
+            end if
+          end do
+          
+          thirdpt =  nodes%data(elements%data(el, maxloc(ellocs,1)),:)
+          
+          !returns outer normal vector
+          call getnormal(bcpoints, thirdpt, nvect)
+          
+          nvect = -nvect
+          
+          locval = 0
+          do pt=1, ubound(points,1)
+            quadpnt_loc%xy(1) = bcpoints(1,1) + (bcpoints(2,1)-bcpoints(1,1))*points(pt)
+            quadpnt_loc%xy(2) = bcpoints(1,2) + (bcpoints(2,2)-bcpoints(1,2))*points(pt)
+            
+            call pde_loc%flux(elements%material(el), quadpnt_loc, vector_out=flux)
+            
+            flux(1) = flux(1)*nvect(1)
+            flux(2) = flux(2)*nvect(2)
+            
+            print *, el
+            print *, flux
+            print *, "---"
+            call wait()
+            
+            locval = sqrt(flux(1)*flux(1) + flux(2)*flux(2))*weights(pt)
+          end do
+          
+          locval = locval*dist(bcpoints(1,:), bcpoints(2,:))
+          
+
+        end do
+        
+        val = val + locval
+        
+      end do
+    end if 
+    
+    
+    
+     val = val*time_step
+    
+    
+  end function get_bcflux
 
 
+  !> Get mass on domain.
+  function get_mass(column, pde_loc) result(mass)
+    use typy
+    use pde_objs
+    use global_objs
+    use globals
+    use geom_tools
+    use debug_tools
+    
+    integer(kind=ikind), intent(in) :: column
+    class(pde_str), intent(in) :: pde_loc
+    real(kind=rkind) :: mass
+    
+    type(integpnt_str) :: quadpnt_loc
+    real(kind=rkind) :: locmass
+    integer(kind=ikind) :: i, pt
+    
+    quadpnt_loc%column=column
+    quadpnt_loc%type_pnt="gqnd"
+    
+    mass = 0.0
+    do i=1, elements%kolik
+      quadpnt_loc%element = i
+      locmass = 0.0
+      do pt=1, ubound(gauss_points%weight,1)
+       quadpnt_loc%order = pt
+       locmass = locmass + pde_loc%mass(elements%material(i), quadpnt_loc)*gauss_points%weight(pt)
+      end do
+      locmass = locmass/gauss_points%area*elements%areas(i)
+      mass = mass + locmass
+    end do
+    
+  end function get_mass
   
 
 

@@ -1,3 +1,27 @@
+! Copyright 2008 Michal Kuraz, Petr Mayer, Copyright 2016  Michal Kuraz, Petr Mayer, Johanna Bloecher
+
+
+! This file is part of DRUtES.
+! DRUtES is free software: you can redistribute it and/or modify
+! it under the terms of the GNU General Public License as published by
+! the Free Software Foundation, either version 3 of the License, or
+! (at your option) any later version.
+! DRUtES is distributed in the hope that it will be useful,
+! but WITHOUT ANY WARRANTY; without even the implied warranty of
+! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+! GNU General Public License for more details.
+! You should have received a copy of the GNU General Public License
+! along with DRUtES. If not, see <http://www.gnu.org/licenses/>.
+
+
+
+!> \file global_objs.f90
+!! \brief main object definitions
+!<
+
+!> Main objects with global attribute are defined here.
+
+
 module global_objs
   use typy
   use sparsematrix
@@ -23,7 +47,7 @@ module global_objs
     !> if true, then the values for quadpnt are returned from the local subdomain data, otherwise (default) the values are returned from the pde_common%xvect array
     logical :: ddlocal = .false.
     integer(kind=ikind) :: subdom
-    !> if true then the values for quadpnt are returned from the exnteded subdomain data, 
+    !> if true then the values for quadpnt are returned from the extended subdomain data, 
     logical :: extended = .false.
     !> if .false. then the solution value will be evaluated for different time than the calculated time 
     logical :: globtime=.true.
@@ -31,6 +55,7 @@ module global_objs
     logical :: debugstop=.false.
     !> use preprocessed values (some PDE problems e.g. Richards equation in total hydraulic head form distiguish between pressure head h and total hydraulic head H, where H is the solution, but e.g. the function for the water content (retention curve) requires h. In this case for evaluating the water content we need to use preprocessed values. The preprocessor could be created as a part of model setup by changing the default pointer pde%getval to your own routine. Because pde%getval is called both from your constitutive functions and from the FEM solver, you should be able to tell your own getval function, which value you want to get H or h? By default it is false.
     logical :: preproc=.false.
+    real(kind=rkind), dimension(2) :: xy
   end type integpnt_str
   
   !> smart array, you don't need to allocate -- usefull if you don't know how many data you will write in, 
@@ -78,6 +103,7 @@ module global_objs
       procedure :: nrfill => rsmartfill_norepeat
   end type smartarray_real  
   
+  !> polymorphic extension of sparse matrix
   type, public, extends(smtx) :: extsmtx
     real(kind=rkind), dimension(:), allocatable :: weight
     logical :: weighted
@@ -90,7 +116,7 @@ module global_objs
   end type dirglob_str
   
 
-
+ !> DRUtES version structure
   type, public :: version    
     !> number of version
     character(len=9) :: number
@@ -117,7 +143,7 @@ module global_objs
     logical    :: run_from_backup
     !> evaluate constitutive functions from table created at program init or directly?
     !! 0 - for direct evaluation
-    !! 1 - to tabelarise the values and linearly approximate values between
+    !! 1 - to tabelarize the values and linearly approximate values between
     !<
     integer(kind=ikind) :: fnc_method
     !> length of interval in between the values in function table
@@ -134,6 +160,8 @@ module global_objs
     character(len=4096) :: fullname
     !> if .true. then DRUtES solves rotational symmetric flow
     logical :: rotsym=.false.
+    !> if .true. then DRUtES checks for integral mass balance errors, requires more computational power
+    logical :: check4mass=.false.
   end type configuration
 
 
@@ -145,6 +173,7 @@ module global_objs
     integer(kind=ikind) :: element
     real(kind=rkind), dimension(:), allocatable :: cumflux
   end type observation
+  
   
   type, public :: observe_time_str
     real(kind=rkind) :: value
@@ -191,7 +220,7 @@ module global_objs
     real(kind=rkind), dimension(:,:), allocatable  :: data
     integer(kind=ikind), dimension(:), allocatable :: edge
     real(kind=rkind), dimension(:,:), allocatable  :: results
-    !> logical array.if true, then the particular node is the domain boundary node, the domain should be sufficiently Lipshitz type
+    !> logical array.if true, then the particular node is the domain boundary node, the domain should be obviously Lipshitz type
     logical, dimension(:), allocatable             :: boundary
     !> integer array, if the node is a boundary node, then this stores the order of boundary node on the boundary curve (for 2D)
     integer(kind=ikind), dimension(:), allocatable :: boundary_order
@@ -256,9 +285,12 @@ module global_objs
     type(smartarray_int), dimension(:), allocatable :: subdom
     !> if element lies at domain boundary, then this array contains list of nodes at boundary
     type(smartarray_int), dimension(:), allocatable :: border
+    !> list of elements at domain boundary
+    type(smartarray_int) :: bcel
   end type element
 
 
+  
   type, public :: integnodes
     real(kind=rkind), dimension(:,:), allocatable :: point
     real(kind=rkind), dimension(:), allocatable   :: weight
@@ -269,6 +301,7 @@ module global_objs
   private :: ismartfill, ismartclear, ismartfill_norepeat, rsmartfill, rsmartclear, rsmartfill_norepeat, ismartexist
   
   contains
+    !> writes into smartarray integer vectors
     subroutine ismartfill(array,input, info)
       use typy
       class(smartarray_int), intent(in out) :: array
@@ -331,7 +364,7 @@ module global_objs
    
     
     
-    
+    !> writes into smartarray integer vectors, only if the value is not present in the smartvector
     subroutine ismartfill_norepeat(array, input, info)
       use typy
       class(smartarray_int), intent(in out) :: array
@@ -339,19 +372,20 @@ module global_objs
       integer(kind=ikind), intent(in), optional :: info
       
       integer(kind=ikind) :: i
-      logical :: exist
+!       logical :: exist
+!       
+!       exist = .false.
+!       if (allocated(array%data)) then
+!         do i=1, array%pos
+!           if (array%data(i) == input) then
+!             exist = .true.
+!             EXIT
+!           end if
+!         end do
+!        end if
+
       
-      exist = .false.
-      if (allocated(array%data)) then
-        do i=1, array%pos
-          if (array%data(i) == input) then
-            exist = .true.
-            EXIT
-          end if
-        end do
-       end if
-      
-      if (.not. exist) then
+      if (.not. ismartexist(array,input)) then
         if (present(info)) then
           call ismartfill(array, input, info)
         else
@@ -362,8 +396,10 @@ module global_objs
     
     end subroutine ismartfill_norepeat
     
+    !> clears (deallocates) smart vector
     subroutine ismartclear(array, full)
       class(smartarray_int), intent(in out) :: array
+      !> if present and .true. the smart vector is completely deallocated
       logical, intent(in), optional :: full
       
       if (present(full) .and. full .and. allocated(array%data)) then
@@ -374,6 +410,7 @@ module global_objs
       
     end subroutine ismartclear
     
+    !> checks if the value is present in the vector
     function ismartexist(array, value) result(exist)
       use typy
       class(smartarray_int), intent(in) :: array
@@ -382,18 +419,16 @@ module global_objs
       
       integer(kind=ikind) :: i
       
-      exist = .false.
+      if (minval (abs(array%data(1:array%pos) - value)) == 0) then
+        exist = .true.
+      else
+        exist = .false.
+      end if
       
-      do i=1, array%pos
-        if (array%data(i) == value) then
-          exist = .true.
-          RETURN
-        end if
-      end do
       
     end function ismartexist
     
-
+    !> write real into smartarray vector
     subroutine rsmartfill(array,input, info)
       use typy
       class(smartarray_real), intent(in out) :: array
@@ -456,7 +491,7 @@ module global_objs
    
     
     
-    
+    !> writes real into smartarray vector, only if value sufficiently differ from the values already present. Analogical to smartfill_norepeat for integers
     subroutine rsmartfill_norepeat(array, input, info)
       use typy
       class(smartarray_real), intent(in out) :: array
@@ -487,6 +522,7 @@ module global_objs
     
     end subroutine rsmartfill_norepeat
     
+    !> clears / deallocates real smartarray vector
     subroutine rsmartclear(array, full)
       class(smartarray_real), intent(in out) :: array
       logical, intent(in), optional :: full

@@ -1,3 +1,28 @@
+! Copyright 2008 Michal Kuraz, Petr Mayer, Copyright 2016  Michal Kuraz, Petr Mayer, Johanna Bloecher
+
+
+! This file is part of DRUtES.
+! DRUtES is free software: you can redistribute it and/or modify
+! it under the terms of the GNU General Public License as published by
+! the Free Software Foundation, either version 3 of the License, or
+! (at your option) any later version.
+! DRUtES is distributed in the hope that it will be useful,
+! but WITHOUT ANY WARRANTY; without even the implied warranty of
+! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+! GNU General Public License for more details.
+! You should have received a copy of the GNU General Public License
+! along with DRUtES. If not, see <http://www.gnu.org/licenses/>.
+
+
+
+!> \file decomposer.f90
+!! \brief domain decomposer (requires coarse mesh)
+!<
+
+
+
+
+
 module decomposer
   use typy
   public :: set_subdomains
@@ -9,6 +34,7 @@ module decomposer
   
   contains
 
+   !> init subroutine
     subroutine init_decomp()
       use typy
       use globals
@@ -84,39 +110,39 @@ module decomposer
       cluster_def = .false.
 
       do i=1, elements%kolik
-	a = nodes%data(elements%data(i,1),:)
-	b = nodes%data(elements%data(i,2),:)
-	c = nodes%data(elements%data(i,3),:)
-	elements%gc(i, 1:drutes_config%dimen) = gravity_center(a,b,c)
+        a = nodes%data(elements%data(i,1),:)
+        b = nodes%data(elements%data(i,2),:)
+        c = nodes%data(elements%data(i,3),:)
+        elements%gc(i, 1:drutes_config%dimen) = gravity_center(a,b,c)
       end do
 
       call write_log("filling the clusters and creating graph of the coarse mesh...")
 	    
       do i=1, coarse_elements%kolik
-	counter = 0
-	do k=1, ubound(coarse_elements%data,2)
-	  domain(k,:) = coarse_nodes%data(coarse_elements%data(i,k),:)
-	end do
-	call progressbar(int(100*i/coarse_elements%kolik))
-	do j=1, elements%kolik
-	  if (.not. cluster_def(j)) then
-	    if (inside(domain, elements%gc(j,1:2))) then
-	      counter = counter + 1
-	      elcounter(counter) = j
-	      cluster_def(j) = .true.
-	    end if
-	  end if
-	end do
+        counter = 0
+        do k=1, ubound(coarse_elements%data,2)
+          domain(k,:) = coarse_nodes%data(coarse_elements%data(i,k),:)
+        end do
+        call progressbar(int(100*i/coarse_elements%kolik))
+        do j=1, elements%kolik
+          if (.not. cluster_def(j)) then
+            if (inside(domain, elements%gc(j,1:2))) then
+              counter = counter + 1
+              elcounter(counter) = j
+              cluster_def(j) = .true.
+            end if
+          end if
+        end do
 
-	if (counter > 0) then
-	  if (counter < 4) call write_log("WARNING, your coarse mesh defines cluster with less then 4 fine mesh elements")
-	  allocate(ddcoarse_mesh(i)%elements(counter))
-	  ddcoarse_mesh(i)%elements = elcounter(1:counter)
-	  ddcoarse_mesh(i)%el_count = counter
-	else
-	  call file_error(file_conf, message="The coarse mesh contains elements that does not cover the &
-	  fine mesh elements, the COARSE mesh has INCORRECT geometry.")
-	end if
+        if (counter > 0) then
+          if (counter < 4) call write_log("WARNING, your coarse mesh defines cluster with less then 4 fine mesh elements")
+          allocate(ddcoarse_mesh(i)%elements(counter))
+          ddcoarse_mesh(i)%elements = elcounter(1:counter)
+          ddcoarse_mesh(i)%el_count = counter
+        else
+          call file_error(file_conf, message="The coarse mesh contains elements that does not cover the &
+          fine mesh elements, the COARSE mesh has INCORRECT geometry.")
+        end if
       end do
 
       ddcoarse_mesh(:)%iter_count = 0
@@ -126,18 +152,18 @@ module decomposer
       do i=1, coarse_elements%kolik
         k = elements%material(ddcoarse_mesh(i)%elements(1))
         exited = .false.
-	fine:  do j=1, ubound(ddcoarse_mesh(i)%elements,1)
-	    l = ddcoarse_mesh(i)%elements(j)
-	    if (k /= elements%material(l)) then
-	      coarse_elements%material(i) = 0
-	      exited = .true.
-	      EXIT fine
-	    end if
-	end do fine
+        fine:  do j=1, ubound(ddcoarse_mesh(i)%elements,1)
+            l = ddcoarse_mesh(i)%elements(j)
+            if (k /= elements%material(l)) then
+              coarse_elements%material(i) = 0
+              exited = .true.
+              EXIT fine
+            end if
+        end do fine
 	 
-	if (.not.exited) then
-	  coarse_elements%material(i) = k
-	end if
+        if (.not.exited) then
+          coarse_elements%material(i) = k
+        end if
       end do
  
 
@@ -176,7 +202,7 @@ module decomposer
 
  
 
-    !> the subdomains are combined based on the gradients of the solution and the Picard iterations
+    !> Domain decomposer / composer from coarse mesh. The subdomains are combined based on the gradients of the solution and the Picard iterations or one of these
     subroutine set_subdomains()
       use typy
       use globals
@@ -210,8 +236,8 @@ module decomposer
 
       processes_count = ubound(pde,1)
       if (.not.(allocated(subdomsdim))) then
-	allocate(subdomsdim(ubound(ddcoarse_mesh,1)))
-	allocate(subdoms(elements%kolik))
+        allocate(subdomsdim(ubound(ddcoarse_mesh,1)))
+        allocate(subdoms(elements%kolik))
         allocate(coarse_el(coarse_elements%kolik))
         allocate(domain_permut(coarse_elements%kolik))
         allocate(node_set(maxval(pde(processes_count)%permut(:))))
@@ -225,7 +251,7 @@ module decomposer
       !check if the cluster is critical (=steep derivatives or more than a single Picard iteration) 
       do i=1, coarse_elements%kolik
         row = 0
-	exited = .false.
+        exited = .false.
         incoarse: do j=1, ubound(ddcoarse_mesh(i)%elements,1)
                     l = ddcoarse_mesh(i)%elements(j)
 		    row=row+1
@@ -237,19 +263,19 @@ module decomposer
 		    call plane_derivative(points(1,:), points(2,:), points(3,:), dgdx, dgdz)
 		    
 !                     if ( ddcoarse_mesh(i)%iter_count > 1 .and. sqrt(dgdx*dgdx + dgdz*dgdz) > 0.0001 ) then
-                      if ( ddcoarse_mesh(i)%iter_count > 1 ) then
+        if ( ddcoarse_mesh(i)%iter_count > 1 ) then
 		      ddcoarse_mesh(i)%treat_alone = .true.
 		      exited = .true.
 		      EXIT incoarse
 		    end if
         end do incoarse
 	  
-	if (.not.exited) then
-	  ddcoarse_mesh(i)%treat_alone = .false.
-	end if
-	if (coarse_elements%material(i) == 0) then
-	  ddcoarse_mesh(i)%treat_alone = .true.
-	end if
+        if (.not.exited) then
+          ddcoarse_mesh(i)%treat_alone = .false.
+        end if
+        if (coarse_elements%material(i) == 0) then
+          ddcoarse_mesh(i)%treat_alone = .true.
+        end if
       end do
 
       
@@ -268,21 +294,21 @@ module decomposer
         end if
 
         if (.not. ddcoarse_mesh(i)%treat_alone) then
-	    do j=1, ubound(coarse_elements%neighbours,2)
-              k = coarse_elements%neighbours(i,j) 
-              if (k > 0) then 
-		if (coarse_elements%material(i) == coarse_elements%material(k)) then
-		  if (.not. ddcoarse_mesh(k)%treat_alone .and. ddcoarse_mesh(k)%subdomain == 0) then
-		    ddcoarse_mesh(k)%subdomain= ddcoarse_mesh(i)%subdomain
-		  end if
-		  if (ddcoarse_mesh(k)%subdomain < ddcoarse_mesh(i)%subdomain .and. .not. ddcoarse_mesh(k)%treat_alone) then
-		    level_nei = ddcoarse_mesh(k)%subdomain
-		    decrease = ddcoarse_mesh(i)%subdomain
-		    where (ddcoarse_mesh(:)%subdomain == decrease)
-		      ddcoarse_mesh(:)%subdomain = level_nei
-		    end where
-		  end if
-		end if
+          do j=1, ubound(coarse_elements%neighbours,2)
+            k = coarse_elements%neighbours(i,j) 
+            if (k > 0) then 
+              if (coarse_elements%material(i) == coarse_elements%material(k)) then
+                if (.not. ddcoarse_mesh(k)%treat_alone .and. ddcoarse_mesh(k)%subdomain == 0) then
+                  ddcoarse_mesh(k)%subdomain= ddcoarse_mesh(i)%subdomain
+                end if
+                if (ddcoarse_mesh(k)%subdomain < ddcoarse_mesh(i)%subdomain .and. .not. ddcoarse_mesh(k)%treat_alone) then
+                  level_nei = ddcoarse_mesh(k)%subdomain
+                  decrease = ddcoarse_mesh(i)%subdomain
+                  where (ddcoarse_mesh(:)%subdomain == decrease)
+                    ddcoarse_mesh(:)%subdomain = level_nei
+                  end where
+                end if
+              end if
               end if
             end do
           end if
@@ -316,55 +342,55 @@ module decomposer
       !!!!!!!!!!!!!!!!!!! begin if remeshed!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       if (ubound(subdomain,1) /= ddinfo%number .or. remeshed) then
-	if (allocated(subdomain)) then
-	  do i=1, ubound(subdomain,1) 
-            call clear_subdomain(subdomain(i))
-	  end do
-	  deallocate(ddinfo%nodesinsub)
-	  deallocate(ddinfo%nodesinextsub)
-	  deallocate(subdomain)
-	end if	
+        if (allocated(subdomain)) then
+          do i=1, ubound(subdomain,1) 
+                  call clear_subdomain(subdomain(i))
+          end do
+          deallocate(ddinfo%nodesinsub)
+          deallocate(ddinfo%nodesinextsub)
+          deallocate(subdomain)
+        end if	
 	
-	do i=1, ubound(ddinfo%nd_dsjnt%crit,1)
-	  call ddinfo%nd_dsjnt%crit(i)%clear()
-	end do
-	 
-	allocate(subdomain(ddinfo%number))
+        do i=1, ubound(ddinfo%nd_dsjnt%crit,1)
+          call ddinfo%nd_dsjnt%crit(i)%clear()
+        end do
+         
+        allocate(subdomain(ddinfo%number))
         allocate(ddinfo%nodesinsub(nodes%kolik))
         allocate(ddinfo%nodesinextsub(nodes%kolik))
        
 
 
-	do i=1, ubound(subdomain,1)
-	  counter = 0
-          coarse_count = 0
-	  do j=1, coarse_elements%kolik
-	    if (ddcoarse_mesh(j)%subdomain == i) then
-	      tmp_int = counter + 1
-	      counter = counter + ubound(ddcoarse_mesh(j)%elements,1)
-              coarse_count = coarse_count + 1
-              coarse_el(coarse_count) = j
-	      subdoms(tmp_int:counter) = ddcoarse_mesh(j)%elements
-	    end if
-	  end do
-          ! write fine elements
-! 	  allocate(subdomain(i)%el(counter))
-!  	  subdomain(i)%el = subdoms(1:counter)
-	  do j=1, counter
-	    call subdomain(i)%elsub%fill(subdoms(j))
-	  end do
-          !write coarse elements
-          allocate(subdomain(i)%coarse_el(coarse_count))
-          subdomain(i)%coarse_el(1:coarse_count) = coarse_el(1:coarse_count)
-	end do
+        do i=1, ubound(subdomain,1)
+          counter = 0
+                coarse_count = 0
+          do j=1, coarse_elements%kolik
+            if (ddcoarse_mesh(j)%subdomain == i) then
+              tmp_int = counter + 1
+              counter = counter + ubound(ddcoarse_mesh(j)%elements,1)
+                    coarse_count = coarse_count + 1
+                    coarse_el(coarse_count) = j
+              subdoms(tmp_int:counter) = ddcoarse_mesh(j)%elements
+            end if
+          end do
+                ! write fine elements
+      ! 	  allocate(subdomain(i)%el(counter))
+      !  	  subdomain(i)%el = subdoms(1:counter)
+          do j=1, counter
+            call subdomain(i)%elsub%fill(subdoms(j))
+          end do
+                !write coarse elements
+                allocate(subdomain(i)%coarse_el(coarse_count))
+                subdomain(i)%coarse_el(1:coarse_count) = coarse_el(1:coarse_count)
+        end do
 
         ! create disjoint map of subdomain elements
-	do i=1, ubound(subdomain,1)
-	  do j=1, subdomain(i)%elsub%pos
-	    k = subdomain(i)%elsub%data(j)
-	    call elements%subdom(k)%fill(i)
-	  end do
-	end do
+        do i=1, ubound(subdomain,1)
+          do j=1, subdomain(i)%elsub%pos
+            k = subdomain(i)%elsub%data(j)
+            call elements%subdom(k)%fill(i)
+          end do
+        end do
 
 ! 	call printmtx(elements%subdom) ; call wait()
         subdomain(:)%critical = .false.
@@ -376,78 +402,79 @@ module decomposer
         end do
         
         
-	! and now you can add desired number of levels
-	call addlevel()
+        ! and now you can add desired number of levels
+        call addlevel()
 
-	
-	! finish the subdomain initialization
-	do i=1, ubound(subdomain,1)
-	  call init_subdomain(subdomain(i), i)
-	end do
-	call write_log(text="domain decomposition was adapted to the new solution, number of subdomains is:",&
-			int1=ddinfo%number, text2="@ simulation time:", real2=ddinfo%t_change)
+        
+        ! finish the subdomain initialization
+        do i=1, ubound(subdomain,1)
+          call init_subdomain(subdomain(i), i)
+        end do
+        call write_log(text="domain decomposition was adapted to the new solution, number of subdomains is:",&
+            int1=ddinfo%number, text2="@ simulation time:", real2=ddinfo%t_change)
 
 
 
        ! create a list of nodes with a list of subdomains, where the node belongs.
         do sub=1, ubound(subdomain,1)
-	  do i=1, subdomain(sub)%elsub%pos
-	    el = subdomain(sub)%elsub%data(i)
-	    do j=1, ubound(elements%data,2)
-	      nd = elements%data(el,j)
-	      call ddinfo%nodesinsub(nd)%nrfill(sub)
-	    end do
-	  end do
-	end do
+          do i=1, subdomain(sub)%elsub%pos
+            el = subdomain(sub)%elsub%data(i)
+            do j=1, ubound(elements%data,2)
+              nd = elements%data(el,j)
+              call ddinfo%nodesinsub(nd)%nrfill(sub)
+            end do
+          end do
+        end do
 	
 	
 
       
-	write(unit=file_decomp, fmt=*) time, ubound(subdomain,1)
-	call flush(file_decomp)
-	
-	
-	node_set = .false.
+        write(unit=file_decomp, fmt=*) time, ubound(subdomain,1)
+        call flush(file_decomp)
+        
+        
+        node_set = .false.
     
-	!> create disjoint map of subdomains      
-	do i=1, ubound(subdomain,1)
-	  do j=1, subdomain(i)%elsub%pos
-	    k = subdomain(i)%elsub%data(j)
-	    do l=1, ubound(elements%data,2)
-	      m = elements%data(k,l)
-	      n = pde(1)%permut(m)
-	      if (n > 0) then
-		if (.not. node_set(n) .or. subdomain(i)%critical) then
-		  ddinfo%nd_dsjnt%data(n) = i
-		  node_set(n) = .true.
-		  if (subdomain(i)%critical) then
-		    call ddinfo%nd_dsjnt%crit(n)%fill(i)
-		  end if
-		end if
-	      end if
-	    end do
-	  end do
-	end do   
-	
-	do i=1, ubound(ddinfo%nd_dsjnt%data,1)
-	  j=ddinfo%nd_dsjnt%data(i)
-	  call subdomain(j)%disjoint%fill(i)
-	end do
+        !> create disjoint map of subdomains      
+        do i=1, ubound(subdomain,1)
+          do j=1, subdomain(i)%elsub%pos
+            k = subdomain(i)%elsub%data(j)
+            do l=1, ubound(elements%data,2)
+              m = elements%data(k,l)
+              n = pde(1)%permut(m)
+              if (n > 0) then
+          if (.not. node_set(n) .or. subdomain(i)%critical) then
+            ddinfo%nd_dsjnt%data(n) = i
+            node_set(n) = .true.
+            if (subdomain(i)%critical) then
+              call ddinfo%nd_dsjnt%crit(n)%fill(i)
+            end if
+          end if
+              end if
+            end do
+          end do
+        end do   
+        
+        do i=1, ubound(ddinfo%nd_dsjnt%data,1)
+          j=ddinfo%nd_dsjnt%data(i)
+          call subdomain(j)%disjoint%fill(i)
+        end do
       end if
 
       ddinfo%ndofs_tot = 0
       do i=1, ubound(subdomain,1)
-	ddinfo%ndofs_tot = ddinfo%ndofs_tot + subdomain(i)%ndof
+        ddinfo%ndofs_tot = ddinfo%ndofs_tot + subdomain(i)%ndof
       end do
       
       do i = 1, ubound(subdomain,1)
-	subdomain(i)%order=i
+        subdomain(i)%order=i
       end do
 
 
     end subroutine set_subdomains
   
     
+    !> after the subdomains are constituted, must be initialized
     subroutine init_subdomain(sub, id)
       use typy
       use sparsematrix
@@ -465,7 +492,7 @@ module decomposer
       logical, dimension(:), allocatable, save :: wrklist
     
       if (.not.(allocated(wrklist))) then
-	allocate(wrklist(maxval(pde(1)%permut(:))))
+        allocate(wrklist(maxval(pde(1)%permut(:))))
       end if
       
       allocate(sub%permut(3_ikind*sub%elsub%pos))
@@ -476,25 +503,25 @@ module decomposer
       sub%permut = 0
       
       do i=1,sub%elsub%pos
-	do j=1, ubound(elements%data,2)
-	  l = sub%elsub%data(i)
-	  k = pde(1)%permut(elements%data(l,j))
-	  if (k /=0 ) then
-	    wrklist(k) = .true.
-	  end if
-	end do
+        do j=1, ubound(elements%data,2)
+          l = sub%elsub%data(i)
+          k = pde(1)%permut(elements%data(l,j))
+          if (k /=0 ) then
+            wrklist(k) = .true.
+          end if
+        end do
       end do
       
       
       counter = 0
       sub%invpermut = 0
       do i=1, ubound(wrklist,1)
-	if (wrklist(i)) then
-	  sub%ndof = sub%ndof + 1
-	  sub%permut(sub%ndof) = i
-          counter = counter + 1
-          sub%invpermut(i) = counter
-	end if
+        if (wrklist(i)) then
+          sub%ndof = sub%ndof + 1
+          sub%permut(sub%ndof) = i
+                counter = counter + 1
+                sub%invpermut(i) = counter
+        end if
       end do
       
 
@@ -503,52 +530,52 @@ module decomposer
       !!if subcycling      
       if (drutes_config%it_method == 2) then
 	
-	i = sub%ndextra%pos
-		
-	allocate(sub%extpermut(i))
-	
-	allocate(sub%extinvpermut(maxval(pde(1)%permut(:))))	
-		
-	sub%extinvpermut = 0
-	
-	sub%extpermut = 0
-	
-	j=1	
-	do i=1, sub%ndextra%pos
-	  if (pde(1)%permut(sub%ndextra%data(i)) > 0) then
-	    sub%extpermut(j) =  pde(1)%permut(sub%ndextra%data(i))
-	    j=j+1
-	  end if	  
-	end do
-	
-	sub%extndof = j-1
-	
-	
-	call sub%extmatrix%init(maxval(pde(1)%permut(:)), sub%extndof)
+        i = sub%ndextra%pos
+          
+        allocate(sub%extpermut(i))
+        
+        allocate(sub%extinvpermut(maxval(pde(1)%permut(:))))	
+          
+        sub%extinvpermut = 0
+        
+        sub%extpermut = 0
+        
+        j=1	
+        do i=1, sub%ndextra%pos
+          if (pde(1)%permut(sub%ndextra%data(i)) > 0) then
+            sub%extpermut(j) =  pde(1)%permut(sub%ndextra%data(i))
+            j=j+1
+          end if	  
+        end do
+        
+        sub%extndof = j-1
+        
+        
+        call sub%extmatrix%init(maxval(pde(1)%permut(:)), sub%extndof)
 
-	
-	allocate(sub%extbvect(sub%extndof))
-	
-	l = 0
-	do i=1, sub%ndextra%pos
-	
- 	  j = sub%ndextra%data(i)
- 	  
- 	  k = pde(1)%permut(j)
+        
+        allocate(sub%extbvect(sub%extndof))
+        
+        l = 0
+        do i=1, sub%ndextra%pos
+        
+          j = sub%ndextra%data(i)
+          
+          k = pde(1)%permut(j)
 
- 	  if (k>0) then
- 	    l = l + 1
-	    sub%extinvpermut(k) = l
-	  end if
-	  
-	end do
-	
-	
-	allocate(sub%resvct%main(sub%ndof))
-	
-	allocate(sub%resvct%ext(sub%extndof))
-	
-	allocate(sub%extxvect(sub%extndof,4))
+          if (k>0) then
+            l = l + 1
+            sub%extinvpermut(k) = l
+          end if
+          
+        end do
+        
+        
+        allocate(sub%resvct%main(sub%ndof))
+        
+        allocate(sub%resvct%ext(sub%extndof))
+        
+        allocate(sub%extxvect(sub%extndof,4))
 	
         sub%extxvect(:,1:3) = pde_common%xvect(sub%extpermut(1:sub%extndof),1:3)
         sub%extxvect(:,4) = pde_common%xvect(sub%extpermut(1:sub%extndof),1)
@@ -572,7 +599,7 @@ module decomposer
             
     end subroutine init_subdomain
     
-    
+    !> destroy the previous subdomain split
     subroutine clear_subdomain(sub)
       use typy
       use sparsematrix
@@ -587,7 +614,7 @@ module decomposer
       
       
       if (allocated(sub%xvect)) then
-	deallocate(sub%xvect)
+        deallocate(sub%xvect)
       else
         call write_log("strange, subdomain%xvect not allocated, called from decomposer::clear_subdomain")
       end if 
@@ -602,19 +629,19 @@ module decomposer
       end if 
       
       if (allocated(sub%ovect)) then
-	deallocate(sub%ovect)
+        deallocate(sub%ovect)
       else
         call write_log("strange, subdomain%ovect not allocated, called from decomposer::clear_subdomain")
       end if 
       
       if (allocated(sub%permut)) then
-	deallocate(sub%permut)
+        deallocate(sub%permut)
       else
         call write_log("strange, subdomain%permut not allocated, called from decomposer::clear_subdomain")
       end if 
       
       if (allocated(sub%invpermut)) then
-	deallocate(sub%invpermut)
+        deallocate(sub%invpermut)
       else
         call write_log("strange, subdomain%invpermut not allocated, called from decomposer::clear_subdomain")
       end if
@@ -628,21 +655,21 @@ module decomposer
       call sub%disjoint%clear(full = .true.)
 
       do i=1, elements%kolik
-	call elements%subdom(i)%clear()
+        call elements%subdom(i)%clear()
       end do
       
       if (allocated(sub%extbvect)) then
-	deallocate(sub%extbvect)
-	deallocate(sub%extpermut)
-	deallocate(sub%extinvpermut)
+        deallocate(sub%extbvect)
+        deallocate(sub%extpermut)
+        deallocate(sub%extinvpermut)
       end if
       
       if (allocated(sub%resvct%main)) then
-	deallocate(sub%resvct%main)
+        deallocate(sub%resvct%main)
       end if
       
       if (allocated(sub%resvct%ext)) then
-	deallocate(sub%resvct%ext)
+        deallocate(sub%resvct%ext)
       end if
       
       
@@ -656,6 +683,7 @@ module decomposer
     end subroutine clear_subdomain
 
 
+    !> read coarse mesh discretization
     subroutine read_coarse_mesh()
       use typy
       use global_objs
@@ -713,7 +741,7 @@ module decomposer
     end subroutine read_coarse_mesh
    
    
-    !> subroutine that creates mesh of quadrangles -- coarse mesh (clusters)
+    !> subroutine that creates mesh of quadrangles -- coarse mesh (clusters), simple coarse meshing procedure
     subroutine make_quadmesh(density)
       use typy
       use globals
@@ -736,17 +764,17 @@ module decomposer
       zmax = maxval(nodes%data(:,2))
       zmin = minval(nodes%data(:,2))
       if (((xmax - xmin)/density - int((xmax - xmin)/density)) > epsilon(xmax)) then
-	xcount = int((xmax - xmin)/density) + 1
+        xcount = int((xmax - xmin)/density) + 1
       else
-	xcount = int((xmax - xmin)/density)
+        xcount = int((xmax - xmin)/density)
       end if
 
       xdens = (xmax - xmin)/(xcount*1.0_rkind)
  
       if (((zmax - zmin)/density - int((zmax - zmin)/density)) > epsilon(zmax)) then
-	zcount = int((zmax - zmin)/density) + 1
+        zcount = int((zmax - zmin)/density) + 1
       else
-	zcount = int((zmax - zmin)/density)
+        zcount = int((zmax - zmin)/density)
       end if
 
       zdens = (zmax - zmin)/(zcount*1.0_rkind)
@@ -766,22 +794,22 @@ module decomposer
 
       row = 0
       do j=0, zcount
-	do i=0, xcount
-	  row = row+1
-	  coarse_nodes%data(row, 1) = xmin + i*xdens
-	  coarse_nodes%data(row, 2) = zmin + j*zdens
-	end do
+        do i=0, xcount
+          row = row+1
+          coarse_nodes%data(row, 1) = xmin + i*xdens
+          coarse_nodes%data(row, 2) = zmin + j*zdens
+        end do
       end do
    
       row = 0
       do j=1, zcount
-	do i=1, xcount
-	  row = row + 1
-	  coarse_elements%data(row,1) = (xcount+1)*(j-1) + i
-	  coarse_elements%data(row,2) = (xcount+1)*(j-1) + i + 1
-	  coarse_elements%data(row,3) = (xcount+1)*j + i + 1
-	  coarse_elements%data(row,4) = (xcount+1)*j + i
-	end do
+        do i=1, xcount
+          row = row + 1
+          coarse_elements%data(row,1) = (xcount+1)*(j-1) + i
+          coarse_elements%data(row,2) = (xcount+1)*(j-1) + i + 1
+          coarse_elements%data(row,3) = (xcount+1)*j + i + 1
+          coarse_elements%data(row,4) = (xcount+1)*j + i
+        end do
       end do
 
       

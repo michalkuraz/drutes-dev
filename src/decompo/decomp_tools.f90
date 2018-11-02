@@ -1,3 +1,27 @@
+
+! Copyright 2008 Michal Kuraz, Petr Mayer, Copyright 2016  Michal Kuraz, Petr Mayer, Johanna Bloecher
+
+! This file is part of DRUtES.
+! DRUtES is free software: you can redistribute it and/or modify
+! it under the terms of the GNU General Public License as published by
+! the Free Software Foundation, either version 3 of the License, or
+! (at your option) any later version.
+! DRUtES is distributed in the hope that it will be useful,
+! but WITHOUT ANY WARRANTY; without even the implied warranty of
+! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+! GNU General Public License for more details.
+! You should have received a copy of the GNU General Public License
+! along with DRUtES. If not, see <http://www.gnu.org/licenses/>.
+
+
+
+!> \file decomp_tools.f90
+!! \brief Tools for domain decompositions.
+!<
+
+
+
+
 module decomp_tools
   public :: print_domains, print_elements_dd
   public :: get_residual
@@ -13,6 +37,7 @@ module decomp_tools
 
   contains
   
+   !> Get local subdomain residual 
     subroutine getres_loc(subdom, debugme)
       use typy 
       use globals
@@ -93,6 +118,7 @@ module decomp_tools
             
     end subroutine getres_loc
   
+  !> multiply local matrix and vector
     subroutine mulAx_dd(x,vct)
       use typy 
       use globals
@@ -125,6 +151,7 @@ module decomp_tools
 
     end subroutine mulAx_dd
     
+    !> get residual globaly
     subroutine get_residual(resvct)
       use typy
       use global_objs
@@ -231,21 +258,21 @@ module decomp_tools
       call a%init(maxval(pde(i)%permut(:)),maxval(pde(i)%permut(:)))
       
       do i=1, ubound(subdomain,1)
-	do ii=1, subdomain(i)%matrix%getn()
-	  do jj = 1, subdomain(i)%matrix%getm()
-	    val = subdomain(i)%matrix%get(ii,jj)
-	    if (abs(val) > epsilon(val) ) then
-	      col = subdomain(i)%permut(jj)
-	      call a%set(val, ii, col)
-	    end if
-	  end do
-	end do
+        do ii=1, subdomain(i)%matrix%getn()
+          do jj = 1, subdomain(i)%matrix%getm()
+            val = subdomain(i)%matrix%get(ii,jj)
+            if (abs(val) > epsilon(val) ) then
+              col = subdomain(i)%permut(jj)
+              call a%set(val, ii, col)
+            end if
+          end do
+        end do
       end do
       
       if (.not. allocated(pde_common%bvect)) allocate(pde_common%bvect(maxval(pde(1)%permut(:))))
       
       do i=1, ubound(subdomain,1)
-	pde_common%bvect(subdomain(i)%permut(1:subdomain(i)%ndof)) = subdomain(i)%bvect(1:subdomain(i)%ndof)
+        pde_common%bvect(subdomain(i)%permut(1:subdomain(i)%ndof)) = subdomain(i)%bvect(1:subdomain(i)%ndof)
       end do
       
     
@@ -253,6 +280,7 @@ module decomp_tools
     end subroutine collect_matrices
     
  
+    !> add overlapping level
     subroutine addlevel()
       use typy
       use decomp_vars
@@ -273,10 +301,10 @@ module decomp_tools
       real(kind=rkind), dimension(:), allocatable :: tmprow, tmpvct
       
       if (.not. allocated(el_inserted)) then
-	allocate(el_inserted(elements%kolik))
-	allocate(nd_inserted(nodes%kolik))
-	allocate(nd_bellow(nodes%kolik))
-	allocate(weight(nodes%kolik))
+        allocate(el_inserted(elements%kolik))
+        allocate(nd_inserted(nodes%kolik))
+        allocate(nd_bellow(nodes%kolik))
+        allocate(weight(nodes%kolik))
       end if
       
       el_inserted = .false.
@@ -289,70 +317,70 @@ module decomp_tools
       call prolong_mtx%init(maxval(pde(i)%permut(:)), 1_ikind*ubound(subdomain,1))
             
       do sub=1, ubound(subdomain,1)
-	do j=1, ubound(subdomain(sub)%coarse_el,1)
-	  coarse_el = subdomain(sub)%coarse_el(j)
-	  ddinfo%coarseinsub(coarse_el) = sub
-	end do
+        do j=1, ubound(subdomain(sub)%coarse_el,1)
+          coarse_el = subdomain(sub)%coarse_el(j)
+          ddinfo%coarseinsub(coarse_el) = sub
+        end do
       end do
       
      
      !searching for boundary clusters at subdomain boundary
       sub_loop: do sub = 1, ubound(subdomain,1)
-	allocate(subdomain(sub)%olayers(0:ddinfo%overlaps))
-	coarse_loop: do i=1,  ubound(subdomain(sub)%coarse_el,1)
-	  coarse_el = subdomain(sub)%coarse_el(i)
-	  coarse_vecino: do j=1, ubound(coarse_elements%neighbours,2)
-	    vecino = coarse_elements%neighbours(coarse_el,j)
-	    if (vecino > 0) then
-	      if (ddinfo%coarseinsub(vecino) /= sub) then !nasel jsem krajni cluster
-		call subdomain(sub)%bcluster%fill(coarse_el)
-		EXIT coarse_vecino
-	      end if
-	    end if
-	  end do coarse_vecino
-	end do coarse_loop
+        allocate(subdomain(sub)%olayers(0:ddinfo%overlaps))
+        coarse_loop: do i=1,  ubound(subdomain(sub)%coarse_el,1)
+          coarse_el = subdomain(sub)%coarse_el(i)
+          coarse_vecino: do j=1, ubound(coarse_elements%neighbours,2)
+            vecino = coarse_elements%neighbours(coarse_el,j)
+            if (vecino > 0) then
+              if (ddinfo%coarseinsub(vecino) /= sub) then !nasel jsem krajni cluster
+          call subdomain(sub)%bcluster%fill(coarse_el)
+          EXIT coarse_vecino
+              end if
+            end if
+          end do coarse_vecino
+        end do coarse_loop
       end do sub_loop
 	
 	      		
       sub_loop2: do sub=1, ubound(subdomain,1)
-	j = subdomain(sub)%elsub%pos
-	el_inserted(subdomain(sub)%elsub%data(1:j)) = .true.
-	level_loop: do level=0, ddinfo%overlaps
-	  do i=1, subdomain(sub)%bcluster%pos
-	    coarse_el = subdomain(sub)%bcluster%data(i)
-	    bound_loop: do k=1, ddcoarse_mesh(coarse_el)%overlap_el(level)%pos
-	      el = ddcoarse_mesh(coarse_el)%overlap_el(level)%data(k)
-	      elsub = ddinfo%coarseinsub(ddinfo%elincoarse(el)) 
-	      if (level > 0) then
-		if (elsub /= sub) then
-		  insert = .true.
-		else
-		  insert = .false.
-		end if
-	      else
-		insert = .false.
-		do ii = 1, ubound(elements%neighbours,2)
-		  vecino = elements%neighbours(el,ii)
-		  if (vecino > 0) then
-		    vecsub = ddinfo%coarseinsub(ddinfo%elincoarse(vecino))
-		  else
-		    vecsub = 0
-		  end if
-		  if (vecsub /= sub .and. vecsub /= 0) then
-		    insert = .true.
-		    EXIT
-		  end if
-	        end do
-	      end if
-	      if (level > 0 .and. insert .and. .not. el_inserted(el)) then
-		call subdomain(sub)%elsub%fill(el)
-		call subdomain(sub)%olayers(level)%fill(el)
-		el_inserted(el) = .true.
-	      else if (level == 0 .and. insert) then
-		call subdomain(sub)%olayers(level)%fill(el)
-	      end if
-	    end do bound_loop
-	  end do
+        j = subdomain(sub)%elsub%pos
+        el_inserted(subdomain(sub)%elsub%data(1:j)) = .true.
+        level_loop: do level=0, ddinfo%overlaps
+          do i=1, subdomain(sub)%bcluster%pos
+            coarse_el = subdomain(sub)%bcluster%data(i)
+            bound_loop: do k=1, ddcoarse_mesh(coarse_el)%overlap_el(level)%pos
+              el = ddcoarse_mesh(coarse_el)%overlap_el(level)%data(k)
+              elsub = ddinfo%coarseinsub(ddinfo%elincoarse(el)) 
+              if (level > 0) then
+          if (elsub /= sub) then
+            insert = .true.
+          else
+            insert = .false.
+          end if
+              else
+          insert = .false.
+          do ii = 1, ubound(elements%neighbours,2)
+            vecino = elements%neighbours(el,ii)
+            if (vecino > 0) then
+              vecsub = ddinfo%coarseinsub(ddinfo%elincoarse(vecino))
+            else
+              vecsub = 0
+            end if
+            if (vecsub /= sub .and. vecsub /= 0) then
+              insert = .true.
+              EXIT
+            end if
+                end do
+              end if
+              if (level > 0 .and. insert .and. .not. el_inserted(el)) then
+          call subdomain(sub)%elsub%fill(el)
+          call subdomain(sub)%olayers(level)%fill(el)
+          el_inserted(el) = .true.
+              else if (level == 0 .and. insert) then
+          call subdomain(sub)%olayers(level)%fill(el)
+              end if
+            end do bound_loop
+          end do
 	end do level_loop
 	
 	!-------
@@ -383,29 +411,29 @@ module decomp_tools
 	
 	
         j = subdomain(sub)%elsub%pos
-	el_inserted(subdomain(sub)%elsub%data(1:j)) = .false.
+        el_inserted(subdomain(sub)%elsub%data(1:j)) = .false.
 
       end do sub_loop2
 
 	
             
       do sub=1, ubound(subdomain,1)
-	allocate(subdomain(sub)%ondlayers(0:ddinfo%overlaps))
-	do level=0, ddinfo%overlaps-1
-	  do i=1, subdomain(sub)%olayers(level)%pos
-	    el = subdomain(sub)%olayers(level)%data(i)
-	    do j=1, ubound(elements%data,2)
-	      nd = elements%data(el, j)
-	      nd_bellow(nd) = .true.
-	    end do
-	  end do
-	  do i=1, subdomain(sub)%olayers(level+1)%pos
-	    el = subdomain(sub)%olayers(level+1)%data(i)
-	    do j=1, ubound(elements%data,2)
-	      nd = elements%data(el, j)
-	      if (.not. nd_inserted(nd) .and. nd_bellow(nd) ) then
-		call subdomain(sub)%ondlayers(level)%fill(nd)
-		nd_inserted(nd) = .true.
+        allocate(subdomain(sub)%ondlayers(0:ddinfo%overlaps))
+        do level=0, ddinfo%overlaps-1
+          do i=1, subdomain(sub)%olayers(level)%pos
+            el = subdomain(sub)%olayers(level)%data(i)
+            do j=1, ubound(elements%data,2)
+              nd = elements%data(el, j)
+              nd_bellow(nd) = .true.
+            end do
+          end do
+          do i=1, subdomain(sub)%olayers(level+1)%pos
+            el = subdomain(sub)%olayers(level+1)%data(i)
+            do j=1, ubound(elements%data,2)
+              nd = elements%data(el, j)
+              if (.not. nd_inserted(nd) .and. nd_bellow(nd) ) then
+          call subdomain(sub)%ondlayers(level)%fill(nd)
+          nd_inserted(nd) = .true.
               end if
             end do
           end do
@@ -414,89 +442,89 @@ module decomp_tools
         ! fill the last level
         level = ddinfo%overlaps
         do i=1, subdomain(sub)%olayers(level)%pos
-	  el = subdomain(sub)%olayers(level)%data(i)
-	  do j=1, ubound(elements%data,2)
-	    nd = elements%data(el, j)
-	    if (.not. nd_inserted(nd)) then
-	      call subdomain(sub)%ondlayers(level)%fill(nd)
-	      nd_inserted(nd) = .true.
-	    end if
-	  end do
-	end do
+          el = subdomain(sub)%olayers(level)%data(i)
+          do j=1, ubound(elements%data,2)
+            nd = elements%data(el, j)
+            if (.not. nd_inserted(nd)) then
+              call subdomain(sub)%ondlayers(level)%fill(nd)
+              nd_inserted(nd) = .true.
+            end if
+          end do
+        end do
 
 	
        ! if subcycling, add nodes, that lie out of the domain, but still have a graph connection to the nodes, that lie inside the domain
-	if (drutes_config%it_method == 2) then
-	  do i = 1, subdomain(sub)%elextra%pos
-	    el = subdomain(sub)%elextra%data(i)
-	    do j=1, ubound(elements%data,2)
-	      nd = elements%data(el, j)
-	      call ddinfo%nodesinextsub(nd)%nrfill(sub)
-	      if (.not. nd_inserted(nd)) then
-		call subdomain(sub)%ndextra%fill(nd)
-		nd_inserted(nd) = .true.
-	      end if
-	    end do
-	  end do
+        if (drutes_config%it_method == 2) then
+          do i = 1, subdomain(sub)%elextra%pos
+            el = subdomain(sub)%elextra%data(i)
+            do j=1, ubound(elements%data,2)
+              nd = elements%data(el, j)
+              call ddinfo%nodesinextsub(nd)%nrfill(sub)
+              if (.not. nd_inserted(nd)) then
+                call subdomain(sub)%ndextra%fill(nd)
+                nd_inserted(nd) = .true.
+              end if
+            end do
+          end do
 	 
           j = subdomain(sub)%elextra%pos
           el_inserted(subdomain(sub)%elextra%data(1:j)) = .true.
 	 
-	  j = subdomain(sub)%ndextra%pos
-	  do i = 1, j
-	    nd = subdomain(sub)%ndextra%data(i)
-	    do k = 1, nodes%el2integ(nd)%pos
-	      el = nodes%el2integ(nd)%data(k)
-	      if (.not. el_inserted(el)) then
-		do l=1, ubound(elements%data,2)
-		  nd2 = elements%data(el,l)
-		  if (.not. nd_inserted(nd2)) then
-		    call subdomain(sub)%ndextra%fill(nd2)
-		    nd_inserted(nd2) = .true.
-		  end if
-		end do
-	      end if
-	    end do
-	  end do
-	  
-	  j = subdomain(sub)%ndextra%pos
-	  nd_inserted(subdomain(sub)%ndextra%data(1:j)) = .false.
-	  
-	  j = subdomain(sub)%elextra%pos
+          j = subdomain(sub)%ndextra%pos
+          do i = 1, j
+            nd = subdomain(sub)%ndextra%data(i)
+            do k = 1, nodes%el2integ(nd)%pos
+              el = nodes%el2integ(nd)%data(k)
+              if (.not. el_inserted(el)) then
+                do l=1, ubound(elements%data,2)
+                nd2 = elements%data(el,l)
+                if (.not. nd_inserted(nd2)) then
+                  call subdomain(sub)%ndextra%fill(nd2)
+                  nd_inserted(nd2) = .true.
+                end if
+              end do
+            end if
+          end do
+        end do
+      
+          j = subdomain(sub)%ndextra%pos
+          nd_inserted(subdomain(sub)%ndextra%data(1:j)) = .false.
+            
+          j = subdomain(sub)%elextra%pos
           el_inserted(subdomain(sub)%elextra%data(1:j)) = .false.
-	end if
+      end if
 	  
 
 
-	! set everywhere in nd_inserted .false.
-	do level = 0, ddinfo%overlaps
-	  j = subdomain(sub)%ondlayers(level)%pos
-          if (allocated(subdomain(sub)%ondlayers(level)%data)) then
-	    nd_inserted(subdomain(sub)%ondlayers(level)%data(1:j)) = .false.
-	    nd_bellow(subdomain(sub)%ondlayers(level)%data(1:j)) = .false.
-	  end if
-	end do
+      ! set everywhere in nd_inserted .false.
+      do level = 0, ddinfo%overlaps
+        j = subdomain(sub)%ondlayers(level)%pos
+              if (allocated(subdomain(sub)%ondlayers(level)%data)) then
+          nd_inserted(subdomain(sub)%ondlayers(level)%data(1:j)) = .false.
+          nd_bellow(subdomain(sub)%ondlayers(level)%data(1:j)) = .false.
+        end if
+      end do
 	
 
-	!create the prolongator matrix, set everywhere just ones 
-	do i=1, subdomain(sub)%elsub%pos
-	  el = subdomain(sub)%elsub%data(i)
-	  do j=1, ubound(elements%data,2)
-	    nd = elements%data(el, j)
-	    pnd = pde(1)%permut(nd)
-	    if (pnd > 0 .and. .not. nd_inserted(nd)) then
-	      call prolong_mtx%set(1.0_rkind, pnd, sub)
-	      nd_inserted(nd) = .true.
-	    end if
-	  end do
-	end do
+      !create the prolongator matrix, set everywhere just ones 
+      do i=1, subdomain(sub)%elsub%pos
+        el = subdomain(sub)%elsub%data(i)
+        do j=1, ubound(elements%data,2)
+          nd = elements%data(el, j)
+          pnd = pde(1)%permut(nd)
+          if (pnd > 0 .and. .not. nd_inserted(nd)) then
+            call prolong_mtx%set(1.0_rkind, pnd, sub)
+            nd_inserted(nd) = .true.
+          end if
+        end do
+      end do
 ! 	if (.not. subdomain(sub)%critical) then
 ! 	  nd_inserted = .false.
 ! 	else
-	  do i=1, subdomain(sub)%elsub%pos
-	    el = subdomain(sub)%elsub%data(i)
+      do i=1, subdomain(sub)%elsub%pos
+        el = subdomain(sub)%elsub%data(i)
             nd_inserted(elements%data(el,:)) = .false.
-          end do
+      end do
 !         end if
       end do
       
@@ -505,39 +533,35 @@ module decomp_tools
       !adjust the prolongator matrix
       
       do sub=1, ubound(subdomain,1)
-	do level = 1, ddinfo%overlaps
-	  do j=1, subdomain(sub)%ondlayers(level)%pos
-	    nd = subdomain(sub)%ondlayers(level)%data(j)
-	    pnd = pde(1)%permut(nd)
-	    if (pnd > 0) then
-	      call prolong_mtx%set((ddinfo%overlaps-level)*1.0_rkind/ddinfo%overlaps, pnd, sub)
-	    end if
-	  end do
-	end do
+        do level = 1, ddinfo%overlaps
+          do j=1, subdomain(sub)%ondlayers(level)%pos
+            nd = subdomain(sub)%ondlayers(level)%data(j)
+            pnd = pde(1)%permut(nd)
+            if (pnd > 0) then
+              call prolong_mtx%set((ddinfo%overlaps-level)*1.0_rkind/ddinfo%overlaps, pnd, sub)
+            end if
+          end do
+        end do
       end do
-      
+    
       do i=1, prolong_mtx%getn()
-	call prolong_mtx%getrow(i=i, v=tmprow, jj=indexes, nelem=ii)
-	if (ii > 1) then
-	  tmp = 0.0_rkind
-	  do j=1,ii
-	    tmp = tmp + tmprow(j)
-	  end do
-	  tmprow = tmprow / tmp
-	  do j=1, ii
-	    call prolong_mtx%set(tmprow(j), i, indexes(j))
-	  end do
-	end if
-      end do
+        call prolong_mtx%getrow(i=i, v=tmprow, jj=indexes, nelem=ii)
+        if (ii > 1) then
+          tmp = 0.0_rkind
+          do j=1,ii
+            tmp = tmp + tmprow(j)
+          end do
+          tmprow = tmprow / tmp
+          do j=1, ii
+            call prolong_mtx%set(tmprow(j), i, indexes(j))
+          end do
+        end if
+    end do
       
-
-      
-
-
-	  
     
     end subroutine addlevel
     
+    !>build matrix for coarse level
     subroutine build_coarsemtx(resvct)
       use typy
       use globals
@@ -562,10 +586,10 @@ module decomp_tools
       allocate(column(fin))
                   
       do sub=1, ubound(subdomain,1)
-	call prolong_mtx%getcol(sub, tmpdata, indexes, i)
-	column = 0
-	column(indexes(1:i)) = tmpdata(1:i)
-	call mulAx_dd(column, Axcol(:,sub))
+        call prolong_mtx%getcol(sub, tmpdata, indexes, i)
+        column = 0
+        column(indexes(1:i)) = tmpdata(1:i)
+        call mulAx_dd(column, Axcol(:,sub))
       end do
       
       i = ubound(subdomain,1)
@@ -574,22 +598,22 @@ module decomp_tools
       allocate(coarsecol(ubound(subdomain,1)))
       
       do sub=1, ubound(subdomain,1)
-	coarsecol = prolong_mtx%mulT(Axcol(:,sub))
-	do i=1, ubound(coarsecol,1)
-	  if (abs(coarsecol(i)) > epsilon(coarsecol(i))) then
-	    call coarse_mtx%set(coarsecol(i), i, sub)
-	  end if
-	end do
+        coarsecol = prolong_mtx%mulT(Axcol(:,sub))
+        do i=1, ubound(coarsecol,1)
+          if (abs(coarsecol(i)) > epsilon(coarsecol(i))) then
+            call coarse_mtx%set(coarsecol(i), i, sub)
+          end if
+        end do
       end do
       
       if (.not. allocated(bcoarse)) then
-	allocate(bcoarse(ubound(subdomain,1)))
-	allocate(xcoarse(ubound(subdomain,1)))
-      else if (ubound(bcoarse,1) /= ubound(subdomain,1)) then
-	deallocate(bcoarse)
-	allocate(bcoarse(ubound(subdomain,1)))
-	deallocate(xcoarse)
-	allocate(xcoarse(ubound(subdomain,1)))
+        allocate(bcoarse(ubound(subdomain,1)))
+        allocate(xcoarse(ubound(subdomain,1)))
+            else if (ubound(bcoarse,1) /= ubound(subdomain,1)) then
+        deallocate(bcoarse)
+        allocate(bcoarse(ubound(subdomain,1)))
+        deallocate(xcoarse)
+        allocate(xcoarse(ubound(subdomain,1)))
       end if
       
       bcoarse = prolong_mtx%mult(resvct)
@@ -600,6 +624,7 @@ module decomp_tools
     end subroutine build_coarsemtx
  
  
+    !> init for adding overlapping level
     subroutine init_addlevel()
       use typy
       use decomp_vars
@@ -614,48 +639,48 @@ module decomp_tools
       allocate(ddinfo%elincoarse(elements%kolik))      
 	
       do coarse_el=1, ubound(ddcoarse_mesh,1)
-	do i=1, ubound(ddcoarse_mesh(coarse_el)%elements,1)
-	  el = ddcoarse_mesh(coarse_el)%elements(i)
-	  ddinfo%elincoarse(el) = coarse_el
-	end do
-	allocate(ddcoarse_mesh(coarse_el)%overlap_el(0:ddinfo%overlaps))
+        do i=1, ubound(ddcoarse_mesh(coarse_el)%elements,1)
+          el = ddcoarse_mesh(coarse_el)%elements(i)
+          ddinfo%elincoarse(el) = coarse_el
+        end do
+        allocate(ddcoarse_mesh(coarse_el)%overlap_el(0:ddinfo%overlaps))
       end do
 	
 
       do coarse_el=1, ubound(ddcoarse_mesh,1)
-	do i=1, ubound(ddcoarse_mesh(coarse_el)%elements,1)
-	  el = ddcoarse_mesh(coarse_el)%elements(i)
-	  border = .false.
-	  vecino_loop: do j=1, ubound(elements%data,2)
-			vecino = elements%neighbours(el, j)
-			if (vecino > 0) then
-			  if (ddinfo%elincoarse(el) /= ddinfo%elincoarse(vecino)) then
-			    border = .true.
-			    EXIT vecino_loop
-			  end if
-			end if
-	  end do vecino_loop
-	  if (border) then
-	    call ddcoarse_mesh(coarse_el)%overlap_el(0)%fill(el)
-	  end if
-	end do
+        do i=1, ubound(ddcoarse_mesh(coarse_el)%elements,1)
+          el = ddcoarse_mesh(coarse_el)%elements(i)
+          border = .false.
+          vecino_loop: do j=1, ubound(elements%data,2)
+            vecino = elements%neighbours(el, j)
+            if (vecino > 0) then
+              if (ddinfo%elincoarse(el) /= ddinfo%elincoarse(vecino)) then
+                border = .true.
+                EXIT vecino_loop
+              end if
+            end if
+          end do vecino_loop
+          if (border) then
+            call ddcoarse_mesh(coarse_el)%overlap_el(0)%fill(el)
+          end if
+        end do
       end do
       
       
       do level = 1, ddinfo%overlaps
-	do coarse_el=1, coarse_elements%kolik
-	  border_loop: do i=1, ddcoarse_mesh(coarse_el)%overlap_el(level-1)%pos
-			  el = ddcoarse_mesh(coarse_el)%overlap_el(level-1)%data(i)
-			  do j=1, ubound(elements%data,2)	
-			    vecino = elements%neighbours(el, j)
-			    if (vecino > 0) then
-			      if (coarse_el /= ddinfo%elincoarse(vecino)) then
-				if (add_el(coarse_el, level, vecino)) then
-				  call ddcoarse_mesh(coarse_el)%overlap_el(level)%nrfill(vecino)
-				end if
-			      end if
-			    end if
-			  end do 
+        do coarse_el=1, coarse_elements%kolik
+          border_loop: do i=1, ddcoarse_mesh(coarse_el)%overlap_el(level-1)%pos
+              el = ddcoarse_mesh(coarse_el)%overlap_el(level-1)%data(i)
+              do j=1, ubound(elements%data,2)	
+                vecino = elements%neighbours(el, j)
+                if (vecino > 0) then
+                  if (coarse_el /= ddinfo%elincoarse(vecino)) then
+              if (add_el(coarse_el, level, vecino)) then
+                call ddcoarse_mesh(coarse_el)%overlap_el(level)%nrfill(vecino)
+              end if
+                  end if
+                end if
+              end do 
           end do border_loop
         end do
       end do
@@ -666,6 +691,7 @@ module decomp_tools
 
     end subroutine init_addlevel
     
+    !> add element to overlapping level
     function add_el(coarse_el, level, el) result(add)
       use typy
       use globals
@@ -681,22 +707,22 @@ module decomp_tools
       add = .true.
       
       do i=0, level-1
-! 	call printmtx(ddcoarse_mesh(coarse_el)%overlap_el(i)) ; call wait()
-	do j=1, ddcoarse_mesh(coarse_el)%overlap_el(i)%pos
-! 	  print *, level-1, el ; stop
-	  if (allocated(ddcoarse_mesh(coarse_el)%overlap_el(i)%data)) then
-	    if (ddcoarse_mesh(coarse_el)%overlap_el(i)%data(j) == el) then
-	      add = .false.
-	      RETURN
-	    end if
-	  end if
-	end do
+      ! 	call printmtx(ddcoarse_mesh(coarse_el)%overlap_el(i)) ; call wait()
+        do j=1, ddcoarse_mesh(coarse_el)%overlap_el(i)%pos
+      ! 	  print *, level-1, el ; stop
+          if (allocated(ddcoarse_mesh(coarse_el)%overlap_el(i)%data)) then
+            if (ddcoarse_mesh(coarse_el)%overlap_el(i)%data(j) == el) then
+              add = .false.
+              RETURN
+            end if
+          end if
+        end do
       end do
     
     end function add_el
 
 
-
+    !> print subdomains into scilab readable files
      subroutine print_domains(behavior)
       use typy 
       use decomp_vars
@@ -730,24 +756,24 @@ module decomp_tools
 
 
       if (present(behavior)) then
-	select case(behavior)
-	  case("all_in_one")
-		mode = 0
-	  case("separately")
-		mode = 1
-	  case("domains_only")
-		mode = 2
-	  case default
-		print *, "incorrect argument of function decomp_tools::print_domains"
-		ERROR STOP
-	end select
-      else
-	mode = 0
+        select case(behavior)
+          case("all_in_one")
+          mode = 0
+          case("separately")
+          mode = 1
+          case("domains_only")
+          mode = 2
+          case default
+          print *, "incorrect argument of function decomp_tools::print_domains"
+          ERROR STOP
+        end select
+            else
+        mode = 0
       end if
       
       if (.not. allocated(deriv)) then
-	allocate(deriv(drutes_config%dimen))
-	decomp_print = 0
+        allocate(deriv(drutes_config%dimen))
+        decomp_print = 0
       end if
 
       decomp_print = decomp_print + 1
@@ -773,176 +799,180 @@ module decomp_tools
       write(unit=filenames(-1), fmt=forma) "out/dd/timestep-", decomp_print, ".sci" 
 
       npoints = ubound(coarse_elements%data,2)
-      
+          
       if (mode == 1 .or. decomp_print == 1) then
-	do i=lbound(ids,1), ubound(ids,1)
-	  call find_unit(ids(i), 6000)
-	  open(unit=ids(i), file=trim(filenames(i)), action="write", status="replace", iostat=ierr)
-	  if (ierr /= 0) then
-	    i_err=system("mkdir out/dd/petr") 
-	    if (i_err /= 0) then
-	      i_err=system("mkdir out/dd/")
-	      i_err=system("mkdir out/dd/petr")
-	      open(unit=ids(i), file=trim(filenames(i)), action="write", status="replace", iostat=ierr)
-	      if (i_err /=0 ) then
-		print *, "unable to open and create directory out/dd (is it UN*X type os?), called  from decomp_tools::print_domains"
-		ERROR STOP
-	      end if
-	    end if
-	    open(unit=ids(i), file=trim(filenames(i)), action="write", status="replace", iostat=ierr)
-	  end if
-	end do  
+        do i=lbound(ids,1), ubound(ids,1)
+          call find_unit(ids(i), 6000)
+          open(unit=ids(i), file=trim(filenames(i)), action="write", status="replace", iostat=ierr)
+          if (ierr /= 0) then
+            i_err=system("mkdir out/dd/petr") 
+            if (i_err /= 0) then
+              i_err=system("mkdir out/dd/")
+              i_err=system("mkdir out/dd/petr")
+              open(unit=ids(i), file=trim(filenames(i)), action="write", status="replace", iostat=ierr)
+              if (i_err /=0 ) then
+                print *, "unable to open and create directory out/dd (is it UN*X type os?), &
+                 called  from decomp_tools::print_domains"
+                ERROR STOP
+              end if
+            end if
+            open(unit=ids(i), file=trim(filenames(i)), action="write", status="replace", iostat=ierr)
+          end if
+        end do  
       end if
 
      do l=-1,1	  
-	write(unit=ids(l), fmt=*) "nt =", coarse_elements%kolik, ";"
-	write(unit=ids(l), fmt=*) "x=zeros(nt,", npoints,");"
-	write(unit=ids(l), fmt=*) "y=zeros(nt,", npoints ,");"
-	write(unit=ids(l), fmt=*) "z=zeros(nt,", npoints, ");"
+      write(unit=ids(l), fmt=*) "nt =", coarse_elements%kolik, ";"
+      write(unit=ids(l), fmt=*) "x=zeros(nt,", npoints,");"
+      write(unit=ids(l), fmt=*) "y=zeros(nt,", npoints ,");"
+      write(unit=ids(l), fmt=*) "z=zeros(nt,", npoints, ");"
 
 
-	do i=1, coarse_elements%kolik
-          n = npoints + 1
-	  do j=1,ubound(coarse_elements%data,2)
-	    body(j,1:2) = coarse_nodes%data(coarse_elements%data(i,n-j),:)
-	    body(j,4) = ddcoarse_mesh(i)%subdomain 
-            body(j,3) = ddcoarse_mesh(i)%iter_count
-            sub = ddinfo%coarseinsub(i)
-            body(j,5) = subdomain(sub)%tmpval
-	  end do
+      do i=1, coarse_elements%kolik
+              n = npoints + 1
+        do j=1,ubound(coarse_elements%data,2)
+          body(j,1:2) = coarse_nodes%data(coarse_elements%data(i,n-j),:)
+          body(j,4) = ddcoarse_mesh(i)%subdomain 
+                body(j,3) = ddcoarse_mesh(i)%iter_count
+                sub = ddinfo%coarseinsub(i)
+                body(j,5) = subdomain(sub)%tmpval
+        end do
 	  
 	
 
 	  
-	  vct1 = body(3, 1:2) - body(1, 1:2) 
-	  vct2 = body(3, 1:2) - body(2, 1:2)
-	  
-	  if ( (vct1(1)*vct2(2)-vct1(2)*vct2(1)) > 0.0_rkind) then
-	    vct_tmp = body(3,:)
-	    body(3,:) = body(2,:)
-	    body(2,:) = vct_tmp
-	  else
-	    CONTINUE
-	  end if
+          vct1 = body(3, 1:2) - body(1, 1:2) 
+          vct2 = body(3, 1:2) - body(2, 1:2)
+          
+          if ( (vct1(1)*vct2(2)-vct1(2)*vct2(1)) > 0.0_rkind) then
+            vct_tmp = body(3,:)
+            body(3,:) = body(2,:)
+            body(2,:) = vct_tmp
+          else
+            CONTINUE
+          end if
 
 
-	  write(unit=ids(l), fmt=*) "x(", i, ",1) =", body(1,1), ";"
-	  write(unit=ids(l), fmt=*) "x(", i, ",2) =", body(2,1), ";"
-	  write(unit=ids(l), fmt=*) "x(", i, ",3) =", body(3,1), ";"
-          if (npoints == 4) write(unit=ids(l), fmt=*) "x(", i, ",4) =", body(4,1), ";"
+          write(unit=ids(l), fmt=*) "x(", i, ",1) =", body(1,1), ";"
+          write(unit=ids(l), fmt=*) "x(", i, ",2) =", body(2,1), ";"
+          write(unit=ids(l), fmt=*) "x(", i, ",3) =", body(3,1), ";"
+                if (npoints == 4) write(unit=ids(l), fmt=*) "x(", i, ",4) =", body(4,1), ";"
 
 
-	  write(unit=ids(l), fmt=*) "y(", i, ",1) =", body(1,2), ";"
-	  write(unit=ids(l), fmt=*) "y(", i, ",2) =", body(2,2), ";"
-	  write(unit=ids(l), fmt=*) "y(", i, ",3) =", body(3,2), ";"
-	  if (npoints == 4) write(unit=ids(l), fmt=*) "y(", i, ",4) =", body(4,2), ";"
+          write(unit=ids(l), fmt=*) "y(", i, ",1) =", body(1,2), ";"
+          write(unit=ids(l), fmt=*) "y(", i, ",2) =", body(2,2), ";"
+          write(unit=ids(l), fmt=*) "y(", i, ",3) =", body(3,2), ";"
+          if (npoints == 4) write(unit=ids(l), fmt=*) "y(", i, ",4) =", body(4,2), ";"
 
-	  if (l>=0) then
-	      write(unit=ids(l), fmt=*) "z(", i, ",1) =", body(1,3+l), ";"
-	      write(unit=ids(l), fmt=*) "z(", i, ",2) =", body(2,3+l), ";"
-	      write(unit=ids(l), fmt=*) "z(", i, ",3) =", body(3,3+l), ";"
-	    if (npoints == 4) write(unit=ids(l), fmt=*) "z(", i, ",4) =", body(4,3+l), ";"
-	  else
-	    write(unit=ids(l), fmt=*) "z(", i, ",1) =", body(1,5), ";"
-	    write(unit=ids(l), fmt=*) "z(", i, ",2) =", body(2,5), ";"
-	    write(unit=ids(l), fmt=*) "z(", i, ",3) =", body(3,5), ";"
-	    if (npoints == 4) write(unit=ids(l), fmt=*) "z(", i, ",4) =", body(4,5), ";"
-	  end if
+          if (l>=0) then
+              write(unit=ids(l), fmt=*) "z(", i, ",1) =", body(1,3+l), ";"
+              write(unit=ids(l), fmt=*) "z(", i, ",2) =", body(2,3+l), ";"
+              write(unit=ids(l), fmt=*) "z(", i, ",3) =", body(3,3+l), ";"
+            if (npoints == 4) write(unit=ids(l), fmt=*) "z(", i, ",4) =", body(4,3+l), ";"
+          else
+            write(unit=ids(l), fmt=*) "z(", i, ",1) =", body(1,5), ";"
+            write(unit=ids(l), fmt=*) "z(", i, ",2) =", body(2,5), ";"
+            write(unit=ids(l), fmt=*) "z(", i, ",3) =", body(3,5), ";"
+            if (npoints == 4) write(unit=ids(l), fmt=*) "z(", i, ",4) =", body(4,5), ";"
+          end if
 
-	end do
-	
-    
-	if (l > -1) then
-	  write(unit=ids(l), fmt=*) "f=gcf();"
-	  write(unit=ids(l), fmt=*) "clf(f,'reset');"
-    ! !       write(unit=ids(1), fmt=*) "f.color_map=jetcolormap(max(z));"
-	  write(unit=ids(l), fmt=*) "n=ceil(max(z));"
-	  write(unit=ids(l), fmt=*)  "r=linspace(0,1,n)';"
-	  write(unit=ids(l), fmt=*)  "g=linspace(1,0,n)';"
-	  write(unit=ids(l), fmt=*)  " b=ones(r);"
+        end do
+        
+          
+        if (l > -1) then
+          write(unit=ids(l), fmt=*) "f=gcf();"
+          write(unit=ids(l), fmt=*) "clf(f,'reset');"
+          ! !       write(unit=ids(1), fmt=*) "f.color_map=jetcolormap(max(z));"
+          write(unit=ids(l), fmt=*) "n=ceil(max(z));"
+          write(unit=ids(l), fmt=*)  "r=linspace(0,1,n)';"
+          write(unit=ids(l), fmt=*)  "g=linspace(1,0,n)';"
+          write(unit=ids(l), fmt=*)  " b=ones(r);"
 
-	  write(unit=ids(l), fmt=*) "for i=1,n;"
-	  write(unit=ids(l), fmt=*) "    if (i>1) then;"
-	  write(unit=ids(l), fmt=*) "        if (b(i-1) > 0) then;"
-	  write(unit=ids(l), fmt=*) "            b(i) = -1;"
-	  write(unit=ids(l), fmt=*) "        else;"
-	  write(unit=ids(l), fmt=*) "            b(i)=1;"
-	  write(unit=ids(l), fmt=*) "        end;"
-	  write(unit=ids(l), fmt=*) "    else;"
-	  write(unit=ids(l), fmt=*) "        b(i) = 0;"
-	  write(unit=ids(l), fmt=*) "    end;"
-	  write(unit=ids(l), fmt=*) "end;"
-	  write(unit=ids(l), fmt=*) "cmap=[r g b];"
-	  write(unit=ids(l), fmt=*) "f=gcf();"
-	  write(unit=ids(l), fmt=*) "f.color_map=cmap;"
+          write(unit=ids(l), fmt=*) "for i=1,n;"
+          write(unit=ids(l), fmt=*) "    if (i>1) then;"
+          write(unit=ids(l), fmt=*) "        if (b(i-1) > 0) then;"
+          write(unit=ids(l), fmt=*) "            b(i) = -1;"
+          write(unit=ids(l), fmt=*) "        else;"
+          write(unit=ids(l), fmt=*) "            b(i)=1;"
+          write(unit=ids(l), fmt=*) "        end;"
+          write(unit=ids(l), fmt=*) "    else;"
+          write(unit=ids(l), fmt=*) "        b(i) = 0;"
+          write(unit=ids(l), fmt=*) "    end;"
+          write(unit=ids(l), fmt=*) "end;"
+          write(unit=ids(l), fmt=*) "cmap=[r g b];"
+          write(unit=ids(l), fmt=*) "f=gcf();"
+          write(unit=ids(l), fmt=*) "f.color_map=cmap;"
 
-	  write(unit=ids(l), fmt=*) "colorbar(floor(min(z)),ceil(max(z)),colminmax=[floor(min(z)) ceil(max(z))], fmt='%.0f');"
-	  write(unit=ids(l), fmt=*) "plot3d1(x',y',z',alpha=0, theta=-90);"
-	  ! syntax from scilab manual:  xs2png(0, 'foo.png')
-	  write(unit=ids(l), fmt="(a,I6.6,a)" ) "xs2png(0, 'domains-", decomp_print , ".png');" 
-	else
-	  write(unit=ids(l), fmt=*) "f=gcf();"
-	  write(unit=ids(l), fmt=*) "clf(f,'reset');"
-	  write(unit=ids(l), fmt=*) "colorbar(min(z),max(z));"
-	  write(unit=ids(l), fmt=*) "plot3d1(x',y',z',alpha=0, theta=-90);"
-	  write(unit=ids(l), fmt="(a,I6.6,a)" ) "xs2png(0, 'domains_dt-", decomp_print , ".png');"
-	end if
+          write(unit=ids(l), fmt=*) "colorbar(floor(min(z)),ceil(max(z)),colminmax=[floor(min(z)) ceil(max(z))], fmt='%.0f');"
+          write(unit=ids(l), fmt=*) "plot3d1(x',y',z',alpha=0, theta=-90);"
+          ! syntax from scilab manual:  xs2png(0, 'foo.png')
+          write(unit=ids(l), fmt="(a,I6.6,a)" ) "xs2png(0, 'domains-", decomp_print , ".png');" 
+        else
+          write(unit=ids(l), fmt=*) "f=gcf();"
+          write(unit=ids(l), fmt=*) "clf(f,'reset');"
+          write(unit=ids(l), fmt=*) "colorbar(min(z),max(z));"
+          write(unit=ids(l), fmt=*) "plot3d1(x',y',z',alpha=0, theta=-90);"
+          write(unit=ids(l), fmt="(a,I6.6,a)" ) "xs2png(0, 'domains_dt-", decomp_print , ".png');"
+        end if
 
       end do
 
       select case(mode)
         case(0)
-	  do l=lbound(ids,1), ubound(ids,1)
-	    write(unit=ids(l), fmt=*) "clear;"
-	    call flush(ids(l))
-	  end do
+          do l=lbound(ids,1), ubound(ids,1)
+            write(unit=ids(l), fmt=*) "clear;"
+            call flush(ids(l))
+          end do
 
         case(2)
-	  do l=-1,1
-	    close(ids(l))
-	  end do
+          do l=-1,1
+            close(ids(l))
+          end do
 
         case(1)
 
-	  do i=1, ubound(pde_common%bvect,1)
-	    write(unit=ids(2), fmt=*) pde_common%bvect(i)
-	  end do
+          do i=1, ubound(pde_common%bvect,1)
+            write(unit=ids(2), fmt=*) pde_common%bvect(i)
+          end do
 
-	  write(unit=ids(3), fmt=*) "#--node id (permutated in stiff. mtx)----node id (physical)---coordinates--------subdomain id----"
-	  write(unit=ids(3), fmt=*) "#-----------------------------------------------------------------------------------------"
+          write(unit=ids(3), fmt=*) &
+          "#--node id (permutated in stiff. mtx)----node id (physical)---coordinates--------subdomain id----"
+          write(unit=ids(3), fmt=*) "#-----------------------------------------------------------------------------------------"
 
-	  do i=1, coarse_elements%kolik
-	    row = 0
-	    do j=1,ubound(ddcoarse_mesh(i)%elements,1)
-	      do k=1,3
-		call nodes_domain%fill(pde(1)%permut(elements%data(ddcoarse_mesh(i)%elements(j),k)))
-		call nodes_domain_invprmt%fill(elements%data(ddcoarse_mesh(i)%elements(j),k))
-!                     nodes_domain(row) = pde(1)%permut(elements%data(ddcoarse_mesh(i)%elements(j),k), 2)
-	      end do
-	    end do  
+          do i=1, coarse_elements%kolik
+            row = 0
+            do j=1,ubound(ddcoarse_mesh(i)%elements,1)
+              do k=1,3
+          call nodes_domain%fill(pde(1)%permut(elements%data(ddcoarse_mesh(i)%elements(j),k)))
+          call nodes_domain_invprmt%fill(elements%data(ddcoarse_mesh(i)%elements(j),k))
+      !                     nodes_domain(row) = pde(1)%permut(elements%data(ddcoarse_mesh(i)%elements(j),k), 2)
+              end do
+            end do  
 
-	    do j=1, nodes_domain%pos
-	      write(ids(3), fmt=*)  nodes_domain%data(j), nodes_domain_invprmt%data(j), &
-	       nodes%data(nodes_domain_invprmt%data(j),:), ddcoarse_mesh(i)%subdomain
-	    end do
-	  end do
+            do j=1, nodes_domain%pos
+              write(ids(3), fmt=*)  nodes_domain%data(j), nodes_domain_invprmt%data(j), &
+               nodes%data(nodes_domain_invprmt%data(j),:), ddcoarse_mesh(i)%subdomain
+            end do
+          end do
 
-	  call nodes_domain%clear(full = .true.)
-	  call nodes_domain_invprmt%clear(full = .true.)
-	  
-	  do i=1, nodes%kolik
-	    write(unit = ids(6), fmt=*) i, pde(1)%solution(i)
-	  end do
-	      
-	  do i=lbound(ids,1), ubound(ids,1)
-	    close(ids(i))
-	  end do
+          call nodes_domain%clear(full = .true.)
+          call nodes_domain_invprmt%clear(full = .true.)
+          
+          do i=1, nodes%kolik
+            write(unit = ids(6), fmt=*) i, pde(1)%solution(i)
+          end do
+              
+          do i=lbound(ids,1), ubound(ids,1)
+            close(ids(i))
+          end do
  
       end select
 
 
     end subroutine print_domains
 
+    
+    !> print subdomains with elements in scilab readable files
      subroutine print_elements_dd(behavior)
       use typy 
       use decomp_vars

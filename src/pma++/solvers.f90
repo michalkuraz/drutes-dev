@@ -534,7 +534,7 @@ module solvers
         dprev  = -1
         dstartnext = -1
         degsmin = 0
-    !    print *,"step2.1"
+        print *,"step2.1"
         do i=1, A%getn()
             !print *,"i=",i
             call A%getrow(i,r1,ri1,sr1,mp1)
@@ -881,7 +881,7 @@ module solvers
         integer(kind=ikind), dimension(:), allocatable :: perm1, perm2
         integer(kind=ikind), dimension(:), allocatable :: iperm1, iperm2
         integer(kind=ikind) :: n,m,i,j, ip, ip2
-        real(kind=rkind), dimension(1:LDU%getn()) :: diag
+        real(kind=rkind), dimension(1:LDU%getn()) :: diag, xw
         real(kind=rkind), dimension(:), allocatable :: v
         integer(kind=ikind), dimension(:), allocatable :: ii
         integer(kind=ikind) :: nelem
@@ -950,13 +950,16 @@ module solvers
             print *, "Prava strana"
             print *,x
         end if
+        xw = 0
         diag(perm2(1))=LDU%get(perm1(1),perm2(1))
         mask = .false.
         mask(perm2(1)) = .true.
+        xw(perm2(1)) = b(perm1(1))
         do i = 2,n
             ip = perm1(i)
             ip2 = perm2(i)
             diag(ip2)= LDU%get(ip,ip2)
+            xw(ip2) = b(ip)
             call LDU%getrow(ip,v,ii,nelem,mask)
             if (ilv==1) then
                 print *, "i=",i, ip, nelem, mask
@@ -964,16 +967,16 @@ module solvers
                 print *, v(1:nelem)
             end if
             do j=1,nelem
-                if ((ii(j)) == ip) then
+                if ((ii(j)) == ip2) then
                     ! jsem na diagonale
                 diag(ip2) = v(j)
                 else
                     if (ilv == 1) then
-                        print *, j, x(ip), v(j), x(ii(j)), ii(j)
+                        print *, j, x(ip), v(j), xw(ii(j)), ii(j)
                     end if
-                    x(ip) = x(ip) - v(j)*x(ii(j))
+                    xw(ip2) = xw(ip2) - v(j)*xw(ii(j))
                     if (ilv == 1) then
-                        print *, j, x(ip), v(j), x(ii(j)), ii(j)
+                        print *, j, x(ip), v(j), xw(ii(j)), ii(j)
                     end if
                 end if
             end do
@@ -982,16 +985,21 @@ module solvers
                 print *, perm2
                 print *,ip,mask
                 print *,ii
-                print *,x
+                print *,xw
             end if
             mask(ip2) = .true.
         end do
+        x = xw
         if (ilv == 1) then
-            print *, "po primem chodu -------------------------------------"
+            print *, "po primem chodu ------------------------------------"
             print *,x
         end if
         ! 2. D z = y
-        x = x/diag  ! tady zalezi na poradi, potreba prezkoumat
+        !x = x/diag ! tady zalezi na poradi, potreba prezkoumat
+        do i = 1,n
+            xw(perm1(i)) = x(perm2(i))/LDU%get(perm1(i),perm2(i))
+        end do
+        x = xw
         if (ilv==1) then
             print *, "po deleni diagonalou --------------------------------"
             print *,x
@@ -1000,26 +1008,29 @@ module solvers
         ! 3. U x = z
         mask = .false.
         mask(perm2(n)) = .true.
+        xw(perm2(n)) = x(perm1(n))
         do i=n-1,1,-1
             ip = perm1(i)
             ip2 =perm2(i)
+            xw(ip2) = x(ip)
             call LDU%getrow(ip,v,ii,nelem,mask)
             do j=1,nelem
                 if (ii(j) == ip2) then
                     ! jsem na diagonale
-                diag(ip) = v(j)
                 else
-                    x(ip) = x(ip) - v(j)*x(ii(j))
+                    xw(ip2) = xw(ip2) - v(j)*xw(ii(j))
                 end if
             end do
             if (ilv==1) then
                 print *,perm1
-                print *,ip,mask
-                print *,ii
+                print *,ip, ip2, mask
+                print *,ii(1:nelem)
+                print *, v(1:nelem)
                 print *,x
             end if
             mask(ip2) = .true.
         end do
+        x = xw
 
     end subroutine LDUback
 
@@ -1390,8 +1401,8 @@ module solvers
             opcnt%div = opcnt%div + 1
 
             !! odhadnout vlastni cisla
-            call esteig(l1,l2,cnt,alfa,beta)
-            print *, "odhad vl. cisel:",l1,l2
+!             call esteig(l1,l2,cnt,alfa,beta)
+!             print *, "odhad vl. cisel:",l1,l2
             !! hotovo
 
             cnt = cnt + 1
@@ -1862,9 +1873,9 @@ module solvers
             opcnt%mul = opcnt%mul + 4*n   + n
             opcnt%div = opcnt%div + 1
 
-            !! odhadnout vlastni cisla
-            call esteig(l1,l2,cnt,alfa,beta)
-            print *, "odhad vl. cisel:",l1,l2
+             !! odhadnout vlastni cisla
+!             call esteig(l1,l2,cnt,alfa,beta)
+!             print *, "odhad vl. cisel:",l1,l2
             !! hotovo
 
             cnt = cnt + 1
@@ -2052,12 +2063,20 @@ module solvers
         class(matrix), intent(in) :: A
         !> mapa povolujici jdnotlive vrcholy
         integer(kind=ikind),dimension(:),intent(inout) :: mapa
-        !> uktualni sada vrstev
+        !> aktualni sada vrstev
         type(vrstvy), intent(inout) :: levelset
+
+        integer(kind=ikind) :: i
 
         if (levelset%nlev == 0) Stop "Chybna pouziti addlevel"
         ! posledni vrstva je v od levelset%levstart(nlev) do
         ! levelset%lesvstart(nlev+1)-1
+        do i = levelset%levstart(levelset%nlev),&
+                levelset%levstart(levelset%nlev+1)
+
+        end do
+
+
 
     end subroutine addlevel
 

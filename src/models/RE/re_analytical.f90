@@ -1,3 +1,46 @@
+! Copyright 2008 Michal Kuraz, Petr Mayer, Copyright 2016  Michal Kuraz, Petr Mayer, Johanna Bloecher
+
+! This file is part of DRUtES.
+! DRUtES is free software: you can redistribute it and/or modify
+! it under the terms of the GNU General Public License as published by
+! the Free Software Foundation, either version 3 of the License, or
+! (at your option) any later version.
+! DRUtES is distributed in the hope that it will be useful,
+! but WITHOUT ANY WARRANTY; without even the implied warranty of
+! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+! GNU General Public License for more details.
+! You should have received a copy of the GNU General Public License
+! along with DRUtES. If not, see <http://www.gnu.org/licenses/>.
+
+!> \file re_analytical.f90
+!! \brief Tracy's analytical solution for the Richards equation.
+!<
+
+!>
+!! Tracy's analytical solution for the Richards equation.
+!! The computational domain $\Omega$ is a rectangle  $ a [L]  \times L [L] $. !!The initial condition is a so-called "very dry" medium defined by pressure head \f$h_r\f$ [L].
+!! Boundary conditions for the pressure head are Dirichlet 
+!!\f$h(x,t) = h_r \quad \forall (x,t) \in \Gamma_{1,2,4} \times [0,T)\f$ on the bottom edge \f$\Gamma_1\f$
+!!and vertical edges \f$\Gamma_2\f$ and \f$\Gamma_4\f$, and on the 
+!!top edge \f$\Gamma_3\f$ the value of \f$h\f$ is given by the relation
+!!
+!!\f[ h(x,t) = \frac{1}{\alpha}\log \left(e^{\alpha h_r} + \left( 1- e^{\alpha h_r} \right)\sin \frac{\pi x_1}{a} \right)  \quad \forall (x,t) \in \Gamma_{3} \times [0,T) \f]
+!!
+!!The analytical solution formulas state as
+!!
+!!
+!!
+!!\f[ 
+!! h(x_1,x_3) =  \frac{1}{\alpha} \log \left( \textrm{e}^{\alpha h_r} + \frac{2h_0}{Lc} \textrm{sin} \left( \frac{\pi x_1}{a} \right) \textrm{e}^{\frac{\alpha}{2}(L-x_3)} \sum_{i=1}^{\infty}  (-1)^i \frac{\lambda_i}{\gamma} \textrm{sin}(\lambda_ix_3) \textrm{e}^{-\gamma t} +   \right.
+!! \qquad \left.\vphantom{\int_t} + \bar{h_0} \textrm{sin} \left( \frac{\pi x_1}{a} \right) \textrm{e}^{\frac{\alpha}{2}(L-x_3)}\frac{\textrm{sinh}(\beta x_3)}{\textrm{sinh}(\beta L)}  \right)
+!!\f]
+!!
+!!where
+!!
+!! \f[
+!!\beta =  \sqrt{ \frac{\alpha^2}{4}  + \left(\frac{\pi}{a}\right)^2 }, \hspace{4mm} c = !!\frac{\alpha(\theta_s - \theta_r}{K_s} ,
+!!\f]
+
 module re_analytical
 
   public :: tracy_bc, tracy

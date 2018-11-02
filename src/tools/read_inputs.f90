@@ -1,3 +1,23 @@
+! Copyright 2008 Michal Kuraz, Petr Mayer, Copyright 2016  Michal Kuraz, Petr Mayer, Johanna Bloecher
+
+! This file is part of DRUtES.
+! DRUtES is free software: you can redistribute it and/or modify
+! it under the terms of the GNU General Public License as published by
+! the Free Software Foundation, either version 3 of the License, or
+! (at your option) any later version.
+! DRUtES is distributed in the hope that it will be useful,
+! but WITHOUT ANY WARRANTY; without even the implied warranty of
+! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+! GNU General Public License for more details.
+! You should have received a copy of the GNU General Public License
+! along with DRUtES. If not, see <http://www.gnu.org/licenses/>.
+
+!> \file read_inputs.f90
+!! \brief Reader for input global and mesh files.
+!<
+
+
+
 module read_inputs
   public :: read_global
   public :: read_1dmesh_int, read_2dmesh_int, read_2dmesh_t3d, read_2dmesh_gmsh
@@ -22,7 +42,7 @@ module read_inputs
       character(len=4096) :: filename
       character(len=8192) :: msg
       integer :: local, global
-      character(len=256), dimension(7) :: probnames
+      character(len=256), dimension(9) :: probnames
       character(len=2) :: dimensions
       
       if (.not. www) then
@@ -34,7 +54,7 @@ module read_inputs
       end if
 
       
-      write(msg, *) "Incorrect option for problem type, the available options are:", new_line("a"),  new_line("a"), new_line("a"),&
+       write(msg, *) "Incorrect option for problem type, the available options are:", new_line("a"),  new_line("a"), new_line("a"),&
         "   RE = Richards equation, primary solution is total hydraulic head H",&
         new_line("a"), new_line("a"),  &
         "   REstd = Richards equation, primary solution is pressure head h, use for homogeneous porous media only, & 
@@ -47,8 +67,13 @@ module read_inputs
         "   Re_dual = Richards equation dual porosity with total hydraulic head", &
         new_line("a"),  new_line("a"), &
         "   heat = Heat conduction equation (Sophoclea, 1979)", &
+!         new_line("a"),  new_line("a"), &
+!         "   LTNE = Local Thermal Non-Equilibrium heat transport model", &
+!         new_line("a"),  new_line("a"), &
+!         "   frozen = Local Thermal Non-Equilibrium heat transport model", &
         new_line("a"),  new_line("a"), &
         new_line("a"),  new_line("a"), new_line("a")
+        
 	
 
       probnames(1) = "REtest"
@@ -58,6 +83,8 @@ module read_inputs
       probnames(5) = "Re_dual" 
       probnames(6) = "heat"
       probnames(7) = "REstd" 
+!       probnames(8) = "LTNE"
+!       probnames(9) = "frozen"
 	
       call fileread(drutes_config%name, local, trim(msg), options=probnames)
 
@@ -216,7 +243,10 @@ module read_inputs
       
       call fileread(pde_common%timeint_method, global, ranges=(/0_ikind,2_ikind/), errmsg=msg)
       
-      call fileread(objval%compute, global)
+      call fileread(objval%compute, global, errmsg="Set correct value [y/n] for evaluating objective function")
+      
+      call fileread(drutes_config%check4mass, global, & 
+        errmsg="Set correct value [y/n] for evaluating integral mass balance accuracy")
       
       call fileread(drutes_config%run_from_backup, global, errmsg="specify [y/n] if you want to relaunch your computation")
       

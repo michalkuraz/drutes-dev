@@ -18,7 +18,7 @@
 !! - \subpage ridka "Ridka matice"
 module mtx
     use typy
-    implicit none
+    implicit none 
     private
 
     !> obecna matice
@@ -95,8 +95,8 @@ module mtx
         !> nasobi jeden radek
         procedure  mulrow
     end type matrix
-
-
+! 
+! 
     !> interface pro ziskani prvku
     abstract interface
         !> funkce pro ziskani prvku
@@ -128,17 +128,17 @@ module mtx
             real(kind=rkind), intent(in) :: r
         end subroutine
     end interface
-
-    public :: mtxtest
-    public :: estimeigvalues
-
+! 
+!     public :: mtxtest
+!     public :: estimeigvalues
+! 
     contains
-
-    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    !! veci pro matrix - zcela univerzalni
-    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-
+! 
+!     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!     !! veci pro matrix - zcela univerzalni
+!     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! 
+! 
     !> nastavi podrobnost behovych reportu
     !! \param A ovlivnena matice
     !! \param level pozadovana uroven podrobnosti
@@ -169,7 +169,7 @@ module mtx
         v = v + r
         call a%set(v,i,j)
     end subroutine addmatrix
-
+! 
     !> rutina pro inicializaci
     subroutine initmatrix(a,n,m)
         use typy
@@ -186,7 +186,7 @@ module mtx
 
 
     !> vrati pocet radku
-    pure function getnmatrix(a) result(res)
+   pure function getnmatrix(a) result(res)
         use typy
         implicit none
         !> matice
@@ -367,27 +367,30 @@ module mtx
         !> matice
         class(matrix), intent(in) :: a
         integer(kind=ikind) :: i,j, nz
-        character(len=a%getm()) :: radek
+!         character(len=a%getm()) :: radek
         character(len=8) :: fmts
+        
+        
+        write(fmts,fmt=*) "function disabled due gcc 8.0 bugs"
 
-        nz = 0
-        write(fmts,fmt="(a2,i5,a1)") "(a",a%m,")"
-        do i=1,a%getn()
-            do j=1,a%getm()
-                if (a%get(i,j) == 0.0_rkind) then
-                radek(j:j) = '.'
-                else
-                    radek(j:j) = 'X'
-                    nz = nz + 1
-                end if
-            end do
-            print fmts,radek
-        end do
-        print *, " pocet radek=", A%getn()
-        print *, " pocet sloupcu",A%getm()
-        print *,"celkovy pocet nenul=",nz
+!         nz = 0
+!         write(fmts,fmt="(a2,i5,a1)") "(a",a%m,")"
+!         do i=1,a%getn()
+!             do j=1,a%getm()
+!                 if (a%get(i,j) == 0.0_rkind) then
+!                 radek(j:j) = '.'
+!                 else
+!                     radek(j:j) = 'X'
+!                     nz = nz + 1
+!                 end if
+!             end do
+!             print fmts,radek
+!         end do
+!         print *, " pocet radek=", A%getn()
+!         print *, " pocet sloupcu",A%getm()
+!         print *,"celkovy pocet nenul=",nz
     end subroutine spymatrix
-
+! 
     !> vytiskne matici
     subroutine printmatrix(a,ncol, width, caption)
         use typy
@@ -704,8 +707,8 @@ module mtx
         y = sqrt(y)
         print *,"normF konci"
     end function normFmatrix
-
-
+! 
+! 
     !> vybere submatici
     !! \param A matice
     !! \param ii radkove indexy

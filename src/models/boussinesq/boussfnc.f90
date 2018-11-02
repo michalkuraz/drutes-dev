@@ -1,3 +1,28 @@
+! Copyright 2008 Michal Kuraz, Petr Mayer, Copyright 2016  Michal Kuraz, Petr Mayer, Johanna Bloecher
+
+! This file is part of DRUtES.
+! DRUtES is free software: you can redistribute it and/or modify
+! it under the terms of the GNU General Public License as published by
+! the Free Software Foundation, either version 3 of the License, or
+! (at your option) any later version.
+! DRUtES is distributed in the hope that it will be useful,
+! but WITHOUT ANY WARRANTY; without even the implied warranty of
+! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+! GNU General Public License for more details.
+! You should have received a copy of the GNU General Public License
+! along with DRUtES. If not, see <http://www.gnu.org/licenses/>.
+
+!> \file bousfnc.f90
+!! \brief Boussinesq equation implementation
+!<
+
+!> Solves the problem of saturated flow over a sloping impermeable layer by an extended form of Dupuit-Forchheimer assumption, where the streamlines are parallel to the impermeable layer. The Boussinesq equation states as:
+!!\f[
+!!\frac{\theta_s}{K_s\textrm{cos} \alpha} \frac{\partial h_b}{\partial t} =  \frac{q(t)}{K} !!\left(1+ \textrm{tan} \alpha \frac{\partial h_b}{\partial x} \right) + \frac{\partial}{\partial !!x} \left( h_b \frac{\partial h_b}{\partial x} \right) - \textrm{tan} \alpha \frac{\partial h_b}!!{\partial x}, 
+!!\f]
+!! where \f$K_s\f$ is the saturated hydraulic conductivity [\f$L.T^{-1}\f$], \f$\theta_s\f$ is the maximal (saturated) water content (equal to the porosity) [-], \f$q(t)\f$ is the time dependent rainfall [\f$L.T^{-1}\f$], $\alpha$ is the angle formed by the impermeable layer and horizontal plane [\f$rad\f$], and \f$h_b\f$ is  solution of the Boussinesq equation [\f$L\f$] --  it is the vertical distance between the impermeable layer and the groundwater table.
+!<
+
 module boussfnc
   public :: bouss_elast
   public :: bouss_cond

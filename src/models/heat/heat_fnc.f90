@@ -1,3 +1,27 @@
+! Copyright 2008 Michal Kuraz, Petr Mayer, Copyright 2016  Michal Kuraz, Petr Mayer, Johanna Bloecher
+
+! This file is part of DRUtES.
+! DRUtES is free software: you can redistribute it and/or modify
+! it under the terms of the GNU General Public License as published by
+! the Free Software Foundation, either version 3 of the License, or
+! (at your option) any later version.
+! DRUtES is distributed in the hope that it will be useful,
+! but WITHOUT ANY WARRANTY; without even the implied warranty of
+! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+! GNU General Public License for more details.
+! You should have received a copy of the GNU General Public License
+! along with DRUtES. If not, see <http://www.gnu.org/licenses/>.
+
+!> \file heat_fnc.f90
+!! \brief Heat transport equation with convection (Sophocleous, 1979)
+!<
+
+!> Heat equation is solved in the following form
+!! \f[  C_T \frac{\partial T}{\partial t} = \overbrace{\kappa_T \Delta T}^{\mbox{ diffusion term}}  - \underbrace{\nabla \cdot (C_T^L \vec{q}_L)}_{\mbox{ convection term}} + \overbrace{S_H}^{\mbox{ reaction term}}. \f]
+!! Convection term can be user defined or obtained from coupling with Richards equation.
+!<
+
+
 module heat_fnc
   public :: heat_conduct
   public :: heat_convect
