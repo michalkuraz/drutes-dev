@@ -272,6 +272,7 @@ module RE_constitutive
       use re_globals
       use pde_objs
       use core_tools
+      use debug_tools
       
       class(pde_str), intent(in) :: pde_loc
       integer(kind=ikind), intent(in) :: layer
@@ -312,9 +313,10 @@ module RE_constitutive
       end if
 
       if (h<0) then
-        if ( h/drutes_config%fnc_discr_length < 0.1*huge(1)) then
+        if ( h/drutes_config%fnc_discr_length < 0.1*huge(1) .and. abs(h)<huge(pos)*1e-3*1e-3) then
           
-          pos = int(-h/drutes_config%fnc_discr_length)+1
+
+          pos = int(-h/drutes_config%fnc_discr_length, ikind)+1
           if (pos <= ubound(watcontab,2)-1) then
             dist = -h - (pos - 1)*drutes_config%fnc_discr_length
             theta = (watcontab(layer,pos+1)-watcontab(layer,pos))/drutes_config%fnc_discr_length*dist + watcontab(layer,pos)
@@ -341,7 +343,6 @@ module RE_constitutive
       else
         theta = vgset(layer)%Ths	
       end if
-      
       
 
     end function vangen_tab
@@ -533,8 +534,11 @@ module RE_constitutive
       end if
 
       if (h<0) then
-        if ( h/drutes_config%fnc_discr_length < 0.1*huge(1)) then
-          pos = int(-h/drutes_config%fnc_discr_length)+1
+        if ( h/drutes_config%fnc_discr_length < 0.1*huge(1) .and. abs(h)<huge(pos)*1e-3*1e-3) then
+          
+          pos = int(-h/drutes_config%fnc_discr_length, ikind)+1
+        
+        
           if (pos <= ubound(warecatab,2)-1) then
             dist = -h - (pos - 1)*drutes_config%fnc_discr_length
             E = (warecatab(layer,pos+1)-warecatab(layer,pos))/drutes_config%fnc_discr_length*dist + warecatab(layer,pos)
@@ -760,8 +764,12 @@ module RE_constitutive
 
       
       if (h<0) then
-        if (-h/drutes_config%fnc_discr_length < 0.1*huge(1) ) then
-          pos = int(-h/drutes_config%fnc_discr_length)+1
+        if ( h/drutes_config%fnc_discr_length < 0.1*huge(1) .and. abs(h)<huge(pos)*1e-3*1e-3) then
+          
+       
+          pos = int(-h/drutes_config%fnc_discr_length, ikind)+1
+
+            
           if (pos <= ubound(Ktab,2)-1) then
             dist = -h - (pos - 1)*drutes_config%fnc_discr_length
             tmp = (Ktab(layer,pos+1)-Ktab(layer,pos))/drutes_config%fnc_discr_length*dist + Ktab(layer,pos)

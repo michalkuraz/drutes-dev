@@ -46,13 +46,14 @@ program main
   use re_analytical
   use objfnc
   use printtools
+  use readtools
   
   character(len=256) :: writer
   character(len=2)   :: ch
   logical :: success
   real ::  stop_time
   real(kind=rkind) :: r, t
-  integer :: fileid, i, j
+  integer :: fileid, i, j, ierrtime
   
   
   call system("rm -rf out/*")
@@ -62,9 +63,15 @@ program main
   
     call getcwd(dir_name)
 
-    call cpu_time(start_time)
-
-
+    open(newunit=fileid, file="/proc/uptime", action="read", status="old", iostat=ierrtime)
+    
+    
+    if (ierrtime /= 0) then
+      call cpu_time(start_time)
+    else
+      read(unit=fileid, fmt=*) start_time
+      close(fileid)
+    end if
 
     version_id%number = "8.0/2018"
     version_id%reliability = "beta "
@@ -128,7 +135,14 @@ program main
   sync all
   
   if (this_image() == 1) then
-    call cpu_time(stop_time)
+  
+    if (ierrtime /= 0) then
+      call cpu_time(stop_time)
+    else
+      open(newunit=fileid, file="/proc/uptime", action="read", status="old")
+      read(unit=fileid, fmt=*) stop_time
+      close(fileid)
+    end if
     
     
     select case (int(stop_time - start_time))
@@ -142,8 +156,7 @@ program main
 		    call write_log(text="# real elapsed CPU time =", real1=(stop_time - start_time)/86400.0_rkind, text2="days") 
    end select
    
-    call find_unit(fileid)
-    open(unit=fileid, file="out/cpu.time", action="write", status="replace")
+    open(newunit=fileid, file="out/cpu.time", action="write", status="replace")
     write(unit=fileid, fmt=*) (stop_time - start_time)
     close(fileid)
 

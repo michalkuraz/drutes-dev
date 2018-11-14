@@ -5,11 +5,11 @@ out := cd ..
 
 #options for debugging, use for development  
 
-# c= gfortran -fimplicit-none  -fcoarray=single -fbounds-check -fbacktrace -g -g3 -fdefault-real-8 -O0 -finit-real=nan 
+c= gfortran -fimplicit-none  -fcoarray=single -fbounds-check -fbacktrace -g -g3 -fdefault-real-8 -O0 -finit-real=nan 
 
 
 #options for optimized compilation, use for production purposes on well debugged versions
-c=gfortran -fimplicit-none  -fcoarray=single -fdefault-real-8 -O3 -finit-real=nan -ffpe-summary=none -fno-backtrace  
+#c=gfortran -fimplicit-none  -fcoarray=single -fdefault-real-8 -O3 -finit-real=nan -ffpe-summary=none -fno-backtrace  
 
 
 d=drutes_obj-`date -I`
@@ -35,7 +35,7 @@ ADE_obj := ADE_fnc.o ADE_reader.o ADE_globals.o ADE_pointers.o
 REDUAL_obj := Re_dual_totH.o Re_dual_globals.o Re_dual_pointers.o Re_dual_reader.o Re_dual_tab.o Re_dual_coupling.o Re_dual_bc.o
 HEAT_obj := heat_fnc.o heat_pointers.o heat_globals.o heat_reader.o
 LTNE_obj := ltne_fnc.o ltne_globals.o ltne_pointers.o ltne_reader.o
-FROZEN_obj := refreeze_globs.o
+FROZEN_obj := freeze_globs.o freeze_fnc.o
 
 ALL_objs := $(CORE_obj) $(TOOLS_obj) $(POINTERMAN_obj) $(MATHTOOLS_obj) $(FEMTOOLS_obj) $(DECOMPO_obj) $(RE_obj) $(PMAoo_obj) $(BOUSSINESQ_obj) $(ADE_obj) $(REDUAL_obj)  $(HEAT_obj) $(LTNE_obj) $(FROZEN_obj)
 #-----------------------------------------------------------------
@@ -151,8 +151,10 @@ ltne_pointers.o: $(CORE_obj) src/models/LTNE/ltne_pointers.f90
 #------end LTNE_obj -------------------------------------
 
 #------begin frozen_obj -----------------------------------
-refreeze_globs.o: $(CORE_obj) src/models/soilfreeze/refreeze_globs.f90
-	$c -c src/models/soilfreeze/refreeze_globs.f90
+freeze_globs.o: $(CORE_obj) src/models/soilfreeze/freeze_globs.f90
+	$c -c src/models/soilfreeze/freeze_globs.f90
+freeze_fnc.o: $(CORE_obj) freeze_globs.o src/models/soilfreeze/freeze_fnc.f90
+	$c -c src/models/soilfreeze/freeze_fnc.f90
 #------end frozen_obj -----------------------------------
 
 #-------begin ADE_obj-------------------------------
