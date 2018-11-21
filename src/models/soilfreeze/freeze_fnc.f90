@@ -29,6 +29,22 @@ module freeze_fnc
     
       type(integpnt_str), intent(in) :: quadpnt
       real(kind=rkind) :: rho
+      
+      real(kind=rkind) :: temp
+      
+      type(intepnt_str) :: quadpnt_loc
+      
+      quadpnt_loc = quadpnt
+      
+      quadpnt_loc%column = 1
+      
+      temp = pde(id_templ)%getval(quadpnt_loc)
+      
+      if (temp>0) then
+        rho = (1.682208e-8*temp*temp*temp - 6.05282462e-6*temp*temp + 2.36680033177935e-5*temp + &
+               0.999946997406686)*1e3
+      else
+        
         
     end function watrho
    
