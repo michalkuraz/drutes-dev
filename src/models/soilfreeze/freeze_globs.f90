@@ -14,7 +14,8 @@ module freeze_globs
   !> specific heat capacity water
   real(kind=rkind), parameter, public :: Cl=4200  
   
-  
-  
+  !> reference temperature for Clapeyron
+  real(kind=rkind), parameter, public :: Tref=273.15
+
 
 end module freeze_globs

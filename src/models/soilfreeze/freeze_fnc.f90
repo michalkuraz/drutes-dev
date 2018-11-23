@@ -1,28 +1,87 @@
 module freeze_fnc
   use pde_objs
   use typy
-  private :: icerho, watrho, icewatrho, Kliquid_temp
+  use freeze_globs
+  private :: icerho, watrho, icewatrho, Kliquid_temp, hl, getwater_id, gettempice_id, gettempwat_id
   public :: iceswitch, capacityhh, capacityhT, diffhh, capacityTh, capacityTT, thetai
-  
-  !> rank number for temperature of liquid in pde structure, must be editted for LTNE heat transport
-  integer(kind=ikind), parameter, private :: id_templ=2
+
+
   
   procedure(tensor_fnc), pointer, public :: Kliquid
-  procedure(scalar_fnc), pointer, public :: rwcap, thetal
+  procedure(scalar_fnc), pointer, public :: rwcap, theta
   
   contains
-    pure &
+
+  
+    pure function gettempice_id() result(id)
+      use typy
+      
+      integer(kind=ikind) :: id
+      
+      select case(drutes_config%name)
+        case("freeze")
+          id = 2
+        case("LTNE")
+          !will be editted later, temporaly genreates error, so we won't forget to update it
+          id = -1
+      end select
+      
+    end function gettempice_id
+  
+  
+    
+    pure function gettempwat_id() result(id)
+      use typy
+      
+      integer(kind=ikind) :: id
+      
+      select case(drutes_config%name)
+        case("freeze")
+          id = 2
+        case("LTNE")
+          !will be editted later, temporaly genreates error, so we won't forget to update it
+          id = -1
+      end select
+      
+    end function gettempwat_id
+    
+    
+    pure function getwater_id() result(id)
+      use typy
+      
+       integer(kind=ikind) :: id
+       
+       id = 1
+       
+     end function getwater_id
+    
+      
+  
+
     function icerho(quadpnt) result(rho)
       use typy
       use global_objs
       
       type(integpnt_str), intent(in) :: quadpnt
       real(kind=rkind) :: rho
+      real(kind=rkind) :: temp
+      
+      type(integpnt_str) :: quadpnt_loc
+      
+      quadpnt_loc = quadpnt
+      
+      quadpnt_loc%column = 1
+      
+      temp = pde(gettempice_id())%getval(quadpnt_loc)
+      
+      
+      rho = exp(log(999.946997406686) + 5e-5*temp)
+
+      
       
     end function icerho
    
    
-    pure &
     function watrho(quadpnt) result(rho)
       use typy
       use global_objs
@@ -32,63 +91,117 @@ module freeze_fnc
       
       real(kind=rkind) :: temp
       
-      type(intepnt_str) :: quadpnt_loc
+      type(integpnt_str) :: quadpnt_loc
       
       quadpnt_loc = quadpnt
       
       quadpnt_loc%column = 1
       
-      temp = pde(id_templ)%getval(quadpnt_loc)
+      temp = pde(gettempwat_id())%getval(quadpnt_loc)
       
       if (temp>0) then
         rho = (1.682208e-8*temp*temp*temp - 6.05282462e-6*temp*temp + 2.36680033177935e-5*temp + &
                0.999946997406686)*1e3
       else
-        
+        rho = exp(log(999.946997406686) + 5e-5*temp)
+      end if
         
     end function watrho
    
    
    
-    pure &
     function icewatrho(quadpnt) result(rho)
       use typy
       use global_objs
       
       type(integpnt_str), intent(in) :: quadpnt
       real(kind=rkind) :: rho
+      
+      integer(kind=ikind) :: layer, el
+      real(kind=rkind) :: thl, thall
+      
+      
+      if (quadpnt%type_pnt == "ndpt" ) then
+        el = nodes%element(quadpnt%order)%data(1)
+      else
+        el = quadpnt%element
+      end if
+      
+      layer = elements%material(el)
+      
+      thl = theta(pde(getwater_id()), layer, x=(/hl(quadpnt)/))
+      thall = theta(pde(getwater_id()), layer, quadpnt)
+      
+      rho = (thl * watrho(quadpnt) + thall * icerho(quadpnt) - thl * icerho(quadpnt))/thall
         
      end function icewatrho
    
    
-    pure &
     function iceswitch(quadpnt) result(sw)
       use typy
       use global_objs
       
       type(integpnt_str), intent(in) :: quadpnt
       integer(kind=ikind) :: sw
+      
+      real(kind=rkind) :: Tf
+      type(integpnt_str) :: quadpnt_loc
+      
+      quadpnt_loc = quadpnt
+      quadpnt_loc%column = 1
+      
+      Tf = Tref*exp(pde(getwater_id())%getval(quadpnt_loc)*grav/Lf) - Tref
+      
+      if (pde(gettempwat_id())%getval(quadpnt_loc) > Tf) then
+        sw = 0
+      else
+        sw = 1
+      end if
           
     end function iceswitch
    
-    pure &
-    function pl(quadpnt) result(val)
+    function hl(quadpnt) result(val)
       use typy
       use global_objs
+      use freeze_globs
      
       type(integpnt_str), intent(in) :: quadpnt
       real(kind=rkind) :: val
+      
+      real(kind=rkind) :: hw, temp
+      
+      hw = pde(getwater_id())%getval(quadpnt)
+      
+      temp = pde(gettempwat_id())%getval(quadpnt)
+      
+      val = hw + iceswitch(quadpnt)*(Lf/grav*log((temp+Tref)/Tref) - hw)
      
-    end function pl
+    end function hl
     
     
-    pure &
     function thetai(quadpnt) result(val)
       use typy
       use global_objs
      
       type(integpnt_str), intent(in) :: quadpnt
       real(kind=rkind) :: val
+      
+      real(kind=rkind) :: thl, thall
+      
+      integer(kind=ikind) :: layer, el
+      
+      if (quadpnt%type_pnt == "ndpt" ) then
+        el = nodes%element(quadpnt%order)%data(1)
+      else
+        el = quadpnt%element
+      end if
+      
+      layer = elements%material(el)
+      
+      thl = theta(pde(getwater_id()), layer, x=(/hl(quadpnt)/))
+      thall = theta(pde(getwater_id()), layer, quadpnt)
+      
+      val = (thall * icewatrho(quadpnt) - thl * watrho(quadpnt))/icerho(quadpnt)
      
     end function thetai
     
@@ -111,10 +224,10 @@ module freeze_fnc
       real(kind=rkind)                :: val
     
     
-      val = (1-iceswitch(quadpnt))*watrho(quadpnt)*rwcap(pde_loc, layer, x=(/pl(quadpnt)/))
+      val = (1-iceswitch(quadpnt))*watrho(quadpnt)*rwcap(pde_loc, layer, x=(/hl(quadpnt)/))
     
       val = val + icerho(quadpnt)*(rwcap(pde_loc, layer, quadpnt) - &
-            rwcap(pde_loc, layer, x=(/pl(quadpnt)/))*(1-iceswitch(quadpnt)))
+            rwcap(pde_loc, layer, x=(/hl(quadpnt)/))*(1-iceswitch(quadpnt)))
           
       val = val * icewatrho(quadpnt) * grav 
       
@@ -140,12 +253,12 @@ module freeze_fnc
     
       real(kind=rkind) :: temp
     
-      temp = pde(id_templ)%getval(quadpnt)
+      temp = pde(gettempwat_id())%getval(quadpnt)
     
     
-      val = iceswitch(quadpnt) * rwcap(pde_loc, layer, x=(/pl(quadpnt)/)) * watrho(quadpnt)*watrho(quadpnt) * Lf/temp
+      val = iceswitch(quadpnt) * rwcap(pde_loc, layer, x=(/hl(quadpnt)/)) * watrho(quadpnt)*watrho(quadpnt) * Lf/temp
     
-      val = val - iceswitch(quadpnt) * rwcap(pde_loc, layer, x=(/pl(quadpnt)/)) *watrho(quadpnt)*icerho(quadpnt) * Lf/temp
+      val = val - iceswitch(quadpnt) * rwcap(pde_loc, layer, x=(/hl(quadpnt)/)) *watrho(quadpnt)*icerho(quadpnt) * Lf/temp
     
       
     end function capacityhT
@@ -223,7 +336,7 @@ module freeze_fnc
       
       E=0
       
-      temp = pde(id_templ)%getval(quadpnt)
+      temp = pde(gettempwat_id())%getval(quadpnt)
       
       if (present(tensor)) then
         call Kliquid_temp(pde_loc, layer, quadpnt, tensor=Klt(1:D, 1:D))
@@ -260,7 +373,7 @@ module freeze_fnc
 
       
       val = Lf*icerho(quadpnt)*rwcap(pde_loc, layer, quadpnt)
-      val = val - Lf*icerho(quadpnt)*rwcap(pde_loc, layer, x=(/pl(quadpnt)/))*(1-iceswitch(quadpnt))
+      val = val - Lf*icerho(quadpnt)*rwcap(pde_loc, layer, x=(/hl(quadpnt)/))*(1-iceswitch(quadpnt))
       
       val = val * icewatrho(quadpnt) * grav
       
@@ -286,12 +399,12 @@ module freeze_fnc
       
       real(kind=rkind) :: temp
       
-      temp = pde(id_templ)%getval(quadpnt)
+      temp = pde(gettempwat_id())%getval(quadpnt)
       
       
-      val = Ci*thetai(quadpnt) + Cl*thetal(pde_loc, layer, quadpnt) 
+      val = Ci*thetai(quadpnt) + Cl*theta(pde_loc, layer, quadpnt) 
       
-      val = val - Lf*icerho(quadpnt)*rwcap(pde_loc, layer, x=(/pl(quadpnt)/))*iceswitch(quadpnt)*Lf*watrho(quadpnt)/temp 
+      val = val - Lf*icerho(quadpnt)*rwcap(pde_loc, layer, x=(/hl(quadpnt)/))*iceswitch(quadpnt)*Lf*watrho(quadpnt)/temp 
       
       
     end function capacityTT
