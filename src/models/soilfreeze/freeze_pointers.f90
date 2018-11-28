@@ -77,8 +77,13 @@ module freeze_pointers
       pde(1)%flux_name(1) = "flux"  
       pde(1)%flux_name(2) = "Darcian flow [L.T^{-1}]"
 
-      pde(1)%mass_name(1) = "theta"
-      pde(1)%mass_name(2) = "theta [-]"
+      allocate(pde(1)%mass_name(2,2))
+      
+      pde(1)%mass_name(1,1) = "theta_l"
+      pde(1)%mass_name(1,2) = "theta_l [-]"
+      
+      pde(1)%mass_name(2,1) = "theta_i"
+      pde(1)%mass_name(2,2) = "theta_i [-]"
       
       
     

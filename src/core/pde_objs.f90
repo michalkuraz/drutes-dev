@@ -34,7 +34,7 @@ module pde_objs
   implicit none
   
   
-  type, public :: pde_fnc
+  type, public :: pde_fnc_str
     procedure(tensor_fnc), nopass, pointer           :: dispersion
     procedure(vector_fnc), nopass, pointer           :: convection
     procedure(vector_fnc), nopass, pointer           :: hidden_convect
@@ -46,7 +46,11 @@ module pde_objs
     procedure(scalar_fnc), nopass, pointer           :: zerord
     procedure(scalar_fnc), nopass, pointer           :: elasticity
     logical                                          :: coupling
-  end type pde_fnc
+  end type pde_fnc_str
+  
+  type, public :: mass_fnc_str
+    procedure(scalar_fnc), nopass, pointer  :: val
+  end type mass_fnc_str
   
 
   type, public :: pde_common_str
@@ -99,8 +103,8 @@ module pde_objs
     character(len=64), dimension(2)                  :: flux_name
     character(len=64), dimension(:,:), allocatable   :: mass_name
     character(len=1)                                 :: mfswitch          
-    type(pde_fnc), dimension(:), allocatable         :: pde_fnc
-    procedure(scalar_fnc), pass(pde_loc), pointer    :: mass
+    type(pde_fnc_str), dimension(:), allocatable     :: pde_fnc
+    type(mass_fnc_str), dimension(:), allocatable    :: mass
     procedure(vector_fnc), pass(pde_loc), pointer    :: flux
     procedure(time_check), pass(pde_loc), pointer    :: dt_check
     procedure(icond_fnc), pass(pde_loc), pointer     :: initcond

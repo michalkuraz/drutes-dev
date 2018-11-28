@@ -1938,7 +1938,7 @@ module RE_constitutive
           quadpnt%type_pnt = "ndpt"
           quadpnt%order = elements%data(el_id,node_order)
           layer = elements%material(el_id)
-          theta =  pde_loc%mass(layer, quadpnt)
+          theta =  pde_loc%mass(1)%val(pde_loc, layer, quadpnt)
           bcval = bcval*(theta*theta)**(1.0_rkind/3.0_rkind)
         end if
           

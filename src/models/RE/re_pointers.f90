@@ -198,12 +198,12 @@ module RE_pointers
       if (drutes_config%fnc_method == 0) then
         pde_loc%pde_fnc(pde_loc%order)%dispersion => mualem
         pde_loc%pde_fnc(pde_loc%order)%elasticity => vangen_elast
-        pde_loc%mass => vangen
+        pde_loc%mass(1)%val => vangen
       else
         call tabvalues(pde_loc, Kfnc=mualem, dKdhfnc = dmualem_dh, Cfnc=vangen_elast, thetafnc=vangen)
         pde_loc%pde_fnc(pde_loc%order)%dispersion  => mualem_tab		
         pde_loc%pde_fnc(pde_loc%order)%elasticity => vangen_elast_tab
-        pde_loc%mass => vangen_tab
+        pde_loc%mass(1)%val => vangen_tab
       end if
       
 
