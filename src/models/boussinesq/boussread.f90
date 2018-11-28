@@ -45,9 +45,7 @@ module boussread
       pde_loc%flux_name(1) = "flux"  
       pde_loc%flux_name(2) = "Darcian specific flux [L^2.T^{-1}]"
 
-      pde_loc%mass_name(1) = "not_available"
-      pde_loc%mass_name(2) = "n_a"
-      
+      allocate(pde_loc%mass_name(0,0))
       
       call find_unit(fileid(1), 200)
       open(unit=fileid(1), file="drutes.conf/boussinesq.conf/slope.in", action="read", status="old", iostat=ierr)

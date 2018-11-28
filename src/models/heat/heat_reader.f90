@@ -52,11 +52,8 @@ module heat_reader
 
       pde_loc%flux_name(1) = "heat_flux"  
       pde_loc%flux_name(2) = "heat flux [W.L-2]"
-
-      pde_loc%mass_name(1) = "skip_this_file"
-      pde_loc%mass_name(2) = "n/a"
       
-      
+      allocate(pde_loc%mass_name(0,0))
 
       call find_unit(file_heat, 200)
       open(unit = file_heat, file="drutes.conf/heat/heat.conf", action="read", status="old", iostat=i_err)

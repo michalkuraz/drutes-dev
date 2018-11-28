@@ -511,17 +511,28 @@ module drutes_init
         
         call print_logo(pde_loc%obspt_unit(name))
         
-        write(unit=pde_loc%obspt_unit(name), fmt=*) "#        time                      ", &
-          trim(pde_loc%solution_name(2)), "            ", &
-        !  trim(pde_loc%solution_name(2)), " (avg over el.)", &
-         "       ", trim(pde_loc%mass_name(2)), "       ",&
-          trim(pde_loc%flux_name(2)), "   in    ", xyz(1:drutes_config%dimen), "     directions", "   cumulative flux"
-        write(unit=pde_loc%obspt_unit(name), fmt=*) &
-          "#-----------------------------------------------------------------------------------------------"
-        write(unit=pde_loc%obspt_unit(name), fmt=*)
-        !J added 
-      ! 	close(unit=pde_loc%obspt_unit(name))
-            else
+        if (ubound(pde_loc%mass_name,1) > 0) then
+          write(unit=pde_loc%obspt_unit(name), fmt=*) "#        time                      ", &
+            trim(pde_loc%solution_name(2)), "            ", &
+           "       ", trim(pde_loc%mass_name(:,2)), "       ",&
+            trim(pde_loc%flux_name(2)), "   in    ", xyz(1:drutes_config%dimen), "     directions", "   cumulative flux"
+          write(unit=pde_loc%obspt_unit(name), fmt=*) &
+            "#-----------------------------------------------------------------------------------------------"
+          write(unit=pde_loc%obspt_unit(name), fmt=*)
+          !J added 
+        ! 	close(unit=pde_loc%obspt_unit(name))
+        else
+          write(unit=pde_loc%obspt_unit(name), fmt=*) "#        time                      ", &
+            trim(pde_loc%solution_name(2)), "            ", &
+           "       ", &
+            trim(pde_loc%flux_name(2)), "   in    ", xyz(1:drutes_config%dimen), "     directions", "   cumulative flux"
+          write(unit=pde_loc%obspt_unit(name), fmt=*) &
+            "#-----------------------------------------------------------------------------------------------"
+          write(unit=pde_loc%obspt_unit(name), fmt=*)
+          !J added 
+        ! 	close(unit=pde_loc%obspt_unit(name))
+        end if
+      else
         open(unit=pde_loc%obspt_unit(name), file=adjustl(trim(pde_loc%obspt_filename(name))), &
                     action="write", access="append", status="old")
       end if

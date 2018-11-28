@@ -49,9 +49,11 @@ module re_reader
 
       pde_loc%flux_name(1) = "flux"  
       pde_loc%flux_name(2) = "Darcian flow [L.T^{-1}]"
+      
+      allocate(pde_loc%mass_name(1,2))
 
-      pde_loc%mass_name(1) = "theta"
-      pde_loc%mass_name(2) = "theta [-]"
+      pde_loc%mass_name(1,1) = "theta"
+      pde_loc%mass_name(1,2) = "theta [-]"
       
       pde_loc%print_mass = .true.
 

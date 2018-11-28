@@ -533,22 +533,22 @@ module postpro
 
 
     
-!       do i=1, nodes%kolik
-!         quadpnt%order = i
-!         quadpnt%preproc=.true.
-! 
-!         write(unit=ids(1), fmt=*) i,  nodes%data(i,:), pde(proc)%getval(quadpnt) 
-!         
-!         layer = elements%material(nodes%element(i)%data(1))
-!         ! 3 is for mass
-!         if (pde(proc)%print_mass) then
-!           write(unit=ids(3), fmt=*)  i, nodes%data(i,:), pde(proc)%mass(layer, quadpnt)
-!         end if
-!         
-!         call pde(proc)%flux(layer, quadpnt, vector_out=flux(1:drutes_config%dimen))
-! 
-!         write(unit=ids(4), fmt=*) i, nodes%data(i,:), flux
-!       end do
+      do i=1, nodes%kolik
+        quadpnt%order = i
+        quadpnt%preproc=.true.
+
+        write(unit=ids(1), fmt=*) i,  nodes%data(i,:), pde(proc)%getval(quadpnt) 
+        
+        layer = elements%material(nodes%element(i)%data(1))
+        ! 3 is for mass
+        if (pde(proc)%print_mass) then
+          write(unit=ids(3), fmt=*)  i, nodes%data(i,:), pde(proc)%mass(layer, quadpnt)
+        end if
+        
+        call pde(proc)%flux(layer, quadpnt, vector_out=flux(1:drutes_config%dimen))
+
+        write(unit=ids(4), fmt=*) i, nodes%data(i,:), flux
+      end do
 
       close(ids(1))
 

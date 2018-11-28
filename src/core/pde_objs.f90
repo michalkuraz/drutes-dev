@@ -97,7 +97,7 @@ module pde_objs
     character(len=512), dimension(2)                 :: problem_name
     character(len=64), dimension(2)                  :: solution_name
     character(len=64), dimension(2)                  :: flux_name
-    character(len=64), dimension(2)                  :: mass_name
+    character(len=64), dimension(:,:), allocatable   :: mass_name
     character(len=1)                                 :: mfswitch          
     type(pde_fnc), dimension(:), allocatable         :: pde_fnc
     procedure(scalar_fnc), pass(pde_loc), pointer    :: mass
