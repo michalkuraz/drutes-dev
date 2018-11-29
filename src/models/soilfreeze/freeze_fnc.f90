@@ -179,24 +179,19 @@ module freeze_fnc
     end function hl
     
     
-    function thetai(quadpnt) result(val)
+    function thetai(pde_loc, layer, quadpnt, x) result(val)
       use typy
       use global_objs
+      use pde_objs
      
-      type(integpnt_str), intent(in) :: quadpnt
+      class(pde_str), intent(in) :: pde_loc
+      integer(kind=ikind), intent(in) :: layer
+      type(integpnt_str), intent(in), optional :: quadpnt
+      real(kind=rkind), dimension(:), intent(in), optional    :: x
       real(kind=rkind) :: val
       
       real(kind=rkind) :: thl, thall
       
-      integer(kind=ikind) :: layer, el
-      
-      if (quadpnt%type_pnt == "ndpt" ) then
-        el = nodes%element(quadpnt%order)%data(1)
-      else
-        el = quadpnt%element
-      end if
-      
-      layer = elements%material(el)
       
       thl = theta(pde(getwater_id()), layer, x=(/hl(quadpnt)/))
       thall = theta(pde(getwater_id()), layer, quadpnt)
@@ -402,7 +397,7 @@ module freeze_fnc
       temp = pde(gettempwat_id())%getval(quadpnt)
       
       
-      val = Ci*thetai(quadpnt) + Cl*theta(pde_loc, layer, quadpnt) 
+      val = Ci*thetai(pde_loc, layer, quadpnt) + Cl*theta(pde_loc, layer, quadpnt) 
       
       val = val - Lf*icerho(quadpnt)*rwcap(pde_loc, layer, x=(/hl(quadpnt)/))*iceswitch(quadpnt)*Lf*watrho(quadpnt)/temp 
       

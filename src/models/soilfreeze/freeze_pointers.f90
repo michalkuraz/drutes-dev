@@ -85,6 +85,14 @@ module freeze_pointers
       pde(1)%mass_name(2,1) = "theta_i"
       pde(1)%mass_name(2,2) = "theta_i [-]"
       
+      deallocate(pde(1)%mass)
+      
+      allocate(pde(1)%mass(2))
+      
+      pde(1)%mass(1)%val => theta
+      
+      pde(1)%mass(2)%val => thetai
+      
       
     
     end subroutine frz_pointers

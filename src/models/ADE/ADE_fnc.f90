@@ -87,7 +87,7 @@ module ADE_fnc
         theta = adepar(layer)%water_cont
         ths = adepar(layer)%water_cont
       else
-        theta = pde(1)%mass(layer, quadpnt)
+        theta = pde(1)%mass(1)%val(pde(1), layer, quadpnt)
         call pde(1)%flux(layer, quadpnt, vector_out = q_w(1:D))
         ths = vgset(layer)%ths
       end if
@@ -175,8 +175,8 @@ module ADE_fnc
       
       
       if (pde_loc%order == 2) then
-        theta = pde(1)%mass(layer, quadpnt)
-        thetas = pde(1)%mass(layer, x=(/0.0_rkind/)) 
+        theta = pde(1)%mass(1)%val(pde(1), layer, quadpnt)
+        thetas = pde(1)%mass(1)%val(pde(1), layer, x=(/0.0_rkind/)) 
       else
         theta = adepar(layer)%water_cont
         thetas = theta
@@ -291,7 +291,7 @@ module ADE_fnc
       if (pde_loc%order == 1) then
         theta = adepar(layer)%water_cont
       else
-        theta = pde(1)%mass(layer, quadpnt)
+        theta = pde(1)%mass(1)%val(pde(1), layer, quadpnt)
       end if
       
       if (present(quadpnt)) then
@@ -323,7 +323,7 @@ module ADE_fnc
       
      
       if (pde_loc%order == 2) then
-        theta = pde(1)%mass(layer, quadpnt)
+        theta = pde(1)%mass(1)%val(pde(1), layer, quadpnt)
       else
         theta = adepar(layer)%water_cont
       end if
@@ -368,7 +368,7 @@ module ADE_fnc
       real(kind=rkind) :: theta
       
       if (pde_loc%order == 2) then
-        theta = pde(1)%mass(layer, quadpnt)
+        theta = pde(1)%mass(1)%val(pde(1),layer, quadpnt)
       else
         theta = adepar(layer)%water_cont
       end if

@@ -141,7 +141,7 @@ module heat_pointers
       real(kind=rkind) :: theta
       
       if (pde_loc%order == 2) then
-        theta = pde(1)%mass(layer, quadpnt)
+        theta = pde(1)%mass(1)%val(pde_loc, layer, quadpnt)
       else
         theta = adepar(layer)%water_cont
       end if
