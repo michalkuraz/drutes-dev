@@ -3,11 +3,11 @@ module freeze_fnc
   use typy
   use freeze_globs
   private :: icerho, watrho, icewatrho, Kliquid_temp, hl, getwater_id, gettempice_id, gettempwat_id
-  public :: iceswitch, capacityhh, capacityhT, diffhh, capacityTh, capacityTT, thetai
+  public :: iceswitch, capacityhh, capacityhT, diffhh, capacityTh, capacityTT, thetai, Kliquid
 
 
   
-  procedure(tensor_fnc), pointer, public :: Kliquid
+  procedure(tensor_fnc), pointer, public :: Kliquid_default
   procedure(scalar_fnc), pointer, public :: rwcap, theta
   
   contains
@@ -284,6 +284,55 @@ module freeze_fnc
     
     
     end subroutine diffhh
+    
+    subroutine Kliquid(pde_loc, layer, quadpnt, x, tensor, scalar) 
+      use typy
+      use global_objs
+      use globals
+      class(pde_str), intent(in) :: pde_loc
+      !> value of the nonlinear function
+      real(kind=rkind), dimension(:), intent(in), optional    :: x
+      !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
+      type(integpnt_str), intent(in), optional :: quadpnt
+      !> material ID
+      integer(kind=ikind), intent(in) :: layer
+      !> return tensor
+      real(kind=rkind), dimension(:,:), intent(out), optional :: tensor
+      !> relative scalar value of the nonlinear function 
+      real(kind=rkind), intent(out), optional                 :: scalar
+      
+      
+      real(kind=rkind), dimension(3,3) :: K
+      integer(kind=ikind) :: D
+      real(kind=rkind) :: Ei, Ks, thi, thl
+      
+      
+      D = drutes_config%dimen
+      
+      if (present(quadpnt)) then
+        call Kliquid_default(pde_loc, layer, quadpnt, tensor=K(1:D, 1:D))
+        thi =  thetai(pde_loc, layer, quadpnt)
+        thl = theta(pde_loc, layer, quadpnt)
+      else if (present(x)) then
+        call Kliquid_default(pde_loc, layer, x=x, tensor=K(1:D, 1:D))
+        thi =  thetai(pde_loc, layer, x=x)
+        thl = theta(pde_loc, layer, x=x)
+      else
+        print *, "runtime error"
+        print *, "exited from Kliquid::freeze_fnc"
+        ERROR STOP
+      end if
+      
+      call Kliquid_default(pde_loc, layer, x=(/0.0_rkind/), scalar=Ks)
+      
+      Ei = 5/4.0_rkind*(Ks-3)*(Ks-3) + 6
+      
+      tensor = 0
+      
+      
+      
+   end subroutine Kliquid
+    
   
   
     subroutine Kliquid_temp(pde_loc, layer, quadpnt, x, tensor, scalar) 

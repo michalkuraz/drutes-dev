@@ -59,11 +59,11 @@ module freeze_pointers
       pde(2)%pde_fnc(2)%convection => convectTT
       
       if (drutes_config%fnc_method == 0) then
-        Kliquid => mualem
+        Kliquid_default => mualem
         rwcap => vangen_elast
         theta => vangen
       else
-        Kliquid  => mualem_tab		
+        Kliquid_default  => mualem_tab		
         rwcap => vangen_elast_tab
         theta => vangen_tab
       end if
