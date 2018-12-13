@@ -492,6 +492,7 @@ module drutes_init
       use global_objs
       use pde_objs
       use printtools
+      use debug_tools
 
       class(pde_str), intent(in out) :: pde_loc
       integer(kind=ikind), intent(in) :: name
@@ -507,22 +508,37 @@ module drutes_init
       
       write(unit=forma, fmt="(a, I16, a)") "(a, a, a, I", decimals, ", a)"
       write(unit=pde_loc%obspt_filename(name), fmt=forma) "out/obspt_", adjustl(trim(pde_loc%problem_name(1))), "-", name, ".out"
+      
      
       if (.not. drutes_config%run_from_backup) then
-        open(unit=pde_loc%obspt_unit(name), file=adjustl(trim(pde_loc%obspt_filename(name))), action="write", status="replace")
-        
-        call print_logo(pde_loc%obspt_unit(name))
-        
-        print *, (/ (trim(pde_loc%mass_name(i,2)), i=1,2)   /)
-        
+        if (ubound(pde_loc%mass_name,1) > 0) then
+          open(unit=pde_loc%obspt_unit(name), file=adjustl(trim(pde_loc%obspt_filename(name))), action="write", status="replace")
+          
+          call print_logo(pde_loc%obspt_unit(name))
+          
 
-          write(unit=pde_loc%obspt_unit(name), fmt=*) "#        time                      ", &
-            trim(pde_loc%solution_name(2)), "            ", &
-           "       ",  (/ (trim(pde_loc%mass_name(i,2)), i=1,ubound(pde_loc%mass_name,1) )   /), "       ",&
-            trim(pde_loc%flux_name(2)), "   in    ", xyz(1:drutes_config%dimen), "     directions", "   cumulative flux"
-          write(unit=pde_loc%obspt_unit(name), fmt=*) &
-            "#-----------------------------------------------------------------------------------------------"
-          write(unit=pde_loc%obspt_unit(name), fmt=*)
+            write(unit=pde_loc%obspt_unit(name), fmt=*) "#        time                      ", &
+              trim(pde_loc%solution_name(2)), "            ", &
+             "       ",  (/ (trim(pde_loc%mass_name(i,2)), i=1,ubound(pde_loc%mass_name,1) )   /), "       ",&
+              trim(pde_loc%flux_name(2)), "   in    ", xyz(1:drutes_config%dimen), "     directions", "   cumulative flux"
+            write(unit=pde_loc%obspt_unit(name), fmt=*) &
+              "#-----------------------------------------------------------------------------------------------"
+            write(unit=pde_loc%obspt_unit(name), fmt=*)
+            
+        else
+          open(unit=pde_loc%obspt_unit(name), file=adjustl(trim(pde_loc%obspt_filename(name))), action="write", status="replace")
+          
+          call print_logo(pde_loc%obspt_unit(name))
+          
+
+            write(unit=pde_loc%obspt_unit(name), fmt=*) "#        time                      ", &
+              trim(pde_loc%solution_name(2)), "            ", &
+              trim(pde_loc%flux_name(2)), "   in    ", xyz(1:drutes_config%dimen), "     directions", "   cumulative flux"
+            write(unit=pde_loc%obspt_unit(name), fmt=*) &
+              "#-----------------------------------------------------------------------------------------------"
+            write(unit=pde_loc%obspt_unit(name), fmt=*)
+          
+        end if
 
 
       else

@@ -280,16 +280,24 @@ module postpro
 
           val = pde(proc)%getval(quadpnt)
 
-          massval = (/ (pde(proc)%mass(j)%val(pde(proc),layer, quadpnt), j=1,ubound(pde(proc)%mass,1) ) /)
-          
-          observation_array(i)%cumflux(proc) = observation_array(i)%cumflux(proc) + &
-              sqrt(dot_product(advectval(1:D), advectval(1:D)))*time_step
-              
-          write(unit=pde(proc)%obspt_unit(i), fmt="(50E24.12E3)") time, val, massval, advectval(1:D), &
-                observation_array(i)%cumflux(proc)
+          if (ubound(pde(proc)%mass_name,1) > 0) then
+            massval = (/ (pde(proc)%mass(j)%val(pde(proc),layer, quadpnt), j=1,ubound(pde(proc)%mass,1) ) /)
+            
+            observation_array(i)%cumflux(proc) = observation_array(i)%cumflux(proc) + &
+                sqrt(dot_product(advectval(1:D), advectval(1:D)))*time_step
+                
+            write(unit=pde(proc)%obspt_unit(i), fmt="(50E24.12E3)") time, val, massval, advectval(1:D), &
+                  observation_array(i)%cumflux(proc)
 
+          else
+            observation_array(i)%cumflux(proc) = observation_array(i)%cumflux(proc) + &
+                sqrt(dot_product(advectval(1:D), advectval(1:D)))*time_step
+                
+            write(unit=pde(proc)%obspt_unit(i), fmt="(50E24.12E3)") time, val, advectval(1:D), &
+                  observation_array(i)%cumflux(proc)
+
+          end if
           call flush(pde(proc)%obspt_unit(i))
-          
         end do
         deallocate(massval)
       end do
