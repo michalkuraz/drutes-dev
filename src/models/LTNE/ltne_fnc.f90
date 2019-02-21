@@ -1,23 +1,29 @@
 module ltne_fnc
 
-  public :: densityFluid 
 
   contains
 
-    pure &
+    pure & !! this is already defined in freeze_fnc.f90
       function  densityFluid(T) result(rho)
-      
-    end function densityFluid
+      use typy
+       
+      real(kind=rkind), intent (in) :: T
+      real(kind=rkind) :: rho
+
+               rho = (1.682208e-8*T*T*T - 6.05282462e-6*T*T + 2.36680033177935e-5*T + &
+               0.999946997406686)*1e3
+  end function densityFluid
     
     !> time derivative coefficient for solid temperature in solid equation
     !! \f[ \varepsilon_s \rho_s C_s \f
     !<
-    subroutine caps(pde_loc,layer, quadpnt, x) result(E)
+    function caps(pde_loc,layer, quadpnt, x) result(E)
       use typy
       use heat_globals
       use pde_objs
       use core_tools
       use re_globals
+      use ltne_globals
 
       class(pde_str), intent(in) :: pde_loc 
       integer(kind=ikind), intent(in) :: layer
@@ -43,7 +49,7 @@ module ltne_fnc
       end if
       
       if (with_richards) then
-        watcont = vgset(layer)%thetas
+        watcont = vgset(layer)%Ths
       else
         watcont = ltnepars(layer)%satwatcont
       end if
@@ -51,7 +57,7 @@ module ltne_fnc
       E = (1-watcont)*ltnepars(layer)%densityS*ltnepars(layer)%heatCapS
       
       
-    end subroutine caps
+    end function caps
         
     
    function TsinS(pde_loc, layer, quadpnt, x) result(val)
@@ -61,7 +67,9 @@ module ltne_fnc
      use ADE_globals
      use re_globals
      use debug_tools
-    
+     use ltne_globals
+     use heat_globals
+
      class(pde_str), intent(in) :: pde_loc
      !> value of the nonlinear function
      real(kind=rkind), dimension(:), intent(in), optional    :: x
@@ -74,6 +82,7 @@ module ltne_fnc
      
      real(kind=rkind) :: h, Pr, Re, T, watcont, thetas, S, As
      real(kind=rkind), dimension(3) :: q 
+     integer(kind=ikind)            :: D
 
      if (.not. present(quadpnt)) then
        print *, "quadpnt must be present"
@@ -94,8 +103,8 @@ module ltne_fnc
      end if
      
      if (with_richards) then
-        watcont = pde(RE_order)%mass(1)%val(layer, quadpnt)
-        thetas = vgset(layer)%thetas
+        watcont = pde(RE_order)%mass(1)%val(pde(RE_order), layer, quadpnt)
+        thetas = vgset(layer)%Ths
      else
         watcont = ltnepars(layer)%actwatcont
         thetas =  ltnepars(layer)%satwatcont
@@ -122,7 +131,8 @@ module ltne_fnc
      use ADE_globals
      use re_globals
      use debug_tools
-    
+     use ltne_globals
+
      class(pde_str), intent(in) :: pde_loc
      !> value of the nonlinear function
      real(kind=rkind), dimension(:), intent(in), optional    :: x
@@ -152,6 +162,8 @@ module ltne_fnc
      use ADE_globals
      use re_globals
      use debug_tools
+     use ltne_globals
+
     
      class(pde_str), intent(in) :: pde_loc
      !> value of the nonlinear function
@@ -166,24 +178,5 @@ module ltne_fnc
      val = ltnepars(layer)%Sh
      
    end function sourceinS
-   
-     
-   function TlinS(pde_loc, layer, quadpnt, x) result(val)
-     use typy
-     use global_objs
-     use pde_objs
-     use ADE_globals
-     use debug_tools
-    
-     class(pde_str), intent(in) :: pde_loc
-     !> value of the nonlinear function
-     real(kind=rkind), dimension(:), intent(in), optional    :: x
-     !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
-     type(integpnt_str), intent(in), optional :: quadpnt
-     !> material ID
-     integer(kind=ikind), intent(in) :: layer
-     !> return value
-     real(kind=rkind)                :: val 
-  
 
 end module ltne_fnc

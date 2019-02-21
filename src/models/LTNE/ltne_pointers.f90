@@ -1,6 +1,6 @@
 module ltne_pointer
 
-  public :: ltne_processes, ltne_pointers
+  public :: ltne_processes
   
   contains
     subroutine ltne_processes(processes)
@@ -8,6 +8,6 @@ module ltne_pointer
       
       integer(kind=ikind), intent(out) :: processes
       
-    subroutine ltne_processes
+    end subroutine ltne_processes
     
 end module ltne_pointer

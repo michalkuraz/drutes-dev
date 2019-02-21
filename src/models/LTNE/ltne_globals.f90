@@ -72,13 +72,10 @@ module ltne_globals
   
   
   !> structure of solute parameters, allocatable, dimension is the number of materials
-  type(ltnepars_str), dimension(:), allocatable, public :: ltnepar
+  type(ltnepars_str), dimension(:), allocatable, public :: ltnepars
 
   !> configuration file unit
   integer, public :: file_ltne
-
-  !> logical, if true, convection is obtained from solving RE
-  logical, public :: with_richards
 
 end module ltne_globals
 
