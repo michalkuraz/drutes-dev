@@ -92,7 +92,7 @@ module postpro
   
       call write_log("making output files for observation time")
       
-      
+
       if (.not. anime) then
         postpro_run = postpro_run + 1
 
@@ -190,11 +190,11 @@ module postpro
           quadpnt%time4eval = curtime
         end if
 
-        
+   
         if (drutes_config%dimen == 1 .or. www) then
  
           call print_pure(ids(proc,:), proc, quadpnt)
-          
+                  
         else
           select case(observe_info%fmt)
             case("pure")
@@ -317,9 +317,6 @@ module postpro
 
       PID = getpid()
 
-      call find_unit(fileid)
-
-
       i = 0
       do
         i = i + 1
@@ -334,7 +331,7 @@ module postpro
 
       write(unit=filename, fmt=format) "/proc/", PID, "/status"
       
-      open(unit=fileid, file=filename, action="read", status="old", iostat=ierr)
+      open(newunit=fileid, file=filename, action="read", status="old", iostat=ierr)
 
       if (ierr /= 0) then
         write(unit=terminal) "WARNING! this is not POSIX system, unable to get RAM consumption"
@@ -551,20 +548,24 @@ module postpro
         quadpnt%preproc=.true.
 
         write(unit=ids(1), fmt=*) i,  nodes%data(i,:), pde(proc)%getval(quadpnt) 
-        
+
         layer = elements%material(nodes%element(i)%data(1))
         ! 3 is for mass
         if (pde(proc)%print_mass) then
           write(unit=ids(3), fmt=*)  i, nodes%data(i,:),  &
           (/ ( pde(proc)%mass(j)%val(pde(proc), layer, quadpnt), j=1,ubound(pde(proc)%mass,1) ) /)
+    
         end if
         
         call pde(proc)%flux(layer, quadpnt, vector_out=flux(1:drutes_config%dimen))
-
-        write(unit=ids(4), fmt=*) i, nodes%data(i,:), flux
+              
+        write(unit=ids(3), fmt=*) i,  nodes%data(i,:), flux(1:drutes_config%dimen)
+      
       end do
 
-      close(ids(1))
+      do i=1, ubound(ids,1)
+        close(ids(i))
+      end do
 
 
     end subroutine print_pure

@@ -99,17 +99,20 @@ module heat_reader
 			      
 
  
-      write(unit=msg, fmt=*) "HINT 1: Are all values anisotropy defining anisotropical diffusivity positive? ", new_line("a"), &
-        "HINT 2 : Have you defined enough values for anisotropy &
-        (e.g. for 2D define angle and the maximal and minimal value of diffusivity, in total 3 values)?", new_line("a"),&
-        "HINT 3: The number of lines with heat conductivity has to correspond to the number of materials & 
-        defined by your mesh"
+      write(unit=msg, fmt=*) "HINT 1: Are all values anisotropy defining anisotropical diffusivity positive? ", &
+       new_line("a"), new_line("a"),  &
+        "   HINT 2: Have you defined an EXACT NUMBER of values for anisotropy?", new_line("a"), &
+        "     (e.g. for 2D define angle and the maximal and minimal value of diffusivity, in total 3 values", new_line("a"),&
+         "      if you switch from 2D to 1D don't forget to erase the last value, otherwise this error is generated)", &
+        new_line("a"), new_line("a"), &
+        "   HINT 3: The number of lines with heat conductivity has to correspond to the number of materials & 
+        defined by your mesh", new_line("a"), new_line("a")
       
       
       allocate(tmp_array(drutes_config%dimen + 1))
       do i=1, ubound(heatpar,1)
         allocate(heatpar(i)%lambda_loc(drutes_config%dimen))
-        call fileread(r=tmp_array, fileid=file_heat, ranges=(/0.0_rkind, huge(tmp)/), errmsg=trim(msg))
+        call fileread(r=tmp_array, fileid=file_heat, ranges=(/0.0_rkind, huge(tmp)/), errmsg=trim(msg), checklen=.TRUE.)
         heatpar(i)%anisoangle = tmp_array(1)
         heatpar(i)%lambda_loc = tmp_array(2:drutes_config%dimen + 1)
         allocate(heatpar(i)%lambda(drutes_config%dimen, drutes_config%dimen))

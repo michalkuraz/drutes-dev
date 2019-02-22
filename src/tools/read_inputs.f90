@@ -68,9 +68,9 @@ module read_inputs
         new_line("a"),  new_line("a"), &
         "   heat = Heat conduction equation (Sophoclea, 1979)", &
         new_line("a"),  new_line("a"), &
-        "   LTNE = Local Thermal Non-Equilibrium heat transport model", &
+        "   LTNE = Local Thermal Non-Equilibrium heat transport model (unfinished yet)", &
         new_line("a"),  new_line("a"), &
-        "   frozen = Local Thermal Non-Equilibrium heat transport model", &
+        "   freeze = Richards equation with freezing/thawing processes", &
         new_line("a"),  new_line("a"), &
         new_line("a"),  new_line("a"), new_line("a")
         
@@ -84,7 +84,7 @@ module read_inputs
       probnames(6) = "heat"
       probnames(7) = "REstd" 
       probnames(8) = "LTNE"
-      probnames(9) = "frozen"
+      probnames(9) = "freeze"
 	
       call fileread(drutes_config%name, local, trim(msg), options=probnames)
 

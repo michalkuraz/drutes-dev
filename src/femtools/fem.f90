@@ -81,12 +81,9 @@ module fem
         end if
       end if
 
+      open(newunit=file_itcounts, file="out/itcounts", action="write", status="replace")
 
-      call find_unit(file_itcounts)
-      open(unit=file_itcounts, file="out/itcounts", action="write", status="replace")
-
-      call find_unit(file_dt)
-      open(unit=file_dt, file="out/dt", action="write", status="replace")
+      open(newunit=file_dt, file="out/dt", action="write", status="replace")
 
      call make_print("separately")
 

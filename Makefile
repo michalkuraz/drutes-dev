@@ -144,7 +144,7 @@ ltne_globals.o: $(CORE_obj) src/models/LTNE/ltne_globals.f90
 	$c -c src/models/LTNE/ltne_globals.f90
 ltne_reader.o: $(CORE_obj) src/models/LTNE/ltne_reader.f90
 	$c -c src/models/LTNE/ltne_reader.f90
-ltne_fnc.o: $(CORE_obj) src/models/LTNE/ltne_fnc.f90
+ltne_fnc.o: $(CORE_obj) ltne_globals.o src/models/LTNE/ltne_fnc.f90
 	$c -c src/models/LTNE/ltne_fnc.f90
 ltne_pointers.o: $(CORE_obj) src/models/LTNE/ltne_pointers.f90
 	$c -c src/models/LTNE/ltne_pointers.f90
