@@ -516,7 +516,7 @@ module drutes_init
           
           call print_logo(pde_loc%obspt_unit(name))
           
-           
+           i=1
             write(unit=pde_loc%obspt_unit(name), fmt=*) "#        time                      ", &
               trim(pde_loc%solution_name(2)), "            ", &
              "       ",  (/ (trim(pde_loc%mass_name(i,2)), i=1,ubound(pde_loc%mass_name,1) )   /), "       ",&

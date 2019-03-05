@@ -72,10 +72,10 @@ module freeze_pointers
       end if
       
       pde(1)%problem_name(1) = "RE_freeze_thaw"
-      pde(1)%problem_name(2) = "Richards' equation with freezing andd thawing processes"
+      pde(1)%problem_name(2) = "Richards' equation with freezing and thawing processes"
 
       pde(1)%solution_name(1) = "press_head" 
-      pde(1)%solution_name(2) = "h  [L]" 
+      pde(1)%solution_name(2) = "h [L]" 
 
       pde(1)%flux_name(1) = "flux"  
       pde(1)%flux_name(2) = "Darcian flow [L.T^{-1}]"

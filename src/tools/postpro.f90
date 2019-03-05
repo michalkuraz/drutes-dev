@@ -57,6 +57,7 @@ module postpro
       type(integpnt_str)                                    :: quadpnt
       integer(kind=ikind), save                             :: anime_run, anime_dec
       integer                                               :: ierr
+      integer(kind=ikind)                                   :: no_files
 
       if (present(name)) then
         select case(name)
@@ -114,10 +115,15 @@ module postpro
         end do
       end if
   
+      i=1
+      
+      no_files = maxval( (/ (ubound(pde(i)%mass_name,1), i=1, ubound(pde,1)) /) ) + 3
+
+  
       if (.not. allocated(ids_obs)) then
-        allocate(ids(ubound(pde,1), 4))
-        allocate(ids_obs(ubound(pde,1), 4))
-        allocate(ids_anime(ubound(pde,1), 4))
+        allocate(ids(ubound(pde,1), no_files))
+        allocate(ids_obs(ubound(pde,1), no_files))
+        allocate(ids_anime(ubound(pde,1), no_files))
       end if
       
       if (anime) then
@@ -170,7 +176,9 @@ module postpro
           (anime_run == 1 .and. anime) .or. & 
          ( .not. anime .and. (mode == -1 .and. postpro_run == 0 ) ) ) then
 
-          do i=1, ubound(filenames(proc)%names,1)
+         
+         
+          do i=1, 3+ubound(pde(proc)%mass_name,1)
             open(newunit=ids(proc, i), file=trim(filenames(proc)%names(i)), action="write", status="replace", iostat=ierr)
           end do  
         end if

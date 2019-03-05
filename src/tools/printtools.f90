@@ -96,17 +96,27 @@ module printtools
       use typy
       use globals
       use core_tools
+      use debug_tools
 
       real(kind=rkind) :: tmp, tmp1
-      real :: konec
-      integer :: fileid
+      real :: now
+      integer :: fileid, ierrtime
+      
+      
+      open(newunit=fileid, file="/proc/uptime", action="read", status="old", iostat=ierrtime)
+    
+    
+      if (ierrtime /= 0) then
+        call cpu_time(now)
+      else
+        read(unit=fileid, fmt=*) now
+        close(fileid)
+      end if
 
-      call cpu_time(konec)
       
       tmp1 = min(100.0,time/end_time*100)
       
-
-      tmp = max(0.0,(end_time-time)/(time/(konec-start_time)))
+      tmp = max(0.0,(end_time-time)/(time/(now-start_time)))
 
       select case (int(tmp))
         case (0:60)   
