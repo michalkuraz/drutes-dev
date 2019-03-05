@@ -45,6 +45,7 @@ module manage_pointers
       use Re_dual_pointers
       use heat_pointers
       use drutes_init
+      use freeze_pointers
 
       integer(kind=ikind) :: i, processes
       
@@ -110,6 +111,13 @@ module manage_pointers
           write(unit=drutes_config%fullname, fmt=*) "DRUtES solves heat conduction with convection"
           call heat(pde(:))
 	  
+        case("freeze")
+        
+          call freeze_processes(pde_common%processes)
+          call pde_constructor(pde_common%processes)
+          write(unit=drutes_config%fullname, fmt=*) "DRUtES solves heat conduction with convection"
+          call frz_pointers()
+          
         case default
           print *, "your new model: ", trim(drutes_config%name), " requires pointer linking"
           print *, "exited from manage_pointers::set_pointers"

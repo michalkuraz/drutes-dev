@@ -35,13 +35,22 @@ module freeze_pointers
       use pde_objs
       use re_globals
       use re_constitutive
+      use re_total
+      use re_reader
+      use re_pointers
       use freeze_globs
       use freeze_fnc
       use heat_pointers
+      use heat_reader
+      use heat_fnc
       
+      integer(kind=ikind) :: i
       
-      call heat(pde(1:2))
-      
+      call heat_read(pde(2))
+      call res_read(pde(1))
+      call RE_totheadbc(pde(1))
+
+    ! pointers for water flow model
       pde(1)%pde_fnc(1)%elasticity => capacityhh
       
       pde(1)%pde_fnc(2)%elasticity => capacityhT
@@ -50,13 +59,7 @@ module freeze_pointers
       
       pde(1)%pde_fnc(2)%dispersion => diffhT
       
-      pde(2)%pde_fnc(1)%elasticity => capacityTh
-      
-      pde(2)%pde_fnc(2)%elasticity => capacityTT
-      
-      pde(2)%pde_fnc(2)%dispersion => diffTT
-      
-      pde(2)%pde_fnc(2)%convection => convectTT
+      pde(1)%initcond => retot_initcond
       
       if (drutes_config%fnc_method == 0) then
         Kliquid_default => mualem
@@ -71,29 +74,52 @@ module freeze_pointers
       pde(1)%problem_name(1) = "RE_freeze_thaw"
       pde(1)%problem_name(2) = "Richards' equation with freezing andd thawing processes"
 
-      pde(1)%solution_name(1) = "press_head" !nazev vystupnich souboru
-      pde(1)%solution_name(2) = "h  [L]" !popisek grafu
+      pde(1)%solution_name(1) = "press_head" 
+      pde(1)%solution_name(2) = "h  [L]" 
 
       pde(1)%flux_name(1) = "flux"  
       pde(1)%flux_name(2) = "Darcian flow [L.T^{-1}]"
 
-      allocate(pde(1)%mass_name(2,2))
+      deallocate(pde(1)%mass_name)
+      deallocate(pde(1)%mass)
       
+      allocate(pde(1)%mass_name(2,2))
+      allocate(pde(1)%mass(2))
+
       pde(1)%mass_name(1,1) = "theta_l"
       pde(1)%mass_name(1,2) = "theta_l [-]"
       
       pde(1)%mass_name(2,1) = "theta_i"
       pde(1)%mass_name(2,2) = "theta_i [-]"
-      
-      deallocate(pde(1)%mass)
-      
-      allocate(pde(1)%mass(2))
+            
       
       pde(1)%mass(1)%val => theta
       
       pde(1)%mass(2)%val => thetai
+
+    ! pointers for heat flow model
+      pde(2)%pde_fnc(1)%elasticity => capacityTh
       
+      pde(2)%pde_fnc(2)%elasticity => capacityTT
       
+      pde(2)%pde_fnc(2)%dispersion => diffTT
+      
+      pde(2)%pde_fnc(2)%convection => convectTT
+      
+      pde(2)%flux => heat_flux
+      
+      pde(2)%initcond => heat_icond  
+      
+      do i=lbound(pde(2)%bc,1), ubound(pde(2)%bc,1)
+        select case(pde(2)%bc(i)%code)
+          case(1)
+            pde(2)%bc(i)%value_fnc => heat_dirichlet
+          case(2)
+            pde(2)%bc(i)%value_fnc => heat_neumann
+          case(0)
+            pde(2)%bc(i)%value_fnc => re_null_bc
+        end select
+      end do  
     
     end subroutine frz_pointers
   

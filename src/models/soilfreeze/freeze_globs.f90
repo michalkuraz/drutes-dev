@@ -8,14 +8,14 @@ module freeze_globs
   real(kind=rkind), parameter, public :: Lf = 334e3
   
   !> specific heat capacity ice
-  real(kind=rkind), parameter, public :: Ci=4000
+  real(kind=rkind), parameter, public :: Ci = 4000
   
   
   !> specific heat capacity water
-  real(kind=rkind), parameter, public :: Cl=4200  
+  real(kind=rkind), parameter, public :: Cl = 4200  
   
   !> reference temperature for Clapeyron
-  real(kind=rkind), parameter, public :: Tref=273.15
+  real(kind=rkind), parameter, public :: Tref = 273.15
 
 
 end module freeze_globs
