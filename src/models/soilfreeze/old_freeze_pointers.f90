@@ -9,9 +9,14 @@ module freeze_pointers
       
       integer(kind=ikind), intent(out) :: processes
       
+      
       select case (drutes_config%name)
         case ("freeze")
           processes = 2
+          
+        case ("LTNE")
+          processes = 4
+          
         case default
           print *, "procedure called when unexpected problem name"
           print *, "exited from freeze_pointers::freeze_processes"
@@ -52,18 +57,18 @@ module freeze_pointers
       
       pde(1)%pde_fnc(1)%dispersion => diffhh
       
-      pde(1)%pde_fnc(1)%convection => convz
-
       pde(1)%pde_fnc(2)%dispersion => diffhT
       
-      pde(1)%flux => all_fluxes
-
       pde(1)%initcond => retot_initcond
       
       if (drutes_config%fnc_method == 0) then
+        Kliquid_default => mualem
         rwcap => vangen_elast
+        theta => vangen
       else
+        Kliquid_default  => mualem_tab		
         rwcap => vangen_elast_tab
+        theta => vangen_tab
       end if
       
       pde(1)%problem_name(1) = "RE_freeze_thaw"
@@ -88,7 +93,7 @@ module freeze_pointers
       pde(1)%mass_name(2,2) = "theta_i [-]"
             
       
-      pde(1)%mass(1)%val => vangen
+      pde(1)%mass(1)%val => theta
       
       pde(1)%mass(2)%val => thetai
 

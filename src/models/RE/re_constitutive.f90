@@ -102,7 +102,7 @@ module RE_constitutive
         ERROR stop
       else if (.not. present(quadpnt) .and. .not. present(x)) then
         print *, "ERROR: you have not specified either integ point or x value"
-              print *, "exited from re_constitutive::vangen"
+        print *, "exited from re_constitutive::vangen"
         ERROR stop
       end if
       
@@ -591,8 +591,7 @@ module RE_constitutive
 
       real(kind=rkind) :: a,n,m, tmp
       type(integpnt_str) :: quadpnt_loc
-      
-  
+        
 
       if (present(quadpnt) .and. present(x)) then
         print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
@@ -870,7 +869,6 @@ module RE_constitutive
       else
         tmp = 0
       end if
-
       if (present(vector_out)) then
         ! must be negative, because the commnon scheme of the CDE problem has negative convection, but RE has positive convection
         vector_out = -vgset(layer)%Ks(drutes_config%dimen,:) * tmp

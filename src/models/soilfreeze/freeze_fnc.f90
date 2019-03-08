@@ -2,206 +2,20 @@ module freeze_fnc
   use pde_objs
   use typy
   use freeze_globs
-  private :: icerho, watrho, icewatrho, Kliquid_temp, hl, getwater_id, gettempice_id, gettempwat_id
-  public :: iceswitch, capacityhh, capacityhT, diffhh, capacityTh, capacityTT, thetai, Kliquid
-
+  use debug_tools
+  use freeze_helper
+  
+  public :: capacityhh, capacityhT,  diffhh, diffhT , convz
+  public:: capacityTT, capacityTh, diffTT, convectTT
 
   
-  procedure(tensor_fnc), pointer, public :: Kliquid_default
-  procedure(scalar_fnc), pointer, public :: rwcap, theta
+  procedure(scalar_fnc), pointer, public :: rwcap
+      
+      
   
   contains
-
-  
-    pure function gettempice_id() result(id)
-      use typy
-      
-      integer(kind=ikind) :: id
-      
-      select case(drutes_config%name)
-        case("freeze")
-          id = 2
-        case("LTNE")
-          !will be editted later, temporaly genreates error, so we won't forget to update it
-          id = -1
-      end select
-      
-    end function gettempice_id
-  
-  
-    
-    pure function gettempwat_id() result(id)
-      use typy
-      
-      integer(kind=ikind) :: id
-      
-      select case(drutes_config%name)
-        case("freeze")
-          id = 2
-        case("LTNE")
-          !will be editted later, temporaly genreates error, so we won't forget to update it
-          id = -1
-      end select
-      
-    end function gettempwat_id
-    
-    
-    pure function getwater_id() result(id)
-      use typy
-      
-       integer(kind=ikind) :: id
-       
-       id = 1
-       
-     end function getwater_id
-    
-      
-  
-
-    function icerho(quadpnt) result(rho)
-      use typy
-      use global_objs
-      
-      type(integpnt_str), intent(in) :: quadpnt
-      real(kind=rkind) :: rho
-      real(kind=rkind) :: temp
-      
-      type(integpnt_str) :: quadpnt_loc
-      
-      quadpnt_loc = quadpnt
-      
-      quadpnt_loc%column = 1
-      
-      temp = pde(gettempice_id())%getval(quadpnt_loc)
-      
-      
-      rho = exp(log(999.946997406686) + 5e-5*temp)
-
-      
-      
-    end function icerho
-   
-   
-    function watrho(quadpnt) result(rho)
-      use typy
-      use global_objs
-    
-      type(integpnt_str), intent(in) :: quadpnt
-      real(kind=rkind) :: rho
-      
-      real(kind=rkind) :: temp
-      
-      type(integpnt_str) :: quadpnt_loc
-      
-      quadpnt_loc = quadpnt
-      
-      quadpnt_loc%column = 1
-      
-      temp = pde(gettempwat_id())%getval(quadpnt_loc)
-      
-      if (temp>0) then
-        rho = (1.682208e-8*temp*temp*temp - 6.05282462e-6*temp*temp + 2.36680033177935e-5*temp + &
-               0.999946997406686)*1e3
-      else
-        rho = exp(log(999.946997406686) + 5e-5*temp)
-      end if
-        
-    end function watrho
-   
-   
-   
-    function icewatrho(quadpnt) result(rho)
-      use typy
-      use global_objs
-      
-      type(integpnt_str), intent(in) :: quadpnt
-      real(kind=rkind) :: rho
-      
-      integer(kind=ikind) :: layer, el
-      real(kind=rkind) :: thl, thall
-      
-      
-      if (quadpnt%type_pnt == "ndpt" ) then
-        el = nodes%element(quadpnt%order)%data(1)
-      else
-        el = quadpnt%element
-      end if
-      
-      layer = elements%material(el)
-      
-      thl = theta(pde(getwater_id()), layer, x=(/hl(quadpnt)/))
-      thall = theta(pde(getwater_id()), layer, quadpnt)
-      
-      rho = (thl * watrho(quadpnt) + thall * icerho(quadpnt) - thl * icerho(quadpnt))/thall
-        
-     end function icewatrho
-   
-   
-    function iceswitch(quadpnt) result(sw)
-      use typy
-      use global_objs
-      
-      type(integpnt_str), intent(in) :: quadpnt
-      integer(kind=ikind) :: sw
-      
-      real(kind=rkind) :: Tf
-      type(integpnt_str) :: quadpnt_loc
-      
-      quadpnt_loc = quadpnt
-      quadpnt_loc%column = 1
-      
-      Tf = Tref*exp(pde(getwater_id())%getval(quadpnt_loc)*grav/Lf) - Tref
-      
-      if (pde(gettempwat_id())%getval(quadpnt_loc) > Tf) then
-        sw = 0
-      else
-        sw = 1
-      end if
-          
-    end function iceswitch
-   
-    function hl(quadpnt) result(val)
-      use typy
-      use global_objs
-      use freeze_globs
-     
-      type(integpnt_str), intent(in) :: quadpnt
-      real(kind=rkind) :: val
-      
-      real(kind=rkind) :: hw, temp
-      
-      hw = pde(getwater_id())%getval(quadpnt)
-      
-      temp = pde(gettempwat_id())%getval(quadpnt)
-      
-      val = hw + iceswitch(quadpnt)*(Lf/grav*log((temp+Tref)/Tref) - hw)
-     
-    end function hl
-    
-    
-    function thetai(pde_loc, layer, quadpnt, x) result(val)
-      use typy
-      use global_objs
-      use pde_objs
-     
-      class(pde_str), intent(in) :: pde_loc
-      integer(kind=ikind), intent(in) :: layer
-      type(integpnt_str), intent(in), optional :: quadpnt
-      real(kind=rkind), dimension(:), intent(in), optional    :: x
-      real(kind=rkind) :: val
-      
-      real(kind=rkind) :: thl, thall
-      
-      
-      thl = theta(pde(getwater_id()), layer, x=(/hl(quadpnt)/))
-      thall = theta(pde(getwater_id()), layer, quadpnt)
-      
-      val = (thall * icewatrho(quadpnt) - thl * watrho(quadpnt))/icerho(quadpnt)
-     
-    end function thetai
-    
-   
-   
+    !> Capacity term due to pressure head for flow model
+    !> so pde(1)
     function capacityhh(pde_loc, layer, quadpnt, x) result(val)
       use typy
       use global_objs
@@ -218,18 +32,21 @@ module freeze_fnc
       !> return value
       real(kind=rkind)                :: val
     
+      if (iceswitch(quadpnt)) then
+        val = rho_ice*rwcap(pde_loc, layer, quadpnt)* rho_icewat(quadpnt) * grav 
+      else
+        val = rho_wat*rwcap(pde_loc, layer, x=(/hl(quadpnt)/))
     
-      val = (1-iceswitch(quadpnt))*watrho(quadpnt)*rwcap(pde_loc, layer, x=(/hl(quadpnt)/))
-    
-      val = val + icerho(quadpnt)*(rwcap(pde_loc, layer, quadpnt) - &
-            rwcap(pde_loc, layer, x=(/hl(quadpnt)/))*(1-iceswitch(quadpnt)))
+        val = val + rho_ice*(rwcap(pde_loc, layer, quadpnt) - &
+            rwcap(pde_loc, layer, x=(/hl(quadpnt)/)))
           
-      val = val * icewatrho(quadpnt) * grav 
-      
-   
+        val = val * rho_icewat(quadpnt) * grav 
+      end if
+
     end function capacityhh
-   
-   
+                 
+    !> Capacity term due to temperature for flow model
+    !> so pde(1)
     function capacityhT(pde_loc, layer, quadpnt, x) result(val)
       use typy
       use global_objs
@@ -248,20 +65,22 @@ module freeze_fnc
     
       real(kind=rkind) :: temp
     
-      temp = pde(gettempwat_id())%getval(quadpnt)
-    
-    
-      val = iceswitch(quadpnt) * rwcap(pde_loc, layer, x=(/hl(quadpnt)/)) * watrho(quadpnt)*watrho(quadpnt) * Lf/temp
-    
-      val = val - iceswitch(quadpnt) * rwcap(pde_loc, layer, x=(/hl(quadpnt)/)) *watrho(quadpnt)*icerho(quadpnt) * Lf/temp
-    
-      
+      temp = pde(2)%getval(quadpnt)
+      if (iceswitch(quadpnt)) then
+        val = rwcap(pde_loc, layer, x=(/hl(quadpnt)/)) * rho_wat**2 * Lf/temp
+        val = val - rwcap(pde_loc, layer, x=(/hl(quadpnt)/)) *rho_wat*rho_ice * Lf/temp
+      else
+        val = 0
+      end if
+
     end function capacityhT
-  
-  
+
+    !> diffusion due to pressure head for flow model
+    !> so pde(1)
     subroutine diffhh(pde_loc, layer, quadpnt, x, tensor, scalar)
       use typy
       use global_objs
+      use freeze_globs
       class(pde_str), intent(in) :: pde_loc
       !> value of the nonlinear function
       real(kind=rkind), dimension(:), intent(in), optional    :: x
@@ -274,88 +93,62 @@ module freeze_fnc
       !> relative scalar value of the nonlinear function 
       real(kind=rkind), intent(out), optional                 :: scalar
       
-      
+print *, "back in diffhh"
       if (present(tensor)) then
-        call Kliquid(pde_loc, layer, quadpnt, tensor=tensor)
-        tensor = icewatrho(quadpnt)*(1-iceswitch(quadpnt))*tensor
+        if(present(quadpnt)) then 
+          call mualem(pde_loc, layer, quadpnt, tensor = tensor)
+          print *, tensor
+          print *, -Omega
+          print *, Q_reduction(layer, quadpnt)
+          tensor = 10**(-Omega*Q_reduction(layer, quadpnt))*tensor
+         print *, tensor
+
+          if(iceswitch(quadpnt)) then
+            tensor = 0
+          else
+            tensor = rho_icewat(quadpnt)*tensor
+          end if
+                   print *, tensor
+
+        else if (present(x)) then
+
+          call mualem(pde_loc, layer, x = x, tensor = tensor)
+          tensor = 10**(-Omega*Q_reduction(layer, x = x))*tensor
+          if(iceswitch(quadpnt)) then
+            tensor = 0
+          else
+            tensor = rho_icewat(quadpnt)*tensor
+          end if
+        end if
       else
         print *, "ERROR! output tensor undefined, exited from diffhh::freeze_fnc"
       end if
     
-    
+
     end subroutine diffhh
     
-    subroutine Kliquid(pde_loc, layer, quadpnt, x, tensor, scalar) 
+    subroutine convz(pde_loc, layer, quadpnt, x, grad,  flux, flux_length)
       use typy
+      use pde_objs
       use global_objs
-      use globals
+      use freeze_globs
+       
       class(pde_str), intent(in) :: pde_loc
-      !> value of the nonlinear function
-      real(kind=rkind), dimension(:), intent(in), optional    :: x
-      !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
-      type(integpnt_str), intent(in), optional :: quadpnt
-      !> material ID
-      integer(kind=ikind), intent(in) :: layer
-      !> return tensor
-      real(kind=rkind), dimension(:,:), intent(out), optional :: tensor
-      !> relative scalar value of the nonlinear function 
-      real(kind=rkind), intent(out), optional                 :: scalar
+      integer(kind=ikind), intent(in)                          :: layer
+      type(integpnt_str), intent(in), optional :: quadpnt    
+      real(kind=rkind), intent(in), dimension(:), optional                   :: x
+      !> this value is optional, because it is required by the vector_fnc procedure pointer global definition
+      real(kind=rkind), dimension(:), intent(in), optional     :: grad
+      real(kind=rkind), dimension(:), intent(out), optional    :: flux
+      real(kind=rkind), intent(out), optional                  :: flux_length
       
-      
-      real(kind=rkind), dimension(3,3) :: K
-      integer(kind=ikind) :: D
-      real(kind=rkind) :: Ei, Ks, thi, thl
-      
-      
-      D = drutes_config%dimen
-      
-      if (present(quadpnt)) then
-        call Kliquid_default(pde_loc, layer, quadpnt, tensor=K(1:D, 1:D))
-        thi =  thetai(pde_loc, layer, quadpnt)
-        thl = theta(pde_loc, layer, quadpnt)
-      else if (present(x)) then
-        call Kliquid_default(pde_loc, layer, x=x, tensor=K(1:D, 1:D))
-        thi =  thetai(pde_loc, layer, x=x)
-        thl = theta(pde_loc, layer, x=x)
-      else
-        print *, "runtime error"
-        print *, "exited from Kliquid::freeze_fnc"
-        ERROR STOP
-      end if
-      
-      call Kliquid_default(pde_loc, layer, x=(/0.0_rkind/), scalar=Ks)
-      
-      Ei = 5/4.0_rkind*(Ks-3)*(Ks-3) + 6
-      
-      tensor = 0
-      
-      
-      
-   end subroutine Kliquid
+      call dmualem_dh(pde_loc, layer, quadpnt, vector_out = flux)
+      flux = rho_wat*flux
+
+    end subroutine convz
     
-  
-  
-    subroutine Kliquid_temp(pde_loc, layer, quadpnt, x, tensor, scalar) 
-      use typy
-      use global_objs
-      class(pde_str), intent(in) :: pde_loc
-      !> value of the nonlinear function
-      real(kind=rkind), dimension(:), intent(in), optional    :: x
-      !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
-      type(integpnt_str), intent(in), optional :: quadpnt
-      !> material ID
-      integer(kind=ikind), intent(in) :: layer
-      !> return tensor
-      real(kind=rkind), dimension(:,:), intent(out), optional :: tensor
-      !> relative scalar value of the nonlinear function 
-      real(kind=rkind), intent(out), optional                 :: scalar
-    
-    
-    end subroutine Kliquid_temp
-  
-      
-      
-      
+    !> diffusion due to temperature for flow model
+    !> so pde(1)
     subroutine diffhT(pde_loc, layer, quadpnt, x, tensor, scalar)
       use typy
       use global_objs
@@ -372,31 +165,44 @@ module freeze_fnc
       !> relative scalar value of the nonlinear function 
       real(kind=rkind), intent(out), optional                 :: scalar
       
-      real(kind=rkind), dimension(3,3) :: Klt, E
+      real(kind=rkind), dimension(3,3) :: Klh, Klt, E, scalarth
       integer(kind=ikind) :: D, i,j
       real(kind=rkind) :: temp
       
       D = drutes_config%dimen
-      
-      E=0
-      
-      temp = pde(gettempwat_id())%getval(quadpnt)
-      
-      if (present(tensor)) then
-        call Kliquid_temp(pde_loc, layer, quadpnt, tensor=Klt(1:D, 1:D))
-        E(1,1) = iceswitch(quadpnt) * watrho(quadpnt) * watrho(quadpnt) * Lf/temp
-        do i=2, D
-          E(i,i) = E(1,1)
-        end do
-        tensor = E(1:D,1:D) - watrho(quadpnt) * Klt(1:D, 1:D)
-      else
-         print *, "ERROR! output tensor undefined, exited from diffhT::freeze_fnc"
-      end if     
-      
-      
-      
-    end subroutine diffhT
+                        print*, "diffht"
 
+      temp = pde(2)%getval(quadpnt)
+      if (present(tensor)) then
+            print*, "diffht"
+        if (present(quadpnt)) then
+          call Kliquid_temp(pde_loc, layer, quadpnt, tensor = Klt(1:D, 1:D))
+          call mualem(pde_loc, layer, quadpnt, tensor = Klh(1:D, 1:D))
+          Klh(1:D,1:D) = 10**(-Omega*Q_reduction(layer, quadpnt))*Klh
+          if(iceswitch(quadpnt)) then
+            tensor = rho_wat * (Klt(1:D, 1:D) - Lf/temp/grav*Klh(1:D,1:D))
+          else
+            tensor = rho_wat * Klt(1:D, 1:D)
+          end if
+        else if (present(x)) then
+          call Kliquid_temp(pde_loc, layer, x = x, tensor = Klt(1:D, 1:D))
+          call mualem(pde_loc, layer, x = x, tensor = Klh(1:D, 1:D))
+          Klh(1:D,1:D) = 10**(-Omega*Q_reduction(layer, x = x))*Klh
+          if(iceswitch(quadpnt)) then
+            tensor = rho_wat * (Klt(1:D, 1:D) - Lf/temp/grav*Klh(1:D,1:D))
+          else
+            tensor = rho_wat * Klt(1:D, 1:D)
+          end if
+        end if
+      else
+         print *, "ERROR! output tensor undefined, exited from diffTh::freeze_fnc"
+      end if   
+
+    end subroutine diffhT
+    
+    
+    !> heat: pde(2)
+    !> Capacity term due to pressure head for heat flow model
 
     function capacityTh(pde_loc, layer, quadpnt, x) result(val)
       use typy
@@ -414,17 +220,16 @@ module freeze_fnc
       !> return value
       real(kind=rkind)                :: val
       
-
-      
-      val = Lf*icerho(quadpnt)*rwcap(pde_loc, layer, quadpnt)
-      val = val - Lf*icerho(quadpnt)*rwcap(pde_loc, layer, x=(/hl(quadpnt)/))*(1-iceswitch(quadpnt))
-      
-      val = val * icewatrho(quadpnt) * grav
-      
+      val = Lf*rho_ice*rwcap(pde_loc, layer, quadpnt)
+      if(.not.iceswitch(quadpnt)) then
+        val = val - Lf*rho_ice*rwcap(pde_loc, layer, x = (/hl(quadpnt)/))
+      end if
+      val = val * rho_icewat(quadpnt) * grav
       
     end function capacityTh
     
-    
+    !> Capacity term due to temperature for heat flow model
+
     function capacityTT(pde_loc, layer, quadpnt, x) result(val)
       use typy
       use global_objs
@@ -443,17 +248,18 @@ module freeze_fnc
       
       real(kind=rkind) :: temp
       
-      temp = pde(gettempwat_id())%getval(quadpnt)
+      temp = pde(2)%getval(quadpnt)
+      print *, "capacTT"
+      val = Ci*rho_ice*thetai(pde_loc, layer, quadpnt) + Cl*rho_wat*vangen(pde_loc, layer, quadpnt) 
       
-      
-      val = Ci*thetai(pde_loc, layer, quadpnt) + Cl*theta(pde_loc, layer, quadpnt) 
-      
-      val = val - Lf*icerho(quadpnt)*rwcap(pde_loc, layer, x=(/hl(quadpnt)/))*iceswitch(quadpnt)*Lf*watrho(quadpnt)/temp 
-      
+      if(iceswitch(quadpnt)) then
+        val = val - Lf*rho_ice*rwcap(pde_loc, layer, x = (/hl(quadpnt)/))*Lf*rho_wat/temp 
+      end if
       
     end function capacityTT
     
-    
+    !> dispersion for heat flow model
+
     subroutine diffTT(pde_loc, layer, quadpnt, x, tensor, scalar)
       use typy
       use global_objs
@@ -470,10 +276,19 @@ module freeze_fnc
       !> relative scalar value of the nonlinear function 
       real(kind=rkind), intent(out), optional                 :: scalar
       
-      real(kind=rkind), dimension(3,3) :: Klt, E
-      integer(kind=ikind) :: D, i,j
+      integer(kind=ikind) :: D, i
       
-        
+     
+      D = drutes_config%dimen
+
+      
+      if (present(tensor)) then
+        do i= 1, D
+          tensor(i,i) =  thermal_cond
+        end do
+      end if
+      
+      
     end subroutine diffTT
     
     
@@ -492,15 +307,20 @@ module freeze_fnc
       real(kind=rkind), dimension(:), intent(out), optional    :: flux
       real(kind=rkind), intent(out), optional                  :: flux_length
       
-      call darcy_frozen(pde_loc, layer, quadpnt, flux)
       
-      flux = flux * Cl
-      
-      
-    end subroutine convectTT
-      
+      if (present(flux)) then
+          call pde(1)%flux(layer, quadpnt, vector_out = flux)
+          flux = Cl *rho_wat*flux
+        end if
+        
+        if (present(flux_length)) then
+           call pde(1)%flux(layer, quadpnt, scalar = flux_length)
+           flux_length = Cl *rho_wat*flux_length
+        end if
               
-    subroutine darcy_frozen(pde_loc, layer, quadpnt, x, grad,  flux, flux_length)
+    end subroutine convectTT
+    
+    subroutine all_fluxes(pde_loc, layer, quadpnt, x, grad,  flux, flux_length)
       use typy
       use pde_objs
       use global_objs
@@ -516,7 +336,6 @@ module freeze_fnc
 
       real(kind=rkind), dimension(3,3)  :: K
       integer                           :: D
-      integer(kind=ikind)               :: i
       integer(kind=ikind), dimension(3) :: nablaz
       real(kind=rkind), dimension(3)  :: gradH
       real(kind=rkind), dimension(3)  :: vct
@@ -526,26 +345,25 @@ module freeze_fnc
       
 
       
-      
       if (present(quadpnt) .and. (present(grad) .or. present(x))) then
         print *, "ERROR: the function can be called either with integ point or x value definition and gradient, not both of them"
         ERROR stop
       else if ((.not. present(grad) .or. .not. present(x)) .and. .not. present(quadpnt)) then
         print *, "ERROR: you have not specified either integ point or x value"
-        print *, "exited from re_constitutive::darcy_law"
+        print *, "exited from freeze_fnc::all_fluxes"
         ERROR stop
       end if
       
       if (present(quadpnt)) then
-        quadpnt_loc=quadpnt
+        quadpnt_loc = quadpnt
         quadpnt_loc%preproc=.true.
-        h = pde_loc%getval(quadpnt_loc)
+        h = hl(quadpnt)
         call pde_loc%getgrad(quadpnt, gradient)
       else
         if (ubound(x,1) /=1) then
           print *, "ERROR: van Genuchten function is a function of a single variable h"
           print *, "       your input data has:", ubound(x,1), "variables"
-          print *, "exited from re_constitutive::darcy_law"
+          print *, "exited from freeze_fnc::all_fluxes"
           ERROR STOP
         end if
         h = x(1)
@@ -559,11 +377,17 @@ module freeze_fnc
       nablaz(D) = 1
       
       gradH(1:D) = gradient(1:D) + nablaz(1:D)
+      if(present(quadpnt)) then
+        call pde_loc%pde_fnc(1)%dispersion(pde_loc, layer, quadpnt, tensor=K(1:D, 1:D))
+        K(1:D,1:D) = 10**(-Omega*Q_reduction(layer, quadpnt))*K(1:D, 1:D)
+              print*, "fluxes 1"
 
-      call Kliquid(pde_loc, layer, x=(/h/), tensor=K(1:D, 1:D))
-     
-      
+      else if (present(x)) then
+        call pde_loc%pde_fnc(1)%dispersion(pde_loc, layer, x=x, tensor=K(1:D, 1:D))
+        K(1:D,1:D) = 10**(-Omega*Q_reduction(layer, x = x))*K(1:D, 1:D)
+      end if
       vct(1:D) = matmul(-K(1:D,1:D), gradH(1:D))
+      print*, "fluxes"
 
 
       if (present(flux_length)) then
@@ -577,15 +401,12 @@ module freeze_fnc
         end select
       end if
 
+      print *, "in all fluxes"
 
       if (present(flux)) then
         flux(1:D) = vct(1:D)
       end if
 
-    end subroutine darcy_frozen     
-
+    end subroutine all_fluxes
     
-              
-
-
 end module freeze_fnc

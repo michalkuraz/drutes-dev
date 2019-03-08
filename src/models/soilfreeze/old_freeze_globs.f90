@@ -21,13 +21,10 @@ module freeze_globs
   real(kind=rkind), parameter, public :: rho_wat = 1000
   
   !> density of ice [kg.m^-3]
-  real(kind=rkind), parameter, public :: rho_ice = 1000
+  real(kind=rkind), parameter, public :: rho_ice = 918
   
    !> Gain factor [-]
   real(kind=rkind), parameter, public :: gwt = 7
-  
-  !> Impedance factor [-] (see Lundin 1990, tested 2,4,6,8,10)
-  real(kind=rkind), parameter, public :: Omega = 6
   
   !> Thermal conductivity [ W/m/K]
   real(kind=rkind), parameter, public :: thermal_cond = 0.5

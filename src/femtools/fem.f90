@@ -58,7 +58,6 @@ module fem
       real(4), dimension(3) :: act_time
       real(4) :: logtime=0.0, logtime_dt=900
       
-
       minimal_dt = dtmax
       time_step = init_dt
       if (.not. drutes_config%run_from_backup) time = 0
@@ -86,7 +85,6 @@ module fem
       open(newunit=file_dt, file="out/dt", action="write", status="replace")
 
      call make_print("separately")
-
      call write_obs()
 
 

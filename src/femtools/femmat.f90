@@ -61,7 +61,6 @@ module femmat
       real(kind=rkind), dimension(:), allocatable :: vcttmp
       real(kind=rkind) :: lambda_l, lambda_h, tmpxx=0, maxtime=0
 
-      
       proc = ubound(pde,1)
       fin = maxval(pde(proc)%permut(:))
       itcount = 0
@@ -173,8 +172,7 @@ module femmat
       call null_problem(spmatrix, pde_common%bvect)
       
       limits = ubound(stiff_mat,1)/ubound(pde,1)
-
-
+      print *, "reached this point"
 
       do i=1, elements%kolik
         pde_common%current_el = i
@@ -191,18 +189,23 @@ module femmat
 		      end if
 		    end do
        end do processes
-	
 
        call build_bvect(i, time_step)
-        
+	      print *, "bvect"
+
        call build_stiff_np(i, time_step)
-        
+	      print *, "buildstiff"
+
        call pde_common%time_integ(i)
-          
+       call printmtx(stiff_mat)
+       call printmtx(cap_mat)
+
        stiff_mat = stiff_mat + cap_mat
         
        call in2global(i,spmatrix, pde_common%bvect)
-
+       
+       call printmtx(stiff_mat)
+stop
       end do
 
 

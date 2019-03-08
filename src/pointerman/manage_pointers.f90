@@ -115,7 +115,7 @@ module manage_pointers
         
           call freeze_processes(pde_common%processes)
           call pde_constructor(pde_common%processes)
-          write(unit=drutes_config%fullname, fmt=*) "DRUtES solves heat conduction with convection"
+          write(unit = drutes_config%fullname, fmt=*) "DRUtES solves coupled water and heat flow considering freezing and melting"
           call frz_pointers()
           
         case default

@@ -119,7 +119,6 @@ module postpro
       
       no_files = maxval( (/ (ubound(pde(i)%mass_name,1), i=1, ubound(pde,1)) /) ) + 3
 
-  
       if (.not. allocated(ids_obs)) then
         allocate(ids(ubound(pde,1), no_files))
         allocate(ids_obs(ubound(pde,1), no_files))
@@ -131,14 +130,14 @@ module postpro
       else
         ids => ids_obs
       end if
-      
+
       allocate(filenames(ubound(pde,1)))
       
       do i=1, ubound(filenames,1)
         allocate(filenames(i)%names(3+ubound(pde(i)%mass_name,1)))
       end do
  
-      
+
       if (anime) then
         prefix = "out/anime/"
         write(unit=forma, fmt="(a, I7, a)") "(a, a, a, a, a, I", 1," a)"
@@ -200,9 +199,11 @@ module postpro
 
    
         if (drutes_config%dimen == 1 .or. www) then
- 
+               print *, "in make print 1"
+
           call print_pure(ids(proc,:), proc, quadpnt)
-                  
+                                print *, "in make print 2"
+
         else
           select case(observe_info%fmt)
             case("pure")
@@ -550,7 +551,7 @@ module postpro
       real(kind=rkind), dimension(3) :: flux
 
 
-    
+
       do i=1, nodes%kolik
         quadpnt%order = i
         quadpnt%preproc=.true.
@@ -564,9 +565,11 @@ module postpro
           (/ ( pde(proc)%mass(j)%val(pde(proc), layer, quadpnt), j=1,ubound(pde(proc)%mass,1) ) /)
     
         end if
+
         
         call pde(proc)%flux(layer, quadpnt, vector_out=flux(1:drutes_config%dimen))
-              
+
+        
         write(unit=ids(3), fmt=*) i,  nodes%data(i,:), flux(1:drutes_config%dimen)
       
       end do
