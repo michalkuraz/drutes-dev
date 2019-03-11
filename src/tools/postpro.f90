@@ -199,10 +199,8 @@ module postpro
 
    
         if (drutes_config%dimen == 1 .or. www) then
-               print *, "in make print 1"
 
           call print_pure(ids(proc,:), proc, quadpnt)
-                                print *, "in make print 2"
 
         else
           select case(observe_info%fmt)

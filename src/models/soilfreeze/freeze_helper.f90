@@ -78,9 +78,9 @@ module freeze_helper
       if(present(quadpnt)) then
         thall = vangen(pde(1), layer, quadpnt)
         thl = vangen(pde(1), layer, x=(/hl(quadpnt)/))
-      else if (present(x)) then
-        thall = vangen(pde(1), layer, x = x)
-        thl = vangen(pde(1), layer, x = x)
+     ! else if (present(x)) then
+      !  thall = vangen(pde(1), layer, x = x)
+      !  thl = vangen(pde(1), layer, x = x)
       end if
       
       thice = thall - thl
@@ -88,12 +88,13 @@ module freeze_helper
        
     end function Q_reduction
     
-    subroutine Kliquid_temp(pde_loc, layer, quadpnt, x, tensor, scalar) 
+    subroutine Kliquid_temp(pde_loc, layer, quadpnt, x, T, tensor, scalar) 
       use typy
       use global_objs
       class(pde_str), intent(in) :: pde_loc
       !> value of the nonlinear function
       real(kind=rkind), dimension(:), intent(in), optional    :: x
+      real(kind=rkind),intent(in), optional    :: T
       !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
       type(integpnt_str), intent(in), optional :: quadpnt
       !> material ID
@@ -112,8 +113,10 @@ module freeze_helper
 
         if (present(quadpnt)) then
           tensor = Klt(1:D, 1:D)*gwt*pde(1)%getval(quadpnt)*surf_tens_deriv(pde_loc, layer, quadpnt)
-        else if (present(x)) then
-          tensor = Klt(1:D, 1:D)*gwt*pde(1)%getval(quadpnt)*surf_tens_deriv(pde_loc, layer, x = x)
+        !else if (present(T)) then
+        !  if (present (x)) then
+        !    tensor = Klt(1:D, 1:D)*gwt*x(1)*surf_tens_deriv(pde_loc, layer, T = T)
+        !  end if
         else
           print *, "runtime error"
           print *, "exited from Kliquid_temp::freeze_fnc"
@@ -127,7 +130,7 @@ module freeze_helper
     end subroutine Kliquid_temp
     
     
-    function surf_tens_deriv(pde_loc, layer, quadpnt, x) result(val)
+    function surf_tens_deriv(pde_loc, layer, quadpnt, T) result(val)
       use typy
       use global_objs
       use freeze_globs
@@ -135,7 +138,7 @@ module freeze_helper
     
       class(pde_str), intent(in) :: pde_loc
       !> value of the nonlinear function
-      real(kind=rkind), dimension(:), intent(in), optional    :: x
+      real(kind=rkind), intent(in), optional    ::  T
       !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
       type(integpnt_str), intent(in), optional :: quadpnt
       !> material ID
@@ -146,7 +149,10 @@ module freeze_helper
       real(kind=rkind) :: temp
     
       temp = pde(2)%getval(quadpnt)
-    
+      if (present(T)) then
+        temp = T
+      end if
+      
       val = -0.1425-2.38e-4*temp
       
     end function surf_tens_deriv
@@ -157,15 +163,17 @@ module freeze_helper
       use freeze_globs
      
       type(integpnt_str), intent(in), optional :: quadpnt
-      real(kind=rkind) :: val
+      real(kind=rkind) :: val, T_melt
       
       real(kind=rkind) :: hw, temp
       
       hw = pde(1)%getval(quadpnt)
       
       temp = pde(2)%getval(quadpnt)
+      T_melt = Tref*exp(hw*grav/Lf)
+      
       if(iceswitch(quadpnt)) then
-        val = hw + (Lf/grav*log((temp+273.15_rkind)/Tref)) !units
+        val = hw+Lf/grav*log((temp+273.15_rkind)/T_melt) !units
       else
         val = hw
       end if

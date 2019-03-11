@@ -43,8 +43,8 @@ module freeze_pointers
       
       call heat_read(pde(2))
       call res_read(pde(1))
-      call RE_totheadbc(pde(1))
-
+      !call RE_totheadbc(pde(1))
+      call RE_pressheadbc(pde(1))
     ! pointers for water flow model
       pde(1)%pde_fnc(1)%elasticity => capacityhh
       
@@ -58,7 +58,7 @@ module freeze_pointers
       
       pde(1)%flux => all_fluxes
 
-      pde(1)%initcond => retot_initcond
+      pde(1)%initcond => re_initcond
       
       if (drutes_config%fnc_method == 0) then
         rwcap => vangen_elast
@@ -91,6 +91,7 @@ module freeze_pointers
       pde(1)%mass(1)%val => vangen
       
       pde(1)%mass(2)%val => thetai
+      ! allocate porosity as mass(3)?
 
     ! pointers for heat flow model
       pde(2)%pde_fnc(1)%elasticity => capacityTh

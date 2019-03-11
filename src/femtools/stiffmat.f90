@@ -110,13 +110,11 @@ module stiffmat
                 quadpnt%order = l
                 call pde(iproc)%pde_fnc(jproc)%dispersion(pde(iproc), layer(iproc, jproc), &
                    quadpnt, tensor=disp(1:top,1:top))
-              print*, disp(1:top,1:top)
 
                 w(:,1:top) =  matmul(u(:,1:top),disp(1:top,1:top))
                 dsum = dsum - matmul(w(:,1:top) ,v(1:top,:))*gauss_points%weight(l)
               end do
               do l=1, ubound(gauss_points%weight,1)
-                            print*, "in stiffmat, before conv"
                 quadpnt%order = l
                 call pde(iproc)%pde_fnc(jproc)%convection(pde(iproc), layer(iproc, jproc), quadpnt, &
                   vector_out=conv(1:top))
@@ -125,7 +123,6 @@ module stiffmat
                    vector_out=conv(1:top))
                   w = base_fnc(i,l)*base_fnc(j,l)
                 csum = csum - dot_product(w(1,1:top), conv(1:top))*gauss_points%weight(l)
-                                                 print*, "in stiffmat, afetr conv"
 
               end do
 
@@ -140,9 +137,6 @@ module stiffmat
 
               ii = i + (iproc-1)*limits
               jj = j + (jproc-1)*limits
-              
-                print*, iproc, jproc, dsum, csum, rsum
-
               
               stiff_mat(ii,jj) = (dsum(1,1) + csum + rsum)
             end do
