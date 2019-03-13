@@ -28,7 +28,7 @@ module freeze_helper
       Tf = Tref*exp(pde(1)%getval(quadpnt_loc)*grav/Lf)
       Tf = Tf - 273.15_rkind
 
-      if (pde(2)%getval(quadpnt_loc) > Tf) then
+      if (pde(2)%getval(quadpnt_loc) >= Tf) then
       !> melting
         sw = .FALSE.
       else
@@ -109,10 +109,10 @@ module freeze_helper
       D = drutes_config%dimen
 
       if (present(tensor)) then
-        call mualem(pde_loc, layer, quadpnt, tensor = Klt(1:D, 1:D))
+        call mualem(pde_loc, layer, x=(/hl(quadpnt)/), tensor = Klt(1:D, 1:D))
 
         if (present(quadpnt)) then
-          tensor = Klt(1:D, 1:D)*gwt*pde(1)%getval(quadpnt)*surf_tens_deriv(pde_loc, layer, quadpnt)
+          tensor = Klt(1:D, 1:D)*gwt*pde(1)%getval(quadpnt)*surf_tens_deriv(pde_loc, layer, quadpnt)/surf_tens_ref
         !else if (present(T)) then
         !  if (present (x)) then
         !    tensor = Klt(1:D, 1:D)*gwt*x(1)*surf_tens_deriv(pde_loc, layer, T = T)
@@ -153,7 +153,7 @@ module freeze_helper
         temp = T
       end if
       
-      val = -0.1425-2.38e-4*temp
+      val = -0.1425-4.76e-4*temp
       
     end function surf_tens_deriv
     
@@ -195,6 +195,7 @@ module freeze_helper
       thl = vangen(pde(1), layer, x=(/hl(quadpnt)/))
       thall = vangen(pde(1), layer, quadpnt)
       
-      val = (thall * rho_icewat(quadpnt) - thl * rho_wat)/rho_ice
+      !val = (thall * rho_icewat(quadpnt) - thl * rho_wat)/rho_ice
+      val = thall - thl
     end function thetai
 end module freeze_helper

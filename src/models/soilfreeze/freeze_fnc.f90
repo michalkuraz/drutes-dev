@@ -34,19 +34,11 @@ module freeze_fnc
     
       if (iceswitch(quadpnt)) then
         val = (rho_wat-rho_ice)/rho_wat*&
-        rwcap(pde_loc, layer, x=(/hl(quadpnt)/))*(-log(Tref)*grav/Lf+1)+&
-        rho_ice/rho_wat*rwcap(pde_loc, layer, quadpnt)
+        rwcap(pde_loc, layer, x=(/hl(quadpnt)/))*(-log(Tref)+1)+&
+        rho_ice/rho_wat*rwcap(pde_loc, layer, x=(/hl(quadpnt)/))
         !val = rho_ice*rwcap(pde_loc, layer, quadpnt)* rho_icewat(quadpnt) * grav 
       else
-       ! val = rho_wat*rwcap(pde_loc, layer, x=(/hl(quadpnt)/))
-    
-        !val = val + rho_ice*(rwcap(pde_loc, layer, quadpnt) - & rwcap(pde_loc, layer, x=(/hl(quadpnt)/)))
-          
-        !val = val * rho_icewat(quadpnt) * grav 
-        
-        val = rwcap(pde_loc, layer, x=(/hl(quadpnt)/))+&
-        rho_ice/rho_wat*rwcap(pde_loc, layer, quadpnt)- &
-        rho_ice/rho_wat*rwcap(pde_loc, layer, x=(/hl(quadpnt)/))
+        val = rwcap(pde_loc, layer, quadpnt)
 
       end if
 
@@ -74,10 +66,8 @@ module freeze_fnc
     
       temp = pde(2)%getval(quadpnt)+273.15_rkind
       if (iceswitch(quadpnt)) then
-        !val = rwcap(pde_loc, layer, x=(/hl(quadpnt)/)) * rho_wat**2 * Lf/temp
-        !val = val - rwcap(pde_loc, layer, x=(/hl(quadpnt)/)) *rho_wat*rho_ice * Lf/temp
         val = (rho_wat-rho_ice)/rho_wat*&
-        rwcap(pde_loc, layer, x=(/hl(quadpnt)/)) * Lf/temp
+        rwcap(pde_loc, layer, x=(/hl(quadpnt)/)) * Lf/temp/grav
       else
         val = 0
       end if
@@ -105,24 +95,7 @@ module freeze_fnc
       if (present(tensor)) then
         if(present(quadpnt)) then 
           call mualem(pde_loc, layer, x = (/hl(quadpnt)/), tensor = tensor)
-
           tensor = 10**(-Omega*Q_reduction(layer, quadpnt))*tensor
-
-         ! if(iceswitch(quadpnt)) then
-          !  tensor = 0
-         ! else
-           ! tensor = rho_icewat(quadpnt)*tensor
-          !end if
-
-     !   else if (present(x)) then
-
-      !    call mualem(pde_loc, layer, x = x, tensor = tensor)
-         ! tensor = 10**(-Omega*Q_reduction(layer, x = x))*tensor
-         ! if(iceswitch(quadpnt)) then
-          !  tensor = 0
-          !else
-            !tensor = rho_icewat(quadpnt)*tensor
-          !end if
         end if
       else
         print *, "ERROR! output tensor undefined, exited from diffhh::freeze_fnc"
@@ -178,22 +151,13 @@ module freeze_fnc
       if (present(tensor)) then
         if (present(quadpnt)) then
           call Kliquid_temp(pde_loc, layer, quadpnt, tensor = Klt(1:D, 1:D))
-          call mualem(pde_loc, layer, quadpnt, tensor = Klh(1:D, 1:D))
+          call mualem(pde_loc, layer, x=(/hl(quadpnt)/), tensor = Klh(1:D, 1:D))
           Klh(1:D,1:D) = 10**(-Omega*Q_reduction(layer, quadpnt))*Klh(1:D, 1:D)
           if(iceswitch(quadpnt)) then
             tensor = (Klt(1:D, 1:D) + Lf/temp/grav*Klh(1:D,1:D))
           else
             tensor = Klt(1:D, 1:D)
           end if
-       ! else if (present(x)) then
-       !   call Kliquid_temp(pde_loc, layer, T = temp, tensor = Klt(1:D, 1:D))
-       !   call mualem(pde_loc, layer, x = x, tensor = Klh(1:D, 1:D))
-       !   Klh(1:D,1:D) = 10**(-Omega*Q_reduction(layer, x = x))*Klh(1:D, 1:D)
-       !   if(iceswitch(quadpnt)) then
-        !    tensor = rho_wat * (Klt(1:D, 1:D) - Lf/temp/grav*Klh(1:D,1:D))
-        !  else
-         !   tensor = rho_wat * Klt(1:D, 1:D)
-         ! end if
         end if
       else
          print *, "ERROR! output tensor undefined, exited from diffTh::freeze_fnc"
@@ -221,14 +185,13 @@ module freeze_fnc
       !> return value
       real(kind=rkind)                :: val
       
-      val = Lf*rho_ice*rwcap(pde_loc, layer, quadpnt)
       if(.not.iceswitch(quadpnt)) then
-        val = val - Lf*rho_ice*rwcap(pde_loc, layer, x = (/hl(quadpnt)/))
+        val = rwcap(pde_loc, layer, quadpnt)
       end if
       if(iceswitch(quadpnt)) then
-        val = val - (-log(Tref)*grav/Lf+1)*Lf*rho_ice*rwcap(pde_loc, layer, x = (/hl(quadpnt)/))
+        val = val - (-log(Tref)+1)*rwcap(pde_loc, layer, x = (/hl(quadpnt)/))
       end if
-      val = val
+      val = val*Lf*rho_ice
       
     end function capacityTh
     
@@ -250,13 +213,25 @@ module freeze_fnc
       !> return value
       real(kind=rkind)                :: val
       
-      real(kind=rkind) :: temp
+      real(kind=rkind) :: temp, vol_soil, th_air
       
+      vol_soil = 1_rkind - vgset(layer)%Ths
+      th_air = vgset(layer)%Ths-thetai(pde_loc, layer, quadpnt)-vangen(pde_loc, layer, x = (/hl(quadpnt)/)) 
+      if(th_air < 0) then
+        if(abs(th_air) > epsilon(th_air)) then
+          print*, th_air
+          print*, epsilon(th_air)
+          print *, "the volume of air is negative"
+          print *, "exited from freeze_fnc :: capacityTT"
+          stop
+        end if
+      end if
       temp = pde(2)%getval(quadpnt)
-      val = Ci*rho_ice*thetai(pde_loc, layer, quadpnt) + Cl*rho_wat*vangen(pde_loc, layer, quadpnt) 
-      
+      val =  Cl*rho_wat*vangen(pde_loc, layer, x = (/hl(quadpnt)/)) 
+      val = val + Cs*rho_soil*vol_soil + Ca*rho_air*th_air
       if(iceswitch(quadpnt)) then
-        val = (val - Lf*rho_ice*rwcap(pde_loc, layer, x = (/hl(quadpnt)/)))*Lf*rho_ice
+        val = (Ci*rho_ice*thetai(pde_loc, layer, quadpnt) + val &
+        - Lf*rho_ice*Lf/temp/grav*rwcap(pde_loc, layer, x = (/hl(quadpnt)/)))
       end if
       
     end function capacityTT
@@ -312,12 +287,12 @@ module freeze_fnc
       
       
       if (present(flux)) then
-          call pde(1)%flux(layer, quadpnt, vector_out = flux)
+          call all_fluxes(pde_loc, layer, quadpnt,  flux = flux)
           flux = Cl *rho_wat*flux
         end if
         
         if (present(flux_length)) then
-           call pde(1)%flux(layer, quadpnt, scalar = flux_length)
+           call all_fluxes(pde_loc, layer, quadpnt, flux_length = flux_length)
            flux_length = Cl *rho_wat*flux_length
         end if
               
@@ -337,13 +312,13 @@ module freeze_fnc
       real(kind=rkind), dimension(:), intent(out), optional    :: flux
       real(kind=rkind), intent(out), optional                  :: flux_length
 
-      real(kind=rkind), dimension(3,3)  :: K
+      real(kind=rkind), dimension(3,3)  :: Klh, Klt
       integer                           :: D
       integer(kind=ikind), dimension(3) :: nablaz
       real(kind=rkind), dimension(3)  :: gradH
       real(kind=rkind), dimension(3)  :: vct
       real(kind=rkind) :: h
-      real(kind=rkind), dimension(:), allocatable :: gradient
+      real(kind=rkind), dimension(:), allocatable :: gradient, gradientT
       type(integpnt_str) :: quadpnt_loc
       
 
@@ -362,6 +337,7 @@ module freeze_fnc
         quadpnt_loc%preproc=.true.
         h = hl(quadpnt)
         call pde_loc%getgrad(quadpnt, gradient)
+        call pde(2)%getgrad(quadpnt, gradientT)
       else
         if (ubound(x,1) /=1) then
           print *, "ERROR: van Genuchten function is a function of a single variable h"
@@ -381,14 +357,15 @@ module freeze_fnc
       
       gradH(1:D) = gradient(1:D) + nablaz(1:D)
       if(present(quadpnt)) then
-        call pde_loc%pde_fnc(1)%dispersion(pde_loc, layer, quadpnt, tensor=K(1:D, 1:D))
-        K(1:D,1:D) = 10**(-Omega*Q_reduction(layer, quadpnt))*K(1:D, 1:D)
+        call pde_loc%pde_fnc(1)%dispersion(pde_loc, layer, x=(/hl(quadpnt)/), tensor=Klh(1:D, 1:D))
+        Klh(1:D,1:D) = 10**(-Omega*Q_reduction(layer, quadpnt))*Klh(1:D, 1:D)
+        call pde_loc%pde_fnc(2)%dispersion(pde_loc, layer, quadpnt, tensor = Klt(1:D, 1:D))
 
       else if (present(x)) then
-        call pde_loc%pde_fnc(1)%dispersion(pde_loc, layer, x=x, tensor=K(1:D, 1:D))
-        K(1:D,1:D) = 10**(-Omega*Q_reduction(layer, x = x))*K(1:D, 1:D)
+        call pde_loc%pde_fnc(1)%dispersion(pde_loc, layer, x = x, tensor=Klh(1:D, 1:D))
+        Klh(1:D,1:D) = 10**(-Omega*Q_reduction(layer, x = x))*Klh(1:D, 1:D)
       end if
-      vct(1:D) = matmul(-K(1:D,1:D), gradH(1:D))
+      vct(1:D) = matmul(-Klh(1:D,1:D), gradH(1:D))+matmul(-Klt(1:D,1:D), gradientT(1:D))
 
 
       if (present(flux_length)) then
