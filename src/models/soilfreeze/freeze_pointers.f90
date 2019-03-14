@@ -52,14 +52,14 @@ module freeze_pointers
       
       pde(1)%pde_fnc(1)%dispersion => diffhh
       
-      !pde(1)%pde_fnc(1)%convection => convz
+      pde(1)%pde_fnc(1)%convection => convz
 
       pde(1)%pde_fnc(2)%dispersion => diffhT
       
       pde(1)%flux => all_fluxes
-      !pde(1)%flux => darcy4totH
 
-      pde(1)%initcond => retot_initcond
+      !pde(1)%initcond => retot_initcond
+      pde(1)%initcond => re_initcond
       
       if (drutes_config%fnc_method == 0) then
         rwcap => vangen_elast
@@ -68,7 +68,7 @@ module freeze_pointers
       end if
       
       pde(1)%problem_name(1) = "RE_freeze_thaw"
-      pde(1)%problem_name(2) = "Richards' equation with freezing and thawing processes"
+      pde(1)%problem_name(2) = "Richards' equation with freezing and thawing"
 
       pde(1)%solution_name(1) = "press_head" 
       pde(1)%solution_name(2) = "h [L]" 

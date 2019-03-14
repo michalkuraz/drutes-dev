@@ -78,11 +78,11 @@ module freeze_helper
       if(present(quadpnt)) then
         thall = vangen(pde(1), layer, quadpnt)
         thl = vangen(pde(1), layer, x=(/hl(quadpnt)/))
-     ! else if (present(x)) then
-      !  thall = vangen(pde(1), layer, x = x)
-      !  thl = vangen(pde(1), layer, x = x)
       end if
-      
+      if(present(x)) then
+        thall = vangen(pde(1), layer,x= x)
+        thl = vangen(pde(1), layer, x=x)
+      end if
       thice = thall - thl
       val = thice/(thall- vgset(layer)%Thr)
        
@@ -105,18 +105,16 @@ module freeze_helper
       real(kind=rkind), intent(out), optional                 :: scalar
       real(kind=rkind), dimension(3,3) :: Klh, Klt
       integer(kind=ikind) :: D
-
+      real(kind = rkind) :: h_l
       D = drutes_config%dimen
 
+      
       if (present(tensor)) then
         call mualem(pde_loc, layer, x=(/hl(quadpnt)/), tensor = Klt(1:D, 1:D))
 
         if (present(quadpnt)) then
-          tensor = Klt(1:D, 1:D)*gwt*pde(1)%getval(quadpnt)*surf_tens_deriv(pde_loc, layer, quadpnt)/surf_tens_ref
-        !else if (present(T)) then
-        !  if (present (x)) then
-        !    tensor = Klt(1:D, 1:D)*gwt*x(1)*surf_tens_deriv(pde_loc, layer, T = T)
-        !  end if
+          h_l = hl(quadpnt)
+          tensor = Klt(1:D, 1:D)*gwt*h_l*surf_tens_deriv(pde_loc, layer, quadpnt)/surf_tens_ref
         else
           print *, "runtime error"
           print *, "exited from Kliquid_temp::freeze_fnc"

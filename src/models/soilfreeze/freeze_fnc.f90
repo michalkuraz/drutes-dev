@@ -36,7 +36,6 @@ module freeze_fnc
         val = (rho_wat-rho_ice)/rho_wat*&
         rwcap(pde_loc, layer, x=(/hl(quadpnt)/))*(-log(Tref)+1)+&
         rho_ice/rho_wat*rwcap(pde_loc, layer, x=(/hl(quadpnt)/))
-        !val = rho_ice*rwcap(pde_loc, layer, quadpnt)* rho_icewat(quadpnt) * grav 
       else
         val = rwcap(pde_loc, layer, quadpnt)
 
@@ -97,10 +96,13 @@ module freeze_fnc
           call mualem(pde_loc, layer, x = (/hl(quadpnt)/), tensor = tensor)
           tensor = 10**(-Omega*Q_reduction(layer, quadpnt))*tensor
         end if
+        if (present(x)) then
+          call mualem(pde_loc, layer, x = x, tensor = tensor)
+          tensor = 10**(-Omega*Q_reduction(layer, x = x))*tensor
+        end if
       else
         print *, "ERROR! output tensor undefined, exited from diffhh::freeze_fnc"
       end if
-    
 
     end subroutine diffhh
     
@@ -147,7 +149,7 @@ module freeze_fnc
       
       D = drutes_config%dimen
 
-      temp = pde(2)%getval(quadpnt)
+      temp = pde(2)%getval(quadpnt)+273.15_rkind
       if (present(tensor)) then
         if (present(quadpnt)) then
           call Kliquid_temp(pde_loc, layer, quadpnt, tensor = Klt(1:D, 1:D))
@@ -155,14 +157,14 @@ module freeze_fnc
           Klh(1:D,1:D) = 10**(-Omega*Q_reduction(layer, quadpnt))*Klh(1:D, 1:D)
           if(iceswitch(quadpnt)) then
             tensor = (Klt(1:D, 1:D) + Lf/temp/grav*Klh(1:D,1:D))
+
           else
             tensor = Klt(1:D, 1:D)
           end if
         end if
       else
-         print *, "ERROR! output tensor undefined, exited from diffTh::freeze_fnc"
+         print *, "ERROR! output tensor undefined, exited from diffhT::freeze_fnc"
       end if   
-
       end subroutine diffhT
     
     
@@ -189,10 +191,11 @@ module freeze_fnc
         val = rwcap(pde_loc, layer, quadpnt)
       end if
       if(iceswitch(quadpnt)) then
-        val = val - (-log(Tref)+1)*rwcap(pde_loc, layer, x = (/hl(quadpnt)/))
+        val = rwcap(pde_loc, layer, quadpnt) - (-log(Tref)+1)*rwcap(pde_loc, layer, x = (/hl(quadpnt)/))
       end if
       val = val*Lf*rho_ice
       
+      val = 0
     end function capacityTh
     
     !> Capacity term due to temperature for heat flow model
@@ -226,7 +229,7 @@ module freeze_fnc
           stop
         end if
       end if
-      temp = pde(2)%getval(quadpnt)
+      temp = pde(2)%getval(quadpnt)+ 273.15_rkind
       val =  Cl*rho_wat*vangen(pde_loc, layer, x = (/hl(quadpnt)/)) 
       val = val + Cs*rho_soil*vol_soil + Ca*rho_air*th_air
       if(iceswitch(quadpnt)) then
@@ -289,11 +292,13 @@ module freeze_fnc
       if (present(flux)) then
           call all_fluxes(pde_loc, layer, quadpnt,  flux = flux)
           flux = Cl *rho_wat*flux
+          flux = 0
         end if
         
         if (present(flux_length)) then
            call all_fluxes(pde_loc, layer, quadpnt, flux_length = flux_length)
            flux_length = Cl *rho_wat*flux_length
+           flux_length = 0
         end if
               
     end subroutine convectTT
@@ -314,7 +319,7 @@ module freeze_fnc
 
       real(kind=rkind), dimension(3,3)  :: Klh, Klt
       integer                           :: D
-      integer(kind=ikind), dimension(3) :: nablaz
+      !integer(kind=ikind), dimension(3) :: nablaz
       real(kind=rkind), dimension(3)  :: gradH
       real(kind=rkind), dimension(3)  :: vct
       real(kind=rkind) :: h
@@ -352,10 +357,10 @@ module freeze_fnc
       
       D = drutes_config%dimen
 
-      nablaz = 0
-      nablaz(D) = 1
+      !nablaz = 0
+      !nablaz(D) = 1
       
-      gradH(1:D) = gradient(1:D) + nablaz(1:D)
+      gradH(1:D) = gradient(1:D) !+ nablaz(1:D)
       if(present(quadpnt)) then
         call pde_loc%pde_fnc(1)%dispersion(pde_loc, layer, x=(/hl(quadpnt)/), tensor=Klh(1:D, 1:D))
         Klh(1:D,1:D) = 10**(-Omega*Q_reduction(layer, quadpnt))*Klh(1:D, 1:D)
