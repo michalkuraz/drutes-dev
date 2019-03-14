@@ -195,7 +195,7 @@ module freeze_fnc
       end if
       val = val*Lf*rho_ice
       
-      val = 0
+      !val = 0
     end function capacityTh
     
     !> Capacity term due to temperature for heat flow model
@@ -292,13 +292,13 @@ module freeze_fnc
       if (present(flux)) then
           call all_fluxes(pde_loc, layer, quadpnt,  flux = flux)
           flux = Cl *rho_wat*flux
-          flux = 0
+          !flux = 0
         end if
         
         if (present(flux_length)) then
            call all_fluxes(pde_loc, layer, quadpnt, flux_length = flux_length)
            flux_length = Cl *rho_wat*flux_length
-           flux_length = 0
+           !flux_length = 0
         end if
               
     end subroutine convectTT
@@ -319,7 +319,7 @@ module freeze_fnc
 
       real(kind=rkind), dimension(3,3)  :: Klh, Klt
       integer                           :: D
-      !integer(kind=ikind), dimension(3) :: nablaz
+      integer(kind=ikind), dimension(3) :: nablaz
       real(kind=rkind), dimension(3)  :: gradH
       real(kind=rkind), dimension(3)  :: vct
       real(kind=rkind) :: h
@@ -357,10 +357,10 @@ module freeze_fnc
       
       D = drutes_config%dimen
 
-      !nablaz = 0
-      !nablaz(D) = 1
+      nablaz = 0
+      nablaz(D) = 1
       
-      gradH(1:D) = gradient(1:D) !+ nablaz(1:D)
+      gradH(1:D) = gradient(1:D) + nablaz(1:D)
       if(present(quadpnt)) then
         call pde_loc%pde_fnc(1)%dispersion(pde_loc, layer, x=(/hl(quadpnt)/), tensor=Klh(1:D, 1:D))
         Klh(1:D,1:D) = 10**(-Omega*Q_reduction(layer, quadpnt))*Klh(1:D, 1:D)
