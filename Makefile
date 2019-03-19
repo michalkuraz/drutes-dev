@@ -153,7 +153,7 @@ ltne_pointers.o: $(CORE_obj) src/models/LTNE/ltne_pointers.f90
 #------begin frozen_obj -----------------------------------
 freeze_globs.o: $(CORE_obj) src/models/soilfreeze/freeze_globs.f90
 	$c -c src/models/soilfreeze/freeze_globs.f90
-freeze_helper.o: $(CORE_obj) $(RE_obj) src/models/soilfreeze/freeze_helper.f90
+freeze_helper.o: $(CORE_obj) $(RE_obj) freeze_globs.o src/models/soilfreeze/freeze_helper.f90
 	$c -c src/models/soilfreeze/freeze_helper.f90
 freeze_fnc.o: $(CORE_obj) freeze_helper.o freeze_globs.o src/models/soilfreeze/freeze_fnc.f90
 	$c -c src/models/soilfreeze/freeze_fnc.f90

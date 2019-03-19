@@ -57,7 +57,7 @@ module RE_constitutive
   
     subroutine intoverflow()
       use core_tools
-      use postpro
+      !use postpro
       character(len=4096) :: msg
       
       write(msg, fmt=*) "You are probably experiencing oscilations", & 
@@ -66,9 +66,9 @@ module RE_constitutive
 	      "We will probably experience a crash soon.:) Check your model configuration to avoid", &
 	      "convective dominant problems."
 	      
-      call write_log(msg)
+      !call write_log(msg)
       
-      call make_print("separately")
+      !call make_print("separately")
 	      
       
     end subroutine intoverflow

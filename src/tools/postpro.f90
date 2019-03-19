@@ -259,7 +259,7 @@ module postpro
       use geom_tools
       use pde_objs
       use debug_tools
-		
+      use freeze_helper
       integer(kind=ikind) :: i, layer, proc, D, j
       real(kind=rkind) :: val
       real(kind=rkind), dimension(:), allocatable :: massval
@@ -284,12 +284,24 @@ module postpro
           quadpnt%preproc=.true.
           
           call pde(proc)%flux(layer=layer, quadpnt=quadpnt,  vector_out=advectval(1:D))
-
-          val = pde(proc)%getval(quadpnt)
+          select case(drutes_config%name)
+            case("freeze")
+              if (proc < 2) then
+                val = hl(quadpnt)
+              else 
+                val = pde(proc)%getval(quadpnt)
+              end if
+            case default
+              val = pde(proc)%getval(quadpnt)
+          end select
 
           if (ubound(pde(proc)%mass_name,1) > 0) then
-            massval = (/ (pde(proc)%mass(j)%val(pde(proc),layer, quadpnt), j=1,ubound(pde(proc)%mass,1) ) /)
-            
+            select case(drutes_config%name)
+              case("freeze")
+                massval = (/ pde(proc)%mass(1)%val(pde(proc),layer, x = (/val/)), pde(proc)%mass(2)%val(pde(proc),layer, quadpnt) /)
+              case default
+                massval = (/ pde(proc)%mass(1)%val(pde(proc),layer, quadpnt) /)
+            end select            
             observation_array(i)%cumflux(proc) = observation_array(i)%cumflux(proc) + &
                 sqrt(dot_product(advectval(1:D), advectval(1:D)))*time_step
                 

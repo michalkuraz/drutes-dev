@@ -33,9 +33,7 @@ module freeze_fnc
       real(kind=rkind)                :: val
     
       if (iceswitch(quadpnt)) then
-        val = (rho_wat-rho_ice)/rho_wat*&
-        rwcap(pde_loc, layer, x=(/hl(quadpnt)/))*(-log(Tref)+1)+&
-        rho_ice/rho_wat*rwcap(pde_loc, layer, x=(/hl(quadpnt)/))
+        val = rho_ice/rho_wat*rwcap(pde_loc, layer, x=(/hl(quadpnt)/))
       else
         val = rwcap(pde_loc, layer, quadpnt)
 
@@ -191,7 +189,7 @@ module freeze_fnc
         val = rwcap(pde_loc, layer, quadpnt)
       end if
       if(iceswitch(quadpnt)) then
-        val = rwcap(pde_loc, layer, quadpnt) - (-log(Tref)+1)*rwcap(pde_loc, layer, x = (/hl(quadpnt)/))
+        val = rwcap(pde_loc, layer, quadpnt)
       end if
       val = val*Lf*rho_ice
       
@@ -359,8 +357,12 @@ module freeze_fnc
 
       nablaz = 0
       nablaz(D) = 1
+      if(iceswitch(quadpnt))then
+        gradH(1:D) = gradient(1:D) + nablaz(1:D) + Lf/grav*gradientT(1:D)/(pde(2)%getval(quadpnt) + 273.15_rkind)
+      else
+        gradH(1:D) = gradient(1:D) + nablaz(1:D)
+      end if
       
-      gradH(1:D) = gradient(1:D) + nablaz(1:D)
       if(present(quadpnt)) then
         call pde_loc%pde_fnc(1)%dispersion(pde_loc, layer, x=(/hl(quadpnt)/), tensor=Klh(1:D, 1:D))
         Klh(1:D,1:D) = 10**(-Omega*Q_reduction(layer, quadpnt))*Klh(1:D, 1:D)
@@ -370,7 +372,7 @@ module freeze_fnc
         call pde_loc%pde_fnc(1)%dispersion(pde_loc, layer, x = x, tensor=Klh(1:D, 1:D))
         Klh(1:D,1:D) = 10**(-Omega*Q_reduction(layer, x = x))*Klh(1:D, 1:D)
       end if
-      vct(1:D) = matmul(-Klh(1:D,1:D), gradH(1:D))+matmul(-Klt(1:D,1:D), gradientT(1:D))
+      vct(1:D) = matmul(-Klh(1:D,1:D), gradH(1:D))!+matmul(-Klt(1:D,1:D), gradientT(1:D))
 
 
       if (present(flux_length)) then
