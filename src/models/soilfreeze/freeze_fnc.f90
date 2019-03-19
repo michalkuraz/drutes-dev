@@ -372,7 +372,8 @@ module freeze_fnc
         call pde_loc%pde_fnc(1)%dispersion(pde_loc, layer, x = x, tensor=Klh(1:D, 1:D))
         Klh(1:D,1:D) = 10**(-Omega*Q_reduction(layer, x = x))*Klh(1:D, 1:D)
       end if
-      vct(1:D) = matmul(-Klh(1:D,1:D), gradH(1:D))!+matmul(-Klt(1:D,1:D), gradientT(1:D))
+      
+      vct(1:D) = matmul(-Klh(1:D,1:D), gradH(1:D))+matmul(-Klt(1:D,1:D), gradientT(1:D))
 
 
       if (present(flux_length)) then
