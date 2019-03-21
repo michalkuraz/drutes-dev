@@ -829,7 +829,13 @@ module readtools
           n=2
           do 
             open(unit=fileid, file=trim(filename), action="read", status="old",  iostat=ierr)
-            allocate(tester(n))
+            if (.not. allocated(tester)) then
+              allocate(tester(n))
+            else
+              deallocate(tester)
+              allocate(tester(n))
+            end if
+             
             tester = sqrt(tmp)
             call comment(fileid)
             read(unit=fileid, fmt=*, iostat=ierr) tester
