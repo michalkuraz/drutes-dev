@@ -12,6 +12,8 @@ module freeze_pointers
       select case (drutes_config%name)
         case ("freeze")
           processes = 2
+        case ("LTNE")
+          processes = 3
         case default
           print *, "procedure called when unexpected problem name"
           print *, "exited from freeze_pointers::freeze_processes"
@@ -35,16 +37,26 @@ module freeze_pointers
       use re_pointers
       use freeze_globs
       use freeze_fnc
+      use freeze_helper
       use heat_pointers
       use heat_reader
       use heat_fnc
       
       integer(kind=ikind) :: i
+      select case (drutes_config%name)
+        case ("freeze")
+          call heat_read(pde(2))
+          call res_read(pde(1))
+        case ("LTNE")
+        case default
+          print *, "procedure called when unexpected problem name"
+          print *, "exited from freeze_pointers::frz_pointers"
+          error stop
+      end select
       
-      call heat_read(pde(2))
-      call res_read(pde(1))
-      !call RE_totheadbc(pde(1))
-      call RE_pressheadbc(pde(1))
+      call RE_totheadbc(pde(1))
+      pde(1)%getval => getval_retot
+      
     ! pointers for water flow model
       pde(1)%pde_fnc(1)%elasticity => capacityhh
       
@@ -52,14 +64,14 @@ module freeze_pointers
       
       pde(1)%pde_fnc(1)%dispersion => diffhh
       
-      pde(1)%pde_fnc(1)%convection => convz
+      !pde(1)%pde_fnc(1)%convection => convz
 
       pde(1)%pde_fnc(2)%dispersion => diffhT
       
       pde(1)%flux => all_fluxes
 
-      !pde(1)%initcond => retot_initcond
-      pde(1)%initcond => re_initcond
+      pde(1)%initcond => retot_initcond
+      !pde(1)%initcond => re_initcond
       
       if (drutes_config%fnc_method == 0) then
         rwcap => vangen_elast
@@ -79,19 +91,29 @@ module freeze_pointers
       deallocate(pde(1)%mass_name)
       deallocate(pde(1)%mass)
       
-      allocate(pde(1)%mass_name(2,2))
-      allocate(pde(1)%mass(2))
+      allocate(pde(1)%mass_name(4,2))
+      allocate(pde(1)%mass(4))
 
-      pde(1)%mass_name(1,1) = "theta_l"
-      pde(1)%mass_name(1,2) = "theta_l [-]"
+      pde(1)%mass_name(1,1) = "theta_tot"
+      pde(1)%mass_name(1,2) = "theta_tot [-]"
       
       pde(1)%mass_name(2,1) = "theta_i"
       pde(1)%mass_name(2,2) = "theta_i [-]"
-            
       
+      pde(1)%mass_name(3,1) = "theta_l"
+      pde(1)%mass_name(3,2) = "theta_l [-]"
+      
+      pde(1)%mass_name(4,1) = "h_l"
+      pde(1)%mass_name(4,2) = "h_l [L]"
+      
+
       pde(1)%mass(1)%val => vangen
       
       pde(1)%mass(2)%val => thetai
+      
+      pde(1)%mass(3)%val => thetal
+      
+      pde(1)%mass(4)%val => hl
       ! allocate porosity as mass(3)?
 
     ! pointers for heat flow model
@@ -103,7 +125,7 @@ module freeze_pointers
       
       pde(2)%pde_fnc(2)%convection => convectTT
       
-      pde(2)%flux => heat_flux
+      pde(2)%flux => heat_flux_freeze
       
       pde(2)%initcond => heat_icond  
       

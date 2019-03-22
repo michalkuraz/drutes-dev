@@ -5,7 +5,7 @@ module freeze_helper
   use debug_tools
   use RE_constitutive
 
-  public :: iceswitch, rho_icewat, Q_reduction, surf_tens_deriv, Kliquid_temp, hl
+  public :: iceswitch, rho_icewat, Q_reduction, surf_tens_deriv, Kliquid_temp, hl, thetai, thetal
       
       
   
@@ -23,7 +23,7 @@ module freeze_helper
       type(integpnt_str) :: quadpnt_loc
       
       quadpnt_loc = quadpnt
-      quadpnt_loc%column = 1
+      quadpnt_loc%preproc=.true.
       
       Tf = Tref*exp(pde(1)%getval(quadpnt_loc)*grav/Lf)
       Tf = Tf - 273.15_rkind
@@ -57,7 +57,7 @@ module freeze_helper
       end if
       
       layer = elements%material(el)
-      thl = vangen(pde(1), layer, x=(/hl(quadpnt)/))
+      thl = vangen(pde(1), layer, x=(/hl(pde(1), layer, quadpnt)/))
       thall = vangen(pde(1), layer, quadpnt)
       thice = thall - thl
       rho = (thl * rho_wat + thice * rho_ice)/thall
@@ -75,13 +75,14 @@ module freeze_helper
       real(kind=rkind), dimension(:), intent(in), optional    :: x
       integer(kind=ikind) :: el
       real(kind=rkind) :: thl, thall, thice, val
+
       if(present(quadpnt)) then
         thall = vangen(pde(1), layer, quadpnt)
-        thl = vangen(pde(1), layer, x=(/hl(quadpnt)/))
+        thl = vangen(pde(1), layer, x=(/hl(pde(1), layer, quadpnt)/))
       end if
       if(present(x)) then
-        thall = vangen(pde(1), layer,x= x)
-        thl = vangen(pde(1), layer, x=x)
+        thall = vangen(pde(1), layer,x = x)
+        thl = vangen(pde(1), layer, x = x)
       end if
       thice = thall - thl
       val = thice/(thall- vgset(layer)%Thr)
@@ -110,10 +111,10 @@ module freeze_helper
 
       
       if (present(tensor)) then
-        call mualem(pde_loc, layer, x=(/hl(quadpnt)/), tensor = Klt(1:D, 1:D))
+        call mualem(pde_loc, layer, x=(/hl(pde_loc, layer, quadpnt)/), tensor = Klt(1:D, 1:D))
 
         if (present(quadpnt)) then
-          h_l = hl(quadpnt)
+          h_l = hl(pde_loc, layer, quadpnt)
           tensor = Klt(1:D, 1:D)*gwt*h_l*surf_tens_deriv(pde_loc, layer, quadpnt)/surf_tens_ref
         else
           print *, "runtime error"
@@ -155,17 +156,24 @@ module freeze_helper
       
     end function surf_tens_deriv
     
-    function hl(quadpnt) result(val)
+    function hl(pde_loc, layer, quadpnt, x) result(val)
       use typy
       use global_objs
       use freeze_globs
-     
+      use pde_objs
+      
+      class(pde_str), intent(in) :: pde_loc
+      integer(kind=ikind), intent(in) :: layer
       type(integpnt_str), intent(in), optional :: quadpnt
+      real(kind=rkind), dimension(:), intent(in), optional    :: x
       real(kind=rkind) :: val, T_melt
-      
       real(kind=rkind) :: hw, temp
+      type(integpnt_str) :: quadpnt_loc
       
-      hw = pde(1)%getval(quadpnt)
+      quadpnt_loc = quadpnt
+      quadpnt_loc%preproc=.true.
+
+      hw = pde(1)%getval(quadpnt_loc)
       
       temp = pde(2)%getval(quadpnt)
       T_melt = Tref*exp(hw*grav/Lf)
@@ -190,10 +198,24 @@ module freeze_helper
       
       real(kind=rkind) :: thl, thall
       
-      thl = vangen(pde(1), layer, x=(/hl(quadpnt)/))
+      thl = vangen(pde(1), layer, x=(/hl(pde(1), layer, quadpnt)/))
       thall = vangen(pde(1), layer, quadpnt)
       
       !val = (thall * rho_icewat(quadpnt) - thl * rho_wat)/rho_ice
       val = thall - thl
     end function thetai
+    
+    function thetal(pde_loc, layer, quadpnt, x) result(val)
+      use typy
+      use global_objs
+      use pde_objs
+      class(pde_str), intent(in) :: pde_loc
+      integer(kind=ikind), intent(in) :: layer
+      type(integpnt_str), intent(in), optional :: quadpnt
+      real(kind=rkind), dimension(:), intent(in), optional    :: x
+      real(kind=rkind) :: val
+      
+      val = vangen(pde(1), layer, x=(/hl(pde(1), layer, quadpnt)/))
+    end function thetal
+    
 end module freeze_helper

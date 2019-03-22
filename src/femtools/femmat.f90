@@ -80,6 +80,7 @@ module femmat
           call diag_precond(a=spmatrix, x=pde_common%xvect(1:fin,3), mode=1)
         end if
 
+        
         call solve_matrix(spmatrix, pde_common%bvect(1:fin), pde_common%xvect(1:fin,3),  itmax1=fin, &
             reps1=1e-15_rkind, itfin1=pcg_it, repsfin1=reps_err)
             
@@ -98,6 +99,8 @@ module femmat
         end if	
 
         error = norm2(pde_common%xvect(1:fin,2)-pde_common%xvect(1:fin,3))/ubound(pde_common%xvect,1)
+        
+        print *, error, itcount
 
          
         if (itcount == 1 .or. error <= iter_criterion) then

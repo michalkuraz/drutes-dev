@@ -180,20 +180,32 @@ if(ln_obs>0){
 
 ln_obs=read_data_plot('out/obspt_heat-','drutes-dev/out/obspt_heat-'
                       ,'.out',col1=1,col2=3,ylabs=expression(paste("heat flux [W",~m^-2,"]",sep=""))
-                      ,xlabs="time [T]",'point',skip=10,k=1,legpos="topright",lims=lims)
+                      ,xlabs="time [T]",'heat_flux_point',skip=10,k=1,legpos="topright",lims=lims)
 if(ln_obs>0){
   print(paste("plot of",ln_obs,"observation points created: heat flux vs. time"))
 }
 
 ln_obs=read_data_plot('out/obspt_heat-','drutes-dev/out/obspt_heat-'
                       ,'.out',col1=1,col2=4,ylabs=expression(paste("cumulative heat flux [W",~m^-2,"]",sep=""))
-                      ,xlabs="time [T]",'point_cum',skip=10,k=1,legpos="topright",lims=lims)
+                      ,xlabs="time [T]",'point_heat_cum',skip=10,k=1,legpos="topright",lims=lims)
 if(ln_obs>0){
   print(paste("plot of",ln_obs,"observation points created: cumulative heat flux vs. time"))
 }
 
 
+ln_obs=read_data_plot('out/RE_freeze_thaw_theta_l-','drutes-dev/out/RE_freeze_thaw_theta_l-'
+                      ,'.dat',col1=2,col2=3,ylabs=expression(paste("vol. water content [-]",sep=""))
+                      ,xlabs="depth [L]",'theta_total_time',idfix=1,skip=0,k=0,legpos=legpos,lims=lims)
+if(ln_obs>0){
+  print(paste("plot of",ln_obs,"observation times created: total water content vs. depth "))
+}
 
+ln_obs=read_data_plot('out/RE_freeze_thaw_theta_i-','drutes-dev/out/RE_freeze_thaw_theta_i-'
+                      ,'.dat',col1=2,col2=3,ylabs=expression(paste("vol. ice content [-]",sep=""))
+                      ,xlabs="depth [L]",'theta_ice_time',idfix=1,skip=0,k=0,legpos=legpos,lims=lims)
+if(ln_obs>0){
+  print(paste("plot of",ln_obs,"observation times created: vol. ice content vs. depth "))
+}
 
 ln_obs=read_data_plot('out/RE_freeze_thaw_press_head-','drutes-dev/out/RE_freeze_thaw_press_head-'
                       ,'.dat',col1=2,col2=3,ylabs=expression(paste("pressure head [L]",sep=""))
@@ -210,8 +222,8 @@ if(ln_obs>0){
 }
 
 ln_obs=read_data_plot('out/obspt_RE_freeze_thaw-','drutes-dev/out/obspt_RE_freeze_thaw-'
-                      ,'.out',col1=1,col2=3,ylabs=expression(paste("water content [-]",sep=""))
-                      ,xlabs="time [T]",'fm_point_wat',skip=10,k=1,legpos="topright",lims=lims)
+                      ,'.out',col1=1,col2=3,ylabs=expression(paste("total water content [-]",sep=""))
+                      ,xlabs="time [T]",'fm_point_tot_wat',skip=10,k=1,legpos="topright",lims=lims)
 if(ln_obs>0){
   print(paste("plot of",ln_obs,"observation points created: vol water content vs. time"))
 }
@@ -224,15 +236,30 @@ if(ln_obs>0){
 }
 
 ln_obs=read_data_plot('out/obspt_RE_freeze_thaw-','drutes-dev/out/obspt_RE_freeze_thaw-'
-                      ,'.out',col1=1,col2=5,ylabs=expression(paste("darcian flux [L/T]",sep=""))
-                      ,xlabs="time [T]",'fm_point_flux',skip=10,k=1,legpos="topright",lims=lims)
+                      ,'.out',col1=1,col2=5,ylabs=expression(paste("liquid water content [-]",sep=""))
+                      ,xlabs="time [T]",'fm_point_liquid_wat',skip=10,k=1,legpos="topright",lims=lims)
+if(ln_obs>0){
+  print(paste("plot of",ln_obs,"observation points created: vol liquid water content vs. time"))
+}
+
+ln_obs=read_data_plot('out/obspt_RE_freeze_thaw-','drutes-dev/out/obspt_RE_freeze_thaw-'
+                      ,'.out',col1=1,col2=6,ylabs=expression(paste("liquid pressure head [L]",sep=""))
+                      ,xlabs="time [T]",'fm_point_hl',skip=10,k=1,legpos="topright",lims=lims)
+if(ln_obs>0){
+  print(paste("plot of",ln_obs,"observation points created: liquid pressure head vs. time"))
+}
+
+ln_obs=read_data_plot('out/obspt_RE_freeze_thaw-','drutes-dev/out/obspt_RE_freeze_thaw-'
+                      ,'.out',col1=1,col2=7,ylabs=expression(paste("darcian flux [L/T]",sep=""))
+                      ,xlabs="time [T]",'fm_point_wat_flux',skip=10,k=1,legpos="topright",lims=lims)
 if(ln_obs>0){
   print(paste("plot of",ln_obs,"observation points created: cumulative heat flux vs. time"))
 }
 
+
 ln_obs=read_data_plot('out/obspt_RE_freeze_thaw-','drutes-dev/out/obspt_RE_freeze_thaw-'
-                      ,'.out',col1=1,col2=6,ylabs=expression(paste("cumul. darcian flux [L]",sep=""))
-                      ,xlabs="time [T]",'fm_point_cum',skip=10,k=1,legpos="topright",lims=lims)
+                      ,'.out',col1=1,col2=8,ylabs=expression(paste("cumul. darcian flux [L]",sep=""))
+                      ,xlabs="time [T]",'fm_point_wat_cum',skip=10,k=1,legpos="topright",lims=lims)
 if(ln_obs>0){
   print(paste("plot of",ln_obs,"observation points created: cumulative heat flux vs. time"))
 }

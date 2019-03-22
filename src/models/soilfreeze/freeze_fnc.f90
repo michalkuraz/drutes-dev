@@ -6,7 +6,7 @@ module freeze_fnc
   use freeze_helper
   
   public :: capacityhh, capacityhT,  diffhh, diffhT , convz
-  public:: capacityTT, capacityTh, diffTT, convectTT
+  public :: capacityTT, capacityTh, diffTT, convectTT, thermal_k, heat_flux_freeze
 
   
   procedure(scalar_fnc), pointer, public :: rwcap
@@ -33,7 +33,7 @@ module freeze_fnc
       real(kind=rkind)                :: val
     
       if (iceswitch(quadpnt)) then
-        val = rho_ice/rho_wat*rwcap(pde_loc, layer, x=(/hl(quadpnt)/))
+        val = rho_ice/rho_wat*rwcap(pde_loc, layer, x=(/hl(pde(1), layer, quadpnt)/))
       else
         val = rwcap(pde_loc, layer, quadpnt)
 
@@ -64,7 +64,7 @@ module freeze_fnc
       temp = pde(2)%getval(quadpnt)+273.15_rkind
       if (iceswitch(quadpnt)) then
         val = (rho_wat-rho_ice)/rho_wat*&
-        rwcap(pde_loc, layer, x=(/hl(quadpnt)/)) * Lf/temp/grav
+        rwcap(pde_loc, layer, x=(/hl(pde_loc, layer, quadpnt)/)) * Lf/temp/grav
       else
         val = 0
       end if
@@ -91,7 +91,7 @@ module freeze_fnc
       
       if (present(tensor)) then
         if(present(quadpnt)) then 
-          call mualem(pde_loc, layer, x = (/hl(quadpnt)/), tensor = tensor)
+          call mualem(pde_loc, layer, x = (/hl(pde(1), layer, quadpnt)/), tensor = tensor)
           tensor = 10**(-Omega*Q_reduction(layer, quadpnt))*tensor
         end if
         if (present(x)) then
@@ -151,7 +151,7 @@ module freeze_fnc
       if (present(tensor)) then
         if (present(quadpnt)) then
           call Kliquid_temp(pde_loc, layer, quadpnt, tensor = Klt(1:D, 1:D))
-          call mualem(pde_loc, layer, x=(/hl(quadpnt)/), tensor = Klh(1:D, 1:D))
+          call mualem(pde_loc, layer, x=(/hl(pde(1), layer, quadpnt)/), tensor = Klh(1:D, 1:D))
           Klh(1:D,1:D) = 10**(-Omega*Q_reduction(layer, quadpnt))*Klh(1:D, 1:D)
           if(iceswitch(quadpnt)) then
             tensor = (Klt(1:D, 1:D) + Lf/temp/grav*Klh(1:D,1:D))
@@ -163,6 +163,7 @@ module freeze_fnc
       else
          print *, "ERROR! output tensor undefined, exited from diffhT::freeze_fnc"
       end if   
+      
       end subroutine diffhT
     
     
@@ -217,7 +218,7 @@ module freeze_fnc
       real(kind=rkind) :: temp, vol_soil, th_air
       
       vol_soil = 1_rkind - vgset(layer)%Ths
-      th_air = vgset(layer)%Ths-thetai(pde_loc, layer, quadpnt)-vangen(pde_loc, layer, x = (/hl(quadpnt)/)) 
+      th_air = vgset(layer)%Ths-thetai(pde_loc, layer, quadpnt)-vangen(pde_loc, layer, x = (/hl(pde(1), layer, quadpnt)/)) 
       if(th_air < 0) then
         if(abs(th_air) > epsilon(th_air)) then
           print*, th_air
@@ -228,11 +229,11 @@ module freeze_fnc
         end if
       end if
       temp = pde(2)%getval(quadpnt)+ 273.15_rkind
-      val =  Cl*rho_wat*vangen(pde_loc, layer, x = (/hl(quadpnt)/)) 
+      val =  Cl*rho_wat*vangen(pde_loc, layer, x = (/hl(pde(1), layer, quadpnt)/)) 
       val = val + Cs*rho_soil*vol_soil + Ca*rho_air*th_air
       if(iceswitch(quadpnt)) then
         val = (Ci*rho_ice*thetai(pde_loc, layer, quadpnt) + val &
-        - Lf*rho_ice*Lf/temp/grav*rwcap(pde_loc, layer, x = (/hl(quadpnt)/)))
+        - Lf*rho_ice*Lf/temp/grav*rwcap(pde_loc, layer, x = (/hl(pde(1), layer, quadpnt)/)))
       end if
       
     end function capacityTT
@@ -254,16 +255,16 @@ module freeze_fnc
       real(kind=rkind), dimension(:,:), intent(out), optional :: tensor
       !> relative scalar value of the nonlinear function 
       real(kind=rkind), intent(out), optional                 :: scalar
-      
+      real(kind=rkind), dimension(3) :: thermal_conduct
       integer(kind=ikind) :: D, i
       
      
       D = drutes_config%dimen
-
+      thermal_conduct = thermal_k(pde_loc,layer, quadpnt)
       
       if (present(tensor)) then
         do i= 1, D
-          tensor(i,i) =  thermal_cond
+          tensor(i,i) =  thermal_conduct(i)
         end do
       end if
       
@@ -300,6 +301,33 @@ module freeze_fnc
         end if
               
     end subroutine convectTT
+    
+    function thermal_k(pde_loc, layer, quadpnt, x) result(val)
+      use typy
+      use global_objs
+      use pde_objs
+      class(pde_str), intent(in) :: pde_loc
+      integer(kind=ikind), intent(in) :: layer
+      type(integpnt_str), intent(in), optional :: quadpnt
+      real(kind=rkind), dimension(:), intent(in), optional    :: x
+      real(kind=rkind), dimension(3) :: val 
+      real(kind=rkind), dimension(3) :: flux
+      real(kind = rkind) :: thl, thice, tk, F
+      integer(kind = ikind) :: D, i
+      D = drutes_config%dimen
+
+      call all_fluxes(pde_loc, layer, quadpnt, flux = flux)
+
+      thice = thetai(pde(1), layer, quadpnt)
+      thl = vangen(pde(1), layer, x=(/hl(pde(1), layer, quadpnt)/))
+      !> hansson changin campbell
+      F = 1+ F1*thice**F2
+      tk = C1 + C2*(thl+F*thice)-(C1-C4)*exp(-(C3*(thl+F*thice))**C5)
+      do i = 1, D
+        val(i) = tk + beta*Cl*rho_wat*abs(flux(i))
+      end do 
+
+    end function thermal_k
     
     subroutine all_fluxes(pde_loc, layer, quadpnt, x, grad,  flux, flux_length)
       use typy
@@ -338,7 +366,7 @@ module freeze_fnc
       if (present(quadpnt)) then
         quadpnt_loc = quadpnt
         quadpnt_loc%preproc=.true.
-        h = hl(quadpnt)
+        h = hl(pde(1), layer, quadpnt)
         call pde_loc%getgrad(quadpnt, gradient)
         call pde(2)%getgrad(quadpnt, gradientT)
       else
@@ -355,26 +383,21 @@ module freeze_fnc
       
       D = drutes_config%dimen
 
-      nablaz = 0
-      nablaz(D) = 1
+      !nablaz = 0
+      !nablaz(D) = 1
       if(iceswitch(quadpnt))then
-        gradH(1:D) = gradient(1:D) + nablaz(1:D) + Lf/grav*gradientT(1:D)/(pde(2)%getval(quadpnt) + 273.15_rkind)
+        gradH(1:D) = gradient(1:D) + Lf/grav*gradientT(1:D)/(pde(2)%getval(quadpnt) + 273.15_rkind)
       else
-        gradH(1:D) = gradient(1:D) + nablaz(1:D)
+        gradH(1:D) = gradient(1:D)
       end if
       
       if(present(quadpnt)) then
-        call pde_loc%pde_fnc(1)%dispersion(pde_loc, layer, x=(/hl(quadpnt)/), tensor=Klh(1:D, 1:D))
-        Klh(1:D,1:D) = 10**(-Omega*Q_reduction(layer, quadpnt))*Klh(1:D, 1:D)
-        call pde_loc%pde_fnc(2)%dispersion(pde_loc, layer, quadpnt, tensor = Klt(1:D, 1:D))
+        call pde(1)%pde_fnc(1)%dispersion(pde_loc, layer, x=(/hl(pde(1), layer, quadpnt)/), tensor=Klh(1:D, 1:D))
+        call pde(1)%pde_fnc(2)%dispersion(pde_loc, layer, quadpnt, tensor = Klt(1:D, 1:D))
 
-      else if (present(x)) then
-        call pde_loc%pde_fnc(1)%dispersion(pde_loc, layer, x = x, tensor=Klh(1:D, 1:D))
-        Klh(1:D,1:D) = 10**(-Omega*Q_reduction(layer, x = x))*Klh(1:D, 1:D)
       end if
       
       vct(1:D) = matmul(-Klh(1:D,1:D), gradH(1:D))+matmul(-Klt(1:D,1:D), gradientT(1:D))
-
 
       if (present(flux_length)) then
         select case(D)
@@ -393,5 +416,60 @@ module freeze_fnc
       end if
 
     end subroutine all_fluxes
+    
+        
+    
+    subroutine heat_flux_freeze(pde_loc, layer, quadpnt, x, grad,  flux, flux_length)
+      use typy
+      use pde_objs
+      use global_objs
+      use debug_tools
+      use heat_globals
+       
+      class(pde_str), intent(in) :: pde_loc
+      integer(kind=ikind), intent(in)                          :: layer
+      type(integpnt_str), intent(in), optional :: quadpnt    
+      real(kind=rkind), intent(in), dimension(:), optional                   :: x
+      !> this value is optional, because it is required by the vector_fnc procedure pointer global definition
+      real(kind=rkind), dimension(:), intent(in), optional     :: grad
+      real(kind=rkind), dimension(:), intent(out), optional    :: flux
+      real(kind=rkind), intent(out), optional                  :: flux_length
+    
+
+      real(kind=rkind), dimension(:), allocatable, save :: gradT
+      real(kind=rkind), dimension(3,3) :: thermal_diff
+      integer(kind = ikind):: D
+      
+      
+      if (present(quadpnt) .and. (present(grad) .or. present(x))) then
+        print *, "ERROR: the function can be called either with integ point or x value definition and gradient, not both of them"
+        print *, "exited from heat_fnc::heat_flux"
+        ERROR stop
+      else if ((.not. present(grad) .or. .not. present(x)) .and. .not. present(quadpnt)) then
+        print *, "ERROR: you have not specified either integ point or x value"
+        print *, "exited from heat_fnc::heat_flux"
+        ERROR stop
+      end if   
+
+      if (.not. allocated(gradT)) allocate(gradT(drutes_config%dimen))
+
+      if (present(quadpnt)) then
+        call pde_loc%getgrad(quadpnt, gradT)
+      else
+        gradT = grad
+      end if
+      
+      D = drutes_config%dimen
+      call diffTT(pde_loc, layer, quadpnt, tensor = thermal_diff)
+      
+      if (present(flux)) then
+        flux = -matmul(thermal_diff(1:D, 1:D), gradT) 
+      end if
+      
+      if (present(flux_length)) then
+        flux_length = norm2(matmul(thermal_diff(1:D, 1:D), gradT))
+      end if
+    
+    end subroutine heat_flux_freeze
     
 end module freeze_fnc

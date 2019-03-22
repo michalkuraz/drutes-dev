@@ -37,6 +37,7 @@ module re_total
       use pde_objs
       use geom_tools
       use re_globals
+      use debug_tools
       
       class(pde_str), intent(in) :: pde_loc
       type(integpnt_str), intent(in) :: quadpnt
@@ -59,6 +60,7 @@ module re_total
           layer = get_layer(quadpnt)
           val = getvalp1(pde_loc, quadpnt) - xyz(D)*cos(4*atan(1.0_rkind)/180*vgset(layer)%anisoangle(1))
         end if
+        
         
       else
         val = getvalp1(pde_loc, quadpnt)

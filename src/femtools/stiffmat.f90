@@ -131,9 +131,7 @@ module stiffmat
                 quadpnt%order = l
                 rsum = rsum + pde(iproc)%pde_fnc(jproc)%reaction(pde(iproc),layer(iproc, jproc), &
                   quadpnt)*base_fnc(i,l)*base_fnc(j,l)*gauss_points%weight(l)
-              end do
-
-	      
+              end do	      
 
               ii = i + (iproc-1)*limits
               jj = j + (jproc-1)*limits

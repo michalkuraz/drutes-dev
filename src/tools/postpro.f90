@@ -259,7 +259,7 @@ module postpro
       use geom_tools
       use pde_objs
       use debug_tools
-      use freeze_helper
+      
       integer(kind=ikind) :: i, layer, proc, D, j
       real(kind=rkind) :: val
       real(kind=rkind), dimension(:), allocatable :: massval
@@ -282,23 +282,15 @@ module postpro
           quadpnt%element = observation_array(i)%element
           
           quadpnt%preproc=.true.
-          
+
           call pde(proc)%flux(layer=layer, quadpnt=quadpnt,  vector_out=advectval(1:D))
-          select case(drutes_config%name)
-            case("freeze")
-              if (proc < 2) then
-                val = hl(quadpnt)
-              else 
-                val = pde(proc)%getval(quadpnt)
-              end if
-            case default
-              val = pde(proc)%getval(quadpnt)
-          end select
+          val = pde(proc)%getval(quadpnt)
 
           if (ubound(pde(proc)%mass_name,1) > 0) then
             select case(drutes_config%name)
               case("freeze")
-                massval = (/ pde(proc)%mass(1)%val(pde(proc),layer, x = (/val/)), pde(proc)%mass(2)%val(pde(proc),layer, quadpnt) /)
+                massval = (/ pde(proc)%mass(1)%val(pde(proc),layer, x = (/val/)), pde(proc)%mass(2)%val(pde(proc),layer, quadpnt) &
+                , pde(proc)%mass(3)%val(pde(proc),layer, quadpnt), pde(proc)%mass(4)%val(pde(proc),layer, quadpnt)/)
               case default
                 massval = (/ pde(proc)%mass(1)%val(pde(proc),layer, quadpnt) /)
             end select            
@@ -559,7 +551,7 @@ module postpro
       real(kind=rkind) ::  distance,  avgval
       type(integpnt_str) :: qpntloc
       real(kind=rkind), dimension(3) :: flux
-
+      real(kind=rkind), dimension(:), allocatable :: massval
 
 
       do i=1, nodes%kolik
@@ -570,18 +562,41 @@ module postpro
 
         layer = elements%material(nodes%element(i)%data(1))
         ! 3 is for mass
+        
         if (pde(proc)%print_mass) then
-          write(unit=ids(3), fmt=*)  i, nodes%data(i,:),  &
-          (/ ( pde(proc)%mass(j)%val(pde(proc), layer, quadpnt), j=1,ubound(pde(proc)%mass,1) ) /)
-    
+          allocate(massval(ubound(pde(proc)%mass,1)))
+          select case(drutes_config%name)
+            case("freeze")
+              write(unit=ids(3), fmt=*)  i, nodes%data(i,:), pde(proc)%mass(1)%val(pde(proc),layer, quadpnt)              
+              write(unit=ids(4), fmt=*)  i, nodes%data(i,:), pde(proc)%mass(2)%val(pde(proc),layer, quadpnt)
+              write(unit=ids(5), fmt=*)  i, nodes%data(i,:), pde(proc)%mass(3)%val(pde(proc),layer, quadpnt)
+              write(unit=ids(6), fmt=*)  i, nodes%data(i,:), pde(proc)%mass(4)%val(pde(proc),layer, quadpnt)
+            case default
+              massval = (/ pde(proc)%mass(1)%val(pde(proc),layer, quadpnt) /)
+              write(unit=ids(3), fmt=*)  i, nodes%data(i,:), pde(proc)%mass(1)%val(pde(proc),layer, quadpnt)              
+
+          end select  
+
+          !&
+          !(/ ( pde(proc)%mass(j)%val(pde(proc), layer, quadpnt), j=1,ubound(pde(proc)%mass,1) ) /)
+          deallocate(massval)
+
         end if
 
-        
-        call pde(proc)%flux(layer, quadpnt, vector_out=flux(1:drutes_config%dimen))
+        select case(drutes_config%name)
+          case("freeze")
+           call pde(proc)%flux(layer, quadpnt, vector_out=flux(1:drutes_config%dimen))
+           if(proc > 1_ikind) then
+             write(unit=ids(3), fmt=*) i,  nodes%data(i,:), flux(1:drutes_config%dimen)
+           else
+             write(unit=ids(7), fmt=*) i,  nodes%data(i,:), flux(1:drutes_config%dimen)
+           end if
 
-        
-        write(unit=ids(3), fmt=*) i,  nodes%data(i,:), flux(1:drutes_config%dimen)
-      
+           
+          case default
+           call pde(proc)%flux(layer, quadpnt, vector_out=flux(1:drutes_config%dimen))
+           write(unit=ids(4), fmt=*) i,  nodes%data(i,:), flux(1:drutes_config%dimen)
+        end select  
       end do
 
       do i=1, ubound(ids,1)
