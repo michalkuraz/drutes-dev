@@ -193,9 +193,23 @@ if(ln_obs>0){
 }
 
 
-ln_obs=read_data_plot('out/RE_freeze_thaw_theta_l-','drutes-dev/out/RE_freeze_thaw_theta_l-'
-                      ,'.dat',col1=2,col2=3,ylabs=expression(paste("vol. water content [-]",sep=""))
+ln_obs=read_data_plot('out/RE_freeze_thaw_theta_tot-','drutes-dev/out/RE_freeze_thaw_theta_tot-'
+                      ,'.dat',col1=2,col2=3,ylabs=expression(paste("total water content [-]",sep=""))
                       ,xlabs="depth [L]",'theta_total_time',idfix=1,skip=0,k=0,legpos=legpos,lims=lims)
+if(ln_obs>0){
+  print(paste("plot of",ln_obs,"observation times created: total water content vs. depth "))
+}
+
+ln_obs=read_data_plot('out/RE_freeze_thaw_theta_l-','drutes-dev/out/RE_freeze_thaw_theta_l-'
+                      ,'.dat',col1=2,col2=3,ylabs=expression(paste("liquid water content [-]",sep=""))
+                      ,xlabs="depth [L]",'theta_liquid_time',idfix=1,skip=0,k=0,legpos=legpos,lims=lims)
+if(ln_obs>0){
+  print(paste("plot of",ln_obs,"observation times created: total water content vs. depth "))
+}
+
+ln_obs=read_data_plot('out/RE_freeze_thaw_h_l-','drutes-dev/out/RE_freeze_thaw_theta_l-'
+                      ,'.dat',col1=2,col2=3,ylabs=expression(paste("liquid pressure head [L]",sep=""))
+                      ,xlabs="depth [L]",'h_l_time',idfix=1,skip=0,k=0,legpos=legpos,lims=lims)
 if(ln_obs>0){
   print(paste("plot of",ln_obs,"observation times created: total water content vs. depth "))
 }
