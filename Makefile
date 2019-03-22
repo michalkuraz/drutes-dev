@@ -106,7 +106,7 @@ read_inputs.o:  simegen.o objfnc.o $(CORE_obj) readtools.o src/tools/read_inputs
 	$c -c src/tools/read_inputs.f90
 drutes_init.o: read_inputs.o readtools.o core_tools.o $(CORE_obj) src/tools/drutes_init.f90
 	$c -c src/tools/drutes_init.f90
-postpro.o: $(CORE_obj) $(MATHTOOLS_obj) freeze_helper.o geom_tools.o src/tools/postpro.f90
+postpro.o: $(CORE_obj) $(MATHTOOLS_obj) geom_tools.o src/tools/postpro.f90
 	$c -c src/tools/postpro.f90
 objfnc.o: $(CORE_obj) readtools.o src/tools/objfnc.f90
 	$c -c  src/tools/objfnc.f90
