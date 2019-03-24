@@ -6,6 +6,7 @@ module freeze_helper
   use RE_constitutive
 
   public :: iceswitch, rho_icewat, Q_reduction, surf_tens_deriv, Kliquid_temp, hl, thetai, thetal
+  public:: vangen_fr, mualem_fr, temp_initcond, wat_initcond, getval_retotfr
       
       
   
@@ -57,8 +58,8 @@ module freeze_helper
       end if
       
       layer = elements%material(el)
-      thl = vangen(pde(1), layer, x=(/hl(pde(1), layer, quadpnt)/))
-      thall = vangen(pde(1), layer, quadpnt)
+      thl = vangen_fr(pde(1), layer, x=(/hl(pde(1), layer, quadpnt)/))
+      thall = vangen_fr(pde(1), layer, quadpnt)
       thice = thall - thl
       rho = (thl * rho_wat + thice * rho_ice)/thall
        
@@ -77,15 +78,15 @@ module freeze_helper
       real(kind=rkind) :: thl, thall, thice, val
 
       if(present(quadpnt)) then
-        thall = vangen(pde(1), layer, quadpnt)
-        thl = vangen(pde(1), layer, x=(/hl(pde(1), layer, quadpnt)/))
+        thall = vangen_fr(pde(1), layer, quadpnt)
+        thl = vangen_fr(pde(1), layer, x=(/hl(pde(1), layer, quadpnt)/))
       end if
       if(present(x)) then
-        thall = vangen(pde(1), layer,x = x)
-        thl = vangen(pde(1), layer, x = x)
+        thall = vangen_fr(pde(1), layer,x = x)
+        thl = vangen_fr(pde(1), layer, x = x)
       end if
       thice = thall - thl
-      val = thice/(thall- vgset(layer)%Thr)
+      val = thice/(thall- freeze_par(layer)%Thr)
        
     end function Q_reduction
     
@@ -111,7 +112,7 @@ module freeze_helper
 
       
       if (present(tensor)) then
-        call mualem(pde_loc, layer, x=(/hl(pde_loc, layer, quadpnt)/), tensor = Klt(1:D, 1:D))
+        call mualem_fr(pde_loc, layer, x=(/hl(pde_loc, layer, quadpnt)/), tensor = Klt(1:D, 1:D))
 
         if (present(quadpnt)) then
           h_l = hl(pde_loc, layer, quadpnt)
@@ -198,8 +199,8 @@ module freeze_helper
       
       real(kind=rkind) :: thl, thall
       
-      thl = vangen(pde(1), layer, x=(/hl(pde(1), layer, quadpnt)/))
-      thall = vangen(pde(1), layer, quadpnt)
+      thl = vangen_fr(pde(1), layer, x=(/hl(pde(1), layer, quadpnt)/))
+      thall = vangen_fr(pde(1), layer, quadpnt)
       
       !val = (thall * rho_icewat(quadpnt) - thl * rho_wat)/rho_ice
       val = thall - thl
@@ -215,7 +216,463 @@ module freeze_helper
       real(kind=rkind), dimension(:), intent(in), optional    :: x
       real(kind=rkind) :: val
       
-      val = vangen(pde(1), layer, x=(/hl(pde(1), layer, quadpnt)/))
+      val = vangen_fr(pde(1), layer, x=(/hl(pde(1), layer, quadpnt)/))
     end function thetal
+    
+    
+    
+    
+    
+        !> \brief Van Genuchten relation \f[ \theta = f(pressure) \f]
+    !!  \f[ \theta_e = \frac{1}{(1+(\alpha*h)^n)^m} \f]
+    !! water content is considered as absolute value not the relative one \n
+    !! see \f[ \theta_e = \frac{\theta - \theta_r}{\theta_s-\theta_r} \f]
+    !<
+    function vangen_fr(pde_loc, layer, quadpnt, x) result(theta)
+      use typy
+      use re_globals
+      use pde_objs
+      class(pde_str), intent(in) :: pde_loc
+      integer(kind=ikind), intent(in) :: layer
+      !> pressure head
+      real(kind=rkind), intent(in), dimension(:), optional :: x
+      !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
+      type(integpnt_str), intent(in), optional :: quadpnt
+      real(kind=rkind) :: h
+      !> resulting water content
+      real(kind=rkind) :: theta
+
+      real(kind=rkind) :: a,n,m, theta_e
+      type(integpnt_str) :: quadpnt_loc
+      
+
+      if (present(quadpnt) .and. present(x)) then
+        print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
+        print *, "exited from freeze_helper::vangen_fr"
+        ERROR stop
+      else if (.not. present(quadpnt) .and. .not. present(x)) then
+        print *, "ERROR: you have not specified either integ point or x value"
+        print *, "exited from freeze_helper::vangen_fr"
+        ERROR stop
+      end if
+      
+      if (present(quadpnt)) then
+        quadpnt_loc=quadpnt
+        quadpnt_loc%preproc=.true.
+        h = pde_loc%getval(quadpnt_loc)
+      else
+        if (ubound(x,1) /=1) then
+          print *, "ERROR: van Genuchten function is a function of a single variable h"
+          print *, "       your input data has:", ubound(x,1), "variables"
+          print *, "exited from freeze_helper::vangen_fr"
+          ERROR STOP
+        end if
+        h = x(1)
+      end if
+      
+      
+      
+      a = freeze_par(layer)%alpha
+      n = freeze_par(layer)%n
+      m = freeze_par(layer)%m
+      
+
+      if (h >=0.0_rkind) then
+        theta = freeze_par(layer)%Ths
+        RETURN
+      else
+        theta_e = 1/(1+(a*(abs(h)))**n)**m
+        theta = theta_e*(freeze_par(layer)%Ths-freeze_par(layer)%Thr)+freeze_par(layer)%Thr
+      end if
+
+    end function vangen_fr
+    
+    
+    
+        !> \brief so-called retention water capacity, it is a derivative to retention curve function
+    !! \f E(h) = C(h) + \frac{\theta(h)}{\theta_s}S_s \f]
+    !! where
+    !! \f[ C(h) = \left\{ \begin{array}{l l}\frac{m n \alpha  (-h \alpha )^{-1+n}}{\left(1+(-h \alpha )^n\right)^{1+m}}(\theta_s - \theta_r) ,  & \quad \mbox{$\forall$ $h \in (-\infty, 0 )$}\\ 0, & \quad \mbox{$\forall$ $h \in \langle 0, + \infty )$}\\ \end{array} \right. \f]
+    !! and 
+    !! \f[ \theta(h) = \left\{ \begin{array}{l l} \frac{\theta_s -\theta_r}{(1+(-\alpha h)^n_{vg})^m_{vg}} + \theta_r,  & \quad \mbox{$\forall$ $h \in (-\infty, 0 )$}\\ \theta_S, & \quad \mbox{$\forall$ $h \in \langle 0, + \infty )$}\\ \end{array} \right. \f]
+    !<
+    function vangen_elast_fr(pde_loc,layer, quadpnt, x) result(E)
+      use typy
+      use re_globals
+      use pde_objs
+      use core_tools
+
+      class(pde_str), intent(in) :: pde_loc 
+      integer(kind=ikind), intent(in) :: layer
+      !> pressure head
+      real(kind=rkind), intent(in), dimension(:),  optional :: x
+      !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
+      type(integpnt_str), intent(in), optional :: quadpnt
+      real(kind=rkind) :: h
+      !> resulting system elasticity
+      real(kind=rkind) :: E
+
+      real(kind=rkind) :: C, a, m, n, tr, ts 
+      type(integpnt_str) :: quadpnt_loc      
+          
+      
+      if (present(quadpnt) .and. present(x)) then
+        print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
+        print *, "exited from freeze_helper::vangen_elast"
+        ERROR stop
+      else if (.not. present(quadpnt) .and. .not. present(x)) then
+        print *, "ERROR: you have not specified either integ point or x value"
+        print *, "exited from freeze_helper::vangen_elast"
+        ERROR stop
+      end if
+      
+      if (present(quadpnt)) then
+        quadpnt_loc=quadpnt
+        quadpnt_loc%preproc=.true.
+        h = pde_loc%getval(quadpnt_loc)
+      else
+      if (ubound(x,1) /=1) then
+        print *, "ERROR: van Genuchten function is a function of a single variable h"
+        print *, "       your input data has:", ubound(x,1), "variables"
+        ERROR STOP
+      end if
+      if (ubound(x,1) /=1) then
+        print *, "ERROR: van Genuchten function is a function of a single variable h"
+        print *, "       your input data has:", ubound(x,1), "variables"
+        print *, "exited from freeze_helper::vangen_elast"
+        ERROR STOP
+      end if
+        h = x(1)
+      end if
+
+      if (h < 0) then
+        a = freeze_par(layer)%alpha
+        n = freeze_par(layer)%n
+        m = freeze_par(layer)%m
+        tr = freeze_par(layer)%Thr
+        ts = freeze_par(layer)%Ths
+        C = a*m*n*(-tr + ts)*(-(a*h))**(-1 + n)*(1 + (-(a*h))**n)**(-1 - m)
+      else
+        E = 0
+        RETURN
+      end if
+
+      E = C 
+      
+
+    end function vangen_elast_fr
+    
+    
+    
+    
+    !> \brief Mualem's fucntion for unsaturated hydraulic conductivity with van Genuchten's water content substitution
+    !! \f[   K(h) = \left\{ \begin{array}{l l} K_s\frac{\left( 1- (-\alpha h)^{n_{vg}m_{vg}} \left( 1+ (-\alpha h)^{n_{vg}} \right)^{-m_{vg}} \right)^2}{\left(1+(-\alpha h)^{n_{vg}} \right)^{\frac{m_{vg}}{2}}},  &  \mbox{$\forall$  $h \in$ $(-\infty,0)$}\\ K_s,  \mbox{$\forall$   $h \in$ $\langle 0, +\infty)$}\\ \end{array} \right. \f]
+    !<
+    subroutine mualem_fr(pde_loc, layer, quadpnt,  x, tensor, scalar)
+      use typy
+      use freeze_globs
+      use pde_objs
+
+      class(pde_str), intent(in) :: pde_loc
+      integer(kind=ikind), intent(in) :: layer
+      !> pressure head
+      real(kind=rkind), dimension(:), intent(in), optional :: x
+      !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
+      type(integpnt_str), intent(in), optional :: quadpnt      
+      !> second order tensor of the unsaturated hydraulic conductivity
+      real(kind=rkind), dimension(:,:), intent(out), optional :: tensor
+      real(kind=rkind) :: h
+      !> relative hydraulic conductivity, (scalar value)
+      real(kind=rkind), intent(out), optional :: scalar
+
+      real(kind=rkind) :: a,n,m, tmp
+      type(integpnt_str) :: quadpnt_loc
+        
+
+      if (present(quadpnt) .and. present(x)) then
+        print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
+        print *, "exited from re_constitutive::mualem"
+        ERROR stop
+      else if (.not. present(quadpnt) .and. .not. present(x)) then
+        print *, "ERROR: you have not specified either integ point or x value"
+        print *, "exited from re_constitutive::mualem"
+        ERROR stop
+      end if
+      
+      if (present(quadpnt)) then
+        quadpnt_loc=quadpnt
+        quadpnt_loc%preproc=.true.
+        h = pde_loc%getval(quadpnt_loc)
+      else
+      	if (ubound(x,1) /=1) then
+          print *, "ERROR: van Genuchten function is a function of a single variable h"
+          print *, "       your input data has:", ubound(x,1), "variables"
+          print *, "exited from re_constitutive::mualem"
+          ERROR STOP
+        end if
+        h = x(1)
+      end if
+      
+      
+      if (h >= 0) then
+        tmp = 1
+      else
+        a = freeze_par(layer)%alpha
+        n = freeze_par(layer)%n
+        m = freeze_par(layer)%m
+
+        tmp =  (1 - (-(a*h))**(m*n)/(1 + (-(a*h))**n)**m)**2/(1 + (-(a*h))**n)**(m/2.0_rkind)
+      end if
+	
+      if (present(tensor)) then
+        tensor = tmp* freeze_par(layer)%Ks
+      end if
+
+      if (present(scalar)) then
+        scalar = tmp
+      end if
+    end subroutine mualem_fr
+    
+    subroutine wat_initcond(pde_loc) 
+      use typy
+      use globals
+      use global_objs
+      use pde_objs
+      use re_globals
+      use re_constitutive
+      use geom_tools
+
+      
+      class(pde_str), intent(in out) :: pde_loc
+      integer(kind=ikind) :: i, j, k,l, m, layer, D
+      real(kind=rkind) :: value
+      
+      D = drutes_config%dimen
+      select case (freeze_par(1_ikind)%icondtypeRE)
+        case("input")
+          call map1d2dJ(pde_loc,"drutes.conf/freeze.conf/hini.in")
+      end select
+      
+      D = drutes_config%dimen
+      do i=1, elements%kolik
+        layer = elements%material(i)
+        do j=1, ubound(elements%data,2)
+          k = elements%data(i,j)
+          l = nodes%edge(k)
+          m = pde_loc%permut(k)
+          if (m == 0) then
+            call pde_loc%bc(l)%value_fnc(pde_loc, i, j, value)
+            pde_loc%solution(k) =  value 
+          else
+            select case (freeze_par(layer)%icondtypeRE)
+              case("H_tot")
+                pde_loc%solution(k) = freeze_par(layer)%initcond !+ nodes%data(k,1)
+              case("hpres")
+                pde_loc%solution(k) = freeze_par(layer)%initcond + nodes%data(k,D)
+              case("theta")
+                value = inverse_vangen_fr(pde_loc, layer, x=(/freeze_par(layer)%initcond/))
+                pde_loc%solution(k) = value + nodes%data(k,D)
+            end select
+          end if
+        end do   
+      end do
+      
+
+    end subroutine wat_initcond
+    
+    subroutine temp_initcond(pde_loc) 
+      use typy
+      use globals
+      use global_objs
+      use pde_objs
+      use heat_globals
+      use geom_tools
+
+      
+      class(pde_str), intent(in out) :: pde_loc
+      integer(kind=ikind) :: i, j, k,l, m, layer, D
+      real(kind=rkind) :: value
+      
+      D = drutes_config%dimen
+      select case (freeze_par(1_ikind)%icondtype)
+        case("input")
+          call map1d2dJ(pde_loc,"drutes.conf/freeze.conf/Tini.in")
+        case("value")
+          do i=1, elements%kolik
+            layer = elements%material(i)
+            do j=1, ubound(elements%data,2)
+              k = elements%data(i,j)
+              l = nodes%edge(k)
+              m = pde_loc%permut(k)
+              if (m == 0) then
+                call pde_loc%bc(l)%value_fnc(pde_loc, i, j, value)
+                pde_loc%solution(k) = value 
+              else
+                pde_loc%solution(k) = freeze_par(layer)%Tinit
+              end if
+            end do   
+          end do
+      end select
+      
+    end subroutine temp_initcond
+    
+    !> specific function for Richards equation in H-form (total hydraulic head form), replaces pde_objs::getvalp1 in order to distinguish between H and h 
+    function getval_retotfr(pde_loc, quadpnt) result(val)
+      use typy
+      use pde_objs
+      use geom_tools
+      use re_globals
+      use debug_tools
+      
+      class(pde_str), intent(in) :: pde_loc
+      type(integpnt_str), intent(in) :: quadpnt
+      real(kind=rkind) :: val
+      
+      real(kind=rkind), dimension(3) :: xyz
+      integer(kind=ikind) :: D, layer
+      
+
+           
+      if (quadpnt%preproc) then
+      
+        D = drutes_config%dimen
+             
+        call getcoor(quadpnt, xyz(1:D))
+        
+        if (drutes_config%dimen>1) then
+          val = getvalp1(pde_loc, quadpnt) - xyz(D)
+        else
+          layer = get_layer(quadpnt)
+          val = getvalp1(pde_loc, quadpnt) - xyz(D)*cos(4*atan(1.0_rkind)/180*freeze_par(layer)%anisoangle(1))
+        end if
+        
+        
+      else
+        val = getvalp1(pde_loc, quadpnt)
+      end if
+	
+      
+    end function getval_retotfr
+    
+        
+    function inverse_vangen_fr(pde_loc, layer, quadpnt, x) result(hpress)
+      use typy
+      use re_globals
+      use pde_objs
+      use core_tools
+      class(pde_str), intent(in) :: pde_loc
+      integer(kind=ikind), intent(in) :: layer
+      !> water content
+      real(kind=rkind), intent(in), dimension(:), optional :: x
+      !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
+      type(integpnt_str), intent(in), optional :: quadpnt
+      real(kind=rkind) :: theta
+      !> resulting pressure head
+      real(kind=rkind) :: hpress
+      
+      
+      real(kind=rkind) :: a,n,m
+      type(integpnt_str) :: quadpnt_loc
+      
+ 
+
+      if (present(quadpnt) .and. present(x)) then
+        print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
+        print *, "exited from freeze_helper::inverse_vangen_fr"
+        ERROR stop
+      else if (.not. present(quadpnt) .and. .not. present(x)) then
+        print *, "ERROR: you have not specified either integ point or x value"
+        print *, "exited from freeze_helper::inverse_vangen_fr"
+        ERROR stop
+      end if
+      
+      if (present(quadpnt)) then
+        quadpnt_loc=quadpnt
+        quadpnt_loc%preproc=.true.
+        theta = pde_loc%getval(quadpnt_loc)
+      else
+        if (ubound(x,1) /=1) then
+          print *, "ERROR: van Genuchten function is a function of a single variable h"
+          print *, "       your input data has:", ubound(x,1), "variables"
+          print *, "exited from freeze_helper::inverse_vangen_fr"
+          ERROR STOP
+        end if
+        theta = x(1)
+      end if
+      
+      
+      
+      a = freeze_par(layer)%alpha
+      n = freeze_par(layer)%n
+      m = freeze_par(layer)%m
+      
+      if (abs(theta - freeze_par(layer)%Ths) < epsilon(theta)) then
+        hpress = 0
+      else
+        if (theta >  freeze_par(layer)%Ths + 10*epsilon(theta)) then
+          call write_log("theta is greater then theta_s, exiting")
+          print *, "called from freeze_helper::inverse_vangen_fr"
+          error stop
+        else if (theta < 0) then
+          call write_log("theta is negative strange, exiting")
+          print *, "called from freeze_helper::inverse_vangen_fr"
+          error stop 
+        end if
+        hpress = ((((freeze_par(layer)%Ths - freeze_par(layer)%Thr)/(theta-freeze_par(layer)%Thr))**(1.0_rkind/m)-1) &  
+        **(1.0_rkind/n))/(-a)
+      end if
+      
+    end function inverse_vangen_fr
+    
+    
+    subroutine freeze_coolant_bc(pde_loc, el_id, node_order, value, code) 
+      use typy
+      use globals
+      use global_objs
+      use pde_objs
+      use re_globals
+
+      class(pde_str), intent(in) :: pde_loc
+      integer(kind=ikind), intent(in)  :: el_id, node_order
+      real(kind=rkind), intent(out), optional    :: value
+      integer(kind=ikind), intent(out), optional :: code
+     
+
+      integer(kind=ikind) :: i, edge_id, j
+      real(kind=rkind), dimension(3) :: gravflux, bcflux
+      real(kind=rkind) :: bcval, gfluxval
+      integer :: i1
+      
+      
+      if (present(value)) then
+        edge_id = nodes%edge(elements%data(el_id, node_order))
+        i = pde_loc%permut(elements%data(el_id, node_order))
+        
+        if (pde_loc%bc(edge_id)%file) then
+          do i=1, ubound(pde_loc%bc(edge_id)%series,1)
+            if (pde_loc%bc(edge_id)%series(i,1) > time) then
+              if (i > 1) then
+                j = i-1
+              else
+                j = i
+              end if
+              bcval = -hc*(pde(2)%solution(el_id)-pde_loc%bc(edge_id)%series(j,2))
+              EXIT
+            end if
+          end do
+        else
+          bcval = -hc*(pde(2)%solution(el_id)-pde_loc%bc(edge_id)%value)
+        end if
+    
+        value = bcval
+
+      end if
+      
+      if (present(code)) then
+        code = 2
+      end if
+
+
+    end subroutine freeze_coolant_bc
     
 end module freeze_helper

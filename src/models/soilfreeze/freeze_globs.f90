@@ -2,22 +2,29 @@ module freeze_globs
   use typy
   
   
-  type, public :: freeze_par
-    real(kind=rkind) :: alpha, n, m, Thr, Ths, lambda_dry 
+  type, public :: freeze_sys
+    real(kind=rkind) :: alpha, n, m, Thr, Ths, snow_density, diameter 
+    real(kind=rkind) :: Cs, Ci, Cl, Ca
+    real(kind=rkind) :: C1, C2, C3, C4, C5, F1, F2, beta
+
     !> hydraulic conductivity tensor of second order
     real(kind=rkind), dimension(:,:), allocatable :: Ks
     !> diagonal values of the hydraulic conductivity tensor in local system of coordinates
     real(kind=rkind), dimension(:), allocatable   :: Ks_local
     !> angle of the anisothrophy axes with respect to global axes
     real(kind=rkind), dimension(:), allocatable   :: anisoangle
-    real(kind=rkind) :: initcond
+    real(kind=rkind) :: initcond, Tinit
     character(len=5) :: icondtype
+    character(len=5) :: icondtypeRE
+    character(len=4) :: material
     real(kind=rkind) :: top, bottom
     real(kind=rkind) :: sinkterm
-  end type freeze_par
+  end type freeze_sys
   
-  type(freeze_par), dimension(:), allocatable, target, public :: freeze_sys
-  
+  type(freeze_sys), dimension(:), allocatable, target, public :: freeze_par
+
+  !> freeze exchange conductivity
+  real(kind=rkind), public :: hc 
   
   !> gravity acceleration [m.s^-2]
   real(kind=rkind), parameter, public :: grav = 9.81
@@ -60,16 +67,11 @@ module freeze_globs
   
   !> Thermal conductivity [ W/m/K]
   real(kind=rkind), parameter, public :: thermal_cond = 0.5
-  real(kind=rkind), parameter, public :: C1 = 0.55
-  real(kind=rkind), parameter, public :: C2 = 0.8
-  real(kind=rkind), parameter, public :: C3 = 3.07
-  real(kind=rkind), parameter, public :: C4 = 0.13
-  real(kind=rkind), parameter, public :: C5 = 4
-  real(kind=rkind), parameter, public :: F1 = 13.05
-  real(kind=rkind), parameter, public :: F2 = 1.06
-  real(kind=rkind), parameter, public :: beta = 0.01
 
   
   !> Reference surface tension at 25 ~deg C g.s^-2
   real(kind=rkind), parameter, public :: surf_tens_ref = 71.89
+  
+  integer, public :: file_freeze
+
 end module freeze_globs

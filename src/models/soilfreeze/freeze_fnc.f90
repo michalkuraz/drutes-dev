@@ -91,11 +91,11 @@ module freeze_fnc
       
       if (present(tensor)) then
         if(present(quadpnt)) then 
-          call mualem(pde_loc, layer, x = (/hl(pde(1), layer, quadpnt)/), tensor = tensor)
+          call mualem_fr(pde_loc, layer, x = (/hl(pde(1), layer, quadpnt)/), tensor = tensor)
           tensor = 10**(-Omega*Q_reduction(layer, quadpnt))*tensor
         end if
         if (present(x)) then
-          call mualem(pde_loc, layer, x = x, tensor = tensor)
+          call mualem_fr(pde_loc, layer, x = x, tensor = tensor)
           tensor = 10**(-Omega*Q_reduction(layer, x = x))*tensor
         end if
       else
@@ -151,7 +151,7 @@ module freeze_fnc
       if (present(tensor)) then
         if (present(quadpnt)) then
           call Kliquid_temp(pde_loc, layer, quadpnt, tensor = Klt(1:D, 1:D))
-          call mualem(pde_loc, layer, x=(/hl(pde(1), layer, quadpnt)/), tensor = Klh(1:D, 1:D))
+          call mualem_fr(pde_loc, layer, x=(/hl(pde(1), layer, quadpnt)/), tensor = Klh(1:D, 1:D))
           Klh(1:D,1:D) = 10**(-Omega*Q_reduction(layer, quadpnt))*Klh(1:D, 1:D)
           if(iceswitch(quadpnt)) then
             tensor = (Klt(1:D, 1:D) + Lf/temp/grav*Klh(1:D,1:D))
@@ -217,8 +217,9 @@ module freeze_fnc
       
       real(kind=rkind) :: temp, vol_soil, th_air
       
-      vol_soil = 1_rkind - vgset(layer)%Ths
-      th_air = vgset(layer)%Ths-thetai(pde_loc, layer, quadpnt)-vangen(pde_loc, layer, x = (/hl(pde(1), layer, quadpnt)/)) 
+      vol_soil = 1_rkind - freeze_par(layer)%Ths
+      th_air = freeze_par(layer)%Ths-thetai(pde_loc, layer, quadpnt)-&
+      vangen_fr(pde_loc, layer, x = (/hl(pde(1), layer, quadpnt)/)) 
       if(th_air < 0) then
         if(abs(th_air) > epsilon(th_air)) then
           print*, th_air
@@ -229,7 +230,7 @@ module freeze_fnc
         end if
       end if
       temp = pde(2)%getval(quadpnt)+ 273.15_rkind
-      val =  Cl*rho_wat*vangen(pde_loc, layer, x = (/hl(pde(1), layer, quadpnt)/)) 
+      val =  Cl*rho_wat*vangen_fr(pde_loc, layer, x = (/hl(pde(1), layer, quadpnt)/)) 
       val = val + Cs*rho_soil*vol_soil + Ca*rho_air*th_air
       if(iceswitch(quadpnt)) then
         val = (Ci*rho_ice*thetai(pde_loc, layer, quadpnt) + val &
@@ -315,18 +316,25 @@ module freeze_fnc
       real(kind = rkind) :: thl, thice, tk, F
       integer(kind = ikind) :: D, i
       D = drutes_config%dimen
-
-      call all_fluxes(pde_loc, layer, quadpnt, flux = flux)
-
+      
       thice = thetai(pde(1), layer, quadpnt)
-      thl = vangen(pde(1), layer, x=(/hl(pde(1), layer, quadpnt)/))
-      !> hansson changin campbell
-      F = 1+ F1*thice**F2
-      tk = C1 + C2*(thl+F*thice)-(C1-C4)*exp(-(C3*(thl+F*thice))**C5)
-      do i = 1, D
-        val(i) = tk + beta*Cl*rho_wat*abs(flux(i))
-      end do 
-
+      thl = vangen_fr(pde(1), layer, x=(/hl(pde(1), layer, quadpnt)/))
+      select case (freeze_par(layer)%material)
+        case ("Soil")
+          call all_fluxes(pde_loc, layer, quadpnt, flux = flux)
+          !> hansson changing campbell
+          F = 1+ freeze_par(layer)%F1*thice**freeze_par(layer)%F2
+          tk = freeze_par(layer)%C1 + freeze_par(layer)%C2*(thl+F*thice)-&
+          (freeze_par(layer)%C1-freeze_par(layer)%C4)*exp(-(freeze_par(layer)%C3*(thl+F*thice))**freeze_par(layer)%C5)
+          do i = 1, D
+            val(i) = tk + freeze_par(layer)%beta*freeze_par(layer)%Cl*rho_wat*abs(flux(i))
+          end do 
+        case("Snow")
+          tk = freeze_par(layer)%snow_density**2*2.5e-6-1.23e-4*freeze_par(layer)%snow_density+0.024
+          do i = 1, D
+            val(i) = tk
+          end do 
+      end select
     end function thermal_k
     
     subroutine all_fluxes(pde_loc, layer, quadpnt, x, grad,  flux, flux_length)

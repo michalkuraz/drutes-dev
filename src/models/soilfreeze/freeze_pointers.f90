@@ -38,6 +38,7 @@ module freeze_pointers
       use freeze_globs
       use freeze_fnc
       use freeze_helper
+      use freeze_read
       use heat_pointers
       use heat_reader
       use heat_fnc
@@ -45,8 +46,9 @@ module freeze_pointers
       integer(kind=ikind) :: i
       select case (drutes_config%name)
         case ("freeze")
-          call heat_read(pde(2))
-          call res_read(pde(1))
+          !call heat_read(pde(2))
+         ! call res_read(pde(1))
+          call freeze_reader(pde(1))
         case ("LTNE")
         case default
           print *, "procedure called when unexpected problem name"
@@ -55,7 +57,7 @@ module freeze_pointers
       end select
       
       call RE_totheadbc(pde(1))
-      pde(1)%getval => getval_retot
+      pde(1)%getval => getval_retotfr
       
     ! pointers for water flow model
       pde(1)%pde_fnc(1)%elasticity => capacityhh
@@ -64,20 +66,13 @@ module freeze_pointers
       
       pde(1)%pde_fnc(1)%dispersion => diffhh
       
-      !pde(1)%pde_fnc(1)%convection => convz
-
       pde(1)%pde_fnc(2)%dispersion => diffhT
       
       pde(1)%flux => all_fluxes
 
-      pde(1)%initcond => retot_initcond
-      !pde(1)%initcond => re_initcond
+      pde(1)%initcond => wat_initcond
       
-      if (drutes_config%fnc_method == 0) then
-        rwcap => vangen_elast
-      else
-        rwcap => vangen_elast_tab
-      end if
+      rwcap => vangen_elast_fr
       
       pde(1)%problem_name(1) = "RE_freeze_thaw"
       pde(1)%problem_name(2) = "Richards' equation with freezing and thawing"
@@ -87,8 +82,8 @@ module freeze_pointers
 
       pde(1)%flux_name(1) = "flux"  
       pde(1)%flux_name(2) = "Darcian flow [L.T^{-1}]"
-
-      deallocate(pde(1)%mass_name)
+      
+      pde(1)%print_mass = .true.
       deallocate(pde(1)%mass)
       
       allocate(pde(1)%mass_name(4,2))
@@ -107,7 +102,7 @@ module freeze_pointers
       pde(1)%mass_name(4,2) = "h_l [L]"
       
 
-      pde(1)%mass(1)%val => vangen
+      pde(1)%mass(1)%val => vangen_fr
       
       pde(1)%mass(2)%val => thetai
       
@@ -117,6 +112,18 @@ module freeze_pointers
       ! allocate porosity as mass(3)?
 
     ! pointers for heat flow model
+      pde(2)%problem_name(1) = "heat"
+      pde(2)%problem_name(2) = "Heat conduction equation with convection"
+
+      pde(2)%solution_name(1) = "temperature" 
+      pde(2)%solution_name(2) = "T " 
+
+      pde(2)%flux_name(1) = "heat_flux"  
+      pde(2)%flux_name(2) = "heat flux [W.L-2]"
+      
+      allocate(pde(2)%mass_name(0,2))
+      pde(2)%print_mass = .false.
+      
       pde(2)%pde_fnc(1)%elasticity => capacityTh
       
       pde(2)%pde_fnc(2)%elasticity => capacityTT
@@ -127,7 +134,7 @@ module freeze_pointers
       
       pde(2)%flux => heat_flux_freeze
       
-      pde(2)%initcond => heat_icond  
+      pde(2)%initcond => temp_initcond 
       
       do i=lbound(pde(2)%bc,1), ubound(pde(2)%bc,1)
         select case(pde(2)%bc(i)%code)
@@ -137,13 +144,12 @@ module freeze_pointers
             pde(2)%bc(i)%value_fnc => heat_neumann
           case(0)
             pde(2)%bc(i)%value_fnc => re_null_bc
+          case(3)
+            pde(2)%bc(i)%value_fnc => freeze_coolant_bc
         end select
       end do  
     
     end subroutine frz_pointers
   
-  
-
-
 
 end module freeze_pointers

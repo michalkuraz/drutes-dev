@@ -21,212 +21,195 @@ module freeze_read
   use typy
   use freeze_globs
   
-  public :: freeze_read
+  public :: freeze_reader
   
   contains
 
     !> opens and reads water.conf/matrix.conf, input data for the Richards equation in single mode, 
     !! Richards equation with the dual porosity regime - matrix domain
-    subroutine freeze_read(pde_loc)
+    subroutine freeze_reader(pde_loc)
       use typy
       use global_objs
       use pde_objs
       use globals
-      use freeze_globals
       use core_tools
       use readtools
       
       class(pde_str), intent(in out) :: pde_loc
-      integer :: ierr, i, j, filewww
+      integer :: ierr, i, j, filewww,i_err
       integer(kind=ikind) :: n
       character(len=1) :: yn
       character(len=4096) :: msg
       real(kind=rkind), dimension(:), allocatable :: tmpdata
 
+      select case (drutes_config%name)
+        case ("freeze")
+          call find_unit(file_freeze, 200)
+          open(unit = file_freeze, file="drutes.conf/freeze/freeze.conf", action="read", status="old", iostat=i_err)
+          if (i_err /= 0) then
+            print *, "missing drutes.conf/freeze/freeze.conf"
+            ERROR STOP
+          end if
+        case ("LTNE")
+          call find_unit(file_freeze, 200)
+          open(unit = file_freeze, file="drutes.conf/freeze/LTNE.conf", action="read", status="old", iostat=i_err)
+          if (i_err /= 0) then
+            print *, "missing drutes.conf/freeze/LTNE.conf"
+            ERROR STOP
+          end if
+        case default
+          print *, "procedure called because of unexpected problem name"
+          print *, "exited from freeze_read::freeze_reader"
+          error stop
+      end select
       
-      pde_loc%problem_name(1) = "heat"
-      pde_loc%problem_name(2) = "Heat conduction equation with convection (Sophocleous, 1979)"
 
-      pde_loc%solution_name(1) = "temperature" !nazev vystupnich souboru
-      pde_loc%solution_name(2) = "T " !popisek grafu
-
-      pde_loc%flux_name(1) = "heat_flux"  
-      pde_loc%flux_name(2) = "heat flux [W.L-2]"
-      
-      allocate(pde_loc%mass_name(0,2))
-
-      call find_unit(file_heat, 200)
-      open(unit = file_heat, file="drutes.conf/heat/heat.conf", action="read", status="old", iostat=i_err)
-      if (i_err /= 0) then
-        print *, "missing drutes.conf/heat/heat.conf file"
-        ERROR STOP
-      end if
-     
-      call fileread(with_richards, file_heat)
-
-      allocate(heatpar(maxval(elements%material)))
-      
-      call fileread(n, file_heat)
-      
-      backspace(file_heat)
-      
-      write(msg, fmt=*) "ERROR!! incorrect number of materials in drutes.conf/heat/heat.conf  &
-        the mesh defines", maxval(elements%material)  , "materials, and your input file defines", n, "material(s)."
-	
-     
-      call fileread(n, file_heat, ranges=(/1_ikind*maxval(elements%material),1_ikind*maxval(elements%material)/),&
-        errmsg=trim(msg))
-	
-      write(unit=msg, fmt=*) "HINT 1: Is the heat capacity (matrix/matrix) positive?", new_line("a"), &
-        "   HINT 2 : Is the number of heat capacity values corresponding to the amount of layers?"
-	
-      do i=1, ubound(heatpar,1)
-        call fileread(heatpar(i)%C, file_heat, ranges=(/0.0_rkind,huge(0.0_rkind)/),&
-        errmsg=trim(msg))
-      end do
-      
-      write(unit=msg, fmt=*) "HINT 1: Is the heat capacity (matrix/water) positive?", new_line("a"), &
-        "   HINT 2 : Is the number of heat capacity values corresponding to the amount of layers?"
-        
-      do i=1, ubound(heatpar,1)
-        call fileread(heatpar(i)%C_w, file_heat, ranges=(/0.0_rkind,huge(0.0_rkind)/),&
-        errmsg=trim(msg))
-      end do
-      
-      
-      write(unit=msg, fmt=*) "HINT 1: Is the heat conductivity positive?", new_line("a"), &
-	"   HINT 2 : Is the number of heat conductivity values corresponding to the amount of layers?"
-			      
-
- 
-      write(unit=msg, fmt=*) "HINT 1: Are all values anisotropy defining anisotropical diffusivity positive? ", &
-       new_line("a"), new_line("a"),  &
-        "   HINT 2: Have you defined an EXACT NUMBER of values for anisotropy?", new_line("a"), &
-        "     (e.g. for 2D define angle and the maximal and minimal value of diffusivity, in total 3 values", new_line("a"),&
-         "      if you switch from 2D to 1D don't forget to erase the last value, otherwise this error is generated)", &
-        new_line("a"), new_line("a"), &
-        "   HINT 3: The number of lines with heat conductivity has to correspond to the number of materials & 
-        defined by your mesh", new_line("a"), new_line("a")
-      
-      
-      allocate(tmp_array(drutes_config%dimen + 1))
-      do i=1, ubound(heatpar,1)
-        allocate(heatpar(i)%lambda_loc(drutes_config%dimen))
-        call fileread(r=tmp_array, fileid=file_heat, ranges=(/0.0_rkind, huge(tmp)/), errmsg=trim(msg), checklen=.TRUE.)
-        heatpar(i)%anisoangle = tmp_array(1)
-        heatpar(i)%lambda_loc = tmp_array(2:drutes_config%dimen + 1)
-        allocate(heatpar(i)%lambda(drutes_config%dimen, drutes_config%dimen))
-        call set_tensor(heatpar(i)%lambda_loc, (/heatpar(i)%anisoangle/), heatpar(i)%lambda)
-      end do
-      
-      
-      write(unit=msg, fmt=*) "Did you specify convection vector component for each coordinate (e.g. x,y,z)"
-      do i=1, ubound(heatpar,1)
-        allocate(heatpar(i)%convection(drutes_config%dimen))
-        call fileread(r=heatpar(i)%convection, fileid=file_heat, errmsg=trim(msg))
-      end do
-        
-      write(unit=msg, fmt=*) "Hint: The number of lines for the initial temperature has to be equal to the number of materials."
-      do i=1, ubound(heatpar,1)
-       call fileread(r=heatpar(i)%Tinit, fileid=file_heat, errmsg=trim(msg))
-      end do
-       
-		    
-      
-      write(unit=msg, fmt=*) "Hint: The number of lines for the heat source has to be equal to the number of materials."
-      do i=1, ubound(heatpar,1)
-       call fileread(r=heatpar(i)%source, fileid=file_heat, errmsg=trim(msg))
-      end do
-      
-      
-      write(unit=msg, fmt=*) "The number of boundaries should be greater than zero and smaller or equal the number of nodes"
-      call fileread(n, file_heat, ranges=(/1_ikind, nodes%kolik/),&
-        errmsg=trim(msg))
-      
-      call readbcvals(unitW=file_heat, struct=pde_loc%bc, dimen=n, &
-          dirname="drutes.conf/heat/")
-      
-      pde_loc%problem_name(1) = "RE_matrix"
-      pde_loc%problem_name(2) = "Richards' equation"
-
-      pde_loc%solution_name(1) = "press_head" !nazev vystupnich souboru
-      pde_loc%solution_name(2) = "h  [L]" !popisek grafu
-
-      pde_loc%flux_name(1) = "flux"  
-      pde_loc%flux_name(2) = "Darcian flow [L.T^{-1}]"
-      
-      allocate(pde_loc%mass_name(1,2))
-
-      pde_loc%mass_name(1,1) = "theta"
-      pde_loc%mass_name(1,2) = "theta [-]"
-      
-      pde_loc%print_mass = .true.
-
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      !water.conf/matrix.conf
-      call find_unit(file_waterm, 200)
-
-      open(unit=file_waterm, file="drutes.conf/water.conf/matrix.conf", action="read", status="old", iostat = ierr)
-
-      
-      if (ierr /= 0) then
-        print *, "missing drutes.conf/water.conf/matrix.conf file"
-        ERROR STOP
-      end if
-      
       write(msg, *) "define method of evaluation of constitutive functions for the Richards equation", new_line("a"), &
         "   0 - direct evaluation (not recommended, extremely resources consuming due to complicated exponential functions)", &
         new_line("a"), &
         "   1 - function values are precalculated in program initialization and values between are linearly approximated"
+
+      call fileread(drutes_config%fnc_method, file_freeze, ranges=(/0_ikind,1_ikind/),errmsg=msg)
       
-      call fileread(drutes_config%fnc_method, file_waterm, ranges=(/0_ikind,1_ikind/),errmsg=msg)
-      
-      call fileread(maxpress, file_waterm, ranges=(/-huge(0.0_rkind), huge(0.0_rkind)/), &
-        errmsg="set some positive nonzero limit for maximal suction pressure (think in absolute values) ")
+      call fileread(maxpress, file_freeze, ranges=(/-huge(0.0_rkind), huge(0.0_rkind)/), &
+        errmsg="set a positive nonzero limit for maximum suction pressure (think in absolute values) ")
         maxpress = abs(maxpress)
       
-      call fileread(drutes_config%fnc_discr_length, file_waterm, ranges=(/tiny(0.0_rkind), maxpress/),  &
+      call fileread(drutes_config%fnc_discr_length, file_freeze, ranges=(/tiny(0.0_rkind), maxpress/),  &
         errmsg="the discretization step for precalculating constitutive functions must be positive and smaller &
-        then the bc")
-
+        than the bc")
+        
+        
+      allocate(freeze_par(maxval(elements%material)))
       
-      call fileread(n, file_waterm)
+      call fileread(n, file_freeze)
       
-      write(msg, fmt=*) "ERROR!! incorrect number of materials in drutes.conf/water.conf/matrix.conf  &
+      backspace(file_freeze)
+      
+      write(msg, fmt=*) "ERROR!! incorrect number of materials in drutes.conf/freeze/freeze.conf  &
         the mesh defines", maxval(elements%material)  , "materials, and your input file defines", n, "material(s)."
 	
-      backspace(file_waterm)
      
-      call fileread(n, file_waterm, ranges=(/1_ikind*maxval(elements%material),1_ikind*maxval(elements%material)/),&
+      call fileread(n, file_freeze, ranges=(/1_ikind*maxval(elements%material),1_ikind*maxval(elements%material)/),&
+        errmsg = trim(msg))
+	
+      write(unit = msg, fmt = *) "Your porous material should be snow or soil?"
+	
+      do i=1, ubound(freeze_par,1)
+        call fileread(freeze_par(i)%material, file_freeze,&
         errmsg=trim(msg))
+        select case(freeze_par(i)%material)
+            case("Snow", "Soil")
+              CONTINUE
+            case default
+              print *, "you have specified the wrong material keyword"
+              print *, "the allowed options are:"
+              print *, "                        Snow"
+              print *, "                        Soil"
+              call file_error(file_freeze)
+          end select
+      end do
+      
+      write(unit = msg, fmt = *) "HINT 1: Is the snow density positive?", new_line("a"),&
+        "   HINT 2 : Did you define snow density for each layer?"
+      
+      allocate(tmpdata(4))
+  
+      do i=1, ubound(freeze_par,1)
+        call fileread(r = tmpdata, fileid = file_freeze, ranges=(/0.0_rkind, huge(0.0_rkind)/), errmsg=trim(msg), checklen = .TRUE.)
+        freeze_par(i)%Cs = tmpdata(1)
+        freeze_par(i)%Cl = tmpdata(2)
+        freeze_par(i)%Ci = tmpdata(3)
+        freeze_par(i)%Ca = tmpdata(4)
+      end do
+      
+      deallocate(tmpdata)
+      
+      write(unit = msg, fmt = *) "HINT 1: Is the snow density positive?", new_line("a"),&
+        "   HINT 2 : Did you define snow density for each layer?"
+  
+      do i=1, ubound(freeze_par,1)
+        call fileread(freeze_par(i)%snow_density, fileid = file_freeze, ranges = (/0.0_rkind,huge(0.0_rkind)/),&
+        errmsg = trim(msg))
+      end do
+      
 
+     write(unit = msg, fmt = *) "HINT 1: Did you define all 8 values for each layer?", new_line("a"), &
+        "   HINT 2 : Did you define values for each layer?"
+      allocate(tmpdata(8))
+      do i=1, ubound(freeze_par,1)
+        call fileread(r = tmpdata, fileid = file_freeze, ranges=(/0.0_rkind, huge(0.0_rkind)/), errmsg=trim(msg), checklen = .TRUE.)
+        freeze_par(i)%C1 = tmpdata(1)
+        freeze_par(i)%C2 = tmpdata(2)
+        freeze_par(i)%C3 = tmpdata(3)
+        freeze_par(i)%C4 = tmpdata(4)
+        freeze_par(i)%C5 = tmpdata(5)
+        freeze_par(i)%F1 = tmpdata(6)
+        freeze_par(i)%F2 = tmpdata(7)
+        freeze_par(i)%beta = tmpdata(8)
+      end do
+      deallocate(tmpdata)
+      
+      
+      call comment(file_freeze)
+      read(unit = file_freeze, fmt= *, iostat=ierr) freeze_par(1)%icondtype
 
-
+      select case(freeze_par(1_ikind)%icondtype)
+            case("value","input")
+              CONTINUE
+            case default
+              print *, "you have specified wrong initial condition type keyword"
+              print *, "the allowed options are:"
+              print *, "                        value = enter constant temp values"
+              print *, "                        input = read from input file (drutes output file)"
+              call file_error(file_freeze)
+      end select
+      
+      write(unit=msg, fmt=*) "Hint: The number of lines for the initial temperature has to be equal to the number of materials."
+      select case(freeze_par(1)%icondtype)
+        case("value")
+          do i=1, ubound(freeze_par,1)
+            call fileread(r = freeze_par(i)%Tinit, fileid=file_freeze, errmsg=trim(msg), ranges=(/-273.15_rkind, huge(0.0_rkind)/))
+          end do
+      end select
+      
+      write(unit=msg, fmt=*) "The number of boundaries should be greater than zero and smaller or equal the number of nodes"
+      
+      call fileread(n, file_freeze, ranges=(/1_ikind, nodes%kolik/),&
+        errmsg=trim(msg))
+      
+      call readbcvals(unitW=file_freeze, struct=pde(2)%bc, dimen=n, &
+          dirname="drutes.conf/freeze/")
+      
+      do i=lbound(pde(2)%bc,1), ubound(pde(2)%bc,1)
+        select case(pde(2)%bc(i)%code)
+          case(3)
+            call fileread(hc, file_freeze)
+        end select
+      end do
  
-      if (.not. allocated(vgset)) then
-        allocate (vgset(n))
-        do i=1, ubound(vgset,1)
-          allocate(vgset(i)%Ks_local(drutes_config%dimen))
-          allocate(vgset(i)%Ks(drutes_config%dimen, drutes_config%dimen))
-          j = max(1,drutes_config%dimen-1)
-          allocate(vgset(i)%anisoangle(j))
-        end do
-      end if
+      do i=1, ubound(freeze_par,1)
+        allocate(freeze_par(i)%Ks_local(drutes_config%dimen))
+        allocate(freeze_par(i)%Ks(drutes_config%dimen, drutes_config%dimen))
+        j = max(1,drutes_config%dimen-1)
+        allocate(freeze_par(i)%anisoangle(j))
+      end do
+      
 
       write(msg, *) "HINT 1 : check number of layers in matrix", new_line("a"), &
          "   HINT 2 : have you specified all values in the following order: ", new_line("a"), &
-         "         alpha   n   m   theta_r   theta_s   S_s "
-      allocate(tmpdata(6))
-      do i = 1, ubound(vgset,1)
-        call fileread(tmpdata, errmsg=msg, fileid=file_waterm, checklen=.true.)
-        vgset(i)%alpha=tmpdata(1)
-        vgset(i)%n=tmpdata(2)
-        vgset(i)%m=tmpdata(3)
-        vgset(i)%thr=tmpdata(4)
-        vgset(i)%ths=tmpdata(5)
-        vgset(i)%Ss=tmpdata(6)
+         "         alpha   n   m   theta_r   theta_s   "
+      allocate(tmpdata(5))
+      do i = 1, ubound(freeze_par,1)
+        call fileread(tmpdata, errmsg=msg, fileid=file_freeze, checklen=.true.)
+        freeze_par(i)%alpha = tmpdata(1)
+        freeze_par(i)%n = tmpdata(2)
+        freeze_par(i)%m = tmpdata(3)
+        freeze_par(i)%thr = tmpdata(4)
+        freeze_par(i)%ths = tmpdata(5)
       end do
-      
+      deallocate(tmpdata)
+
      
 
 
@@ -239,7 +222,6 @@ module freeze_read
         "       for 1D problem the angle value defines the angle between the VERTICAL and the flow trajectory", new_line("a"), &
         "       (carefull some other softwares consider HORIZONTAL!!)"
         
-      deallocate(tmpdata)
       
       select case(drutes_config%dimen)
         case(1,2)
@@ -248,71 +230,33 @@ module freeze_read
           allocate(tmpdata(drutes_config%dimen+2))
       end select
       
-      do i = 1, ubound(vgset,1)
-        call fileread(tmpdata, file_waterm, errmsg=msg, checklen=.TRUE.)
+      do i = 1, ubound(freeze_par,1)
+        call fileread(tmpdata, file_freeze, errmsg=msg, checklen=.TRUE.)
         
         if (drutes_config%dimen > 1) then
-          vgset(i)%anisoangle(:) = tmpdata(1:drutes_config%dimen-1)
+          freeze_par(i)%anisoangle(:) = tmpdata(1:drutes_config%dimen-1)
         else
-          vgset(i)%anisoangle(:) = tmpdata(1)
+          freeze_par(i)%anisoangle(:) = tmpdata(1)
         end if
         
         select case(drutes_config%dimen)
           case(1)
-            vgset(i)%Ks_local(:) = tmpdata(2)
+            freeze_par(i)%Ks_local(:) = tmpdata(2)
           case(2)
-            vgset(i)%Ks_local(:) = tmpdata(2:3)
+            freeze_par(i)%Ks_local(:) = tmpdata(2:3)
           case(3)
-            vgset(i)%Ks_local(:) = tmpdata(3:5)
+            freeze_par(i)%Ks_local(:) = tmpdata(3:5)
         end select
 
-        call set_tensor(vgset(i)%Ks_local(:), vgset(i)%anisoangle(:),  vgset(i)%Ks)
+        call set_tensor(freeze_par(i)%Ks_local(:), freeze_par(i)%anisoangle(:),  freeze_par(i)%Ks)
       end do
 
-      
-      do i=1, ubound(vgset,1)
-        call fileread(vgset(i)%sinkterm, file_waterm,  errmsg="Have you defined sink term for each layer?")
-      end do
-      
-      if (.not. www) then
-        do i=1, ubound(vgset,1)
-          call comment(file_waterm)
-          read(unit=file_waterm, fmt= *, iostat=ierr) vgset(i)%initcond, vgset(i)%icondtype, &
-                    yn, vgset(i)%rcza_set%val
-          select case(yn)
-            case("y")
-              vgset(i)%rcza_set%use = .true.
-            case("n")
-              vgset(i)%rcza_set%use = .false.
-            case default
-              write(msg, fmt=*) "type [y/n] value for using the retention curve zone approach at layer:", i
-              call file_error(file_waterm, msg)
-          end select
-          select case(vgset(i)%icondtype)
-            case("H_tot", "hpres", "theta","input")
-              CONTINUE
-            case default
-              print *, "you have specified wrong initial condition type keyword"
-              print *, "the allowed options are:"
-              print *, "                        H_tot = total hydraulic head"
-              print *, "                        hpres = pressure head"
-              print *, "                        theta = water content"
-                    print *, "                        input = read from input file (drutes output file)"
-              call file_error(file_waterm)
-          end select
-          if (ierr /= 0) then
-            print *, "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-            print *, "HINT: check number of line records of initial conditions in water.conf/matrix.conf!"
-            print *, "----------------------------------------"
-            call file_error(file_waterm)
-          end if
-        end do
-            else
-        do i=1, ubound(vgset,1)
-          call comment(file_waterm)
-          read(unit=file_waterm, fmt= *, iostat=ierr) vgset(i)%initcond, vgset(i)%icondtype
-                vgset(i)%rcza_set%use = .false.
-          select case(vgset(i)%icondtype)
+
+        do i=1, ubound(freeze_par,1)
+        call comment(file_freeze)
+        read(unit = file_freeze, fmt= *, iostat=ierr) freeze_par(i)%initcond, freeze_par(i)%icondtypeRE
+
+          select case(freeze_par(i)%icondtypeRE)
             case("H_tot", "hpres", "theta","input")
               CONTINUE
             case default
@@ -322,31 +266,29 @@ module freeze_read
               print *, "                        hpres = pressure head"
               print *, "                        theta = water content"
               print *, "                        input = read from input file (drutes output file)"
-              call file_error(file_waterm)
+              call file_error(file_freeze)
           end select
           if (ierr /= 0) then
             print *, "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-            print *, "HINT: check number of line records of initial conditions in water.conf/matrix.conf!"
+            print *, "HINT: check number of line records of initial conditions in freeze/freeze.conf!"
             print *, "----------------------------------------"
-            call file_error(file_waterm)
+            call file_error(file_freeze)
           end if
         end do
-      end if
-
    
 	
 	
-      call fileread(n, file_waterm, ranges=(/1_ikind, huge(1_ikind)/), &
+      call fileread(n, file_freeze, ranges=(/1_ikind, huge(1_ikind)/), &
       errmsg="at least one boundary must be specified (and no negative values here)")
       
 
-      call readbcvals(unitW=file_waterm, struct=pde_loc%bc, dimen=n, &
-		      dirname="drutes.conf/water.conf/")
+      call readbcvals(unitW=file_freeze, struct=pde(1)%bc, dimen=n, &
+		      dirname="freeze/freeze.conf/")
 
 		      
-      close(file_waterm)	      
+      close(file_freeze)	      
 
-    end subroutine res_read
+    end subroutine freeze_reader
 
 
 end module freeze_read
