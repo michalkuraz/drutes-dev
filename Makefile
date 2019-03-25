@@ -5,11 +5,11 @@ out := cd ..
 
 #options for debugging, use for development  
 
-# c= gfortran -fimplicit-none  -fcoarray=single -fbounds-check -fbacktrace -g -g3 -fdefault-real-8 -O0 -finit-real=nan 
+c= gfortran -fimplicit-none  -fcoarray=single -fbounds-check -fbacktrace -g -g3 -fdefault-real-8 -O0 -finit-real=nan 
 
 
 #options for optimized compilation, use for production purposes on well debugged versions
-c=gfortran -fimplicit-none  -fcoarray=single -fdefault-real-8 -O3 -finit-real=nan -ffpe-summary=none -fno-backtrace  
+#c=gfortran -fimplicit-none  -fcoarray=single -fdefault-real-8 -O3 -finit-real=nan -ffpe-summary=none -fno-backtrace  
 
 
 d=drutes_obj-`date -I`
@@ -36,8 +36,9 @@ REDUAL_obj := Re_dual_totH.o Re_dual_globals.o Re_dual_pointers.o Re_dual_reader
 HEAT_obj := heat_fnc.o heat_pointers.o heat_globals.o heat_reader.o
 LTNE_obj := ltne_fnc.o ltne_globals.o ltne_pointers.o ltne_reader.o
 FROZEN_obj := refreeze_globs.o
+KINWAVE_obj := kinreader.o kinglobs.o kinfnc.o
 
-ALL_objs := $(CORE_obj) $(TOOLS_obj) $(POINTERMAN_obj) $(MATHTOOLS_obj) $(FEMTOOLS_obj) $(DECOMPO_obj) $(RE_obj) $(PMAoo_obj) $(BOUSSINESQ_obj) $(ADE_obj) $(REDUAL_obj)  $(HEAT_obj) $(LTNE_obj) $(FROZEN_obj)
+ALL_objs := $(CORE_obj) $(TOOLS_obj) $(POINTERMAN_obj) $(MATHTOOLS_obj) $(FEMTOOLS_obj) $(DECOMPO_obj) $(RE_obj) $(PMAoo_obj) $(BOUSSINESQ_obj) $(ADE_obj) $(REDUAL_obj)  $(HEAT_obj) $(LTNE_obj) $(FROZEN_obj) $(KINWAVE_obj)
 #-----------------------------------------------------------------
 
 #-------begin CORE_obj--------------------------------
@@ -213,6 +214,15 @@ fem.o: $(CORE_obj) $(LINALG_obj) $(DECOMPO_obj) $(TOOLS_obj) femmat.o src/femtoo
 	$c -c src/femtools/fem.f90
 #------end FEMTOOLS_obj------------------------------
 
+
+#------begin KINWAVE_obj-----------------------------
+kinglobs.o: $(CORE_obj) src/models/kinwave/kinglobs.f90
+	$c -c src/models/kinwave/kinglobs.f90
+kinfnc.o: $(CORE_obj) kinglobs.o src/models/kinwave/kinfnc.f90
+	$c -c src/models/kinwave/kinfnc.f90
+kinreader.o: $(CORE_obj) kinglobs.o src/models/kinwave/kinreader.f90
+	$c -c src/models/kinwave/kinreader.f90
+#------end KINWAVE_obj-------------------------------
 
 
 #-------begin POINTERS_obj--------------------------------
