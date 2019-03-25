@@ -36,9 +36,11 @@ REDUAL_obj := Re_dual_totH.o Re_dual_globals.o Re_dual_pointers.o Re_dual_reader
 HEAT_obj := heat_fnc.o heat_pointers.o heat_globals.o heat_reader.o
 LTNE_obj := ltne_fnc.o ltne_globals.o ltne_pointers.o ltne_reader.o
 FROZEN_obj := refreeze_globs.o
-KINWAVE_obj := kinreader.o kinglobs.o kinfnc.o
+KINWAVE_obj := kinreader.o kinglobs.o kinfnc.o kinpointer.o
 
-ALL_objs := $(CORE_obj) $(TOOLS_obj) $(POINTERMAN_obj) $(MATHTOOLS_obj) $(FEMTOOLS_obj) $(DECOMPO_obj) $(RE_obj) $(PMAoo_obj) $(BOUSSINESQ_obj) $(ADE_obj) $(REDUAL_obj)  $(HEAT_obj) $(LTNE_obj) $(FROZEN_obj) $(KINWAVE_obj)
+MODEL_objs := $(RE_obj)  $(BOUSSINESQ_obj) $(ADE_obj) $(REDUAL_obj)  $(HEAT_obj) $(LTNE_obj) $(FROZEN_obj) $(KINWAVE_obj) 
+
+ALL_objs := $(CORE_obj) $(TOOLS_obj) $(POINTERMAN_obj) $(MATHTOOLS_obj) $(FEMTOOLS_obj) $(DECOMPO_obj)  $(PMAoo_obj) $(MODEL_objs)
 #-----------------------------------------------------------------
 
 #-------begin CORE_obj--------------------------------
@@ -222,11 +224,13 @@ kinfnc.o: $(CORE_obj) kinglobs.o src/models/kinwave/kinfnc.f90
 	$c -c src/models/kinwave/kinfnc.f90
 kinreader.o: $(CORE_obj) kinglobs.o src/models/kinwave/kinreader.f90
 	$c -c src/models/kinwave/kinreader.f90
+kinpointer.o: $(CORE_obj) $(TOOLS_obj) kinglobs.o kinreader.o src/models/kinwave/kinpointer.f90
+	$c -c src/models/kinwave/kinpointer.f90
 #------end KINWAVE_obj-------------------------------
 
 
 #-------begin POINTERS_obj--------------------------------
-manage_pointers.o: $(CORE_obj) $(TOOLS_obj) $(CORE_obj) $(FEMTOOLS_obj) $(LINALG_obj) $(RE_obj) $(DECOMPO_obj)  $(BOUSSINESQ_obj) $(ADE_obj) $(REDUAL_obj) $(HEAT_obj) src/pointerman/manage_pointers.f90
+manage_pointers.o: $(CORE_obj) $(TOOLS_obj) $(CORE_obj) $(FEMTOOLS_obj) $(LINALG_obj) $(MODEL_objs)  src/pointerman/manage_pointers.f90
 	$c -c src/pointerman/manage_pointers.f90
 #-------end pointers_obj--------------------------------
 

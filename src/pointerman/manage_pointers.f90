@@ -45,6 +45,7 @@ module manage_pointers
       use Re_dual_pointers
       use heat_pointers
       use drutes_init
+      use kinpointer
 
       integer(kind=ikind) :: i, processes
       
@@ -109,6 +110,16 @@ module manage_pointers
           call pde_constructor(pde_common%processes)
           write(unit=drutes_config%fullname, fmt=*) "DRUtES solves heat conduction with convection"
           call heat(pde(:))
+          
+          
+        case("kinwave")
+        
+          call kinwaveprocs(pde_common%processes)
+          call pde_constructor(pde_common%processes)
+          write(unit=drutes_config%fullname, fmt=*) "DRUtES solves kinematic wave equation for real catchments"
+          call kinwavelinker(pde(1))
+          
+          
 	  
         case default
           print *, "your new model: ", trim(drutes_config%name), " requires pointer linking"
