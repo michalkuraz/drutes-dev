@@ -117,17 +117,17 @@ module RE_pointers
           case(-1)
               pde_loc%bc(i)%value_fnc => re_dirichlet_height_bc
           case(0)
-          pde_loc%bc(i)%value_fnc => re_null_bc
+            pde_loc%bc(i)%value_fnc => re_null_bc
           case(1)
-          pde_loc%bc(i)%value_fnc => re_dirichlet_bc
+            pde_loc%bc(i)%value_fnc => re_dirichlet_bc
           case(2)
-          pde_loc%bc(i)%value_fnc => re_neumann_bc
+            pde_loc%bc(i)%value_fnc => re_neumann_bc
           case(3)
-          pde_loc%bc(i)%value_fnc => re_null_bc
+            pde_loc%bc(i)%value_fnc => re_null_bc
           case default
-          print *, "ERROR! You have specified an unsupported boundary type definition for the Richards equation"
-          print *, "the incorrect boundary code specified is:", pde_loc%bc(i)%code
-          ERROR stop
+            print *, "ERROR! You have specified an unsupported boundary type definition for the Richards equation"
+            print *, "the incorrect boundary code specified is:", pde_loc%bc(i)%code
+            ERROR stop
         end select
       end do
 	
@@ -198,12 +198,12 @@ module RE_pointers
       if (drutes_config%fnc_method == 0) then
         pde_loc%pde_fnc(pde_loc%order)%dispersion => mualem
         pde_loc%pde_fnc(pde_loc%order)%elasticity => vangen_elast
-        pde_loc%mass => vangen
+        pde_loc%mass(1)%val => vangen
       else
         call tabvalues(pde_loc, Kfnc=mualem, dKdhfnc = dmualem_dh, Cfnc=vangen_elast, thetafnc=vangen)
         pde_loc%pde_fnc(pde_loc%order)%dispersion  => mualem_tab		
         pde_loc%pde_fnc(pde_loc%order)%elasticity => vangen_elast_tab
-        pde_loc%mass => vangen_tab
+        pde_loc%mass(1)%val => vangen_tab
       end if
       
 

@@ -135,11 +135,11 @@ module heat_fnc
       
       if (present(quadpnt) .and. present(x)) then
         print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
-        print *, "exited from re_constitutive::vangen_elast"
+        print *, "exited from heat_fnc::heat_elast"
         ERROR stop
       else if (.not. present(quadpnt) .and. .not. present(x)) then
         print *, "ERROR: you have not specified either integ point or x value"
-        print *, "exited from re_constitutive::vangen_elast"
+        print *, "exited from heat_fnc::heat_elast"
         ERROR stop
       end if
 

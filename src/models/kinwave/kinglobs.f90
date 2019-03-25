@@ -17,14 +17,18 @@
 module kinglobs
   use typy
   
-  type, public :: surface_str
+  type, public :: surfacend_str
     real(kind=rkind), dimension(3) :: xyz
     logical :: boundary
-    integer(kind=ikind) :: cover
+  end type surfacend_str
+  
+  type, public :: surface_el_str
     real(kind=rkind) :: sx, sy
-  end type surface_str
+    integer(kind=ikind) :: cover
+  end type surface_el_str
 
-  type(surface_str), dimension(:), allocatable :: watershed
+  type(surfacend_str), dimension(:), allocatable :: watershed_nd
+  type(surface_el_str), dimension(:), allocatable :: watershed_el
 
 end module kinglobs
 

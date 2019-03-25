@@ -102,7 +102,7 @@ module RE_constitutive
         ERROR stop
       else if (.not. present(quadpnt) .and. .not. present(x)) then
         print *, "ERROR: you have not specified either integ point or x value"
-              print *, "exited from re_constitutive::vangen"
+        print *, "exited from re_constitutive::vangen"
         ERROR stop
       end if
       
@@ -272,6 +272,7 @@ module RE_constitutive
       use re_globals
       use pde_objs
       use core_tools
+      use debug_tools
       
       class(pde_str), intent(in) :: pde_loc
       integer(kind=ikind), intent(in) :: layer
@@ -312,9 +313,10 @@ module RE_constitutive
       end if
 
       if (h<0) then
-        if ( h/drutes_config%fnc_discr_length < 0.1*huge(1)) then
+        if ( h/drutes_config%fnc_discr_length < 0.1*huge(1) .and. abs(h)<huge(pos)*1e-3*1e-3) then
           
-          pos = int(-h/drutes_config%fnc_discr_length)+1
+
+          pos = int(-h/drutes_config%fnc_discr_length, ikind)+1
           if (pos <= ubound(watcontab,2)-1) then
             dist = -h - (pos - 1)*drutes_config%fnc_discr_length
             theta = (watcontab(layer,pos+1)-watcontab(layer,pos))/drutes_config%fnc_discr_length*dist + watcontab(layer,pos)
@@ -341,7 +343,6 @@ module RE_constitutive
       else
         theta = vgset(layer)%Ths	
       end if
-      
       
 
     end function vangen_tab
@@ -533,8 +534,11 @@ module RE_constitutive
       end if
 
       if (h<0) then
-        if ( h/drutes_config%fnc_discr_length < 0.1*huge(1)) then
-          pos = int(-h/drutes_config%fnc_discr_length)+1
+        if ( h/drutes_config%fnc_discr_length < 0.1*huge(1) .and. abs(h)<huge(pos)*1e-3*1e-3) then
+          
+          pos = int(-h/drutes_config%fnc_discr_length, ikind)+1
+        
+        
           if (pos <= ubound(warecatab,2)-1) then
             dist = -h - (pos - 1)*drutes_config%fnc_discr_length
             E = (warecatab(layer,pos+1)-warecatab(layer,pos))/drutes_config%fnc_discr_length*dist + warecatab(layer,pos)
@@ -587,8 +591,7 @@ module RE_constitutive
 
       real(kind=rkind) :: a,n,m, tmp
       type(integpnt_str) :: quadpnt_loc
-      
-  
+        
 
       if (present(quadpnt) .and. present(x)) then
         print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
@@ -760,8 +763,12 @@ module RE_constitutive
 
       
       if (h<0) then
-        if (-h/drutes_config%fnc_discr_length < 0.1*huge(1) ) then
-          pos = int(-h/drutes_config%fnc_discr_length)+1
+        if ( h/drutes_config%fnc_discr_length < 0.1*huge(1) .and. abs(h)<huge(pos)*1e-3*1e-3) then
+          
+       
+          pos = int(-h/drutes_config%fnc_discr_length, ikind)+1
+
+            
           if (pos <= ubound(Ktab,2)-1) then
             dist = -h - (pos - 1)*drutes_config%fnc_discr_length
             tmp = (Ktab(layer,pos+1)-Ktab(layer,pos))/drutes_config%fnc_discr_length*dist + Ktab(layer,pos)
@@ -862,7 +869,6 @@ module RE_constitutive
       else
         tmp = 0
       end if
-
       if (present(vector_out)) then
         ! must be negative, because the commnon scheme of the CDE problem has negative convection, but RE has positive convection
         vector_out = -vgset(layer)%Ks(drutes_config%dimen,:) * tmp
@@ -1930,7 +1936,7 @@ module RE_constitutive
           quadpnt%type_pnt = "ndpt"
           quadpnt%order = elements%data(el_id,node_order)
           layer = elements%material(el_id)
-          theta =  pde_loc%mass(layer, quadpnt)
+          theta =  pde_loc%mass(1)%val(pde_loc, layer, quadpnt)
           bcval = bcval*(theta*theta)**(1.0_rkind/3.0_rkind)
         end if
           

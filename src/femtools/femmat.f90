@@ -61,7 +61,6 @@ module femmat
       real(kind=rkind), dimension(:), allocatable :: vcttmp
       real(kind=rkind) :: lambda_l, lambda_h, tmpxx=0, maxtime=0
 
-      
       proc = ubound(pde,1)
       fin = maxval(pde(proc)%permut(:))
       itcount = 0
@@ -81,6 +80,7 @@ module femmat
           call diag_precond(a=spmatrix, x=pde_common%xvect(1:fin,3), mode=1)
         end if
 
+        
         call solve_matrix(spmatrix, pde_common%bvect(1:fin), pde_common%xvect(1:fin,3),  itmax1=fin, &
             reps1=1e-15_rkind, itfin1=pcg_it, repsfin1=reps_err)
             
@@ -99,6 +99,8 @@ module femmat
         end if	
 
         error = norm2(pde_common%xvect(1:fin,2)-pde_common%xvect(1:fin,3))/ubound(pde_common%xvect,1)
+        
+        print *, error, itcount
 
          
         if (itcount == 1 .or. error <= iter_criterion) then
@@ -174,8 +176,6 @@ module femmat
       
       limits = ubound(stiff_mat,1)/ubound(pde,1)
 
-
-
       do i=1, elements%kolik
         pde_common%current_el = i
         processes: do proc=1, ubound(pde,1)
@@ -191,18 +191,16 @@ module femmat
 		      end if
 		    end do
        end do processes
-	
 
        call build_bvect(i, time_step)
-        
+
        call build_stiff_np(i, time_step)
-        
+
        call pde_common%time_integ(i)
-          
+
        stiff_mat = stiff_mat + cap_mat
         
        call in2global(i,spmatrix, pde_common%bvect)
-
       end do
 
 

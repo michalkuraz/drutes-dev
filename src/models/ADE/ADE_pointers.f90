@@ -115,7 +115,7 @@ module ADE_pointers
 
       pde(adepos)%pde_fnc(adepos)%elasticity => ADE_tder_coef
       
-      pde(adepos)%mass => ADE_mass
+      pde(adepos)%mass(1)%val => ADE_mass
 
       pde(adepos)%pde_fnc(adepos)%reaction => ADE_reaction
             

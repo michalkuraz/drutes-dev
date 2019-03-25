@@ -46,6 +46,7 @@ module manage_pointers
       use heat_pointers
       use drutes_init
       use kinpointer
+      use freeze_pointers
 
       integer(kind=ikind) :: i, processes
       
@@ -121,6 +122,13 @@ module manage_pointers
           
           
 	  
+        case("freeze")
+        
+          call freeze_processes(pde_common%processes)
+          call pde_constructor(pde_common%processes)
+          write(unit = drutes_config%fullname, fmt=*) "DRUtES solves coupled water and heat flow considering freezing and melting"
+          call frz_pointers()
+          
         case default
           print *, "your new model: ", trim(drutes_config%name), " requires pointer linking"
           print *, "exited from manage_pointers::set_pointers"
@@ -132,7 +140,7 @@ module manage_pointers
       select case(drutes_config%dimen)
         case(1)
             solve_matrix => LDU_face
-!        	    solve_matrix => CG_normal_face
+            !solve_matrix => CG_normal_face
         case(2)
       !           solve_matrix => pcg
       ! 	    solve_matrix => LDU_face

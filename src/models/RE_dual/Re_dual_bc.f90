@@ -277,7 +277,7 @@ module Re_dual_bc
         quadpnt%column = 2
         quadpnt%order = elements%data(el_id,node_order)
         layer = elements%material(el_id)
-        theta =  pde_loc%mass(layer, quadpnt)
+        theta =  pde_loc%mass(1)%val(pde_loc, layer, quadpnt)
         select case (pde_loc%mfswitch)
           case("m")
             value = (rain - evap*theta**(2.0_rkind/3.0_rkind))*(1_rkind-infweight)  

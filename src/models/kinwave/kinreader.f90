@@ -18,7 +18,7 @@
 module kinreader
 
   private :: read_catchment, gen_catchment
-  public :: kinematix
+  public :: kininit
 
   contains
   
@@ -57,7 +57,7 @@ module kinreader
         end if
       end do
       
-      allocate(watershed(ndcounter))
+      allocate(watershed_nd(ndcounter))
       
       close(filenodes)
       
@@ -77,17 +77,48 @@ module kinreader
     subroutine gen_catchment()
       use typy
       use kinglobs
+      use globals
+      use geom_tools
       
-!       allocate(
+      integer(kind=ikind) :: i
+      real(kind=rkind), dimension(3) :: a,b,c
+      
+      allocate(watershed_nd(nodes%kolik))
+      
+      allocate(watershed_el(elements%kolik))
+      
+      
+      do i=1, nodes%kolik
+        watershed_nd(i)%xyz(1:2) = nodes%data(i,:)
+        watershed_nd(i)%xyz(3) = nodes%data(i,1)**2*0.001 + nodes%data(i,2)**2*0.002
+      end do
+      
+      watershed_el(:)%cover = 1
+      
+      do i=1, elements%kolik
+        a = watershed_nd(elements%data(i,1))%xyz
+        b = watershed_nd(elements%data(i,2))%xyz
+        c = watershed_nd(elements%data(i,3))%xyz
+        
+        call plane_derivative(a,b,c, watershed_el(i)%sx, watershed_el(i)%sy)
+        
+      end do
+      
+      
       
       
     
     
     end subroutine gen_catchment
     
-    subroutine kinematix()
+
+    
+    subroutine kininit(pde_loc)
       use typy
       use pde_objs
+      
+      class(pde_str), intent(in out) :: pde_loc
+      integer :: file_kinematix, ierr
       
       select case(drutes_config%mesh_type)
         case(1) 
@@ -103,9 +134,29 @@ module kinreader
           ERROR STOP
           
       end select
+      
+      pde_loc%problem_name(1) = "runoff"
+      pde_loc%problem_name(2) = "Kinematic wave equation for real catchments"
+
+      pde_loc%solution_name(1) = "runoff_depth" !nazev vystupnich souboru
+      pde_loc%solution_name(2) = "[L] " !popisek grafu
+
+      pde_loc%flux_name(1) = "runoff_flux"  
+      pde_loc%flux_name(2) = "runoff flux [L3.T^-1.L-2]"
     
+      allocate(pde_loc%mass_name(2,2))
+      
+      pde_loc%mass_name(1,1) = "runoff_height"
+      pde_loc%mass_name(1,2) = "runoff elevation [m a.m.s.l]"
+      
+      pde_loc%mass_name(2,1) = "elevation"
+      pde_loc%mass_name(2,2) = "surface elevation [m a.m.s.l]"
+      
+      open(newunit=file_kinematix, file="drutes.conf/kinwave/kinwave.conf", action="read", status="old", iostat = ierr)
+      
+      
       
     
-    end subroutine kinematix
+    end subroutine kininit
 
 end module kinreader
