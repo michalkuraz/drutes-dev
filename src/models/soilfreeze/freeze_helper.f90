@@ -678,9 +678,11 @@ module freeze_helper
           T =  pde(2)%getval(quadpnt)
           bcval = -hc*(T-pde_loc%bc(edge_id)%value)
         end if
-    
+       print*, "temperature", T, "bcval", bcval
         value = bcval
-
+if(bcval > 0.1) then
+stop
+end if
       end if
       if (present(code)) then
         code = 2
