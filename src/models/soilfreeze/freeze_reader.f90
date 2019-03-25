@@ -110,6 +110,25 @@ module freeze_read
           end select
       end do
       
+     write(unit = msg, fmt = *) "Use freezing point depression? yes - 1 or no -0"
+     call fileread(frz_pnt, file_freeze, ranges=(/0_ikind,1_ikind/), errmsg = trim(msg))
+      select case(frz_pnt)
+            case(1_ikind,0_ikind)
+              CONTINUE
+            case default
+              print *, "you have specified wrong input for freezing point depression"
+              print *, "the allowed options are:"
+              print *, "                        1 = yes"
+              print *, "                        0 = no"
+              call file_error(file_freeze)
+      end select
+      
+      if(frz_pnt > 0) then
+       clap = .true.
+      else
+       clap = .false.
+      end if
+      
       write(unit = msg, fmt = *) "HINT 1: Is the snow density positive?", new_line("a"),&
         "   HINT 2 : Did you define snow density for each layer?"
       

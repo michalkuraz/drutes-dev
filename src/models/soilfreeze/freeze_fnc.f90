@@ -375,7 +375,8 @@ module freeze_fnc
         quadpnt_loc = quadpnt
         quadpnt_loc%preproc=.true.
         h = hl(pde(1), layer, quadpnt)
-        call pde_loc%getgrad(quadpnt, gradient)
+        !call getgrad_freeze(pde(1), quadpnt, gradient)
+        call pde(1)%getgrad(quadpnt, gradient)
         call pde(2)%getgrad(quadpnt, gradientT)
       else
         if (ubound(x,1) /=1) then
@@ -477,7 +478,6 @@ module freeze_fnc
       if (present(flux_length)) then
         flux_length = norm2(matmul(thermal_diff(1:D, 1:D), gradT))
       end if
-    
     end subroutine heat_flux_freeze
     
 end module freeze_fnc

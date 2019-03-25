@@ -26,10 +26,16 @@ module freeze_helper
       quadpnt_loc = quadpnt
       quadpnt_loc%preproc=.true.
       
-      Tf = Tref*exp(pde(1)%getval(quadpnt_loc)*grav/Lf)
-      Tf = Tf - 273.15_rkind
+      if(clap) then
+        Tf = Tref*exp(pde(1)%getval(quadpnt_loc)*grav/Lf)
+        Tf = Tf - 273.15_rkind
+      else
+        Tf = 0
+      end if
+      
 
-      if (pde(2)%getval(quadpnt_loc) >= Tf) then
+
+      if (pde(2)%getval(quadpnt_loc) > Tf) then
       !> melting
         sw = .FALSE.
       else
@@ -640,9 +646,10 @@ module freeze_helper
 
       integer(kind=ikind) :: i, edge_id, j
       real(kind=rkind), dimension(3) :: gravflux, bcflux
-      real(kind=rkind) :: bcval, gfluxval
+      real(kind=rkind) :: bcval, gfluxval, T
       integer :: i1
-      
+      type(integpnt_str) :: quadpnt
+      integer(kind=ikind) :: layer
       
       if (present(value)) then
         edge_id = nodes%edge(elements%data(el_id, node_order))
@@ -656,23 +663,130 @@ module freeze_helper
               else
                 j = i
               end if
-              bcval = -hc*(pde(2)%solution(el_id)-pde_loc%bc(edge_id)%series(j,2))
+              quadpnt%type_pnt = "ndpt"
+              quadpnt%column=1
+              quadpnt%order = elements%data(el_id,node_order)
+              T =  pde(2)%getval(quadpnt)
+              bcval = -hc*(T-pde_loc%bc(edge_id)%series(j,2))
               EXIT
             end if
           end do
         else
-          bcval = -hc*(pde(2)%solution(el_id)-pde_loc%bc(edge_id)%value)
+          quadpnt%type_pnt = "ndpt"
+          quadpnt%column=1
+          quadpnt%order = elements%data(el_id,node_order)
+          T =  pde(2)%getval(quadpnt)
+          bcval = -hc*(T-pde_loc%bc(edge_id)%value)
         end if
     
         value = bcval
 
       end if
-      
       if (present(code)) then
         code = 2
       end if
 
 
     end subroutine freeze_coolant_bc
+    
+    
+    subroutine getgrad_freeze(pde_loc, quadpnt, grad)
+      use typy
+      use decomp_vars
+
+      
+      class(pde_str), intent(in) :: pde_loc
+      type(integpnt_str), intent(in) :: quadpnt
+      type(integpnt_str), dimension(:), allocatable, save :: quadpntloc
+      real(kind=rkind), dimension(:), allocatable, intent(out) :: grad
+      real(kind=rkind), dimension(3) :: gradloc
+      integer(kind=ikind), dimension(:), allocatable, save :: pts
+      real(kind=rkind), dimension(3)    :: a,b,c
+      real(kind=rkind) :: dx
+      integer(kind=ikind) :: i, el, top, j, k
+      real(kind=rkind), dimension(:,:), allocatable, save :: domain
+
+      
+      if (.not. allocated(grad)) then
+        allocate(grad(drutes_config%dimen))
+      else if (ubound(grad,1) /= drutes_config%dimen ) then
+        deallocate(grad)
+        allocate(grad(drutes_config%dimen))
+      end if
+      
+      if (.not. allocated(pts)) then
+        allocate(pts(ubound(elements%data,2)))
+        allocate(quadpntloc(ubound(elements%data,2)))
+      end if
+      
+      select case(quadpnt%type_pnt)
+        case("gqnd", "obpt", "xypt")
+          top = 1
+        case("ndpt")
+          !in case of ndpt the gradient is assumed as an average value of gradients at neighbourhood points
+          top = nodes%element(quadpnt%order)%pos
+        case default
+          print *, "RUNTIME ERROR: incorrect quadpnt type definition (value quadpnt%type_pnt)"
+          print *, "the value specified in code was:", quadpnt%type_pnt
+          print *, "exited from pde_objs::getgradp1"
+          ERROR STOP
+          
+      end select
+      
+      gradloc = 0
+      do i=1, top  
+        select case(quadpnt%type_pnt)
+          case("gqnd")
+            el = quadpnt%element
+          case("xypt")
+            if (quadpnt%element > 0) then
+              el = quadpnt%element
+            else
+              print *, "specify correct value for quadpnt%element"
+              print *, "exited from pde_objs::getgradp1"
+              ERROR STOP
+            end if
+          case("obpt")
+            el = observation_array(quadpnt%order)%element
+          case("ndpt")
+            el = nodes%element(quadpnt%order)%data(i)
+        end select
+      
+      pts = elements%data(el,:)
+      
+      quadpntloc(:) = quadpnt
+      quadpntloc(:)%type_pnt = "ndpt"
+      select case(drutes_config%dimen)
+        case(1)
+          dx = nodes%data(pts(2),1) - nodes%data(pts(1),1)
+          quadpntloc(1)%order = pts(1)
+          quadpntloc(2)%order = pts(2)
+          gradloc(1) = gradloc(1) + (hl(pde_loc,1_ikind,quadpntloc(2)) - hl(pde_loc,1_ikind, quadpntloc(1)))/dx
+        case(2)
+          a(1:2) = nodes%data(pts(1),:)
+          b(1:2) = nodes%data(pts(2),:)
+          c(1:2) = nodes%data(pts(3),:)
+          
+          
+          quadpntloc(1)%order = pts(1)
+          quadpntloc(2)%order = pts(2)
+          quadpntloc(3)%order = pts(3)
+        
+          
+          
+          a(3) = hl(pde_loc,1_ikind, quadpntloc(1))
+          b(3) = hl(pde_loc,1_ikind, quadpntloc(2))
+          c(3) = hl(pde_loc,1_ikind, quadpntloc(3))
+          call get2dderivative(a,b,c,grad(1), grad(2))
+
+          gradloc(1:2) = gradloc(1:2) + grad
+        case(3)
+      end select
+      end do
+      
+      grad = gradloc(1:drutes_config%dimen)/top
+    
+    end subroutine getgrad_freeze
+    
     
 end module freeze_helper

@@ -67,11 +67,13 @@ module freeze_globs
   
   !> Thermal conductivity [ W/m/K]
   real(kind=rkind), parameter, public :: thermal_cond = 0.5
-
   
   !> Reference surface tension at 25 ~deg C g.s^-2
   real(kind=rkind), parameter, public :: surf_tens_ref = 71.89
   
   integer, public :: file_freeze
 
+  integer, public :: frz_pnt
+  
+  logical, public :: clap
 end module freeze_globs
