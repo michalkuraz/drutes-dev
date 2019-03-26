@@ -176,7 +176,7 @@ ln_obs=read_data_plot('out/heat_solid_T_solid-','drutes-dev/out/heat_solid_T_sol
                       ,'.dat',col1=2,col2=3,ylabs=expression(paste("temperature (solid) [",degree*C,"]",sep=""))
                       ,xlabs="depth [L]",'temp_time',idfix=1,skip=0,k=0,legpos=legpos,lims=lims)
 if(ln_obs>0){
-  print(paste("plot of",ln_obs,"observation times created: Temperature vs. depth "))
+  print(paste("plot of",ln_obs,"observation times created: Soil Temperature vs. depth "))
 }
 
 
@@ -184,7 +184,7 @@ ln_obs=read_data_plot('out/heat_liquid_T_liquid-','drutes-dev/out/heat_liquid_T_
                       ,'.dat',col1=2,col2=3,ylabs=expression(paste("temperature (pore) [",degree*C,"]",sep=""))
                       ,xlabs="depth [L]",'temp_time',idfix=1,skip=0,k=0,legpos=legpos,lims=lims)
 if(ln_obs>0){
-  print(paste("plot of",ln_obs,"observation times created: Temperature vs. depth "))
+  print(paste("plot of",ln_obs,"observation times created: Pore Temperature vs. depth "))
 }
 
 
@@ -367,12 +367,14 @@ if(ln_obs>0){
   print(paste("plot of",ln_obs,"observation times created: total water content vs. depth "))
 }
 
-ln_obs=read_data_plot('out/RE_LTNE_thaw_h_l-','drutes-dev/out/RE_LTNE_thaw_theta_l-'
+
+ln_obs=read_data_plot('out/RE_LTNE_thaw_h_l-','drutes-dev/out/RE_LTNE_thaw_h_l-'
                       ,'.dat',col1=2,col2=3,ylabs=expression(paste("liquid pressure head [L]",sep=""))
                       ,xlabs="depth [L]",'h_l_time',idfix=1,skip=0,k=0,legpos=legpos,lims=lims)
 if(ln_obs>0){
   print(paste("plot of",ln_obs,"observation times created: total water content vs. depth "))
 }
+
 
 ln_obs=read_data_plot('out/RE_LTNE_thaw_theta_i-','drutes-dev/out/RE_LTNE_thaw_theta_i-'
                       ,'.dat',col1=2,col2=3,ylabs=expression(paste("vol. ice content [-]",sep=""))

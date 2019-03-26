@@ -291,6 +291,10 @@ module postpro
               case("freeze")
                 massval = (/ pde(proc)%mass(1)%val(pde(proc),layer, x = (/val/)), pde(proc)%mass(2)%val(pde(proc),layer, quadpnt) &
                 , pde(proc)%mass(3)%val(pde(proc),layer, quadpnt), pde(proc)%mass(4)%val(pde(proc),layer, quadpnt)/)
+              case("LTNE")
+                massval = (/ pde(proc)%mass(1)%val(pde(proc),layer, x = (/val/)), pde(proc)%mass(2)%val(pde(proc),layer, quadpnt) &
+                , pde(proc)%mass(3)%val(pde(proc),layer, quadpnt), pde(proc)%mass(4)%val(pde(proc),layer, quadpnt), &
+                pde(proc)%mass(5)%val(pde(proc),layer, quadpnt)/)
               case default
                 massval = (/ pde(proc)%mass(1)%val(pde(proc),layer, quadpnt) /)
             end select            
@@ -571,6 +575,13 @@ module postpro
               write(unit=ids(4), fmt=*)  i, nodes%data(i,:), pde(proc)%mass(2)%val(pde(proc),layer, quadpnt)
               write(unit=ids(5), fmt=*)  i, nodes%data(i,:), pde(proc)%mass(3)%val(pde(proc),layer, quadpnt)
               write(unit=ids(6), fmt=*)  i, nodes%data(i,:), pde(proc)%mass(4)%val(pde(proc),layer, quadpnt)
+            case("LTNE")
+              write(unit=ids(3), fmt=*)  i, nodes%data(i,:), pde(proc)%mass(1)%val(pde(proc),layer, quadpnt)              
+              write(unit=ids(4), fmt=*)  i, nodes%data(i,:), pde(proc)%mass(2)%val(pde(proc),layer, quadpnt)
+              write(unit=ids(5), fmt=*)  i, nodes%data(i,:), pde(proc)%mass(3)%val(pde(proc),layer, quadpnt)
+              write(unit=ids(6), fmt=*)  i, nodes%data(i,:), pde(proc)%mass(4)%val(pde(proc),layer, quadpnt)
+              write(unit=ids(7), fmt=*)  i, nodes%data(i,:), pde(proc)%mass(5)%val(pde(proc),layer, quadpnt)
+
             case default
               massval = (/ pde(proc)%mass(1)%val(pde(proc),layer, quadpnt) /)
               write(unit=ids(3), fmt=*)  i, nodes%data(i,:), pde(proc)%mass(1)%val(pde(proc),layer, quadpnt)              
@@ -591,9 +602,14 @@ module postpro
            else
              write(unit=ids(7), fmt=*) i,  nodes%data(i,:), flux(1:drutes_config%dimen)
            end if
-
-           
-          case default
+          case("LTNE")
+            call pde(proc)%flux(layer, quadpnt, vector_out=flux(1:drutes_config%dimen))
+            if(proc > 1_ikind) then
+              write(unit=ids(3), fmt=*) i,  nodes%data(i,:), flux(1:drutes_config%dimen)
+            else
+              write(unit=ids(8), fmt=*) i,  nodes%data(i,:), flux(1:drutes_config%dimen)
+           end if
+         case default
            call pde(proc)%flux(layer, quadpnt, vector_out=flux(1:drutes_config%dimen))
            write(unit=ids(4), fmt=*) i,  nodes%data(i,:), flux(1:drutes_config%dimen)
         end select  
