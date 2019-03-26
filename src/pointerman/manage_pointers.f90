@@ -46,6 +46,7 @@ module manage_pointers
       use heat_pointers
       use drutes_init
       use freeze_pointers
+      use ltne_pointers
 
       integer(kind=ikind) :: i, processes
       
@@ -117,6 +118,13 @@ module manage_pointers
           call pde_constructor(pde_common%processes)
           write(unit = drutes_config%fullname, fmt=*) "DRUtES solves coupled water and heat flow considering freezing and melting"
           call frz_pointers()
+          
+       case("LTNE")
+        
+          call ltne_processes(pde_common%processes)
+          call pde_constructor(pde_common%processes)
+          write(unit = drutes_config%fullname, fmt=*) "DRUtES solves local thermal non equilibrium"
+          call ltne_points()
           
         case default
           print *, "your new model: ", trim(drutes_config%name), " requires pointer linking"

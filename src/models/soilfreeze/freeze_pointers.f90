@@ -46,10 +46,7 @@ module freeze_pointers
       integer(kind=ikind) :: i
       select case (drutes_config%name)
         case ("freeze")
-          !call heat_read(pde(2))
-         ! call res_read(pde(1))
           call freeze_reader(pde(1))
-        case ("LTNE")
         case default
           print *, "procedure called when unexpected problem name"
           print *, "exited from freeze_pointers::frz_pointers"
@@ -148,8 +145,7 @@ module freeze_pointers
             pde(2)%bc(i)%value_fnc => freeze_coolant_bc
         end select
       end do  
-    
+        
     end subroutine frz_pointers
   
-
 end module freeze_pointers

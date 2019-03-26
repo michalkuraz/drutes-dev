@@ -1,12 +1,12 @@
-module freeze_helper
+module LTNE_helper
   use pde_objs
   use typy
-  use freeze_globs
+  use LTNE_globs
   use debug_tools
   use RE_constitutive
 
-  public :: iceswitch, rho_icewat, Q_reduction, surf_tens_deriv, Kliquid_temp, hl, thetai, thetal
-  public:: vangen_fr, mualem_fr, temp_initcond, wat_initcond, getval_retotfr
+  public :: iceswitch, rho_icewat, Q_reduction, hl, thetai, thetal
+  public:: vangen_ltne, mualem_ltne, temp_l_initcond, temp_s_initcond, wat_init, getval_retotltne
       
       
   
@@ -64,8 +64,8 @@ module freeze_helper
       end if
       
       layer = elements%material(el)
-      thl = vangen_fr(pde(1), layer, x=(/hl(pde(1), layer, quadpnt)/))
-      thall = vangen_fr(pde(1), layer, quadpnt)
+      thl = vangen_ltne(pde(1), layer, x=(/hl(pde(1), layer, quadpnt)/))
+      thall = vangen_ltne(pde(1), layer, quadpnt)
       thice = thall - thl
       rho = (thl * rho_wat + thice * rho_ice)/thall
        
@@ -84,90 +84,24 @@ module freeze_helper
       real(kind=rkind) :: thl, thall, thice, val
 
       if(present(quadpnt)) then
-        thall = vangen_fr(pde(1), layer, quadpnt)
-        thl = vangen_fr(pde(1), layer, x=(/hl(pde(1), layer, quadpnt)/))
+        thall = vangen_ltne(pde(1), layer, quadpnt)
+        thl = vangen_ltne(pde(1), layer, x=(/hl(pde(1), layer, quadpnt)/))
       end if
       if(present(x)) then
-        thall = vangen_fr(pde(1), layer,x = x)
-        thl = vangen_fr(pde(1), layer, x = x)
+        thall = vangen_ltne(pde(1), layer,x = x)
+        thl = vangen_ltne(pde(1), layer, x = x)
       end if
       thice = thall - thl
-      val = thice/(thall- freeze_par(layer)%Thr)
+      val = thice/(thall- LTNE_par(layer)%Thr)
        
     end function Q_reduction
     
-    subroutine Kliquid_temp(pde_loc, layer, quadpnt, x, T, tensor, scalar) 
-      use typy
-      use global_objs
-      class(pde_str), intent(in) :: pde_loc
-      !> value of the nonlinear function
-      real(kind=rkind), dimension(:), intent(in), optional    :: x
-      real(kind=rkind),intent(in), optional    :: T
-      !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
-      type(integpnt_str), intent(in), optional :: quadpnt
-      !> material ID
-      integer(kind=ikind), intent(in) :: layer
-      !> return tensor
-      real(kind=rkind), dimension(:,:), intent(out), optional :: tensor
-      !> relative scalar value of the nonlinear function 
-      real(kind=rkind), intent(out), optional                 :: scalar
-      real(kind=rkind), dimension(3,3) :: Klh, Klt
-      integer(kind=ikind) :: D
-      real(kind = rkind) :: h_l
-      D = drutes_config%dimen
-
-      
-      if (present(tensor)) then
-        call mualem_fr(pde_loc, layer, x=(/hl(pde_loc, layer, quadpnt)/), tensor = Klt(1:D, 1:D))
-        Klt(1:D, 1:D) = 10**(-Omega*Q_reduction(layer, quadpnt))*Klt(1:D, 1:D)
-
-        if (present(quadpnt)) then
-          h_l = hl(pde_loc, layer, quadpnt)
-          tensor = Klt(1:D, 1:D)*gwt*h_l*surf_tens_deriv(pde_loc, layer, quadpnt)/surf_tens_ref
-        else
-          print *, "runtime error"
-          print *, "exited from Kliquid_temp::freeze_fnc"
-          ERROR STOP
-        end if
-      else
-         print *, "ERROR! output tensor undefined, exited from Kliquid_temp::freeze_fnc"
-      end if    
-
-      
-    end subroutine Kliquid_temp
     
-    
-    function surf_tens_deriv(pde_loc, layer, quadpnt, T) result(val)
-      use typy
-      use global_objs
-      use freeze_globs
-      use pde_objs
-    
-      class(pde_str), intent(in) :: pde_loc
-      !> value of the nonlinear function
-      real(kind=rkind), intent(in), optional    ::  T
-      !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
-      type(integpnt_str), intent(in), optional :: quadpnt
-      !> material ID
-      integer(kind=ikind), intent(in) :: layer
-      !> return value
-      real(kind=rkind)                :: val
-    
-      real(kind=rkind) :: temp
-    
-      temp = pde(2)%getval(quadpnt)
-      if (present(T)) then
-        temp = T
-      end if
-      
-      val = -0.1425-4.76e-4*temp
-      
-    end function surf_tens_deriv
     
     function hl(pde_loc, layer, quadpnt, x) result(val)
       use typy
       use global_objs
-      use freeze_globs
+      use LTNE_globs
       use pde_objs
       
       class(pde_str), intent(in) :: pde_loc
@@ -206,8 +140,8 @@ module freeze_helper
       
       real(kind=rkind) :: thl, thall
       
-      thl = vangen_fr(pde(1), layer, x=(/hl(pde(1), layer, quadpnt)/))
-      thall = vangen_fr(pde(1), layer, quadpnt)
+      thl = vangen_ltne(pde(1), layer, x=(/hl(pde(1), layer, quadpnt)/))
+      thall = vangen_ltne(pde(1), layer, quadpnt)
       
       !val = (thall * rho_icewat(quadpnt) - thl * rho_wat)/rho_ice
       val = thall - thl
@@ -223,19 +157,14 @@ module freeze_helper
       real(kind=rkind), dimension(:), intent(in), optional    :: x
       real(kind=rkind) :: val
       
-      val = vangen_fr(pde(1), layer, x=(/hl(pde(1), layer, quadpnt)/))
+      val = vangen_ltne(pde(1), layer, x=(/hl(pde(1), layer, quadpnt)/))
     end function thetal
     
     
+
     
     
-    
-        !> \brief Van Genuchten relation \f[ \theta = f(pressure) \f]
-    !!  \f[ \theta_e = \frac{1}{(1+(\alpha*h)^n)^m} \f]
-    !! water content is considered as absolute value not the relative one \n
-    !! see \f[ \theta_e = \frac{\theta - \theta_r}{\theta_s-\theta_r} \f]
-    !<
-    function vangen_fr(pde_loc, layer, quadpnt, x) result(theta)
+    function vangen_ltne(pde_loc, layer, quadpnt, x) result(theta)
       use typy
       use re_globals
       use pde_objs
@@ -255,11 +184,11 @@ module freeze_helper
 
       if (present(quadpnt) .and. present(x)) then
         print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
-        print *, "exited from freeze_helper::vangen_fr"
+        print *, "exited from LTNE_helper::vangen_ltne"
         ERROR stop
       else if (.not. present(quadpnt) .and. .not. present(x)) then
         print *, "ERROR: you have not specified either integ point or x value"
-        print *, "exited from freeze_helper::vangen_fr"
+        print *, "exited from LTNE_helper::vangen_ltne"
         ERROR stop
       end if
       
@@ -271,7 +200,7 @@ module freeze_helper
         if (ubound(x,1) /=1) then
           print *, "ERROR: van Genuchten function is a function of a single variable h"
           print *, "       your input data has:", ubound(x,1), "variables"
-          print *, "exited from freeze_helper::vangen_fr"
+          print *, "exited from LTNE_helper::vangen_ltne"
           ERROR STOP
         end if
         h = x(1)
@@ -279,20 +208,20 @@ module freeze_helper
       
       
       
-      a = freeze_par(layer)%alpha
-      n = freeze_par(layer)%n
-      m = freeze_par(layer)%m
+      a = LTNE_par(layer)%alpha
+      n = LTNE_par(layer)%n
+      m = LTNE_par(layer)%m
       
 
       if (h >=0.0_rkind) then
-        theta = freeze_par(layer)%Ths
+        theta = LTNE_par(layer)%Ths
         RETURN
       else
         theta_e = 1/(1+(a*(abs(h)))**n)**m
-        theta = theta_e*(freeze_par(layer)%Ths-freeze_par(layer)%Thr)+freeze_par(layer)%Thr
+        theta = theta_e*(LTNE_par(layer)%Ths-LTNE_par(layer)%Thr)+LTNE_par(layer)%Thr
       end if
 
-    end function vangen_fr
+    end function vangen_ltne
     
     
     
@@ -303,7 +232,7 @@ module freeze_helper
     !! and 
     !! \f[ \theta(h) = \left\{ \begin{array}{l l} \frac{\theta_s -\theta_r}{(1+(-\alpha h)^n_{vg})^m_{vg}} + \theta_r,  & \quad \mbox{$\forall$ $h \in (-\infty, 0 )$}\\ \theta_S, & \quad \mbox{$\forall$ $h \in \langle 0, + \infty )$}\\ \end{array} \right. \f]
     !<
-    function vangen_elast_fr(pde_loc,layer, quadpnt, x) result(E)
+    function vangen_elast_ltne(pde_loc,layer, quadpnt, x) result(E)
       use typy
       use re_globals
       use pde_objs
@@ -325,11 +254,11 @@ module freeze_helper
       
       if (present(quadpnt) .and. present(x)) then
         print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
-        print *, "exited from freeze_helper::vangen_elast"
+        print *, "exited from LTNE_helper::vangen_elast"
         ERROR stop
       else if (.not. present(quadpnt) .and. .not. present(x)) then
         print *, "ERROR: you have not specified either integ point or x value"
-        print *, "exited from freeze_helper::vangen_elast"
+        print *, "exited from LTNE_helper::vangen_elast"
         ERROR stop
       end if
       
@@ -346,18 +275,18 @@ module freeze_helper
       if (ubound(x,1) /=1) then
         print *, "ERROR: van Genuchten function is a function of a single variable h"
         print *, "       your input data has:", ubound(x,1), "variables"
-        print *, "exited from freeze_helper::vangen_elast"
+        print *, "exited from LTNE_helper::vangen_elast"
         ERROR STOP
       end if
         h = x(1)
       end if
 
       if (h < 0) then
-        a = freeze_par(layer)%alpha
-        n = freeze_par(layer)%n
-        m = freeze_par(layer)%m
-        tr = freeze_par(layer)%Thr
-        ts = freeze_par(layer)%Ths
+        a = LTNE_par(layer)%alpha
+        n = LTNE_par(layer)%n
+        m = LTNE_par(layer)%m
+        tr = LTNE_par(layer)%Thr
+        ts = LTNE_par(layer)%Ths
         C = a*m*n*(-tr + ts)*(-(a*h))**(-1 + n)*(1 + (-(a*h))**n)**(-1 - m)
       else
         E = 0
@@ -367,7 +296,7 @@ module freeze_helper
       E = C 
       
 
-    end function vangen_elast_fr
+    end function vangen_elast_ltne
     
     
     
@@ -375,9 +304,9 @@ module freeze_helper
     !> \brief Mualem's fucntion for unsaturated hydraulic conductivity with van Genuchten's water content substitution
     !! \f[   K(h) = \left\{ \begin{array}{l l} K_s\frac{\left( 1- (-\alpha h)^{n_{vg}m_{vg}} \left( 1+ (-\alpha h)^{n_{vg}} \right)^{-m_{vg}} \right)^2}{\left(1+(-\alpha h)^{n_{vg}} \right)^{\frac{m_{vg}}{2}}},  &  \mbox{$\forall$  $h \in$ $(-\infty,0)$}\\ K_s,  \mbox{$\forall$   $h \in$ $\langle 0, +\infty)$}\\ \end{array} \right. \f]
     !<
-    subroutine mualem_fr(pde_loc, layer, quadpnt,  x, tensor, scalar)
+    subroutine mualem_ltne(pde_loc, layer, quadpnt,  x, tensor, scalar)
       use typy
-      use freeze_globs
+      use LTNE_globs
       use pde_objs
 
       class(pde_str), intent(in) :: pde_loc
@@ -424,23 +353,23 @@ module freeze_helper
       if (h >= 0) then
         tmp = 1
       else
-        a = freeze_par(layer)%alpha
-        n = freeze_par(layer)%n
-        m = freeze_par(layer)%m
+        a = LTNE_par(layer)%alpha
+        n = LTNE_par(layer)%n
+        m = LTNE_par(layer)%m
 
         tmp =  (1 - (-(a*h))**(m*n)/(1 + (-(a*h))**n)**m)**2/(1 + (-(a*h))**n)**(m/2.0_rkind)
       end if
 	
       if (present(tensor)) then
-        tensor = tmp* freeze_par(layer)%Ks
+        tensor = tmp* LTNE_par(layer)%Ks
       end if
 
       if (present(scalar)) then
         scalar = tmp
       end if
-    end subroutine mualem_fr
+    end subroutine mualem_ltne
     
-    subroutine wat_initcond(pde_loc) 
+    subroutine wat_init(pde_loc) 
       use typy
       use globals
       use global_objs
@@ -455,9 +384,9 @@ module freeze_helper
       real(kind=rkind) :: value
       
       D = drutes_config%dimen
-      select case (freeze_par(1_ikind)%icondtypeRE)
+      select case (LTNE_par(1_ikind)%icondtypeRE)
         case("input")
-          call map1d2dJ(pde_loc,"drutes.conf/freeze.conf/hini.in")
+          call map1d2dJ(pde_loc,"drutes.conf/LTNE.conf/hini.in")
       end select
       
       D = drutes_config%dimen
@@ -471,13 +400,13 @@ module freeze_helper
             call pde_loc%bc(l)%value_fnc(pde_loc, i, j, value)
             pde_loc%solution(k) =  value 
           else
-            select case (freeze_par(layer)%icondtypeRE)
+            select case (LTNE_par(layer)%icondtypeRE)
               case("H_tot")
-                pde_loc%solution(k) = freeze_par(layer)%initcond !+ nodes%data(k,1)
+                pde_loc%solution(k) = LTNE_par(layer)%initcond !+ nodes%data(k,1)
               case("hpres")
-                pde_loc%solution(k) = freeze_par(layer)%initcond + nodes%data(k,D)
+                pde_loc%solution(k) = LTNE_par(layer)%initcond + nodes%data(k,D)
               case("theta")
-                value = inverse_vangen_fr(pde_loc, layer, x=(/freeze_par(layer)%initcond/))
+                value = inverse_vangen_ltne(pde_loc, layer, x=(/LTNE_par(layer)%initcond/))
                 pde_loc%solution(k) = value + nodes%data(k,D)
             end select
           end if
@@ -485,9 +414,9 @@ module freeze_helper
       end do
       
 
-    end subroutine wat_initcond
+    end subroutine wat_init
     
-    subroutine temp_initcond(pde_loc) 
+    subroutine temp_l_initcond(pde_loc) 
       use typy
       use globals
       use global_objs
@@ -501,9 +430,9 @@ module freeze_helper
       real(kind=rkind) :: value
       
       D = drutes_config%dimen
-      select case (freeze_par(1_ikind)%icondtype)
+      select case (LTNE_par(1_ikind)%icondtype)
         case("input")
-          call map1d2dJ(pde_loc,"drutes.conf/freeze.conf/Tini.in")
+          call map1d2dJ(pde_loc,"drutes.conf/LTNE.conf/Tini_l.in")
         case("value")
           do i=1, elements%kolik
             layer = elements%material(i)
@@ -515,16 +444,69 @@ module freeze_helper
                 call pde_loc%bc(l)%value_fnc(pde_loc, i, j, value)
                 pde_loc%solution(k) = value 
               else
-                pde_loc%solution(k) = freeze_par(layer)%Tinit
+                pde_loc%solution(k) = LTNE_par(layer)%Tinit_l
               end if
             end do   
           end do
       end select
       
-    end subroutine temp_initcond
+    end subroutine temp_l_initcond
     
+    subroutine temp_s_initcond(pde_loc) 
+      use typy
+      use globals
+      use global_objs
+      use pde_objs
+      use heat_globals
+      use geom_tools
+
+      
+      class(pde_str), intent(in out) :: pde_loc
+      integer(kind=ikind) :: i, j, k,l, m, layer, D
+      real(kind=rkind) :: value
+      
+      D = drutes_config%dimen
+      select case (LTNE_par(1_ikind)%icondtypeTs)
+        case("input")
+          call map1d2dJ(pde_loc,"drutes.conf/LTNE.conf/Tini_s.in")
+        case("value")
+          do i=1, elements%kolik
+            layer = elements%material(i)
+            do j=1, ubound(elements%data,2)
+              k = elements%data(i,j)
+              l = nodes%edge(k)
+              m = pde_loc%permut(k)
+              if (m == 0) then
+                call pde_loc%bc(l)%value_fnc(pde_loc, i, j, value)
+                pde_loc%solution(k) = value 
+              else
+                pde_loc%solution(k) = LTNE_par(layer)%Tinit_s
+              end if
+            end do   
+          end do
+      end select
+      
+    end subroutine temp_s_initcond
+    
+    
+    
+    function T_m(pde_loc, layer, quadpnt, x) result(val)
+      use typy
+      use global_objs
+      use pde_objs
+      class(pde_str), intent(in) :: pde_loc
+      integer(kind=ikind), intent(in) :: layer
+      type(integpnt_str), intent(in), optional :: quadpnt
+      real(kind=rkind), dimension(:), intent(in), optional    :: x
+      real(kind=rkind) :: val, h, A, Re, Pr, thice, thl, Cp, up, densp
+      real(kind=rkind), dimension(3) :: flux
+      integer(kind=ikind) :: D
+
+      val = Ltne_par(layer)%Ths*pde(2)%getval(quadpnt)+(1-Ltne_par(layer)%Ths)*pde(3)%getval(quadpnt)     
+     
+    end function T_m
     !> specific function for Richards equation in H-form (total hydraulic head form), replaces pde_objs::getvalp1 in order to distinguish between H and h 
-    function getval_retotfr(pde_loc, quadpnt) result(val)
+    function getval_retotltne(pde_loc, quadpnt) result(val)
       use typy
       use pde_objs
       use geom_tools
@@ -550,7 +532,7 @@ module freeze_helper
           val = getvalp1(pde_loc, quadpnt) - xyz(D)
         else
           layer = get_layer(quadpnt)
-          val = getvalp1(pde_loc, quadpnt) - xyz(D)*cos(4*atan(1.0_rkind)/180*freeze_par(layer)%anisoangle(1))
+          val = getvalp1(pde_loc, quadpnt) - xyz(D)*cos(4*atan(1.0_rkind)/180*LTNE_par(layer)%anisoangle(1))
         end if
         
         
@@ -559,10 +541,10 @@ module freeze_helper
       end if
 	
       
-    end function getval_retotfr
+    end function getval_retotltne
     
         
-    function inverse_vangen_fr(pde_loc, layer, quadpnt, x) result(hpress)
+    function inverse_vangen_ltne(pde_loc, layer, quadpnt, x) result(hpress)
       use typy
       use re_globals
       use pde_objs
@@ -585,11 +567,11 @@ module freeze_helper
 
       if (present(quadpnt) .and. present(x)) then
         print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
-        print *, "exited from freeze_helper::inverse_vangen_fr"
+        print *, "exited from LTNE_helper::inverse_vangen_ltne"
         ERROR stop
       else if (.not. present(quadpnt) .and. .not. present(x)) then
         print *, "ERROR: you have not specified either integ point or x value"
-        print *, "exited from freeze_helper::inverse_vangen_fr"
+        print *, "exited from LTNE_helper::inverse_vangen_ltne"
         ERROR stop
       end if
       
@@ -601,7 +583,7 @@ module freeze_helper
         if (ubound(x,1) /=1) then
           print *, "ERROR: van Genuchten function is a function of a single variable h"
           print *, "       your input data has:", ubound(x,1), "variables"
-          print *, "exited from freeze_helper::inverse_vangen_fr"
+          print *, "exited from LTNE_helper::inverse_vangen_ltne"
           ERROR STOP
         end if
         theta = x(1)
@@ -609,30 +591,30 @@ module freeze_helper
       
       
       
-      a = freeze_par(layer)%alpha
-      n = freeze_par(layer)%n
-      m = freeze_par(layer)%m
+      a = LTNE_par(layer)%alpha
+      n = LTNE_par(layer)%n
+      m = LTNE_par(layer)%m
       
-      if (abs(theta - freeze_par(layer)%Ths) < epsilon(theta)) then
+      if (abs(theta - LTNE_par(layer)%Ths) < epsilon(theta)) then
         hpress = 0
       else
-        if (theta >  freeze_par(layer)%Ths + 10*epsilon(theta)) then
+        if (theta >  LTNE_par(layer)%Ths + 10*epsilon(theta)) then
           call write_log("theta is greater then theta_s, exiting")
-          print *, "called from freeze_helper::inverse_vangen_fr"
+          print *, "called from LTNE_helper::inverse_vangen_ltne"
           error stop
         else if (theta < 0) then
           call write_log("theta is negative strange, exiting")
-          print *, "called from freeze_helper::inverse_vangen_fr"
+          print *, "called from LTNE_helper::inverse_vangen_ltne"
           error stop 
         end if
-        hpress = ((((freeze_par(layer)%Ths - freeze_par(layer)%Thr)/(theta-freeze_par(layer)%Thr))**(1.0_rkind/m)-1) &  
+        hpress = ((((LTNE_par(layer)%Ths - LTNE_par(layer)%Thr)/(theta-LTNE_par(layer)%Thr))**(1.0_rkind/m)-1) &  
         **(1.0_rkind/n))/(-a)
       end if
       
-    end function inverse_vangen_fr
+    end function inverse_vangen_ltne
     
     
-    subroutine freeze_coolant_bc(pde_loc, el_id, node_order, value, code) 
+    subroutine LTNE_coolant_bc(pde_loc, el_id, node_order, value, code) 
       use typy
       use globals
       use global_objs
@@ -667,7 +649,7 @@ module freeze_helper
               quadpnt%type_pnt = "ndpt"
               quadpnt%column=1
               quadpnt%order = elements%data(el_id,node_order)
-              T =  pde(2)%getval(quadpnt)
+              T =  pde_loc%getval(quadpnt)
               bcval = -hc*(T-pde_loc%bc(edge_id)%series(j,2))
               EXIT
             end if
@@ -676,7 +658,7 @@ module freeze_helper
           quadpnt%type_pnt = "ndpt"
           quadpnt%column=1
           quadpnt%order = elements%data(el_id,node_order)
-          T =  pde(2)%getval(quadpnt)
+          T =  pde_loc%getval(quadpnt)
           bcval = -hc*(T-pde_loc%bc(edge_id)%value)
         end if
       end if
@@ -685,10 +667,10 @@ module freeze_helper
       end if
 
 
-    end subroutine freeze_coolant_bc
+    end subroutine LTNE_coolant_bc
     
     
-    subroutine getgrad_freeze(pde_loc, quadpnt, grad)
+    subroutine getgrad_LTNE(pde_loc, quadpnt, grad)
       use typy
       use decomp_vars
 
@@ -784,7 +766,7 @@ module freeze_helper
       
       grad = gradloc(1:drutes_config%dimen)/top
     
-    end subroutine getgrad_freeze
+    end subroutine getgrad_LTNE
     
     
-end module freeze_helper
+end module LTNE_helper
