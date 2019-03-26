@@ -25,8 +25,6 @@
 module core_tools
 
   public :: write_log
-
-  
   public :: avg
   public :: mesh_allocater
   public :: find_unit

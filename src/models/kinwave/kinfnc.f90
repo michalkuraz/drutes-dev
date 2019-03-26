@@ -15,5 +15,81 @@
 
 module kinfnc
 
+  contains 
+    subroutine kinconvect(pde_loc, layer, quadpnt, x, vector_in, vector_out, scalar)
+      use typy
+      use globals
+      use global_objs
+      use pde_objs
+      use re_globals
+      use geom_tools
+      use debug_tools
+      use kinglobs
+
+      class(pde_str), intent(in) :: pde_loc
+      integer(kind=ikind), intent(in) :: layer
+      type(integpnt_str), intent(in), optional :: quadpnt    
+      !> pressure head
+      real(kind=rkind), dimension(:), intent(in), optional :: x
+      !> this argument is required by the global vector_fnc procedure pointer, unused in this procedure
+      real(kind=rkind), dimension(:), intent(in), optional :: vector_in
+      !> first order tensor of the unsaturated hydraulic conductivity derivative in respect to h. it is the last column of the hydraulic conductivity second order tensor times  
+      !!relative unsaturated hydraulic conductivity derivative in respect to h (scalar value)
+      !<
+      real(kind=rkind), dimension(:), intent(out), optional :: vector_out
+      !> relative unsaturated hydraulic conductivity derivative in respect to h, scalar value
+      real(kind=rkind), intent(out), optional :: scalar
+      
+      integer(kind=ikind) :: el
+      
+      el = quadpnt%element
+      
+      vector_out(1) = 1.49_rkind * sign(1.0_rkind, watershed_el(el)%sx) * sqrt(abs( watershed_el(el)%sx))/manning(layer)
+      
+      vector_out(2) = 1.49_rkind * sign(1.0_rkind, watershed_el(el)%sy) * sqrt(abs( watershed_el(el)%sy))/manning(layer)
+      
+    end subroutine kinconvect
+    
+    
+    
+    subroutine kinbor(pde_loc, el_id, node_order, value, code) 
+        use typy
+        use globals
+        use global_objs
+        use pde_objs
+        use debug_tools
+        
+        class(pde_str), intent(in) :: pde_loc
+        integer(kind=ikind), intent(in)  :: el_id, node_order
+        real(kind=rkind), intent(out), optional    :: value
+        integer(kind=ikind), intent(out), optional :: code
+
+        
+        
+
+        if (present(value)) then
+          value = 0.0_rkind
+        end if
+
+        
+        if (present(code)) then
+          code = 1
+        end if
+    
+      end subroutine kinbor
+      
+      subroutine kinematixinit(pde_loc) 
+        use typy
+        use globals
+        use global_objs
+        use pde_objs
+
+        class(pde_str), intent(in out) :: pde_loc
+  
+        pde_loc%solution(:) = 0.0_rkind
+       
+        
+      end subroutine kinematixinit
+
 
 end module kinfnc

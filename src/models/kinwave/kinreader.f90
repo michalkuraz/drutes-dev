@@ -116,9 +116,14 @@ module kinreader
     subroutine kininit(pde_loc)
       use typy
       use pde_objs
+      use kinglobs
+      use readtools
+      use core_tools
       
       class(pde_str), intent(in out) :: pde_loc
       integer :: file_kinematix, ierr
+      integer(kind=ikind) :: n, i
+      character(len=512) :: msg
       
       select case(drutes_config%mesh_type)
         case(1) 
@@ -142,20 +147,30 @@ module kinreader
       pde_loc%solution_name(2) = "[L] " !popisek grafu
 
       pde_loc%flux_name(1) = "runoff_flux"  
-      pde_loc%flux_name(2) = "runoff flux [L3.T^-1.L-2]"
+      pde_loc%flux_name(2) = "runoff flux [L3.T-1.L-2]"
     
-      allocate(pde_loc%mass_name(2,2))
+      allocate(pde_loc%mass_name(1,2))
       
       pde_loc%mass_name(1,1) = "runoff_height"
       pde_loc%mass_name(1,2) = "runoff elevation [m a.m.s.l]"
       
-      pde_loc%mass_name(2,1) = "elevation"
-      pde_loc%mass_name(2,2) = "surface elevation [m a.m.s.l]"
-      
       open(newunit=file_kinematix, file="drutes.conf/kinwave/kinwave.conf", action="read", status="old", iostat = ierr)
       
+      n = maxval(elements%material)
+      
+      write(msg, fmt=*) "You have specified incorrect number of subregions with different Manning cofficients,", new_line("a"),  &
+      "according to mesh definitions, you should define", n, "different Manning values." 
       
       
+      allocate(manning(n))
+      
+      call fileread(i, file_kinematix, ranges=(/n,n/), errmsg=cut(msg))
+      
+      do i=1, n
+        call fileread(manning(i), file_kinematix, ranges=(/epsilon(manning(1)), huge(manning(1))/))
+      end do
+      
+       
     
     end subroutine kininit
 
