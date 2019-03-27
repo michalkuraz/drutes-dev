@@ -104,12 +104,10 @@ module kinreader
         
       end do
       
-      
-      
-      
-    
+
     
     end subroutine gen_catchment
+    
     
 
     
@@ -121,9 +119,10 @@ module kinreader
       use core_tools
       
       class(pde_str), intent(in out) :: pde_loc
-      integer :: file_kinematix, ierr
-      integer(kind=ikind) :: n, i
+      integer :: file_kinematix, ierr, filerain
+      integer(kind=ikind) :: n, i, counter
       character(len=512) :: msg
+      real(kind=rkind) :: tmp
       
       select case(drutes_config%mesh_type)
         case(1) 
@@ -170,7 +169,31 @@ module kinreader
         call fileread(manning(i), file_kinematix, ranges=(/epsilon(manning(1)), huge(manning(1))/))
       end do
       
-       
+      open(newunit=filerain, file="drutes.conf/kinwave/rain.in", status="old", action="read", iostat=ierr)
+      
+      if (ierr /= 0) then
+        print *, "unable to open file with rainfall data drutes.conf/kinwave/rain.in"
+        error stop
+      end if
+      
+      
+      counter = 0
+      do
+        call comment(filerain)
+        read(unit=filerain, fmt=*, iostat=ierr) tmp
+        
+        if (ierr /= 0) then
+          EXIT
+        else
+          counter = counter + 1
+        end if
+      end do
+      
+      close(filerain)
+      
+      open(newunit=filerain, file="drutes.conf/kinwave/rain.in", status="old", action="read", iostat=ierr)
+      
+      allocate( 
     
     end subroutine kininit
 

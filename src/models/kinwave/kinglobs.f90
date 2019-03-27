@@ -31,6 +31,12 @@ module kinglobs
   type(surface_el_str), dimension(:), allocatable :: watershed_el
   
   real(kind=rkind), dimension(:), allocatable :: manning
+  
+  
+  type, public :: raindata_str
+    real(kind=rkind), dimension(:,:), allocatable :: xy
+    integer(kind=ikind), dimension(:), allocatable :: el2pt
+    
 
 end module kinglobs
 

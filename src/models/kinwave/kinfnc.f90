@@ -53,43 +53,67 @@ module kinfnc
     
     
     subroutine kinbor(pde_loc, el_id, node_order, value, code) 
-        use typy
-        use globals
-        use global_objs
-        use pde_objs
-        use debug_tools
-        
-        class(pde_str), intent(in) :: pde_loc
-        integer(kind=ikind), intent(in)  :: el_id, node_order
-        real(kind=rkind), intent(out), optional    :: value
-        integer(kind=ikind), intent(out), optional :: code
-
-        
-        
-
-        if (present(value)) then
-          value = 0.0_rkind
-        end if
-
-        
-        if (present(code)) then
-          code = 1
-        end if
-    
-      end subroutine kinbor
+      use typy
+      use globals
+      use global_objs
+      use pde_objs
+      use debug_tools
       
-      subroutine kinematixinit(pde_loc) 
-        use typy
-        use globals
-        use global_objs
-        use pde_objs
+      class(pde_str), intent(in) :: pde_loc
+      integer(kind=ikind), intent(in)  :: el_id, node_order
+      real(kind=rkind), intent(out), optional    :: value
+      integer(kind=ikind), intent(out), optional :: code
 
-        class(pde_str), intent(in out) :: pde_loc
+      
+      
+
+      if (present(value)) then
+        value = 0.0_rkind
+      end if
+
+      
+      if (present(code)) then
+        code = 1
+      end if
   
-        pde_loc%solution(:) = 0.0_rkind
-       
-        
-      end subroutine kinematixinit
+    end subroutine kinbor
+      
+    subroutine kinematixinit(pde_loc) 
+      use typy
+      use globals
+      use global_objs
+      use pde_objs
+
+      class(pde_str), intent(in out) :: pde_loc
+
+      pde_loc%solution(:) = 0.0_rkind
+     
+      
+    end subroutine kinematixinit
+    
+    
+    function rainfall(pde_loc, layer, quadpnt, x) result(val)
+      use typy
+      use global_objs
+      use pde_objs
+      
+      class(pde_str), intent(in) :: pde_loc
+      !> value of the nonlinear function
+      real(kind=rkind), dimension(:), intent(in), optional    :: x
+      !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
+      type(integpnt_str), intent(in), optional :: quadpnt
+      !> material ID
+      integer(kind=ikind), intent(in) :: layer
+      !> return value
+      real(kind=rkind)                :: val
+      
+      
+      
+     
+    
+    
+    end function rainfall
+    
 
 
 end module kinfnc
