@@ -156,6 +156,24 @@ module LTNE_read
       
       deallocate(tmpdata)
       
+     write(unit = msg, fmt = *) "Does air chnge temperature? yes - 1 or no -0"
+     call fileread(frz_pnt, file_LTNE, ranges=(/0_ikind,1_ikind/), errmsg = trim(msg))
+      select case(frz_pnt)
+            case(1_ikind,0_ikind)
+              CONTINUE
+            case default
+              print *, "you have specified wrong input for heat flow handling of air"
+              print *, "the allowed options are:"
+              print *, "                        1 = yes"
+              print *, "                        0 = no"
+              call file_error(file_LTNE)
+      end select
+      
+      if(frz_pnt > 0) then
+       air = .true.
+      else
+       air = .false.
+      end if
       
       call comment(file_LTNE)
       read(unit = file_LTNE, fmt= *, iostat=ierr) LTNE_par(1)%icondtype

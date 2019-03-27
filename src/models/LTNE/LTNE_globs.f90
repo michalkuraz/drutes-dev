@@ -73,4 +73,6 @@ module LTNE_globs
   integer, public :: frz_pnt
   
   logical, public :: clap
+  
+  logical, public:: air
 end module LTNE_globs

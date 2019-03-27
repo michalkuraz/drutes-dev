@@ -121,11 +121,11 @@ module LTNE_helper
       T_melt = Tref*exp(hw*grav/Lf)
       
       if(iceswitch(quadpnt)) then
+
         val = hw+Lf/grav*log((temp+273.15_rkind)/T_melt) !units
       else
         val = hw
       end if
-      
     end function hl
     
     function thetai(pde_loc, layer, quadpnt, x) result(val)
@@ -485,26 +485,10 @@ module LTNE_helper
             end do   
           end do
       end select
-      
     end subroutine temp_s_initcond
     
-    
-    
-    function T_m(pde_loc, layer, quadpnt, x) result(val)
-      use typy
-      use global_objs
-      use pde_objs
-      class(pde_str), intent(in) :: pde_loc
-      integer(kind=ikind), intent(in) :: layer
-      type(integpnt_str), intent(in), optional :: quadpnt
-      real(kind=rkind), dimension(:), intent(in), optional    :: x
-      real(kind=rkind) :: val, h, A, Re, Pr, thice, thl, Cp, up, densp
-      real(kind=rkind), dimension(3) :: flux
-      integer(kind=ikind) :: D
 
-      val = Ltne_par(layer)%Ths*pde(2)%getval(quadpnt)+(1-Ltne_par(layer)%Ths)*pde(3)%getval(quadpnt)     
-     
-    end function T_m
+    
     !> specific function for Richards equation in H-form (total hydraulic head form), replaces pde_objs::getvalp1 in order to distinguish between H and h 
     function getval_retotltne(pde_loc, quadpnt) result(val)
       use typy

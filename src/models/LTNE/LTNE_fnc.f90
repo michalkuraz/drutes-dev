@@ -6,7 +6,7 @@ module LTNE_fnc
   use LTNE_helper
   
   public :: capacityhh,  diffhh,  all_fluxes_LTNE
-  public :: capacityTlTl, capacityTlh, diffTlTl, convectTlTl, thermal_p, heat_flux_l_LTNE, heat_flux_s_LTNE, qsl_pos, qsl_neg
+  public :: capacityTlTl, capacityTlh, diffTlTl, convectTlTl, thermal_p, heat_flux_l_LTNE, heat_flux_s_LTNE, qsl_pos, qsl_neg, T_m
 
   
   procedure(scalar_fnc), pointer, public :: rwcap
@@ -139,7 +139,11 @@ module LTNE_fnc
       end if
       temp = pde(2)%getval(quadpnt)+ 273.15_rkind
       val =  ltne_par(layer)%Cl*rho_wat*vangen_ltne(pde_loc, layer, x = (/hl(pde(1), layer, quadpnt)/)) 
-      val = val + ltne_par(layer)%Ca*rho_air*th_air+ ltne_par(layer)%Ci*rho_ice*thetai(pde_loc, layer, quadpnt)
+      if(air) then
+        val = val + ltne_par(layer)%Ci*rho_ice*thetai(pde_loc, layer, quadpnt) + ltne_par(layer)%Ca*rho_air*th_air
+      else
+        val = val + ltne_par(layer)%Ci*rho_ice*thetai(pde_loc, layer, quadpnt) 
+      end if
       val = val*LTNE_par(layer)%Ths
       if(iceswitch(quadpnt)) then
         val = val + Lf*rho_ice*Lf/temp/grav*rwcap(pde_loc, layer, x = (/hl(pde(1), layer, quadpnt)/))
@@ -171,7 +175,7 @@ module LTNE_fnc
       
       if (present(tensor)) then
         do i= 1, D
-          tensor(i,i) =  thermal_p(pde_loc,layer, quadpnt)
+          tensor(i,i) =  thermal_p(pde_loc,layer, quadpnt)*ltne_par(layer)%Ths
         end do
       end if
       
@@ -253,7 +257,7 @@ module LTNE_fnc
       
       if (present(tensor)) then
         do i= 1, D
-          tensor(i,i) =  ltne_par(layer)%Li
+          tensor(i,i) =  ltne_par(layer)%Li * (1-ltne_par(layer)%Ths)
         end do
       end if
       
@@ -276,8 +280,11 @@ module LTNE_fnc
       
       thice = thetai(pde(1), layer, quadpnt)
       thl = vangen_ltne(pde(1), layer, x=(/hl(pde(1), layer, quadpnt)/))
-      
-      val = thl*ltne_par(layer)%Ll+thice*ltne_par(layer)%Li+(ltne_par(layer)%ths-thl)*LTNE_par(layer)%La
+      if(air) then
+        val = thl*ltne_par(layer)%Ll+thice*ltne_par(layer)%Li+(ltne_par(layer)%ths-thl)*LTNE_par(layer)%La
+      else 
+        val = (thl*ltne_par(layer)%Ll+thice*ltne_par(layer)%Li)/ vangen_ltne(pde(1), layer, quadpnt)
+      end if
       
     end function thermal_p
     
@@ -463,7 +470,7 @@ module LTNE_fnc
       end if
       
       D = drutes_config%dimen
-      !!!!! change here
+      
       call diffTsTs(pde_loc, layer, quadpnt, tensor = thermal_diff)
             
       if (present(flux)) then
@@ -493,15 +500,22 @@ module LTNE_fnc
       thice = thetai(pde(1), layer, quadpnt)
       thl = vangen_ltne(pde(1), layer, x=(/hl(pde(1), layer, quadpnt)/))
       
-      Cp = thl*ltne_par(layer)%Cl+thice*ltne_par(layer)%Ci+(ltne_par(layer)%ths-thl)*LTNE_par(layer)%Ca
-      up = thl*ul+thice*ui+(ltne_par(layer)%ths-thl)*ua
-      densp = thl*rho_wat+thice*rho_ice+(ltne_par(layer)%ths-thl)*rho_air
+      if(air) then
+        Cp = thl*ltne_par(layer)%Cl+thice*ltne_par(layer)%Ci +(ltne_par(layer)%ths-thl)*LTNE_par(layer)%Ca
+        up = thl*ul+(ltne_par(layer)%ths-thl)*ua !+thice*ui
+        densp = thl*rho_wat+thice*rho_ice+(ltne_par(layer)%ths-thl)*rho_air
+      else
+       Cp = (thl*ltne_par(layer)%Cl+thice*ltne_par(layer)%Ci)/ vangen_ltne(pde(1), layer,  quadpnt)
+       up = thl*ul !+thice*ui
+       densp = (thl*rho_wat+thice*rho_ice)/ vangen_ltne(pde(1), layer,  quadpnt)
+      end if 
+      
       A = 6*(1-ltne_par(layer)%Ths)/LTNE_par(layer)%diameter
       tp = thermal_p(pde_loc, layer, quadpnt)
       Pr = Cp*up/tp
       call all_fluxes_LTNE(pde_loc, layer, quadpnt, flux_length = flux_tmp)
       Re = densp*flux_tmp*LTNE_par(layer)%diameter/up
-      h = tp/LTNE_par(layer)%diameter*(2.4e-5+285.6*Pr**2.7*Re**(1/3))
+      h = tp/LTNE_par(layer)%diameter*(2.4e-5+(285.6*Pr**2.7*Re**(0.33333333_rkind)))
       val = h * A
     end function qsl_pos
     
@@ -522,4 +536,26 @@ module LTNE_fnc
      val = - qsl_pos(pde_loc, layer, quadpnt)
     end function qsl_neg
     
+    
+        
+    
+    function T_m(pde_loc, layer, quadpnt, x) result(val)
+      use typy
+      use global_objs
+      use pde_objs
+      class(pde_str), intent(in) :: pde_loc
+      integer(kind=ikind), intent(in) :: layer
+      type(integpnt_str), intent(in), optional :: quadpnt
+      real(kind=rkind), dimension(:), intent(in), optional    :: x
+      real(kind=rkind) :: val, h, A, Re, Pr, thice, thl, Cp, up, densp
+      real(kind=rkind), dimension(3) :: flux
+      integer(kind=ikind) :: D
+
+      if(air) then
+        val = ltne_par(layer)%ths*pde(2)%getval(quadpnt)+(1-Ltne_par(layer)%Ths)*pde(3)%getval(quadpnt)     
+      else
+        val = vangen_ltne(pde(1), layer, quadpnt)*pde(2)%getval(quadpnt)+(1-Ltne_par(layer)%Ths)*pde(3)%getval(quadpnt)     
+      end if
+
+    end function T_m
 end module LTNE_fnc

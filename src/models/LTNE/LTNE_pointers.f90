@@ -158,9 +158,9 @@ module LTNE_pointers
       allocate(pde(3)%mass_name(0,2))
       pde(3)%print_mass = .false.
             
-      pde(3)%pde_fnc(2)%elasticity => capacityTsTs
+      pde(3)%pde_fnc(3)%elasticity => capacityTsTs
       
-      pde(3)%pde_fnc(2)%dispersion => diffTsTs
+      pde(3)%pde_fnc(3)%dispersion => diffTsTs
             
       pde(3)%flux => heat_flux_s_LTNE
       

@@ -174,7 +174,7 @@ if(ln_obs>0){
 
 ln_obs=read_data_plot('out/heat_solid_T_solid-','drutes-dev/out/heat_solid_T_solid-'
                       ,'.dat',col1=2,col2=3,ylabs=expression(paste("temperature (solid) [",degree*C,"]",sep=""))
-                      ,xlabs="depth [L]",'temp_time',idfix=1,skip=0,k=0,legpos=legpos,lims=lims)
+                      ,xlabs="depth [L]",'solid_temp_time',idfix=1,skip=0,k=0,legpos=legpos,lims=lims)
 if(ln_obs>0){
   print(paste("plot of",ln_obs,"observation times created: Soil Temperature vs. depth "))
 }
@@ -182,7 +182,7 @@ if(ln_obs>0){
 
 ln_obs=read_data_plot('out/heat_liquid_T_liquid-','drutes-dev/out/heat_liquid_T_liquid-'
                       ,'.dat',col1=2,col2=3,ylabs=expression(paste("temperature (pore) [",degree*C,"]",sep=""))
-                      ,xlabs="depth [L]",'temp_time',idfix=1,skip=0,k=0,legpos=legpos,lims=lims)
+                      ,xlabs="depth [L]",'pore_temp_time',idfix=1,skip=0,k=0,legpos=legpos,lims=lims)
 if(ln_obs>0){
   print(paste("plot of",ln_obs,"observation times created: Pore Temperature vs. depth "))
 }
@@ -194,6 +194,23 @@ ln_obs=read_data_plot('out/obspt_heat-','drutes-dev/out/obspt_heat-'
 if(ln_obs>0){
   print(paste("plot of",ln_obs,"observation points created: temperature vs. time"))
 }
+
+
+ln_obs=read_data_plot('out/obspt_heat_liquid-','drutes-dev/out/obspt_heat_liquid-'
+                      ,'.out',col1=1,col2=2,ylabs=expression(paste("pore temperature [",degree*C,"]",sep=""))
+                      ,xlabs="time [T]",'pore_temp_point',skip=10,k=1,legpos="topright",lims=lims)
+if(ln_obs>0){
+  print(paste("plot of",ln_obs,"observation points created: temperature vs. time"))
+}
+
+
+ln_obs=read_data_plot('out/obspt_heat_solid-','drutes-dev/out/obspt_heat_solid-'
+                      ,'.out',col1=1,col2=2,ylabs=expression(paste("solid temperature [",degree*C,"]",sep=""))
+                      ,xlabs="time [T]",'solid_temp_point',skip=10,k=1,legpos="topright",lims=lims)
+if(ln_obs>0){
+  print(paste("plot of",ln_obs,"observation points created: temperature vs. time"))
+}
+
 
 ln_obs=read_data_plot('out/obspt_heat-','drutes-dev/out/obspt_heat-'
                       ,'.out',col1=1,col2=3,ylabs=expression(paste("heat flux [W",~m^-2,"]",sep=""))
