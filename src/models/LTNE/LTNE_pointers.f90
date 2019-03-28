@@ -124,8 +124,8 @@ module LTNE_pointers
       
       pde(2)%pde_fnc(2)%convection => convectTlTl
       
-      pde(2)%pde_fnc(2)%reaction => qsl_pos
-      pde(2)%pde_fnc(3)%reaction => qsl_neg
+      pde(2)%pde_fnc(3)%reaction => qsl_pos
+      pde(2)%pde_fnc(2)%reaction => qsl_neg
 
       pde(2)%flux => heat_flux_l_LTNE
       
@@ -166,8 +166,8 @@ module LTNE_pointers
       
       pde(3)%initcond => temp_s_initcond 
       
-      pde(3)%pde_fnc(2)%reaction => qsl_neg
-      pde(3)%pde_fnc(3)%reaction => qsl_pos
+      pde(3)%pde_fnc(3)%reaction => qsl_neg
+      pde(3)%pde_fnc(2)%reaction => qsl_pos
       
       do i=lbound(pde(3)%bc,1), ubound(pde(2)%bc,1)
         select case(pde(3)%bc(i)%code)
