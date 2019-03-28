@@ -116,12 +116,10 @@ module LTNE_helper
       quadpnt_loc%preproc=.true.
 
       hw = pde(1)%getval(quadpnt_loc)
-      
       temp = pde(2)%getval(quadpnt)
       T_melt = Tref*exp(hw*grav/Lf)
       
       if(iceswitch(quadpnt)) then
-
         val = hw+Lf/grav*log((temp+273.15_rkind)/T_melt) !units
       else
         val = hw
@@ -386,7 +384,7 @@ module LTNE_helper
       D = drutes_config%dimen
       select case (LTNE_par(1_ikind)%icondtypeRE)
         case("input")
-          call map1d2dJ(pde_loc,"drutes.conf/LTNE.conf/hini.in")
+          call map1d2dJ(pde_loc,"drutes.conf/LTNE/hini.in")
       end select
       
       D = drutes_config%dimen
@@ -432,7 +430,7 @@ module LTNE_helper
       D = drutes_config%dimen
       select case (LTNE_par(1_ikind)%icondtype)
         case("input")
-          call map1d2dJ(pde_loc,"drutes.conf/LTNE.conf/Tini_l.in")
+          call map1d2dJ(pde_loc,"drutes.conf/LTNE/Tini_l.in")
         case("value")
           do i=1, elements%kolik
             layer = elements%material(i)
@@ -468,7 +466,7 @@ module LTNE_helper
       D = drutes_config%dimen
       select case (LTNE_par(1_ikind)%icondtypeTs)
         case("input")
-          call map1d2dJ(pde_loc,"drutes.conf/LTNE.conf/Tini_s.in")
+          call map1d2dJ(pde_loc,"drutes.conf/LTNE/Tini_s.in")
         case("value")
           do i=1, elements%kolik
             layer = elements%material(i)
@@ -505,26 +503,19 @@ module LTNE_helper
       integer(kind=ikind) :: D, layer
       
 
-           
       if (quadpnt%preproc) then
-      
         D = drutes_config%dimen
              
         call getcoor(quadpnt, xyz(1:D))
-        
         if (drutes_config%dimen>1) then
           val = getvalp1(pde_loc, quadpnt) - xyz(D)
         else
           layer = get_layer(quadpnt)
-          val = getvalp1(pde_loc, quadpnt) - xyz(D)*cos(4*atan(1.0_rkind)/180*LTNE_par(layer)%anisoangle(1))
+          val = getvalp1(pde(1), quadpnt) - xyz(D)*cos(4*atan(1.0_rkind)/180*LTNE_par(layer)%anisoangle(1))
         end if
-        
-        
       else
         val = getvalp1(pde_loc, quadpnt)
       end if
-	
-      
     end function getval_retotltne
     
         

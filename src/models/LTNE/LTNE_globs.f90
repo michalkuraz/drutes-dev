@@ -24,7 +24,7 @@ module LTNE_globs
   type(LTNE_sys), dimension(:), allocatable, target, public :: LTNE_par
 
   !> LTNE exchange conductivity
-  real(kind=rkind), public :: hc 
+  real(kind=rkind), public :: hc, cumfilt 
   
   !> gravity acceleration [m.s^-2]
   real(kind=rkind), parameter, public :: grav = 9.81

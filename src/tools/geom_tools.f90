@@ -1148,7 +1148,7 @@ module geom_tools
       
       
       open(unit=fileid, file=cut(filename), action="read", iostat=ierr)
-      
+      print*, filename
       if (ierr /= 0) then
         print *, "unable to open file with the vertical distribution of the initial condition, exiting...."
         print *, "called from map1d2dJ::drutes_init"

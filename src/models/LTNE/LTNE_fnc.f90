@@ -5,8 +5,9 @@ module LTNE_fnc
   use debug_tools
   use LTNE_helper
   
-  public :: capacityhh,  diffhh,  all_fluxes_LTNE
-  public :: capacityTlTl, capacityTlh, diffTlTl, convectTlTl, thermal_p, heat_flux_l_LTNE, heat_flux_s_LTNE, qsl_pos, qsl_neg, T_m
+  public :: capacityhh,  diffhh,  all_fluxes_LTNE, Dirichlet_mass_bc
+  public :: capacityTlTl, capacityTlh, diffTlTl, convectTlTl, thermal_p
+  public:: heat_flux_l_LTNE, heat_flux_s_LTNE, qsl_pos, qsl_neg, T_m
 
   
   procedure(scalar_fnc), pointer, public :: rwcap
@@ -310,9 +311,7 @@ module LTNE_fnc
       real(kind=rkind) :: h
       real(kind=rkind), dimension(:), allocatable :: gradient, gradientT
       type(integpnt_str) :: quadpnt_loc
-      
-
-      
+            
       if (present(quadpnt) .and. (present(grad) .or. present(x))) then
         print *, "ERROR: the function can be called either with integ point or x value definition and gradient, not both of them"
         ERROR stop
@@ -321,12 +320,11 @@ module LTNE_fnc
         print *, "exited from LTNE_fnc::all_fluxes"
         ERROR stop
       end if
-      
+
       if (present(quadpnt)) then
         quadpnt_loc = quadpnt
         quadpnt_loc%preproc=.true.
         h = hl(pde(1), layer, quadpnt)
-        !call getgrad_LTNE(pde(1), quadpnt, gradient)
         call pde(1)%getgrad(quadpnt, gradient)
         call pde(2)%getgrad(quadpnt, gradientT)
       else
@@ -340,11 +338,8 @@ module LTNE_fnc
         allocate(gradient(ubound(grad,1)))
         gradient = grad
       end if
-      
-      D = drutes_config%dimen
 
-      !nablaz = 0
-      !nablaz(D) = 1
+      D = drutes_config%dimen
       if(iceswitch(quadpnt))then
         gradH(1:D) = gradient(1:D) + Lf/grav*gradientT(1:D)/(pde(2)%getval(quadpnt) + 273.15_rkind)
       else
@@ -357,7 +352,6 @@ module LTNE_fnc
       end if
       
       vct(1:D) = matmul(-Klh(1:D,1:D), gradH(1:D))
-
       if (present(flux_length)) then
         select case(D)
           case(1)
@@ -367,6 +361,7 @@ module LTNE_fnc
           case(3)
                 flux_length = sqrt(vct(1)*vct(1) + vct(2)*vct(2) + vct(3)*vct(3))
         end select
+
       end if
 
 
@@ -514,7 +509,7 @@ module LTNE_fnc
       tp = thermal_p(pde_loc, layer, quadpnt)
       Pr = Cp*up/tp
       call all_fluxes_LTNE(pde_loc, layer, quadpnt, flux_length = flux_tmp)
-      Re = densp*flux_tmp*LTNE_par(layer)%diameter/up
+      Re = densp*abs(flux_tmp)*LTNE_par(layer)%diameter/up
       h = tp/LTNE_par(layer)%diameter*(2.4e-5+(285.6*Pr**2.7*Re**(0.33333333_rkind)))
       val = h * A
     end function qsl_pos
@@ -558,4 +553,65 @@ module LTNE_fnc
       end if
 
     end function T_m
+    
+    subroutine Dirichlet_mass_bc(pde_loc, el_id, node_order, value, code) 
+      use typy
+      use globals
+      use global_objs
+      use pde_objs
+      use re_globals
+
+      class(pde_str), intent(in) :: pde_loc
+      integer(kind=ikind), intent(in)  :: el_id, node_order
+      real(kind=rkind), intent(out), optional    :: value
+      integer(kind=ikind), intent(out), optional :: code
+     
+
+      integer(kind=ikind) :: i, edge_id, j
+      real(kind=rkind), dimension(3) :: gravflux, bcflux
+      real(kind=rkind) :: bcval, gfluxval, flux_length, infilt
+      integer :: i1
+      type(integpnt_str) :: quadpnt
+      integer(kind=ikind) :: layer
+      
+      if (present(value)) then
+        edge_id = nodes%edge(elements%data(el_id, node_order))
+        i = pde_loc%permut(elements%data(el_id, node_order))
+        
+        if (pde_loc%bc(edge_id)%file) then
+          do i=1, ubound(pde_loc%bc(edge_id)%series,1)
+            if (pde_loc%bc(edge_id)%series(i,1) > time) then
+              if (i > 1) then
+                j = i-1
+              else
+                j = i
+              end if
+              bcval = pde_loc%bc(edge_id)%series(j,2)
+              EXIT
+            end if
+          end do
+        else
+         quadpnt%type_pnt = "ndpt"
+          quadpnt%column=1
+          quadpnt%order = elements%data(el_id,node_order)
+          if(time_step > 0_rkind) then
+            !call all_fluxes_LTNE(pde_loc, layer, quadpnt, flux_length = flux_length)
+            flux_length = 1e-3_rkind
+          else
+            flux_length = 0
+            cumfilt = 0
+          end if
+          infilt = flux_length*time_step
+          cumfilt = cumfilt + infilt
+          bcval = pde_loc%bc(edge_id)%value-cumfilt
+          if(bcval <0) then
+            bcval = 0
+          end if
+        end if
+      end if
+      if (present(code)) then
+        code = 1
+      end if
+
+    end subroutine Dirichlet_mass_bc
 end module LTNE_fnc

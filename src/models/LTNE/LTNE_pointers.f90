@@ -48,6 +48,8 @@ module LTNE_pointers
       end select
       
       call RE_totheadbc(pde(1))
+
+      
       pde(1)%getval => getval_retotltne
       
     ! pointers for water flow model
@@ -56,6 +58,12 @@ module LTNE_pointers
       pde(1)%pde_fnc(1)%dispersion => diffhh
             
       pde(1)%flux => all_fluxes_LTNE
+      do i=lbound(pde(1)%bc,1), ubound(pde(1)%bc,1)
+        select case(pde(1)%bc(i)%code)
+          case(6)
+            pde(1)%bc(i)%value_fnc => Dirichlet_mass_bc
+        end select
+      end do
 
       pde(1)%initcond => wat_init
       

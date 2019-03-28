@@ -162,6 +162,7 @@ module RE_pointers
             pde_loc%bc(i)%value_fnc => retot_seepage	
           case(5)
             pde_loc%bc(i)%value_fnc => retot_atmospheric
+          case(6)
           case default
           print *, "ERROR! You have specified an unsupported boundary type definition for the Richards equation"
           print *, "the incorrect boundary code specified is:", pde_loc%bc(i)%code

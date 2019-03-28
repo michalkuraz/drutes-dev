@@ -135,7 +135,6 @@ module stiffmat
 
               ii = i + (iproc-1)*limits
               jj = j + (jproc-1)*limits
-              
               stiff_mat(ii,jj) = (dsum(1,1) + csum + rsum)
             end do
           end do 

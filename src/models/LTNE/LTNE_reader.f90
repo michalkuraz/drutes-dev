@@ -156,7 +156,7 @@ module LTNE_read
       
       deallocate(tmpdata)
       
-     write(unit = msg, fmt = *) "Does air chnge temperature? yes - 1 or no -0"
+     write(unit = msg, fmt = *) "Does air change temperature? yes - 1 or no -0"
      call fileread(frz_pnt, file_LTNE, ranges=(/0_ikind,1_ikind/), errmsg = trim(msg))
       select case(frz_pnt)
             case(1_ikind,0_ikind)
@@ -345,7 +345,7 @@ module LTNE_read
       
 
       call readbcvals(unitW=file_LTNE, struct=pde(1)%bc, dimen=n, &
-		      dirname="LTNE/LTNE.conf/")
+		      dirname="drutes.conf/LTNE/")
 
 		      
       close(file_LTNE)	      

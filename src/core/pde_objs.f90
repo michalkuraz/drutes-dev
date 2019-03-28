@@ -445,7 +445,6 @@ module pde_objs
       type(integpnt_str) :: quadpntloc
       real(kind=rkind) :: valprev, timeprev, timeglob
       logical :: stopper=.false.
-
    
        val = getvalp1loc(pde_loc, quadpnt)
 
@@ -469,7 +468,6 @@ module pde_objs
 
       end if
 	
-    
     end function getvalp1
     
     
