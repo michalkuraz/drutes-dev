@@ -485,7 +485,75 @@ module LTNE_helper
       end select
     end subroutine temp_s_initcond
     
+    subroutine Kliquid_temp(pde_loc, layer, quadpnt, x, T, tensor, scalar) 
+      use typy
+      use global_objs
+      class(pde_str), intent(in) :: pde_loc
+      !> value of the nonlinear function
+      real(kind=rkind), dimension(:), intent(in), optional    :: x
+      real(kind=rkind),intent(in), optional    :: T
+      !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
+      type(integpnt_str), intent(in), optional :: quadpnt
+      !> material ID
+      integer(kind=ikind), intent(in) :: layer
+      !> return tensor
+      real(kind=rkind), dimension(:,:), intent(out), optional :: tensor
+      !> relative scalar value of the nonlinear function 
+      real(kind=rkind), intent(out), optional                 :: scalar
+      real(kind=rkind), dimension(3,3) :: Klh, Klt
+      integer(kind=ikind) :: D
+      real(kind = rkind) :: h_l
+      D = drutes_config%dimen
 
+      
+      if (present(tensor)) then
+        call mualem_ltne(pde_loc, layer, x=(/hl(pde_loc, layer, quadpnt)/), tensor = Klt(1:D, 1:D))
+        if(qlt_log) then
+          Klt(1:D, 1:D) = 10**(-Omega*Q_reduction(layer, quadpnt))*Klt(1:D, 1:D)
+        else
+          Klt(1:D,1:D)= 0_rkind*Klt(1:D, 1:D)
+        end if 
+        if (present(quadpnt)) then
+          h_l = hl(pde_loc, layer, quadpnt)
+          tensor = Klt(1:D, 1:D)*gwt*h_l*surf_tens_deriv(pde_loc, layer, quadpnt)/surf_tens_ref
+        else
+          print *, "runtime error"
+          print *, "exited from ltne_helper:: Kliquid_temp"
+          ERROR STOP
+        end if
+      else
+         print *, "ERROR! output tensor undefined, exited from ltne_helper:: Kliquid_temp"
+      end if    
+
+      
+    end subroutine Kliquid_temp
+    
+    function surf_tens_deriv(pde_loc, layer, quadpnt, T) result(val)
+      use typy
+      use global_objs
+      use freeze_globs
+      use pde_objs
+    
+      class(pde_str), intent(in) :: pde_loc
+      !> value of the nonlinear function
+      real(kind=rkind), intent(in), optional    ::  T
+      !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
+      type(integpnt_str), intent(in), optional :: quadpnt
+      !> material ID
+      integer(kind=ikind), intent(in) :: layer
+      !> return value
+      real(kind=rkind)                :: val
+    
+      real(kind=rkind) :: temp
+    
+      temp = pde(2)%getval(quadpnt)
+      if (present(T)) then
+        temp = T
+      end if
+      
+      val = -0.1425-4.76e-4*temp
+      
+    end function surf_tens_deriv
     
     !> specific function for Richards equation in H-form (total hydraulic head form), replaces pde_objs::getvalp1 in order to distinguish between H and h 
     function getval_retotltne(pde_loc, quadpnt) result(val)
@@ -610,9 +678,7 @@ module LTNE_helper
       integer(kind=ikind) :: layer
       
       if (present(value)) then
-        edge_id = nodes%edge(elements%data(el_id, node_order))
-        i = pde_loc%permut(elements%data(el_id, node_order))
-        
+        edge_id = nodes%edge(elements%data(el_id, node_order))        
         if (pde_loc%bc(edge_id)%file) then
           do i=1, ubound(pde_loc%bc(edge_id)%series,1)
             if (pde_loc%bc(edge_id)%series(i,1) > time) then
@@ -643,105 +709,6 @@ module LTNE_helper
 
 
     end subroutine LTNE_coolant_bc
-    
-    
-    subroutine getgrad_LTNE(pde_loc, quadpnt, grad)
-      use typy
-      use decomp_vars
-
-      
-      class(pde_str), intent(in) :: pde_loc
-      type(integpnt_str), intent(in) :: quadpnt
-      type(integpnt_str), dimension(:), allocatable, save :: quadpntloc
-      real(kind=rkind), dimension(:), allocatable, intent(out) :: grad
-      real(kind=rkind), dimension(3) :: gradloc
-      integer(kind=ikind), dimension(:), allocatable, save :: pts
-      real(kind=rkind), dimension(3)    :: a,b,c
-      real(kind=rkind) :: dx
-      integer(kind=ikind) :: i, el, top, j, k
-      real(kind=rkind), dimension(:,:), allocatable, save :: domain
-
-      
-      if (.not. allocated(grad)) then
-        allocate(grad(drutes_config%dimen))
-      else if (ubound(grad,1) /= drutes_config%dimen ) then
-        deallocate(grad)
-        allocate(grad(drutes_config%dimen))
-      end if
-      
-      if (.not. allocated(pts)) then
-        allocate(pts(ubound(elements%data,2)))
-        allocate(quadpntloc(ubound(elements%data,2)))
-      end if
-      
-      select case(quadpnt%type_pnt)
-        case("gqnd", "obpt", "xypt")
-          top = 1
-        case("ndpt")
-          !in case of ndpt the gradient is assumed as an average value of gradients at neighbourhood points
-          top = nodes%element(quadpnt%order)%pos
-        case default
-          print *, "RUNTIME ERROR: incorrect quadpnt type definition (value quadpnt%type_pnt)"
-          print *, "the value specified in code was:", quadpnt%type_pnt
-          print *, "exited from pde_objs::getgradp1"
-          ERROR STOP
-          
-      end select
-      
-      gradloc = 0
-      do i=1, top  
-        select case(quadpnt%type_pnt)
-          case("gqnd")
-            el = quadpnt%element
-          case("xypt")
-            if (quadpnt%element > 0) then
-              el = quadpnt%element
-            else
-              print *, "specify correct value for quadpnt%element"
-              print *, "exited from pde_objs::getgradp1"
-              ERROR STOP
-            end if
-          case("obpt")
-            el = observation_array(quadpnt%order)%element
-          case("ndpt")
-            el = nodes%element(quadpnt%order)%data(i)
-        end select
-      
-      pts = elements%data(el,:)
-      
-      quadpntloc(:) = quadpnt
-      quadpntloc(:)%type_pnt = "ndpt"
-      select case(drutes_config%dimen)
-        case(1)
-          dx = nodes%data(pts(2),1) - nodes%data(pts(1),1)
-          quadpntloc(1)%order = pts(1)
-          quadpntloc(2)%order = pts(2)
-          gradloc(1) = gradloc(1) + (hl(pde_loc,1_ikind,quadpntloc(2)) - hl(pde_loc,1_ikind, quadpntloc(1)))/dx
-        case(2)
-          a(1:2) = nodes%data(pts(1),:)
-          b(1:2) = nodes%data(pts(2),:)
-          c(1:2) = nodes%data(pts(3),:)
-          
-          
-          quadpntloc(1)%order = pts(1)
-          quadpntloc(2)%order = pts(2)
-          quadpntloc(3)%order = pts(3)
-        
-          
-          
-          a(3) = hl(pde_loc,1_ikind, quadpntloc(1))
-          b(3) = hl(pde_loc,1_ikind, quadpntloc(2))
-          c(3) = hl(pde_loc,1_ikind, quadpntloc(3))
-          call get2dderivative(a,b,c,grad(1), grad(2))
-
-          gradloc(1:2) = gradloc(1:2) + grad
-        case(3)
-      end select
-      end do
-      
-      grad = gradloc(1:drutes_config%dimen)/top
-    
-    end subroutine getgrad_LTNE
     
     
 end module LTNE_helper

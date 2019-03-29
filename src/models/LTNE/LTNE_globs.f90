@@ -75,4 +75,6 @@ module LTNE_globs
   logical, public :: clap
   
   logical, public:: air
+  
+  logical, public :: qlt_log
 end module LTNE_globs

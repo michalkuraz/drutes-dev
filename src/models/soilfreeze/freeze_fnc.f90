@@ -99,7 +99,7 @@ module freeze_fnc
           tensor = 10**(-Omega*Q_reduction(layer, x = x))*tensor
         end if
       else
-        print *, "ERROR! output tensor undefined, exited from diffhh::freeze_fnc"
+        print *, "ERROR! output tensor undefined, exited from freeze_fnc::diffhh"
       end if
 
     end subroutine diffhh
@@ -141,7 +141,7 @@ module freeze_fnc
           end if
         end if
       else
-         print *, "ERROR! output tensor undefined, exited from diffhT::freeze_fnc"
+         print *, "ERROR! output tensor undefined, exited from freeze_fnc::diffhT"
       end if   
       
       end subroutine diffhT

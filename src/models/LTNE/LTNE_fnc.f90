@@ -5,8 +5,8 @@ module LTNE_fnc
   use debug_tools
   use LTNE_helper
   
-  public :: capacityhh,  diffhh,  all_fluxes_LTNE, Dirichlet_mass_bc
-  public :: capacityTlTl, capacityTlh, diffTlTl, convectTlTl, thermal_p
+  public ::  all_fluxes_LTNE, Dirichlet_mass_bc, Dirichlet_Neumann_switch_bc
+  public :: capacityhh, diffhh, capacityTlTl, capacityTlh, diffTlTl, convectTlTl, thermal_p
   public:: heat_flux_l_LTNE, heat_flux_s_LTNE, qsl_pos, qsl_neg, T_m
 
   
@@ -71,10 +71,50 @@ module LTNE_fnc
           tensor = 10**(-Omega*Q_reduction(layer, x = x))*tensor
         end if
       else
-        print *, "ERROR! output tensor undefined, exited from diffhh::LTNE_fnc"
+        print *, "ERROR! output tensor undefined, exited from LTNE_fnc:diffhh"
       end if
 
     end subroutine diffhh
+    
+    subroutine diffhT(pde_loc, layer, quadpnt, x, tensor, scalar)
+      use typy
+      use global_objs
+      use ltne_globs
+      class(pde_str), intent(in) :: pde_loc
+      !> value of the nonlinear function
+      real(kind=rkind), dimension(:), intent(in), optional    :: x
+      !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
+      type(integpnt_str), intent(in), optional :: quadpnt
+      !> material ID
+      integer(kind=ikind), intent(in) :: layer
+      !> return tensor
+      real(kind=rkind), dimension(:,:), intent(out), optional :: tensor
+      !> relative scalar value of the nonlinear function 
+      real(kind=rkind), intent(out), optional                 :: scalar
+      
+      real(kind=rkind), dimension(3,3) :: Klh, Klt, E
+      integer(kind=ikind) :: D, i,j
+      real(kind=rkind) :: temp
+      
+      D = drutes_config%dimen
+
+      temp = pde(2)%getval(quadpnt)+273.15_rkind
+      if (present(tensor)) then
+        if (present(quadpnt)) then
+          call Kliquid_temp(pde_loc, layer, quadpnt, tensor = Klt(1:D, 1:D))
+          call mualem_ltne(pde_loc, layer, x=(/hl(pde(1), layer, quadpnt)/), tensor = Klh(1:D, 1:D))
+          Klh(1:D,1:D) = 10**(-Omega*Q_reduction(layer, quadpnt))*Klh(1:D, 1:D)
+          if(iceswitch(quadpnt)) then
+            tensor = (Klt(1:D, 1:D) + Lf/temp/grav*Klh(1:D,1:D))
+          else
+            tensor = Klt(1:D, 1:D)
+          end if
+        end if
+      else
+         print *, "ERROR! output tensor undefined, exited from Ltne_fnc::diffhT"
+      end if   
+      
+      end subroutine diffhT
     
     !> heat: pde(2)
     !> Capacity term due to pressure head for heat flow model
@@ -576,8 +616,8 @@ module LTNE_fnc
       
       if (present(value)) then
         edge_id = nodes%edge(elements%data(el_id, node_order))
-        i = pde_loc%permut(elements%data(el_id, node_order))
-        
+        print*, edge_id
+        call wait()
         if (pde_loc%bc(edge_id)%file) then
           do i=1, ubound(pde_loc%bc(edge_id)%series,1)
             if (pde_loc%bc(edge_id)%series(i,1) > time) then
@@ -587,16 +627,17 @@ module LTNE_fnc
                 j = i
               end if
               bcval = pde_loc%bc(edge_id)%series(j,2)
+              value = bcval
               EXIT
             end if
           end do
         else
-         quadpnt%type_pnt = "ndpt"
-          quadpnt%column=1
+          quadpnt%type_pnt = "ndpt"
+          quadpnt%column = 1 ! otherwise column is random integer number
           quadpnt%order = elements%data(el_id,node_order)
           if(time_step > 0_rkind) then
-            !call all_fluxes_LTNE(pde_loc, layer, quadpnt, flux_length = flux_length)
-            flux_length = 1e-3_rkind
+            call  all_fluxes_LTNE(pde_loc, layer, quadpnt, flux_length = flux_length)
+            !flux_length = 1e-3_rkind
           else
             flux_length = 0
             cumfilt = 0
@@ -607,11 +648,79 @@ module LTNE_fnc
           if(bcval <0) then
             bcval = 0
           end if
+          value = bcval
         end if
       end if
       if (present(code)) then
-        code = 1
+        if(bcval == 0) then
+          code = 2
+        else
+          code = 4
+        end if
       end if
 
     end subroutine Dirichlet_mass_bc
+    
+    subroutine Dirichlet_Neumann_switch_bc(pde_loc, el_id, node_order, value, code) 
+      use typy
+      use globals
+      use global_objs
+      use pde_objs
+      use re_globals
+
+      class(pde_str), intent(in) :: pde_loc
+      integer(kind=ikind), intent(in)  :: el_id, node_order
+      real(kind=rkind), intent(out), optional    :: value
+      integer(kind=ikind), intent(out), optional :: code
+     
+
+      integer(kind=ikind) :: i, edge_id, j
+      real(kind=rkind), dimension(3) :: gravflux, bcflux
+      real(kind=rkind) :: bcval, gfluxval, flux_length, infilt
+      integer :: i1
+      type(integpnt_str) :: quadpnt
+      integer(kind=ikind) :: layer, code_tmp
+      
+      if (.not. allocated(pde_common%xvect) ) then
+        if (present(value)) value = 0
+        if (present(code)) code = 2
+        RETURN
+      end if
+     
+      edge_id = nodes%edge(elements%data(el_id, node_order))
+      if (pde_loc%bc(edge_id)%file) then
+        if (present(value)) then
+          edge_id = nodes%edge(elements%data(el_id, node_order))
+          i = pde_loc%permut(elements%data(el_id, node_order))
+          do i=1, ubound(pde_loc%bc(edge_id)%series,1)
+            if (pde_loc%bc(edge_id)%series(i,1) > time) then
+              if (i > 1) then
+                j = i-1
+              else
+                j = i
+              end if
+              bcval = pde_loc%bc(edge_id)%series(j,2)
+              value = bcval
+              EXIT
+            end if
+          end do
+       end if
+        if (present(code)) then
+          do i=1, ubound(pde_loc%bc(edge_id)%series,1)
+            if (pde_loc%bc(edge_id)%series(i,1) > time) then
+              if (i > 1) then
+                j = i-1
+              else
+                j = i
+              end if
+              code_tmp = pde_loc%bc(edge_id)%series(j,3)
+              code = code_tmp
+              EXIT
+            end if
+          end do
+        end if 
+      else
+      end if
+    end subroutine Dirichlet_Neumann_switch_bc
+
 end module LTNE_fnc

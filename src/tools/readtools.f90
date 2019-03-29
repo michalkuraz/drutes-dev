@@ -799,9 +799,10 @@ module readtools
         end if
 
         if (struct(i)%file) then
+        print*, "looking at the file"
           call find_unit(fileid)
-          write(unit=filename, fmt="(a, I3, a)") trim(dirname), i, ".bc"
-          !write(unit=filename, fmt="(a, I3, a)") trim(dirname), struct(i)%ID, ".bc"
+          !write(unit=filename, fmt="(a, I3, a)") trim(dirname), i, ".bc"
+          write(unit=filename, fmt="(a, I3, a)") trim(dirname), struct(i)%ID, ".bc"
           open(unit=fileid, file=adjustl(trim(filename)), action="read", status="old",  iostat=ierr)
           if (ierr /= 0) then
             write(unit=msg, fmt=*) "ERROR: if using unsteady boundary value data, you must supply the file with data!", &
@@ -880,8 +881,6 @@ module readtools
         end if
 
       end do
-
-      
 
     end subroutine readbcvals
 

@@ -37,6 +37,7 @@ module LTNE_pointers
       use heat_pointers
       use heat_fnc
       
+      
       integer(kind=ikind) :: i
       select case (drutes_config%name)
         case ("LTNE")
@@ -56,7 +57,8 @@ module LTNE_pointers
       pde(1)%pde_fnc(1)%elasticity => capacityhh
             
       pde(1)%pde_fnc(1)%dispersion => diffhh
-            
+      pde(1)%pde_fnc(2)%dispersion => diffhT
+
       pde(1)%flux => all_fluxes_LTNE
       do i=lbound(pde(1)%bc,1), ubound(pde(1)%bc,1)
         select case(pde(1)%bc(i)%code)
@@ -68,6 +70,7 @@ module LTNE_pointers
       pde(1)%initcond => wat_init
       
       rwcap => vangen_elast_LTNE
+      
       
       pde(1)%problem_name(1) = "RE_LTNE_thaw"
       pde(1)%problem_name(2) = "Richards' equation with freezing and thawing"
@@ -148,7 +151,9 @@ module LTNE_pointers
           case(0)
             pde(2)%bc(i)%value_fnc => re_null_bc
           case(3)
-            pde(2)%bc(i)%value_fnc => LTNE_coolant_bc
+            pde(2)%bc(i)%value_fnc => ltne_coolant_bc
+          case(4)
+            pde(2)%bc(i)%value_fnc => Dirichlet_Neumann_switch_bc
         end select
       end do  
         
@@ -186,7 +191,9 @@ module LTNE_pointers
           case(0)
             pde(3)%bc(i)%value_fnc => re_null_bc
           case(3)
-            pde(3)%bc(i)%value_fnc => LTNE_coolant_bc
+            pde(3)%bc(i)%value_fnc => ltne_coolant_bc
+          case(4)
+            pde(3)%bc(i)%value_fnc => Dirichlet_Neumann_switch_bc
         end select
       end do  
            

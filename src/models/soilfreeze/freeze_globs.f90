@@ -76,4 +76,7 @@ module freeze_globs
   integer, public :: frz_pnt
   
   logical, public :: clap
+  
+  logical, public :: qlt_log
+  
 end module freeze_globs

@@ -187,15 +187,14 @@ module heat_fnc
       real(kind=rkind) :: tempval
       
       edge_id = nodes%edge(elements%data(el_id, node_order))
-      
       if (present(value)) then
         if (pde_loc%bc(edge_id)%file) then
           do i=1, ubound(pde_loc%bc(edge_id)%series,1)
             if (pde_loc%bc(edge_id)%series(i,1) > time) then
               if (i > 1) then
-          j = i-1
+                j = i-1
               else
-          j = i
+                j = i
               end if
               tempval = pde_loc%bc(edge_id)%series(j,2)
               EXIT
@@ -206,7 +205,6 @@ module heat_fnc
         end if
         value = tempval 
       end if
-
 
       
       if (present(code)) then

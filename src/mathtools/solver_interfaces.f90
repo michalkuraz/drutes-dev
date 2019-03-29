@@ -80,7 +80,7 @@ module solver_interfaces
           allocate(p2(ubound(b,1)))
         end if
     
-         call LDUd(A, pivtype=1, ilev=0, perm1=p1, perm2=p2)
+         call LDUd(A, pivtype=0, ilev=0, perm1=p1, perm2=p2)
          
          call LDUback(A, b, x, p1=p1, p2=p2)
          

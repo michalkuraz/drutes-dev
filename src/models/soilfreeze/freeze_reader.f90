@@ -37,7 +37,7 @@ module freeze_read
       
       class(pde_str), intent(in out) :: pde_loc
       integer :: ierr, i, j, filewww,i_err
-      integer(kind=ikind) :: n
+      integer(kind=ikind) :: n, tmp_int
       character(len=1) :: yn
       character(len=4096) :: msg
       real(kind=rkind), dimension(:), allocatable :: tmpdata
@@ -206,14 +206,27 @@ module freeze_read
             call fileread(hc, file_freeze)
         end select
       end do
- 
-      do i=1, ubound(freeze_par,1)
-        allocate(freeze_par(i)%Ks_local(drutes_config%dimen))
-        allocate(freeze_par(i)%Ks(drutes_config%dimen, drutes_config%dimen))
-        j = max(1,drutes_config%dimen-1)
-        allocate(freeze_par(i)%anisoangle(j))
-      end do
       
+      
+     write(unit = msg, fmt = *) "Use qlt? yes - 1 or no -0"
+     call fileread(tmp_int, file_freeze, ranges=(/0_ikind,1_ikind/), errmsg = trim(msg))
+      select case(tmp_int)
+            case(1_ikind,0_ikind)
+              CONTINUE
+            case default
+              print *, "you have specified wrong input for freezing point depression"
+              print *, "the allowed options are:"
+              print *, "                        1 = yes"
+              print *, "                        0 = no"
+              call file_error(file_freeze)
+      end select
+      
+      if(tmp_int > 0) then
+       qlt_log = .true.
+      else
+       qlt_log = .false.
+      end if
+
 
       write(msg, *) "HINT 1 : check number of layers in matrix", new_line("a"), &
          "   HINT 2 : have you specified all values in the following order: ", new_line("a"), &
@@ -231,7 +244,14 @@ module freeze_read
 
      
 
-
+ 
+      do i=1, ubound(freeze_par,1)
+        allocate(freeze_par(i)%Ks_local(drutes_config%dimen))
+        allocate(freeze_par(i)%Ks(drutes_config%dimen, drutes_config%dimen))
+        j = max(1,drutes_config%dimen-1)
+        allocate(freeze_par(i)%anisoangle(j))
+      end do
+      
       write(msg, *) "HINT: check number of records of anisothropy description in water.conf/matrix.conf!!", &
         new_line("a") ,  &
         "      for 3D problem you must specify exactly Kxx, Kyy and Kzz values.", new_line("a"), &
@@ -302,7 +322,7 @@ module freeze_read
       
 
       call readbcvals(unitW=file_freeze, struct=pde(1)%bc, dimen=n, &
-		      dirname="freeze/freeze.conf/")
+		      dirname="drutes.conf/freeze/")
 
 		      
       close(file_freeze)	      
