@@ -143,6 +143,8 @@ module freeze_pointers
             pde(2)%bc(i)%value_fnc => re_null_bc
           case(3)
             pde(2)%bc(i)%value_fnc => freeze_coolant_bc
+           case(4)
+            pde(2)%bc(i)%value_fnc => Dirichlet_Neumann_switch_bc
         end select
       end do  
         

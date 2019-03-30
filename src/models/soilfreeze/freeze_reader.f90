@@ -20,6 +20,7 @@
 module freeze_read
   use typy
   use freeze_globs
+  use debug_tools
   
   public :: freeze_reader
   
@@ -324,7 +325,6 @@ module freeze_read
       call readbcvals(unitW=file_freeze, struct=pde(1)%bc, dimen=n, &
 		      dirname="drutes.conf/freeze/")
 
-		      
       close(file_freeze)	      
 
     end subroutine freeze_reader

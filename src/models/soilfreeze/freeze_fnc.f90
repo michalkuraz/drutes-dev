@@ -6,7 +6,7 @@ module freeze_fnc
   use freeze_helper
   
   public :: capacityhh, capacityhT,  diffhh, diffhT
-  public :: capacityTT, capacityTh, diffTT, convectTT, thermal_k, heat_flux_freeze
+  public :: capacityTT, capacityTh, diffTT, convectTT, thermal_k, heat_flux_freeze, Dirichlet_Neumann_switch_bc
 
   
   procedure(scalar_fnc), pointer, public :: rwcap
@@ -461,5 +461,65 @@ module freeze_fnc
         flux_length = norm2(matmul(thermal_diff(1:D, 1:D), gradT))
       end if
     end subroutine heat_flux_freeze
-    
+        subroutine Dirichlet_Neumann_switch_bc(pde_loc, el_id, node_order, value, code) 
+      use typy
+      use globals
+      use global_objs
+      use pde_objs
+      use re_globals
+
+      class(pde_str), intent(in) :: pde_loc
+      integer(kind=ikind), intent(in)  :: el_id, node_order
+      real(kind=rkind), intent(out), optional    :: value
+      integer(kind=ikind), intent(out), optional :: code
+     
+
+      integer(kind=ikind) :: i, edge_id, j
+      real(kind=rkind), dimension(3) :: gravflux, bcflux
+      real(kind=rkind) :: bcval, gfluxval, flux_length, infilt
+      integer :: i1
+      type(integpnt_str) :: quadpnt
+      integer(kind=ikind) :: layer, code_tmp
+      
+      if (.not. allocated(pde_common%xvect) ) then
+        if (present(value)) value = 0
+        if (present(code)) code = 2
+        RETURN
+      end if
+     
+      edge_id = nodes%edge(elements%data(el_id, node_order))
+      if (pde_loc%bc(edge_id)%file) then
+        if (present(value)) then
+          edge_id = nodes%edge(elements%data(el_id, node_order))
+          i = pde_loc%permut(elements%data(el_id, node_order))
+          do i=1, ubound(pde_loc%bc(edge_id)%series,1)
+            if (pde_loc%bc(edge_id)%series(i,1) > time) then
+              if (i > 1) then
+                j = i-1
+              else
+                j = i
+              end if
+              bcval = pde_loc%bc(edge_id)%series(j,2)
+              value = bcval
+              EXIT
+            end if
+          end do
+       end if
+        if (present(code)) then
+          do i=1, ubound(pde_loc%bc(edge_id)%series,1)
+            if (pde_loc%bc(edge_id)%series(i,1) > time) then
+              if (i > 1) then
+                j = i-1
+              else
+                j = i
+              end if
+              code_tmp = pde_loc%bc(edge_id)%series(j,3)
+              code = code_tmp
+              EXIT
+            end if
+          end do
+        end if 
+      else
+      end if
+    end subroutine Dirichlet_Neumann_switch_bc
 end module freeze_fnc

@@ -782,6 +782,7 @@ module readtools
       do i = lbound(struct,1), ubound(struct,1)
         call comment(unitW)
         read(unit=unitW, fmt=*, iostat=ierr) struct(i)%ID, struct(i)%code, y_file, struct(i)%value
+
         select case(y_file)
           case("y")
             struct(i)%file = .true.
