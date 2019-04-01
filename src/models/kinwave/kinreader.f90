@@ -30,6 +30,7 @@ module kinreader
       
       integer :: ierr, filenodes, fileel
       integer(kind=ikind) :: ndcounter, itmp, i
+      real(kind=rkind), dimension(:), allocatable :: distance
       
       open(newunit=filenodes, file="drutes.conf/kinwave/nodes.in", status="old", action="read", iostat=ierr)
       
@@ -117,12 +118,16 @@ module kinreader
       use kinglobs
       use readtools
       use core_tools
+      use geom_tools
+      use global_objs
       
       class(pde_str), intent(in out) :: pde_loc
-      integer :: file_kinematix, ierr, filerain
-      integer(kind=ikind) :: n, i, counter
+      integer :: file_kinematix, ierr, filerain, frainpts
+      integer(kind=ikind) :: n, i, counter, j, k
       character(len=512) :: msg
       real(kind=rkind) :: tmp
+      real(kind=rkind), dimension(:), allocatable :: pts, distance
+      
       
       select case(drutes_config%mesh_type)
         case(1) 
@@ -169,18 +174,18 @@ module kinreader
         call fileread(manning(i), file_kinematix, ranges=(/epsilon(manning(1)), huge(manning(1))/))
       end do
       
-      open(newunit=filerain, file="drutes.conf/kinwave/rain.in", status="old", action="read", iostat=ierr)
+      open(newunit=frainpts, file="drutes.conf/kinwave/rain.pts", status="old", action="read", iostat=ierr)
       
       if (ierr /= 0) then
-        print *, "unable to open file with rainfall data drutes.conf/kinwave/rain.in"
+        print *, "unable to open file with rainfall data drutes.conf/kinwave/rain.pts"
         error stop
       end if
       
       
       counter = 0
       do
-        call comment(filerain)
-        read(unit=filerain, fmt=*, iostat=ierr) tmp
+        call comment(frainpts)
+        read(unit=frainpts, fmt=*, iostat=ierr) tmp
         
         if (ierr /= 0) then
           EXIT
@@ -189,11 +194,34 @@ module kinreader
         end if
       end do
       
-      close(filerain)
+      close(frainpts)
       
-      open(newunit=filerain, file="drutes.conf/kinwave/rain.in", status="old", action="read", iostat=ierr)
+      open(newunit=frainpts, file="drutes.conf/kinwave/rain.pts", status="old", action="read", iostat=ierr)
       
-      allocate( 
+      allocate(raindata(counter))
+      
+      do i=1, ubound(raindata,1)
+        call fileread(raindata(i)%xy, frainpts, checklen=.true.)
+      end do
+      
+      allocate(el2pt(elements%kolik))
+      
+      allocate(pts(drutes_config%dimen))
+      
+      allocate(distance(ubound(raindata,1)))
+      do i=1, elements%kolik
+        distance = huge(distance)
+        do j=1, ubound(distance,1)
+          pts = 0
+          do k=1, ubound(elements%data,2)
+            pts = pts + nodes%data(elements%data(i,k),:)
+          end do
+          pts = pts/ubound(elements%data,2)
+          distance(j) = dist(pts, raindata(j)%xy)
+        end do
+        el2pt(i) = minloc(distance,1)        
+      end do
+        
     
     end subroutine kininit
 

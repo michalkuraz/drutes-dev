@@ -34,9 +34,12 @@ module kinglobs
   
   
   type, public :: raindata_str
-    real(kind=rkind), dimension(:,:), allocatable :: xy
-    integer(kind=ikind), dimension(:), allocatable :: el2pt
-    
+    real(kind=rkind), dimension(2) :: xy
+    real(kind=rkind), dimension(:,:), allocatable :: series
+  end type raindata_str
+  
+  type(raindata_str), dimension(:), allocatable :: raindata
+  integer(kind=ikind), dimension(:), allocatable :: el2pt
 
 end module kinglobs
 
