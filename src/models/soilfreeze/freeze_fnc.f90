@@ -461,7 +461,8 @@ module freeze_fnc
         flux_length = norm2(matmul(thermal_diff(1:D, 1:D), gradT))
       end if
     end subroutine heat_flux_freeze
-        subroutine Dirichlet_Neumann_switch_bc(pde_loc, el_id, node_order, value, code) 
+    
+    subroutine Dirichlet_Neumann_switch_bc(pde_loc, el_id, node_order, value, code) 
       use typy
       use globals
       use global_objs

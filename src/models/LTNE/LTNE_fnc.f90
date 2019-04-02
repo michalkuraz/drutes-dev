@@ -618,8 +618,6 @@ module LTNE_fnc
       
       if (present(value)) then
         edge_id = nodes%edge(elements%data(el_id, node_order))
-        print*, edge_id
-        call wait()
         if (pde_loc%bc(edge_id)%file) then
           do i=1, ubound(pde_loc%bc(edge_id)%series,1)
             if (pde_loc%bc(edge_id)%series(i,1) > time) then

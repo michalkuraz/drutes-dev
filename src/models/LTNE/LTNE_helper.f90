@@ -692,6 +692,7 @@ module LTNE_helper
               quadpnt%order = elements%data(el_id,node_order)
               T =  pde_loc%getval(quadpnt)
               bcval = -hc*(T-pde_loc%bc(edge_id)%series(j,2))
+              value = bcval
               EXIT
             end if
           end do
@@ -701,6 +702,7 @@ module LTNE_helper
           quadpnt%order = elements%data(el_id,node_order)
           T =  pde_loc%getval(quadpnt)
           bcval = -hc*(T-pde_loc%bc(edge_id)%value)
+          value = bcval
         end if
       end if
       if (present(code)) then
