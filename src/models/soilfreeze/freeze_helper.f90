@@ -506,7 +506,7 @@ module freeze_helper
       D = drutes_config%dimen
       select case (freeze_par(1_ikind)%icondtype)
         case("input")
-          call map1d2dJ(pde_loc,"drutes.conf/freeze.conf/Tini.in")
+          call map1d2dJ(pde_loc,"drutes.conf/freeze/Tini.in")
         case("value")
           do i=1, elements%kolik
             layer = elements%material(i)

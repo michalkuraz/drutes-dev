@@ -800,7 +800,6 @@ module readtools
         end if
 
         if (struct(i)%file) then
-        print*, "looking at the file"
           call find_unit(fileid)
           !write(unit=filename, fmt="(a, I3, a)") trim(dirname), i, ".bc"
           write(unit=filename, fmt="(a, I3, a)") trim(dirname), struct(i)%ID, ".bc"

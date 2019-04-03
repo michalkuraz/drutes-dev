@@ -23,6 +23,9 @@ module LTNE_globs
   
   type(LTNE_sys), dimension(:), allocatable, target, public :: LTNE_par
 
+  
+  real(kind=rkind), dimension(:), allocatable, public :: T_air
+
   !> LTNE exchange conductivity
   real(kind=rkind), public :: hc, cumfilt 
   

@@ -483,6 +483,16 @@ module LTNE_helper
             end do   
           end do
       end select
+      if(allocated(T_air))then
+      else
+        allocate(T_air(nodes%kolik))
+      end if
+      do i=1, elements%kolik
+        do j=1, ubound(elements%data,2)
+          k = elements%data(i,j)
+          T_air(k) = pde_loc%solution(k) 
+        end do   
+      end do
     end subroutine temp_s_initcond
     
     subroutine Kliquid_temp(pde_loc, layer, quadpnt, x, T, tensor, scalar) 

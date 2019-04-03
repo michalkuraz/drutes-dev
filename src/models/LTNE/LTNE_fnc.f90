@@ -31,12 +31,23 @@ module LTNE_fnc
       !> material ID
       integer(kind=ikind), intent(in) :: layer
       !> return value
-      real(kind=rkind)                :: val
-    
-      if (iceswitch(quadpnt)) then
-        val = rho_ice/rho_wat*rwcap(pde_loc, layer, quadpnt)
+      real(kind=rkind)                :: val, thice,thtot,thair,th_l
+      
+      thice = thetai(pde_loc, layer, quadpnt)
+      th_l = vangen_ltne(pde_loc, layer, x = (/hl(pde(1), layer, quadpnt)/))
+      thair = LTNE_par(layer)%Ths-thice-th_l
+      
+      if(air) then
+        thtot = th_l + thice
       else
-        val = rwcap(pde_loc, layer, quadpnt)
+        thtot = th_l +thice + thair
+      end if
+      
+      
+      if (iceswitch(quadpnt)) then
+        val = rho_ice/rho_wat*rwcap(pde_loc, layer, quadpnt)*thtot
+      else
+        val = rwcap(pde_loc, layer, quadpnt)*thtot
 
       end if
 
@@ -158,17 +169,20 @@ module LTNE_fnc
       !> value of the nonlinear function
       real(kind=rkind), dimension(:), intent(in), optional    :: x
       !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
-      type(integpnt_str), intent(in), optional :: quadpnt
       !> material ID
+      type(integpnt_str), intent(in), optional :: quadpnt
       integer(kind=ikind), intent(in) :: layer
       !> return value
       real(kind=rkind)                :: val
       
-      real(kind=rkind) :: temp, vol_soil, th_air
-      
+      real(kind=rkind) :: temp, vol_soil, th_air, C_P, dens_p, th_l
+      real(kind=rkind) :: thice, thtot
+
       vol_soil = 1_rkind - LTNE_par(layer)%Ths
-      th_air = LTNE_par(layer)%Ths-thetai(pde_loc, layer, quadpnt)-&
-      vangen_ltne(pde_loc, layer, x = (/hl(pde(1), layer, quadpnt)/)) 
+      thice = thetai(pde_loc, layer, quadpnt)
+      th_l = vangen_ltne(pde_loc, layer, x = (/hl(pde(1), layer, quadpnt)/))
+      th_air = LTNE_par(layer)%Ths-thice-th_l
+
       if(th_air < 0) then
         if(abs(th_air) > epsilon(th_air)) then
           print*, th_air
@@ -178,14 +192,21 @@ module LTNE_fnc
           stop
         end if
       end if
-      temp = pde(2)%getval(quadpnt)+ 273.15_rkind
-      val =  ltne_par(layer)%Cl*rho_wat*vangen_ltne(pde_loc, layer, x = (/hl(pde(1), layer, quadpnt)/)) 
       if(air) then
-        val = val + ltne_par(layer)%Ci*rho_ice*thetai(pde_loc, layer, quadpnt) + ltne_par(layer)%Ca*rho_air*th_air
+        thtot = thice+th_l+th_air
+        C_P = (ltne_par(layer)%Cl*th_l+ltne_par(layer)%Ci*thice+ltne_par(layer)%Ca*th_air)/(thtot)
+        dens_p = (rho_wat*th_l+rho_ice*thice+rho_air*th_air)/thtot
       else
-        val = val + ltne_par(layer)%Ci*rho_ice*thetai(pde_loc, layer, quadpnt) 
+        thtot = thice+th_l
+        C_P = (ltne_par(layer)%Cl*th_l+ltne_par(layer)%Ci*thice)/(thtot)
+        dens_p = (rho_wat* th_l+rho_ice*thice)/thtot
       end if
-      val = val*LTNE_par(layer)%Ths
+
+      
+      temp = pde(2)%getval(quadpnt)+ 273.15_rkind
+      val = C_P*dens_p
+      val = val*thtot
+      
       if(iceswitch(quadpnt)) then
         val = val + Lf*rho_ice*Lf/temp/grav*rwcap(pde_loc, layer, x = (/hl(pde(1), layer, quadpnt)/))
       end if
@@ -527,7 +548,7 @@ module LTNE_fnc
       integer(kind=ikind), intent(in) :: layer
       type(integpnt_str), intent(in), optional :: quadpnt
       real(kind=rkind), dimension(:), intent(in), optional    :: x
-      real(kind=rkind) :: val, h, A, Re, Pr, thice, thl, Cp, up, densp, tp, flux_tmp
+      real(kind=rkind) :: val, h, A, Re, Pr, thice, thl, Cp, up, densp, tp, flux_tmp, thair, thtot
       real(kind=rkind), dimension(3) :: flux
       
       integer(kind=ikind) :: D
@@ -536,15 +557,17 @@ module LTNE_fnc
 
       thice = thetai(pde(1), layer, quadpnt)
       thl = vangen_ltne(pde(1), layer, x=(/hl(pde(1), layer, quadpnt)/))
-      
+      thair = ltne_par(layer)%ths-thl
       if(air) then
-        Cp = thl*ltne_par(layer)%Cl+thice*ltne_par(layer)%Ci +(ltne_par(layer)%ths-thl)*LTNE_par(layer)%Ca
-        up = thl*ul+(ltne_par(layer)%ths-thl)*ua !+thice*ui
-        densp = thl*rho_wat+thice*rho_ice+(ltne_par(layer)%ths-thl)*rho_air
+        thtot = thice+thl+thair
+        Cp = (thl*ltne_par(layer)%Cl+thice*ltne_par(layer)%Ci +thair*LTNE_par(layer)%Ca)/thtot
+        up = (thl*ul+thair*ua)/(thl+thair) !+thice*ui
+        densp = (thl*rho_wat+thice*rho_ice+thair*rho_air)/thtot
       else
-       Cp = (thl*ltne_par(layer)%Cl+thice*ltne_par(layer)%Ci)/ vangen_ltne(pde(1), layer,  quadpnt)
-       up = thl*ul !+thice*ui
-       densp = (thl*rho_wat+thice*rho_ice)/ vangen_ltne(pde(1), layer,  quadpnt)
+       thtot = thice+thl
+       Cp = (thl*ltne_par(layer)%Cl+thice*ltne_par(layer)%Ci)/ thtot
+       up = ul !+thice*ui
+       densp = (thl*rho_wat+thice*rho_ice)/ thtot
       end if 
       
       A = 6*(1-ltne_par(layer)%Ths)/LTNE_par(layer)%diameter
@@ -574,8 +597,6 @@ module LTNE_fnc
     end function qsl_neg
     
     
-        
-    
     function T_m(pde_loc, layer, quadpnt, x) result(val)
       use typy
       use global_objs
@@ -584,14 +605,24 @@ module LTNE_fnc
       integer(kind=ikind), intent(in) :: layer
       type(integpnt_str), intent(in), optional :: quadpnt
       real(kind=rkind), dimension(:), intent(in), optional    :: x
-      real(kind=rkind) :: val, h, A, Re, Pr, thice, thl, Cp, up, densp
+      real(kind=rkind) :: val 
+      real(kind = rkind):: thair, Ths, thtot
       real(kind=rkind), dimension(3) :: flux
-      integer(kind=ikind) :: D
+      integer(kind=ikind) :: el_id
 
       if(air) then
         val = ltne_par(layer)%ths*pde(2)%getval(quadpnt)+(1-Ltne_par(layer)%Ths)*pde(3)%getval(quadpnt)     
       else
-        val = vangen_ltne(pde(1), layer, quadpnt)*pde(2)%getval(quadpnt)+(1-Ltne_par(layer)%Ths)*pde(3)%getval(quadpnt)     
+        thtot = vangen_ltne(pde(1), layer, quadpnt)
+        thair = Ltne_par(layer)%Ths - thtot
+        Ths = (1-Ltne_par(layer)%Ths)
+        if(quadpnt%element >75) then
+          el_id = elements%kolik
+        else
+          el_id = quadpnt%element
+        end if
+        val = thtot*pde(2)%getval(quadpnt)+ths*pde(3)%getval(quadpnt)+thair*T_air(el_id) 
+
       end if
 
     end function T_m

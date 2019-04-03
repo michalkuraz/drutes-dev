@@ -322,6 +322,21 @@ if(ln_obs>0){
   print(paste("plot of",ln_obs,"observation points created: water content vs. time"))
 }
 
+
+ln_obs=read_data_plot('out/obspt_RE_matrix-','drutes-dev/out/obspt_RE_matrix-'
+                      ,'.out',col1=1,col2=4,ylabs=expression(paste("darcian flux [L/T]",sep=""))
+                      ,xlabs="time [T]",'flux_point',idfix=0,lims=lims,legpos = legpos ,skip=5,k=1)
+if(ln_obs>0){
+  print(paste("plot of",ln_obs,"observation points created: water flux vs. time"))
+}
+
+
+ln_obs=read_data_plot('out/obspt_RE_matrix-','drutes-dev/out/obspt_RE_matrix-'
+                      ,'.out',col1=1,col2=5,ylabs=expression(paste("cumulative flux [L]",sep=""))
+                      ,xlabs="time [T]",'cumflux_point',idfix=0,lims=lims,legpos = legpos ,skip=5,k=1)
+if(ln_obs>0){
+  print(paste("plot of",ln_obs,"observation points created: cumulative flux vs. time"))
+}
 # ln_obs=read_data_plot('out/obspt_ADER_in_liquid-','drutes-dev/out/obspt_ADER_in_liquid-'
 #                       ,'.out',col1=1,col2=3,ylabs=expression(paste("concentration in liquid [M ",L^-3,"]",sep=""))
 #                       ,xlabs="time [T]",'conc_point',idfix=0,lims=lims,legpos = legpos ,skip=5,k=1)

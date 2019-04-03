@@ -5,7 +5,7 @@ module freeze_fnc
   use debug_tools
   use freeze_helper
   
-  public :: capacityhh, capacityhT,  diffhh, diffhT
+  public :: capacityhh, capacityhT,  diffhh, diffhT, Dirichlet_mass_bc
   public :: capacityTT, capacityTh, diffTT, convectTT, thermal_k, heat_flux_freeze, Dirichlet_Neumann_switch_bc
 
   
@@ -461,6 +461,72 @@ module freeze_fnc
         flux_length = norm2(matmul(thermal_diff(1:D, 1:D), gradT))
       end if
     end subroutine heat_flux_freeze
+    
+    
+    subroutine Dirichlet_mass_bc(pde_loc, el_id, node_order, value, code) 
+      use typy
+      use globals
+      use global_objs
+      use pde_objs
+      use re_globals
+
+      class(pde_str), intent(in) :: pde_loc
+      integer(kind=ikind), intent(in)  :: el_id, node_order
+      real(kind=rkind), intent(out), optional    :: value
+      integer(kind=ikind), intent(out), optional :: code
+     
+
+      integer(kind=ikind) :: i, edge_id, j
+      real(kind=rkind), dimension(3) :: gravflux, bcflux
+      real(kind=rkind) :: bcval, gfluxval, flux_length, infilt
+      integer :: i1
+      type(integpnt_str) :: quadpnt
+      integer(kind=ikind) :: layer
+      
+      if (present(value)) then
+        edge_id = nodes%edge(elements%data(el_id, node_order))
+        if (pde_loc%bc(edge_id)%file) then
+          do i=1, ubound(pde_loc%bc(edge_id)%series,1)
+            if (pde_loc%bc(edge_id)%series(i,1) > time) then
+              if (i > 1) then
+                j = i-1
+              else
+                j = i
+              end if
+              bcval = pde_loc%bc(edge_id)%series(j,2)
+              value = bcval
+              EXIT
+            end if
+          end do
+        else
+          quadpnt%type_pnt = "ndpt"
+          quadpnt%column = 1 ! otherwise column is random integer number
+          quadpnt%order = elements%data(el_id,node_order)
+          if(time_step > 0_rkind) then
+            call  all_fluxes(pde_loc, layer, quadpnt, flux_length = flux_length)
+            !flux_length = 1e-3_rkind
+          else
+            flux_length = 0
+            cumfilt = 0
+          end if
+          infilt = flux_length*time_step
+          cumfilt = cumfilt + infilt
+          bcval = pde_loc%bc(edge_id)%value-cumfilt
+          if(bcval <0) then
+            bcval = 0
+          end if
+          value = bcval
+        end if
+      end if
+      if (present(code)) then
+        if(bcval == 0) then
+          code = 2
+        else
+          code = 4
+        end if
+      end if
+
+    end subroutine Dirichlet_mass_bc
     
     subroutine Dirichlet_Neumann_switch_bc(pde_loc, el_id, node_order, value, code) 
       use typy

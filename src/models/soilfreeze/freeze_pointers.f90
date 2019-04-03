@@ -66,7 +66,14 @@ module freeze_pointers
       pde(1)%pde_fnc(2)%dispersion => diffhT
       
       pde(1)%flux => all_fluxes
-
+      do i=lbound(pde(1)%bc,1), ubound(pde(1)%bc,1)
+        select case(pde(1)%bc(i)%code)
+          case(6)
+            pde(1)%bc(i)%value_fnc => Dirichlet_mass_bc
+          case(7)
+            pde(1)%bc(i)%value_fnc => Dirichlet_Neumann_switch_bc
+        end select
+      end do
       pde(1)%initcond => wat_initcond
       
       rwcap => vangen_elast_fr

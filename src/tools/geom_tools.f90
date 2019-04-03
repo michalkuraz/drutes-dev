@@ -1072,7 +1072,6 @@ module geom_tools
         call fileread(input(i,:), fileid)
       end do
             
-
       do i=1, elements%kolik
         do j=1, ubound(elements%data,2)
           k = elements%data(i,j)

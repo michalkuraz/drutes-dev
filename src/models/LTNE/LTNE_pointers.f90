@@ -64,6 +64,8 @@ module LTNE_pointers
         select case(pde(1)%bc(i)%code)
           case(6)
             pde(1)%bc(i)%value_fnc => Dirichlet_mass_bc
+          case(7)
+            pde(1)%bc(i)%value_fnc => Dirichlet_Neumann_switch_bc
         end select
       end do
 
