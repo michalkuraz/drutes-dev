@@ -44,9 +44,23 @@ module kinfnc
       
       el = quadpnt%element
       
-      vector_out(1) = 1.49_rkind * sign(1.0_rkind, watershed_el(el)%sx) * sqrt(abs( watershed_el(el)%sx))/manning(layer)
+      select case (drutes_config%dimen)
       
-      vector_out(2) = 1.49_rkind * sign(1.0_rkind, watershed_el(el)%sy) * sqrt(abs( watershed_el(el)%sy))/manning(layer)
+        case(1)
+          vector_out(1) = 1.49_rkind * sign(1.0_rkind, watershed_el(el)%sx) * sqrt(abs( watershed_el(el)%sx))/manning(layer)
+      
+        case(2)
+      
+          vector_out(1) = 1.49_rkind * sign(1.0_rkind, watershed_el(el)%sx) * sqrt(abs( watershed_el(el)%sx))/manning(layer)
+          
+          vector_out(2) = 1.49_rkind * sign(1.0_rkind, watershed_el(el)%sy) * sqrt(abs( watershed_el(el)%sy))/manning(layer)
+          
+        case(3)
+          print *, "kinematic wave has no sense for three-dimensions"
+          print *, "exited from kinfnc::kinconvect"
+          ERROR STOP
+          
+      end select
       
     end subroutine kinconvect
     
@@ -96,6 +110,7 @@ module kinfnc
       use typy
       use global_objs
       use pde_objs
+      use kinglobs
       
       class(pde_str), intent(in) :: pde_loc
       !> value of the nonlinear function
@@ -106,11 +121,23 @@ module kinfnc
       integer(kind=ikind), intent(in) :: layer
       !> return value
       real(kind=rkind)                :: val
+      integer(kind=ikind), save :: position = 2
+      integer(kind=ikind) :: i
       
       
-      
-     
+      if (position /= raindata(1)%series(1)%pos) then
+        do i=position, raindata(1)%series(1)%pos
+          if (raindata(1)%series(1)%data(i-1) < time .and. raindata(1)%series(1)%data(i) > time) then
+            position = i
+            EXIT
+          else if (raindata(1)%series(1)%data(i) < time .and. i ==  raindata(1)%series(1)%pos) then
+            position = raindata(1)%series(1)%pos
+          end if
+        end do
+      end if
     
+      val = -raindata(el2pt(quadpnt%element))%series(2)%data(position)
+        
     
     end function rainfall
     

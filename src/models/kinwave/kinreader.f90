@@ -120,12 +120,14 @@ module kinreader
       use core_tools
       use geom_tools
       use global_objs
+      use debug_tools
       
       class(pde_str), intent(in out) :: pde_loc
       integer :: file_kinematix, ierr, filerain, frainpts
       integer(kind=ikind) :: n, i, counter, j, k
       character(len=512) :: msg
       real(kind=rkind) :: tmp
+      real(kind=rkind), dimension(:), allocatable :: tmp_array
       real(kind=rkind), dimension(:), allocatable :: pts, distance
       
       
@@ -221,6 +223,25 @@ module kinreader
         end do
         el2pt(i) = minloc(distance,1)        
       end do
+      
+      open(newunit=filerain, file="drutes.conf/kinwave/rain.vals", status="old", action="read", iostat=ierr)
+      
+      allocate(tmp_array(ubound(raindata,1)+1))
+      
+      do 
+        call comment(filerain)
+        read(unit=filerain, fmt=*, iostat=ierr) tmp_array
+        if (ierr == 0) then
+          do i=1, ubound(raindata,1)
+            call raindata(i)%series(1)%fill(tmp_array(1))
+            call raindata(i)%series(2)%fill(tmp_array(i+1))
+          end do
+        else
+          EXIT
+        end if
+      end do
+      
+              
         
     
     end subroutine kininit

@@ -16,6 +16,7 @@
 
 module kinglobs
   use typy
+  use global_objs
   
   type, public :: surfacend_str
     real(kind=rkind), dimension(3) :: xyz
@@ -35,7 +36,7 @@ module kinglobs
   
   type, public :: raindata_str
     real(kind=rkind), dimension(2) :: xy
-    real(kind=rkind), dimension(:,:), allocatable :: series
+    type(smartarray_real), dimension(2) :: series
   end type raindata_str
   
   type(raindata_str), dimension(:), allocatable :: raindata
