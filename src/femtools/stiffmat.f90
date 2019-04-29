@@ -206,7 +206,9 @@ module stiffmat
 	  
           ii = i + (iproc-1)*limits
           
-          bside(ii) = suma*dt*elements%areas(el_id)
+          bside(ii) = suma*dt*elements%areas(el_id)/gauss_points%area
+          
+    
           
         end do
       end do
