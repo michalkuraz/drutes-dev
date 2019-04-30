@@ -363,7 +363,7 @@ module freeze_helper
         ts = freeze_par(layer)%Ths
         C = a*m*n*(-tr + ts)*(-(a*h))**(-1 + n)*(1 + (-(a*h))**n)**(-1 - m)
       else
-        E = 0
+        E = 1e-9
         RETURN
       end if
 
@@ -460,7 +460,7 @@ module freeze_helper
       D = drutes_config%dimen
       select case (freeze_par(1_ikind)%icondtypeRE)
         case("input")
-          call map1d2dJ(pde_loc,"drutes.conf/freeze.conf/hini.in")
+          call map1d2dJ(pde_loc,"drutes.conf/freeze.conf/hini.in", correct_h = .true.)
       end select
       
       D = drutes_config%dimen
@@ -506,7 +506,7 @@ module freeze_helper
       D = drutes_config%dimen
       select case (freeze_par(1_ikind)%icondtype)
         case("input")
-          call map1d2dJ(pde_loc,"drutes.conf/freeze/Tini.in")
+          call map1d2dJ(pde_loc,"drutes.conf/freeze/Tini.in", correct_h = .false.)
         case("value")
           do i=1, elements%kolik
             layer = elements%material(i)

@@ -686,6 +686,7 @@ module postpro
       write(unit=ids(1), fmt=*) nodes%kolik
       do i=1, nodes%kolik
         quadpnt%order = i
+        quadpnt%preproc=.true.
         write(unit=ids(1), fmt=*) i, pde(proc)%getval(quadpnt)
       end do
       write(unit=ids(1), fmt="(a)") "$EndNodeData"

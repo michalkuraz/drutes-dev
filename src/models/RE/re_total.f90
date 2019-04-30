@@ -53,7 +53,7 @@ module re_total
         D = drutes_config%dimen
              
         call getcoor(quadpnt, xyz(1:D))
-        
+
         if (drutes_config%dimen>1) then
           val = getvalp1(pde_loc, quadpnt) - xyz(D)
         else
@@ -912,7 +912,7 @@ module re_total
               D = drutes_config%dimen
       select case (vgset(1_ikind)%icondtype)
         case("input")
-          call map1d2dJ(pde_loc,"drutes.conf/water.conf/hini.in")
+          call map1d2dJ(pde_loc,"drutes.conf/water.conf/hini.in", correct_h = .true.)
       end select
       
       D = drutes_config%dimen

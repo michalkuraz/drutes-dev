@@ -384,7 +384,7 @@ module LTNE_helper
       D = drutes_config%dimen
       select case (LTNE_par(1_ikind)%icondtypeRE)
         case("input")
-          call map1d2dJ(pde_loc,"drutes.conf/LTNE/hini.in")
+          call map1d2dJ(pde_loc,"drutes.conf/LTNE/hini.in", correct_h = .true.)
       end select
       
       D = drutes_config%dimen
@@ -430,7 +430,7 @@ module LTNE_helper
       D = drutes_config%dimen
       select case (LTNE_par(1_ikind)%icondtype)
         case("input")
-          call map1d2dJ(pde_loc,"drutes.conf/LTNE/Tini_l.in")
+          call map1d2dJ(pde_loc,"drutes.conf/LTNE/Tini_l.in", correct_h = .false.)
         case("value")
           do i=1, elements%kolik
             layer = elements%material(i)
@@ -466,7 +466,7 @@ module LTNE_helper
       D = drutes_config%dimen
       select case (LTNE_par(1_ikind)%icondtypeTs)
         case("input")
-          call map1d2dJ(pde_loc,"drutes.conf/LTNE/Tini_s.in")
+          call map1d2dJ(pde_loc,"drutes.conf/LTNE/Tini_s.in", correct_h = .false.)
         case("value")
           do i=1, elements%kolik
             layer = elements%material(i)
@@ -483,16 +483,20 @@ module LTNE_helper
             end do   
           end do
       end select
-      if(allocated(T_air))then
-      else
-        allocate(T_air(nodes%kolik))
+    
+    
+      if(.not.air) then
+        if(allocated(T_air))then
+        else
+            allocate(T_air(nodes%kolik))
+        end if
+        do i=1, elements%kolik
+          do j=1, ubound(elements%data,2)
+            k = elements%data(i,j)
+            T_air(k) = pde_loc%solution(k) 
+    end do   
+        end do
       end if
-      do i=1, elements%kolik
-        do j=1, ubound(elements%data,2)
-          k = elements%data(i,j)
-          T_air(k) = pde_loc%solution(k) 
-        end do   
-      end do
     end subroutine temp_s_initcond
     
     subroutine Kliquid_temp(pde_loc, layer, quadpnt, x, T, tensor, scalar) 

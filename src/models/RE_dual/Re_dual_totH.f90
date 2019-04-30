@@ -81,7 +81,7 @@ module dual_por
         case("m")
           select case (vgmatrix(1_ikind)%icondtype)
               case("input")
-                call map1d2dJ(pde_loc,"drutes.conf/REdual/hinim.in")
+                call map1d2dJ(pde_loc,"drutes.conf/REdual/hinim.in", correct_h = .true.)
           end select
           do i=1, elements%kolik
             layer = elements%material(i)
@@ -106,7 +106,7 @@ module dual_por
         case("f")
           select case (vgfracture(1_ikind)%icondtype)
             case("input")
-              call map1d2dJ(pde_loc,"drutes.conf/REdual/hinif.in")
+              call map1d2dJ(pde_loc,"drutes.conf/REdual/hinif.in", correct_h = .true.)
             end select
 
           do i=1, elements%kolik

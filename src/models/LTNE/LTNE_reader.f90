@@ -258,7 +258,7 @@ module LTNE_read
             case(1_ikind,0_ikind)
               CONTINUE
             case default
-              print *, "you have specified wrong input for freezing point depression"
+              print *, "you have specified wrong input for qlt"
               print *, "the allowed options are:"
               print *, "                        1 = yes"
               print *, "                        0 = no"

@@ -1124,7 +1124,7 @@ module geom_tools
     end subroutine map1d2d
     
     
-    subroutine map1d2dJ(pde_loc,filename)
+    subroutine map1d2dJ(pde_loc,filename, correct_h)
       use typy
       use global_objs
       use globals
@@ -1135,6 +1135,7 @@ module geom_tools
       
       character(len=*), intent(in) :: filename
       class(pde_str), intent(in out) :: pde_loc
+      logical, intent (in) :: correct_h
       integer :: fileid, ierr
       integer(kind=ikind) :: i, counter, k, l, m, proc, j, ii, D
       real(kind=rkind), dimension(:,:), allocatable :: input
@@ -1147,7 +1148,6 @@ module geom_tools
       
       
       open(unit=fileid, file=cut(filename), action="read", iostat=ierr)
-      print*, filename
       if (ierr /= 0) then
         print *, "unable to open file with the vertical distribution of the initial condition, exiting...."
         print *, "called from map1d2dJ::drutes_init"
@@ -1210,6 +1210,7 @@ module geom_tools
                   
                   grad = (input(ii+1,3) - input(ii,3))/(input(ii+1,2) - input(ii,2))
                   value =  input(ii,3) + grad*(nodes%data(k,D) - input(ii,2))
+
                   val_defined=.true.
                   if (isnan(value)) then
                     call file_error(fileid, "bad input file with initial conditions")
@@ -1232,7 +1233,10 @@ module geom_tools
                 end if
               end if
             end if
-            pde_loc%solution(k) =  value+nodes%data(k,D) 
+            pde_loc%solution(k) =  value 
+            if(correct_h) then
+              pde_loc%solution(k) =  pde_loc%solution(k)+nodes%data(k,D) 
+            end if 
         end do
       end do
         

@@ -1975,7 +1975,7 @@ module RE_constitutive
         D = drutes_config%dimen
         select case (vgset(1_ikind)%icondtype)
           case("input")
-            call map1d2dJ(pde_loc,"drutes.conf/water.conf/hini.in")
+            call map1d2dJ(pde_loc,"drutes.conf/water.conf/hini.in", correct_h = .false.)
         end select
         
         do i=1, elements%kolik
