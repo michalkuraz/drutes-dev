@@ -90,24 +90,35 @@ module kinreader
       allocate(watershed_el(elements%kolik))
       
       
-      do i=1, nodes%kolik
-        watershed_nd(i)%xyz(1:2) = nodes%data(i,:)
-        watershed_nd(i)%xyz(3) = nodes%data(i,1)**2*0.01 + nodes%data(i,2)**2*0.02
-      end do
+      select case(drutes_config%dimen)
+        case(2)
+          do i=1, nodes%kolik
+            watershed_nd(i)%xyz(1:2) = nodes%data(i,:)
+            watershed_nd(i)%xyz(3) = nodes%data(i,1)*0.01 !+ nodes%data(i,2)**2*0.02
+          end do
+          do i=1, elements%kolik
+            a = watershed_nd(elements%data(i,1))%xyz
+            b = watershed_nd(elements%data(i,2))%xyz
+            c = watershed_nd(elements%data(i,3))%xyz
+        
+            call plane_derivative(a,b,c, watershed_el(i)%sx, watershed_el(i)%sy)
+          end do
+        case(1)
+          do i=1, nodes%kolik
+            watershed_nd(i)%xyz(1) = nodes%data(i,1)
+            watershed_nd(i)%xyz(2) = nodes%data(i,1)*0.1
+          end do
+          do i=1, elements%kolik
+            watershed_el(i)%sx = (watershed_nd(elements%data(i,2))%xyz(2) - watershed_nd(elements%data(i,1))%xyz(2)) / &
+              (nodes%data(elements%data(i,2),1) - nodes%data(elements%data(i,1),1))
+          end do
+      end select
+          
+    
       
       watershed_el(:)%cover = 1
       
-      do i=1, elements%kolik
-        a = watershed_nd(elements%data(i,1))%xyz
-        b = watershed_nd(elements%data(i,2))%xyz
-        c = watershed_nd(elements%data(i,3))%xyz
-        
-        call plane_derivative(a,b,c, watershed_el(i)%sx, watershed_el(i)%sy)
-        
-      end do
-      
 
-      
 
     
     end subroutine gen_catchment
@@ -206,6 +217,7 @@ module kinreader
       allocate(raindata(counter))
       
       do i=1, ubound(raindata,1)
+        allocate(raindata(i)%xy(drutes_config%dimen))
         call fileread(raindata(i)%xy, frainpts, checklen=.true.)
       end do
       

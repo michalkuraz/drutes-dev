@@ -48,8 +48,10 @@ module kinfnc
       el = quadpnt%element
       
       hsurf = max(0.0_rkind, pde_loc%getval(quadpnt))
+! hsurf = 0.1
       
       m = 5.0_rkind/3
+  
       
       select case (drutes_config%dimen)
       
@@ -147,6 +149,7 @@ module kinfnc
       end if
     
       val = raindata(el2pt(quadpnt%element))%series(position,2)
+      
         
     
     end function rainfall

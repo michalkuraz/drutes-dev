@@ -47,7 +47,7 @@ module kinpointer
       
       pde_loc%pde_fnc(pde_loc%order)%elasticity => kin_elast
       
-      pde_loc%diffusion = .false.
+!       pde_loc%diffusion = .false.
       
       
     end subroutine kinwavelinker
