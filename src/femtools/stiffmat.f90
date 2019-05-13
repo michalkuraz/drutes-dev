@@ -173,6 +173,7 @@ module stiffmat
 
      
      stiff_mat = stiff_mat/gauss_points%area*elements%areas(el_id)
+     
           
     end subroutine build_stiff_np
     
@@ -246,10 +247,10 @@ module stiffmat
               quadpnt%column = 1
               hp = pde(iproc)%getval(quadpnt)
               quadpnt%column = 2
-              source = -pde(iproc)%pde_fnc(iproc)%zerord(pde(iproc), layer, quadpnt=quadpnt)
+              source = pde(iproc)%pde_fnc(iproc)%zerord(pde(iproc), layer, quadpnt=quadpnt)
               call pde(iproc)%pde_fnc(iproc)%convection(pde(iproc), layer, quadpnt, &
                       vector_out=conv(1:top))
-              suma = suma + ((hp + source) *(base_fnc(1,l)+dot_product(dt*conv(1:top), v(1:top,1))))* &
+              suma = suma + (hp + source) *(base_fnc(1,l)+dot_product(dt*conv(1:top), v(1:top,1)))* &
                     gauss_points%weight(l)  
             end do
             
@@ -261,6 +262,7 @@ module stiffmat
         end if
       end do
     
+      
 
     end subroutine build_bvect
 

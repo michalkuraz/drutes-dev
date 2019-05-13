@@ -80,6 +80,7 @@ module kinreader
       use kinglobs
       use globals
       use geom_tools
+      use debug_tools
       
       integer(kind=ikind) :: i
       real(kind=rkind), dimension(3) :: a,b,c
@@ -91,7 +92,7 @@ module kinreader
       
       do i=1, nodes%kolik
         watershed_nd(i)%xyz(1:2) = nodes%data(i,:)
-        watershed_nd(i)%xyz(3) = nodes%data(i,1)**2*0.001 + nodes%data(i,2)**2*0.002
+        watershed_nd(i)%xyz(3) = nodes%data(i,1)**2*0.01 + nodes%data(i,2)**2*0.02
       end do
       
       watershed_el(:)%cover = 1
@@ -104,6 +105,8 @@ module kinreader
         call plane_derivative(a,b,c, watershed_el(i)%sx, watershed_el(i)%sy)
         
       end do
+      
+
       
 
     
@@ -224,26 +227,38 @@ module kinreader
         el2pt(i) = minloc(distance,1)        
       end do
       
-      open(newunit=filerain, file="drutes.conf/kinwave/rain.vals", status="old", action="read", iostat=ierr)
+      
+      open(newunit=filerain, file="drutes.conf/kinwave/rain.in", status="old", action="read", iostat=ierr)
       
       allocate(tmp_array(ubound(raindata,1)+1))
       
+      counter = 0
       do 
         call comment(filerain)
         read(unit=filerain, fmt=*, iostat=ierr) tmp_array
         if (ierr == 0) then
-          do i=1, ubound(raindata,1)
-            call raindata(i)%series(1)%fill(tmp_array(1))
-            call raindata(i)%series(2)%fill(tmp_array(i+1))
-          end do
+          counter = counter + 1
         else
           EXIT
         end if
       end do
       
-              
-        
-    
+      do i=1, ubound(raindata,1)
+        allocate(raindata(i)%series(counter,2))
+      end do
+      
+      close(filerain)
+      
+      open(newunit=filerain, file="drutes.conf/kinwave/rain.in", status="old", action="read", iostat=ierr)
+      
+      do i=1, ubound(raindata(1)%series,1)
+        call fileread(tmp_array, filerain, checklen=.true.)
+        do j=1, ubound(raindata,1)
+          raindata(j)%series(i,1) = tmp_array(1)
+          raindata(j)%series(i,2) = tmp_array(1+j)
+        end do
+      end do
+
     end subroutine kininit
 
 end module kinreader

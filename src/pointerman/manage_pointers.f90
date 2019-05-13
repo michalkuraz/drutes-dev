@@ -98,7 +98,7 @@ module manage_pointers
       
     
         case("REtest")
-          write(unit=drutes_config%fullname, fmt=*) "DRUtES debugs itself"
+          write(unit=drutes_config%fullname, fmt=*) "(debugs) itself"
           pde_common%processes = 3
           call pde_constructor(3_ikind)
           do i=1, 3
@@ -109,7 +109,7 @@ module manage_pointers
         
           call heat_processes(pde_common%processes)
           call pde_constructor(pde_common%processes)
-          write(unit=drutes_config%fullname, fmt=*) "DRUtES solves heat conduction with convection"
+          write(unit=drutes_config%fullname, fmt=*) "heat conduction with convection"
           call heat(pde(:))
           
           
@@ -117,16 +117,15 @@ module manage_pointers
         
           call kinwaveprocs(pde_common%processes)
           call pde_constructor(pde_common%processes)
-          write(unit=drutes_config%fullname, fmt=*) "DRUtES solves kinematic wave equation for real catchments"
+          write(unit=drutes_config%fullname, fmt=*) "kinematic wave equation for real catchments"
           call kinwavelinker(pde(1))
-          
           
 	  
         case("freeze")
         
           call freeze_processes(pde_common%processes)
           call pde_constructor(pde_common%processes)
-          write(unit = drutes_config%fullname, fmt=*) "DRUtES solves coupled water and heat flow considering freezing and melting"
+          write(unit = drutes_config%fullname, fmt=*) "coupled water and heat flow considering freezing and melting"
           call frz_pointers()
           
         case default

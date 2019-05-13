@@ -37,19 +37,17 @@ module kinpointer
       
       pde_loc%pde_fnc(pde_loc%order)%convection => kinconvect
       
-      allocate(pde_loc%bc(101:102))
+      allocate(pde_loc%bc(101:101))
       
       pde_loc%bc(101)%value_fnc => kinbor
-      
-      pde_loc%bc(102)%value_fnc => kinbor
-      
+    
       pde_loc%initcond => kinematixinit
       
       pde_loc%pde_fnc(pde_loc%order)%zerord => rainfall
       
-      pde_loc%diffusion = .false.
+      pde_loc%pde_fnc(pde_loc%order)%elasticity => kin_elast
       
-   
+      pde_loc%diffusion = .false.
       
       
     end subroutine kinwavelinker

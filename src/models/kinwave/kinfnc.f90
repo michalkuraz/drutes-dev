@@ -15,6 +15,8 @@
 
 module kinfnc
 
+  public :: kinconvect, kinbor, kinematixinit, rainfall, kin_elast
+
   contains 
     subroutine kinconvect(pde_loc, layer, quadpnt, x, vector_in, vector_out, scalar)
       use typy
@@ -41,19 +43,27 @@ module kinfnc
       real(kind=rkind), intent(out), optional :: scalar
       
       integer(kind=ikind) :: el
+      real(kind=rkind) :: hsurf, m
       
       el = quadpnt%element
+      
+      hsurf = max(0.0_rkind, pde_loc%getval(quadpnt))
+      
+      m = 5.0_rkind/3
       
       select case (drutes_config%dimen)
       
         case(1)
-          vector_out(1) = 1.49_rkind * sign(1.0_rkind, watershed_el(el)%sx) * sqrt(abs( watershed_el(el)%sx))/manning(layer)
+          vector_out(1) = 1.49_rkind * sign(1.0_rkind, watershed_el(el)%sx) * & 
+                          sqrt(abs( watershed_el(el)%sx))/manning(layer)*m*hsurf**(m-1)
       
         case(2)
       
-          vector_out(1) = 1.49_rkind * sign(1.0_rkind, watershed_el(el)%sx) * sqrt(abs( watershed_el(el)%sx))/manning(layer)
+          vector_out(1) = 1.49_rkind * sign(1.0_rkind, watershed_el(el)%sx) * & 
+                          sqrt(abs( watershed_el(el)%sx))/manning(layer)*m*hsurf**(m-1)
           
-          vector_out(2) = 1.49_rkind * sign(1.0_rkind, watershed_el(el)%sy) * sqrt(abs( watershed_el(el)%sy))/manning(layer)
+          vector_out(2) = 1.49_rkind * sign(1.0_rkind, watershed_el(el)%sy) * & 
+                          sqrt(abs( watershed_el(el)%sy))/manning(layer)*m*hsurf**(m-1)
           
         case(3)
           print *, "kinematic wave has no sense for three-dimensions"
@@ -121,25 +131,60 @@ module kinfnc
       integer(kind=ikind), intent(in) :: layer
       !> return value
       real(kind=rkind)                :: val
-      integer(kind=ikind), save :: position = 2
+      integer(kind=ikind), save :: position = 1
       integer(kind=ikind) :: i
       
       
-      if (position /= raindata(1)%series(1)%pos) then
-        do i=position, raindata(1)%series(1)%pos
-          if (raindata(1)%series(1)%data(i-1) < time .and. raindata(1)%series(1)%data(i) > time) then
+       if (position < ubound(raindata(1)%series,1)) then
+        do i=position, ubound(raindata(1)%series,1)-1
+           if (raindata(1)%series(i,1) < time .and. raindata(1)%series(i+1,1) > time) then
             position = i
             EXIT
-          else if (raindata(1)%series(1)%data(i) < time .and. i ==  raindata(1)%series(1)%pos) then
-            position = raindata(1)%series(1)%pos
+          else if (raindata(1)%series(i+1,1) < time .and. i == ubound(raindata(1)%series,1) ) then
+            position = i
           end if
         end do
       end if
     
-      val = -raindata(el2pt(quadpnt%element))%series(2)%data(position)
+      val = raindata(el2pt(quadpnt%element))%series(position,2)
         
     
     end function rainfall
+    
+    
+    function kin_elast(pde_loc,layer, quadpnt, x) result(E)
+      use typy
+      use heat_globals
+      use pde_objs
+      use core_tools
+
+      class(pde_str), intent(in) :: pde_loc 
+      integer(kind=ikind), intent(in) :: layer
+      !> pressure head
+      real(kind=rkind), intent(in), dimension(:),  optional :: x
+      !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
+      type(integpnt_str), intent(in), optional :: quadpnt
+      real(kind=rkind) :: h
+      !> resulting system elasticity
+      real(kind=rkind) :: E
+
+       
+      
+      if (present(quadpnt) .and. present(x)) then
+        print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
+        print *, "exited from heat_fnc::heat_elast"
+        ERROR stop
+      else if (.not. present(quadpnt) .and. .not. present(x)) then
+        print *, "ERROR: you have not specified either integ point or x value"
+        print *, "exited from heat_fnc::heat_elast"
+        ERROR stop
+      end if
+
+
+      E = 1.0_rkind
+      
+
+    end function kin_elast 
     
 
 

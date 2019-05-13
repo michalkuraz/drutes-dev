@@ -112,6 +112,7 @@ program main
     call write_log("number of nodes:", int1=nodes%kolik, text2="number of elements:", int2=elements%kolik)
         
     call set_pointers()
+  
  
     call init_observe()
    
@@ -125,9 +126,10 @@ program main
      if (objval%compute) call objval%read_config()
 
   end if
+
   
   call write_log("DRUtES solves ", text2=adjustl(trim(drutes_config%fullname)))
-
+  
 
   call solve_pde(success)    
 
