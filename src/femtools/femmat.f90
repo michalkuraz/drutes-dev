@@ -90,9 +90,6 @@ module femmat
           ierr=0
         end if
 		  
-        call printmtx(nodes%data)
-        
-        call printmtx(elements%data) ; stop
 		  
         if (drutes_config%dimen >  1) then
           write(unit=file_itcg, fmt = *) time, pcg_it, reps_err
@@ -100,7 +97,7 @@ module femmat
           call diag_precond(a=spmatrix, x=pde_common%xvect(1:fin,3), mode=-1)
         end if
         
-        call printmtx(pde_common%xvect) ; call wait()
+!         call printmtx(pde_common%xvect) ; call wait()
 
         error = norm2(pde_common%xvect(1:fin,2)-pde_common%xvect(1:fin,3))/ubound(pde_common%xvect,1)
         

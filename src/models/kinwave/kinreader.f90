@@ -230,6 +230,11 @@ module kinreader
       
       open(newunit=filerain, file="drutes.conf/kinwave/rain.in", status="old", action="read", iostat=ierr)
       
+      if (ierr /= 0) then 
+        print *, "unable to open drutes.conf/kinwave/rain.in, missing file"
+        ERROR STOP
+      end if
+      
       allocate(tmp_array(ubound(raindata,1)+1))
       
       counter = 0
@@ -242,6 +247,7 @@ module kinreader
           EXIT
         end if
       end do
+      
       
       do i=1, ubound(raindata,1)
         allocate(raindata(i)%series(counter,2))
