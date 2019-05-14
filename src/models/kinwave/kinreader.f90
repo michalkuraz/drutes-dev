@@ -94,7 +94,7 @@ module kinreader
         case(2)
           do i=1, nodes%kolik
             watershed_nd(i)%xyz(1:2) = nodes%data(i,:)
-            watershed_nd(i)%xyz(3) = nodes%data(i,1)*0.01 !+ nodes%data(i,2)**2*0.02
+            watershed_nd(i)%xyz(3) = nodes%data(i,2)*0.01 !+ nodes%data(i,2)**2*0.02
           end do
           do i=1, elements%kolik
             a = watershed_nd(elements%data(i,1))%xyz
@@ -112,6 +112,8 @@ module kinreader
             watershed_el(i)%sx = (watershed_nd(elements%data(i,2))%xyz(2) - watershed_nd(elements%data(i,1))%xyz(2)) / &
               (nodes%data(elements%data(i,2),1) - nodes%data(elements%data(i,1),1))
           end do
+          
+          print *, 
       end select
           
     
@@ -184,10 +186,16 @@ module kinreader
       
       allocate(manning(n))
       
+      allocate(oneDslopes(n))
+      
       call fileread(i, file_kinematix, ranges=(/n,n/), errmsg=cut(msg))
       
       do i=1, n
         call fileread(manning(i), file_kinematix, ranges=(/epsilon(manning(1)), huge(manning(1))/))
+      end do
+      
+      do i=1, n
+        call fileread(oneDslopes(i), file_kinematix, ranges=(/epsilon(oneDslopes(1)), huge(oneDslopes(1))/))
       end do
       
       open(newunit=frainpts, file="drutes.conf/kinwave/rain.pts", status="old", action="read", iostat=ierr)

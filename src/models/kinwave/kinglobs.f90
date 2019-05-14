@@ -33,6 +33,8 @@ module kinglobs
   
   real(kind=rkind), dimension(:), allocatable :: manning
   
+  real(kind=rkind), dimension(:), allocatable :: oneDslopes
+  
   
   type, public :: raindata_str
     real(kind=rkind), dimension(:), allocatable :: xy

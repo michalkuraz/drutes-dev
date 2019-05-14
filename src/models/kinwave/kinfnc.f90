@@ -48,7 +48,7 @@ module kinfnc
       el = quadpnt%element
       
       hsurf = max(0.0_rkind, pde_loc%getval(quadpnt))
-! hsurf = 0.1
+
       
       m = 5.0_rkind/3
   
@@ -56,16 +56,17 @@ module kinfnc
       select case (drutes_config%dimen)
       
         case(1)
-          vector_out(1) = 1.49_rkind * sign(1.0_rkind, watershed_el(el)%sx) * & 
+          vector_out(1) = -1.49_rkind * sign(1.0_rkind, watershed_el(el)%sx) * & 
                           sqrt(abs( watershed_el(el)%sx))/manning(layer)*m*hsurf**(m-1)
       
         case(2)
       
-          vector_out(1) = 1.49_rkind * sign(1.0_rkind, watershed_el(el)%sx) * & 
+          vector_out(1) = -1.49_rkind * sign(1.0_rkind, watershed_el(el)%sx) * & 
                           sqrt(abs( watershed_el(el)%sx))/manning(layer)*m*hsurf**(m-1)
           
-          vector_out(2) = 1.49_rkind * sign(1.0_rkind, watershed_el(el)%sy) * & 
+          vector_out(2) = -1.49_rkind * sign(1.0_rkind, watershed_el(el)%sy) * & 
                           sqrt(abs( watershed_el(el)%sy))/manning(layer)*m*hsurf**(m-1)
+                          
           
         case(3)
           print *, "kinematic wave has no sense for three-dimensions"
