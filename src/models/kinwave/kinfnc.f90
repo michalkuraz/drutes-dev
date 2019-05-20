@@ -100,7 +100,7 @@ module kinfnc
 
       
       if (present(code)) then
-        code = 2
+        code = 1
       end if
   
     end subroutine kinbor

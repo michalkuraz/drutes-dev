@@ -94,7 +94,7 @@ module kinreader
         case(2)
           do i=1, nodes%kolik
             watershed_nd(i)%xyz(1:2) = nodes%data(i,:)
-            watershed_nd(i)%xyz(3) = nodes%data(i,2)*0.01 !+ nodes%data(i,2)**2*0.02
+            watershed_nd(i)%xyz(3) = nodes%data(i,2)**2*0.001 + nodes%data(i,2)**2*0.02
           end do
           do i=1, elements%kolik
             a = watershed_nd(elements%data(i,1))%xyz
@@ -113,7 +113,6 @@ module kinreader
               (nodes%data(elements%data(i,2),1) - nodes%data(elements%data(i,1),1))
           end do
           
-          print *, 
       end select
           
     
