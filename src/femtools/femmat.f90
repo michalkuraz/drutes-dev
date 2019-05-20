@@ -97,7 +97,7 @@ module femmat
           call diag_precond(a=spmatrix, x=pde_common%xvect(1:fin,3), mode=-1)
         end if
         
-!          call printmtx(pde_common%xvect) ; call wait()
+         call printmtx(pde_common%xvect) ; call wait()
 
         error = norm2(pde_common%xvect(1:fin,2)-pde_common%xvect(1:fin,3))/ubound(pde_common%xvect,1)
         
@@ -198,7 +198,10 @@ module femmat
 
        call pde_common%time_integ(i)
        
+!        call printmtx(stiff_mat) ; call wait()
 
+! call printmtx(bside) ; call wait()
+       
        stiff_mat = stiff_mat + cap_mat
         
        call in2global(i,spmatrix, pde_common%bvect)

@@ -157,7 +157,7 @@ module stiffmat
                   quadpnt%order = l
                   call pde(iproc)%pde_fnc(iproc)%convection(pde(iproc), layer(iproc, iproc), quadpnt, &
                     vector_out=conv(1:top))
-                  csum = ((base_fnc(i,l) + dt*dot_product(conv(1:top), v(1:top,1)))* &
+                  csum = csum + ((base_fnc(i,l) + dt*dot_product(conv(1:top), v(1:top,1)))* &
                           (base_fnc(j,l) + dt*dot_product(conv(1:top), u(1,1:top))))* &
                           gauss_points%weight(l)
                  end do
@@ -238,10 +238,11 @@ module stiffmat
           end do
         else
           layer = elements%material(el_id)
-          suma = 0
           
           do i=1, ubound(stiff_mat,1)/ ubound(pde,1)
             v(1:top,1) = elements%ders(el_id,i,1:top)
+            suma = 0
+
             do l=1,  ubound(gauss_points%weight,1)
               quadpnt%order = l
               quadpnt%column = 1
@@ -250,7 +251,7 @@ module stiffmat
               source = pde(iproc)%pde_fnc(iproc)%zerord(pde(iproc), layer, quadpnt=quadpnt)
               call pde(iproc)%pde_fnc(iproc)%convection(pde(iproc), layer, quadpnt, &
                       vector_out=conv(1:top))
-              suma = suma + (hp + source) *(base_fnc(1,l)+dot_product(dt*conv(1:top), v(1:top,1)))* &
+              suma = suma + (hp + dt*source) *(base_fnc(1,l)+dot_product(dt*conv(1:top), v(1:top,1)))* &
                     gauss_points%weight(l)  
             end do
             
