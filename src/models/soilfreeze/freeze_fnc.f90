@@ -15,7 +15,7 @@ module freeze_fnc
   
   contains
     !> Capacity term due to pressure head for flow model
-    !> so pde(1)
+    !> so pde(wat)
     function capacityhh(pde_loc, layer, quadpnt, x) result(val)
       use typy
       use global_objs
@@ -42,7 +42,7 @@ module freeze_fnc
     end function capacityhh
                  
     !> Capacity term due to temperature for flow model
-    !> so pde(1)
+    !> so pde(wat)
     function capacityhT(pde_loc, layer, quadpnt, x) result(val)
       use typy
       use global_objs
@@ -61,7 +61,7 @@ module freeze_fnc
     
       real(kind=rkind) :: temp
     
-      temp = pde(2)%getval(quadpnt)+273.15_rkind
+      temp = pde(heat_proc)%getval(quadpnt)+273.15_rkind
       if (iceswitch(quadpnt)) then
         val = (rho_wat-rho_ice)/rho_wat*&
         rwcap(pde_loc, layer, x=(/hl(pde_loc, layer, quadpnt)/)) * Lf/temp/grav
@@ -72,7 +72,7 @@ module freeze_fnc
     end function capacityhT
 
     !> diffusion due to pressure head for flow model
-    !> so pde(1)
+    !> so pde(wat)
     subroutine diffhh(pde_loc, layer, quadpnt, x, tensor, scalar)
       use typy
       use global_objs
@@ -91,7 +91,7 @@ module freeze_fnc
       
       if (present(tensor)) then
         if(present(quadpnt)) then 
-          call mualem_fr(pde_loc, layer, x = (/hl(pde(1), layer, quadpnt)/), tensor = tensor)
+          call mualem_fr(pde_loc, layer, x = (/hl(pde(wat), layer, quadpnt)/), tensor = tensor)
           tensor = 10**(-Omega*Q_reduction(layer, quadpnt))*tensor
         end if
         if (present(x)) then
@@ -105,7 +105,7 @@ module freeze_fnc
     end subroutine diffhh
     
     !> diffusion due to temperature for flow model
-    !> so pde(1)
+    !> so pde(wat)
     subroutine diffhT(pde_loc, layer, quadpnt, x, tensor, scalar)
       use typy
       use global_objs
@@ -128,11 +128,11 @@ module freeze_fnc
       
       D = drutes_config%dimen
 
-      temp = pde(2)%getval(quadpnt)+273.15_rkind
+      temp = pde(heat_proc)%getval(quadpnt)+273.15_rkind
       if (present(tensor)) then
         if (present(quadpnt)) then
           call Kliquid_temp(pde_loc, layer, quadpnt, tensor = Klt(1:D, 1:D))
-          call mualem_fr(pde_loc, layer, x=(/hl(pde(1), layer, quadpnt)/), tensor = Klh(1:D, 1:D))
+          call mualem_fr(pde_loc, layer, x=(/hl(pde(wat), layer, quadpnt)/), tensor = Klh(1:D, 1:D))
           Klh(1:D,1:D) = 10**(-Omega*Q_reduction(layer, quadpnt))*Klh(1:D, 1:D)
           if(iceswitch(quadpnt)) then
             tensor = (Klt(1:D, 1:D) + Lf/temp/grav*Klh(1:D,1:D))
@@ -147,7 +147,7 @@ module freeze_fnc
       end subroutine diffhT
     
     
-    !> heat: pde(2)
+    !> heat: pde(heat_proc)
     !> Capacity term due to pressure head for heat flow model
 
     function capacityTh(pde_loc, layer, quadpnt, x) result(val)
@@ -199,7 +199,7 @@ module freeze_fnc
       
       vol_soil = 1_rkind - freeze_par(layer)%Ths
       th_air = freeze_par(layer)%Ths-thetai(pde_loc, layer, quadpnt)-&
-      vangen_fr(pde_loc, layer, x = (/hl(pde(1), layer, quadpnt)/)) 
+      vangen_fr(pde_loc, layer, x = (/hl(pde(wat), layer, quadpnt)/)) 
       if(th_air < 0) then
         if(abs(th_air) > epsilon(th_air)) then
           print*, th_air
@@ -209,12 +209,12 @@ module freeze_fnc
           stop
         end if
       end if
-      temp = pde(2)%getval(quadpnt)+ 273.15_rkind
-      val =  Cl*rho_wat*vangen_fr(pde_loc, layer, x = (/hl(pde(1), layer, quadpnt)/)) 
+      temp = pde(heat_proc)%getval(quadpnt)+ 273.15_rkind
+      val =  Cl*rho_wat*vangen_fr(pde_loc, layer, x = (/hl(pde(wat), layer, quadpnt)/)) 
       val = val + Cs*rho_soil*vol_soil + Ca*rho_air*th_air
       if(iceswitch(quadpnt)) then
         val = (Ci*rho_ice*thetai(pde_loc, layer, quadpnt) + val &
-        + Lf*rho_ice*Lf/temp/grav*rwcap(pde_loc, layer, x = (/hl(pde(1), layer, quadpnt)/)))
+        + Lf*rho_ice*Lf/temp/grav*rwcap(pde_loc, layer, x = (/hl(pde(wat), layer, quadpnt)/)))
       end if
       
     end function capacityTT
@@ -297,8 +297,8 @@ module freeze_fnc
       integer(kind = ikind) :: D, i
       D = drutes_config%dimen
       
-      thice = thetai(pde(1), layer, quadpnt)
-      thl = vangen_fr(pde(1), layer, x=(/hl(pde(1), layer, quadpnt)/))
+      thice = thetai(pde(wat), layer, quadpnt)
+      thl = vangen_fr(pde(wat), layer, x=(/hl(pde(wat), layer, quadpnt)/))
       select case (freeze_par(layer)%material)
         case ("Soil")
           call all_fluxes(pde_loc, layer, quadpnt, flux = flux)
@@ -354,10 +354,10 @@ module freeze_fnc
       if (present(quadpnt)) then
         quadpnt_loc = quadpnt
         quadpnt_loc%preproc=.true.
-        h = hl(pde(1), layer, quadpnt)
-        !call getgrad_freeze(pde(1), quadpnt, gradient)
-        call pde(1)%getgrad(quadpnt, gradient)
-        call pde(2)%getgrad(quadpnt, gradientT)
+        h = hl(pde(wat), layer, quadpnt)
+        !call getgrad_freeze(pde(wat), quadpnt, gradient)
+        call pde(wat)%getgrad(quadpnt, gradient)
+        call pde(heat_proc)%getgrad(quadpnt, gradientT)
       else
         if (ubound(x,1) /=1) then
           print *, "ERROR: van Genuchten function is a function of a single variable h"
@@ -375,16 +375,16 @@ module freeze_fnc
       !nablaz = 0
       !nablaz(D) = 1
       if(iceswitch(quadpnt))then
-        gradH(1:D) = gradient(1:D) + Lf/grav*gradientT(1:D)/(pde(2)%getval(quadpnt) + 273.15_rkind)
+        gradH(1:D) = gradient(1:D) + Lf/grav*gradientT(1:D)/(pde(heat_proc)%getval(quadpnt) + 273.15_rkind)
       else
         gradH(1:D) = gradient(1:D)
       end if
       
       if(present(quadpnt)) then
-        call pde(1)%pde_fnc(1)%dispersion(pde_loc, layer, x=(/hl(pde(1), layer, quadpnt)/), tensor=Klh(1:D, 1:D))
+        call pde(wat)%pde_fnc(1)%dispersion(pde_loc, layer, x=(/hl(pde(wat), layer, quadpnt)/), tensor=Klh(1:D, 1:D))
         Klh(1:D, 1:D) = 10**(-Omega*Q_reduction(layer, quadpnt))*Klh(1:D, 1:D)
 
-        call pde(1)%pde_fnc(2)%dispersion(pde_loc, layer, quadpnt, tensor = Klt(1:D, 1:D))
+        call pde(wat)%pde_fnc(2)%dispersion(pde_loc, layer, quadpnt, tensor = Klt(1:D, 1:D))
 
       end if
       

@@ -80,4 +80,9 @@ module LTNE_globs
   logical, public:: air
   
   logical, public :: qlt_log
+  
+  integer(kind = ikind), parameter, public :: wat = 1
+  integer(kind = ikind), parameter, public :: heat_proc = 2
+  integer(kind = ikind), parameter, public :: heat_solid = 3
+  
 end module LTNE_globs

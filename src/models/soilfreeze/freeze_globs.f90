@@ -41,7 +41,7 @@ module freeze_globs
   !> specific heat capacity air[J/kg/K]
   real(kind=rkind), parameter, public :: Ca = 1006  
   
-    !> specific heat capacity soil[J/kg/K]
+  !> specific heat capacity soil[J/kg/K]
   real(kind=rkind), parameter, public :: Cs = 800 
   
   !> reference temperature for Clapeyron [K]
@@ -79,4 +79,7 @@ module freeze_globs
   
   logical, public :: qlt_log
   
+  integer(kind = ikind), parameter, public :: wat = 1
+  integer(kind = ikind), parameter, public :: heat_proc = 2
+
 end module freeze_globs

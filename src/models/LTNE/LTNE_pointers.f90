@@ -39,163 +39,165 @@ module LTNE_pointers
       
       
       integer(kind=ikind) :: i
+
+      
       select case (drutes_config%name)
         case ("LTNE")
-          call LTNE_reader(pde(1))
+          call LTNE_reader(pde(wat))
         case default
           print *, "procedure called when unexpected problem name"
           print *, "exited from LTNE_pointers::frz_pointers"
           error stop
       end select
       
-      call RE_totheadbc(pde(1))
+      call RE_totheadbc(pde(wat))
 
       
-      pde(1)%getval => getval_retotltne
+      pde(wat)%getval => getval_retotltne
       
     ! pointers for water flow model
-      pde(1)%pde_fnc(1)%elasticity => capacityhh
+      pde(wat)%pde_fnc(1)%elasticity => capacityhh
             
-      pde(1)%pde_fnc(1)%dispersion => diffhh
-      pde(1)%pde_fnc(2)%dispersion => diffhT
+      pde(wat)%pde_fnc(1)%dispersion => diffhh
+      pde(wat)%pde_fnc(2)%dispersion => diffhT
 
-      pde(1)%flux => all_fluxes_LTNE
-      do i=lbound(pde(1)%bc,1), ubound(pde(1)%bc,1)
-        select case(pde(1)%bc(i)%code)
+      pde(wat)%flux => all_fluxes_LTNE
+      do i=lbound(pde(wat)%bc,1), ubound(pde(wat)%bc,1)
+        select case(pde(wat)%bc(i)%code)
           case(6)
-            pde(1)%bc(i)%value_fnc => Dirichlet_mass_bc
+            pde(wat)%bc(i)%value_fnc => Dirichlet_mass_bc
           case(7)
-            pde(1)%bc(i)%value_fnc => Dirichlet_Neumann_switch_bc
+            pde(wat)%bc(i)%value_fnc => Dirichlet_Neumann_switch_bc
         end select
       end do
 
-      pde(1)%initcond => wat_init
+      pde(wat)%initcond => wat_init
       
       rwcap => vangen_elast_LTNE
       
       
-      pde(1)%problem_name(1) = "RE_LTNE_thaw"
-      pde(1)%problem_name(2) = "Richards' equation with freezing and thawing"
+      pde(wat)%problem_name(1) = "RE_LTNE_thaw"
+      pde(wat)%problem_name(2) = "Richards' equation with freezing and thawing"
 
-      pde(1)%solution_name(1) = "press_head" 
-      pde(1)%solution_name(2) = "h [L]" 
+      pde(wat)%solution_name(1) = "press_head" 
+      pde(wat)%solution_name(2) = "h [L]" 
 
-      pde(1)%flux_name(1) = "flux"  
-      pde(1)%flux_name(2) = "Darcian flow [L.T^{-1}]"
+      pde(wat)%flux_name(1) = "flux"  
+      pde(wat)%flux_name(2) = "Darcian flow [L.T^{-1}]"
       
-      pde(1)%print_mass = .true.
-      deallocate(pde(1)%mass)
+      pde(wat)%print_mass = .true.
+      deallocate(pde(wat)%mass)
       
-      allocate(pde(1)%mass_name(5,2))
-      allocate(pde(1)%mass(5))
+      allocate(pde(wat)%mass_name(5,2))
+      allocate(pde(wat)%mass(5))
 
-      pde(1)%mass_name(1,1) = "theta_tot"
-      pde(1)%mass_name(1,2) = "theta_tot [-]"
+      pde(wat)%mass_name(1,1) = "theta_tot"
+      pde(wat)%mass_name(1,2) = "theta_tot [-]"
       
-      pde(1)%mass_name(2,1) = "theta_i"
-      pde(1)%mass_name(2,2) = "theta_i [-]"
+      pde(wat)%mass_name(2,1) = "theta_i"
+      pde(wat)%mass_name(2,2) = "theta_i [-]"
       
-      pde(1)%mass_name(3,1) = "theta_l"
-      pde(1)%mass_name(3,2) = "theta_l [-]"
+      pde(wat)%mass_name(3,1) = "theta_l"
+      pde(wat)%mass_name(3,2) = "theta_l [-]"
       
-      pde(1)%mass_name(4,1) = "h_l"
-      pde(1)%mass_name(4,2) = "h_l [L]"
+      pde(wat)%mass_name(4,1) = "h_l"
+      pde(wat)%mass_name(4,2) = "h_l [L]"
       
-      pde(1)%mass_name(5,1) = "T_m"
-      pde(1)%mass_name(5,2) = "T_m [deg C]"
+      pde(wat)%mass_name(5,1) = "T_m"
+      pde(wat)%mass_name(5,2) = "T_m [deg C]"
 
-      pde(1)%mass(1)%val => vangen_ltne
+      pde(wat)%mass(1)%val => vangen_ltne
       
-      pde(1)%mass(2)%val => thetai
+      pde(wat)%mass(2)%val => thetai
       
-      pde(1)%mass(3)%val => thetal
+      pde(wat)%mass(3)%val => thetal
       
-      pde(1)%mass(4)%val => hl
+      pde(wat)%mass(4)%val => hl
       
-      pde(1)%mass(5)%val => T_m
+      pde(wat)%mass(5)%val => T_m
 
       ! allocate porosity as mass(3)?
 
     ! pointers for heat flow model
-      pde(2)%problem_name(1) = "heat_liquid"
-      pde(2)%problem_name(2) = "Heat conduction equation with convection"
+      pde(heat_proc)%problem_name(1) = "heat_liquid"
+      pde(heat_proc)%problem_name(2) = "Heat conduction equation with convection"
 
-      pde(2)%solution_name(1) = "T_liquid" 
-      pde(2)%solution_name(2) = "T_l " 
+      pde(heat_proc)%solution_name(1) = "T_liquid" 
+      pde(heat_proc)%solution_name(2) = "T_l " 
 
-      pde(2)%flux_name(1) = "heat_l_flux"  
-      pde(2)%flux_name(2) = "heat liquid flux [W.L-2]"
+      pde(heat_proc)%flux_name(1) = "heat_l_flux"  
+      pde(heat_proc)%flux_name(2) = "heat liquid flux [W.L-2]"
       
-      allocate(pde(2)%mass_name(0,2))
-      pde(2)%print_mass = .false.
+      allocate(pde(heat_proc)%mass_name(0,2))
+      pde(heat_proc)%print_mass = .false.
       
-      pde(2)%pde_fnc(1)%elasticity => capacityTlh
+      pde(heat_proc)%pde_fnc(1)%elasticity => capacityTlh
       
-      pde(2)%pde_fnc(2)%elasticity => capacityTlTl
+      pde(heat_proc)%pde_fnc(2)%elasticity => capacityTlTl
       
-      pde(2)%pde_fnc(2)%dispersion => diffTlTl
+      pde(heat_proc)%pde_fnc(2)%dispersion => diffTlTl
       
-      pde(2)%pde_fnc(2)%convection => convectTlTl
+      pde(heat_proc)%pde_fnc(2)%convection => convectTlTl
       
-      pde(2)%pde_fnc(3)%reaction => qsl_pos
-      pde(2)%pde_fnc(2)%reaction => qsl_neg
+      pde(heat_proc)%pde_fnc(3)%reaction => qsl_pos
+      pde(heat_proc)%pde_fnc(2)%reaction => qsl_neg
 
-      pde(2)%flux => heat_flux_l_LTNE
+      pde(heat_proc)%flux => heat_flux_l_LTNE
       
-      pde(2)%initcond => temp_l_initcond 
+      pde(heat_proc)%initcond => temp_l_initcond 
       
-      do i=lbound(pde(2)%bc,1), ubound(pde(2)%bc,1)
-        select case(pde(2)%bc(i)%code)
+      do i=lbound(pde(heat_proc)%bc,1), ubound(pde(heat_proc)%bc,1)
+        select case(pde(heat_proc)%bc(i)%code)
           case(1)
-            pde(2)%bc(i)%value_fnc => heat_dirichlet
+            pde(heat_proc)%bc(i)%value_fnc => heat_dirichlet
           case(2)
-            pde(2)%bc(i)%value_fnc => heat_neumann
+            pde(heat_proc)%bc(i)%value_fnc => heat_neumann
           case(0)
-            pde(2)%bc(i)%value_fnc => re_null_bc
+            pde(heat_proc)%bc(i)%value_fnc => re_null_bc
           case(3)
-            pde(2)%bc(i)%value_fnc => ltne_coolant_bc
+            pde(heat_proc)%bc(i)%value_fnc => ltne_coolant_bc
           case(4)
-            pde(2)%bc(i)%value_fnc => Dirichlet_Neumann_switch_bc
+            pde(heat_proc)%bc(i)%value_fnc => Dirichlet_Neumann_switch_bc
         end select
       end do  
         
         
       !pointers for solid heat flow model
-      pde(3)%problem_name(1) = "heat_solid"
-      pde(3)%problem_name(2) = "Heat conduction equation with convection"
+      pde(heat_solid)%problem_name(1) = "heat_solid"
+      pde(heat_solid)%problem_name(2) = "Heat conduction equation with convection"
 
-      pde(3)%solution_name(1) = "T_solid" 
-      pde(3)%solution_name(2) = "T_s " 
+      pde(heat_solid)%solution_name(1) = "T_solid" 
+      pde(heat_solid)%solution_name(2) = "T_s " 
 
-      pde(3)%flux_name(1) = "heat_s_flux"  
-      pde(3)%flux_name(2) = "heat solid flux [W.L-2]"
+      pde(heat_solid)%flux_name(1) = "heat_s_flux"  
+      pde(heat_solid)%flux_name(2) = "heat solid flux [W.L-2]"
       
-      allocate(pde(3)%mass_name(0,2))
-      pde(3)%print_mass = .false.
+      allocate(pde(heat_solid)%mass_name(0,2))
+      pde(heat_solid)%print_mass = .false.
             
-      pde(3)%pde_fnc(3)%elasticity => capacityTsTs
+      pde(heat_solid)%pde_fnc(3)%elasticity => capacityTsTs
       
-      pde(3)%pde_fnc(3)%dispersion => diffTsTs
+      pde(heat_solid)%pde_fnc(3)%dispersion => diffTsTs
             
-      pde(3)%flux => heat_flux_s_LTNE
+      pde(heat_solid)%flux => heat_flux_s_LTNE
       
-      pde(3)%initcond => temp_s_initcond 
+      pde(heat_solid)%initcond => temp_s_initcond 
       
-      pde(3)%pde_fnc(3)%reaction => qsl_neg
-      pde(3)%pde_fnc(2)%reaction => qsl_pos
+      pde(heat_solid)%pde_fnc(3)%reaction => qsl_neg
+      pde(heat_solid)%pde_fnc(2)%reaction => qsl_pos
       
-      do i=lbound(pde(3)%bc,1), ubound(pde(2)%bc,1)
-        select case(pde(3)%bc(i)%code)
+      do i=lbound(pde(heat_solid)%bc,1), ubound(pde(heat_proc)%bc,1)
+        select case(pde(heat_solid)%bc(i)%code)
           case(1)
-            pde(3)%bc(i)%value_fnc => heat_dirichlet
+            pde(heat_solid)%bc(i)%value_fnc => heat_dirichlet
           case(2)
-            pde(3)%bc(i)%value_fnc => heat_neumann
+            pde(heat_solid)%bc(i)%value_fnc => heat_neumann
           case(0)
-            pde(3)%bc(i)%value_fnc => re_null_bc
+            pde(heat_solid)%bc(i)%value_fnc => re_null_bc
           case(3)
-            pde(3)%bc(i)%value_fnc => ltne_coolant_bc
+            pde(heat_solid)%bc(i)%value_fnc => ltne_coolant_bc
           case(4)
-            pde(3)%bc(i)%value_fnc => Dirichlet_Neumann_switch_bc
+            pde(heat_solid)%bc(i)%value_fnc => Dirichlet_Neumann_switch_bc
         end select
       end do  
            

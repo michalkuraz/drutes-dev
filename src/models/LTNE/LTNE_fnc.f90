@@ -16,7 +16,7 @@ module LTNE_fnc
   
   contains
     !> Capacity term due to pressure head for flow model
-    !> so pde(1)
+    !> so pde(wat)
     function capacityhh(pde_loc, layer, quadpnt, x) result(val)
       use typy
       use global_objs
@@ -34,7 +34,7 @@ module LTNE_fnc
       real(kind=rkind)                :: val, thice,thtot,thair,th_l
       
       thice = thetai(pde_loc, layer, quadpnt)
-      th_l = vangen_ltne(pde_loc, layer, x = (/hl(pde(1), layer, quadpnt)/))
+      th_l = vangen_ltne(pde_loc, layer, x = (/hl(pde(wat), layer, quadpnt)/))
       thair = LTNE_par(layer)%Ths-thice-th_l
       
       if(air) then
@@ -55,7 +55,7 @@ module LTNE_fnc
 
 
     !> diffusion due to pressure head for flow model
-    !> so pde(1)
+    !> so pde(wat)
     subroutine diffhh(pde_loc, layer, quadpnt, x, tensor, scalar)
       use typy
       use global_objs
@@ -74,7 +74,7 @@ module LTNE_fnc
       
       if (present(tensor)) then
         if(present(quadpnt)) then 
-          call mualem_ltne(pde_loc, layer, x = (/hl(pde(1), layer, quadpnt)/), tensor = tensor)
+          call mualem_ltne(pde_loc, layer, x = (/hl(pde(wat), layer, quadpnt)/), tensor = tensor)
           tensor = 10**(-Omega*Q_reduction(layer, quadpnt))*tensor
         end if
         if (present(x)) then
@@ -109,11 +109,11 @@ module LTNE_fnc
       
       D = drutes_config%dimen
 
-      temp = pde(2)%getval(quadpnt)+273.15_rkind
+      temp = pde(heat_proc)%getval(quadpnt)+273.15_rkind
       if (present(tensor)) then
         if (present(quadpnt)) then
           call Kliquid_temp(pde_loc, layer, quadpnt, tensor = Klt(1:D, 1:D))
-          call mualem_ltne(pde_loc, layer, x=(/hl(pde(1), layer, quadpnt)/), tensor = Klh(1:D, 1:D))
+          call mualem_ltne(pde_loc, layer, x=(/hl(pde(wat), layer, quadpnt)/), tensor = Klh(1:D, 1:D))
           Klh(1:D,1:D) = 10**(-Omega*Q_reduction(layer, quadpnt))*Klh(1:D, 1:D)
           if(iceswitch(quadpnt)) then
             tensor = (Klt(1:D, 1:D) + Lf/temp/grav*Klh(1:D,1:D))
@@ -127,7 +127,7 @@ module LTNE_fnc
       
       end subroutine diffhT
     
-    !> heat: pde(2)
+    !> heat: pde(heat_proc)
     !> Capacity term due to pressure head for heat flow model
 
     function capacityTlh(pde_loc, layer, quadpnt, x) result(val)
@@ -180,7 +180,7 @@ module LTNE_fnc
 
       vol_soil = 1_rkind - LTNE_par(layer)%Ths
       thice = thetai(pde_loc, layer, quadpnt)
-      th_l = vangen_ltne(pde_loc, layer, x = (/hl(pde(1), layer, quadpnt)/))
+      th_l = vangen_ltne(pde_loc, layer, x = (/hl(pde(wat), layer, quadpnt)/))
       th_air = LTNE_par(layer)%Ths-thice-th_l
 
       if(th_air < 0) then
@@ -203,12 +203,12 @@ module LTNE_fnc
       end if
 
       
-      temp = pde(2)%getval(quadpnt)+ 273.15_rkind
+      temp = pde(heat_proc)%getval(quadpnt)+ 273.15_rkind
       val = C_P*dens_p
       val = val*thtot
       
       if(iceswitch(quadpnt)) then
-        val = val + Lf*rho_ice*Lf/temp/grav*rwcap(pde_loc, layer, x = (/hl(pde(1), layer, quadpnt)/))
+        val = val + Lf*rho_ice*Lf/temp/grav*rwcap(pde_loc, layer, x = (/hl(pde(wat), layer, quadpnt)/))
       end if
       
     end function capacityTlTl
@@ -273,7 +273,7 @@ module LTNE_fnc
               
     end subroutine convectTlTl
     
-    ! PDE(3)
+    ! pde(heat_solid)
     function capacityTsTs(pde_loc, layer, quadpnt, x) result(val)
       use typy
       use global_objs
@@ -340,12 +340,12 @@ module LTNE_fnc
       integer(kind = ikind) :: D, i
       D = drutes_config%dimen
       
-      thice = thetai(pde(1), layer, quadpnt)
-      thl = vangen_ltne(pde(1), layer, x=(/hl(pde(1), layer, quadpnt)/))
+      thice = thetai(pde(wat), layer, quadpnt)
+      thl = vangen_ltne(pde(wat), layer, x=(/hl(pde(wat), layer, quadpnt)/))
       if(air) then
         val = thl*ltne_par(layer)%Ll+thice*ltne_par(layer)%Li+(ltne_par(layer)%ths-thl)*LTNE_par(layer)%La
       else 
-        val = (thl*ltne_par(layer)%Ll+thice*ltne_par(layer)%Li)/ vangen_ltne(pde(1), layer, quadpnt)
+        val = (thl*ltne_par(layer)%Ll+thice*ltne_par(layer)%Li)/ vangen_ltne(pde(wat), layer, quadpnt)
       end if
       
     end function thermal_p
@@ -385,9 +385,9 @@ module LTNE_fnc
       if (present(quadpnt)) then
         quadpnt_loc = quadpnt
         quadpnt_loc%preproc=.true.
-        h = hl(pde(1), layer, quadpnt)
-        call pde(1)%getgrad(quadpnt, gradient)
-        call pde(2)%getgrad(quadpnt, gradientT)
+        h = hl(pde(wat), layer, quadpnt)
+        call pde(wat)%getgrad(quadpnt, gradient)
+        call pde(heat_proc)%getgrad(quadpnt, gradientT)
       else
         if (ubound(x,1) /=1) then
           print *, "ERROR: van Genuchten function is a function of a single variable h"
@@ -402,15 +402,15 @@ module LTNE_fnc
 
       D = drutes_config%dimen
       if(iceswitch(quadpnt))then
-        gradH(1:D) = gradient(1:D) + Lf/grav*gradientT(1:D)/(pde(2)%getval(quadpnt) + 273.15_rkind)
+        gradH(1:D) = gradient(1:D) + Lf/grav*gradientT(1:D)/(pde(heat_proc)%getval(quadpnt) + 273.15_rkind)
       else
         gradH(1:D) = gradient(1:D)
       end if
       
       if(present(quadpnt)) then
-        call pde(1)%pde_fnc(1)%dispersion(pde_loc, layer, x=(/hl(pde(1), layer, quadpnt)/), tensor=Klh(1:D, 1:D))
+        call pde(wat)%pde_fnc(1)%dispersion(pde_loc, layer, x=(/hl(pde(wat), layer, quadpnt)/), tensor=Klh(1:D, 1:D))
         Klh(1:D, 1:D) = 10**(-Omega*Q_reduction(layer, quadpnt))*Klh(1:D, 1:D)
-        call pde(1)%pde_fnc(2)%dispersion(pde_loc, layer, quadpnt, tensor = Klt(1:D, 1:D))
+        call pde(wat)%pde_fnc(2)%dispersion(pde_loc, layer, quadpnt, tensor = Klt(1:D, 1:D))
 
       end if
       
@@ -555,8 +555,8 @@ module LTNE_fnc
 
       D = drutes_config%dimen
 
-      thice = thetai(pde(1), layer, quadpnt)
-      thl = vangen_ltne(pde(1), layer, x=(/hl(pde(1), layer, quadpnt)/))
+      thice = thetai(pde(wat), layer, quadpnt)
+      thl = vangen_ltne(pde(wat), layer, x=(/hl(pde(wat), layer, quadpnt)/))
       thair = ltne_par(layer)%ths-thl
       if(air) then
         thtot = thice+thl+thair
@@ -611,9 +611,9 @@ module LTNE_fnc
       integer(kind=ikind) :: el_id
 
       if(air) then
-        val = ltne_par(layer)%ths*pde(2)%getval(quadpnt)+(1-Ltne_par(layer)%Ths)*pde(3)%getval(quadpnt)     
+        val = ltne_par(layer)%ths*pde(heat_proc)%getval(quadpnt)+(1-Ltne_par(layer)%Ths)*pde(heat_solid)%getval(quadpnt)     
       else
-        thtot = vangen_ltne(pde(1), layer, quadpnt)
+        thtot = vangen_ltne(pde(wat), layer, quadpnt)
         thair = Ltne_par(layer)%Ths - thtot
         Ths = (1-Ltne_par(layer)%Ths)
         if(quadpnt%element >75) then
@@ -621,7 +621,7 @@ module LTNE_fnc
         else
           el_id = quadpnt%element
         end if
-        val = thtot*pde(2)%getval(quadpnt)+ths*pde(3)%getval(quadpnt)+thair*T_air(el_id) 
+        val = thtot*pde(heat_proc)%getval(quadpnt)+ths*pde(heat_solid)%getval(quadpnt)+thair*T_air(el_id) 
 
       end if
 

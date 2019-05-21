@@ -27,7 +27,7 @@ module freeze_helper
       quadpnt_loc%preproc=.true.
       
       if(clap) then
-        Tf = Tref*exp(pde(1)%getval(quadpnt_loc)*grav/Lf)
+        Tf = Tref*exp(pde(wat)%getval(quadpnt_loc)*grav/Lf)
         Tf = Tf - 273.15_rkind
       else
         Tf = 0
@@ -35,7 +35,7 @@ module freeze_helper
       
 
 
-      if (pde(2)%getval(quadpnt_loc) > Tf) then
+      if (pde(heat_proc)%getval(quadpnt_loc) > Tf) then
       !> melting
         sw = .FALSE.
       else
@@ -64,8 +64,8 @@ module freeze_helper
       end if
       
       layer = elements%material(el)
-      thl = vangen_fr(pde(1), layer, x=(/hl(pde(1), layer, quadpnt)/))
-      thall = vangen_fr(pde(1), layer, quadpnt)
+      thl = vangen_fr(pde(wat), layer, x=(/hl(pde(wat), layer, quadpnt)/))
+      thall = vangen_fr(pde(wat), layer, quadpnt)
       thice = thall - thl
       rho = (thl * rho_wat + thice * rho_ice)/thall
        
@@ -84,12 +84,12 @@ module freeze_helper
       real(kind=rkind) :: thl, thall, thice, val
 
       if(present(quadpnt)) then
-        thall = vangen_fr(pde(1), layer, quadpnt)
-        thl = vangen_fr(pde(1), layer, x=(/hl(pde(1), layer, quadpnt)/))
+        thall = vangen_fr(pde(wat), layer, quadpnt)
+        thl = vangen_fr(pde(wat), layer, x=(/hl(pde(wat), layer, quadpnt)/))
       end if
       if(present(x)) then
-        thall = vangen_fr(pde(1), layer,x = x)
-        thl = vangen_fr(pde(1), layer, x = x)
+        thall = vangen_fr(pde(wat), layer,x = x)
+        thl = vangen_fr(pde(wat), layer, x = x)
       end if
       thice = thall - thl
       val = thice/(thall- freeze_par(layer)%Thr)
@@ -158,7 +158,7 @@ module freeze_helper
     
       real(kind=rkind) :: temp
     
-      temp = pde(2)%getval(quadpnt)
+      temp = pde(heat_proc)%getval(quadpnt)
       if (present(T)) then
         temp = T
       end if
@@ -184,9 +184,9 @@ module freeze_helper
       quadpnt_loc = quadpnt
       quadpnt_loc%preproc=.true.
 
-      hw = pde(1)%getval(quadpnt_loc)
+      hw = pde(wat)%getval(quadpnt_loc)
       
-      temp = pde(2)%getval(quadpnt)
+      temp = pde(heat_proc)%getval(quadpnt)
       T_melt = Tref*exp(hw*grav/Lf)
       
       if(iceswitch(quadpnt)) then
@@ -209,8 +209,8 @@ module freeze_helper
       
       real(kind=rkind) :: thl, thall
       
-      thl = vangen_fr(pde(1), layer, x=(/hl(pde(1), layer, quadpnt)/))
-      thall = vangen_fr(pde(1), layer, quadpnt)
+      thl = vangen_fr(pde(wat), layer, x=(/hl(pde(wat), layer, quadpnt)/))
+      thall = vangen_fr(pde(wat), layer, quadpnt)
       
       !val = (thall * rho_icewat(quadpnt) - thl * rho_wat)/rho_ice
       val = thall - thl
@@ -226,7 +226,7 @@ module freeze_helper
       real(kind=rkind), dimension(:), intent(in), optional    :: x
       real(kind=rkind) :: val
       
-      val = vangen_fr(pde(1), layer, x=(/hl(pde(1), layer, quadpnt)/))
+      val = vangen_fr(pde(wat), layer, x=(/hl(pde(wat), layer, quadpnt)/))
     end function thetal
     
     
