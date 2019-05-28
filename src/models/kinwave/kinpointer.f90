@@ -40,6 +40,14 @@ module kinpointer
       allocate(pde_loc%bc(101:101))
       
       pde_loc%bc(101)%value_fnc => kinbor
+      
+!       pde_loc%bc(102)%value_fnc => kinbor
+
+      if (drutes_config%dimen == 1) then
+        nodes%edge(ubound(nodes%data)) = 101
+        
+        nodes%edge(1) = 0
+      end if
     
       pde_loc%initcond => kinematixinit
       
@@ -48,6 +56,8 @@ module kinpointer
       pde_loc%pde_fnc(pde_loc%order)%elasticity => kin_elast
       
       pde_loc%diffusion = .false.
+      
+      pde_loc%getval => getval_kinwave
       
       
     end subroutine kinwavelinker

@@ -15,9 +15,36 @@
 
 module kinfnc
 
-  public :: kinconvect, kinbor, kinematixinit, rainfall, kin_elast
+  public :: kinconvect, kinbor, kinematixinit, rainfall, kin_elast, getval_kinwave
 
   contains 
+  
+    !> specific function for kinematic wave equation, replaces pde_objs::getvalp1 surface runoff should be in [mm]
+    function getval_kinwave(pde_loc, quadpnt) result(val)
+      use typy
+      use pde_objs
+      use geom_tools
+      use re_globals
+      use debug_tools
+      
+      class(pde_str), intent(in) :: pde_loc
+      type(integpnt_str), intent(in) :: quadpnt
+      real(kind=rkind) :: val
+      
+      real(kind=rkind), dimension(3) :: xyz
+      integer(kind=ikind) :: D, layer
+      
+      val = getvalp1(pde_loc, quadpnt)
+           
+      if (quadpnt%preproc) then
+        val = val*1e3
+      end if
+	
+      
+    end function getval_kinwave
+  
+  
+  
     subroutine kinconvect(pde_loc, layer, quadpnt, x, vector_in, vector_out, scalar)
       use typy
       use globals
@@ -48,11 +75,9 @@ module kinfnc
       el = quadpnt%element
       
       hsurf = max(0.0_rkind, pde_loc%getval(quadpnt))
-
       
       m = 5.0_rkind/3
   
-      
       select case (drutes_config%dimen)
       
         case(1)

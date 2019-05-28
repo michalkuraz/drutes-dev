@@ -104,13 +104,9 @@ module kinreader
             call plane_derivative(a,b,c, watershed_el(i)%sx, watershed_el(i)%sy)
           end do
         case(1)
-          do i=1, nodes%kolik
-            watershed_nd(i)%xyz(1) = nodes%data(i,1)
-            watershed_nd(i)%xyz(2) = nodes%data(i,1)*0.1
-          end do
+     
           do i=1, elements%kolik
-            watershed_el(i)%sx = (watershed_nd(elements%data(i,2))%xyz(2) - watershed_nd(elements%data(i,1))%xyz(2)) / &
-              (nodes%data(elements%data(i,2),1) - nodes%data(elements%data(i,1),1))
+            watershed_el(i)%sx = oneDslopes(elements%material(i))
           end do
           
       end select
@@ -145,21 +141,22 @@ module kinreader
       real(kind=rkind), dimension(:), allocatable :: tmp_array
       real(kind=rkind), dimension(:), allocatable :: pts, distance
       
-      
-      select case(drutes_config%mesh_type)
-        case(1) 
-          call gen_catchment()
-          
-        case(4)
-          call read_catchment()
-          
-        case default
-          print *, "for kinematic wave equation use Arc GIS data option only"
-          print *, "  this is option number 4"
-          print *, "exiting..."
-          ERROR STOP
-          
-      end select
+      if (drutes_config%dimen == 2) then
+        select case(drutes_config%mesh_type)
+          case(1) 
+            call gen_catchment()
+            
+          case(4)
+            call read_catchment()
+            
+          case default
+            print *, "for kinematic wave equation use Arc GIS data option only"
+            print *, "  this is option number 4"
+            print *, "exiting..."
+            ERROR STOP
+            
+        end select
+      end if
       
       pde_loc%problem_name(1) = "runoff"
       pde_loc%problem_name(2) = "Kinematic wave equation for real catchments"
@@ -193,9 +190,12 @@ module kinreader
         call fileread(manning(i), file_kinematix, ranges=(/epsilon(manning(1)), huge(manning(1))/))
       end do
       
-      do i=1, n
-        call fileread(oneDslopes(i), file_kinematix, ranges=(/epsilon(oneDslopes(1)), huge(oneDslopes(1))/))
-      end do
+      if (drutes_config%dimen == 1) then
+        do i=1, n
+          call fileread(oneDslopes(i), file_kinematix, ranges=(/epsilon(oneDslopes(1)), huge(oneDslopes(1))/))
+        end do
+        call gen_catchment()
+      end if
       
       open(newunit=frainpts, file="drutes.conf/kinwave/rain.pts", status="old", action="read", iostat=ierr)
       
