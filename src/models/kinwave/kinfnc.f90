@@ -42,6 +42,91 @@ module kinfnc
 	
       
     end function getval_kinwave
+    
+    
+    subroutine kinflux(pde_loc, layer, quadpnt, x, grad,  flux, flux_length)
+      use typy
+      use pde_objs
+      use global_objs
+      use debug_tools
+      use kinglobs
+       
+      class(pde_str), intent(in) :: pde_loc
+      integer(kind=ikind), intent(in)                          :: layer
+      type(integpnt_str), intent(in), optional :: quadpnt    
+      real(kind=rkind), intent(in), dimension(:), optional                   :: x
+      !> this value is optional, because it is required by the vector_fnc procedure pointer global definition
+      real(kind=rkind), dimension(:), intent(in), optional     :: grad
+      real(kind=rkind), dimension(:), intent(out), optional    :: flux
+      real(kind=rkind), intent(out), optional                  :: flux_length
+    
+
+      real(kind=rkind) :: h, m
+      integer(kind=ikind) :: el
+
+      
+      
+      if (present(quadpnt) .and. present(x)) then
+        print *, "ERROR: the function can be called either with integ point or x value definition and gradient, not both of them"
+        print *, "exited from kinfnc::kinflux"
+        ERROR stop
+      else if (.not. present(x) .and. .not. present(quadpnt)) then
+        print *, "ERROR: you have not specified either integ point or x value"
+        print *, "exited from kinfnc::kinflux"
+        ERROR stop
+      end if   
+
+      
+      if (present(quadpnt)) then
+        h = pde_loc%getval(quadpnt)
+        if (quadpnt%preproc) then
+          h=h*1e-3
+        end if
+      else
+        h = x(1)
+      end if
+      
+      
+      select case(quadpnt%type_pnt)
+        case("gqnd", "obpt")
+          el = quadpnt%element
+        case("ndpt")
+          el = nodes%element(quadpnt%order)%data(1)
+      end select
+      
+      m = 5.0_rkind/3
+
+      
+      
+      if (present(flux)) then
+        select case(drutes_config%dimen)
+          case(1)
+            flux(1) = -1.49_rkind * sign(1.0_rkind, watershed_el(el)%sx) * & 
+                            sqrt(abs( watershed_el(el)%sx))/manning(layer)*h**m
+          case(2)
+            flux(1) = -1.49_rkind * sign(1.0_rkind, watershed_el(el)%sx) * & 
+                            sqrt(abs( watershed_el(el)%sx))/manning(layer)*h**m
+            flux(2) = -1.49_rkind * sign(1.0_rkind, watershed_el(el)%sy) * & 
+                            sqrt(abs( watershed_el(el)%sx))/manning(layer)*h**m
+        end select
+      end if
+          
+      
+      
+      if (present(flux_length)) then
+        select case(drutes_config%dimen)
+          case(1)     
+            flux_length = 1.49_rkind * sign(1.0_rkind, watershed_el(el)%sx) * & 
+                            sqrt(abs( watershed_el(el)%sx))/manning(layer)*h**m
+          case(2)
+            flux_length = norm2((/1.49_rkind * sign(1.0_rkind, watershed_el(el)%sx) * & 
+                            sqrt(abs( watershed_el(el)%sx))/manning(layer)*h**m, &
+                            1.49_rkind * sign(1.0_rkind, watershed_el(el)%sy) * & 
+                            sqrt(abs( watershed_el(el)%sy))/manning(layer)*h**m/))
+        end select          
+       end if
+    
+    end subroutine kinflux
   
   
   

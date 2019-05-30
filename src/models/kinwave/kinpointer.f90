@@ -59,6 +59,8 @@ module kinpointer
       
       pde_loc%getval => getval_kinwave
       
+      pde_loc%flux => kinflux
+      
       
     end subroutine kinwavelinker
     
