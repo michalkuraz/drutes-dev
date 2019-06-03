@@ -156,35 +156,54 @@ module kinfnc
       
       integer(kind=ikind) :: el
       real(kind=rkind) :: hsurf, m
+      type(integpnt_str) :: quadpnt_loc
+      real(kind=rkind), dimension(:), allocatable, save :: ndvals, slopes
+      
       
       el = quadpnt%element
       
       hsurf = max(0.0_rkind, pde_loc%getval(quadpnt))
       
       m = 5.0_rkind/3
+      
+      if (.not. allocated(slopes)) allocate(slopes(drutes_config%dimen))
+      
+      if (backwater) then
+        if (.not. allocated(ndvals)) allocate(ndvals(ubound(elements%data,2)))
+        
+        quadpnt_loc%type_pnt = "ndpt"
+        
+        do i=1, ubound(ndvals,1)
+          quadpnt_loc%order = elements%data(el,i)
+          ndvals(i) = pde_loc%getval(quadpnt_loc)
+        end do
+        
+        select case(drutes_config%dimen)
+          case(1)
+            slopes(1) = (ndvals(2) - ndvals(1))/(nodes%data(elements%data(el,2) - nodes%data(elements%data
   
-      select case (drutes_config%dimen)
-      
-        case(1)
-          vector_out(1) = -1.49_rkind * sign(1.0_rkind, watershed_el(el)%sx) * & 
-                          sqrt(abs( watershed_el(el)%sx))/manning(layer)*m*hsurf**(m-1)
-      
-        case(2)
-      
-          vector_out(1) = -1.49_rkind * sign(1.0_rkind, watershed_el(el)%sx) * & 
-                          sqrt(abs( watershed_el(el)%sx))/manning(layer)*m*hsurf**(m-1)
-          
-          vector_out(2) = -1.49_rkind * sign(1.0_rkind, watershed_el(el)%sy) * & 
-                          sqrt(abs( watershed_el(el)%sy))/manning(layer)*m*hsurf**(m-1)
-                          
-          
-        case(3)
-          print *, "kinematic wave has no sense for three-dimensions"
-          print *, "exited from kinfnc::kinconvect"
-          ERROR STOP
-          
-      end select
-      
+        select case (drutes_config%dimen)
+        
+          case(1)
+            vector_out(1) = -1.49_rkind * sign(1.0_rkind, watershed_el(el)%sx) * & 
+                            sqrt(abs( watershed_el(el)%sx))/manning(layer)*m*hsurf**(m-1)
+        
+          case(2)
+        
+            vector_out(1) = -1.49_rkind * sign(1.0_rkind, watershed_el(el)%sx) * & 
+                            sqrt(abs( watershed_el(el)%sx))/manning(layer)*m*hsurf**(m-1)
+            
+            vector_out(2) = -1.49_rkind * sign(1.0_rkind, watershed_el(el)%sy) * & 
+                            sqrt(abs( watershed_el(el)%sy))/manning(layer)*m*hsurf**(m-1)
+                            
+            
+          case(3)
+            print *, "kinematic wave has no sense for three-dimensions"
+            print *, "exited from kinfnc::kinconvect"
+            ERROR STOP
+            
+        end select
+        
     end subroutine kinconvect
     
     

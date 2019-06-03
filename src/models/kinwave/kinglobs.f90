@@ -43,6 +43,8 @@ module kinglobs
   
   type(raindata_str), dimension(:), allocatable :: raindata
   integer(kind=ikind), dimension(:), allocatable :: el2pt
+  
+  logical :: backwater
 
 end module kinglobs
 

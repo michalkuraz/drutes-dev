@@ -190,6 +190,8 @@ module kinreader
         call fileread(manning(i), file_kinematix, ranges=(/epsilon(manning(1)), huge(manning(1))/))
       end do
       
+      call fileread(backwater, file_kinematix)
+      
       if (drutes_config%dimen == 1) then
         do i=1, n
           call fileread(oneDslopes(i), file_kinematix, ranges=(/epsilon(oneDslopes(1)), huge(oneDslopes(1))/))
