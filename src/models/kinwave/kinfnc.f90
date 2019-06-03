@@ -154,10 +154,11 @@ module kinfnc
       !> relative unsaturated hydraulic conductivity derivative in respect to h, scalar value
       real(kind=rkind), intent(out), optional :: scalar
       
-      integer(kind=ikind) :: el
+      integer(kind=ikind) :: el, D, i
       real(kind=rkind) :: hsurf, m
       type(integpnt_str) :: quadpnt_loc
       real(kind=rkind), dimension(:), allocatable, save :: ndvals, slopes
+      real(kind=rkind), dimension(:,:), allocatable, save :: abc
       
       
       el = quadpnt%element
@@ -166,43 +167,78 @@ module kinfnc
       
       m = 5.0_rkind/3
       
+      D = drutes_config%dimen
+      
       if (.not. allocated(slopes)) allocate(slopes(drutes_config%dimen))
       
       if (backwater) then
         if (.not. allocated(ndvals)) allocate(ndvals(ubound(elements%data,2)))
         
         quadpnt_loc%type_pnt = "ndpt"
+        quadpnt_loc%column = 3
         
         do i=1, ubound(ndvals,1)
           quadpnt_loc%order = elements%data(el,i)
           ndvals(i) = pde_loc%getval(quadpnt_loc)
         end do
         
-        select case(drutes_config%dimen)
+        select case(D)
           case(1)
-            slopes(1) = (ndvals(2) - ndvals(1))/(nodes%data(elements%data(el,2) - nodes%data(elements%data
-  
-        select case (drutes_config%dimen)
-        
-          case(1)
-            vector_out(1) = -1.49_rkind * sign(1.0_rkind, watershed_el(el)%sx) * & 
-                            sqrt(abs( watershed_el(el)%sx))/manning(layer)*m*hsurf**(m-1)
-        
+            slopes(1) = (ndvals(2) - ndvals(1))/(nodes%data(elements%data(el,2),1) - nodes%data(elements%data(el,1),1))
+            slopes(1) = slopes(1) +  watershed_el(el)%sx
           case(2)
-        
-            vector_out(1) = -1.49_rkind * sign(1.0_rkind, watershed_el(el)%sx) * & 
-                            sqrt(abs( watershed_el(el)%sx))/manning(layer)*m*hsurf**(m-1)
+            if (.not. allocated(abc)) allocate(abc(ubound(elements%data,2),3))
             
-            vector_out(2) = -1.49_rkind * sign(1.0_rkind, watershed_el(el)%sy) * & 
-                            sqrt(abs( watershed_el(el)%sy))/manning(layer)*m*hsurf**(m-1)
-                            
+            do i=1, ubound(elements%data,2)
+              abc(i, 1:2) = nodes%data(elements%data(el,i),:)
+              abc(i,3) = ndvals(i)
+            end do
+            
+            call plane_derivative(abc(1,:), abc(2,:), abc(3,:), slopes(1), slopes(2))
+            
+            slopes(1) = slopes(1) + watershed_el(el)%sx
+            slopes(2) = slopes(2) + watershed_el(el)%sy
             
           case(3)
             print *, "kinematic wave has no sense for three-dimensions"
             print *, "exited from kinfnc::kinconvect"
             ERROR STOP
-            
-        end select
+          end select
+        else
+          select case(D)
+            case(1)
+              slopes(1) = watershed_el(el)%sx
+            case(2)
+              slopes(1) = watershed_el(el)%sx
+              slopes(2) = watershed_el(el)%sy
+            case(3)
+            print *, "kinematic wave has no sense for three-dimensions"
+            print *, "exited from kinfnc::kinconvect"
+            ERROR STOP
+          end select
+        end if
+        
+        vector_out(1:D) = -1.49_rkind * sign(1.0_rkind, slopes(1:D)) * & 
+                            sqrt(abs( slopes(1:D)))/manning(layer)*m*hsurf**(m-1)
+  
+!         select case (drutes_config%dimen)
+!         
+!           case(1)
+!             vector_out(1) = -1.49_rkind * sign(1.0_rkind, watershed_el(el)%sx) * & 
+!                             sqrt(abs( watershed_el(el)%sx))/manning(layer)*m*hsurf**(m-1)
+!         
+!           case(2)
+!         
+!             vector_out(1) = -1.49_rkind * sign(1.0_rkind, watershed_el(el)%sx) * & 
+!                             sqrt(abs( watershed_el(el)%sx))/manning(layer)*m*hsurf**(m-1)
+!             
+!             vector_out(2) = -1.49_rkind * sign(1.0_rkind, watershed_el(el)%sy) * & 
+!                             sqrt(abs( watershed_el(el)%sy))/manning(layer)*m*hsurf**(m-1)
+!                             
+!             
+! 
+!             
+!         end select
         
     end subroutine kinconvect
     

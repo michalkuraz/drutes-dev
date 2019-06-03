@@ -238,7 +238,8 @@ module re_reader
 		      dirname="drutes.conf/water.conf/")
 
 		      
-      close(file_waterm)	      
+      close(file_waterm)
+            
 
     end subroutine res_read
 
