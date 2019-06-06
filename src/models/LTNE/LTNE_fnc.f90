@@ -410,7 +410,7 @@ module LTNE_fnc
       if(present(quadpnt)) then
         call pde(wat)%pde_fnc(1)%dispersion(pde_loc, layer, x=(/hl(pde(wat), layer, quadpnt)/), tensor=Klh(1:D, 1:D))
         Klh(1:D, 1:D) = 10**(-Omega*Q_reduction(layer, quadpnt))*Klh(1:D, 1:D)
-        call pde(wat)%pde_fnc(2)%dispersion(pde_loc, layer, quadpnt, tensor = Klt(1:D, 1:D))
+        call pde(wat)%pde_fnc(heat_proc)%dispersion(pde_loc, layer, quadpnt, tensor = Klt(1:D, 1:D))
 
       end if
       

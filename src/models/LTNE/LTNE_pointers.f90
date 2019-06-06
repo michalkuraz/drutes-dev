@@ -59,7 +59,7 @@ module LTNE_pointers
       pde(wat)%pde_fnc(1)%elasticity => capacityhh
             
       pde(wat)%pde_fnc(1)%dispersion => diffhh
-      pde(wat)%pde_fnc(2)%dispersion => diffhT
+      pde(wat)%pde_fnc(heat_proc)%dispersion => diffhT
 
       pde(wat)%flux => all_fluxes_LTNE
       do i=lbound(pde(wat)%bc,1), ubound(pde(wat)%bc,1)
@@ -133,14 +133,14 @@ module LTNE_pointers
       
       pde(heat_proc)%pde_fnc(1)%elasticity => capacityTlh
       
-      pde(heat_proc)%pde_fnc(2)%elasticity => capacityTlTl
+      pde(heat_proc)%pde_fnc(heat_proc)%elasticity => capacityTlTl
       
-      pde(heat_proc)%pde_fnc(2)%dispersion => diffTlTl
+      pde(heat_proc)%pde_fnc(heat_proc)%dispersion => diffTlTl
       
-      pde(heat_proc)%pde_fnc(2)%convection => convectTlTl
+      pde(heat_proc)%pde_fnc(heat_proc)%convection => convectTlTl
       
-      pde(heat_proc)%pde_fnc(3)%reaction => qsl_pos
-      pde(heat_proc)%pde_fnc(2)%reaction => qsl_neg
+      pde(heat_proc)%pde_fnc(heat_solid)%reaction => qsl_pos
+      pde(heat_proc)%pde_fnc(heat_proc)%reaction => qsl_neg
 
       pde(heat_proc)%flux => heat_flux_l_LTNE
       
@@ -175,16 +175,16 @@ module LTNE_pointers
       allocate(pde(heat_solid)%mass_name(0,2))
       pde(heat_solid)%print_mass = .false.
             
-      pde(heat_solid)%pde_fnc(3)%elasticity => capacityTsTs
+      pde(heat_solid)%pde_fnc(heat_solid)%elasticity => capacityTsTs
       
-      pde(heat_solid)%pde_fnc(3)%dispersion => diffTsTs
+      pde(heat_solid)%pde_fnc(heat_solid)%dispersion => diffTsTs
             
       pde(heat_solid)%flux => heat_flux_s_LTNE
       
       pde(heat_solid)%initcond => temp_s_initcond 
       
-      pde(heat_solid)%pde_fnc(3)%reaction => qsl_neg
-      pde(heat_solid)%pde_fnc(2)%reaction => qsl_pos
+      pde(heat_solid)%pde_fnc(heat_solid)%reaction => qsl_neg
+      pde(heat_solid)%pde_fnc(heat_proc)%reaction => qsl_pos
       
       do i=lbound(pde(heat_solid)%bc,1), ubound(pde(heat_proc)%bc,1)
         select case(pde(heat_solid)%bc(i)%code)
