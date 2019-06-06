@@ -56,9 +56,9 @@ module LTNE_pointers
       pde(wat)%getval => getval_retotltne
       
     ! pointers for water flow model
-      pde(wat)%pde_fnc(1)%elasticity => capacityhh
+      pde(wat)%pde_fnc(wat)%elasticity => capacityhh
             
-      pde(wat)%pde_fnc(1)%dispersion => diffhh
+      pde(wat)%pde_fnc(wat)%dispersion => diffhh
       pde(wat)%pde_fnc(heat_proc)%dispersion => diffhT
 
       pde(wat)%flux => all_fluxes_LTNE
@@ -131,7 +131,7 @@ module LTNE_pointers
       allocate(pde(heat_proc)%mass_name(0,2))
       pde(heat_proc)%print_mass = .false.
       
-      pde(heat_proc)%pde_fnc(1)%elasticity => capacityTlh
+      pde(heat_proc)%pde_fnc(wat)%elasticity => capacityTlh
       
       pde(heat_proc)%pde_fnc(heat_proc)%elasticity => capacityTlTl
       
