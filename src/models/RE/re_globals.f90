@@ -57,5 +57,7 @@ module re_globals
   type(soilpar), dimension(:), allocatable, public :: vgset
 
   integer, public :: file_waterm
+  integer, public :: file_evap
+  
    
 end module re_globals
