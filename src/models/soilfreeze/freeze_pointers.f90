@@ -57,13 +57,13 @@ module freeze_pointers
       pde(wat)%getval => getval_retotfr
       
     ! pointers for water flow model
-      pde(wat)%pde_fnc(1)%elasticity => capacityhh
+      pde(wat)%pde_fnc(wat)%elasticity => capacityhh
       
-      pde(wat)%pde_fnc(2)%elasticity => capacityhT
+      pde(wat)%pde_fnc(heat_proc)%elasticity => capacityhT
       
-      pde(wat)%pde_fnc(1)%dispersion => diffhh
+      pde(wat)%pde_fnc(wat)%dispersion => diffhh
       
-      pde(wat)%pde_fnc(2)%dispersion => diffhT
+      pde(wat)%pde_fnc(heat_proc)%dispersion => diffhT
       
       pde(wat)%flux => all_fluxes
       do i=lbound(pde(wat)%bc,1), ubound(pde(wat)%bc,1)
@@ -128,13 +128,13 @@ module freeze_pointers
       allocate(pde(heat_proc)%mass_name(0,2))
       pde(heat_proc)%print_mass = .false.
       
-      pde(heat_proc)%pde_fnc(1)%elasticity => capacityTh
+      pde(heat_proc)%pde_fnc(wat)%elasticity => capacityTh
       
-      pde(heat_proc)%pde_fnc(2)%elasticity => capacityTT
+      pde(heat_proc)%pde_fnc(heat_proc)%elasticity => capacityTT
       
-      pde(heat_proc)%pde_fnc(2)%dispersion => diffTT
+      pde(heat_proc)%pde_fnc(heat_proc)%dispersion => diffTT
       
-      pde(heat_proc)%pde_fnc(2)%convection => convectTT
+      pde(heat_proc)%pde_fnc(heat_proc)%convection => convectTT
       
       pde(heat_proc)%flux => heat_flux_freeze
       
