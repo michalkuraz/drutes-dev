@@ -115,7 +115,7 @@ module RE_pointers
       do i=lbound(pde_loc%bc,1), ubound(pde_loc%bc,1)
         select case(pde_loc%bc(i)%code)
           case(-1)
-              pde_loc%bc(i)%value_fnc => re_dirichlet_height_bc
+            pde_loc%bc(i)%value_fnc => re_dirichlet_height_bc
           case(0)
             pde_loc%bc(i)%value_fnc => re_null_bc
           case(1)
@@ -202,7 +202,7 @@ module RE_pointers
         pde_loc%mass(1)%val => vangen
       else
         call tabvalues(pde_loc, Kfnc=mualem, dKdhfnc = dmualem_dh, Cfnc=vangen_elast, thetafnc=vangen)
-        pde_loc%pde_fnc(pde_loc%order)%dispersion  => mualem_tab		
+        pde_loc%pde_fnc(pde_loc%order)%dispersion  => mualem_tab
         pde_loc%pde_fnc(pde_loc%order)%elasticity => vangen_elast_tab
         pde_loc%mass(1)%val => vangen_tab
       end if

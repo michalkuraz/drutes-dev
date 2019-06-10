@@ -54,7 +54,9 @@ program main
   real ::  stop_time
   real(kind=rkind) :: r, t
   integer :: fileid, i, j, ierrtime
+
   
+
   
   call system("rm -rf out/*")
   

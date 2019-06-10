@@ -260,9 +260,9 @@ module postpro
       use pde_objs
       use debug_tools
       
-      integer(kind=ikind) :: i, layer, proc, D, j
+      integer(kind=ikind) :: i, layer, proc, D, j, massdim, printdim
       real(kind=rkind) :: val
-      real(kind=rkind), dimension(:), allocatable :: massval
+      real(kind=rkind), dimension(:), allocatable, save :: massval
       real(kind=rkind), dimension(3) :: advectval
       type(integpnt_str) :: quadpnt
 
@@ -271,9 +271,16 @@ module postpro
       quadpnt%column=3
       D = drutes_config%dimen
       
+      massdim=0
+      if (.not. allocated(massval)) then
+        do proc=1, ubound(pde,1)
+          if (ubound(pde(proc)%mass,1) > massdim) massdim = ubound(pde(proc)%mass,1)
+        end do
+        allocate(massval(massdim))
+      end if
+      
 
       do proc=1, ubound(pde,1)
-        allocate(massval(ubound(pde(proc)%mass,1)))
         do i =1, ubound(observation_array,1)
           layer = elements%material(observation_array(i)%element)
 
@@ -284,37 +291,28 @@ module postpro
           quadpnt%preproc=.true.
 
           call pde(proc)%flux(layer=layer, quadpnt=quadpnt,  vector_out=advectval(1:D))
-          val = pde(proc)%getval(quadpnt)
-
-          if (ubound(pde(proc)%mass_name,1) > 0) then
-            select case(drutes_config%name)
-              case("freeze")
-                massval = (/ pde(proc)%mass(1)%val(pde(proc),layer, x = (/val/)), pde(proc)%mass(2)%val(pde(proc),layer, quadpnt) &
-                , pde(proc)%mass(3)%val(pde(proc),layer, quadpnt), pde(proc)%mass(4)%val(pde(proc),layer, quadpnt)/)
-              case("LTNE")
-                massval = (/ pde(proc)%mass(1)%val(pde(proc),layer, x = (/val/)), pde(proc)%mass(2)%val(pde(proc),layer, quadpnt) &
-                , pde(proc)%mass(3)%val(pde(proc),layer, quadpnt), pde(proc)%mass(4)%val(pde(proc),layer, quadpnt), &
-                pde(proc)%mass(5)%val(pde(proc),layer, quadpnt)/)
-              case default
-                massval = (/ pde(proc)%mass(1)%val(pde(proc),layer, quadpnt) /)
-            end select            
-            observation_array(i)%cumflux(proc) = observation_array(i)%cumflux(proc) + &
-                sqrt(dot_product(advectval(1:D), advectval(1:D)))*time_step
-                
-            write(unit=pde(proc)%obspt_unit(i), fmt="(50E24.12E3)") time, val, massval, advectval(1:D), &
-                  observation_array(i)%cumflux(proc)
-
+          
+          if (pde(proc)%print_mass) then
+            printdim  = ubound(pde(proc)%mass,1)
           else
-            observation_array(i)%cumflux(proc) = observation_array(i)%cumflux(proc) + &
-                sqrt(dot_product(advectval(1:D), advectval(1:D)))*time_step
-                
-            write(unit=pde(proc)%obspt_unit(i), fmt="(50E24.12E3)") time, val, advectval(1:D), &
-                  observation_array(i)%cumflux(proc)
-
+            printdim = 0
           end if
+          
+          quadpnt%preproc = .true.
+          val = pde(proc)%getval(quadpnt)
+          
+          do j=1, ubound(pde(proc)%mass,1)
+            massval(j) = pde(proc)%mass(j)%val(pde(proc),layer, quadpnt)
+          end do
+          
+          
+          
+          write(unit=pde(proc)%obspt_unit(i), fmt=*) time, val, massval(1:printdim), advectval(1:D), &
+                  observation_array(i)%cumflux(proc)
+          
+
           call flush(pde(proc)%obspt_unit(i))
         end do
-        deallocate(massval)
       end do
     end subroutine write_obs
  
@@ -406,7 +404,6 @@ module postpro
       integer(kind=ikind) :: i, j, layer, ii
       real(kind=rkind) :: tmp, totflux
       real(kind=rkind), dimension(3) :: flux
-!       real(kind=rkind), dimension(3,8) :: body
       real(kind=rkind), dimension(:,:), allocatable :: body
       real(kind=rkind), dimension(2) :: vct1, vct2
       real(kind=rkind), dimension(8) :: vct_tmp
@@ -446,7 +443,7 @@ module postpro
         layer = elements%material(i)     
       
         qpntloc%element = i
-        qpntloc%column = 2
+        qpntloc%column = 3
         qpntloc%type_pnt = "gqnd"
         qpntloc%preproc=.true.
         do ii=1, ubound(pde(proc)%mass,1)
@@ -550,69 +547,81 @@ module postpro
       integer, dimension(:), intent(in) :: ids
       integer(kind=ikind), intent(in) :: proc
       type(integpnt_str),  intent(in out) :: quadpnt
-      real(kind=rkind) :: curtime
-      integer(kind=ikind) :: i, layer, j
+      real(kind=rkind) :: curtime, tmp
+      integer(kind=ikind) :: i, layer, j, velocity_id, ii, jj
       real(kind=rkind) ::  distance,  avgval
       type(integpnt_str) :: qpntloc
-      real(kind=rkind), dimension(3) :: flux
+      real(kind=rkind), dimension(3) :: flux, flux_tmp
       real(kind=rkind), dimension(:), allocatable :: massval
+      real(kind=rkind), dimension(:), allocatable, save :: pts
 
-
+ 
+      if (.not. allocated(pts)) allocate(pts(ubound(nodes%data,2)))
+      
       do i=1, nodes%kolik
+        quadpnt%type_pnt = "ndpt"
         quadpnt%order = i
         quadpnt%preproc=.true.
-
         write(unit=ids(1), fmt=*) i,  nodes%data(i,:), pde(proc)%getval(quadpnt) 
-
-        layer = elements%material(nodes%element(i)%data(1))
-        ! 3 is for mass
+      end do
+      
+      
+      do i=1, elements%kolik
+        avgval=0
+        do ii=1, ubound(elements%data,2)
+          quadpnt%type_pnt = "ndpt"
+          quadpnt%preproc = .true.
+          quadpnt%order = elements%data(i,ii)
+          avgval = avgval + pde(proc)%getval(quadpnt) 
+        end do
+        avgval = avgval/ubound(elements%data,2)
         
+   
+        pts = 0
+        do ii=1, ubound(elements%data,2)
+          pts = pts + nodes%data(elements%data(i,ii),:)
+        end do
+        pts = pts/ubound(elements%data,2)
+        
+        write(unit=ids(2), fmt=*)  i, pts, avgval
+      
+        quadpnt%element = i
+        quadpnt%column = 3
+        quadpnt%type_pnt = "gqnd"
+        quadpnt%preproc=.true. 
+        
+        layer = elements%material(i)
+        
+
+        
+        ! 3 is for mass
         if (pde(proc)%print_mass) then
-          allocate(massval(ubound(pde(proc)%mass,1)))
-          select case(drutes_config%name)
-            case("freeze")
-              write(unit=ids(3), fmt=*)  i, nodes%data(i,:), pde(proc)%mass(1)%val(pde(proc),layer, quadpnt)              
-              write(unit=ids(4), fmt=*)  i, nodes%data(i,:), pde(proc)%mass(2)%val(pde(proc),layer, quadpnt)
-              write(unit=ids(5), fmt=*)  i, nodes%data(i,:), pde(proc)%mass(3)%val(pde(proc),layer, quadpnt)
-              write(unit=ids(6), fmt=*)  i, nodes%data(i,:), pde(proc)%mass(4)%val(pde(proc),layer, quadpnt)
-            case("LTNE")
-              write(unit=ids(3), fmt=*)  i, nodes%data(i,:), pde(proc)%mass(1)%val(pde(proc),layer, quadpnt)              
-              write(unit=ids(4), fmt=*)  i, nodes%data(i,:), pde(proc)%mass(2)%val(pde(proc),layer, quadpnt)
-              write(unit=ids(5), fmt=*)  i, nodes%data(i,:), pde(proc)%mass(3)%val(pde(proc),layer, quadpnt)
-              write(unit=ids(6), fmt=*)  i, nodes%data(i,:), pde(proc)%mass(4)%val(pde(proc),layer, quadpnt)
-              write(unit=ids(7), fmt=*)  i, nodes%data(i,:), pde(proc)%mass(5)%val(pde(proc),layer, quadpnt)
-
-            case default
-              massval = (/ pde(proc)%mass(1)%val(pde(proc),layer, quadpnt) /)
-              write(unit=ids(3), fmt=*)  i, nodes%data(i,:), pde(proc)%mass(1)%val(pde(proc),layer, quadpnt)              
-
-          end select  
-
-          !&
-          !(/ ( pde(proc)%mass(j)%val(pde(proc), layer, quadpnt), j=1,ubound(pde(proc)%mass,1) ) /)
-          deallocate(massval)
-
+          do j=3, ubound(pde(proc)%mass,1) + 2
+            tmp = 0
+            do jj=1, ubound(gauss_points%weight,1)
+              quadpnt%order = jj
+              tmp = tmp + pde(proc)%mass(j-2)%val(pde(proc),layer, quadpnt)*gauss_points%weight(jj)
+            end do
+            tmp = tmp/gauss_points%area
+            write(unit=ids(j), fmt=*)  i, pts, tmp
+          end do
+        end if
+        
+        flux = 0
+        do jj=1, ubound(gauss_points%weight,1)
+          quadpnt%order = jj
+          call pde(proc)%flux(layer, quadpnt, vector_out=flux_tmp(1:drutes_config%dimen))
+          flux = flux + flux_tmp*gauss_points%weight(jj)
+        end do
+        flux = flux / gauss_points%area
+        
+        if (.not. pde(proc)%print_mass) then
+          velocity_id = 3
+        else
+          velocity_id = 3 + ubound(pde(proc)%mass,1)
         end if
 
-        select case(drutes_config%name)
-          case("freeze")
-           call pde(proc)%flux(layer, quadpnt, vector_out=flux(1:drutes_config%dimen))
-           if(proc > 1_ikind) then
-             write(unit=ids(3), fmt=*) i,  nodes%data(i,:), flux(1:drutes_config%dimen)
-           else
-             write(unit=ids(7), fmt=*) i,  nodes%data(i,:), flux(1:drutes_config%dimen)
-           end if
-          case("LTNE")
-            call pde(proc)%flux(layer, quadpnt, vector_out=flux(1:drutes_config%dimen))
-            if(proc > 1_ikind) then
-              write(unit=ids(3), fmt=*) i,  nodes%data(i,:), flux(1:drutes_config%dimen)
-            else
-              write(unit=ids(8), fmt=*) i,  nodes%data(i,:), flux(1:drutes_config%dimen)
-           end if
-         case default
-           call pde(proc)%flux(layer, quadpnt, vector_out=flux(1:drutes_config%dimen))
-           write(unit=ids(4), fmt=*) i,  nodes%data(i,:), flux(1:drutes_config%dimen)
-        end select  
+        write(unit=ids(velocity_id), fmt=*) i,  pts, flux(1:drutes_config%dimen)
       end do
 
       do i=1, ubound(ids,1)
@@ -686,12 +695,12 @@ module postpro
       write(unit=ids(1), fmt=*) nodes%kolik
       do i=1, nodes%kolik
         quadpnt%order = i
-        quadpnt%preproc=.true.
+        quadpnt%preproc = .true.
         write(unit=ids(1), fmt=*) i, pde(proc)%getval(quadpnt)
       end do
       write(unit=ids(1), fmt="(a)") "$EndNodeData"
     
-    end subroutine print_gmsh
+end subroutine print_gmsh
 
   
     
