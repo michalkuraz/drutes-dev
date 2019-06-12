@@ -125,7 +125,7 @@ module read_inputs
       call fileread(iter_criterion, local, ranges=(/0.0_rkind, huge(0.0_rkind)/), &
       errmsg="iteration criterion must be positive, and smaller than the maximal number your computer can handle :)")
       
-      call fileread(time_units, local, options=(/"s    ", "hrs  ", "day  ", "month" , "year "/), errmsg="say how wrong you are" )
+      call fileread(time_units, local, options=(/"s    ","min  " "hrs  ", "day  ", "month" , "year "/), errmsg="say how wrong you are" )
       
       call fileread(init_dt, local, ranges=(/tiny(0.0_rkind), huge(0.0_rkind)/),&
       errmsg="initial time step must be positive, and smaller than the maximal number your computer can handle :)")

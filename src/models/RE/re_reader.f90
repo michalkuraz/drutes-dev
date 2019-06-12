@@ -1,5 +1,5 @@
 
-! Copyright 2008 Michal Kuraz, Petr Mayer, Copyright 2016  Michal Kuraz, Petr Mayer, Johanna Bloecher
+! Copyright 2008 Michal Kuraz, Petr Mayer, Copyright 2016  Michal Kuraz, Petr Mayer, Johanna Bloecher, Copyright 2019  Michal Kuraz, Petr Mayer, Johanna Bloecher, Juliana Arbelaez
 
 ! This file is part of DRUtES.
 ! DRUtES is free software: you can redistribute it and/or modify
@@ -237,7 +237,16 @@ module re_reader
 		      dirname="drutes.conf/water.conf/")
 
 		      
-      close(file_waterm)	      
+      close(file_waterm)	
+      
+  !> Calle reader if the user select atmospheric boundary
+      do i=lbound(pde_loc%bc,1), ubound(pde_loc%bc,1)
+        if (pde_loc%bc(i)%code == 5) then 
+          call Re_evap_var()
+        end if 
+      end do
+      
+    
 
     end subroutine res_read
 

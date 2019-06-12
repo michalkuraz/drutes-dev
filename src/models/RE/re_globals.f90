@@ -59,5 +59,8 @@ module re_globals
   integer, public :: file_waterm
   integer, public :: file_evap
   
-   
+  !> evaporation input 
+  real(kind=rkind), public :: albedo,latitude,elevation
+  
+  
 end module re_globals
