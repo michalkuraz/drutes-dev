@@ -15,12 +15,68 @@
 module Re_evap_bc
 
   public :: evap_pm_bc
+  public :: evap_datadt_bc
+  
   
  
   contains
 
-  !> Defines Neumann (flux) evaporation boundary condition using the Penman-Monteith Model
+  !> Defines dt of provide data for eveporation calculations
+  subroutine evap_datadt_bc
+      use typy
+      use globals
+      use global_objs
+      use pde_objs
+      use geom_tools
+      use re_globals
+    
 
+      integer(kind=ikind) :: evap_units
+      real(kind=rkind) :: datadt
+      logical, save :: run1st=.true.
+      
+      
+      
+        if (runf1st) then
+        select case(time_units)
+          case("s")
+            datadt = (1.0_rkind/86400.0_rkind)*datadt
+          case("min")
+            datadt = (1.0_rkind/1440.0_rkind)*datadt
+          case("hrs")
+            datadt = (1.0_rkind/24.0_rkind)*datadt
+          case("day")
+            continue
+          case("month")
+            datadt = 30.0_rkind*datadt
+          case("year")
+            datadt = 365.0_rkind*datadt
+          case default
+            ERROR STOP
+        end select
+        
+        select case(nint(time_units))
+          case(1.0_rkind/24.0_rkind)
+            evap_units  = "hourly"
+          case(1)
+            evap_units  = "daily"
+          case(28.0_rkind:31.0_rkind)
+            evap_units  = "monthly"
+          case(365.0_rkind)
+            evap_units  = "yearly"
+          case default
+            ERROR STOP
+        end select
+        run1st = .false.
+      end if
+      
+      
+      
+  end subroutine evap_datadt_bc
+  
+  
+  
+  !> Defines Neumann (flux) evaporation boundary condition using the Penman-Monteith Model
   subroutine evap_pm_bc(pde_loc, el_id, node_order, value, code) 
       use typy
       use globals
@@ -28,6 +84,7 @@ module Re_evap_bc
       use pde_objs
       use geom_tools
       use re_globals
+      use evap_datadt_bc
       
       
       class(pde_str), intent(in) :: pde_loc
@@ -39,20 +96,6 @@ module Re_evap_bc
       type(integpnt_str) :: quadpnt
       real(kind=rkind), dimension(3) :: xyz
       real(kind=rkind) :: tmax, tmin, tmean,rhmean, wind,solar,soil, slope_vap,e_soil,e_air, Patm,gp, light
-      logical, save :: run1st=.true.
-      
-      if (runf1st) then
-        select case(time_units)
-          case(¨s¨)
-            
-          case(¨hrs¨)
-          
-          case(¨day¨)
-          
-        end select
-        
-        run1st = .false.
-      end if
       
       edge_id = nodes%edge(elements%data(el_id, node_order))
 
@@ -114,5 +157,6 @@ module Re_evap_bc
 
   end subroutine evap_pm_bc
   
-  
+
+
 end module Re_evap_bc
