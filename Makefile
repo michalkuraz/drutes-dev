@@ -36,8 +36,9 @@ REDUAL_obj := Re_dual_totH.o Re_dual_globals.o Re_dual_pointers.o Re_dual_reader
 HEAT_obj := heat_fnc.o heat_pointers.o heat_globals.o heat_reader.o
 LTNE_obj := ltne_fnc.o ltne_globals.o ltne_pointers.o ltne_reader.o
 FROZEN_obj := refreeze_globs.o
+evaporation_obj := Re_evap_bc.o Re_evap_reader.o
 
-ALL_objs := $(CORE_obj) $(TOOLS_obj) $(POINTERMAN_obj) $(MATHTOOLS_obj) $(FEMTOOLS_obj) $(DECOMPO_obj) $(RE_obj) $(PMAoo_obj) $(BOUSSINESQ_obj) $(ADE_obj) $(REDUAL_obj)  $(HEAT_obj) $(LTNE_obj) $(FROZEN_obj)
+ALL_objs := $(CORE_obj) $(TOOLS_obj) $(POINTERMAN_obj) $(MATHTOOLS_obj) $(FEMTOOLS_obj) $(DECOMPO_obj) $(RE_obj) $(PMAoo_obj) $(BOUSSINESQ_obj) $(ADE_obj) $(REDUAL_obj)  $(HEAT_obj) $(LTNE_obj) $(FROZEN_obj) $(evaporation_obj)
 #-----------------------------------------------------------------
 
 #-------begin CORE_obj--------------------------------
@@ -198,6 +199,14 @@ bousspointers.o: $(CORE_obj)  boussfnc.o boussglob.o boussread.o src/models/bous
 
 
 
+#------begin evaporation_obj-------------------------
+Re_evap_reader.o: $(CORE_obj) $(TOOLS_obj) $(RE_obj) src/models/evaporation/Re_evap_reader.f90
+	$c -c src/models/evaporation/Re_evap_reader.f90
+Re_evap_bc.o: $(CORE_obj) $(TOOLS_obj) src/models/evaporation/Re_evap_bc.f90
+	$c -c src/models/evaporation/Re_evap_bc.f90
+#------end evaporation_obj---------------------------
+
+
 #------begin FEMTOOLS_obj-----------------------------
 fem_tools.o:  $(CORE_obj) $(MATHTOOLS_obj) $(TOOLS_obj) $(PMA++_obj) src/femtools/fem_tools.f90
 	$c -c  src/femtools/fem_tools.f90
@@ -212,6 +221,8 @@ femmat.o: $(CORE_obj) $(PMA++_obj) fem_tools.o stiffmat.o capmat.o decomp_vars.o
 fem.o: $(CORE_obj) $(LINALG_obj) $(DECOMPO_obj) $(TOOLS_obj) femmat.o src/femtools/fem.f90
 	$c -c src/femtools/fem.f90
 #------end FEMTOOLS_obj------------------------------
+
+
 
 
 

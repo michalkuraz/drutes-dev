@@ -25,13 +25,12 @@ contains
      use globals
      use global_objs
      use core_tools
-     use dual_globals
      use readtools
      use pde_objs
      use debug_tools
 
-    call find_unit(file_evap, 300)
-      open(unit=file_evap file="drutes.conf/evaporation/evap.conf", action="read", status="old", iostat = ierr)
+
+      open(newunit=file_evap file="drutes.conf/evaporation/evap.conf", action="read", status="old", iostat = ierr)
       if (i_err /= 0) then
         print *, "missing evap.conf file in drutes.conf/evaporation/evap.conf""
         ERROR STOP
