@@ -131,11 +131,11 @@ module Re_evap_bc
               delta = 0.409_rkind*sin((2.0_rkind*3.14159265_rkind*J/365.0_rkind) -1.39_rkind)
               omega = acos(-tan(phi)*tan(delta))
               R_a = (24*60/3.14159265)*dr*0.0820*(omega*sin(phi)*sin(delta) + cos(phi)*cos(delta)* sin(omega))
-              R_so = (0.75 + z*2*10**(-5))*R_a
+              R_so = (0.75 + z*2e-5)*R_a
               R_ns = (1-a)*solar
               tmink = tmin + 273.15_rkind
               tmaxk = tmax + 273.15_rkind
-              R_nl = 4.903*10**(-9)*((tmink**4 + tmaxk**4)/2.0_rkind)*(0.34_rkind - 0.14_rkind*sqrt(e_air))*(1.35_rkind*(solar/R_so) - 0.35_rkind)
+              R_nl = 4.903e-9*((tmink**4 + tmaxk**4)/2.0_rkind)*(0.34_rkind - 0.14_rkind*sqrt(e_air))*(1.35_rkind*(solar/R_so) - 0.35_rkind)
               radiation = R_ns - R_ln
               wind2 = wind*(4.87_rkind/log(67.82_rkind*z - 5.42_rkind))
               !Soil flux calculation
