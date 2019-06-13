@@ -178,7 +178,12 @@ module postpro
          
          
           do i=1, 3+ubound(pde(proc)%mass_name,1)
-            open(newunit=ids(proc, i), file=trim(filenames(proc)%names(i)), action="write", status="replace", iostat=ierr)
+            ! if gsmh don't print element average value 
+            if (i == 2 .and. observe_info%fmt == "gmsh") then
+              CONTINUE
+            else
+              open(newunit=ids(proc, i), file=trim(filenames(proc)%names(i)), action="write", status="replace", iostat=ierr)
+            end if
           end do  
         end if
 
@@ -354,8 +359,8 @@ module postpro
       do 
         read(unit=fileid, fmt=*, iostat=ierr) ch
         if (ch == "VmPeak:") then
-        backspace fileid
-        EXIT
+          backspace fileid
+          EXIT
         end if
 
         if (ierr /=0) then
@@ -364,7 +369,12 @@ module postpro
         end if
       end do
 
-      read(unit=fileid, fmt=*) ch, bytes, byte_unit
+      read(unit=fileid, fmt=*, iostat=ierr) ch, bytes, byte_unit
+      
+      if (ierr /=0) then
+        print *, "unable to fetch memory consumption from system files"
+        RETURN
+      end if
 
       call write_log(text="Peak RAM  consumption on image", int1=1_ikind*THIS_IMAGE(), text2="was:", int2=bytes, text3=byte_unit)
 
@@ -381,7 +391,12 @@ module postpro
         end if
       end do
 
-      read(unit=fileid, fmt=*) ch, bytes, byte_unit
+      read(unit=fileid, fmt=*, iostat=ierr) ch, bytes, byte_unit
+      
+      if (ierr /=0) then
+        print *, "unable to fetch swap consumption from system files"
+        RETURN
+      end if
 
       call write_log(text="Peak SWAP consumption on image", int1=1_ikind*THIS_IMAGE(), text2="was:", int2=bytes, text3=byte_unit)
 
@@ -641,9 +656,9 @@ module postpro
       integer, dimension(:), intent(in) :: ids
       integer(kind=ikind), intent(in) :: proc
       type(integpnt_str),  intent(in out) :: quadpnt
-      integer(kind=ikind) :: i
+      integer(kind=ikind) :: i, j, layer
       logical, dimension(:), allocatable, save :: printed 
-      real(kind=rkind) :: curtime
+      real(kind=rkind) :: curtime, totflux
       
       
       if (.not. allocated(printed)) then
@@ -658,47 +673,91 @@ module postpro
       end if
       
       if (.not. printed(proc)) then
-    
-        write(unit=ids(1), fmt="(a)") "$MeshFormat"
-        write(unit=ids(1), fmt="(a)") "2.2 0 8"
-        write(unit=ids(1), fmt="(a)") "$EndMeshFormat"
-        write(unit=ids(1), fmt="(a)") "$Nodes"
-        
-        write(unit=ids(1), fmt=*) nodes%kolik
-        
-        do i=1, nodes%kolik
-          write(unit=ids(1), fmt=*) i,  nodes%data(i,:)
+       do i=1, ubound(ids,1)
+          if (i/=2) then 
+            write(unit=ids(i), fmt="(a)") "$MeshFormat"
+            write(unit=ids(i), fmt="(a)") "2.2 0 8"
+            write(unit=ids(i), fmt="(a)") "$EndMeshFormat"
+            write(unit=ids(i), fmt="(a)") "$Nodes"
+            
+            write(unit=ids(i), fmt=*) nodes%kolik
+            
+            do j=1, nodes%kolik
+              write(unit=ids(i), fmt=*) j,  nodes%data(j,:)
+            end do
+            write(unit=ids(i), fmt="(a)") "$EndNodes"
+            write(unit=ids(i), fmt="(a)") "$Elements"
+            write(unit=ids(i), fmt=*) elements%kolik
+            do j=1, elements%kolik
+              write(unit=ids(i), fmt=*) j,  elements%data(j,:)
+            end do
+            write(unit=ids(i), fmt="(a)") "$EndElements"
+            write(unit=ids(i), fmt="(a)") "$NodeData"
+            
+          end if
         end do
-        write(unit=ids(1), fmt="(a)") "$EndNodes"
-        write(unit=ids(1), fmt="(a)") "$Elements"
-        write(unit=ids(1), fmt=*) elements%kolik
-        do i=1, elements%kolik
-          write(unit=ids(1), fmt=*) i,  elements%data(i,:)
-        end do
-        write(unit=ids(1), fmt="(a)") "$EndElements"
-        write(unit=ids(1), fmt="(a)") "$NodeData"
-        
         printed(proc) = .true.
       end if
       
-      write(unit=ids(1), fmt="(a)") "$NodeData"     
-      write(unit=ids(1), fmt=*) "1"
-      write(unit=ids(1), fmt=*) ' " ', trim(pde(proc)%problem_name(2)), " ", trim(pde(proc)%solution_name(1)) , ' " '
-      write(unit=ids(1), fmt=*) "1"
-      write(unit=ids(1), fmt=*) curtime  !///tohle udává čas
-      write(unit=ids(1), fmt=*) "3"
-      write(unit=ids(1), fmt=*) postpro_run
-      write(unit=ids(1), fmt=*) "1"
-        
-
       
-      write(unit=ids(1), fmt=*) nodes%kolik
-      do i=1, nodes%kolik
-        quadpnt%order = i
-        quadpnt%preproc = .true.
-        write(unit=ids(1), fmt=*) i, pde(proc)%getval(quadpnt)
+      do i=1, ubound(ids,1)
+        if (i/=2) then
+          write(unit=ids(i), fmt="(a)") "$NodeData"     
+          write(unit=ids(i), fmt=*) "1"
+          
+          !write solution
+          if (i==1) then
+            write(unit=ids(i), fmt=*) ' " ', trim(pde(proc)%problem_name(2)), " ", trim(pde(proc)%solution_name(1)) , ' " '
+          
+          ! write mass
+          else if (i >= 3 .and. i <= ubound(ids,1)-1) then
+            write(unit=ids(i), fmt=*) ' " ', trim(pde(proc)%problem_name(2)), " ", trim(pde(proc)%mass_name(i-2,1)) , ' " '
+          ! write fluxes   
+          else if ( i == ubound(ids,1) ) then
+            write(unit=ids(i), fmt=*) ' " ', trim(pde(proc)%problem_name(2)), " ", trim(pde(proc)%flux_name(1)) , ' " '
+          end if
+          
+          write(unit=ids(i), fmt=*) "1"
+          write(unit=ids(i), fmt=*) curtime  
+          write(unit=ids(i), fmt=*) "3"
+          write(unit=ids(i), fmt=*) postpro_run
+          write(unit=ids(i), fmt=*) "1"
+            
+
+          
+          write(unit=ids(i), fmt=*) nodes%kolik
+          
+           !write solution
+          if (i==1) then
+            do j=1, nodes%kolik
+              quadpnt%order = j
+              quadpnt%preproc = .true.
+              write(unit=ids(i), fmt=*) j, pde(proc)%getval(quadpnt)
+            end do
+            
+          ! write mass  
+          else if (i >= 3 .and. i <= ubound(ids,1)-1) then
+            do j=1, nodes%kolik
+              quadpnt%order = j
+              quadpnt%preproc = .true.
+              layer = nodes%element(j)%data(1)
+              write(unit=ids(i), fmt=*) j, pde(proc)%mass(i-2)%val(pde(proc), layer, quadpnt)
+            end do
+          
+          
+          ! write fluxes   
+          else if ( i == ubound(ids,1) ) then
+            do j=1, nodes%kolik
+              quadpnt%order = j
+              quadpnt%preproc = .true.
+              layer = nodes%element(j)%data(1)
+              call pde(proc)%flux(layer, quadpnt, scalar=totflux)
+              write(unit=ids(i), fmt=*) j, totflux
+            end do
+          end if
+          write(unit=ids(i), fmt="(a)") "$EndNodeData"
+        end if
       end do
-      write(unit=ids(1), fmt="(a)") "$EndNodeData"
     
 end subroutine print_gmsh
 
