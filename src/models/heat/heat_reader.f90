@@ -95,10 +95,11 @@ module heat_reader
       
       
       write(unit=msg, fmt=*) "HINT 1: Is the heat conductivity positive?", new_line("a"), &
-	"   HINT 2 : Is the number of heat conductivity values corresponding to the amount of layers?"
-			      
+        "   HINT 2 : Is the number of heat conductivity values corresponding to the amount of layers?"
+                  
 
  
+
       write(unit=msg, fmt=*) "HINT 1: Are all values anisotropy defining anisotropical diffusivity positive? ", &
        new_line("a"), new_line("a"),  &
         "   HINT 2: Have you defined an EXACT NUMBER of values for anisotropy?", new_line("a"), &
@@ -107,12 +108,15 @@ module heat_reader
         new_line("a"), new_line("a"), &
         "   HINT 3: The number of lines with heat conductivity has to correspond to the number of materials & 
         defined by your mesh", new_line("a"), new_line("a")
+
       
       
       allocate(tmp_array(drutes_config%dimen + 1))
       do i=1, ubound(heatpar,1)
         allocate(heatpar(i)%lambda_loc(drutes_config%dimen))
+
         call fileread(r=tmp_array, fileid=file_heat, ranges=(/0.0_rkind, huge(tmp)/), errmsg=trim(msg), checklen=.TRUE.)
+
         heatpar(i)%anisoangle = tmp_array(1)
         heatpar(i)%lambda_loc = tmp_array(2:drutes_config%dimen + 1)
         allocate(heatpar(i)%lambda(drutes_config%dimen, drutes_config%dimen))
@@ -120,11 +124,13 @@ module heat_reader
       end do
       
       
-      write(unit=msg, fmt=*) "Did you specify convection vector component for each coordinate (e.g. x,y,z)"
-      do i=1, ubound(heatpar,1)
-        allocate(heatpar(i)%convection(drutes_config%dimen))
-        call fileread(r=heatpar(i)%convection, fileid=file_heat, errmsg=trim(msg))
-      end do
+      if (.not. with_richards) then
+        write(unit=msg, fmt=*) "Did you specify convection vector component for each coordinate (e.g. x,y,z)"
+        do i=1, ubound(heatpar,1)
+          allocate(heatpar(i)%convection(drutes_config%dimen))
+          call fileread(r=heatpar(i)%convection, fileid=file_heat, errmsg=trim(msg))
+        end do
+      end if
         
       write(unit=msg, fmt=*) "Hint: The number of lines for the initial temperature has to be equal to the number of materials."
       do i=1, ubound(heatpar,1)
@@ -145,6 +151,7 @@ module heat_reader
       
       call readbcvals(unitW=file_heat, struct=pde_loc%bc, dimen=n, &
           dirname="drutes.conf/heat/")
+
       
       
       

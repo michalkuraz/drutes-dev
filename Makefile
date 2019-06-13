@@ -4,13 +4,10 @@ in := cd objs
 out := cd ..
 
 #options for debugging, use for development  
-
 c= gfortran -fimplicit-none  -fcoarray=single -fbounds-check -fbacktrace -g -g3 -fdefault-real-8 -O0 -finit-real=nan -Wsurprising
-
 
 #options for optimized compilation, use for production purposes on well debugged versions
 #c=gfortran -fimplicit-none  -fcoarray=single -fdefault-real-8 -O3 -finit-real=nan -ffpe-summary=none -fno-backtrace  
-
 
 d=drutes_obj-`date -I`
 
@@ -35,9 +32,14 @@ ADE_obj := ADE_fnc.o ADE_reader.o ADE_globals.o ADE_pointers.o
 REDUAL_obj := Re_dual_totH.o Re_dual_globals.o Re_dual_pointers.o Re_dual_reader.o Re_dual_tab.o Re_dual_coupling.o Re_dual_bc.o
 HEAT_obj := heat_fnc.o heat_pointers.o heat_globals.o heat_reader.o
 LTNE_obj := LTNE_fnc.o LTNE_globs.o LTNE_pointers.o LTNE_reader.o LTNE_helper.o
+KINWAVE_obj := kinreader.o kinglobs.o kinfnc.o kinpointer.o
+
 FROZEN_obj := freeze_globs.o freeze_helper.o freeze_fnc.o freeze_reader.o freeze_pointers.o
 
-ALL_objs := $(CORE_obj) $(TOOLS_obj) $(POINTERMAN_obj) $(MATHTOOLS_obj) $(FEMTOOLS_obj) $(DECOMPO_obj) $(RE_obj) $(PMAoo_obj) $(BOUSSINESQ_obj) $(ADE_obj) $(REDUAL_obj)  $(HEAT_obj) $(LTNE_obj) $(FROZEN_obj)
+
+MODEL_objs := $(RE_obj)  $(BOUSSINESQ_obj) $(ADE_obj) $(REDUAL_obj)  $(HEAT_obj) $(LTNE_obj) $(FROZEN_obj) $(KINWAVE_obj) 
+
+ALL_objs := $(CORE_obj) $(TOOLS_obj) $(POINTERMAN_obj) $(MATHTOOLS_obj) $(FEMTOOLS_obj) $(DECOMPO_obj)  $(PMAoo_obj) $(MODEL_objs)
 #-----------------------------------------------------------------
 
 #-------begin CORE_obj--------------------------------
@@ -144,7 +146,7 @@ LTNE_globs.o: $(CORE_obj) src/models/LTNE/LTNE_globs.f90
 	$c -c src/models/LTNE/LTNE_globs.f90
 LTNE_reader.o: $(CORE_obj) LTNE_globs.o src/models/LTNE/LTNE_reader.f90
 	$c -c src/models/LTNE/LTNE_reader.f90
-LTNE_helper.o: $(CORE_obj) LTNE_globs.o src/models/LTNE/LTNE_helper.f90
+LTNE_helper.o: $(CORE_obj) LTNE_globs.o $(FROZEN_obj) src/models/LTNE/LTNE_helper.f90
 	$c -c src/models/LTNE/LTNE_helper.f90
 LTNE_fnc.o: $(CORE_obj) LTNE_globs.o LTNE_helper.o src/models/LTNE/LTNE_fnc.f90
 	$c -c src/models/LTNE/LTNE_fnc.f90
@@ -224,9 +226,20 @@ fem.o: $(CORE_obj) $(LINALG_obj) $(DECOMPO_obj) $(TOOLS_obj) femmat.o src/femtoo
 #------end FEMTOOLS_obj------------------------------
 
 
+#------begin KINWAVE_obj-----------------------------
+kinglobs.o: $(CORE_obj) src/models/kinwave/kinglobs.f90
+	$c -c src/models/kinwave/kinglobs.f90
+kinfnc.o: $(CORE_obj) kinglobs.o src/models/kinwave/kinfnc.f90
+	$c -c src/models/kinwave/kinfnc.f90
+kinreader.o: $(CORE_obj) kinglobs.o src/models/kinwave/kinreader.f90
+	$c -c src/models/kinwave/kinreader.f90
+kinpointer.o: $(CORE_obj) $(TOOLS_obj) kinglobs.o kinreader.o src/models/kinwave/kinpointer.f90
+	$c -c src/models/kinwave/kinpointer.f90
+#------end KINWAVE_obj-------------------------------
+
 
 #-------begin POINTERS_obj--------------------------------
-manage_pointers.o: $(CORE_obj) $(TOOLS_obj) $(CORE_obj) $(FEMTOOLS_obj) $(LINALG_obj) $(RE_obj) $(DECOMPO_obj)  $(BOUSSINESQ_obj) $(ADE_obj) $(REDUAL_obj) $(HEAT_obj) $(FROZEN_obj) $(LTNE_obj) src/pointerman/manage_pointers.f90
+manage_pointers.o: $(CORE_obj) $(TOOLS_obj) $(CORE_obj) $(FEMTOOLS_obj) $(LINALG_obj) $(DECOMPO_obj) $(MODEL_objs) src/pointerman/manage_pointers.f90
 	$c -c src/pointerman/manage_pointers.f90
 #-------end pointers_obj--------------------------------
 

@@ -45,6 +45,7 @@ module manage_pointers
       use Re_dual_pointers
       use heat_pointers
       use drutes_init
+      use kinpointer
       use freeze_pointers
       use ltne_pointers
 
@@ -98,7 +99,7 @@ module manage_pointers
       
     
         case("REtest")
-          write(unit=drutes_config%fullname, fmt=*) "DRUtES debugs itself"
+          write(unit=drutes_config%fullname, fmt=*) "(debugs) itself"
           pde_common%processes = 3
           call pde_constructor(3_ikind)
           do i=1, 3
@@ -109,14 +110,23 @@ module manage_pointers
         
           call heat_processes(pde_common%processes)
           call pde_constructor(pde_common%processes)
-          write(unit=drutes_config%fullname, fmt=*) "DRUtES solves heat conduction with convection"
+          write(unit=drutes_config%fullname, fmt=*) "heat conduction with convection"
           call heat(pde(:))
+          
+          
+        case("kinwave")
+        
+          call kinwaveprocs(pde_common%processes)
+          call pde_constructor(pde_common%processes)
+          write(unit=drutes_config%fullname, fmt=*) "kinematic wave equation for real catchments"
+          call kinwavelinker(pde(1))
+          
 	  
         case("freeze")
         
           call freeze_processes(pde_common%processes)
           call pde_constructor(pde_common%processes)
-          write(unit = drutes_config%fullname, fmt=*) "DRUtES solves coupled water and heat flow considering freezing and melting"
+          write(unit = drutes_config%fullname, fmt=*) "coupled water and heat flow considering freezing and melting"
           call frz_pointers()
           
        case("LTNE")
@@ -139,9 +149,9 @@ module manage_pointers
             solve_matrix => LDU_face
             !solve_matrix => CG_normal_face
         case(2)
-      !           solve_matrix => pcg
-      ! 	    solve_matrix => LDU_face
-            solve_matrix => CG_normal_face
+                solve_matrix => cg_face
+!       	    solve_matrix => LDU_face
+!             solve_matrix => CG_normal_face
       ! 	    solve_matrix => sparse_gem_pig_AtA
       ! 	    solve_matrix => jacobi_face
       end select

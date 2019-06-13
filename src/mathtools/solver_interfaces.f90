@@ -74,6 +74,16 @@ module solver_interfaces
         
         integer(kind=ikind), dimension(:), allocatable, save :: p1, p2
         
+    !! pivtype -- method of pivoting
+    !! 0 ... no pivoting (not recommended)
+    !! 1 ... full pivoting (use both permutation vector)
+    !! 2 ... column pivoting (requires perm1 only)
+    !! 3 ... row pivoting (requires perm2 only)
+    !! 4 ... diagonal pivoting (symmetric matrix only)
+    !! 5 ... diagonal pivoting with minimal degree (symmetric matrix only)
+        
+        
+        
         
         if (.not. allocated(p1)) then
           allocate(p1(ubound(b,1)))

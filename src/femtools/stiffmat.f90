@@ -1,4 +1,3 @@
-
 ! Copyright 2008 Michal Kuraz, Petr Mayer, Copyright 2016  Michal Kuraz, Petr Mayer, Johanna Bloecher
 
 
@@ -30,8 +29,9 @@ module stiffmat
   public :: build_stiff_np
   public :: build_bvect
   contains
-
-     !> build local stifness matrix for nonlinear problems and Picard method
+   
+   
+   !> build local stifness matrix for nonlinear problems and Picard method
      subroutine build_stiff_np(el_id, dt, domain_id, quadpnt_in)
       use typy
       use globals
@@ -94,56 +94,88 @@ module stiffmat
       end if
       
       do iproc=1,ubound(pde,1)
-        do jproc=1, ubound(pde,1)
-          pde_block_column = jproc
+        !use Galerkin FEM
+        if (pde(iproc)%diffusion) then
+          do jproc=1, ubound(pde,1)
+            pde_block_column = jproc
+            do i=1, ubound(stiff_mat,1)/ ubound(pde,1)
+              do j=1, ubound(stiff_mat,1)/ubound(pde,1)
+                dsum = 0
+                csum = 0
+                rsum = 0
+                
+                
+                v(1:top,1) = elements%ders(el_id,i,1:top)
+                u(1,1:top) = elements%ders(el_id,j,1:top)
+
+                do l=1, ubound(gauss_points%weight,1)
+                  quadpnt%order = l
+                  call pde(iproc)%pde_fnc(jproc)%dispersion(pde(iproc), layer(iproc, jproc), &
+                     quadpnt, tensor=disp(1:top,1:top))
+
+                  w(:,1:top) =  matmul(u(:,1:top),disp(1:top,1:top))
+                  dsum = dsum - matmul(w(:,1:top) ,v(1:top,:))*gauss_points%weight(l)
+                end do
+                do l=1, ubound(gauss_points%weight,1)
+                  quadpnt%order = l
+                  call pde(iproc)%pde_fnc(jproc)%convection(pde(iproc), layer(iproc, jproc), quadpnt, &
+                    vector_out=conv(1:top))
+                  csum = csum - dot_product(u(1,1:top),conv(1:top))*base_fnc(i,l)*gauss_points%weight(l)
+                  call pde(iproc)%pde_fnc(jproc)%der_convect(pde(iproc), layer(iproc, jproc), quadpnt, 	&
+                     vector_out=conv(1:top))
+                    w = base_fnc(i,l)*base_fnc(j,l)
+                  csum = csum - dot_product(w(1,1:top), conv(1:top))*gauss_points%weight(l)
+
+                end do
+
+
+                do l=1, ubound(gauss_points%weight,1)
+                  quadpnt%order = l
+                  rsum = rsum + pde(iproc)%pde_fnc(jproc)%reaction(pde(iproc),layer(iproc, jproc), &
+                    quadpnt)*base_fnc(i,l)*base_fnc(j,l)*gauss_points%weight(l)
+                end do	      
+
+                ii = i + (iproc-1)*limits
+                jj = j + (jproc-1)*limits
+                
+                stiff_mat(ii,jj) = (dsum(1,1) + csum + rsum)*dt
+              end do
+            end do 
+          end do
+        
+        !use least-square FEM (for convection only problems)
+        else
           do i=1, ubound(stiff_mat,1)/ ubound(pde,1)
             do j=1, ubound(stiff_mat,1)/ubound(pde,1)
-              dsum = 0
-              csum = 0
-              rsum = 0
-              
-              
-              v(1:top,1) = elements%ders(el_id,i,1:top)
-              u(1,1:top) = elements%ders(el_id,j,1:top)
+                csum = 0
+                v(1:top,1) = elements%ders(el_id,i,1:top)
+                u(1,1:top) = elements%ders(el_id,j,1:top)
 
-              do l=1, ubound(gauss_points%weight,1)
-                quadpnt%order = l
-                call pde(iproc)%pde_fnc(jproc)%dispersion(pde(iproc), layer(iproc, jproc), &
-                   quadpnt, tensor=disp(1:top,1:top))
-
-                w(:,1:top) =  matmul(u(:,1:top),disp(1:top,1:top))
-                dsum = dsum - matmul(w(:,1:top) ,v(1:top,:))*gauss_points%weight(l)
-              end do
-              do l=1, ubound(gauss_points%weight,1)
-                quadpnt%order = l
-                call pde(iproc)%pde_fnc(jproc)%convection(pde(iproc), layer(iproc, jproc), quadpnt, &
-                  vector_out=conv(1:top))
-                csum = csum - dot_product(u(1,1:top),conv(1:top))*base_fnc(i,l)*gauss_points%weight(l)
-                call pde(iproc)%pde_fnc(jproc)%der_convect(pde(iproc), layer(iproc, jproc), quadpnt, 	&
-                   vector_out=conv(1:top))
-                  w = base_fnc(i,l)*base_fnc(j,l)
-                csum = csum - dot_product(w(1,1:top), conv(1:top))*gauss_points%weight(l)
-
-              end do
-
-
-              do l=1, ubound(gauss_points%weight,1)
-                quadpnt%order = l
-                rsum = rsum + pde(iproc)%pde_fnc(jproc)%reaction(pde(iproc),layer(iproc, jproc), &
-                  quadpnt)*base_fnc(i,l)*base_fnc(j,l)*gauss_points%weight(l)
-              end do	      
-
-              ii = i + (iproc-1)*limits
-              jj = j + (jproc-1)*limits
-              stiff_mat(ii,jj) = (dsum(1,1) + csum + rsum)
-            end do
-          end do 
-        end do
+                do l=1, ubound(gauss_points%weight,1)
+                  quadpnt%order = l
+                  call pde(iproc)%pde_fnc(iproc)%convection(pde(iproc), layer(iproc, iproc), quadpnt, &
+                    vector_out=conv(1:top))
+                  csum = csum + ((base_fnc(i,l) + dt*dot_product(conv(1:top), v(1:top,1)))* &
+                          (base_fnc(j,l) + dt*dot_product(conv(1:top), u(1,1:top))))* &
+                          gauss_points%weight(l)
+                 end do
+                 ii = i + (iproc-1)*limits
+                 jj = j + (iproc-1)*limits
+                
+                stiff_mat(ii,jj) =  csum 
+               end do
+             end do
+          
+        end if
       end do
 
-     stiff_mat = stiff_mat/gauss_points%area*elements%areas(el_id)*dt
+     
+     stiff_mat = stiff_mat/gauss_points%area*elements%areas(el_id)
+     
           
     end subroutine build_stiff_np
+    
+  
     
     
     subroutine build_bvect(el_id, dt, domain_id, quadpnt_in)    
@@ -161,11 +193,15 @@ module stiffmat
       integer(kind=ikind), intent(in), optional :: domain_id
       type(integpnt_str) , intent(in), optional :: quadpnt_in
       
-      integer(kind=ikind) :: iproc, limits, ii, i, l
-      real(kind=rkind) :: suma
+      integer(kind=ikind) :: iproc, limits, ii, i, l, top, layer
+      real(kind=rkind) :: suma, hp, source
       type(integpnt_str) :: quadpnt
+      real(kind=rkind), dimension(3) :: conv
+      real(kind=rkind), dimension(3,1) :: v
       
       bside = 0
+      
+      top = drutes_config%dimen
       
       if (present(quadpnt_in)) then
         quadpnt = quadpnt_in
@@ -183,22 +219,49 @@ module stiffmat
       end if
       
       do iproc = 1, ubound(pde,1)
-        do i=1, ubound(stiff_mat,1)/ ubound(pde,1)
-          suma = 0
-          
-          do l=1, ubound(gauss_points%weight,1)
-                 quadpnt%order = l	  
-           suma = suma - pde(iproc)%pde_fnc(iproc)%zerord(pde(iproc), layer=elements%material(el_id), quadpnt=quadpnt) &
-           *gauss_points%weight(l)
+        if (pde(iproc)%diffusion) then
+          do i=1, ubound(stiff_mat,1)/ ubound(pde,1)
+            suma = 0
+            
+            do l=1, ubound(gauss_points%weight,1)
+              quadpnt%order = l	  
+              suma = suma - pde(iproc)%pde_fnc(iproc)%zerord(pde(iproc), layer=elements%material(el_id), quadpnt=quadpnt)* &
+              gauss_points%weight(l)
+            end do
+      
+            ii = i + (iproc-1)*limits
+            
+            bside(ii) = suma*dt*elements%areas(el_id)/gauss_points%area
+            
           end do
-	  
-          ii = i + (iproc-1)*limits
+        else
+          layer = elements%material(el_id)
           
-          bside(ii) = suma*dt*elements%areas(el_id)
+          do i=1, ubound(stiff_mat,1)/ ubound(pde,1)
+            v(1:top,1) = elements%ders(el_id,i,1:top)
+            suma = 0
+
+            do l=1,  ubound(gauss_points%weight,1)
+              quadpnt%order = l
+              quadpnt%column = 1
+              hp = pde(iproc)%getval(quadpnt)
+              quadpnt%column = 2
+              source = pde(iproc)%pde_fnc(iproc)%zerord(pde(iproc), layer, quadpnt=quadpnt)
+              call pde(iproc)%pde_fnc(iproc)%convection(pde(iproc), layer, quadpnt, &
+                      vector_out=conv(1:top))
+              suma = suma + (hp + dt*source) *(base_fnc(1,l)+dot_product(dt*conv(1:top), v(1:top,1)))* &
+                    gauss_points%weight(l)  
+            end do
+            
+            ii = i + (iproc-1)*limits
+            bside(ii) = suma*elements%areas(el_id)/gauss_points%area
+          end do
+      
           
-        end do
+        end if
       end do
     
+      
 
     end subroutine build_bvect
 

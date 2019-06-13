@@ -59,9 +59,8 @@ module re_reader
 
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       !water.conf/matrix.conf
-      call find_unit(file_waterm, 200)
 
-      open(unit=file_waterm, file="drutes.conf/water.conf/matrix.conf", action="read", status="old", iostat = ierr)
+      open(newunit=file_waterm, file="drutes.conf/water.conf/matrix.conf", action="read", status="old", iostat = ierr)
 
       
       if (ierr /= 0) then
@@ -239,7 +238,8 @@ module re_reader
 		      dirname="drutes.conf/water.conf/")
 
 		      
-      close(file_waterm)	      
+      close(file_waterm)
+            
 
     end subroutine res_read
 

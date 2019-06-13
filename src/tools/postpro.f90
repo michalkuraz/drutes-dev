@@ -544,7 +544,7 @@ module postpro
         end if
         
         
-        write(unit=ids(i), fmt=*) "plot3d1(x',y',z',alpha=0, theta=-90);"
+        write(unit=ids(i), fmt=*) "plot3d1(x',y',z',alpha=30, theta=-60);"
 
 
       end do 

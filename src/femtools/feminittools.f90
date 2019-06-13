@@ -108,9 +108,10 @@ module feminittools
 
           end do
       end select
+
       
       call reorder()
-      
+
       i = ubound(pde,1)
       
       if (drutes_config%it_method /= 1) then
@@ -129,7 +130,6 @@ module feminittools
     
       end do
 
- 
       ! fill nodes%el2integ
       !--------------
       call write_log("analyzing mesh structure...")
@@ -450,7 +450,7 @@ module feminittools
 
 	      case(3)
 
-	  !to be implemented
+          !to be implemented
 
 	 
 	    end select
@@ -481,24 +481,15 @@ module feminittools
       counter = 1
       proc_start = 0
 
-        
+       
+  
       do proc=1, ubound(pde,1)
-      
-
         pde(proc)%procbase_fnc(1) = counter
 
         do i=1, nodes%kolik
-
           pde(proc)%permut(i) = i
-
-
           if (nodes%edge(i) /= 0) then
-                    
-        
-          
             call pde(proc)%bc(nodes%edge(i))%value_fnc(pde(proc), 1_ikind,1_ikind, code=bc)
-                      
- 
           else
             bc = 0
           end if
@@ -511,11 +502,11 @@ module feminittools
               counter  = counter + 1
           end select  
         end do
-
         proc_start = counter-1
         pde(proc)%procbase_fnc(2) = counter - 1
-
       end do
+
+      
 
       allocate(pde_common%invpermut(counter))
       

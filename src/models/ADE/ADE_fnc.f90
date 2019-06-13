@@ -245,7 +245,12 @@ module ADE_fnc
       
       bd = sorption(layer, media_id)%bd
       
-      val = bd*sorption(layer, media_id)%ratio*(1-vgset(layer)%ths)
+      
+      if (use_richards) then
+        val = bd*sorption(layer, media_id)%ratio*(1-vgset(layer)%ths)
+      else
+        val = bd*sorption(layer, media_id)%ratio*(1-adepar(layer)%water_cont)
+      end if
       
     end function ADE_tder_cscl
     
@@ -475,7 +480,7 @@ module ADE_fnc
     end subroutine ADE_neumann
     
     
-     subroutine ADE_null_bc(pde_loc, el_id, node_order, value, code) 
+    subroutine ADE_null_bc(pde_loc, el_id, node_order, value, code) 
       use typy
       use globals
       use global_objs

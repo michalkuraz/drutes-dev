@@ -69,7 +69,6 @@ module femmat
 
       do
 
-
         itcount = itcount + 1
 
         
@@ -82,24 +81,27 @@ module femmat
 
         
         call solve_matrix(spmatrix, pde_common%bvect(1:fin), pde_common%xvect(1:fin,3),  itmax1=fin, &
-            reps1=1e-15_rkind, itfin1=pcg_it, repsfin1=reps_err)
+            reps1=1e-11_rkind, itfin1=pcg_it, repsfin1=reps_err)
             
             
-        if (pcg_it > 0.5*fin) then 
+        if (pcg_it > 0.75*fin) then 
           ierr=-1
         else
           ierr=0
         end if
 		  
-
+		  
         if (drutes_config%dimen >  1) then
           write(unit=file_itcg, fmt = *) time, pcg_it, reps_err
           call flush(file_itcg)
           call diag_precond(a=spmatrix, x=pde_common%xvect(1:fin,3), mode=-1)
-        end if	
+        end if
+        
+
 
         error = norm2(pde_common%xvect(1:fin,2)-pde_common%xvect(1:fin,3))/ubound(pde_common%xvect,1)
         
+
          
         if (itcount == 1 .or. error <= iter_criterion) then
           do proc=1, ubound(pde,1)
@@ -195,6 +197,7 @@ module femmat
        call build_stiff_np(i, time_step)
 
        call pde_common%time_integ(i)
+
        stiff_mat = stiff_mat + cap_mat
         
        call in2global(i,spmatrix, pde_common%bvect)
