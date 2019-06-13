@@ -61,6 +61,7 @@ module re_globals
   
   !> evaporation input 
   real(kind=rkind), public :: albedo,latitude,elevation, day_year
+  real(kind=rkind), public :: Tref = 273.15_rkind
   
   
 end module re_globals

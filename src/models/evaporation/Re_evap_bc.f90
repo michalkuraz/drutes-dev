@@ -22,15 +22,16 @@ module Re_evap_bc
   contains
 
   !> Defines dt of provide data for eveporation calculations
-    subroutine evap_datadt_bc
+    subroutine evap_datadt_bc(evap_units, series)
       use typy
       use globals
 
-      integer(kind=ikind) :: evap_units
-      real(kind=rkind) :: datadt
-      logical, save :: run1st=.true.
+
+      real(lkind=rkind), dimension(:,:), intent(in) :: series
+      character(len=*), intent(out) :: evap_units
+      real(kind=rkind) :: datascale
       
-      
+
       if (runf1st) then
         select case(time_units)
           case("s")
@@ -62,7 +63,47 @@ module Re_evap_bc
             ERROR STOP
         end select
         run1st = .false.
+
+      
+      if (ubound(series,1)> 1) then
+        datascale = series(2,1) - series(1,1)
+      else
+        datascale = series(1,1)
+
       end if
+      
+
+      ! if time units is a day, then datascale = 1
+      select case(cut(time_units))
+        case("s")
+          datascale = (1.0_rkind/86400.0_rkind)*datascale
+        case("min")
+          datascale = (1.0_rkind/1440.0_rkind)*datascale
+        case("hrs")
+          datascale = (1.0_rkind/24.0_rkind)*datascale
+        case("day")
+          continue
+        case("month")
+          datascale = 30.0_rkind*datascale
+        case("year")
+          datascale = 365.0_rkind*datascale
+        case default
+          ERROR STOP
+      end select
+      
+      select case(nint(datascale))
+        case(0)
+          evap_units  = "hourly"
+        case(1)
+          evap_units  = "daily"
+        case(28:31)
+          evap_units  = "monthly"
+        case(365)
+          evap_units  = "yearly"
+        case default
+          ERROR STOP
+      end select
+
     end subroutine evap_datadt_bc
   
   
@@ -87,8 +128,16 @@ module Re_evap_bc
       real(kind=rkind), dimension(3) :: xyz
       real(kind=rkind) :: tmax, tmin, tmean,tmean_prev,tmax_prev,tmin_prev wind,solar,soil
       real(kind=rkind) ::  slope_vap,e_soil,e_air, Patm,gp, light,evap
+      logical, save :: run1st=.true.
+      character(len=8), save :: evap_units 
+      
       
       edge_id = nodes%edge(elements%data(el_id, node_order))
+      if (run1st) then
+        call evap_datadt_bc(evap_units, pde_loc%bc(edge_id)%series)
+        run1st = .false.
+      end if
+      
 
       quadpnt%type_pnt = "ndpt"
       quadpnt%order = elements%data(el_id, node_order)
@@ -133,8 +182,8 @@ module Re_evap_bc
                 case default
                   ERROR STOP
               end select
-              dr = 1.0_rkind + 0.033_rkind*cos(2.0_rkind*3.14159265_rkind*num_day/365.0_rkind)
-              delta = 0.409_rkind*sin((2.0_rkind*3.14159265_rkind*num_day/365.0_rkind) -1.39_rkind)
+              dr = 1.0_rkind + 0.033_rkind*cos(2.0_rkind*pi()*num_day/365.0_rkind)
+              delta = 0.409_rkind*sin((2.0_rkind*pi()*num_day/365.0_rkind) -1.39_rkind)
               omega = acos(-tan(phi)*tan(delta))
               R_a = (24*60/3.14159265)*dr*0.0820*(omega*sin(phi)*sin(delta) + cos(phi)*cos(delta)* sin(omega))
 
@@ -143,13 +192,13 @@ module Re_evap_bc
 
               R_ns = (1-albedo)*solar
 
-              tmink = tmin + 273.15_rkind
-              tmaxk = tmax + 273.15_rkind
+              tmink = tmin + Tref
+              tmaxk = tmax + Tref
               R_nl = 4.903e-9*((tmink**4 + tmaxk**4)/2.0_rkind)*(0.34_rkind - &
                0.14_rkind*sqrt(e_air))*(1.35_rkind*(solar/R_so) - 0.35_rkind)
               radiation = R_ns - R_ln
               wind2 = wind*(4.87_rkind/log(67.82_rkind*z - 5.42_rkind))
-              select case(evap_units)
+              select case(cut(evap_units))
                 case("hourly")
                   soil = 0.1_rking*radiation
                 case("daily")
@@ -167,7 +216,7 @@ module Re_evap_bc
           print *, "evaporation boundary must be time dependent, check record for the boundary", edge_id
           ERROR STOP
         end if
-      value = 
+        value = 
       end if
       
 
@@ -176,6 +225,9 @@ module Re_evap_bc
       end if
 
     end subroutine evap_pm_bc
+    
+
+    
   
 
 

@@ -122,7 +122,7 @@ re_total.o: $(CORE_obj) $(TOOLS_obj) re_globals.o re_constitutive.o src/models/R
 	$c -c src/models/RE/re_total.f90
 re_reader.o:  $(CORE_obj) $(TOOLS_obj) re_globals.o src/models/RE/re_reader.f90
 	$c -c src/models/RE/re_reader.f90	
-re_pointers.o:  $(CORE_obj) re_globals.o re_constitutive.o re_total.o re_reader.o src/models/RE/re_pointers.f90
+re_pointers.o:  $(CORE_obj) re_globals.o re_constitutive.o re_total.o re_reader.o Re_evap_bc.o src/models/RE/re_pointers.f90
 	$c -c src/models/RE/re_pointers.f90
 re_analytical.o:  $(CORE_obj) re_globals.o re_constitutive.o src/models/RE/re_analytical.f90
 	$c -c src/models/RE/re_analytical.f90

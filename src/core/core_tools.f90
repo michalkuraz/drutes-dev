@@ -31,6 +31,7 @@ module core_tools
   public :: mesh_allocater
   public :: find_unit
   public :: cut
+  public :: pi
 
 
   contains
@@ -212,7 +213,12 @@ module core_tools
   end subroutine find_unit
 
 
-
+  function pi() result(value)
+    use typy
+    real(kind=rkind) :: value
+    
+    value = 4_ikind*atan(1.0_rkind)
+  end function pi
 
 
 end module core_tools
