@@ -60,7 +60,7 @@ module re_globals
   integer, public :: file_evap
   
   !> evaporation input 
-  real(kind=rkind), public :: albedo,latitude,elevation
+  real(kind=rkind), public :: albedo,latitude,elevation, day_year
   
   
 end module re_globals
