@@ -69,9 +69,6 @@ module Re_evap_bc
         end select
         run1st = .false.
       end if
-      
-      
-      
   end subroutine evap_datadt_bc
   
   
@@ -95,7 +92,7 @@ module Re_evap_bc
       integer(kind=ikind) :: edge_id, i, j, D,num_day
       type(integpnt_str) :: quadpnt
       real(kind=rkind), dimension(3) :: xyz
-      real(kind=rkind) :: tmax, tmin, tmean,rhmean, wind,solar,soil, slope_vap,e_soil,e_air, Patm,gp, light
+      real(kind=rkind) :: tmax, tmin, tmean,tmean_prev,tmax_prev,tmin_prev wind,solar,soil, slope_vap,e_soil,e_air, Patm,gp, light,evap
       
       edge_id = nodes%edge(elements%data(el_id, node_order))
 
@@ -118,27 +115,56 @@ module Re_evap_bc
               end if
               tmax = pde_loc%bc(edge_id)%series(j,2)
               tmin = pde_loc%bc(edge_id)%series(j,3)
+              tmax_prev = pde_loc%bc(edge_id)%series(j-1,2)
+              tmin_prev =  pde_loc%bc(edge_id)%series(j-1,3)
               rhmean = pde_loc%bc(edge_id)%series(j,4)
               wind = pde_loc%bc(edge_id)%series(j,5)
               solar = pde_loc%bc(edge_id)%series(j,6)
               light = pde_loc%bc(edge_id)%series(j,7)
               tmean = (tmax+tmin)/2.0_rkind
+              tmean_prev = (tmax_prev+tmin_prev)/2.0_rkind
               e_soil = 0.6108_rkind*exp(17.27_rkinf*tmean/(tmean + 237.3_rkind))
               slope_vap = (4098.0_rkind*e_soil)/(tmean + 237.3_rkind)**2
               e_air = 0.6108_rkind*exp(17.27_rkind*tmean/(tmean + 237.3_rkind))*(rhmean/100.0_rkind)
               !num_day calculation
-              dr = 1.0_rkind + 0.033_rkind*cos(2.0_rkind*3.14159265_rkind*J/365.0_rkind)
-              delta = 0.409_rkind*sin((2.0_rkind*3.14159265_rkind*J/365.0_rkind) -1.39_rkind)
+              select case(evap_units)
+                case("hourly")
+                  num_day = day_year
+                case("daily")
+                  num_day= 
+                case("monthly")
+                  num_day = 0.14_rkind*(tmean- tmean_prev)
+                case("yearly")
+                  num_day = 0.14_rkind*(tmean- tmean_prev)
+                case default
+                  ERROR STOP
+              dr = 1.0_rkind + 0.033_rkind*cos(2.0_rkind*3.14159265_rkind*num_day/365.0_rkind)
+              delta = 0.409_rkind*sin((2.0_rkind*3.14159265_rkind*num_day/365.0_rkind) -1.39_rkind)
               omega = acos(-tan(phi)*tan(delta))
               R_a = (24*60/3.14159265)*dr*0.0820*(omega*sin(phi)*sin(delta) + cos(phi)*cos(delta)* sin(omega))
+
               R_so = (0.75 + z*2e-5)*R_a
-              R_ns = (1-a)*solar
+
+
+              R_ns = (1-albedo)*solar
+
               tmink = tmin + 273.15_rkind
               tmaxk = tmax + 273.15_rkind
               R_nl = 4.903e-9*((tmink**4 + tmaxk**4)/2.0_rkind)*(0.34_rkind - 0.14_rkind*sqrt(e_air))*(1.35_rkind*(solar/R_so) - 0.35_rkind)
               radiation = R_ns - R_ln
               wind2 = wind*(4.87_rkind/log(67.82_rkind*z - 5.42_rkind))
-              !Soil flux calculation
+              select case(evap_units)
+                case("hourly")
+                  soil = 0.1_rking*radiation
+                case("daily")
+                  soil = 0.0_rkind
+                case("monthly")
+                  soil = 0.14_rkind*(tmean- tmean_prev)
+                case("yearly")
+                  soil = 0.14_rkind*(tmean- tmean_prev)
+              end select
+              
+            
               value = 
               EXIT
             end if
