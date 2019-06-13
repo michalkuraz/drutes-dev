@@ -36,8 +36,7 @@ module Re_evap_bc
       logical, save :: run1st=.true.
       
       
-      
-        if (runf1st) then
+      if (runf1st) then
         select case(time_units)
           case("s")
             datadt = (1.0_rkind/86400.0_rkind)*datadt
@@ -54,15 +53,15 @@ module Re_evap_bc
           case default
             ERROR STOP
         end select
-        
+
         select case(nint(time_units))
-          case(1.0_rkind/24.0_rkind)
+          case(0)
             evap_units  = "hourly"
           case(1)
             evap_units  = "daily"
-          case(28.0_rkind:31.0_rkind)
+          case(28:31)
             evap_units  = "monthly"
-          case(365.0_rkind)
+          case(365)
             evap_units  = "yearly"
           case default
             ERROR STOP
@@ -81,7 +80,7 @@ module Re_evap_bc
       use pde_objs
       use geom_tools
       use re_globals
-      use evap_datadt_bc
+      
       
       
       class(pde_str), intent(in) :: pde_loc
@@ -159,8 +158,6 @@ module Re_evap_bc
                 case("yearly")
                   soil = 0.14_rkind*(tmean- tmean_prev)
               end select
-              
-            
               value = 
               EXIT
             end if
