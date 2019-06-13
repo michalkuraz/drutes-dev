@@ -25,7 +25,6 @@ contains
      use globals
      use global_objs
      use core_tools
-     use dual_globals
      use readtools
      use pde_objs
      use debug_tools

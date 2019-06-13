@@ -22,14 +22,9 @@ module Re_evap_bc
   contains
 
   !> Defines dt of provide data for eveporation calculations
-  subroutine evap_datadt_bc
+    subroutine evap_datadt_bc
       use typy
       use globals
-      use global_objs
-      use pde_objs
-      use geom_tools
-      use re_globals
-    
 
       integer(kind=ikind) :: evap_units
       real(kind=rkind) :: datadt
@@ -56,32 +51,30 @@ module Re_evap_bc
         end select
         
         select case(nint(time_units))
-          case(1.0_rkind/24.0_rkind)
+          case(0)
             evap_units  = "hourly"
           case(1)
             evap_units  = "daily"
-          case(28.0_rkind:31.0_rkind)
+          case(28:31)
             evap_units  = "monthly"
-          case(365.0_rkind)
+          case(365)
             evap_units  = "yearly"
           case default
             ERROR STOP
         end select
         run1st = .false.
       end if
-  end subroutine evap_datadt_bc
+    end subroutine evap_datadt_bc
   
   
   
   !> Defines Neumann (flux) evaporation boundary condition using the Penman-Monteith Model
-  subroutine evap_pm_bc(pde_loc, el_id, node_order, value, code) 
+    subroutine evap_pm_bc(pde_loc, el_id, node_order, value, code) 
       use typy
       use globals
       use global_objs
       use pde_objs
-      use geom_tools
       use re_globals
-      use evap_datadt_bc
       
       
       class(pde_str), intent(in) :: pde_loc
@@ -92,7 +85,8 @@ module Re_evap_bc
       integer(kind=ikind) :: edge_id, i, j, D,num_day
       type(integpnt_str) :: quadpnt
       real(kind=rkind), dimension(3) :: xyz
-      real(kind=rkind) :: tmax, tmin, tmean,tmean_prev,tmax_prev,tmin_prev wind,solar,soil, slope_vap,e_soil,e_air, Patm,gp, light,evap
+      real(kind=rkind) :: tmax, tmin, tmean,tmean_prev,tmax_prev,tmin_prev wind,solar,soil
+      real(kind=rkind) ::  slope_vap,e_soil,e_air, Patm,gp, light,evap
       
       edge_id = nodes%edge(elements%data(el_id, node_order))
 
@@ -138,6 +132,7 @@ module Re_evap_bc
                   num_day = 0.14_rkind*(tmean- tmean_prev)
                 case default
                   ERROR STOP
+              end select
               dr = 1.0_rkind + 0.033_rkind*cos(2.0_rkind*3.14159265_rkind*num_day/365.0_rkind)
               delta = 0.409_rkind*sin((2.0_rkind*3.14159265_rkind*num_day/365.0_rkind) -1.39_rkind)
               omega = acos(-tan(phi)*tan(delta))
@@ -150,7 +145,8 @@ module Re_evap_bc
 
               tmink = tmin + 273.15_rkind
               tmaxk = tmax + 273.15_rkind
-              R_nl = 4.903e-9*((tmink**4 + tmaxk**4)/2.0_rkind)*(0.34_rkind - 0.14_rkind*sqrt(e_air))*(1.35_rkind*(solar/R_so) - 0.35_rkind)
+              R_nl = 4.903e-9*((tmink**4 + tmaxk**4)/2.0_rkind)*(0.34_rkind - &
+               0.14_rkind*sqrt(e_air))*(1.35_rkind*(solar/R_so) - 0.35_rkind)
               radiation = R_ns - R_ln
               wind2 = wind*(4.87_rkind/log(67.82_rkind*z - 5.42_rkind))
               select case(evap_units)
@@ -181,7 +177,7 @@ module Re_evap_bc
         code = 2
       end if
 
-  end subroutine evap_pm_bc
+    end subroutine evap_pm_bc
   
 
 
