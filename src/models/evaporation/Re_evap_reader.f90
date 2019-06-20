@@ -39,7 +39,6 @@ contains
       call fileread(elevation, file_evap, ranges=(/0.0_rkind, huge(0.0_rkind)/), errmsg="specify elevation above sea level in m. This can be only positive")
       call fileread(latitude, file_evap, ranges=(/- huge(0.0_rkind), huge(0.0_rkind)/), errmsg="specify latitude in radians. This can be negative or positive depend on hemisphere")
       call fileread(albedo, file_evap, ranges=(/0.0_rkind, 1.0_rkind/), errmsg="specify albedo or canopy reflection coefficient between 0 and 1")
-      call fileread(day_year, file_evap, ranges=(/1.0_rkind, 365.0_rkind/), errmsg="specify albedo or canopy reflection coefficient between 0 and 1")
     close(file_evap)	
 
   end subroutine Re_evap_var()

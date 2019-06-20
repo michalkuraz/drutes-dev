@@ -16,9 +16,12 @@ module Re_evap_bc
 
   public :: evap_pm_bc
   public :: evap_datadt_bc
+  public :: e_o
+  public :: pressure_atm
+  public :: wind_fcn
+  public :: radiation_fcn
+  public :: soilheat_fcn
   
-  
- 
   contains
 
   !> Defines dt of provide data for eveporation calculations
@@ -27,49 +30,15 @@ module Re_evap_bc
       use globals
 
 
-      real(lkind=rkind), dimension(:,:), intent(in) :: series
+      real(kind=rkind), dimension(:,:), intent(in) :: series
       character(len=*), intent(out) :: evap_units
       real(kind=rkind) :: datascale
       
-
-      if (runf1st) then
-        select case(time_units)
-          case("s")
-            datadt = (1.0_rkind/86400.0_rkind)*datadt
-          case("min")
-            datadt = (1.0_rkind/1440.0_rkind)*datadt
-          case("hrs")
-            datadt = (1.0_rkind/24.0_rkind)*datadt
-          case("day")
-            continue
-          case("month")
-            datadt = 30.0_rkind*datadt
-          case("year")
-            datadt = 365.0_rkind*datadt
-          case default
-            ERROR STOP
-        end select
-
-        select case(nint(time_units))
-          case(0)
-            evap_units  = "hourly"
-          case(1)
-            evap_units  = "daily"
-          case(28:31)
-            evap_units  = "monthly"
-          case(365)
-            evap_units  = "yearly"
-          case default
-            ERROR STOP
-        end select
-        run1st = .false.
-
       
       if (ubound(series,1)> 1) then
         datascale = series(2,1) - series(1,1)
       else
         datascale = series(1,1)
-
       end if
       
 
@@ -115,24 +84,25 @@ module Re_evap_bc
       use global_objs
       use pde_objs
       use re_globals
-
-      
+      use core_tools
       
       class(pde_str), intent(in) :: pde_loc
       integer(kind=ikind), intent(in)  :: el_id, node_order
       real(kind=rkind), intent(out), optional   :: value
       integer(kind=ikind), intent(out), optional :: code
 
-      integer(kind=ikind) :: edge_id, i, j, D,num_day
+      integer(kind=ikind) :: edge_id, i, j, D,num_day,hour,day, month,year,layer
       type(integpnt_str) :: quadpnt
       real(kind=rkind), dimension(3) :: xyz
-      real(kind=rkind) :: tmax, tmin, tmean,tmean_prev,tmax_prev,tmin_prev wind,solar,soil
-      real(kind=rkind) ::  slope_vap,e_soil,e_air, Patm,gp, light,evap
+      real(kind=rkind) :: tmax, tmin,tmean,tmean_prev,tmax_prev,tmin_prev,wind,solar,soil
+      real(kind=rkind) ::  slope_vap,e_sat,e_act, Patm,gp, light,evap, rhmean
+      real(kind=rkind) :: radiation, tmaxk,tmink,wind2,rain, theta
       logical, save :: run1st=.true.
       character(len=8), save :: evap_units 
       
       
       edge_id = nodes%edge(elements%data(el_id, node_order))
+      
       if (run1st) then
         call evap_datadt_bc(evap_units, pde_loc%bc(edge_id)%series)
         run1st = .false.
@@ -144,8 +114,8 @@ module Re_evap_bc
       D = drutes_config%dimen
       call getcoor(quadpnt, xyz(1:D))
       
-      Patm = 
-      gp = 
+      Patm = pressure_atm(elevation) 
+      gp = 0.665_rkind*10e-3*Patm
       
       if (present(value)) then
         if (pde_loc%bc(edge_id)%file) then
@@ -156,59 +126,48 @@ module Re_evap_bc
               else
                 j = i
               end if
-              tmax = pde_loc%bc(edge_id)%series(j,2)
-              tmin = pde_loc%bc(edge_id)%series(j,3)
-              tmax_prev = pde_loc%bc(edge_id)%series(j-1,2)
-              tmin_prev =  pde_loc%bc(edge_id)%series(j-1,3)
-              rhmean = pde_loc%bc(edge_id)%series(j,4)
-              wind = pde_loc%bc(edge_id)%series(j,5)
-              solar = pde_loc%bc(edge_id)%series(j,6)
-              light = pde_loc%bc(edge_id)%series(j,7)
+              
+              hour  = pde_loc%bc(edge_id)%series(j,1)
+              day = pde_loc%bc(edge_id)%series(j,2)
+              month = pde_loc%bc(edge_id)%series(j,3)
+              year = pde_loc%bc(edge_id)%series(j,4)
+              tmax = pde_loc%bc(edge_id)%series(j,5)
+              tmin = pde_loc%bc(edge_id)%series(j,6)
+              tmax_prev = pde_loc%bc(edge_id)%series(j-1,5)
+              tmin_prev =  pde_loc%bc(edge_id)%series(j-1,6)
+              rhmean = pde_loc%bc(edge_id)%series(j,7)
+              wind = pde_loc%bc(edge_id)%series(j,8)
+              light = pde_loc%bc(edge_id)%series(j,9)
+              solar = pde_loc%bc(edge_id)%series(j,10)
+              rain = pde_loc%bc(edge_id)%series(j,11)
+              theta =  pde_loc%mass(layer, quadpnt)
+              
+              
               tmean = (tmax+tmin)/2.0_rkind
               tmean_prev = (tmax_prev+tmin_prev)/2.0_rkind
-              e_soil = 0.6108_rkind*exp(17.27_rkinf*tmean/(tmean + 237.3_rkind))
-              slope_vap = (4098.0_rkind*e_soil)/(tmean + 237.3_rkind)**2
-              e_air = 0.6108_rkind*exp(17.27_rkind*tmean/(tmean + 237.3_rkind))*(rhmean/100.0_rkind)
-              !num_day calculation
-              select case(evap_units)
-                case("hourly")
-                  num_day = day_year
-                case("daily")
-                  num_day= 
-                case("monthly")
-                  num_day = 0.14_rkind*(tmean- tmean_prev)
-                case("yearly")
-                  num_day = 0.14_rkind*(tmean- tmean_prev)
-                case default
-                  ERROR STOP
-              end select
-              dr = 1.0_rkind + 0.033_rkind*cos(2.0_rkind*pi()*num_day/365.0_rkind)
-              delta = 0.409_rkind*sin((2.0_rkind*pi()*num_day/365.0_rkind) -1.39_rkind)
-              omega = acos(-tan(phi)*tan(delta))
-              R_a = (24*60/3.14159265)*dr*0.0820*(omega*sin(phi)*sin(delta) + cos(phi)*cos(delta)* sin(omega))
-
-              R_so = (0.75 + z*2e-5)*R_a
-
-
-              R_ns = (1-albedo)*solar
-
               tmink = tmin + Tref
               tmaxk = tmax + Tref
-              R_nl = 4.903e-9*((tmink**4 + tmaxk**4)/2.0_rkind)*(0.34_rkind - &
-               0.14_rkind*sqrt(e_air))*(1.35_rkind*(solar/R_so) - 0.35_rkind)
-              radiation = R_ns - R_ln
-              wind2 = wind*(4.87_rkind/log(67.82_rkind*z - 5.42_rkind))
-              select case(cut(evap_units))
-                case("hourly")
-                  soil = 0.1_rking*radiation
-                case("daily")
-                  soil = 0.0_rkind
-                case("monthly")
-                  soil = 0.14_rkind*(tmean- tmean_prev)
-                case("yearly")
-                  soil = 0.14_rkind*(tmean- tmean_prev)
-              end select
-              value = 
+              e_sat = ((e_o(tmax) + e_o(tmin))/2.0_rkind)
+              e_act = ((e_o(tmax) + e_o(tmin))/2.0_rkind)*(rhmean/100.0_rkind)
+              slope_vap = (4098.0_rkind*e_sat)/(tmean + Tref)**2.0_rkind
+              
+              !num_day calculation
+              num_day = num_day_fcn (day, month,evap_units)
+              !> Net Radiation calculation             
+              radiation = radiation_fcn(num_day,latitude,elevation,albedo,e_act,solar,tmink,tmaxk)
+              !> Wind velocity calculation
+              wind2 = wind*wind_fcn(elevation)
+              !> Soil Flux calculation
+              soil = soilheat_fcn(tmean,tmean_prev,radiation,hour,evap_units)
+              !Evaporation rate
+              evap = (0.408_rkind*(radiation - soil)*gp*(900.0_rkind/(tmean + Tref))*wind2*(e_sat - e_act))&
+              / (slope_vap + gp*(1.0_rkind + 0.34_rkind*wind2))
+              
+              if ((rain - evap) .GE. 0) then
+                value = rain - evap
+              else
+                value = rain - evap*theta**(2.0_rkind/3.0_rkind)
+              end if
               EXIT
             end if
           end do
@@ -216,7 +175,7 @@ module Re_evap_bc
           print *, "evaporation boundary must be time dependent, check record for the boundary", edge_id
           ERROR STOP
         end if
-        value = 
+        !value = 
       end if
       
 
@@ -225,10 +184,105 @@ module Re_evap_bc
       end if
 
     end subroutine evap_pm_bc
+ 
+   
+    !> Actual vapor pressure function
+    function e_o(x) result (val) 
+      use typy
+      real (kind=rkind), intent(in) :: x
+      real (kind=rkind) :: val
+      val = 0.6108_rkind*exp(17.27_rkind*x/(x + 237.3_rkind))
+    end function e_o
+    !> Atmospheric  pressure function
+    function pressure_atm (x) result (val) 
+      use typy
+      real (kind=rkind), intent(in) :: x
+      real (kind=rkind) :: val
+      val = 101.3_rkind((293.0_rkind- 0.0065_rkind*x)/293.0_rkind)**5.26_rkind
+    end function pressure_atm
+    !> Wind velocity function
+    function wind_fcn(x) result (val) 
+      use typy
+      real (kind=rkind), intent(in) :: x
+      real (kind=rkind) :: val
+      val = (4.87_rkind/log(67.82_rkind*x - 5.42_rkind))
+    end function wind_fcn
+    !> Net radiation function
+    function radiation_fcn(x,y,z,a,e,s,t_max,t_min) result (val) 
+      use typy
+      real (kind=rkind), intent(in) :: y,z,a,e,s,t_max,t_min
+      integer (kind=ikind), intent(in) :: x
+      real (kind=rkind) :: val
+      real(kind=rkind) :: omega, R_nl,R_so,R_ns,R_a,dr,delta
+      
+       interface 
+        function pi() result (y)
+        use typy
+        real(kind=rkind) :: y 
+        end function
+      end interface
+      
+      dr = 1.0_rkind + 0.033_rkind*cos((2.0_rkind*pi()*x)/365.0_rkind)
+      delta = 0.409_rkind*sin(((2.0_rkind*pi()*x)/365.0_rkind) -1.39_rkind)
+      omega = acos(-tan(y)*tan(delta))
+              
+      R_a = ((24.0_rkind*60.0_rkind)/pi())*dr*0.0820_rkind*(omega*sin(y)*sin(delta)&
+              + cos(y)*cos(delta)*sin(omega))
+      R_so = (0.75_rkind + z*2e-5)*R_a
+      R_ns = (1.0_rkind-a)*s
+      R_nl = 4.903e-9*((t_min**4.0_rkind + t_max**4.0_rkind)/2.0_rkind)*(0.34_rkind - &
+               0.14_rkind*sqrt(e))*(1.35_rkind*(s/R_so) - 0.35_rkind)
+      val = R_ns - R_nl
+    end function radiation_fcn
+    !>Soil heat flux function
+    function soilheat_fcn(t1,t2,r,h,u) result(val)
+      use typy
+      real (kind=rkind), intent(in) :: t1,t2,r
+      character(len=*), intent(in) :: u
+      integer(kind =ikind), intent(in) :: h 
+      real (kind=rkind) :: val
+      
+      select case(cut(u))
+        case("hourly")
+          if (h .LE.  20 .AND. h .GE. 6 ) then
+            val = 0.1_rkind*r
+          else 
+            val = 0.5_rkind*r
+          end if
+        case("daily")
+          val = 0.0_rkind
+        case("monthly")
+          val = 0.14_rkind*(t1- t2)
+        case("yearly")
+          val = 0.14_rkind*(t1- t2)
+      end select
     
-
+    end function soilheat_fcn
+    !>Day of the year function
+    function num_day_fcn(x,y,z) result(val)
+      use typy
+      character(len=*), intent(in) :: z
+      integer(kind =ikind), intent(in) :: x,y
+      real (kind=rkind) :: val
+      
+      select case(z)
+        case("hourly")
+          val = nint(((275.0_rkind/9.0_rkind)*y-30.0_rkind + x)-2.0_rkind)
+            if (y < 3) then
+              val = val + 2
+            end if
+        case("daily")
+          val = nint(((275.0_rkind/9.0_rkind)*y-30.0_rkind + x)-2.0_rkind)
+        case("monthly")
+          val = nint(30.4_rkind*y- 15.0_rkind)
+            if (y < 3) then
+              val = val + 2
+            end if
+        case("yearly")
+          !>Assuming summer condition
+          val = 183
+      end select
     
-  
-
-
+    end function num_day_fcn
+    
 end module Re_evap_bc
