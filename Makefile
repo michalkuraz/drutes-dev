@@ -38,7 +38,7 @@ LTNE_obj := ltne_fnc.o ltne_globals.o ltne_pointers.o ltne_reader.o
 FROZEN_obj := refreeze_globs.o
 evaporation_obj := Re_evap_bc.o Re_evap_reader.o
 
-ALL_objs := $(CORE_obj) $(TOOLS_obj) $(POINTERMAN_obj) $(MATHTOOLS_obj) $(FEMTOOLS_obj) $(DECOMPO_obj) $(RE_obj) $(PMAoo_obj) $(BOUSSINESQ_obj) $(ADE_obj) $(REDUAL_obj)  $(HEAT_obj) $(LTNE_obj) $(FROZEN_obj) $(evaporation_obj)
+ALL_objs := $(CORE_obj) $(TOOLS_obj) $(POINTERMAN_obj) $(MATHTOOLS_obj) $(FEMTOOLS_obj) $(DECOMPO_obj) $(RE_obj) $(PMAoo_obj) $(BOUSSINESQ_obj) $(ADE_obj) $(REDUAL_obj)  $(HEAT_obj) $(FROZEN_obj) $(evaporation_obj)
 #-----------------------------------------------------------------
 
 #-------begin CORE_obj--------------------------------
@@ -120,7 +120,7 @@ re_constitutive.o: $(CORE_obj) $(TOOLS_obj) re_globals.o src/models/RE/re_consti
 	$c -c src/models/RE/re_constitutive.f90
 re_total.o: $(CORE_obj) $(TOOLS_obj) re_globals.o re_constitutive.o src/models/RE/re_total.f90
 	$c -c src/models/RE/re_total.f90
-re_reader.o:  $(CORE_obj) $(TOOLS_obj) re_globals.o src/models/RE/re_reader.f90
+re_reader.o: $(CORE_obj) $(TOOLS_obj) re_globals.o $(evaporation_obj) src/models/RE/re_reader.f90
 	$c -c src/models/RE/re_reader.f90	
 re_pointers.o:  $(CORE_obj) re_globals.o re_constitutive.o re_total.o re_reader.o Re_evap_bc.o src/models/RE/re_pointers.f90
 	$c -c src/models/RE/re_pointers.f90
@@ -140,15 +140,15 @@ heat_pointers.o: $(CORE_obj) $(RE_obj) heat_globals.o heat_fnc.o heat_reader.o $
 #------end HEAT_obj-------------------------------------
 
 
-#------begin LTNE_obj -----------------------------------
-ltne_globals.o: $(CORE_obj) src/models/LTNE/ltne_globals.f90
-	$c -c src/models/LTNE/ltne_globals.f90
-ltne_reader.o: $(CORE_obj) src/models/LTNE/ltne_reader.f90
-	$c -c src/models/LTNE/ltne_reader.f90
-ltne_fnc.o: $(CORE_obj) src/models/LTNE/ltne_fnc.f90
-	$c -c src/models/LTNE/ltne_fnc.f90
-ltne_pointers.o: $(CORE_obj) src/models/LTNE/ltne_pointers.f90
-	$c -c src/models/LTNE/ltne_pointers.f90
+# ------begin LTNE_obj -----------------------------------
+# ltne_globals.o: $(CORE_obj) src/models/LTNE/ltne_globals.f90
+# 	$c -c src/models/LTNE/ltne_globals.f90
+# ltne_reader.o: $(CORE_obj) ltne_globals.o src/models/LTNE/ltne_reader.f90
+# 	$c -c src/models/LTNE/ltne_reader.f90
+# ltne_fnc.o: $(CORE_obj) src/models/LTNE/ltne_fnc.f90
+# 	$c -c src/models/LTNE/ltne_fnc.f90
+# ltne_pointers.o: $(CORE_obj) src/models/LTNE/ltne_pointers.f90
+# 	$c -c src/models/LTNE/ltne_pointers.f90
 #------end LTNE_obj -------------------------------------
 
 #------begin frozen_obj -----------------------------------
@@ -200,7 +200,7 @@ bousspointers.o: $(CORE_obj)  boussfnc.o boussglob.o boussread.o src/models/bous
 
 
 #------begin evaporation_obj-------------------------
-Re_evap_reader.o: $(CORE_obj) $(TOOLS_obj) $(RE_obj) src/models/evaporation/Re_evap_reader.f90
+Re_evap_reader.o: $(CORE_obj) $(TOOLS_obj) re_globals.o src/models/evaporation/Re_evap_reader.f90
 	$c -c src/models/evaporation/Re_evap_reader.f90
 Re_evap_bc.o: $(CORE_obj) $(TOOLS_obj) src/models/evaporation/Re_evap_bc.f90
 	$c -c src/models/evaporation/Re_evap_bc.f90

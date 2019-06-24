@@ -33,6 +33,7 @@ module re_reader
       use re_globals
       use core_tools
       use readtools
+      use Re_evap_reader
       
       class(pde_str), intent(in out) :: pde_loc
       integer :: ierr, i, j, filewww

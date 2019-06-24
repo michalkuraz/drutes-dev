@@ -18,28 +18,34 @@
 
 
 module Re_evap_reader
-  public :: Re_evap_var()
-contains
-  subroutine Re_evap_var()
-     use typy
-     use globals
-     use global_objs
-     use core_tools
-     use readtools
-     use pde_objs
-     use debug_tools
+  public :: Re_evap_var
+  contains
+    subroutine Re_evap_var()
+       use typy
+       use globals
+       use global_objs
+       use core_tools
+       use readtools
+       use pde_objs
+       use debug_tools
+       use re_globals
+       
+       integer :: ierr
 
 
-      open(newunit=file_evap file="drutes.conf/evaporation/evap.conf", action="read", status="old", iostat = ierr)
-      if (i_err /= 0) then
-        print *, "missing evap.conf file in drutes.conf/evaporation/evap.conf""
-        ERROR STOP
-      end if 
+        open(newunit=file_evap, file="drutes.conf/evaporation/evap.conf", action="read", status="old", iostat = ierr)
+        if (ierr /= 0) then
+          print *, "missing evap.conf file in drutes.conf/evaporation/evap.conf"
+          ERROR STOP
+        end if 
 
-      call fileread(elevation, file_evap, ranges=(/0.0_rkind, huge(0.0_rkind)/), errmsg="specify elevation above sea level in m. This can be only positive")
-      call fileread(latitude, file_evap, ranges=(/- huge(0.0_rkind), huge(0.0_rkind)/), errmsg="specify latitude in radians. This can be negative or positive depend on hemisphere")
-      call fileread(albedo, file_evap, ranges=(/0.0_rkind, 1.0_rkind/), errmsg="specify albedo or canopy reflection coefficient between 0 and 1")
-    close(file_evap)	
+        call fileread(elevation, file_evap, ranges=(/0.0_rkind, huge(0.0_rkind)/), & 
+                      errmsg="specify elevation above sea level in m. This can be only positive")
+        call fileread(latitude, file_evap, ranges=(/- huge(0.0_rkind), huge(0.0_rkind)/), &
+                      errmsg="specify latitude in radians. This can be negative or positive depend on hemisphere")
+        call fileread(albedo, file_evap, ranges=(/0.0_rkind, 1.0_rkind/), &
+                      errmsg="specify albedo or canopy reflection coefficient between 0 and 1")
+      close(file_evap)	
 
-  end subroutine Re_evap_var()
+    end subroutine Re_evap_var
 end module Re_evap_reader

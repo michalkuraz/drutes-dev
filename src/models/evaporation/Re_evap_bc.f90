@@ -21,6 +21,7 @@ module Re_evap_bc
   public :: wind_fcn
   public :: radiation_fcn
   public :: soilheat_fcn
+  public :: num_day_fcn
   
   contains
 
@@ -28,6 +29,7 @@ module Re_evap_bc
     subroutine evap_datadt_bc(evap_units, series)
       use typy
       use globals
+      use core_tools
 
 
       real(kind=rkind), dimension(:,:), intent(in) :: series
@@ -85,6 +87,7 @@ module Re_evap_bc
       use pde_objs
       use re_globals
       use core_tools
+      use geom_tools
       
       class(pde_str), intent(in) :: pde_loc
       integer(kind=ikind), intent(in)  :: el_id, node_order
@@ -198,7 +201,7 @@ module Re_evap_bc
       use typy
       real (kind=rkind), intent(in) :: x
       real (kind=rkind) :: val
-      val = 101.3_rkind((293.0_rkind- 0.0065_rkind*x)/293.0_rkind)**5.26_rkind
+      val = 101.3_rkind*((293.0_rkind- 0.0065_rkind*x)/293.0_rkind)**5.26_rkind
     end function pressure_atm
     !> Wind velocity function
     function wind_fcn(x) result (val) 
@@ -210,17 +213,12 @@ module Re_evap_bc
     !> Net radiation function
     function radiation_fcn(x,y,z,a,e,s,t_max,t_min) result (val) 
       use typy
+      use core_tools
       real (kind=rkind), intent(in) :: y,z,a,e,s,t_max,t_min
       integer (kind=ikind), intent(in) :: x
       real (kind=rkind) :: val
       real(kind=rkind) :: omega, R_nl,R_so,R_ns,R_a,dr,delta
       
-       interface 
-        function pi() result (y)
-        use typy
-        real(kind=rkind) :: y 
-        end function
-      end interface
       
       dr = 1.0_rkind + 0.033_rkind*cos((2.0_rkind*pi()*x)/365.0_rkind)
       delta = 0.409_rkind*sin(((2.0_rkind*pi()*x)/365.0_rkind) -1.39_rkind)
@@ -237,6 +235,8 @@ module Re_evap_bc
     !>Soil heat flux function
     function soilheat_fcn(t1,t2,r,h,u) result(val)
       use typy
+      use core_tools
+      
       real (kind=rkind), intent(in) :: t1,t2,r
       character(len=*), intent(in) :: u
       integer(kind =ikind), intent(in) :: h 

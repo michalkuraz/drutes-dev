@@ -1,0 +1,360 @@
+
+! Copyright 2008 Michal Kuraz, Petr Mayer, Copyright 2016  Michal Kuraz, Petr Mayer, Johanna Bloecher
+
+! This file is part of DRUtES.
+! DRUtES is free software: you can redistribute it and/or modify
+! it under the terms of the GNU General Public License as published by
+! the Free Software Foundation, either version 3 of the License, or
+! (at your option) any later version.
+! DRUtES is distributed in the hope that it will be useful,
+! but WITHOUT ANY WARRANTY; without even the implied warranty of
+! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+! GNU General Public License for more details.
+! You should have received a copy of the GNU General Public License
+! along with DRUtES. If not, see <http://www.gnu.org/licenses/>.
+
+module kinfnc
+
+  public :: kinconvect, kinbor, kinematixinit, rainfall, kin_elast, getval_kinwave
+
+  contains 
+  
+    !> specific function for kinematic wave equation, replaces pde_objs::getvalp1 surface runoff should be in [mm]
+    function getval_kinwave(pde_loc, quadpnt) result(val)
+      use typy
+      use pde_objs
+      use geom_tools
+      use re_globals
+      use debug_tools
+      
+      class(pde_str), intent(in) :: pde_loc
+      type(integpnt_str), intent(in) :: quadpnt
+      real(kind=rkind) :: val
+      
+      real(kind=rkind), dimension(3) :: xyz
+      integer(kind=ikind) :: D, layer
+      
+      val = getvalp1(pde_loc, quadpnt)
+           
+      if (quadpnt%preproc) then
+        val = val*1e3
+      end if
+	
+      
+    end function getval_kinwave
+    
+    
+    subroutine kinflux(pde_loc, layer, quadpnt, x, grad,  flux, flux_length)
+      use typy
+      use pde_objs
+      use global_objs
+      use debug_tools
+      use kinglobs
+       
+      class(pde_str), intent(in) :: pde_loc
+      integer(kind=ikind), intent(in)                          :: layer
+      type(integpnt_str), intent(in), optional :: quadpnt    
+      real(kind=rkind), intent(in), dimension(:), optional                   :: x
+      !> this value is optional, because it is required by the vector_fnc procedure pointer global definition
+      real(kind=rkind), dimension(:), intent(in), optional     :: grad
+      real(kind=rkind), dimension(:), intent(out), optional    :: flux
+      real(kind=rkind), intent(out), optional                  :: flux_length
+    
+
+      real(kind=rkind) :: h, m
+      integer(kind=ikind) :: el
+
+      
+      
+      if (present(quadpnt) .and. present(x)) then
+        print *, "ERROR: the function can be called either with integ point or x value definition and gradient, not both of them"
+        print *, "exited from kinfnc::kinflux"
+        ERROR stop
+      else if (.not. present(x) .and. .not. present(quadpnt)) then
+        print *, "ERROR: you have not specified either integ point or x value"
+        print *, "exited from kinfnc::kinflux"
+        ERROR stop
+      end if   
+
+      
+      if (present(quadpnt)) then
+        h = pde_loc%getval(quadpnt)
+        if (quadpnt%preproc) then
+          h=h*1e-3
+        end if
+      else
+        h = x(1)
+      end if
+      
+      
+      select case(quadpnt%type_pnt)
+        case("gqnd", "obpt")
+          el = quadpnt%element
+        case("ndpt")
+          el = nodes%element(quadpnt%order)%data(1)
+      end select
+      
+      m = 5.0_rkind/3
+
+      
+      
+      if (present(flux)) then
+        select case(drutes_config%dimen)
+          case(1)
+            flux(1) = -1.49_rkind * sign(1.0_rkind, watershed_el(el)%sx) * & 
+                            sqrt(abs( watershed_el(el)%sx))/manning(layer)*h**m
+          case(2)
+            flux(1) = -1.49_rkind * sign(1.0_rkind, watershed_el(el)%sx) * & 
+                            sqrt(abs( watershed_el(el)%sx))/manning(layer)*h**m
+            flux(2) = -1.49_rkind * sign(1.0_rkind, watershed_el(el)%sy) * & 
+                            sqrt(abs( watershed_el(el)%sx))/manning(layer)*h**m
+        end select
+      end if
+          
+      
+      
+      if (present(flux_length)) then
+        select case(drutes_config%dimen)
+          case(1)     
+            flux_length = 1.49_rkind * sign(1.0_rkind, watershed_el(el)%sx) * & 
+                            sqrt(abs( watershed_el(el)%sx))/manning(layer)*h**m
+          case(2)
+            flux_length = norm2((/1.49_rkind * sign(1.0_rkind, watershed_el(el)%sx) * & 
+                            sqrt(abs( watershed_el(el)%sx))/manning(layer)*h**m, &
+                            1.49_rkind * sign(1.0_rkind, watershed_el(el)%sy) * & 
+                            sqrt(abs( watershed_el(el)%sy))/manning(layer)*h**m/))
+        end select          
+       end if
+    
+    end subroutine kinflux
+  
+  
+  
+    subroutine kinconvect(pde_loc, layer, quadpnt, x, vector_in, vector_out, scalar)
+      use typy
+      use globals
+      use global_objs
+      use pde_objs
+      use re_globals
+      use geom_tools
+      use debug_tools
+      use kinglobs
+
+      class(pde_str), intent(in) :: pde_loc
+      integer(kind=ikind), intent(in) :: layer
+      type(integpnt_str), intent(in), optional :: quadpnt    
+      !> pressure head
+      real(kind=rkind), dimension(:), intent(in), optional :: x
+      !> this argument is required by the global vector_fnc procedure pointer, unused in this procedure
+      real(kind=rkind), dimension(:), intent(in), optional :: vector_in
+      !> first order tensor of the unsaturated hydraulic conductivity derivative in respect to h. it is the last column of the hydraulic conductivity second order tensor times  
+      !!relative unsaturated hydraulic conductivity derivative in respect to h (scalar value)
+      !<
+      real(kind=rkind), dimension(:), intent(out), optional :: vector_out
+      !> relative unsaturated hydraulic conductivity derivative in respect to h, scalar value
+      real(kind=rkind), intent(out), optional :: scalar
+      
+      integer(kind=ikind) :: el, D, i
+      real(kind=rkind) :: hsurf, m
+      type(integpnt_str) :: quadpnt_loc
+      real(kind=rkind), dimension(:), allocatable, save :: ndvals, slopes
+      real(kind=rkind), dimension(:,:), allocatable, save :: abc
+      
+      
+      el = quadpnt%element
+      
+      hsurf = max(0.0_rkind, pde_loc%getval(quadpnt))
+      
+      m = 5.0_rkind/3
+      
+      D = drutes_config%dimen
+      
+      if (.not. allocated(slopes)) allocate(slopes(drutes_config%dimen))
+      
+      if (backwater) then
+        if (.not. allocated(ndvals)) allocate(ndvals(ubound(elements%data,2)))
+        
+        quadpnt_loc%type_pnt = "ndpt"
+        quadpnt_loc%column = 3
+        
+        do i=1, ubound(ndvals,1)
+          quadpnt_loc%order = elements%data(el,i)
+          ndvals(i) = pde_loc%getval(quadpnt_loc)
+        end do
+        
+        select case(D)
+          case(1)
+            slopes(1) = (ndvals(2) - ndvals(1))/(nodes%data(elements%data(el,2),1) - nodes%data(elements%data(el,1),1))
+            slopes(1) = slopes(1) +  watershed_el(el)%sx
+          case(2)
+            if (.not. allocated(abc)) allocate(abc(ubound(elements%data,2),3))
+            
+            do i=1, ubound(elements%data,2)
+              abc(i, 1:2) = nodes%data(elements%data(el,i),:)
+              abc(i,3) = ndvals(i)
+            end do
+            
+            call plane_derivative(abc(1,:), abc(2,:), abc(3,:), slopes(1), slopes(2))
+            
+            slopes(1) = slopes(1) + watershed_el(el)%sx
+            slopes(2) = slopes(2) + watershed_el(el)%sy
+            
+          case(3)
+            print *, "kinematic wave has no sense for three-dimensions"
+            print *, "exited from kinfnc::kinconvect"
+            ERROR STOP
+          end select
+        else
+          select case(D)
+            case(1)
+              slopes(1) = watershed_el(el)%sx
+            case(2)
+              slopes(1) = watershed_el(el)%sx
+              slopes(2) = watershed_el(el)%sy
+            case(3)
+            print *, "kinematic wave has no sense for three-dimensions"
+            print *, "exited from kinfnc::kinconvect"
+            ERROR STOP
+          end select
+        end if
+        
+        vector_out(1:D) = -1.49_rkind * sign(1.0_rkind, slopes(1:D)) * & 
+                            sqrt(abs( slopes(1:D)))/manning(layer)*m*hsurf**(m-1)
+  
+!         select case (drutes_config%dimen)
+!         
+!           case(1)
+!             vector_out(1) = -1.49_rkind * sign(1.0_rkind, watershed_el(el)%sx) * & 
+!                             sqrt(abs( watershed_el(el)%sx))/manning(layer)*m*hsurf**(m-1)
+!         
+!           case(2)
+!         
+!             vector_out(1) = -1.49_rkind * sign(1.0_rkind, watershed_el(el)%sx) * & 
+!                             sqrt(abs( watershed_el(el)%sx))/manning(layer)*m*hsurf**(m-1)
+!             
+!             vector_out(2) = -1.49_rkind * sign(1.0_rkind, watershed_el(el)%sy) * & 
+!                             sqrt(abs( watershed_el(el)%sy))/manning(layer)*m*hsurf**(m-1)
+!                             
+!             
+! 
+!             
+!         end select
+        
+    end subroutine kinconvect
+    
+    
+    
+    subroutine kinbor(pde_loc, el_id, node_order, value, code) 
+      use typy
+      use globals
+      use global_objs
+      use pde_objs
+      use debug_tools
+      
+      class(pde_str), intent(in) :: pde_loc
+      integer(kind=ikind), intent(in)  :: el_id, node_order
+      real(kind=rkind), intent(out), optional    :: value
+      integer(kind=ikind), intent(out), optional :: code
+
+      
+      
+
+      if (present(value)) then
+        value = 0.0_rkind
+      end if
+
+      
+      if (present(code)) then
+        code = 1
+      end if
+  
+    end subroutine kinbor
+      
+    subroutine kinematixinit(pde_loc) 
+      use typy
+      use globals
+      use global_objs
+      use pde_objs
+
+      class(pde_str), intent(in out) :: pde_loc
+
+      pde_loc%solution(:) = 0.0_rkind
+     
+      
+    end subroutine kinematixinit
+    
+    
+    function rainfall(pde_loc, layer, quadpnt, x) result(val)
+      use typy
+      use global_objs
+      use pde_objs
+      use kinglobs
+      
+      class(pde_str), intent(in) :: pde_loc
+      !> value of the nonlinear function
+      real(kind=rkind), dimension(:), intent(in), optional    :: x
+      !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
+      type(integpnt_str), intent(in), optional :: quadpnt
+      !> material ID
+      integer(kind=ikind), intent(in) :: layer
+      !> return value
+      real(kind=rkind)                :: val
+      integer(kind=ikind), save :: position = 1
+      integer(kind=ikind) :: i
+      
+      
+       if (position < ubound(raindata(1)%series,1)) then
+        do i=position, ubound(raindata(1)%series,1)-1
+           if (raindata(1)%series(i,1) < time .and. raindata(1)%series(i+1,1) > time) then
+            position = i
+            EXIT
+          else if (raindata(1)%series(i+1,1) < time .and. i == ubound(raindata(1)%series,1) ) then
+            position = i
+          end if
+        end do
+      end if
+    
+      val = raindata(el2pt(quadpnt%element))%series(position,2)
+      
+        
+    
+    end function rainfall
+    
+    
+    function kin_elast(pde_loc,layer, quadpnt, x) result(E)
+      use typy
+      use heat_globals
+      use pde_objs
+      use core_tools
+
+      class(pde_str), intent(in) :: pde_loc 
+      integer(kind=ikind), intent(in) :: layer
+      !> pressure head
+      real(kind=rkind), intent(in), dimension(:),  optional :: x
+      !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
+      type(integpnt_str), intent(in), optional :: quadpnt
+      real(kind=rkind) :: h
+      !> resulting system elasticity
+      real(kind=rkind) :: E
+
+       
+      
+      if (present(quadpnt) .and. present(x)) then
+        print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
+        print *, "exited from heat_fnc::heat_elast"
+        ERROR stop
+      else if (.not. present(quadpnt) .and. .not. present(x)) then
+        print *, "ERROR: you have not specified either integ point or x value"
+        print *, "exited from heat_fnc::heat_elast"
+        ERROR stop
+      end if
+
+
+      E = 1.0_rkind
+      
+
+    end function kin_elast 
+    
+
+
+end module kinfnc

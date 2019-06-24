@@ -142,6 +142,7 @@ module RE_pointers
       use re_globals
       use re_constitutive
       use re_total
+      use Re_evap_bc
       
       class(pde_str), intent(in out) :: pde_loc
       integer(kind=ikind) :: i
