@@ -750,7 +750,7 @@ module postpro
             do j=1, nodes%kolik
               quadpnt%order = j
               quadpnt%preproc = .true.
-              layer = nodes%element(j)%data(1)
+              layer = elements%material(nodes%element(j)%data(1))
               call pde(proc)%flux(layer, quadpnt, scalar=totflux)
               write(unit=ids(i), fmt=*) j, totflux
             end do

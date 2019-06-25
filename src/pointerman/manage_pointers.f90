@@ -50,6 +50,7 @@ module manage_pointers
       use ltne_pointers
 
       integer(kind=ikind) :: i, processes
+      logical :: symetric
       
       
 
@@ -149,11 +150,21 @@ module manage_pointers
             solve_matrix => LDU_face
             !solve_matrix => CG_normal_face
         case(2)
-                solve_matrix => cg_face
-!       	    solve_matrix => LDU_face
-!             solve_matrix => CG_normal_face
-      ! 	    solve_matrix => sparse_gem_pig_AtA
-      ! 	    solve_matrix => jacobi_face
+          symetric = .true.
+          do i=1, ubound(pde,1)
+            if (.not. pde(i)%symmetric) then
+              symetric = .false.
+              EXIT 
+            end if
+          end do
+          
+          if (.not. symetric) then
+            solve_matrix => CG_normal_face
+          else
+            solve_matrix => cg_face
+          end if
+
+
       end select
       
       select case (drutes_config%it_method)
@@ -168,6 +179,7 @@ module manage_pointers
       select case(pde_common%timeint_method)
         case(0)
           pde_common%time_integ => steady_state_int
+          solve_matrix => LDU_face
         case(1)
           pde_common%time_integ => impl_euler_np_diag
         case(2)

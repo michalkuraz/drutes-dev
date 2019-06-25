@@ -126,6 +126,11 @@ module pde_objs
     !> for some problems mass property differs from the solution (e.g. Richards equation - solution is H or h, but the mass property is theta) and so it makes sense to print the mass property as well. For different problems, such as concentration of solutes, the solution and the mass property is identical.
     logical :: print_mass=.false.
     logical :: diffusion = .true.
+    !> is operator symmetric or not -> for non-symmetric operators we use CG for normal equations \f[ \mathbf{A^TAx=A^tb} \f]
+    !! for symmetric operators we can use conjugate gradient directly
+    !! by default it is false (safe but not so efficient option)
+    !<
+    logical :: symmetric = .false.
     procedure(getval_str), pass(pde_loc), pointer :: getval
     contains 
       !> get vector of gradient of the solution

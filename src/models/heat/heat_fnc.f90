@@ -283,7 +283,6 @@ module heat_fnc
       real(kind=rkind), dimension(:), allocatable, save :: gradT
 
       
-      
       if (present(quadpnt) .and. (present(grad) .or. present(x))) then
         print *, "ERROR: the function can be called either with integ point or x value definition and gradient, not both of them"
         print *, "exited from heat_fnc::heat_flux"

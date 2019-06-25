@@ -61,6 +61,8 @@ module kinpointer
       
       pde_loc%flux => kinflux
       
+      pde_loc%symmetric = .true.
+      
       
     end subroutine kinwavelinker
     
