@@ -457,13 +457,15 @@ module drutes_init
       use pde_objs
       use geom_tools
       use core_tools 
+      use debug_tools
       
       integer(kind=ikind) :: i,j
       real(kind=rkind) :: act_dist
       
       
-      act_dist = huge(act_dist)
+      
       do i=1, ubound(measured_pts,1)
+        act_dist = huge(act_dist)
         do j=1, nodes%kolik
           if (dist(measured_pts(i)%xyz, nodes%data(j,:)) < act_dist) then
             measured_pts(i)%node = j
@@ -474,6 +476,7 @@ module drutes_init
       end do
       
       outer_boundaries = maxval(nodes%edge)
+      
       
       do i=1, ubound(measured_pts,1)
        nodes%edge(measured_pts(i)%node) = outer_boundaries + i
