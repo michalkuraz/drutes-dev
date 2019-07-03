@@ -55,7 +55,7 @@ module freeze_pointers
           print *, "exited from freeze_pointers::frz_pointers"
           error stop
       end select
-   
+
       
       call RE_totheadbc(pde(wat))
       pde(wat)%getval => getval_retotfr
@@ -248,7 +248,6 @@ module freeze_pointers
           print *, "exited from freeze_pointers::frz_pointers"
           error stop
       end select
-    
     
     end subroutine frz_pointers
   

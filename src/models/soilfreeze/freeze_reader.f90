@@ -63,7 +63,7 @@ module freeze_read
           print *, "exited from freeze_read::freeze_reader"
           error stop
       end select
-      
+
 
       write(msg, *) "define method of evaluation of constitutive functions for the Richards equation", new_line("a"), &
         "   0 - direct evaluation (not recommended, extremely resources consuming due to complicated exponential functions)", &
@@ -300,7 +300,7 @@ module freeze_read
             call fileread(freeze_par(i)%diameter, file_freeze, ranges=(/0.0_rkind, huge(0.0_rkind)/), errmsg=trim(msg))
          end do
       end select
-      
+
       allocate(tmpdata(4))
      write(unit = msg, fmt = *) "HINT 1: Are all capacities positive?", new_line("a"),&
         "   HINT 2 : Did you define heat capacities for each layer?"
@@ -343,6 +343,7 @@ module freeze_read
           end do
           deallocate(tmpdata)
         case ("LTNE")
+            allocate(tmpdata(4))
             write(unit = msg, fmt = *) "HINT 1: Are the thermal conductivities positive?", new_line("a"),&
           "   HINT 2 : Did you define thermal conductivties for each layer?"
         
@@ -369,7 +370,6 @@ module freeze_read
               print *, "                        0 = no"
               call file_error(file_freeze)
          end select
-      
         if(frz_pnt > 0) then
          air = .true.
         else
