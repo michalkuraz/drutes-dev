@@ -6,7 +6,7 @@ module freeze_helper
   use RE_constitutive
 
   public :: iceswitch, rho_icewat, Q_reduction, surf_tens_deriv, Kliquid_temp, hl, thetai, thetal
-  public:: vangen_fr, mualem_fr, temp_initcond, wat_initcond, getval_retotfr
+  public:: vangen_fr, mualem_fr, temp_initcond, temp_s_initcond, wat_initcond, getval_retotfr
       
       
   
@@ -120,9 +120,9 @@ module freeze_helper
       if (present(tensor)) then
         call mualem_fr(pde_loc, layer, x=(/hl(pde_loc, layer, quadpnt)/), tensor = Klt(1:D, 1:D))
         if(qlt_log) then
-                Klt(1:D, 1:D) = 10**(-Omega*Q_reduction(layer, quadpnt))*Klt(1:D, 1:D)
+          Klt(1:D, 1:D) = 10**(-Omega*Q_reduction(layer, quadpnt))*Klt(1:D, 1:D)
         else
-            Klt(1:D,1:D)= 0_rkind*Klt(1:D, 1:D)
+          Klt(1:D,1:D)= 0_rkind*Klt(1:D, 1:D)
         end if 
         if (present(quadpnt)) then
           h_l = hl(pde_loc, layer, quadpnt)
@@ -460,7 +460,7 @@ module freeze_helper
       D = drutes_config%dimen
       select case (freeze_par(1_ikind)%icondtypeRE)
         case("input")
-          call map1d2dJ(pde_loc,"drutes.conf/freeze.conf/hini.in", correct_h = .true.)
+          call map1d2dJ(pde_loc,"drutes.conf/freeze/hini.in", correct_h = .true.)
       end select
       
       D = drutes_config%dimen
@@ -525,6 +525,56 @@ module freeze_helper
       end select
       
     end subroutine temp_initcond
+    
+     subroutine temp_s_initcond(pde_loc) 
+      use typy
+      use globals
+      use global_objs
+      use pde_objs
+      use heat_globals
+      use geom_tools
+
+      
+      class(pde_str), intent(in out) :: pde_loc
+      integer(kind=ikind) :: i, j, k,l, m, layer, D
+      real(kind=rkind) :: value
+      
+      D = drutes_config%dimen
+      select case (freeze_par(1_ikind)%icondtypeTs)
+        case("input")
+          call map1d2dJ(pde_loc,"drutes.conf/freeze/Tini_s.in", correct_h = .false.)
+        case("value")
+          do i=1, elements%kolik
+            layer = elements%material(i)
+            do j=1, ubound(elements%data,2)
+              k = elements%data(i,j)
+              l = nodes%edge(k)
+              m = pde_loc%permut(k)
+              if (m == 0) then
+                call pde_loc%bc(l)%value_fnc(pde_loc, i, j, value)
+                pde_loc%solution(k) = value 
+              else
+                pde_loc%solution(k) = freeze_par(layer)%Tinit_s
+              end if
+            end do   
+          end do
+      end select
+    
+    
+      if(.not.air) then
+        if(allocated(T_air))then
+        else
+            allocate(T_air(nodes%kolik))
+        end if
+        do i=1, elements%kolik
+          do j=1, ubound(elements%data,2)
+            k = elements%data(i,j)
+            T_air(k) = pde_loc%solution(k) 
+          end do   
+        end do
+      end if
+    end subroutine temp_s_initcond
+
     
     !> specific function for Richards equation in H-form (total hydraulic head form), replaces pde_objs::getvalp1 in order to distinguish between H and h 
     function getval_retotfr(pde_loc, quadpnt) result(val)

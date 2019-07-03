@@ -132,10 +132,10 @@ module manage_pointers
           
        case("LTNE")
         
-          call ltne_processes(pde_common%processes)
+          call freeze_processes(pde_common%processes)
           call pde_constructor(pde_common%processes)
           write(unit = drutes_config%fullname, fmt=*) "DRUtES solves local thermal non equilibrium"
-          call ltne_points()
+          call frz_pointers()
           
         case default
           print *, "your new model: ", trim(drutes_config%name), " requires pointer linking"
