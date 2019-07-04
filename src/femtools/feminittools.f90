@@ -497,13 +497,12 @@ module feminittools
           if (nodes%edge(i) /= 0) then
                     
         
-!           call wait()
-          el = nodes%element(i)%data(1)
-          do j=1, ubound(elements%data,2)
-            if (elements%data(el, j) == i) then
-              call pde(proc)%bc(nodes%edge(i))%value_fnc(pde(proc), el, j, code=bc)
-            end if
-          end do
+            el = nodes%element(i)%data(1)
+            do j=1, ubound(elements%data,2)
+              if (elements%data(el, j) == i) then
+                call pde(proc)%bc(nodes%edge(i))%value_fnc(pde(proc), el, j, code=bc)
+              end if
+            end do
                       
  
           else
