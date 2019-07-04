@@ -92,6 +92,7 @@ module freeze_globs
       
   logical, public:: air
     
+  real(kind=rkind), public :: beta
   
   integer(kind = ikind), parameter, public :: wat = 1
   integer(kind = ikind), parameter, public :: heat_proc = 2

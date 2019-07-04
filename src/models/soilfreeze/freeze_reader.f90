@@ -146,10 +146,14 @@ module freeze_read
       
       if(frz_pnt > 0) then
        fr_rate = .true.
+        write(unit = msg, fmt = *) "beta should be positive"
+        call fileread(beta, file_freeze, ranges=(/0.0_rkind, huge(0.0_rkind)/), errmsg=trim(msg))     
       else
        fr_rate = .false.
       end if
       
+     
+
        write(unit = msg, fmt = *) "Use qlt? yes - 1 or no -0"
      call fileread(tmp_int, file_freeze, ranges=(/0_ikind,1_ikind/), errmsg = trim(msg))
       select case(tmp_int)

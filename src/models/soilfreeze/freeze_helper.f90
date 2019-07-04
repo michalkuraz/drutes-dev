@@ -5,7 +5,7 @@ module freeze_helper
   use debug_tools
   use RE_constitutive
 
-  public :: iceswitch, rho_icewat, Q_reduction, surf_tens_deriv, Kliquid_temp, hl, thetai, thetal
+  public :: iceswitch, rho_icewat, Q_reduction, surf_tens_deriv, Kliquid_temp, hl, hcl, thetai, thetal
   public:: vangen_fr, mualem_fr, temp_initcond, temp_s_initcond, wat_initcond, getval_retotfr
       
       
@@ -177,7 +177,7 @@ module freeze_helper
       integer(kind=ikind), intent(in) :: layer
       type(integpnt_str), intent(in), optional :: quadpnt
       real(kind=rkind), dimension(:), intent(in), optional    :: x
-      real(kind=rkind) :: val, T_melt
+      real(kind=rkind) :: val, T_f
       real(kind=rkind) :: hw, temp
       type(integpnt_str) :: quadpnt_loc
       
@@ -187,33 +187,82 @@ module freeze_helper
       hw = pde(wat)%getval(quadpnt_loc)
       
       temp = pde(heat_proc)%getval(quadpnt)
-      T_melt = Tref*exp(hw*grav/Lf)
+      T_f = Tref*exp(hw*grav/Lf)
       
       if(iceswitch(quadpnt)) then
-        val = hw+Lf/grav*log((temp+273.15_rkind)/T_melt) !units
+        if(fr_rate) then
+          val = hw
+        else
+          val = hw+Lf/grav*log((temp+273.15_rkind)/T_f) !units
+        end if        
       else
         val = hw
       end if
       
     end function hl
     
+    function hcl(pde_loc, layer, quadpnt, x) result(val)
+      use typy
+      use global_objs
+      use freeze_globs
+      use pde_objs
+      
+      class(pde_str), intent(in) :: pde_loc
+      integer(kind=ikind), intent(in) :: layer
+      type(integpnt_str), intent(in), optional :: quadpnt
+      real(kind=rkind), dimension(:), intent(in), optional    :: x
+      real(kind=rkind) :: val, T_f
+      real(kind=rkind) :: hw, temp
+      type(integpnt_str) :: quadpnt_loc
+      
+      quadpnt_loc = quadpnt
+      quadpnt_loc%preproc=.true.
+
+      hw = pde(wat)%getval(quadpnt_loc)
+      
+      temp = pde(heat_proc)%getval(quadpnt)
+      T_f = Tref*exp(hw*grav/Lf)
+      
+      if(iceswitch(quadpnt)) then
+        val = hw+Lf/grav*log((temp+273.15_rkind)/T_f) !units       
+      else
+        val = hw
+      end if
+      
+    end function hcl
+    
     function thetai(pde_loc, layer, quadpnt, x) result(val)
       use typy
       use global_objs
       use pde_objs
+      use debug_tools
       class(pde_str), intent(in) :: pde_loc
       integer(kind=ikind), intent(in) :: layer
       type(integpnt_str), intent(in), optional :: quadpnt
       real(kind=rkind), dimension(:), intent(in), optional    :: x
       real(kind=rkind) :: val
+      type(integpnt_str) :: quadpnt_loc
+
+      real(kind=rkind) :: thl, thall, thi_tmp
       
-      real(kind=rkind) :: thl, thall
-      
-      thl = vangen_fr(pde(wat), layer, x=(/hl(pde(wat), layer, quadpnt)/))
-      thall = vangen_fr(pde(wat), layer, quadpnt)
-      
-      !val = (thall * rho_icewat(quadpnt) - thl * rho_wat)/rho_ice
-      val = thall - thl
+      if(fr_rate) then
+        quadpnt_loc = quadpnt
+        if(time > 0_rkind) then
+              call wait
+          quadpnt_loc%column = 1
+          thi_tmp = pde(wat)%mass(2)%val(pde(wat),layer, quadpnt_loc)
+          print*, pde(wat)%mass(2)%val(pde(wat),layer, quadpnt)
+          print*, pde(wat)%mass(2)%val(pde(wat),layer, quadpnt_loc)
+        else
+          thi_tmp = 0_rkind
+        end if
+        val = thi_tmp + vf(pde_loc, layer, quadpnt, x)*time_step
+              print*, "value", val
+      else
+        thl = vangen_fr(pde(wat), layer, x=(/hl(pde(wat), layer, quadpnt)/))
+        thall = vangen_fr(pde(wat), layer, quadpnt)
+        val = thall - thl
+      end if
     end function thetai
     
     function thetal(pde_loc, layer, quadpnt, x) result(val)
@@ -737,8 +786,33 @@ module freeze_helper
         code = 2
       end if
 
-
     end subroutine freeze_coolant_bc
     
+    function vf(pde_loc, layer, quadpnt, x) result(val)
+      use typy
+      use globals
+      use global_objs
+      use pde_objs
+      use freeze_globs
+      class(pde_str), intent(in) :: pde_loc
+      integer(kind=ikind), intent(in) :: layer
+      type(integpnt_str), intent(in), optional :: quadpnt
+      real(kind=rkind), dimension(:), intent(in), optional    :: x
+      real(kind=rkind) :: val
+      real(kind=rkind) :: thcl, thl, T, T_f, hw
+      type(integpnt_str) :: quadpnt_loc
+      
+      quadpnt_loc = quadpnt
+      quadpnt_loc%preproc=.true.
+
+      hw = pde(wat)%getval(quadpnt_loc)
+      T = pde(heat_proc)%getval(quadpnt)
+      T_f = Tref*exp(hw*grav/Lf)
+      thl = vangen_fr(pde(wat), layer, quadpnt)
+      thcl = vangen_fr(pde(wat), layer, x=(/hcl(pde(wat), layer, quadpnt)/))
+
+      val = beta*(thl-thcl)*(T_f-T)**(0.33333333_rkind)
+
+    end function vf
     
 end module freeze_helper

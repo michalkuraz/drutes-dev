@@ -384,7 +384,11 @@ module freeze_fnc
       !nablaz = 0
       !nablaz(D) = 1
       if(iceswitch(quadpnt))then
+       if(fr_rate) then
+         gradH(1:D) = gradient(1:D)
+       else
         gradH(1:D) = gradient(1:D) + Lf/grav*gradientT(1:D)/(pde(heat_proc)%getval(quadpnt) + 273.15_rkind)
+       end if
       else
         gradH(1:D) = gradient(1:D)
       end if
@@ -677,7 +681,7 @@ module freeze_fnc
       
     end subroutine diffTsTs
     
-        subroutine heat_flux_s_LTNE(pde_loc, layer, quadpnt, x, grad,  flux, flux_length)
+    subroutine heat_flux_s_LTNE(pde_loc, layer, quadpnt, x, grad,  flux, flux_length)
       use typy
       use pde_objs
       use global_objs
@@ -787,7 +791,7 @@ module freeze_fnc
      val = - qsl_pos(pde_loc, layer, quadpnt)
     end function qsl_neg
     
-    
+    !> Mixture temperature
     function T_m(pde_loc, layer, quadpnt, x) result(val)
       use typy
       use global_objs

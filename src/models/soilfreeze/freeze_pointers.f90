@@ -93,7 +93,6 @@ module freeze_pointers
       
       pde(wat)%print_mass = .true.
       deallocate(pde(wat)%mass)
-      
       select case (drutes_config%name)
         case ("freeze")
           allocate(pde(wat)%mass_name(4,2))
@@ -161,7 +160,7 @@ module freeze_pointers
       pde(heat_proc)%solution_name(1) = "temperature" 
       pde(heat_proc)%solution_name(2) = "T " 
 
-      pde(heat_proc)%flux_name(1) = "heat_flux"  
+      pde(heat_proc)%flux_name(1) = "flux"  
       pde(heat_proc)%flux_name(2) = "heat flux [W.L-2]"
       
       allocate(pde(heat_proc)%mass_name(0,2))
@@ -202,10 +201,10 @@ module freeze_pointers
           pde(heat_solid)%problem_name(1) = "heat_solid"
           pde(heat_solid)%problem_name(2) = "Heat conduction equation with convection"
 
-          pde(heat_solid)%solution_name(1) = "T_solid" 
+          pde(heat_solid)%solution_name(1) = "Temperature" 
           pde(heat_solid)%solution_name(2) = "T_s " 
 
-          pde(heat_solid)%flux_name(1) = "heat_s_flux"  
+          pde(heat_solid)%flux_name(1) = "flux"  
           pde(heat_solid)%flux_name(2) = "heat solid flux [W.L-2]"
         
           allocate(pde(heat_solid)%mass_name(0,2))
@@ -248,7 +247,7 @@ module freeze_pointers
           print *, "exited from freeze_pointers::frz_pointers"
           error stop
       end select
-    
+
     end subroutine frz_pointers
   
 end module freeze_pointers

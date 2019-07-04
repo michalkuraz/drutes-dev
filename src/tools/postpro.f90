@@ -271,7 +271,6 @@ module postpro
       real(kind=rkind), dimension(3) :: advectval
       type(integpnt_str) :: quadpnt
 
-      
       quadpnt%type_pnt = "obpt"
       quadpnt%column=3
       D = drutes_config%dimen
