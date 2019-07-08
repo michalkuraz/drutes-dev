@@ -137,9 +137,7 @@ module Re_evap_bc
               EXIT
             end if
           end do
-          
-
-              
+      
           hour  = pde_loc%bc(edge_id)%series(datapos,1)
           day = pde_loc%bc(edge_id)%series(datapos,2)
           hour  = pde_loc%bc(edge_id)%series(datapos,1)
@@ -156,6 +154,8 @@ module Re_evap_bc
           solar = pde_loc%bc(edge_id)%series(datapos,10)
           rain = pde_loc%bc(edge_id)%series(datapos,11)
           theta =  pde_loc%mass(layer, quadpnt)
+          
+          
           rain = pde_loc%bc(edge_id)%series(datapos,11)
           theta =  pde_loc%mass(layer, quadpnt)
           
@@ -185,7 +185,6 @@ module Re_evap_bc
           else
             value = rain - evap*theta**(2.0_rkind/3.0_rkind)
           end if
-
         else
           print *, "evaporation boundary must be time dependent, check record for the boundary", edge_id
           ERROR STOP
@@ -201,28 +200,31 @@ module Re_evap_bc
     end subroutine evap_pm_bc
  
    
-    !> Actual vapor pressure function
+  !> Actual vapor pressure function
     function e_o(x) result (val) 
       use typy
       real (kind=rkind), intent(in) :: x
       real (kind=rkind) :: val
       val = 0.6108_rkind*exp(17.27_rkind*x/(x + 237.3_rkind))
     end function e_o
-    !> Atmospheric  pressure function
+    
+  !> Atmospheric  pressure function
     function pressure_atm (x) result (val) 
       use typy
       real (kind=rkind), intent(in) :: x
       real (kind=rkind) :: val
       val = 101.3_rkind*((293.0_rkind- 0.0065_rkind*x)/293.0_rkind)**5.26_rkind
     end function pressure_atm
-    !> Wind velocity function
+    
+  !> Wind velocity function
     function wind_fcn(x) result (val) 
       use typy
       real (kind=rkind), intent(in) :: x
       real (kind=rkind) :: val
       val = (4.87_rkind/log(67.82_rkind*x - 5.42_rkind))
     end function wind_fcn
-    !> Net radiation function
+    
+  !> Net radiation function
     function radiation_fcn(x,y,z,a,e,s,t_max,t_min) result (val) 
       use typy
       use core_tools
@@ -244,7 +246,8 @@ module Re_evap_bc
                0.14_rkind*sqrt(e))*(1.35_rkind*(s/R_so) - 0.35_rkind)
       val = R_ns - R_nl
     end function radiation_fcn
-    !>Soil heat flux function
+    
+  !>Soil heat flux function
     function soilheat_fcn(t1,t2,r,h,u) result(val)
       use typy
       use core_tools
@@ -268,8 +271,8 @@ module Re_evap_bc
         case("yearly")
           val = 0.14_rkind*(t1- t2)
       end select
-    
     end function soilheat_fcn
+    
     !>Day of the year function
     function num_day_fcn(x,y,z) result(val)
       use typy
