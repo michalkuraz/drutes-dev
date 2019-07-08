@@ -130,10 +130,14 @@ module Re_evap_bc
                 j = i
               end if
               
+              
               hour  = pde_loc%bc(edge_id)%series(j,1)
               day = pde_loc%bc(edge_id)%series(j,2)
               month = pde_loc%bc(edge_id)%series(j,3)
               year = pde_loc%bc(edge_id)%series(j,4)
+              
+              
+              
               tmax = pde_loc%bc(edge_id)%series(j,5)
               tmin = pde_loc%bc(edge_id)%series(j,6)
               tmax_prev = pde_loc%bc(edge_id)%series(j-1,5)
