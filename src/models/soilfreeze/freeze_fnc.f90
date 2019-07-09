@@ -245,9 +245,9 @@ module freeze_fnc
       select case (drutes_config%name)
         case ("LTNE")
           if (present(tensor)) then
-          do i= 1, D
-            tensor(i,i) =  thermal_p(pde_loc,layer, quadpnt)*freeze_par(layer)%Ths
-          end do
+            do i= 1, D
+              tensor(i,i) =  thermal_p(pde_loc,layer, quadpnt)*freeze_par(layer)%Ths
+            end do
           end if
         case("freeze")
           thermal_conduct = thermal_k(pde_loc,layer, quadpnt)
@@ -313,7 +313,7 @@ module freeze_fnc
           call all_fluxes(pde_loc, layer, quadpnt, flux = flux)
           !> hansson changing campbell
           F = 1+ freeze_par(layer)%F1*thice**freeze_par(layer)%F2
-          tk = freeze_par(layer)%C1 + freeze_par(layer)%C2*(thl+F*thice)-&
+          tk = freeze_par(layer)%C1 + freeze_par(layer)%C2*(thl+F*thice)-& 
           (freeze_par(layer)%C1-freeze_par(layer)%C4)*exp(-(freeze_par(layer)%C3*(thl+F*thice))**freeze_par(layer)%C5)
           do i = 1, D
             val(i) = tk + freeze_par(layer)%beta*freeze_par(layer)%Cl*rho_wat*abs(flux(i))

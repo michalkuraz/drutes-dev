@@ -22,10 +22,62 @@ module freeze_read
   use freeze_globs
   use debug_tools
   
-  public :: freeze_reader
+  public :: freeze_reader, read_frrate
   
   contains
+    subroutine read_frrate
+      use typy
+      use global_objs
+      use pde_objs
+      use globals
+      use core_tools
+      use readtools
+      use freeze_globs
+      
+      integer :: i_err
+      character(len=4096) :: msg
+      
+      call find_unit(file_freeze, 200)
+      open(unit = file_freeze, file="drutes.conf/freeze/freeze.conf", action="read", status="old", iostat=i_err)
+      if (i_err /= 0) then
+        print *, "missing drutes.conf/freeze/freeze.conf"
+        ERROR STOP
+      end if
+    
+      
+      
+      write(unit = msg, fmt = *) "Use freezing rate? yes - 1 or no -0"
+      call fileread(frz_pnt, file_freeze, ranges=(/0_ikind,1_ikind/), errmsg = trim(msg))
+      select case(frz_pnt)
+            case(1_ikind,0_ikind)
+              CONTINUE
+            case default
+              print *, "you have specified wrong input for freezing rate"
+              print *, "the allowed options are:"
+              print *, "                        1 = yes (freezing rate)"
+              print *, "                        0 = no (instantaneous freezing)"
+              call file_error(file_freeze)
+      end select
+      
+      if(frz_pnt > 0) then
+       fr_rate = .true.
+          wat = 1
+          heat_proc = 2
+          ice = 3
+          heat_solid = 4
 
+      else
+       fr_rate = .false.
+         wat = 1
+         heat_proc = 2
+         heat_solid = 3
+      end if
+      
+    close(file_freeze)	  
+    
+    end subroutine read_frrate
+
+    
     !> opens and reads water.conf/matrix.conf, input data for the Richards equation in single mode, 
     !! Richards equation with the dual porosity regime - matrix domain
     subroutine freeze_reader(pde_loc)
@@ -64,7 +116,27 @@ module freeze_read
           error stop
       end select
 
-
+      write(unit = msg, fmt = *) "Use freezing rate? yes - 1 or no -0"
+      call fileread(frz_pnt, file_freeze, ranges=(/0_ikind,1_ikind/), errmsg = trim(msg))
+      select case(frz_pnt)
+            case(1_ikind,0_ikind)
+              CONTINUE
+            case default
+              print *, "you have specified wrong input for freezing rate"
+              print *, "the allowed options are:"
+              print *, "                        1 = yes (freezing rate)"
+              print *, "                        0 = no (instantaneous freezing)"
+              call file_error(file_freeze)
+      end select
+      
+      if(frz_pnt > 0) then
+       fr_rate = .true.
+        write(unit = msg, fmt = *) "beta should be positive"
+        call fileread(beta, file_freeze, ranges=(/0.0_rkind, huge(0.0_rkind)/), errmsg=trim(msg))     
+      else
+       fr_rate = .false.
+      end if
+      
       write(msg, *) "define method of evaluation of constitutive functions for the Richards equation", new_line("a"), &
         "   0 - direct evaluation (not recommended, extremely resources consuming due to complicated exponential functions)", &
         new_line("a"), &
@@ -131,36 +203,15 @@ module freeze_read
       end if
       
       
-     write(unit = msg, fmt = *) "Use freezing rate? yes - 1 or no -0"
-     call fileread(frz_pnt, file_freeze, ranges=(/0_ikind,1_ikind/), errmsg = trim(msg))
-      select case(frz_pnt)
-            case(1_ikind,0_ikind)
-              CONTINUE
-            case default
-              print *, "you have specified wrong input for freezing point depression"
-              print *, "the allowed options are:"
-              print *, "                        1 = yes (freezing rate)"
-              print *, "                        0 = no (instantaneous freezing)"
-              call file_error(file_freeze)
-      end select
-      
-      if(frz_pnt > 0) then
-       fr_rate = .true.
-        write(unit = msg, fmt = *) "beta should be positive"
-        call fileread(beta, file_freeze, ranges=(/0.0_rkind, huge(0.0_rkind)/), errmsg=trim(msg))     
-      else
-       fr_rate = .false.
-      end if
-      
      
 
-       write(unit = msg, fmt = *) "Use qlt? yes - 1 or no -0"
+     write(unit = msg, fmt = *) "Use qlt? yes - 1 or no -0"
      call fileread(tmp_int, file_freeze, ranges=(/0_ikind,1_ikind/), errmsg = trim(msg))
       select case(tmp_int)
             case(1_ikind,0_ikind)
               CONTINUE
             case default
-              print *, "you have specified wrong input for freezing point depression"
+              print *, "you have specified wrong input for qlt"
               print *, "the allowed options are:"
               print *, "                        1 = yes"
               print *, "                        0 = no"
@@ -268,9 +319,42 @@ module freeze_read
       errmsg="at least one boundary must be specified (and no negative values here)")
       
 
-      call readbcvals(unitW=file_freeze, struct=pde(1)%bc, dimen=n, &
+      call readbcvals(unitW=file_freeze, struct=pde(wat)%bc, dimen=n, &
 		      dirname="drutes.conf/freeze/")
 
+      if(fr_rate) then
+        do i=1, ubound(freeze_par,1)
+            call comment(file_freeze)
+            read(unit = file_freeze, fmt= *, iostat=ierr) freeze_par(i)%iceini, freeze_par(i)%icondtypeIce
+
+            select case(freeze_par(i)%icondtypeIce)
+                case("theta")
+                CONTINUE
+                case default
+                print *, "you have specified wrong initial condition type keyword"
+                print *, "the allowed options are:"
+                print *, "                        theta = ice content"
+                call file_error(file_freeze)
+            end select
+            if (ierr /= 0) then
+                print *, "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+                print *, "HINT: check number of line records of initial conditions in freeze/freeze.conf!"
+                print *, "----------------------------------------"
+                call file_error(file_freeze)
+            end if
+        end do
+        
+       call fileread(n, file_freeze, ranges=(/1_ikind, huge(1_ikind)/), &
+       errmsg="at least one boundary must be specified (and no negative values here)")
+      
+
+       call readbcvals(unitW=file_freeze, struct=pde(ice)%bc, dimen=n, &
+		      dirname="drutes.conf/freeze/")
+		      
+      end if
+	
+	
+		      
       close(file_freeze)	      
 
       select case (drutes_config%name)
@@ -454,7 +538,7 @@ module freeze_read
         errmsg=trim(msg))
       
       call readbcvals(unitW=file_freeze, struct=pde(heat_solid)%bc, dimen=n, &
-          dirname="drutes.conf/freeze/")
+          dirname="drutes.conf/freeze/") 
       
       do i=lbound(pde(heat_solid)%bc,1), ubound(pde(heat_solid)%bc,1)
         select case(pde(heat_solid)%bc(i)%code)

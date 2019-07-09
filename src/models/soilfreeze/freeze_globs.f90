@@ -13,9 +13,9 @@ module freeze_globs
     real(kind=rkind), dimension(:), allocatable   :: Ks_local
     !> angle of the anisothrophy axes with respect to global axes
     real(kind=rkind), dimension(:), allocatable   :: anisoangle
-    real(kind=rkind) :: initcond, Tinit
+    real(kind=rkind) :: initcond, Tinit, iceini
     real(kind=rkind) :: Tinit_s, Tinit_l
-    character(len=5) :: icondtype, icondtypeTs
+    character(len=5) :: icondtype, icondtypeTs, icondtypeIce
     character(len=5) :: icondtypeRE
     character(len=4) :: material
     real(kind=rkind) :: top, bottom
@@ -94,8 +94,6 @@ module freeze_globs
     
   real(kind=rkind), public :: beta
   
-  integer(kind = ikind), parameter, public :: wat = 1
-  integer(kind = ikind), parameter, public :: heat_proc = 2
-  integer(kind = ikind), parameter, public :: heat_solid = 3
+  integer(kind = ikind), public :: wat, heat_proc, ice, heat_solid
 
 end module freeze_globs

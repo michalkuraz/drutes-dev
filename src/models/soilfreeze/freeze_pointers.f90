@@ -6,14 +6,24 @@ module freeze_pointers
     subroutine freeze_processes(processes)
       use typy
       use globals
+      use freeze_globs
+      use freeze_read
       
       integer(kind=ikind), intent(out) :: processes
-      
+      call read_frrate()
       select case (drutes_config%name)
         case ("freeze")
-          processes = 2
+          if(fr_rate) then
+            processes = 3
+          else
+            processes = 2
+          end if
         case ("LTNE")
-          processes = 3
+          if(fr_rate) then
+            processes = 4
+          else
+            processes = 3
+          end if
         case default
           print *, "procedure called when unexpected problem name"
           print *, "exited from freeze_pointers::freeze_processes"
@@ -53,7 +63,7 @@ module freeze_pointers
         case default
           print *, "procedure called when unexpected problem name"
           print *, "exited from freeze_pointers::frz_pointers"
-          error stop
+          error stop 
       end select
 
       
@@ -90,69 +100,94 @@ module freeze_pointers
 
       pde(wat)%flux_name(1) = "flux"  
       pde(wat)%flux_name(2) = "Darcian flow [L.T^{-1}]"
-      
       pde(wat)%print_mass = .true.
       deallocate(pde(wat)%mass)
       select case (drutes_config%name)
         case ("freeze")
-          allocate(pde(wat)%mass_name(4,2))
-          allocate(pde(wat)%mass(4))
+          if(fr_rate) then
+            allocate(pde(wat)%mass_name(3,2))
+            allocate(pde(wat)%mass(3))
+            
+          else
+            allocate(pde(wat)%mass_name(4,2))
+            allocate(pde(wat)%mass(4))
+            
+            pde(wat)%mass_name(4,1) = "theta_i"
+            pde(wat)%mass_name(4,2) = "theta_i [-]"
+            
+            pde(wat)%mass(4)%val => thetai
+          end if
 
-          pde(wat)%mass_name(1,1) = "theta_tot"
-          pde(wat)%mass_name(1,2) = "theta_tot [-]"
-      
-          pde(wat)%mass_name(2,1) = "theta_i"
-          pde(wat)%mass_name(2,2) = "theta_i [-]"
-      
-          pde(wat)%mass_name(3,1) = "theta_l"
-          pde(wat)%mass_name(3,2) = "theta_l [-]"
-      
-          pde(wat)%mass_name(4,1) = "h_l"
-          pde(wat)%mass_name(4,2) = "h_l [L]"
-      
-          pde(wat)%mass(1)%val => vangen_fr
-      
-          pde(wat)%mass(2)%val => thetai
-      
-          pde(wat)%mass(3)%val => thetal
-      
-          pde(wat)%mass(4)%val => hl
+         
         case ("LTNE")
-          allocate(pde(wat)%mass_name(5,2))
-          allocate(pde(wat)%mass(5))
+          if(fr_rate) then
+            allocate(pde(wat)%mass_name(4,2))
+            allocate(pde(wat)%mass(4))
 
-          pde(wat)%mass_name(1,1) = "theta_tot"
-          pde(wat)%mass_name(1,2) = "theta_tot [-]"
-      
-          pde(wat)%mass_name(2,1) = "theta_i"
-          pde(wat)%mass_name(2,2) = "theta_i [-]"
-      
-          pde(wat)%mass_name(3,1) = "theta_l"
-          pde(wat)%mass_name(3,2) = "theta_l [-]"
-      
-          pde(wat)%mass_name(4,1) = "h_l"
-          pde(wat)%mass_name(4,2) = "h_l [L]"
-      
-          pde(wat)%mass_name(5,1) = "T_m"
-          pde(wat)%mass_name(5,2) = "T_m [deg C]"
+            pde(wat)%mass_name(4,1) = "T_m"
+            pde(wat)%mass_name(4,2) = "T_m [deg C]"
+            
+            pde(wat)%mass(4)%val => T_m        
+ 
+          else
+            allocate(pde(wat)%mass_name(5,2))
+            allocate(pde(wat)%mass(5))
+            
+            pde(wat)%mass_name(4,1) = "T_m"
+            pde(wat)%mass_name(4,2) = "T_m [deg C]"
+            
+            pde(wat)%mass_name(5,1) = "theta_i"
+            pde(wat)%mass_name(5,2) = "theta_i [-]"
+            
+            pde(wat)%mass(4)%val => T_m        
 
-          pde(wat)%mass(1)%val => vangen_fr
-      
-          pde(wat)%mass(2)%val => thetai
-      
-          pde(wat)%mass(3)%val => thetal
-      
-          pde(wat)%mass(4)%val => hl
-      
-          pde(wat)%mass(5)%val => T_m        
+            pde(wat)%mass(5)%val => thetai
+          end if
+
         case default
           print *, "procedure called when unexpected problem name"
           print *, "exited from freeze_pointers::frz_pointers"
           error stop
       end select
-     
-      ! allocate porosity as mass(3)?
+      
+      pde(wat)%mass_name(1,1) = "theta_tot"
+      pde(wat)%mass_name(1,2) = "theta_tot [-]"
+      
+      pde(wat)%mass_name(2,1) = "theta_l"
+      pde(wat)%mass_name(2,2) = "theta_l [-]"
+      
+      pde(wat)%mass_name(3,1) = "h_l"
+      pde(wat)%mass_name(3,2) = "h_l [L]"
+      
+      pde(wat)%mass(1)%val => vangen_fr
+            
+      pde(wat)%mass(2)%val => thetal
+      
+      pde(wat)%mass(3)%val => hl
+      
+      
+      if(fr_rate) then
+        pde(ice)%print_mass = .false.
+        pde(ice)%problem_name(1) = "ice_content"
+        pde(ice)%problem_name(2) = "Ice with freezing rate"
+            
+        pde(ice)%solution_name(1) = "ice_content" 
+        pde(ice)%solution_name(2) = "theta_i " 
 
+        pde(ice)%pde_fnc(ice)%zerord => vf
+        pde(wat)%pde_fnc(wat)%zerord => neg_vf
+            
+        do i=lbound(pde(ice)%bc,1), ubound(pde(ice)%bc,1)
+          select case(pde(ice)%bc(i)%code)
+            case(1)
+                pde(ice)%bc(i)%value_fnc => heat_dirichlet
+            case(2)
+                pde(ice)%bc(i)%value_fnc => heat_neumann
+          end select
+        end do
+        pde(ice)%initcond => ice_initcond
+      end if
+      
     ! pointers for heat flow model
       pde(heat_proc)%problem_name(1) = "heat"
       pde(heat_proc)%problem_name(2) = "Heat conduction equation with convection"

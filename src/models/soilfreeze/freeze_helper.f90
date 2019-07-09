@@ -5,8 +5,8 @@ module freeze_helper
   use debug_tools
   use RE_constitutive
 
-  public :: iceswitch, rho_icewat, Q_reduction, surf_tens_deriv, Kliquid_temp, hl, hcl, thetai, thetal
-  public:: vangen_fr, mualem_fr, temp_initcond, temp_s_initcond, wat_initcond, getval_retotfr
+  public :: iceswitch, rho_icewat, Q_reduction, surf_tens_deriv, Kliquid_temp, hl, hcl, thetai, thetal, neg_vf, vf
+  public:: vangen_fr, mualem_fr, temp_initcond, temp_s_initcond, wat_initcond, getval_retotfr, ice_initcond
       
       
   
@@ -33,7 +33,6 @@ module freeze_helper
         Tf = 0
       end if
       
-
 
       if (pde(heat_proc)%getval(quadpnt_loc) > Tf) then
       !> melting
@@ -242,28 +241,34 @@ module freeze_helper
       real(kind=rkind), dimension(:), intent(in), optional    :: x
       real(kind=rkind) :: val
       type(integpnt_str) :: quadpnt_loc
-
       real(kind=rkind) :: thl, thall, thi_tmp
       
+      
       if(fr_rate) then
-        quadpnt_loc = quadpnt
-        if(time > 0_rkind) then
-              call wait
-          quadpnt_loc%column = 1
-          thi_tmp = pde(wat)%mass(2)%val(pde(wat),layer, quadpnt_loc)
-          print*, pde(wat)%mass(2)%val(pde(wat),layer, quadpnt)
-          print*, pde(wat)%mass(2)%val(pde(wat),layer, quadpnt_loc)
-        else
-          thi_tmp = 0_rkind
-        end if
-        val = thi_tmp + vf(pde_loc, layer, quadpnt, x)*time_step
-              print*, "value", val
+        val =  pde(ice)%getval(quadpnt)
       else
         thl = vangen_fr(pde(wat), layer, x=(/hl(pde(wat), layer, quadpnt)/))
         thall = vangen_fr(pde(wat), layer, quadpnt)
         val = thall - thl
       end if
     end function thetai
+    
+    
+    function neg_vf(pde_loc, layer, quadpnt, x) result(val)
+      use typy
+      use global_objs
+      use pde_objs
+      use debug_tools
+      class(pde_str), intent(in) :: pde_loc
+      integer(kind=ikind), intent(in) :: layer
+      type(integpnt_str), intent(in), optional :: quadpnt
+      real(kind=rkind), dimension(:), intent(in), optional    :: x
+      real(kind=rkind) :: val
+      type(integpnt_str) :: quadpnt_loc
+      real(kind=rkind) :: thl, thall, thi_tmp
+      
+      val =  -vf(pde_loc, layer, quadpnt)
+    end function neg_vf
     
     function thetal(pde_loc, layer, quadpnt, x) result(val)
       use typy
@@ -538,6 +543,48 @@ module freeze_helper
       
 
     end subroutine wat_initcond
+    
+    subroutine ice_initcond(pde_loc) 
+      use typy
+      use globals
+      use global_objs
+      use pde_objs
+      use re_globals
+      use re_constitutive
+      use geom_tools
+
+      
+      class(pde_str), intent(in out) :: pde_loc
+      integer(kind=ikind) :: i, j, k,l, m, layer, D
+      real(kind=rkind) :: value
+      
+      D = drutes_config%dimen
+      select case (freeze_par(1_ikind)%icondtypeIce)
+        case("input")
+          call map1d2dJ(pde_loc,"drutes.conf/freeze/iceini.in", correct_h = .true.)
+      end select
+      
+      D = drutes_config%dimen
+      do i=1, elements%kolik
+        layer = elements%material(i)
+        do j=1, ubound(elements%data,2)
+          k = elements%data(i,j)
+          l = nodes%edge(k)
+          m = pde_loc%permut(k)
+          if (m == 0) then
+            call pde_loc%bc(l)%value_fnc(pde_loc, i, j, value)
+            pde_loc%solution(k) =  value 
+          else
+            select case (freeze_par(layer)%icondtypeIce)
+              case("theta")
+                pde_loc%solution(k) = freeze_par(layer)%iceini 
+            end select
+          end if
+        end do   
+      end do
+      
+
+    end subroutine ice_initcond
     
     subroutine temp_initcond(pde_loc) 
       use typy
