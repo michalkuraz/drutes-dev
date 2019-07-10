@@ -330,7 +330,7 @@ module postpro
       integer(kind=ikind) :: bytes
       character(len=2) :: byte_unit
       character(len=7) :: ch
-      character(len=256) :: filename, format
+      character(len=256) :: filename, format, command
 
       PID = getpid()
 
@@ -347,6 +347,10 @@ module postpro
   !     write(unit=format, fmt = *) "(I.", i, ")"
 
       write(unit=filename, fmt=format) "/proc/", PID, "/status"
+      
+      write(unit=command, fmt=*) "cp ", cut(filename), " out/"
+      
+      ierr = system(cut(command))
       
       open(newunit=fileid, file=filename, action="read", status="old", iostat=ierr)
 

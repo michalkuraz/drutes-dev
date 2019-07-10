@@ -126,8 +126,7 @@ module capmat
 
       
       cap_mat = cap_mat/gauss_points%area*elements%areas(el_id)
-      
-      print *, cap_mat ; stop
+
 
       bside =  bside + matmul(cap_mat, elnode_prev)
       
