@@ -740,7 +740,7 @@ module postpro
             do j=1, nodes%kolik
               quadpnt%order = j
               quadpnt%preproc = .true.
-              layer = nodes%element(j)%data(1)
+              layer = elements%material(nodes%element(j)%data(1))
               write(unit=ids(i), fmt=*) j, pde(proc)%mass(i-2)%val(pde(proc), layer, quadpnt)
             end do
           
