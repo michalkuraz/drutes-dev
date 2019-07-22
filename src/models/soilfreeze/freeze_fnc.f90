@@ -7,7 +7,8 @@ module freeze_fnc
   
   public :: capacityhh, capacityhT,  diffhh, diffhT, Dirichlet_mass_bc
   public :: capacityTT, capacityTh, diffTT, convectTT, thermal_k, heat_flux_freeze, Dirichlet_Neumann_switch_bc
-
+  public :: capacityTsTs, thermal_p, diffTsTs, heat_flux_s_LTNE
+  public:: T_m, qsl_neg, qsl_pos
   
   procedure(scalar_fnc), pointer, public :: rwcap
       
@@ -241,14 +242,22 @@ module freeze_fnc
       
      
       D = drutes_config%dimen
-      thermal_conduct = thermal_k(pde_loc,layer, quadpnt)
-      
-      if (present(tensor)) then
-        do i= 1, D
-          tensor(i,i) =  thermal_conduct(i)
-        end do
-      end if
-      
+      select case (drutes_config%name)
+        case ("LTNE")
+          if (present(tensor)) then
+            do i= 1, D
+              tensor(i,i) =  thermal_p(pde_loc,layer, quadpnt)*freeze_par(layer)%Ths
+            end do
+          end if
+        case("freeze")
+          thermal_conduct = thermal_k(pde_loc,layer, quadpnt)
+          if (present(tensor)) then
+            do i= 1, D
+              tensor(i,i) =  thermal_conduct(i)
+            end do
+          end if
+      end select 
+
       
     end subroutine diffTT
     
@@ -271,13 +280,13 @@ module freeze_fnc
       
       if (present(flux)) then
           call all_fluxes(pde_loc, layer, quadpnt,  flux = flux)
-          flux = Cl *rho_wat*flux
+          flux = freeze_par(layer)%Cl *rho_wat*flux
           !flux = 0
         end if
         
         if (present(flux_length)) then
            call all_fluxes(pde_loc, layer, quadpnt, flux_length = flux_length)
-           flux_length = Cl *rho_wat*flux_length
+           flux_length = freeze_par(layer)%Cl *rho_wat*flux_length
            !flux_length = 0
         end if
               
@@ -304,7 +313,7 @@ module freeze_fnc
           call all_fluxes(pde_loc, layer, quadpnt, flux = flux)
           !> hansson changing campbell
           F = 1+ freeze_par(layer)%F1*thice**freeze_par(layer)%F2
-          tk = freeze_par(layer)%C1 + freeze_par(layer)%C2*(thl+F*thice)-&
+          tk = freeze_par(layer)%C1 + freeze_par(layer)%C2*(thl+F*thice)-& 
           (freeze_par(layer)%C1-freeze_par(layer)%C4)*exp(-(freeze_par(layer)%C3*(thl+F*thice))**freeze_par(layer)%C5)
           do i = 1, D
             val(i) = tk + freeze_par(layer)%beta*freeze_par(layer)%Cl*rho_wat*abs(flux(i))
@@ -375,7 +384,11 @@ module freeze_fnc
       !nablaz = 0
       !nablaz(D) = 1
       if(iceswitch(quadpnt))then
+       if(fr_rate) then
+         gradH(1:D) = gradient(1:D)
+       else
         gradH(1:D) = gradient(1:D) + Lf/grav*gradientT(1:D)/(pde(heat_proc)%getval(quadpnt) + 273.15_rkind)
+       end if
       else
         gradH(1:D) = gradient(1:D)
       end if
@@ -589,4 +602,224 @@ module freeze_fnc
       else
       end if
     end subroutine Dirichlet_Neumann_switch_bc
+    
+    ! Thermal properties LTNE
+    function thermal_p(pde_loc, layer, quadpnt, x) result(val)
+      use typy
+      use global_objs
+      use pde_objs
+      class(pde_str), intent(in) :: pde_loc
+      integer(kind=ikind), intent(in) :: layer
+      type(integpnt_str), intent(in), optional :: quadpnt
+      real(kind=rkind), dimension(:), intent(in), optional    :: x
+      real(kind=rkind) :: val 
+      real(kind=rkind), dimension(3) :: flux
+      real(kind = rkind) :: thl, thice, tk, F
+      integer(kind = ikind) :: D, i
+      D = drutes_config%dimen
+      
+      thice = thetai(pde(wat), layer, quadpnt)
+      thl = vangen_fr(pde(wat), layer, x=(/hl(pde(wat), layer, quadpnt)/))
+      if(air) then
+        val = thl*freeze_par(layer)%Ll+thice*freeze_par(layer)%Li+(freeze_par(layer)%ths-thl)*freeze_par(layer)%La
+      else 
+        val = (thl*freeze_par(layer)%Ll+thice*freeze_par(layer)%Li)/ vangen_fr(pde(wat), layer, quadpnt)
+      end if
+      
+    end function thermal_p
+    
+        ! pde(heat_solid)
+    function capacityTsTs(pde_loc, layer, quadpnt, x) result(val)
+      use typy
+      use global_objs
+      use freeze_globs
+      use pde_objs
+
+      class(pde_str), intent(in) :: pde_loc
+      !> value of the nonlinear function
+      real(kind=rkind), dimension(:), intent(in), optional    :: x
+      !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
+      type(integpnt_str), intent(in), optional :: quadpnt
+      !> material ID
+      integer(kind=ikind), intent(in) :: layer
+      !> return value
+      real(kind=rkind)                :: val
+      
+      real(kind=rkind) :: temp, vol_soil, th_air
+      
+      val = (1-freeze_par(layer)%Ths)*freeze_par(layer)%Cs
+      
+    end function capacityTsTs
+    
+    subroutine diffTsTs(pde_loc, layer, quadpnt, x, tensor, scalar)
+      use typy
+      use global_objs
+      use freeze_globs
+      class(pde_str), intent(in) :: pde_loc
+      !> value of the nonlinear function
+      real(kind=rkind), dimension(:), intent(in), optional    :: x
+      !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
+      type(integpnt_str), intent(in), optional :: quadpnt
+      !> material ID
+      integer(kind=ikind), intent(in) :: layer
+      !> return tensor
+      real(kind=rkind), dimension(:,:), intent(out), optional :: tensor
+      !> relative scalar value of the nonlinear function 
+      real(kind=rkind), intent(out), optional                 :: scalar
+      real(kind=rkind), dimension(3) :: thermal_conduct
+      integer(kind=ikind) :: D, i
+      
+     
+      D = drutes_config%dimen
+      
+      if (present(tensor)) then
+        do i= 1, D
+          tensor(i,i) =  freeze_par(layer)%Li * (1-freeze_par(layer)%Ths)
+        end do
+      end if
+      
+      
+    end subroutine diffTsTs
+    
+    subroutine heat_flux_s_LTNE(pde_loc, layer, quadpnt, x, grad,  flux, flux_length)
+      use typy
+      use pde_objs
+      use global_objs
+      use debug_tools
+      use heat_globals
+       
+      class(pde_str), intent(in) :: pde_loc
+      integer(kind=ikind), intent(in)                          :: layer
+      type(integpnt_str), intent(in), optional :: quadpnt    
+      real(kind=rkind), intent(in), dimension(:), optional                   :: x
+      !> this value is optional, because it is required by the vector_fnc procedure pointer global definition
+      real(kind=rkind), dimension(:), intent(in), optional     :: grad
+      real(kind=rkind), dimension(:), intent(out), optional    :: flux
+      real(kind=rkind), intent(out), optional                  :: flux_length
+    
+
+      real(kind=rkind), dimension(:), allocatable, save :: gradT
+      real(kind=rkind), dimension(3,3) :: thermal_diff
+      integer(kind = ikind):: D
+      
+      
+      if (present(quadpnt) .and. (present(grad) .or. present(x))) then
+        print *, "ERROR: the function can be called either with integ point or x value definition and gradient, not both of them"
+        print *, "exited from heat_fnc::heat_flux"
+        ERROR stop
+      else if ((.not. present(grad) .or. .not. present(x)) .and. .not. present(quadpnt)) then
+        print *, "ERROR: you have not specified either integ point or x value"
+        print *, "exited from heat_fnc::heat_flux"
+        ERROR stop
+      end if   
+
+      if (.not. allocated(gradT)) allocate(gradT(drutes_config%dimen))
+
+      if (present(quadpnt)) then
+        call pde_loc%getgrad(quadpnt, gradT)
+      else
+        gradT = grad
+      end if
+      
+      D = drutes_config%dimen
+      
+      call diffTsTs(pde_loc, layer, quadpnt, tensor = thermal_diff)
+            
+      if (present(flux)) then
+        flux = -matmul(thermal_diff(1:D, 1:D), gradT) 
+      end if
+      
+      if (present(flux_length)) then
+        flux_length = norm2(matmul(thermal_diff(1:D, 1:D), gradT))
+      end if
+    end subroutine heat_flux_s_LTNE
+    
+      
+    function qsl_pos(pde_loc, layer, quadpnt, x) result(val)
+      use typy
+      use global_objs
+      use pde_objs
+      class(pde_str), intent(in) :: pde_loc
+      integer(kind=ikind), intent(in) :: layer
+      type(integpnt_str), intent(in), optional :: quadpnt
+      real(kind=rkind), dimension(:), intent(in), optional    :: x
+      real(kind=rkind) :: val, h, A, Re, Pr, thice, thl, Cp, up, densp, tp, flux_tmp, thair, thtot
+      real(kind=rkind), dimension(3) :: flux
+      
+      integer(kind=ikind) :: D
+
+      D = drutes_config%dimen
+
+      thice = thetai(pde(wat), layer, quadpnt)
+      thl = vangen_fr(pde(wat), layer, x=(/hl(pde(wat), layer, quadpnt)/))
+      thair = freeze_par(layer)%ths-thl
+      if(air) then
+        thtot = thice+thl+thair
+        Cp = (thl*freeze_par(layer)%Cl+thice*freeze_par(layer)%Ci +thair*freeze_par(layer)%Ca)/thtot
+        up = (thl*ul+thair*ua)/(thl+thair) !+thice*ui
+        densp = (thl*rho_wat+thice*rho_ice+thair*rho_air)/thtot
+      else
+       thtot = thice+thl
+       Cp = (thl*freeze_par(layer)%Cl+thice*freeze_par(layer)%Ci)/ thtot
+       up = ul !+thice*ui
+       densp = (thl*rho_wat+thice*rho_ice)/ thtot
+      end if 
+      
+      A = 6*(1-freeze_par(layer)%Ths)/freeze_par(layer)%diameter
+      tp = thermal_p(pde_loc, layer, quadpnt)
+      Pr = Cp*up/tp
+      call all_fluxes(pde_loc, layer, quadpnt, flux_length = flux_tmp)
+      Re = densp*abs(flux_tmp)*freeze_par(layer)%diameter/up
+      h = tp/freeze_par(layer)%diameter*(2.4e-5+(285.6*Pr**2.7*Re**(0.33333333_rkind)))
+      val = h * A
+    end function qsl_pos
+    
+
+    
+    function qsl_neg(pde_loc, layer, quadpnt, x) result(val)
+      use typy
+      use global_objs
+      use pde_objs
+      class(pde_str), intent(in) :: pde_loc
+      integer(kind=ikind), intent(in) :: layer
+      type(integpnt_str), intent(in), optional :: quadpnt
+      real(kind=rkind), dimension(:), intent(in), optional    :: x
+      real(kind=rkind) :: val, h, A, Re, Pr, thice, thl, Cp, up, densp
+      real(kind=rkind), dimension(3) :: flux
+      integer(kind=ikind) :: D
+
+     val = - qsl_pos(pde_loc, layer, quadpnt)
+    end function qsl_neg
+    
+    !> Mixture temperature
+    function T_m(pde_loc, layer, quadpnt, x) result(val)
+      use typy
+      use global_objs
+      use pde_objs
+      class(pde_str), intent(in) :: pde_loc
+      integer(kind=ikind), intent(in) :: layer
+      type(integpnt_str), intent(in), optional :: quadpnt
+      real(kind=rkind), dimension(:), intent(in), optional    :: x
+      real(kind=rkind) :: val 
+      real(kind = rkind):: thair, Ths, thtot
+      real(kind=rkind), dimension(3) :: flux
+      integer(kind=ikind) :: el_id
+
+      if(air) then
+        val = freeze_par(layer)%ths*pde(heat_proc)%getval(quadpnt)+(1-freeze_par(layer)%Ths)*pde(heat_solid)%getval(quadpnt)     
+      else
+        thtot = vangen_fr(pde(wat), layer, quadpnt)
+        thair = freeze_par(layer)%Ths - thtot
+        Ths = (1-freeze_par(layer)%Ths)
+        if(quadpnt%element >75) then
+          el_id = elements%kolik
+        else
+          el_id = quadpnt%element
+        end if
+        val = thtot*pde(heat_proc)%getval(quadpnt)+ths*pde(heat_solid)%getval(quadpnt)+thair*T_air(el_id) 
+
+      end if
+
+    end function T_m
+
 end module freeze_fnc
