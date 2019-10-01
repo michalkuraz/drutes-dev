@@ -179,14 +179,13 @@ module postpro
          
           do i=1, 3+ubound(pde(proc)%mass_name,1)
             ! if gsmh don't print element average value 
-            if (i == 2 .and. observe_info%fmt == "gmsh") then
+            if (i == 2 .and. observe_info%fmt == "gmsh" .and. drutes_config%dimen > 1) then
               CONTINUE
             else
               open(newunit=ids(proc, i), file=trim(filenames(proc)%names(i)), action="write", status="replace", iostat=ierr)
             end if
           end do  
         end if
-
 
 
         quadpnt%type_pnt = "ndpt"
@@ -309,8 +308,8 @@ module postpro
             massval(j) = pde(proc)%mass(j)%val(pde(proc),layer, quadpnt)
           end do
           
-          
-          
+          observation_array(i)%cumflux(proc) = observation_array(i)%cumflux(proc) + norm2(advectval(1:D))
+  
           write(unit=pde(proc)%obspt_unit(i), fmt=*) time, val, massval(1:printdim), advectval(1:D), &
                   observation_array(i)%cumflux(proc)
           
@@ -600,9 +599,9 @@ module postpro
           pts = pts + nodes%data(elements%data(i,ii),:)
         end do
         pts = pts/ubound(elements%data,2)
-        
+
         write(unit=ids(2), fmt=*)  i, pts, avgval
-      
+
         quadpnt%element = i
         quadpnt%column = 3
         quadpnt%type_pnt = "gqnd"
@@ -625,6 +624,8 @@ module postpro
           end do
         end if
         
+      
+        
         flux = 0
         do jj=1, ubound(gauss_points%weight,1)
           quadpnt%order = jj
@@ -645,7 +646,6 @@ module postpro
       do i=1, ubound(ids,1)
         close(ids(i))
       end do
-
 
     end subroutine print_pure
     

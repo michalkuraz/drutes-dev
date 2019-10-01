@@ -30,6 +30,7 @@ module kinpointer
       use kinfnc
       use kinreader
       use pde_objs
+      use debug_tools
       
       class(pde_str), intent(in out) :: pde_loc
       
@@ -62,7 +63,6 @@ module kinpointer
       pde_loc%flux => kinflux
       
       pde_loc%symmetric = .true.
-      
       
     end subroutine kinwavelinker
     

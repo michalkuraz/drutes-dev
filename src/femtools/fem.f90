@@ -85,6 +85,7 @@ module fem
       open(newunit=file_dt, file="out/dt", action="write", status="replace")
 
      call make_print("separately")
+
      call write_obs()
 
 

@@ -31,6 +31,7 @@ module kinreader
       integer :: ierr, filenodes, fileel
       integer(kind=ikind) :: ndcounter, itmp, i
       real(kind=rkind), dimension(:), allocatable :: distance
+      real(kind=rkind), dimension(:), allocatable :: tmpvals
       
       open(newunit=filenodes, file="drutes.conf/kinwave/nodes.in", status="old", action="read", iostat=ierr)
       
@@ -140,6 +141,7 @@ module kinreader
       real(kind=rkind) :: tmp
       real(kind=rkind), dimension(:), allocatable :: tmp_array
       real(kind=rkind), dimension(:), allocatable :: pts, distance
+      character(len=7), dimension(2) :: infnames
       
       if (drutes_config%dimen == 2) then
         select case(drutes_config%mesh_type)
@@ -184,6 +186,8 @@ module kinreader
       
       allocate(oneDslopes(n))
       
+      allocate(inf_model(n))
+      
       call fileread(i, file_kinematix, ranges=(/n,n/), errmsg=cut(msg))
       
       do i=1, n
@@ -194,10 +198,50 @@ module kinreader
       
       if (drutes_config%dimen == 1) then
         do i=1, n
-          call fileread(oneDslopes(i), file_kinematix, ranges=(/epsilon(oneDslopes(1)), huge(oneDslopes(1))/))
+          call fileread(oneDslopes(i), file_kinematix, ranges=(/-huge(oneDslopes(1)), huge(oneDslopes(1))/))
         end do
         call gen_catchment()
       end if
+      
+      infnames(1) = "Ks"
+      infnames(2) = "Schwarz"
+      
+      write(msg, *) "Set model for reducing rainfall by infiltration. ", &
+            "The model must be set for each subregion, thus the number of subregions -> ", & 
+            "number of lines with model type records.", new_line("a"), &
+            "-------------------------------------", &
+             new_line("a"), new_line("a"),&
+            "    Ks - only saturated hydraulic conductivity is subtracted",   new_line("a"), new_line("a"),&
+            "    Schwarz - Schwarz equation for unsteady infiltration is used,",  new_line("a"),& 
+            "    see: D. Swartzendruber. ", & 
+            "A Quasi-Solution of Richards Equation for the Downward Infiltration of Water into Soil. " , &  
+            "Water Resour. Res., 23(5): 809–817, MAY 1987."
+            
+      do i=1, ubound(inf_model,1)
+        call fileread(inf_model(i)%name, file_kinematix, cut(msg), options=infnames)
+      end do
+      
+      do i=1, ubound(inf_model,1)
+        if (allocated(tmp_array)) deallocate(tmp_array)
+        select case(cut(inf_model(i)%name))
+          case("Ks")
+            write(msg,*) "For subregion:", i, "model Ks for reducing the rainfall intensity is defined", &
+            "provide only a SINGLE value of Ks"
+            allocate(tmp_array(1))
+            call fileread(tmp_array, errmsg=msg, fileid=file_kinematix, checklen=.true.)
+            inf_model(i)%Ks = tmp_array(1)
+          case("Schwarz")
+             write(msg,*) "For subregion:", i, &
+             "model Schwarz (Schwarzendruber, 1987) for reducing the rainfall intensity is defined", &
+             "provide THREE values for S, A, Ks"
+             allocate(tmp_array(3))
+             call fileread(tmp_array, errmsg=msg, fileid=file_kinematix, checklen=.true.)
+             inf_model(i)%S = tmp_array(1)
+             inf_model(i)%A = tmp_array(2)
+             inf_model(i)%Ks = tmp_array(3)
+        end select
+      end do
+            
       
       open(newunit=frainpts, file="drutes.conf/kinwave/rain.pts", status="old", action="read", iostat=ierr)
       
@@ -256,6 +300,7 @@ module kinreader
         ERROR STOP
       end if
       
+      if (allocated(tmp_array)) deallocate(tmp_array)
       allocate(tmp_array(ubound(raindata,1)+1))
       
       counter = 0
@@ -285,6 +330,7 @@ module kinreader
           raindata(j)%series(i,2) = tmp_array(1+j)
         end do
       end do
+      
 
     end subroutine kininit
 
