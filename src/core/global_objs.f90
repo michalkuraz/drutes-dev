@@ -402,8 +402,10 @@ module global_objs
       !> if present and .true. the smart vector is completely deallocated
       logical, intent(in), optional :: full
       
-      if (present(full) .and. full .and. allocated(array%data)) then
-        deallocate(array%data)
+      if (present(full)) then
+         if (full .and. allocated(array%data)) then
+           deallocate(array%data)
+         end if
       end if
 
       array%pos = 0

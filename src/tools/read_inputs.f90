@@ -68,10 +68,10 @@ module read_inputs
         new_line("a"),  new_line("a"), &
         "   heat = Heat conduction equation (Sophoclea, 1979)", &
         new_line("a"),  new_line("a"), &
-        "   LTNE = Local Thermal Non-Equilibrium heat transport model (unfinished yet)", &
-        new_line("a"),  new_line("a"), &
-        "   freeze = Richards equation with freezing/thawing processes", &
-        new_line("a"),  new_line("a"), &
+!         "   LTNE = Local Thermal Non-Equilibrium heat transport model (unfinished yet)", &
+!         new_line("a"),  new_line("a"), &
+!         "   freeze = Richards equation with freezing/thawing processes (unfinished yet)", &
+!         new_line("a"),  new_line("a"), &
         "   kinwave = Kinematic wave equation for 2D catchments", &
         new_line("a"),  new_line("a"), new_line("a")
         

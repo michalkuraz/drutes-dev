@@ -144,6 +144,8 @@ module readtools
       integer(kind=ikind) :: i, i1, i2, arraybound, current_pos, chpos
       real(kind=rkind), dimension(:), allocatable :: tmpdata
       
+      logical :: terminate = .false.
+      
       call comment(fileid)
       
       arraybound=1
@@ -210,8 +212,21 @@ module readtools
       read(unit=fileid, fmt=*, iostat=ierr) r
     
       
-      
       if (ierr /= 0) then
+        if (.not. present(noexit)) then
+          terminate = .true.
+        else
+          if (noexit) then
+            terminate = .false.
+          else
+            terminate = .true.
+          end if
+        end if
+      end if
+      
+      
+      
+      if (terminate) then
         if (present(errmsg)) then
           call file_error(fileid,errmsg)
         end if
@@ -247,8 +262,9 @@ module readtools
       character(len=*), intent(in), optional :: errmsg
       logical, intent(in), optional :: noexit
       
-      !logical vars
+  
       integer :: ierr
+      logical :: terminate = .false.
       
       call comment(fileid)
       
@@ -261,18 +277,29 @@ module readtools
         end if
       end if
       
+      
       if (ierr /= 0) then
-        if (present(errmsg)) then
-          call file_error(fileid,errmsg)
-        end if
-        if (.not. present(noexit) .or. .not. noexit) then
-          if (present(errmsg)) then
-            call file_error(fileid,errmsg)
+        if (.not. present(noexit)) then
+          terminate = .true.
+        else
+          if (noexit) then
+            terminate = .false.
           else
-            call file_error(fileid)
+            terminate = .true.
           end if
         end if
       end if
+      
+      
+      
+      if (terminate) then
+        if (present(errmsg)) then
+          call file_error(fileid,errmsg)
+        else
+          call file_error(fileid)
+        end if
+      end if
+      
 
     end subroutine read_real
     
@@ -293,6 +320,7 @@ module readtools
       integer :: ierr, ierr2
       integer(kind=ikind) :: i, i1, i2, arraybound, current_pos, chpos
       real(kind=rkind), dimension(:), allocatable :: tmpdata
+      logical :: terminate = .false.
       
       call comment(fileid)
       
@@ -359,18 +387,26 @@ module readtools
       call comment(fileid)
       read(unit=fileid, fmt=*, iostat=ierr) r
     
-      
+            
       
       if (ierr /= 0) then
+        if (.not. present(noexit)) then
+          terminate = .true.
+        else
+          if (noexit) then
+            terminate = .false.
+          else
+            terminate = .true.
+          end if
+        end if
+      end if
+      
+      
+      if (terminate) then
         if (present(errmsg)) then
           call file_error(fileid,errmsg)
-        end if
-        if (.not. present(noexit) .or. .not. noexit) then
-          if (present(errmsg)) then
-            call file_error(fileid,errmsg)
-          else
+        else
             call file_error(fileid)
-          end if
         end if
       end if
       
@@ -389,6 +425,7 @@ module readtools
     
     
     subroutine read_char(ch, fileid, errmsg, options, noexit)
+      use debug_tools
       character(len=*), intent(out) :: ch
       integer, intent(in) :: fileid
       character(len=*), intent(in), optional :: errmsg
@@ -396,7 +433,8 @@ module readtools
       logical, intent(in), optional :: noexit
 
       integer :: ierr, i
-      logical :: ok
+      logical :: ok = .true.
+      logical :: terminate = .false.
       
       call comment(fileid)
       
@@ -410,20 +448,28 @@ module readtools
             EXIT
           end if
         end do
-            else
-        ok = .true.	
       end if
       
-      if (ierr /= 0 .or. .not.(ok) .and. (.not. present(noexit) .or. .not. noexit)) then
+
+      if (ierr /= 0 .or. .not.(ok)) then
+        if (.not. present(noexit)) then
+          terminate = .true.
+        else
+          if (noexit) then
+            terminate = .false.
+          else
+            terminate = .true.
+          end if
+        end if
+      end if
+
+      if (terminate) then
         if (.not. ok) then
           print *, "the value in your input file was: ", trim(ch)
           print *, "however the allowed options for this field are:"
           do i=1, ubound(options,1)
             print *, "-  ", adjustl(trim(options(i)))
           end do
-        end if
-        if (present(errmsg)) then
-          call file_error(fileid,errmsg)
         end if
         if (present(errmsg)) then
           call file_error(fileid,errmsg)
@@ -449,24 +495,31 @@ module readtools
       integer(kind=ikind) :: i, j
       real, dimension(:), allocatable :: tmpdata
       logical :: ok
+      logical :: terminate = .false. 
       
       call comment(fileid)
  
       read(unit=fileid, fmt=*, iostat=ierr) r
       
-
       if (ierr /= 0) then
-        if (present(errmsg)) then
-          call file_error(fileid,errmsg)
-        end if
-        if (.not. present(noexit) .or. .not. noexit) then
-          if (present(errmsg)) then
-            call file_error(fileid,errmsg)
+        terminate = .true.
+        if (present(noexit)) then
+          if (noexit) then
+            terminate = .false.
           else
-            call file_error(fileid)
+            terminate = .true.
           end if
         end if
       end if
+
+      if (terminate) then
+        if (present(errmsg)) then
+          call file_error(fileid,errmsg)
+        else
+          call file_error(fileid)
+        end if
+      end if
+      
       
       if (present(options)) then
         do i=1, ubound(r,1)
@@ -495,6 +548,7 @@ module readtools
 
       integer :: ierr
       character(len=1) :: ch
+      logical :: terminate = .false.
       
       call comment(fileid)
       
@@ -512,11 +566,21 @@ module readtools
              //achar(27)//'[0m'
          end select
        end if
-      
-      if (ierr /= 0 .and. (.not. present(noexit) .or. .not. noexit)) then
-        if (present(errmsg)) then
-          call file_error(fileid,errmsg)
+       
+      if  (ierr /= 0 ) then
+        if (.not. present(noexit)) then
+          terminate = .true.
+        else
+          if (noexit) then
+            terminate = .false.
+          else
+            terminate = .true.
+          end if
         end if
+      end if
+       
+      
+      if (terminate) then
         if (present(errmsg)) then
           call file_error(fileid,errmsg)
         else
