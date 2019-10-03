@@ -152,12 +152,10 @@ module Re_evap_bc
           wind = pde_loc%bc(edge_id)%series(datapos,8)
           light = pde_loc%bc(edge_id)%series(datapos,9)
           solar = pde_loc%bc(edge_id)%series(datapos,10)
-          rain = pde_loc%bc(edge_id)%series(datapos,11)
-          theta =  pde_loc%mass(layer, quadpnt)
           
           
           rain = pde_loc%bc(edge_id)%series(datapos,11)
-          theta =  pde_loc%mass(layer, quadpnt)
+          theta =  pde_loc%mass(1)%val(pde_loc, layer, quadpnt)
           
           
           tmean = (tmax+tmin)/2.0_rkind

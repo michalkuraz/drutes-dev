@@ -47,8 +47,8 @@ module freeze_globs
   !> specific heat capacity soil[J/kg/K]
   real(kind=rkind), parameter, public :: Cs = 800 
   
-  !> reference temperature for Clapeyron [K]
-  real(kind=rkind), parameter, public :: Tref = 273.15
+  !> reference temperature for Clapeyron [K] (defined in RE globals now)
+!   real(kind=rkind), parameter, public :: Tref = 273.15
 
   !> density of water [kg.m^-3]
   real(kind=rkind), parameter, public :: rho_wat = 1000
