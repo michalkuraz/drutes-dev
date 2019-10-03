@@ -297,8 +297,9 @@ module Re_dual_reader
       pde_loc%flux_name(1) = "flux_m"  
       pde_loc%flux_name(2) = "Darcian flow [L.T^{-1}]"
 
-      pde_loc%mass_name(1) = "theta_m"
-      pde_loc%mass_name(2) = "theta [-]"
+      allocate(pde_loc%mass_name(1,2))
+      pde_loc%mass_name(1,1) = "theta_m"
+      pde_loc%mass_name(1,2) = "theta [-]"
       pde_loc%mfswitch= "m"
       pde_loc%print_mass = .true.
     ! boundary values
@@ -348,8 +349,9 @@ module Re_dual_reader
       pde_loc%flux_name(1) = "flux_f"  
       pde_loc%flux_name(2) = "Darcian flow [L.T^{-1}]"
 
-      pde_loc%mass_name(1) = "theta_f"
-      pde_loc%mass_name(2) = "theta [-]"
+      allocate(pde_loc%mass_name(1,2))
+      pde_loc%mass_name(1,1) = "theta_f"
+      pde_loc%mass_name(1,2) = "theta [-]"
       pde_loc%mfswitch= "f"
       pde_loc%print_mass = .true.
     ! boundary values

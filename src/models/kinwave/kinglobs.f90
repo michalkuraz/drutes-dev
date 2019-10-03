@@ -27,6 +27,11 @@ module kinglobs
     real(kind=rkind) :: sx, sy
     integer(kind=ikind) :: cover
   end type surface_el_str
+  
+  type, public :: inf_model_str
+    character(len=7) :: name
+    real(kind=rkind) :: Ks, S, A
+  end type inf_model_str
 
   type(surfacend_str), dimension(:), allocatable :: watershed_nd
   type(surface_el_str), dimension(:), allocatable :: watershed_el
@@ -45,6 +50,12 @@ module kinglobs
   integer(kind=ikind), dimension(:), allocatable :: el2pt
   
   logical :: backwater
+  
+  type(inf_model_str), dimension(:), allocatable :: inf_model
+  
+  
+  
+  
 
 end module kinglobs
 

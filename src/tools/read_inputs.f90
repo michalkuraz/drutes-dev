@@ -42,7 +42,7 @@ module read_inputs
       character(len=4096) :: filename
       character(len=8192) :: msg
       integer :: local, global
-      character(len=256), dimension(9) :: probnames
+      character(len=256), dimension(10) :: probnames
       character(len=2) :: dimensions
       
       if (.not. www) then
@@ -67,11 +67,12 @@ module read_inputs
         "   Re_dual = Richards equation dual porosity with total hydraulic head", &
         new_line("a"),  new_line("a"), &
         "   heat = Heat conduction equation (Sophoclea, 1979)", &
-!         new_line("a"),  new_line("a"), &
-!         "   LTNE = Local Thermal Non-Equilibrium heat transport model", &
-!         new_line("a"),  new_line("a"), &
-!         "   frozen = Local Thermal Non-Equilibrium heat transport model", &
         new_line("a"),  new_line("a"), &
+!         "   LTNE = Local Thermal Non-Equilibrium heat transport model (unfinished yet)", &
+!         new_line("a"),  new_line("a"), &
+!         "   freeze = Richards equation with freezing/thawing processes (unfinished yet)", &
+!         new_line("a"),  new_line("a"), &
+        "   kinwave = Kinematic wave equation for 2D catchments", &
         new_line("a"),  new_line("a"), new_line("a")
         
 	
@@ -83,8 +84,11 @@ module read_inputs
       probnames(5) = "Re_dual" 
       probnames(6) = "heat"
       probnames(7) = "REstd" 
-!       probnames(8) = "LTNE"
-!       probnames(9) = "frozen"
+      probnames(8) = "LTNE"
+      probnames(9) = "freeze"
+      probnames(10) = "kinwave"
+      
+
 	
       call fileread(drutes_config%name, local, trim(msg), options=probnames)
 
@@ -125,8 +129,7 @@ module read_inputs
       call fileread(iter_criterion, local, ranges=(/0.0_rkind, huge(0.0_rkind)/), &
       errmsg="iteration criterion must be positive, and smaller than the maximal number your computer can handle :)")
       
-      call fileread(time_units, local, options=(/"s    ","min  ",  "hrs  ", "day  ", "month" , "year "/), & 
-      errmsg="select your time unit between s,min,hrs,day,month, or year " )
+      call fileread(time_units, local)
       
       call fileread(init_dt, local, ranges=(/tiny(0.0_rkind), huge(0.0_rkind)/),&
       errmsg="initial time step must be positive, and smaller than the maximal number your computer can handle :)")
@@ -461,6 +464,8 @@ module read_inputs
       use geom_tools
       
       character(len=256) :: ch
+      character(len=11) :: msh
+      real(kind=rkind) :: mshfmt
       integer(kind=ikind) :: i, itmp, jtmp, itmp2, edge, nd1, nd2, i_err, k, l, j, n, id, el
       integer(kind=ikind), dimension(:), allocatable :: tmp_array
       logical :: use_filemat=.false., update
@@ -470,13 +475,30 @@ module read_inputs
       integer(kind=ikind), dimension(:), allocatable :: excl_ids
       
       
-      read(unit=file_mesh, fmt=*, iostat=i_err) ch
-!       
-      if (i_err == 0) then
-        if (adjustl(trim(ch)) == "materials.conf") then
-          use_filemat=.true.
-        end if
+      
+      read(unit=file_mesh, fmt=*, iostat=i_err) msh
+     
+      if (i_err /= 0 .or. msh /= "$MeshFormat") then
+        print *, "ERROR: file drutes.conf/mesh/mesh.msh has strange (unsupported) syntax"
+        print *, "exiting from read_inputs::read_2dmesh_gmsh"
+        ERROR STOP
       end if
+      
+      read(unit=file_mesh, fmt=*, iostat=i_err) mshfmt
+      
+      
+      if (i_err /= 0) then 
+        print *, "ERROR: file drutes.conf/mesh/mesh.msh has strange (unsupported) syntax"
+        print *, "exiting from read_inputs::read_2dmesh_gmsh"
+        ERROR STOP
+      end if
+      
+      if (int(mshfmt) /= 2) then
+        print *, "DRUtES supports gmsh version 2 only,"
+        print *,  "launch gmsh with option -format msh2. "
+        ERROR STOP
+      end if
+
       
       do
         read(unit=file_mesh, fmt=*) ch
@@ -601,60 +623,7 @@ module read_inputs
       end do
       
       
-      if (use_filemat) then
-        allocate(smalldom(3,2))
-        call find_unit(file_mat)
-        open(unit=file_mat, file="drutes.conf/mesh/materials.conf", action="read", iostat=i_err)
-        if (i_err /= 0) then
-          print *, "unable to open drutes.conf/mesh/materials.conf"
-          print *, "exited from read_inputs::read_2dmesh_gmsh"
-          ERROR STOP
-        end if
-        call fileread(n, file_mat)
-        allocate(excl_ids(n))
-        do i=1, n
-          call fileread(excl_ids(i), file_mat)
-        end do
-          
-        call fileread(n, file_mat)
-        do i=1, n
-          call fileread(id, file_mat)
-          call fileread(j, file_mat)
-          
-          if (allocated(domain)) then
-            deallocate(domain)
-          end if
-          
-          allocate(domain(j,2))
-          do k=1,j
-            call fileread(domain(k,:), file_mat)
-          end do
-          
-          
-          do el=1, elements%kolik
-
-            do l=1, ubound(elements%data,2)
-              smalldom(l,:)=nodes%data(elements%data(el,l),:)
-            end do
-
-            point=gravity_center(smalldom(1,:), smalldom(2,:), smalldom(3,:))
-
-        
-            if (inside(domain, point)) then
-                update=.true.
-                do l=1, ubound(excl_ids,1)
-                  if (elements%material(el) == excl_ids(l)) then
-                    update=.false.
-                    exit
-                  end if
-                end do
-                if (update) then
-                  elements%material(el) = id
-                end if
-              end if
-            end do
-        end do
-      end if
+    
  
     end subroutine read_2dmesh_gmsh
     

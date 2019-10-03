@@ -39,6 +39,8 @@ module kinfnc
       if (quadpnt%preproc) then
         val = val*1e3
       end if
+      
+
 	
       
     end function getval_kinwave
@@ -125,6 +127,8 @@ module kinfnc
                             sqrt(abs( watershed_el(el)%sy))/manning(layer)*h**m/))
         end select          
        end if
+       
+       
     
     end subroutine kinflux
   
@@ -283,12 +287,21 @@ module kinfnc
       
     end subroutine kinematixinit
     
-    
+    !> for model Ks
+    !! \f[ q_{in} = K_s \f]
+    !! for model Swartzendruber cumulative infiltration is given by
+    !! \f[ I = \frac{S(1-\exp(-A \sqrt(t)))}{A} + K_s t \f]
+    !! the infiltration speed is given by \f[ \dv{I}{t}, \f] and so
+    !! \f[  q_{in} =  \dv{\frac{S(1-\exp(-A \sqrt(t)))}{A} + K_s t}{t} = \frac{S\exp(-A\sqrt{t})}{2\sqrt{t}}+K \f]
+    !! surface runoff is then given by
+    !! \f[ i = \mathrm{max}(0, q_{in})
+    !<
     function rainfall(pde_loc, layer, quadpnt, x) result(val)
       use typy
       use global_objs
       use pde_objs
       use kinglobs
+      use debug_tools
       
       class(pde_str), intent(in) :: pde_loc
       !> value of the nonlinear function
@@ -298,7 +311,8 @@ module kinfnc
       !> material ID
       integer(kind=ikind), intent(in) :: layer
       !> return value
-      real(kind=rkind)                :: val
+      real(kind=rkind) :: val
+      real(kind=rkind) :: qin, S, A, K 
       integer(kind=ikind), save :: position = 1
       integer(kind=ikind) :: i
       
@@ -316,6 +330,23 @@ module kinfnc
     
       val = raindata(el2pt(quadpnt%element))%series(position,2)
       
+      select case(inf_model(layer)%name)
+        case("Ks")
+          qin = inf_model(layer)%Ks
+        case("Schwarz")
+          S = inf_model(layer)%S
+          A = inf_model(layer)%A
+          K = inf_model(layer)%Ks
+          
+          if (time > epsilon(time)) then
+            qin = S/(2*sqrt(time))*exp(-A*sqrt(time)) + K
+          else
+            qin = huge(qin)
+          end if
+      end select
+      
+      val = max(0.0_rkind, val - qin)
+          
         
     
     end function rainfall

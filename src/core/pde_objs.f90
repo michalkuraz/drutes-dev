@@ -34,7 +34,7 @@ module pde_objs
   implicit none
   
   
-  type, public :: pde_fnc
+  type, public :: pde_fnc_str
     procedure(tensor_fnc), nopass, pointer           :: dispersion
     procedure(vector_fnc), nopass, pointer           :: convection
     procedure(vector_fnc), nopass, pointer           :: hidden_convect
@@ -46,7 +46,11 @@ module pde_objs
     procedure(scalar_fnc), nopass, pointer           :: zerord
     procedure(scalar_fnc), nopass, pointer           :: elasticity
     logical                                          :: coupling
-  end type pde_fnc
+  end type pde_fnc_str
+  
+  type, public :: mass_fnc_str
+    procedure(scalar_fnc), nopass, pointer  :: val
+  end type mass_fnc_str
   
 
   type, public :: pde_common_str
@@ -97,10 +101,10 @@ module pde_objs
     character(len=512), dimension(2)                 :: problem_name
     character(len=64), dimension(2)                  :: solution_name
     character(len=64), dimension(2)                  :: flux_name
-    character(len=64), dimension(2)                  :: mass_name
+    character(len=64), dimension(:,:), allocatable   :: mass_name
     character(len=1)                                 :: mfswitch          
-    type(pde_fnc), dimension(:), allocatable         :: pde_fnc
-    procedure(scalar_fnc), pass(pde_loc), pointer    :: mass
+    type(pde_fnc_str), dimension(:), allocatable     :: pde_fnc
+    type(mass_fnc_str), dimension(:), allocatable    :: mass
     procedure(vector_fnc), pass(pde_loc), pointer    :: flux
     procedure(time_check), pass(pde_loc), pointer    :: dt_check
     procedure(icond_fnc), pass(pde_loc), pointer     :: initcond
@@ -121,6 +125,12 @@ module pde_objs
     integer(kind=ikind) :: order
     !> for some problems mass property differs from the solution (e.g. Richards equation - solution is H or h, but the mass property is theta) and so it makes sense to print the mass property as well. For different problems, such as concentration of solutes, the solution and the mass property is identical.
     logical :: print_mass=.false.
+    logical :: diffusion = .true.
+    !> is operator symmetric or not -> for non-symmetric operators we use CG for normal equations \f[ \mathbf{A^TAx=A^tb} \f]
+    !! for symmetric operators we can use conjugate gradient directly
+    !! by default it is false (safe but not so efficient option)
+    !<
+    logical :: symmetric = .false.
     procedure(getval_str), pass(pde_loc), pointer :: getval
     contains 
       !> get vector of gradient of the solution
@@ -441,7 +451,6 @@ module pde_objs
       type(integpnt_str) :: quadpntloc
       real(kind=rkind) :: valprev, timeprev, timeglob
       logical :: stopper=.false.
-
    
        val = getvalp1loc(pde_loc, quadpnt)
 
@@ -465,7 +474,6 @@ module pde_objs
 
       end if
 	
-    
     end function getvalp1
     
     

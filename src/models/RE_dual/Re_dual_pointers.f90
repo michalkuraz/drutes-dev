@@ -59,7 +59,7 @@ module Re_dual_pointers
 	    end select
 	    
 	    pde(1)%pde_fnc(1)%elasticity => dual_ret_cap
-	    pde(1)%mass => vangen_d
+	    pde(1)%mass(1)%val => vangen_d
       else
 	    call dual_tabvalues(pde(1), Kfnc=dual_mualem, Cfnc=dual_ret_cap,&
             thetafnc=vangen_d,ex_K_fnc=dual_coupling_K)
@@ -67,7 +67,7 @@ module Re_dual_pointers
 	    pde(1)%pde_fnc(1)%reaction => dual_coupling_neg_tab
 	    pde(1)%pde_fnc(2)%reaction => dual_coupling_tab
 	    pde(1)%pde_fnc(1)%elasticity => dual_ret_cap_tab
-	    pde(1)%mass => vangen_d_tab
+	    pde(1)%mass(1)%val => vangen_d_tab
       end if
       
       ! boundary condition defined as different type boundary_vals
@@ -132,7 +132,7 @@ module Re_dual_pointers
 	     stop
 	    end select
 	    pde(2)%pde_fnc(2)%elasticity => dual_ret_cap
-	    pde(2)%mass => vangen_d
+	    pde(2)%mass(1)%val => vangen_d
       else
       	    call dual_tabvalues(pde(2), Kfnc=dual_mualem, Cfnc=dual_ret_cap,&
             thetafnc=vangen_d,ex_K_fnc=dual_coupling_K)
@@ -140,7 +140,7 @@ module Re_dual_pointers
 	    pde(2)%pde_fnc(2)%reaction => dual_coupling_neg_tab
 	    pde(2)%pde_fnc(1)%reaction => dual_coupling_tab
 	    pde(2)%pde_fnc(2)%elasticity => dual_ret_cap_tab
-	    pde(2)%mass => vangen_d_tab
+	    pde(2)%mass(1)%val => vangen_d_tab
       end if
       
       pde(2)%flux => darcy_law_d

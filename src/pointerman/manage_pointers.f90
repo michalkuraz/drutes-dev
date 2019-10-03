@@ -45,8 +45,12 @@ module manage_pointers
       use Re_dual_pointers
       use heat_pointers
       use drutes_init
+      use kinpointer
+      use freeze_pointers
+      use ltne_pointers
 
       integer(kind=ikind) :: i, processes
+      logical :: symetric
       
       
 
@@ -96,7 +100,7 @@ module manage_pointers
       
     
         case("REtest")
-          write(unit=drutes_config%fullname, fmt=*) "DRUtES debugs itself"
+          write(unit=drutes_config%fullname, fmt=*) "(debugs) itself"
           pde_common%processes = 3
           call pde_constructor(3_ikind)
           do i=1, 3
@@ -107,9 +111,32 @@ module manage_pointers
         
           call heat_processes(pde_common%processes)
           call pde_constructor(pde_common%processes)
-          write(unit=drutes_config%fullname, fmt=*) "DRUtES solves heat conduction with convection"
+          write(unit=drutes_config%fullname, fmt=*) "heat conduction with convection"
           call heat(pde(:))
+          
+          
+        case("kinwave")
+        
+          call kinwaveprocs(pde_common%processes)
+          call pde_constructor(pde_common%processes)
+          write(unit=drutes_config%fullname, fmt=*) "kinematic wave equation for real catchments"
+          call kinwavelinker(pde(1))
+          
 	  
+        case("freeze")
+        
+          call freeze_processes(pde_common%processes)
+          call pde_constructor(pde_common%processes)
+          write(unit = drutes_config%fullname, fmt=*) "coupled water and heat flow considering freezing and melting"
+          call frz_pointers()
+          
+       case("LTNE")
+        
+          call freeze_processes(pde_common%processes)
+          call pde_constructor(pde_common%processes)
+          write(unit = drutes_config%fullname, fmt=*) "DRUtES solves local thermal non equilibrium"
+          call frz_pointers()
+          
         case default
           print *, "your new model: ", trim(drutes_config%name), " requires pointer linking"
           print *, "exited from manage_pointers::set_pointers"
@@ -121,13 +148,23 @@ module manage_pointers
       select case(drutes_config%dimen)
         case(1)
             solve_matrix => LDU_face
-!        	    solve_matrix => CG_normal_face
+            !solve_matrix => CG_normal_face
         case(2)
-      !           solve_matrix => pcg
-      ! 	    solve_matrix => LDU_face
+          symetric = .true.
+          do i=1, ubound(pde,1)
+            if (.not. pde(i)%symmetric) then
+              symetric = .false.
+              EXIT 
+            end if
+          end do
+          
+          if (.not. symetric) then
             solve_matrix => CG_normal_face
-      ! 	    solve_matrix => sparse_gem_pig_AtA
-      ! 	    solve_matrix => jacobi_face
+          else
+            solve_matrix => cg_face
+          end if
+
+
       end select
       
       select case (drutes_config%it_method)
@@ -142,6 +179,7 @@ module manage_pointers
       select case(pde_common%timeint_method)
         case(0)
           pde_common%time_integ => steady_state_int
+          solve_matrix => LDU_face
         case(1)
           pde_common%time_integ => impl_euler_np_diag
         case(2)

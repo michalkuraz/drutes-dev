@@ -93,29 +93,43 @@ module capmat
       
 
       do iproc=1, ubound(pde,1)
-        do jproc=1, ubound(pde,1)
-          pde_block_column = jproc
-          do l=1,  limits
-            do j=1,  limits
-              do i=1, ubound(gauss_points%weight,1)
-                quadpnt%order = i
-                tmp =  -pde(iproc)%pde_fnc(jproc)%elasticity(pde(iproc), layer(iproc, jproc), &
-                quadpnt)*base_fnc(j,i)*base_fnc(l,i)*gauss_points%weight(i)
-                ll = l + limits*(iproc-1)
-                jj = j + limits*(jproc-1)
-                cap_mat(ll,jj) = cap_mat(ll,jj) + tmp
+        if (pde(iproc)%diffusion) then
+          do jproc=1, ubound(pde,1)
+            pde_block_column = jproc
+            do l=1,  limits
+              do j=1,  limits
+                do i=1, ubound(gauss_points%weight,1)
+                  quadpnt%order = i
+                  tmp =  -pde(iproc)%pde_fnc(jproc)%elasticity(pde(iproc), layer(iproc, jproc), &
+                  quadpnt)*base_fnc(j,i)*base_fnc(l,i)*gauss_points%weight(i)
+                  ll = l + limits*(iproc-1)
+                  jj = j + limits*(jproc-1)
+                  cap_mat(ll,jj) = cap_mat(ll,jj) + tmp
+                end do
               end do
             end do
           end do
-        end do
+        else
+          do l=1,  limits
+            do j=1,  limits
+              do i=1, ubound(gauss_points%weight,1)
+                  
+                ll = l + limits*(iproc-1)
+                jj = j + limits*(jproc-1)
+                cap_mat(ll,jj) = 0
+              end do
+            end do
+          end do
+        end if 
+          
       end do
 
       
       cap_mat = cap_mat/gauss_points%area*elements%areas(el_id)
 
+
       bside =  bside + matmul(cap_mat, elnode_prev)
       
-
     end subroutine impl_euler_np_nondiag
 
 
@@ -172,18 +186,24 @@ module capmat
       do iproc=1, ubound(pde,1)
         do jproc=1, ubound(pde,1)
           pde_block_column = jproc
-          do l=1,  limits
-            do j=1,  limits
-              do i=1, ubound(gauss_points%weight,1)
-                quadpnt%order = i
-                tmp =  -pde(iproc)%pde_fnc(jproc)%elasticity(pde(iproc), layer(iproc, jproc), &
-                quadpnt)*base_fnc(j,i)*base_fnc(l,i)*gauss_points%weight(i)
-                ll = l + limits*(iproc-1)
-                jj = j + limits*(jproc-1)
-                cap_mat(ll,jj) = cap_mat(ll,jj) + tmp
+          if (pde(iproc)%diffusion) then
+            do l=1,  limits
+              do j=1,  limits
+                do i=1, ubound(gauss_points%weight,1)
+                  quadpnt%order = i
+                  tmp =  -pde(iproc)%pde_fnc(jproc)%elasticity(pde(iproc), layer(iproc, jproc), &
+                  quadpnt)*base_fnc(j,i)*base_fnc(l,i)*gauss_points%weight(i)
+                  ll = l + limits*(iproc-1)
+                  jj = j + limits*(jproc-1)
+                  cap_mat(ll,jj) = cap_mat(ll,jj) + tmp
+                end do
               end do
             end do
-          end do
+          else
+            ll = l + limits*(iproc-1)
+            jj = j + limits*(jproc-1)
+            cap_mat(ll,jj) = 0
+          end if
         end do
       end do
 
@@ -203,7 +223,7 @@ module capmat
 
      bside = bside +   matmul(cap_mat, elnode_prev)
      
-     
+
     end subroutine impl_euler_np_diag
 
     subroutine steady_state_int(el_id, domain_id, quadpnt_in)

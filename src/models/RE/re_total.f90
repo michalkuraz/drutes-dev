@@ -37,6 +37,7 @@ module re_total
       use pde_objs
       use geom_tools
       use re_globals
+      use debug_tools
       
       class(pde_str), intent(in) :: pde_loc
       type(integpnt_str), intent(in) :: quadpnt
@@ -52,13 +53,14 @@ module re_total
         D = drutes_config%dimen
              
         call getcoor(quadpnt, xyz(1:D))
-        
+
         if (drutes_config%dimen>1) then
           val = getvalp1(pde_loc, quadpnt) - xyz(D)
         else
           layer = get_layer(quadpnt)
           val = getvalp1(pde_loc, quadpnt) - xyz(D)*cos(4*atan(1.0_rkind)/180*vgset(layer)%anisoangle(1))
         end if
+        
         
       else
         val = getvalp1(pde_loc, quadpnt)
@@ -601,7 +603,7 @@ module re_total
         quadpnt%type_pnt = "ndpt"
         quadpnt%order = elements%data(el_id,node_order)
         layer = elements%material(el_id)
-        theta =  pde_loc%mass(layer, quadpnt)
+        theta =  pde_loc%mass(1)%val(pde_loc,layer, quadpnt)
         value = rain - evap*theta**(2.0_rkind/3.0_rkind)
 
 
@@ -664,31 +666,233 @@ module re_total
       use globals
       use global_objs
       use pde_objs
+      use debug_tools
       use re_globals
+      use geom_tools
       
       class(pde_str), intent(in) :: pde_loc
       integer(kind=ikind), intent(in)  :: el_id, node_order
       real(kind=rkind), intent(out), optional    :: value
       integer(kind=ikind), intent(out), optional :: code
       
-      ! local variables
+      real(kind=rkind) :: solval, gradn
+      real(kind=rkind), dimension(:), allocatable, save :: solgrad, nvect
       type(integpnt_str) :: quadpnt
-      real(kind=rkind) :: val
+      integer(kind=ikind) :: i, el_vecino, el_vecino2, nd_tmp, nd, counter, status, nd_vecino, nd_vecino2, pos, test1, test2, nd3
+      integer(kind=ikind) :: myel, edge_id
+      real(kind=rkind), dimension(2,2) :: points
+      real(kind=rkind), dimension(2) :: third
+      
+
+              
+      
+      if (.not. allocated(pde_common%xvect) ) then
+        if (present(value)) value = 0
+        if (present(code)) code = 2
+        RETURN
+      end if
+     
+      
+      nd = elements%data(el_id, node_order)
       
       quadpnt%type_pnt = "ndpt"
+      quadpnt%order = elements%data(el_id,node_order)
       quadpnt%column = 1
-      quadpnt%order = elements%data(el_id, node_order)
+        
+      quadpnt%preproc = .true.
+        
+      solval = pde_loc%getval(quadpnt)
+        
+      quadpnt%preproc = .false.
+        
+      call pde_loc%getgrad(quadpnt, solgrad)
       
-      val=pde_loc%getval(quadpnt)
-    
-      if (val < 0) then
-        if (present(code)) code=2
-        if (present(value)) value=0
-        RETURN
+      
+      
+      if (drutes_config%dimen > 1) then
+      
+        status = nodes%element(nd)%pos
+        
+        if (status == 3 .and. elements%border(el_id)%pos > 0) then
+          status = 2
+        end if
+        
+        select case(status)
+          case(1)
+            el_vecino = el_id
+            el_vecino2 = el_id
+          case(2)      
+            do i=1, nodes%element(nd)%pos
+              el_vecino = nodes%element(nd)%data(i)
+              if (elements%border(el_vecino)%pos > 0 .and. el_vecino /= el_id) then
+                EXIT
+              end if
+              if (i==nodes%element(nd)%pos) el_vecino=0
+            end do
+            el_vecino2 = el_id
+          case default
+            do i=1, nodes%element(nd)%pos
+              el_vecino = nodes%element(nd)%data(i)
+              if (elements%border(el_vecino)%pos > 0 .and. el_vecino /= el_id) then
+                EXIT
+              end if
+              if (i==nodes%element(nd)%pos) el_vecino=0
+            end do
+            
+            do i=1, nodes%element(nd)%pos
+              el_vecino2 = nodes%element(nd)%data(i)
+              if (elements%border(el_vecino2)%pos > 0 .and. el_vecino2 /= el_id .and. el_vecino2 /= el_vecino) then
+                EXIT
+              end if
+              if (i==nodes%element(nd)%pos) el_vecino2=0
+            end do
+        end select
+        
+        
+        if (el_vecino == 0 .or. el_vecino2 == 0) then
+          print *, "bug in re_total::re_seepage "
+          print *,  "bug keyword: all neighbours are zeroes (don't worry if you don't understand it)"
+          print *, "contact Michal -> michalkuraz@gmail.com"
+          ERROR STOP
+        end if
+        
+        
+
+        do i=1, elements%border(el_vecino)%pos
+          if (elements%border(el_vecino)%data(i) == nd) then
+            if (elements%border(el_vecino)%pos < 3 .or. nodes%element(nd)%pos == 1) then
+              if (i < elements%border(el_vecino)%pos) then
+                nd_vecino = elements%border(el_vecino)%data(i+1)
+              else
+                nd_vecino = elements%border(el_vecino)%data(1)
+              end if
+              EXIT
+            else
+              if (i < elements%border(el_vecino)%pos .and. i > 1) then
+                test1 = i+1
+                test2 = i-1
+              else if (i == elements%border(el_vecino)%pos ) then
+                test1 = 1
+                test2 = i-1
+              else if (i == 1) then
+                test1 = 2
+                test2 = elements%border(el_vecino)%pos
+              end if
+              
+              if (nodes%element(elements%data(el_vecino,test1))%pos == 1) then
+                nd_vecino = elements%data(el_vecino,test1)
+              else if  (nodes%element(elements%data(el_vecino,test2))%pos == 1) then
+                nd_vecino = elements%data(el_vecino,test2)
+              else
+                print *, "bug in re_total::re_seepage, bug keyword: unable to find neighbour vecino1 "
+                print *, "(don't worry if you don't understand it)"
+                print *, "contact Michal -> michalkuraz@gmail.com"
+                ERROR STOP  
+              end if   
+              EXIT        
+            end if
+          end if
+        end do
+                
+        do i=1, elements%border(el_vecino2)%pos
+          if (elements%border(el_vecino2)%data(i) == nd) then
+            if (elements%border(el_vecino2)%pos < 3 .or. nodes%element(nd)%pos == 1) then
+              if (i < elements%border(el_vecino2)%pos) then
+                nd_vecino2 = elements%border(el_vecino2)%data(i+1)
+                if (nd_vecino2 == nd_vecino) then
+                  pos = i-1
+                  if (pos < 1) then
+                    pos = elements%border(el_vecino)%pos
+                  end if
+                  nd_vecino2 = elements%border(el_vecino2)%data(pos)
+                end if
+              else
+                nd_vecino2 = elements%border(el_vecino2)%data(1)
+                if (nd_vecino2 == nd_vecino) then
+                  pos = i-1
+                  nd_vecino2 = elements%border(el_vecino2)%data(pos)
+                end if
+              end if
+              EXIT
+            else 
+              if (i < elements%border(el_vecino2)%pos .and. i > 1) then
+                test1 = i+1
+                test2 = i-1
+              else if (i == elements%border(el_vecino2)%pos ) then
+                test1 = 1
+                test2 = i-1
+              else if (i == 1) then
+                test1 = 2
+                test2 = elements%border(el_vecino2)%pos
+              end if
+              
+              if (nodes%element(elements%data(el_vecino2,test1))%pos == 1) then
+                nd_vecino2 = elements%data(el_vecino2,test1)
+              else if  (nodes%element(elements%data(el_vecino2,test2))%pos == 1) then
+                nd_vecino2 = elements%data(el_vecino2,test2)
+              else
+                print *, "bug in re_total::re_seepage, bug keyword: unable to find neighbour vecino2 "
+                print *, "(don't worry if you don't understand it)"
+                print *, "contact Michal -> michalkuraz@gmail.com"
+                ERROR STOP  
+              end if   
+              EXIT         
+            end if
+          end if
+        end do
+        
+        points(1,:) = nodes%data(nd_vecino,:)
+        points(2,:) = nodes%data(nd_vecino2,:)
+        
+        
+        if (elements%border(el_id)%pos < 2) then
+          myel = el_id
+        else
+          myel = elements%neighbours(el_id,1)
+        end if
+        
+        do i=1, ubound(elements%data,2)
+          nd3 =  elements%data(myel, i)
+          if ( nd3 /= nd .and. nd3 /= nd_vecino .and. nd3 /= nd_vecino2) then
+            third = nodes%data(nd3,:)
+            EXIT
+          end if
+          
+          if (i == ubound(elements%data,2)) then
+            print *,  "bug in re_total::re_seepage, bug keyword: unable to find internal element node"
+            print *, "(don't worry if you don't understand it)"
+            print *, "contact Michal -> michalkuraz@gmail.com"
+            ERROR STOP  
+          end if
+        end do  
+      
+      
+        call getnormal(points, third, nvect)    
+      
+
+        gradn = solgrad(1)*nvect(1) + solgrad(2)*nvect(2)
+      
       else
+     
+        if (node_order == 1) then
+          gradn = -solgrad(1)
+        else
+          gradn = solgrad(1)
+        end if
       
       end if
-        
+     
+      edge_id = nodes%edge(elements%data(el_id, node_order))
+      
+      if (solval < pde_loc%bc(edge_id)%value .or. gradn > 0) then
+        code = 2
+        value = 0
+      else 
+        code = 4
+        value = nodes%data(nd,drutes_config%dimen)
+      end if
+       
+
     end subroutine retot_seepageface
 
 
@@ -708,7 +912,7 @@ module re_total
               D = drutes_config%dimen
       select case (vgset(1_ikind)%icondtype)
         case("input")
-          call map1d2dJ(pde_loc,"drutes.conf/water.conf/hini.in")
+          call map1d2dJ(pde_loc,"drutes.conf/water.conf/hini.in", correct_h = .true.)
       end select
       
       D = drutes_config%dimen
