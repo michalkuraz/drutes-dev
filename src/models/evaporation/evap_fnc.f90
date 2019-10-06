@@ -12,14 +12,14 @@
 ! You should have received a copy of the GNU General Public License
 ! along with DRUtES. If not, see <http://www.gnu.org/licenses/>.
 
-!> \file Re_evap_reader.f90
+!> \file evap_fnc.f90
 !! \brief This module contains subroutines that read input information from config files and additional input files
 !<
 
 
 
 
-module evapfnc
+module evap_fnc
 
   contains
   
@@ -113,4 +113,4 @@ module evapfnc
     
     
 
-end module evapfnc
+end module evap_fnc
