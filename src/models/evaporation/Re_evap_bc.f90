@@ -12,6 +12,11 @@
 ! You should have received a copy of the GNU General Public License
 ! along with DRUtES. If not, see <http://www.gnu.org/licenses/>.
 
+
+!> \file Re_evap_bc.f90
+!! \brief This module contains subroutines that read input information from config files and additional input files
+!<
+
 module Re_evap_bc
 
   public :: evap_pm_bc
