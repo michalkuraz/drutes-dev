@@ -206,31 +206,66 @@ module evap_fnc
     
     
     
-    !!> Thermal Properties
+    !!> Thermal Properties of Liquid water
     function hydraulic_lT(pde_loc, layer, quadpnt, x) result(val)
       use typy
       use global_objs
       use pde_objs
       use evap_globals
+      use re_constitutive
       
+      class(pde_str), intent(in) :: pde_loc
+      integer(kind=ikind), intent(in) :: layer
+      !> pressure head
+      real(kind=rkind), dimension(:), intent(in), optional :: x
+      !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
+      type(integpnt_str), intent(in), optional :: quadpnt      
+      !> second order tensor of the unsaturated hydraulic conductivity
+      real(kind=rkind), dimension(:,:), intent(out), optional :: tensor
+      !> relative hydraulic conductivity, (scalar value)
+      real(kind=rkind), intent(out), optional :: scalar
       
+      real(kind=rkind) :: temperature, press_head
+      
+     press_head = pde(1)%getval(quadpnt)
+     temperature = pde(2)%getval(quadpnt)
+     
+     call mualem(pde_loc, layer, quadpnt,  x, tensor, scalar)
+     val = 
+     
       
       
       
     end function hydraulic_lT
     
+    !!> Isothermal Properties of water vapor
     function hydraulic_vh(pde_loc, layer, quadpnt, x) result(val)
       use typy
       use global_objs
       use pde_objs
       use evap_globals
       
+      class(pde_str), intent(in) :: pde_loc
+      integer(kind=ikind), intent(in) :: layer
+      !> pressure head
+      real(kind=rkind), dimension(:), intent(in), optional :: x
+      !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
+      type(integpnt_str), intent(in), optional :: quadpnt      
       
+      real(kind=rkind) :: temperature, press_head
+      
+      
+      press_head = pde(1)%getval(quadpnt)
+      temperature = pde(2)%getval(quadpnt)
+      
+      val = 
+     
       
       
       
     end function hydraulic_vh
     
+    !!> Thermal Properties of water vapor
     function hydraulic_vT(pde_loc, layer, quadpnt, x) result(val)
       use typy
       use global_objs
@@ -243,8 +278,8 @@ module evap_fnc
       
     end function hydraulic_vT
 
-    
-    function dt_theta_vapor(pde_loc, layer, quadpnt, x) result(val)
+    !!> Water vapor time derivative
+    function d_theta_vapordt(pde_loc, layer, quadpnt, x) result(val)
       use typy
       use global_objs
       use pde_objs
@@ -270,10 +305,9 @@ module evap_fnc
       
       
       
-    end function dt_theta_vapor
+    end function d_theta_vapordt
     
-    
-    
+    !!> Water vapor
     function theta_vapor(quadpnt, .....) result(val)
       
       presshead = pde(1)%getval(quadpnt)
