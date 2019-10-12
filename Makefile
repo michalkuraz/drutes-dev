@@ -13,6 +13,9 @@ d=drutes_obj-`date -I`
 
 all : main.o $(ALL_objs)
 	    [ -d bin ] || mkdir bin && $c -g -o bin/drutes main.o $(ALL_objs)
+install : main.o $(ALL_objs)
+	    [ -d bin ] || mkdir bin && $c -g -o bin/drutes main.o $(ALL_objs) && [ -d obj ] || mkdir obj && mv *.o *.mod obj
+	
 dir="obj"
 
 servers="miguel@neptun01.fsv.cvut.cz:~  miguel@matsrv-lin01.fsv.cvut.cz:~ miguel@cml.fsv.cvut.cz:~"
@@ -260,7 +263,7 @@ schwarz_dd2subcyc.o: $(CORE_obj) $(MATHTOOLS_obj)  femmat.o decomp_vars.o decomp
 
 #----build main---------
 main.o:  $(ALL_objs) src/core/main.f90
-	$c -c src/core/main.f90
+	$c -c src/core/main.f90 
 #-----------------------
 
 
