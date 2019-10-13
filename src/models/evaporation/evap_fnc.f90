@@ -26,35 +26,13 @@ module evap_fnc
   use debug_tools
   use re_globals
   
-  public :: capacity_h, difussion_hh, difussion_hT, convection_h
+  public :: difussion_hh, difussion_hT, convection
   public :: capacity_T, difussion_Th, difussion_TT, convection_T
   public :: 
 
   contains
     !!> Coefficents for modified Richards equation
-    !!> Capacity water flow eqation
-    subroutine capacity_h(pde_loc, layer, quadpnt,  x, tensor, scalar)
-      use typy
-      use re_globals
-      use pde_objs
-
-      class(pde_str), intent(in) :: pde_loc
-      integer(kind=ikind), intent(in) :: layer
-      !> pressure head
-      real(kind=rkind), dimension(:), intent(in), optional :: x
-      !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
-      type(integpnt_str), intent(in), optional :: quadpnt      
-      !> second order tensor of the unsaturated hydraulic conductivity
-      real(kind=rkind), dimension(:,:), intent(out), optional :: tensor
-      real(kind=rkind) :: h
-      !> relative hydraulic conductivity, (scalar value)
-      real(kind=rkind), intent(out), optional :: scalar
-      
-      call mualem(...)
-      
-      
-      
-    end subroutine capacity_h
+    !!> Capacity water flow equation from RE equation 
     !! Difussion due to pressure gradient
     subroutine difussion_hh(pde_loc, layer, quadpnt,  x, tensor, scalar)
       use typy
@@ -69,22 +47,24 @@ module evap_fnc
       type(integpnt_str), intent(in), optional :: quadpnt      
       !> second order tensor of the unsaturated hydraulic conductivity
       real(kind=rkind), dimension(:,:), intent(out), optional :: tensor
-      real(kind=rkind) :: h
       !> relative hydraulic conductivity, (scalar value)
       real(kind=rkind), intent(out), optional :: scalar
       
-       if (present(tensor)) then
-        if(present(quadpnt)) then 
-          call mualem_fr(pde_loc, layer, x = (/hl(pde(wat), layer, quadpnt)/), tensor = tensor)
-          tensor = 
-        end if
-        if (present(x)) then
-          call mualem_fr(pde_loc, layer, x = x, tensor = tensor)
-          tensor = 10**(-Omega*Q_reduction(layer, x = x))*tensor
-        end if
-      else
-        print *, "ERROR! output tensor undefined, exited from freeze_fnc::diffhh"
+      real(kind=rkind) :: h
+      real(kind=rkind), dimension(3,3) :: Klh, 
+      integer(kind=ikind):: D
+      
+      if (.not. present(quadpnt) .or. present(tensor)) then
+        print *, "ERROR! output tensor undefined, exited from evap_fnc::difussion_hh"
+        ERROR STOP
       end if
+      
+      D = drutes_config%dimen
+      
+      call mualem(pde_loc, layer, quadpnt,tensor(1:D,1:D) = Klh(1:D,1:D))
+      tensor(1:D,1:D) = Klh(1:D,1:D) + 
+      
+      
       
       
     end subroutine difussion_hh
@@ -108,26 +88,34 @@ module evap_fnc
     end subroutine difussion_hT
     !! Convection term for water flow 
     subroutine convection_h(pde_loc, layer, quadpnt,  x, tensor, scalar)
-        use typy
-        use re_globals
-        use pde_objs
+      use typy
+      use re_globals
+      use pde_objs
 
-        class(pde_str), intent(in) :: pde_loc
-        integer(kind=ikind), intent(in) :: layer
-        !> pressure head
-        real(kind=rkind), dimension(:), intent(in), optional :: x
-        !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
-        type(integpnt_str), intent(in), optional :: quadpnt      
-        !> second order tensor of the unsaturated hydraulic conductivity
-        real(kind=rkind), dimension(:,:), intent(out), optional :: tensor
-        real(kind=rkind) :: h
-        !> relative hydraulic conductivity, (scalar value)
-        real(kind=rkind), intent(out), optional :: scalar
+      class(pde_str), intent(in) :: pde_loc
+      integer(kind=ikind), intent(in) :: layer
+      !> pressure head
+      real(kind=rkind), dimension(:), intent(in), optional :: x
+      !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
+      type(integpnt_str), intent(in), optional :: quadpnt      
+      !> second order tensor of the unsaturated hydraulic conductivity
+      real(kind=rkind), dimension(:,:), intent(out), optional :: tensor
+      real(kind=rkind) :: h
+      !> relative hydraulic conductivity, (scalar value)
+      real(kind=rkind), intent(out), optional :: scalar
+        
+      if (.not. present(quadpnt) .or. present(tensor)) then
+        print *, "ERROR! output tensor undefined, exited from evap_fnc::difussion_hh"
+        ERROR STOP
+      end if 
+        !i can use pde_loc
+        
+      call dmualem_dh(pde_loc, layer, quadpnt, x, vector_in, vector_out, scalar)
     end subroutine convection_h
     
     !!> Coefficents for Heat equation
     !!> Capacity heat equation
-    subroutine capacity_T(pde_loc, layer, quadpnt,  x, tensor, scalar)
+    function capacity_T(pde_loc, layer, quadpnt, x) result(val)
       use typy
       use re_globals
       use pde_objs
@@ -186,7 +174,7 @@ module evap_fnc
         real(kind=rkind), intent(out), optional :: scalar
     end subroutine difussion_hT
     !! Convection term for heat flow
-    subroutine convection_T(pde_loc, layer, quadpnt,  x, tensor, scalar)
+    subroutine convection_T(pde_loc, layer, quadpnt, x, vector_in, vector_out, scalar)
         use typy
         use re_globals
         use pde_objs
@@ -202,6 +190,18 @@ module evap_fnc
         real(kind=rkind) :: h
         !> relative hydraulic conductivity, (scalar value)
         real(kind=rkind), intent(out), optional :: scalar
+        real(kind=rkind), dimension(3) :: Kvect
+        
+        integer(kind=ikind) :: D
+        
+        
+        D = drutes_config%dimen
+        
+        !i need to use pde(order)
+        
+    call dmualem_dh(pde_loc, layer, quadpnt, x,  vector_out = Kvect(1:D))
+    
+     vector_out = kr()*C*pde_loc%getval(quadpnt)
     end subroutine convection_T
     
     
@@ -279,7 +279,7 @@ module evap_fnc
     end function hydraulic_vT
 
     !!> Water vapor time derivative
-    function d_theta_vapordt(pde_loc, layer, quadpnt, x) result(val)
+    function dtheta_vapordt(pde_loc, layer, quadpnt, x) result(val)
       use typy
       use global_objs
       use pde_objs
@@ -305,7 +305,7 @@ module evap_fnc
       
       
       
-    end function d_theta_vapordt
+    end function dtheta_vapordt
     
     !!> Water vapor
     function theta_vapor(quadpnt, .....) result(val)

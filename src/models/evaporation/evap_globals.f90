@@ -18,5 +18,11 @@
 
 module evap_globals
   use typy
-  
+   
+  real(kind=rkind), parameter, public :: R_gas = 
+  real(kind=rkind), parameter, public :: MolW = 
+  real(kind=rkind), parameter, public :: gravity = 
+  real(kind=rkind), parameter, public :: gamma_0 = 
+  integer(kind=ikind), parameter, public ::re_order = 1
+  integer(kind=ikind), parameter, public ::heat_order = 2
 end module evap_globals
