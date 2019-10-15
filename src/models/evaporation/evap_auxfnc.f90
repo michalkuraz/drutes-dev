@@ -22,14 +22,18 @@ module evap_auxfnc
   use re_globals
   use evap_globals
   
-  public :: rh_soil, rho_sv
+  public :: rh_soil, rho_sv, drho_sv_dT,rho_l
+  public :: latent_heat_wat, surf_tension_soilwat
+  public :: dsurf_tension_soilwat_dT, thermal_conduc
+  public :: vapor_diff_air,vapor_diff_soil, tortuosity
+  public :: enhacement_factor
   
 
   contains
   
   !< Relative Humudity soil rh_soil [-]
   !Input: 
-  function rh_soil(pde_loc, layer, quadpnt, x) result(val)
+  function rh_soil(pde_loc, layer, quadpnt) result(val)
     use typy
     use global_objs
     use pde_objs
@@ -45,35 +49,18 @@ module evap_auxfnc
     !> return value
     real(kind=rkind):: val
     
-     real(kind=rkind):: h,T
+    real(kind=rkind):: h,T
     
-    
-    if (present(quadpnt) .and. present(x)) then
-      print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
-      print *, "exited from evap_auxfnc::rh_soil"
-      ERROR stop
-    else if (.not. present(quadpnt) .and. .not. present(x)) then
-      print *, "ERROR: you have not specified either integ point or x value"
+   
+    if (.not. present(quadpnt)) then
+      print *, "ERROR: you have not specified either integ point "
       print *, "exited from evap_auxfnc::rh_soil"
       ERROR stop
     end if
     
-    
-    if (present(quadpnt)) then
-      !quadpnt_loc=quadpnt
-      !quadpnt_loc%preproc=.true.
-      h = pde(1)%getval(quadpnt)
-      T = pde(2)%getval(quadpnt)
-    else
-      if (ubound(x,1) /=1) then
-          print *, "ERROR: van Genuchten function is a function of a single variable h"
-          print *, "       your input data has:", ubound(x,1), "variables"
-          print *, "exited from evap_auxfnc::rh_soil"
-          ERROR STOP
-      end if
-        h = x(1)
-        T = x(2)
-    end if
+    h = pde(RE_order)%getval(quadpnt)
+    T = pde(Heat_order)%getval(quadpnt)
+
     
     val = exp ((h*MolW*grav)/R_gas*T)
     
@@ -97,37 +84,57 @@ module evap_auxfnc
     !> return value
     real(kind=rkind):: val
     
-     real(kind=rkind):: T
+    real(kind=rkind):: T
     
     
-    if (present(quadpnt) .and. present(x)) then
-      print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
-      print *, "exited from evap_auxfnc::rh_soil"
-      ERROR stop
-    else if (.not. present(quadpnt) .and. .not. present(x)) then
-      print *, "ERROR: you have not specified either integ point or x value"
-      print *, "exited from evap_auxfnc::rh_soil"
+    if (.not. present(quadpnt)) then
+      print *, "ERROR: you have not specified either integ point "
+      print *, "exited from evap_auxfnc::rho_sv"
       ERROR stop
     end if
     
     
-    if (present(quadpnt)) then
-      !quadpnt_loc=quadpnt
-      !quadpnt_loc%preproc=.true.
-      T = pde(2)%getval(quadpnt)
-    else
-      if (ubound(x,1) /=1) then
-          print *, "ERROR: van Genuchten function is a function of a single variable h"
-          print *, "       your input data has:", ubound(x,1), "variables"
-          print *, "exited from evap_auxfnc::rh_soil"
-          ERROR STOP
-      end if
-        T = x(2)
-    end if
+   
+    T = pde(Heat_order)%getval(quadpnt)
+   
     
     val = 1e-3 *exp(31.3716_rkind - (6014.79_rkind/T) - 7.92495e-3*T**3)/T
 
   end fuction rho_sv
+  
+  function drho_sv_dT(pde_loc, layer, quadpnt, x) result(val)
+    use typy
+    use global_objs
+    use pde_objs
+    use evap_globals
+    
+    class(pde_str), intent(in) :: pde_loc
+    !> value of the nonlinear function
+    real(kind=rkind), dimension(:), intent(in), optional    :: x
+    !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
+    type(integpnt_str), intent(in), optional :: quadpnt
+    !> material ID
+    integer(kind=ikind), intent(in) :: layer
+    !> return value
+    real(kind=rkind):: val
+    
+    real(kind=rkind):: T
+    
+    
+    if (.not. present(quadpnt)) then
+      print *, "ERROR: you have not specified either integ point "
+      print *, "exited from evap_auxfnc::drho_sv_dT"
+      ERROR stop
+    end if
+    
+    
+   
+    T = pde(Heat_order)%getval(quadpnt)
+   
+    
+    val = 1e-3 *exp(31.3716_rkind - (6014.79_rkind/T) - 7.92495e-3*T**3)/T
+
+  end fuction drho_sv_dT
   
   !Liquid water density  rho_l [kg/m^3]
   !Input: Temperature in 
@@ -149,32 +156,13 @@ module evap_auxfnc
     
      real(kind=rkind)::T
     
-    
-    if (present(quadpnt) .and. present(x)) then
-      print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
-      print *, "exited from evap_auxfnc::rh_soil"
-      ERROR stop
-    else if (.not. present(quadpnt) .and. .not. present(x)) then
-      print *, "ERROR: you have not specified either integ point or x value"
-      print *, "exited from evap_auxfnc::rh_soil"
+     if (.not. present(quadpnt)) then
+      print *, "ERROR: you have not specified either integ point "
+      print *, "exited from evap_auxfnc::rho_l"
       ERROR stop
     end if
-    
-    
-    if (present(quadpnt)) then
-      !quadpnt_loc=quadpnt
-      !quadpnt_loc%preproc=.true.
-      T = pde(2)%getval(quadpnt)
-    else
-      if (ubound(x,1) /=1) then
-          print *, "ERROR: van Genuchten function is a function of a single variable h"
-          print *, "       your input data has:", ubound(x,1), "variables"
-          print *, "exited from evap_auxfnc::rh_soil"
-          ERROR STOP
-      end if
-        T = x(2)
-    end if
-    
+  
+    T = pde(Heat_order)%getval(quadpnt)
     val = 1000.0_rkind - 7.37e-3*(T - 4.0_rkind)**2 + 3.79e-5*(T -4.0_rkind)**3
 
   end fuction rho_l
@@ -197,33 +185,16 @@ module evap_auxfnc
     !> return value
     real(kind=rkind):: val
     
-     real(kind=rkind)::T
+    real(kind=rkind)::T
     
-    
-    if (present(quadpnt) .and. present(x)) then
-      print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
-      print *, "exited from evap_auxfnc::rh_soil"
-      ERROR stop
-    else if (.not. present(quadpnt) .and. .not. present(x)) then
-      print *, "ERROR: you have not specified either integ point or x value"
-      print *, "exited from evap_auxfnc::rh_soil"
+    if (.not. present(quadpnt)) then
+      print *, "ERROR: you have not specified either integ point "
+      print *, "exited from evap_auxfnc::latent_heat_wat"
       ERROR stop
     end if
+  
+    T = pde(Heat_order)%getval(quadpnt)
     
-    
-    if (present(quadpnt)) then
-      !quadpnt_loc=quadpnt
-      !quadpnt_loc%preproc=.true.
-      T = pde(2)%getval(quadpnt)
-    else
-      if (ubound(x,1) /=1) then
-          print *, "ERROR: van Genuchten function is a function of a single variable h"
-          print *, "       your input data has:", ubound(x,1), "variables"
-          print *, "exited from evap_auxfnc::rh_soil"
-          ERROR STOP
-      end if
-        T = x(2)
-    end if
     
     val = 2.501e-6 - 2369*T
 
@@ -251,34 +222,49 @@ module evap_auxfnc
      real(kind=rkind)::T
     
     
-    if (present(quadpnt) .and. present(x)) then
-      print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
-      print *, "exited from evap_auxfnc::rh_soil"
-      ERROR stop
-    else if (.not. present(quadpnt) .and. .not. present(x)) then
-      print *, "ERROR: you have not specified either integ point or x value"
-      print *, "exited from evap_auxfnc::rh_soil"
+     if (.not. present(quadpnt)) then
+      print *, "ERROR: you have not specified either integ point "
+      print *, "exited from evap_auxfnc::surf_tension_soilwat"
       ERROR stop
     end if
-    
-    
-    if (present(quadpnt)) then
-      !quadpnt_loc=quadpnt
-      !quadpnt_loc%preproc=.true.
-      T = pde(2)%getval(quadpnt)
-    else
-      if (ubound(x,1) /=1) then
-          print *, "ERROR: van Genuchten function is a function of a single variable h"
-          print *, "       your input data has:", ubound(x,1), "variables"
-          print *, "exited from evap_auxfnc::rh_soil"
-          ERROR STOP
-      end if
-        T = x(2)
-    end if
+  
+    T = pde(Heat_order)%getval(quadpnt)
     
     val = 75.6_rkind - 0.1425_rkind*T - 2.38e-4*T**2
 
   end fuction surf_tension_soilwat
+  
+  
+  function dsurf_tension_soilwat_dT(pde_loc, layer, quadpnt, x) result(val)
+    use typy
+    use global_objs
+    use pde_objs
+    use evap_globals
+    
+    class(pde_str), intent(in) :: pde_loc
+    !> value of the nonlinear function
+    real(kind=rkind), dimension(:), intent(in), optional    :: x
+    !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
+    type(integpnt_str), intent(in), optional :: quadpnt
+    !> material ID
+    integer(kind=ikind), intent(in) :: layer
+    !> return value
+    real(kind=rkind):: val
+    
+     real(kind=rkind)::T
+    
+    
+     if (.not. present(quadpnt)) then
+      print *, "ERROR: you have not specified either integ point "
+      print *, "exited from evap_auxfnc::dsurf_tension_soilwat_dT"
+      ERROR stop
+    end if
+  
+    T = pde(Heat_order)%getval(quadpnt)
+    
+    val = - 0.1425_rkind - 4.76e-4*T
+
+  end fuction dsurf_tension_soilwat_dT
   
   !thermal conductivity  []
   !Input: Liquid Water content
@@ -298,37 +284,139 @@ module evap_auxfnc
     !> return value
     real(kind=rkind):: val
     
-     real(kind=rkind)::theta_l
+    real(kind=rkind)::theta_l
     
     
-    if (present(quadpnt) .and. present(x)) then
-      print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
-      print *, "exited from evap_auxfnc::rh_soil"
-      ERROR stop
-    else if (.not. present(quadpnt) .and. .not. present(x)) then
-      print *, "ERROR: you have not specified either integ point or x value"
-      print *, "exited from evap_auxfnc::rh_soil"
+    if (.not. present(quadpnt)) then
+      print *, "ERROR: you have not specified either integ point "
+      print *, "exited from evap_auxfnc::thermal_conduc"
       ERROR stop
     end if
-    
-    
-    if (present(quadpnt)) then
-      quadpnt_loc=quadpnt
-      quadpnt_loc%preproc=.true.
-      theta_l =  pde_loc%mass(1)%val(pde_loc, layer, quadpnt)
-    else
-      if (ubound(x,1) /=1) then
-          print *, "ERROR: van Genuchten function is a function of a single variable h"
-          print *, "       your input data has:", ubound(x,1), "variables"
-          print *, "exited from evap_auxfnc::rh_soil"
-          ERROR STOP
-      end if
-        T = x(2) !!id what is here!!
-    end if
+  
+    theta_l = pde_loc%mass(1)%val(pde_loc, layer, quadpnt)
     
     val = b1 + b2*theta_l + b3*theta_l**0.5
 
   end fuction thermal_conduc
+  
+  function vapor_diff_soil(pde_loc, layer, quadpnt, x) result(val)
+    use typy
+    use global_objs
+    use pde_objs
+    use evap_globals
+    
+    class(pde_str), intent(in) :: pde_loc
+    !> value of the nonlinear function
+    real(kind=rkind), dimension(:), intent(in), optional    :: x
+    !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
+    type(integpnt_str), intent(in), optional :: quadpnt
+    !> material ID
+    integer(kind=ikind), intent(in) :: layer
+    !> return value
+    real(kind=rkind):: val
+    
+    real(kind=rkind)::theta_l, theta_sat, theta_air
+    
+    
+    if (.not. present(quadpnt)) then
+      print *, "ERROR: you have not specified either integ point "
+      print *, "exited from evap_auxfnc::vapor_diff_soil"
+      ERROR stop
+    end if
+  
+    theta_l = pde_loc%mass(1)%val(pde_loc, layer, quadpnt)
+    theta_air = 1 - theta_l
+    theta_sat = vgset(layer)%ths
+    
+    val = tortuosity(theta_l)*theta_air*vapor_diff_air(pde_loc, layer, quadpnt)
+
+  end fuction vapor_diff_soil
+  
+  
+  function tortuosity(theta_l) result(val)
+    use typy
+    use global_objs
+    use pde_objs
+    use evap_globals
+    
+    
+    real(kind=rkind),intent (in):: theta_l
+    !> return value
+    real(kind=rkind):: val
+    
+    real(kind=rkind):: theta_sat, theta_air
+    
+    
+    
+    theta_air = 1 - theta_l
+    theta_sat = vgset(layer)%ths
+    
+    val = ((theta_air)**(7/3))/ (theta_sat**2)
+
+  end fuction tortuosity
+  
+  function vapor_diff_air(pde_loc, layer, quadpnt, x) result(val)
+    use typy
+    use global_objs
+    use pde_objs
+    use evap_globals
+    
+    class(pde_str), intent(in) :: pde_loc
+    !> value of the nonlinear function
+    real(kind=rkind), dimension(:), intent(in), optional    :: x
+    !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
+    type(integpnt_str), intent(in), optional :: quadpnt
+    !> material ID
+    integer(kind=ikind), intent(in) :: layer
+    !> return value
+    real(kind=rkind):: val
+    
+    real(kind=rkind)::T
+    
+    
+     if (.not. present(quadpnt)) then
+      print *, "ERROR: you have not specified either integ point "
+      print *, "exited from evap_auxfnc::vapor_diff_air"
+      ERROR stop
+    end if
+  
+    T = pde(Heat_order)%getval(quadpnt)
+    
+    val =  2.12e-5 * (T/Tref)**2
+
+  end fuction vapor_diff_air
+  
+  function enhacement_factor(pde_loc, layer, quadpnt, x) result(val)
+    use typy
+    use global_objs
+    use pde_objs
+    use evap_globals
+    
+    class(pde_str), intent(in) :: pde_loc
+    !> value of the nonlinear function
+    real(kind=rkind), dimension(:), intent(in), optional    :: x
+    !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
+    type(integpnt_str), intent(in), optional :: quadpnt
+    !> material ID
+    integer(kind=ikind), intent(in) :: layer
+    !> return value
+    real(kind=rkind):: val
+    
+    real(kind=rkind)::T
+    
+    
+     if (.not. present(quadpnt)) then
+      print *, "ERROR: you have not specified either integ point "
+      print *, "exited from evap_auxfnc::enhacement_factor"
+      ERROR stop
+    end if
+    
+    theta_sat = vgset(layer)%ths
+    theta_l = pde_loc%mass(1)%val(pde_loc, layer, quadpnt)
+    
+    val =  9.5_rkind + 3.0_rkind*(theta_l/theta_sat) -8.5_rkind *exp(-((1.0_rkind + &
+    (2.6_rkind/f_c**0.5))*(theta_l/theta_sat))**4)
+  end fuction enhacement_factor
   
   
 end module evap_auxfnc

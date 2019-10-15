@@ -25,4 +25,10 @@ module evap_globals
   real(kind=rkind), parameter, public :: gamma_0 = 
   integer(kind=ikind), parameter, public ::re_order = 1
   integer(kind=ikind), parameter, public ::heat_order = 2
+  integer(kind=ikind), parameter, public :: f_c 
+  integer(kind=ikind), parameter, public :: GwT = 
+  integer(kind=ikind), parameter, public :: C_liq =
+  integer(kind=ikind), parameter, public :: C_vap = 
+  integer(kind=ikind), parameter, public :: C_soil = 
+  
 end module evap_globals
