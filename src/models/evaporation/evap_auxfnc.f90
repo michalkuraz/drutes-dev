@@ -33,13 +33,12 @@ module evap_auxfnc
   
   !< Relative Humudity soil rh_soil [-]
   !Input: 
-  function rh_soil(pde_loc, layer, quadpnt) result(val)
+  function rh_soil(layer, quadpnt) result(val)
     use typy
     use global_objs
     use pde_objs
     use evap_globals
     
-    class(pde_str), intent(in) :: pde_loc
     !> value of the nonlinear function
     real(kind=rkind), dimension(:), intent(in), optional    :: x
     !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
