@@ -87,8 +87,9 @@ module evap_fnc
       !> relative hydraulic conductivity, (scalar value)
       real(kind=rkind), intent(out), optional :: scalar
       
-       real(kind=rkind), dimension(3,3) :: KlT, KvT
-      integer(kind=ikind):: D
+      real(kind=rkind), dimension(3,3) :: KlT, KvT
+      real(kind=rkind) :: Klt_scalar, Kvt_scalar
+      integer(kind=ikind):: D, i
        
       if (.not. present(quadpnt) .or. present(tensor)) then
         print *, "ERROR! output tensor undefined, exited from evap_fnc::difussion_hh"
@@ -97,12 +98,28 @@ module evap_fnc
       
       D = drutes_config%dimen
       
-      KlT(1:D,1:D) = hydraulic_lT(pde_loc, layer, quadpnt, x) 
-      KvT(1:D,1:D) = hydraulic_vT(pde_loc, layer, quadpnt, x)*
+      if ( present(x) ) then
+        print *, "This option is not implemented"
+        print *, "exited from evap_fnc::difussion_hT"
+        ERROR STOP
+      end if
+      
+      Klt_scalar = hydraulic_lT(pde_loc, layer, quadpnt) 
+      Kvt_scalar = hydraulic_vT(pde_loc, layer, quadpnt)
+      
+      Klt = 0
+      KvT = 0
+      
+      do i=1, D
+        KlT(i,i) = Klt_scalar
+        KvT(i,i) = Kvt_scalar 
+      end do
       
       tensor(1:D,1:D) = Klh(1:D,1:D) + Kvh(1:D,1:D)
         
     end subroutine difussion_hT
+    
+    
     !! Convection term for water flow 
     subroutine convection_h(pde_loc, layer, quadpnt, x, vector_in, vector_out, scalar)
       use typy
@@ -420,12 +437,12 @@ module evap_fnc
       end if
       
       theta_l = pde_loc%mass(1)%val(pde_loc, layer, quadpnt)
-      rh_soil = rh_soil(pde_loc, layer, quadpnt)
+      rh_soil = rh_soil(layer, quadpnt)
       rho_l = rho_l(pde_loc, layer, quadpnt, x) 
       rho_sv = rho_sv(pde_loc, layer, quadpnt, x) 
       
       
-      val = (1 - theta_l)*rho_sv*rh_soil*(1/rho_l)
+      val = (1 - theta_l)*rho_sv*rh_soil*(1.0_rkind/rho_l)
     
     end function theta_vapor
     
