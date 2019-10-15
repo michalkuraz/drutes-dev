@@ -245,6 +245,14 @@ Re_evap_reader.o: $(CORE_obj) $(TOOLS_obj) re_globals.o src/models/evaporation/R
 	$c -c src/models/evaporation/Re_evap_reader.f90
 Re_evap_bc.o: $(CORE_obj) $(TOOLS_obj) src/models/evaporation/Re_evap_bc.f90
 	$c -c src/models/evaporation/Re_evap_bc.f90
+evap_globals.o: $(CORE_obj) src/models/evaporation/evap_globals.f90
+	$c -c src/models/evaporation/evap_globals.f90
+evap_reader.o: $(CORE_obj) $(TOOLS_obj) evap_globals.o re_globals.o src/models/evaporation/evap_reader.f90
+	$c -c src/models/evaporation/evap_reader.f90
+evap_fnc.o: $(CORE_obj) evap_globals.o re_globals.o src/models/evaporation/evap_fnc.f90
+	$c -c src/models/evaporation/evap_fnc.f90
+evap_auxfnc.o: $(CORE_obj) re_globals.o evap_globals.f90 src/models/evaporation/evap_auxfnc.f90
+	$c -c src/models/evaporation/evap_auxfnc.f90
 #------end evaporation_obj---------------------------
 
 
