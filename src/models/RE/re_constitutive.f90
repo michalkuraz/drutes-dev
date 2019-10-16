@@ -826,7 +826,7 @@ module RE_constitutive
       !> relative unsaturated hydraulic conductivity derivative in respect to h, scalar value
       real(kind=rkind), intent(out), optional :: scalar
 
-      real(kind=rkind) :: a,n,m, tmp, h
+      real(kind=rkind) :: a,n,m, Kr, h
       type(integpnt_str) :: quadpnt_loc     
       
          
@@ -860,22 +860,22 @@ module RE_constitutive
         a = vgset(layer)%alpha
         n = vgset(layer)%n
         m = vgset(layer)%m
-        tmp = (    (a*(-(a*h))**(-1 + n)*(1 + (-(a*h))**n)**(-1 - m/2.0)* &
+        Kr = (    (a*(-(a*h))**(-1 + n)*(1 + (-(a*h))**n)**(-1 - m/2.0)* &
             (1 - (-(a*h))**(m*n)/(1 + (-(a*h))**n)**m)**2*m*n)/2.0 + &
          (2*(1 - (-(a*h))**(m*n)/(1 + (-(a*h))**n)**m)* &
             (-(a*(-(a*h))**(-1 + n + m*n)*(1 + (-(a*h))**n)**(-1 - m)*m*n) + &
               (a*(-(a*h))**(-1 + m*n)*m*n)/(1 + (-(a*h))**n)**m))/ &
           (1 + (-(a*h))**n)**(m/2.0))
       else
-        tmp = 0
+        Kr = 0
       end if
       if (present(vector_out)) then
         ! must be negative, because the commnon scheme of the CDE problem has negative convection, but RE has positive convection
-        vector_out = -vgset(layer)%Ks(drutes_config%dimen,:) * tmp
+        vector_out = -vgset(layer)%Ks(drutes_config%dimen,:) * Kr
       end if
 
       if (present(scalar)) then
-        scalar = tmp
+        scalar = Kr
       end if
 
     end subroutine dmualem_dh
