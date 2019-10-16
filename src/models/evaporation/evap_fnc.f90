@@ -266,7 +266,7 @@ module evap_fnc
         
       call dmualem_dh(pde_loc, layer, quadpnt, x,  vector_out = Kvect(1:D))
     
-      vector_out(1:D) = kr()*C_liq*T*Kvect(1:D)
+      vector_out(1:D) = C_liq*T*Kvect(1:D)
     end subroutine convection_T
     
     
@@ -390,9 +390,14 @@ module evap_fnc
       end if
 
 
-      quadpnt_loc = quadpnt
+      
+      quadpnt_loc = q
+      
+      theta_vapor = theta_vapor(quadpnt, layer, quadpnt, x)
       
       quadpnt_loc%column = 1
+      
+      theta_vapor_prev = 
       
       
       val = 

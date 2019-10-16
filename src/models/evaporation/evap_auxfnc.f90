@@ -405,7 +405,7 @@ module evap_auxfnc
     real(kind=rkind)::T
     
     
-     if (.not. present(quadpnt)) then
+    if (.not. present(quadpnt)) then
       print *, "ERROR: you have not specified either integ point "
       print *, "exited from evap_auxfnc::enhacement_factor"
       ERROR stop
