@@ -31,6 +31,9 @@ module evap_reader
        use pde_objs
        use debug_tools
        use re_globals
+       use evap_globals
+       
+       
        
        integer :: ierr
 
@@ -42,14 +45,12 @@ module evap_reader
         end if 
 
         
-        b1,b2,b3 !thermal conductivity coefficients
-        
-        !call fileread(elevation, file_evap, ranges=(/0.0_rkind, huge(0.0_rkind)/), & 
+        call fileread(b1, file_vapor, ranges=(/0.0_rkind, huge(0.0_rkind)/), & 
                       errmsg="specify elevation above sea level in m. This can be only positive")
-        !call fileread(latitude, file_evap, ranges=(/- huge(0.0_rkind), huge(0.0_rkind)/), &
-                      !errmsg="specify latitude in radians. This can be negative or positive depend on hemisphere")
-        !call fileread(albedo, file_evap, ranges=(/0.0_rkind, 1.0_rkind/), &
-                      !errmsg="specify albedo or canopy reflection coefficient between 0 and 1")
+        call fileread(b2, file_vapor, ranges=(/0.0_rkind, huge(0.0_rkind)/), & 
+                      errmsg="specify elevation above sea level in m. This can be only positive")
+        call fileread(b2, file_vapor, ranges=(/0.0_rkind, huge(0.0_rkind)/), & 
+                      errmsg="specify elevation above sea level in m. This can be only positive")
       close(file_evap)	
 
     end subroutine evap_var

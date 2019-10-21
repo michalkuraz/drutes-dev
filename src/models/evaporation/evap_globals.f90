@@ -18,17 +18,27 @@
 
 module evap_globals
   use typy
+  
+    real(kind=rkind), public:: b1,b2,b3
+    integer, public :: file_vapor
    
-  real(kind=rkind), parameter, public :: R_gas = 
-  real(kind=rkind), parameter, public :: MolW = 
-  real(kind=rkind), parameter, public :: gravity = 
-  real(kind=rkind), parameter, public :: gamma_0 = 
+  real(kind=rkind), parameter, public :: R_gas = 8.314
+  
+  real(kind=rkind), parameter, public :: MolW = 0.018015
+    !> gravity acceleration [m.s^-2]
+  real(kind=rkind), parameter, public :: gravity = 9.18
+   !> Reference surface tension at 25 ~deg C g.s^-2
+  real(kind=rkind), parameter, public :: gamma_0 = 71.89
   integer(kind=ikind), parameter, public ::re_order = 1
   integer(kind=ikind), parameter, public ::heat_order = 2
-  integer(kind=ikind), parameter, public :: f_c 
-  integer(kind=ikind), parameter, public :: GwT = 
-  integer(kind=ikind), parameter, public :: C_liq =
-  integer(kind=ikind), parameter, public :: C_vap = 
-  integer(kind=ikind), parameter, public :: C_soil = 
+  integer(kind=ikind), parameter, public :: f_c = 0.02
+   !> Gain factor [-]
+  integer(kind=ikind), parameter, public :: GwT = 7
+  
+  integer(kind=ikind), parameter, public :: C_liq = 4188 
+  
+  integer(kind=ikind), parameter, public :: C_vap = 1800
+  
+  integer(kind=ikind), parameter, public :: C_soil =  1920
   
 end module evap_globals
