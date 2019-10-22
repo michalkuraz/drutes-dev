@@ -396,7 +396,7 @@ module evap_fnc
       
       real(kind=rkind), dimension(:), allocatable, save :: gradT
       
-        if (present(quadpnt) .and. (present(grad) .or. present(x))) then
+      if (present(quadpnt) .and. (present(grad) .or. present(x))) then
         print *, "ERROR: the function can be called either with integ point or x value definition and gradient, not both of them"
         ERROR stop
       else if ((.not. present(grad) .or. .not. present(x)) .and. .not. present(quadpnt)) then
@@ -415,9 +415,15 @@ module evap_fnc
       
       D = drutes_config%dimen
       
-
-     call darcy_law(pde_loc, layer, quadpnt, x, grad,  flux = q_liq(1:D), flux_length)
-     KlT(1:D,1:D) = hydraulic_lT(pde_loc, layer, quadpnt) 
+      if (present(x)) then
+        call darcy_law(pde_loc, layer, x=x, flux = q_liq(1:D))
+      end if
+      
+      if (present(quadpnt)) then
+        call darcy_law(pde_loc, layer, quadpnt, flux = q_liq(1:D))
+      end if
+      
+      KlT(1:D,1:D) = hydraulic_lT(pde_loc, layer, quadpnt) 
       
       vct(1:D) = q_liq(1:D) - matmul(-KlT(1:D,1:D), gradT(1:D))
       
@@ -577,8 +583,18 @@ module evap_fnc
       end if
       
       D = drutes_config%dimen
-      call vapor_flux(pde_loc, layer, quadpnt, x, grad,  flux = q_vap(1:D), flux_length)
-      call liquid_flux(pde_loc, layer, quadpnt, x, grad,  flux= q_liq(1:D), flux_length)
+      
+      if (present(x)) then
+        call vapor_flux(pde_loc, layer, x=x, flux = q_vap(1:D))
+        call liquid_flux(pde_loc, layer, x=x,  flux=q_liq(1:D))
+      end if
+      
+      if (present(quadpnt)) then
+        call vapor_flux(pde_loc, layer, quadpnt, flux = q_vap(1:D))
+        call liquid_flux(pde_loc, layer, quadpnt, flux=q_liq(1:D))
+      end if
+      
+      
       kappa = thermal_conduc(pde_loc, layer, quadpnt)
       L = latent_heat_wat(quadpnt)
       T = pde(Heat_order)%getval(quadpnt)
