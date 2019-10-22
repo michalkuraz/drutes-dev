@@ -31,7 +31,7 @@ module evap_globals
   real(kind=rkind), parameter, public :: gamma_0 = 71.89
   integer(kind=ikind), parameter, public ::re_order = 1
   integer(kind=ikind), parameter, public ::heat_order = 2
-  integer(kind=ikind), parameter, public :: f_c = 0.02
+  real(kind=rkind), parameter, public :: f_c = 0.02
    !> Gain factor [-]
   integer(kind=ikind), parameter, public :: GwT = 7
   

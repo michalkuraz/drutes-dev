@@ -192,7 +192,6 @@ module Re_evap_bc
           print *, "evaporation boundary must be time dependent, check record for the boundary", edge_id
           ERROR STOP
         end if
-        !value = 
       end if
       
 

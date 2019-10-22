@@ -26,7 +26,7 @@ module evap_auxfnc
   public :: latent_heat_wat, surf_tension_soilwat
   public :: dsurf_tension_soilwat_dT, thermal_conduc
   public :: vapor_diff_air,vapor_diff_soil, tortuosity
-  public :: enhacement_factor
+  public :: enhancement_factor
   
 
   contains
@@ -50,7 +50,7 @@ module evap_auxfnc
     
    
     if (.not. present(quadpnt)) then
-      print *, "ERROR: you have not specified integ point "
+      print *, "ERROR: you have not integ point "
       print *, "exited from evap_auxfnc::rh_soil"
       ERROR stop
     end if
@@ -80,7 +80,7 @@ module evap_auxfnc
     
     
     if (.not. present(quadpnt)) then
-      print *, "ERROR: you have not specified either integ point "
+      print *, "ERROR: you have not specified integ point "
       print *, "exited from evap_auxfnc::rho_sv"
       ERROR stop
     end if
@@ -109,7 +109,7 @@ module evap_auxfnc
     
     
     if (.not. present(quadpnt)) then
-      print *, "ERROR: you have not specified either integ point "
+      print *, "ERROR: you have not specified  integ point "
       print *, "exited from evap_auxfnc::drho_sv_dT"
       ERROR stop
     end if
@@ -119,7 +119,7 @@ module evap_auxfnc
     T = pde(Heat_order)%getval(quadpnt)
    
     
-    val = 1e-3 *exp(31.3716_rkind - (6014.79_rkind/T) - 7.92495e-3*T**3)/T
+    val = exp(- 7.92495e-3*T**3 - (6014.79_rkind/T))*(-1.00145e9*T**4 - 4.2122e10*T + 2.53357e14)*(1/T**3)
 
   end function drho_sv_dT
   
@@ -139,7 +139,7 @@ module evap_auxfnc
      real(kind=rkind)::T
     
      if (.not. present(quadpnt)) then
-      print *, "ERROR: you have not specified either integ point "
+      print *, "ERROR: you have not specified integ point "
       print *, "exited from evap_auxfnc::rho_l"
       ERROR stop
     end if
@@ -166,7 +166,7 @@ module evap_auxfnc
     real(kind=rkind)::T
     
     if (.not. present(quadpnt)) then
-      print *, "ERROR: you have not specified either integ point "
+      print *, "ERROR: you have not specified  integ point "
       print *, "exited from evap_auxfnc::latent_heat_wat"
       ERROR stop
     end if
@@ -197,7 +197,7 @@ module evap_auxfnc
     
     
      if (.not. present(quadpnt)) then
-      print *, "ERROR: you have not specified either integ point "
+      print *, "ERROR: you have not specified  integ point "
       print *, "exited from evap_auxfnc::surf_tension_soilwat"
       ERROR stop
     end if
@@ -256,7 +256,7 @@ module evap_auxfnc
     
     
     if (.not. present(quadpnt)) then
-      print *, "ERROR: you have not specified either integ point "
+      print *, "ERROR: you have not specified  integ point "
       print *, "exited from evap_auxfnc::thermal_conduc"
       ERROR stop
     end if
@@ -286,7 +286,7 @@ module evap_auxfnc
     
     
     if (.not. present(quadpnt)) then
-      print *, "ERROR: you have not specified either integ point "
+      print *, "ERROR: you have not specified  integ point "
       print *, "exited from evap_auxfnc::vapor_diff_soil"
       ERROR stop
     end if
@@ -295,7 +295,7 @@ module evap_auxfnc
     theta_air = 1 - theta_l
     theta_sat = vgset(layer)%ths
     
-    val = tortuosity(theta_l)*theta_air*vapor_diff_air(quadpnt)
+    val = tortuosity(theta_l, layer)*theta_air*vapor_diff_air(quadpnt)
 
   end function vapor_diff_soil
   
@@ -341,7 +341,7 @@ module evap_auxfnc
     
     
      if (.not. present(quadpnt)) then
-      print *, "ERROR: you have not specified either integ point "
+      print *, "ERROR: you have not specified  integ point "
       print *, "exited from evap_auxfnc::vapor_diff_air"
       ERROR stop
     end if
@@ -352,7 +352,7 @@ module evap_auxfnc
 
   end function vapor_diff_air
   
-  function enhacement_factor(pde_loc, layer, quadpnt) result(val)
+  function enhancement_factor(pde_loc, layer, quadpnt) result(val)
     use typy
     use global_objs
     use pde_objs
@@ -366,21 +366,22 @@ module evap_auxfnc
     !> return value
     real(kind=rkind):: val
     
-    real(kind=rkind)::T,theta_l, theta_sat
+    real(kind=rkind)::T,theta_l, theta_sat, tmp, const
     
     
     if (.not. present(quadpnt)) then
-      print *, "ERROR: you have not specified either integ point "
+      print *, "ERROR: you have not specified  integ point "
       print *, "exited from evap_auxfnc::enhacement_factor"
       ERROR stop
     end if
     
     theta_sat = vgset(layer)%ths
     theta_l = pde_loc%mass(1)%val(pde_loc, layer, quadpnt)
+    const = 1 + (2.6_rkind/sqrt(f_c))
+    tmp = exp(- (const * (theta_l/theta_sat))**4)
     
-    val =  9.5_rkind + 3.0_rkind*(theta_l/theta_sat) -8.5_rkind *exp(-((1.0_rkind + &
-    (2.6_rkind/(f_c**0.5))*(theta_l/theta_sat))**4)
-  end function enhacement_factor
+    val =  9.5_rkind + 3.0_rkind*(theta_l/theta_sat) -8.5_rkind *tmp
+  end function enhancement_factor
   
   
 end module evap_auxfnc
