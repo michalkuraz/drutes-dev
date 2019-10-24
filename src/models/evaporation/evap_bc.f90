@@ -19,7 +19,10 @@
 
 module evap_bc
 
-  subroutine heat _bc(pde_loc, el_id, node_order, value, code) 
+public :: heat_robin
+public:: water _neumann
+
+  subroutine heat_robin(pde_loc, el_id, node_order, value, scalar, vector_out, code) 
        use typy
       use globals
       use global_objs
@@ -34,13 +37,17 @@ module evap_bc
       
       class(pde_str), intent(in) :: pde_loc
       integer(kind=ikind), intent(in)  :: el_id, node_order
-      real(kind=rkind), intent(out), optional   :: value
+      real(kind=rkind), dimension(:), intent(out), optional   :: value
+      real(kind = rkind), intent(out), optional :: scalar
+      real(kind = rkind), dimension(:,),intent(out), optional :: vector_out
       integer(kind=ikind), intent(out), optional :: code
+      
 
       
       type(integpnt_str) :: quadpnt
       real(kind=rkind), dimension(3) :: xyz
       real(kind =rkind):: T, L , kappa
+      real(kind = rkind), dimension(3):: normal_vct
       
 
       quadpnt%type_pnt = "ndpt"
@@ -58,16 +65,24 @@ module evap_bc
       L = latent_heat_wat(quadpnt)
       call vapor_flux(pde_loc, layer, quadpnt, x, grad,  flux = q_vap(1:D), flux_length)
       call liquid_flux(pde_loc, layer, quadpnt, x, grad,  flux= q_liq(1:D), flux_length)
+      radia
+      
+      heat_soil_flux = 
+      
+      normal_vct (1:D ) = 
+      value =  
+      scalar = kappa
+      vector_out = C_liq * q_liq(1:D) + C_vap*q_vap(1:D)
       
 
       if (present(code)) then
-        code = 2
+        code = 2 ! should be 3? 1: Direchlet, 2: Neumann 3: Robin
       end if
 
-  end subroutine heat_bc
+  end subroutine  heat_robin
   
   
-  subroutine water _bc(pde_loc, el_id, node_order, value, code) 
+  subroutine water _neumann(pde_loc, el_id, node_order, value, code) 
       use typy
       use globals
       use global_objs
@@ -108,8 +123,10 @@ module evap_bc
         code = 2
       end if
 
-  end subroutine water_bc
+  end subroutine water_neumann
     
+  function evaporation()
+  end function evaporation
     
     
 
