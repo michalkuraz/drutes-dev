@@ -726,28 +726,29 @@ module evap_fnc
 
       !!> Water vapor time derivative
     function dtheta_vapordt(pde_loc, layer)  result(val)
-        use typy
-        use global_objs
-        use pde_objs
-        use evap_auxfnc
-        
-        class(pde_str), intent(in) :: pde_loc
-        !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
-        type(integpnt_str):: quadpnt
-        !> material ID
-        integer(kind=ikind), intent(in) :: layer
-        !> return value
-        real(kind=rkind) :: val, theta_vapor_curr, theta_vapor_prev
-    
+      use typy
+      use global_objs
+      use pde_objs
+      use evap_auxfnc
+      use globals
       
+      class(pde_str), intent(in) :: pde_loc
+      !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
+      type(integpnt_str):: quadpnt
+      !> material ID
+      integer(kind=ikind), intent(in) :: layer
+      !> return value
+      real(kind=rkind) :: val, theta_vapor_curr, theta_vapor_prev
+  
+    
       quadpnt%column = 2
       theta_vapor_prev = theta_vapor(pde_loc,layer, quadpnt) 
-      
+    
       quadpnt%column = 1
       theta_vapor_curr= theta_vapor(pde_loc,layer, quadpnt) 
-      
-      
-      val = (theta_vapor_curr - theta_vapor_prev)/ time !! check time
+    
+    
+      val = (theta_vapor_curr - theta_vapor_prev)/ time_step !! check time
         
     end function dtheta_vapordt
 

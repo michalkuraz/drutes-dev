@@ -24,15 +24,18 @@ module evap_bc
   use debug_tools
   use re_globals
 
-public :: heat_robin
-public :: water_neumann
-public :: evaporation
-public :: sensible_heat
+  public :: heat_robin
+  public :: water_neumann
+  public :: evaporation
+  public :: sensible_heat
 
   contains
 
-
-  subroutine heat_robin(pde_loc, el_id, node_order, value, scalar, vector_out, code) 
+  !> implementation for Robin boundary condition
+  !! solution is a scalar function \f[ p \f]
+  !! \f val = acoef  \pdv{p}{\vec{n}}  + bcoef p ||\vec{q} ||_2 \f]
+  !<
+  subroutine heat_robin(pde_loc, el_id, node_order, val, acoef, bcoef, code) 
       use typy
       use globals
       use global_objs
@@ -48,9 +51,8 @@ public :: sensible_heat
       
       class(pde_str), intent(in) :: pde_loc
       integer(kind=ikind), intent(in)  :: el_id, node_order
-      real(kind=rkind), dimension(:), intent(out), optional   :: value
-      real(kind = rkind), intent(out), optional :: scalar
-      real(kind = rkind), dimension(:),intent(out), optional :: vector_out
+      real(kind=rkind), intent(out), optional   :: val
+      real(kind = rkind), intent(out), optional :: acoef, bcoef
       integer(kind=ikind), intent(out), optional :: code
     
       type(integpnt_str) :: quadpnt
@@ -66,7 +68,10 @@ public :: sensible_heat
       logical, save :: run1st=.true.
       character(len=8), save :: evap_units 
       integer(kind =ikind) :: D, i,  edge_id, datapos, dataprev
-       integer(kind =ikind) :: num_day,hour,day, month
+      integer(kind =ikind) :: num_day,hour,day, month
+      real(kind=rkind), dimension(3) :: q_vap, q_liq
+      
+      
       quadpnt%type_pnt = "ndpt"
       quadpnt%order = elements%data(el_id, node_order)
       quadpnt%column = 2
@@ -79,7 +84,7 @@ public :: sensible_heat
         call evap_datadt_bc(evap_units, pde_loc%bc(edge_id)%series)
         run1st = .false.
       end if    
-      if (present(value)) then
+      if (present(acoef) .and. present(bcoef)) then
         if (pde_loc%bc(edge_id)%file) then
           do i = pde_loc%bc(edge_id)%series_pos, ubound(pde_loc%bc(edge_id)%series,1)
             if (pde_loc%bc(edge_id)%series(i,1) > time .and. i < ubound(pde_loc%bc(edge_id)%series,1)) then
@@ -111,14 +116,17 @@ public :: sensible_heat
           evap = evaporation(layer, quadpnt, rhmean)
           num_day = num_day_fcn (day, month,evap_units)
           rad = radiation_fcn(num_day,latitude,elevation,albedo,e_act,solar,tmink,tmaxk)
-          call vapor_flux(pde_loc, layer , quadpnt, flux = q_vap(1:D))
+          
+          call vapor_flux(pde_loc, layer , quadpnt=quadpnt, flux=q_vap(1:D))
+          
           call liquid_flux(pde_loc, layer, quadpnt, flux=q_liq(1:D))
+          
           heat_soil_flux = rad - Hs - L*evap
       
           normal_vct (1:D) = 0
-          value(1:D)=  - heat_soil_flux*normal_vct(1:D) + L*q_vap(1:D)
-          scalar = - kappa
-          vector_out(1:D) = C_liq*q_liq(1:D) + C_vap*q_vap(1:D)
+          val =  - heat_soil_flux - L*norm2(q_vap(1:D))
+          acoef = -kappa
+          bcoef = C_liq*norm2(q_liq(1:D)) + C_vap*norm2(q_vap(1:D))
               
   
         else
@@ -127,7 +135,7 @@ public :: sensible_heat
         end if
       end if
       if (present(code)) then
-        code = 2 ! should be 3? 1: Direchlet, 2: Neumann 3: Robin
+        code = 3 ! should be 3? 1: Direchlet, 2: Neumann 3: Robin
       end if
 
   end subroutine  heat_robin
