@@ -51,6 +51,8 @@ module evap_reader
                       errmsg="specify elevation above sea level in m. This can be only positive")
         call fileread(b2, file_vapor, ranges=(/0.0_rkind, huge(0.0_rkind)/), & 
                       errmsg="specify elevation above sea level in m. This can be only positive")
+          call fileread(resistance, file_vapor, ranges=(/0.0_rkind, huge(0.0_rkind)/), & 
+                      errmsg="specify elevation above sea level in m. This can be only positive")
       close(file_evap)	
 
     end subroutine evap_var

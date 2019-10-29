@@ -31,6 +31,7 @@ module evap_fnc
   public :: theta_vapor, dtheta_vapordt
   public :: hydraulic_lT
   public :: hydraulic_vh, hydraulic_vT
+  public :: liquid_flux,vapor_flux, heatmod_flux
 
   contains
   
@@ -135,8 +136,6 @@ module evap_fnc
       tensor(1:D,1:D) = KlT(1:D, 1:D) + KvT(1:D,1:D)
         
     end subroutine difussion_hT
-    
-    
     !! Convection term for water flow 
     subroutine convection_h(pde_loc, layer, quadpnt, x, vector_in, vector_out, scalar)
       use typy
@@ -726,7 +725,7 @@ module evap_fnc
     end function hydraulic_vT
 
       !!> Water vapor time derivative
-    function dtheta_vapordt(pde_loc, layer, quadpnt)  result(val)
+    function dtheta_vapordt(pde_loc, layer)  result(val)
         use typy
         use global_objs
         use pde_objs
@@ -734,17 +733,21 @@ module evap_fnc
         
         class(pde_str), intent(in) :: pde_loc
         !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
-        type(integpnt_str), intent(in), optional :: quadpnt
+        type(integpnt_str):: quadpnt
         !> material ID
         integer(kind=ikind), intent(in) :: layer
         !> return value
-        real(kind=rkind)                :: val
-        
-       if (.not. present(quadpnt)) then
-          print *, "ERROR: you have not specified  integ point "
-          print *, "exited from evap_fnc::hydraulic_vh"
-          ERROR stop
-        end if
+        real(kind=rkind) :: val, theta_vapor_curr, theta_vapor_prev
+    
+      
+      quadpnt%column = 2
+      theta_vapor_prev = theta_vapor(pde_loc,layer, quadpnt) 
+      
+      quadpnt%column = 1
+      theta_vapor_curr= theta_vapor(pde_loc,layer, quadpnt) 
+      
+      
+      val = (theta_vapor_curr - theta_vapor_prev)/ time !! check time
         
     end function dtheta_vapordt
 

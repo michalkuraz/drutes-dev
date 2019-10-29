@@ -19,8 +19,10 @@
 module evap_globals
   use typy
   
-    real(kind=rkind), public:: b1,b2,b3
-    integer, public :: file_vapor
+  real(kind=rkind), public:: b1,b2,b3
+  integer, public :: file_vapor
+  real(kind=rkind), public:: resistance
+  
    
   real(kind=rkind), parameter, public :: R_gas = 8.314
   
@@ -40,5 +42,6 @@ module evap_globals
   integer(kind=ikind), parameter, public :: C_vap = 1800
   
   integer(kind=ikind), parameter, public :: C_soil =  1920
+  integer(kind=ikind), parameter, public :: C_air =  1200
   
 end module evap_globals

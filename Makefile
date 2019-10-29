@@ -33,14 +33,8 @@ REDUAL_obj := Re_dual_totH.o Re_dual_globals.o Re_dual_pointers.o Re_dual_reader
 HEAT_obj := heat_fnc.o heat_pointers.o heat_globals.o heat_reader.o
 LTNE_obj := LTNE_fnc.o LTNE_globs.o LTNE_pointers.o LTNE_reader.o LTNE_helper.o
 KINWAVE_obj := kinreader.o kinglobs.o kinfnc.o kinpointer.o
-
 FROZEN_obj := freeze_globs.o freeze_helper.o freeze_fnc.o freeze_reader.o freeze_pointers.o
-
-
-
 EVAPORATION_obj := Re_evap_bc.o Re_evap_reader.o evap_globals.o evap_reader.o evap_fnc.o  evap_auxfnc.o   evap_bc.o
-
-
 
 MODEL_objs := $(RE_obj)  $(BOUSSINESQ_obj) $(ADE_obj) $(REDUAL_obj)  $(HEAT_obj) $(LTNE_obj) $(FROZEN_obj) $(KINWAVE_obj) $(EVAPORATION_obj)
 
@@ -256,7 +250,8 @@ evap_fnc.o: $(CORE_obj) evap_globals.o re_globals.o  evap_auxfnc.o src/models/ev
 	$c -c src/models/evaporation/evap_fnc.f90
 evap_auxfnc.o: $(CORE_obj) re_globals.o evap_globals.o  src/models/evaporation/evap_auxfnc.f90
 	$c -c src/models/evaporation/evap_auxfnc.f90
-evap_bc.o:  $(CORE_obj) $(TOOLS_obj)  re_globals.o evap_globals.o evap_fnc.o evap_auxfnc.o src/models/evaporation/evap_auxfnc.f90
+evap_bc.o:  $(CORE_obj) $(TOOLS_obj)  re_globals.o evap_globals.o evap_fnc.o  evap_auxfnc.o  Re_evap_bc.o  src/models/evaporation/evap_bc.f90
+	$c -c src/models/evaporation/evap_bc.f90
 #------end evaporation_obj---------------------------
 
 

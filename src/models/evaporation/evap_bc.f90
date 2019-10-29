@@ -18,71 +18,21 @@
 !<
 
 module evap_bc
+  use pde_objs
+  use typy
+  use evap_globals
+  use debug_tools
+  use re_globals
 
 public :: heat_robin
-public:: water _neumann
+public :: water_neumann
+public :: evaporation
+public :: sensible_heat
+
+  contains
+
 
   subroutine heat_robin(pde_loc, el_id, node_order, value, scalar, vector_out, code) 
-       use typy
-      use globals
-      use global_objs
-      use pde_objs
-      use re_globals
-      use core_tools
-      use geom_tools
-      use debug_tools
-      use eva_fnc
-      use evap_auxfnc
-      use evap_globals
-      
-      class(pde_str), intent(in) :: pde_loc
-      integer(kind=ikind), intent(in)  :: el_id, node_order
-      real(kind=rkind), dimension(:), intent(out), optional   :: value
-      real(kind = rkind), intent(out), optional :: scalar
-      real(kind = rkind), dimension(:,),intent(out), optional :: vector_out
-      integer(kind=ikind), intent(out), optional :: code
-      
-
-      
-      type(integpnt_str) :: quadpnt
-      real(kind=rkind), dimension(3) :: xyz
-      real(kind =rkind):: T, L , kappa
-      real(kind = rkind), dimension(3):: normal_vct
-      
-
-      quadpnt%type_pnt = "ndpt"
-      quadpnt%order = elements%data(el_id, node_order)
-      quadpnt%column = 2
-      layer = elements%material(el_id)
-      D = drutes_config%dimen
-      call getcoor(quadpnt, xyz(1:D))
-      
-      
-      edge_id = nodes%edge(elements%data(el_id, node_order))
-      
-      T = pde(Heat_order)%getval(quadpnt)
-      kappa = thermal_conduc(pde_loc, layer, quadpnt)
-      L = latent_heat_wat(quadpnt)
-      call vapor_flux(pde_loc, layer, quadpnt, x, grad,  flux = q_vap(1:D), flux_length)
-      call liquid_flux(pde_loc, layer, quadpnt, x, grad,  flux= q_liq(1:D), flux_length)
-      radia
-      
-      heat_soil_flux = 
-      
-      normal_vct (1:D ) = 
-      value =  
-      scalar = kappa
-      vector_out = C_liq * q_liq(1:D) + C_vap*q_vap(1:D)
-      
-
-      if (present(code)) then
-        code = 2 ! should be 3? 1: Direchlet, 2: Neumann 3: Robin
-      end if
-
-  end subroutine  heat_robin
-  
-  
-  subroutine water _neumann(pde_loc, el_id, node_order, value, code) 
       use typy
       use globals
       use global_objs
@@ -91,9 +41,111 @@ public:: water _neumann
       use core_tools
       use geom_tools
       use debug_tools
-      use eva_fnc
+      use evap_fnc
       use evap_auxfnc
       use evap_globals
+      use re_evap_bc
+      
+      class(pde_str), intent(in) :: pde_loc
+      integer(kind=ikind), intent(in)  :: el_id, node_order
+      real(kind=rkind), dimension(:), intent(out), optional   :: value
+      real(kind = rkind), intent(out), optional :: scalar
+      real(kind = rkind), dimension(:),intent(out), optional :: vector_out
+      integer(kind=ikind), intent(out), optional :: code
+    
+      type(integpnt_str) :: quadpnt
+      integer(kind=ikind) :: layer
+      real(kind=rkind), dimension(3) :: xyz
+      real(kind =rkind):: T, L , kappa
+      real(kind = rkind), dimension(3):: normal_vct
+      
+      real(kind=rkind) :: tmax, tmin,tmean,solar
+      real(kind=rkind) ::  e_act, evap, rhmean
+      real(kind=rkind) :: radiation, tmaxk,tmink
+      real(kind = rkind):: Hs, rad, heat_soil_flux
+      logical, save :: run1st=.true.
+      character(len=8), save :: evap_units 
+      integer(kind =ikind) :: D, i,  edge_id, datapos, dataprev
+       integer(kind =ikind) :: num_day,hour,day, month
+      quadpnt%type_pnt = "ndpt"
+      quadpnt%order = elements%data(el_id, node_order)
+      quadpnt%column = 2
+      layer = elements%material(el_id)
+      D = drutes_config%dimen
+      call getcoor(quadpnt, xyz(1:D))
+      edge_id = nodes%edge(elements%data(el_id, node_order))
+      
+      if (run1st) then
+        call evap_datadt_bc(evap_units, pde_loc%bc(edge_id)%series)
+        run1st = .false.
+      end if    
+      if (present(value)) then
+        if (pde_loc%bc(edge_id)%file) then
+          do i = pde_loc%bc(edge_id)%series_pos, ubound(pde_loc%bc(edge_id)%series,1)
+            if (pde_loc%bc(edge_id)%series(i,1) > time .and. i < ubound(pde_loc%bc(edge_id)%series,1)) then
+              datapos = i + 1
+              dataprev = i
+              EXIT
+            else if (pde_loc%bc(edge_id)%series(i,1) > time .and. i == ubound(pde_loc%bc(edge_id)%series,1)) then
+              datapos = i
+              dataprev = i-1 
+              EXIT
+            end if
+          end do
+      
+          day = pde_loc%bc(edge_id)%series(datapos,2)
+          month = pde_loc%bc(edge_id)%series(datapos,3)
+          tmax = pde_loc%bc(edge_id)%series(datapos,5)
+          tmin = pde_loc%bc(edge_id)%series(datapos,6)
+          rhmean = pde_loc%bc(edge_id)%series(datapos,7)
+          solar = pde_loc%bc(edge_id)%series(datapos,10)
+          
+          tmean = (tmax+tmin)/2.0_rkind
+          tmink = tmin + Tref
+          tmaxk = tmax + Tref
+          e_act = ((e_o(tmax) + e_o(tmin))/2.0_rkind)*(rhmean/100.0_rkind)
+      
+          kappa = thermal_conduc(pde_loc, layer, quadpnt)
+          L = latent_heat_wat(quadpnt)
+          Hs= sensible_heat(quadpnt, tmean)
+          evap = evaporation(layer, quadpnt, rhmean)
+          num_day = num_day_fcn (day, month,evap_units)
+          rad = radiation_fcn(num_day,latitude,elevation,albedo,e_act,solar,tmink,tmaxk)
+          call vapor_flux(pde_loc, layer , quadpnt, flux = q_vap(1:D))
+          call liquid_flux(pde_loc, layer, quadpnt, flux=q_liq(1:D))
+          heat_soil_flux = rad - Hs - L*evap
+      
+          normal_vct (1:D) = 0
+          value(1:D)=  - heat_soil_flux*normal_vct(1:D) + L*q_vap(1:D)
+          scalar = - kappa
+          vector_out(1:D) = C_liq*q_liq(1:D) + C_vap*q_vap(1:D)
+              
+  
+        else
+          print *, "evaporation boundary must be time dependent, check record for the boundary", edge_id
+          ERROR STOP
+        end if
+      end if
+      if (present(code)) then
+        code = 2 ! should be 3? 1: Direchlet, 2: Neumann 3: Robin
+      end if
+
+  end subroutine  heat_robin
+  
+  
+  subroutine water_neumann(pde_loc, el_id, node_order, value, code) 
+      use typy
+      use globals
+      use global_objs
+      use pde_objs
+      use re_globals
+      use core_tools
+      use geom_tools
+      use debug_tools
+      use evap_fnc
+      use evap_auxfnc
+      use evap_globals
+      
       
       class(pde_str), intent(in) :: pde_loc
       integer(kind=ikind), intent(in)  :: el_id, node_order
@@ -102,7 +154,12 @@ public:: water _neumann
 
       
       type(integpnt_str) :: quadpnt
+      integer(kind=ikind) :: layer
       real(kind=rkind), dimension(3) :: xyz
+      integer(kind=ikind) :: edge_id, i, datapos, dataprev, D
+    
+      real(kind=rkind) ::  evap, rhmean, rain, theta
+      
     
       
 
@@ -113,11 +170,39 @@ public:: water _neumann
       D = drutes_config%dimen
       call getcoor(quadpnt, xyz(1:D))
       
-      call vapor_flux(pde_loc, layer, quadpnt, x, grad,  flux = q_vap(1:D), flux_length)
-      call liquid_flux(pde_loc, layer, quadpnt, x, grad,  flux= q_liq(1:D), flux_length)
+      
+         if (present(value)) then
+          if (pde_loc%bc(edge_id)%file) then
+          do i = pde_loc%bc(edge_id)%series_pos, ubound(pde_loc%bc(edge_id)%series,1)
+            if (pde_loc%bc(edge_id)%series(i,1) > time .and. i < ubound(pde_loc%bc(edge_id)%series,1)) then
+              datapos = i + 1
+              dataprev = i
+              EXIT
+            else if (pde_loc%bc(edge_id)%series(i,1) > time .and. i == ubound(pde_loc%bc(edge_id)%series,1)) then
+              datapos = i
+              dataprev = i-1 
+              EXIT
+            end if
+          end do
       
       
-      
+          rhmean = pde_loc%bc(edge_id)%series(datapos,7)
+          rain = pde_loc%bc(edge_id)%series(datapos,11)
+          theta =  pde_loc%mass(1)%val(pde_loc, layer, quadpnt)
+          
+          evap = evaporation(layer, quadpnt, rhmean)
+              
+          if ((rain - evap) >= 0) then
+            value = rain - evap
+          else
+            value = rain - evap*theta**(2.0_rkind/3.0_rkind)
+          end if
+        else
+          print *, "evaporation boundary must be time dependent, check record for the boundary", edge_id
+          ERROR STOP
+        end if
+      end if
+
 
       if (present(code)) then
         code = 2
@@ -125,9 +210,66 @@ public:: water _neumann
 
   end subroutine water_neumann
     
-  function evaporation()
+  function evaporation(layer, quadpnt, rh_air) result(val)
+      use typy
+      use globals
+      use global_objs
+      use pde_objs
+      use re_globals
+      use core_tools
+      use geom_tools
+      use debug_tools
+      use evap_fnc
+      use evap_auxfnc
+      use evap_globals
+      
+      
+      integer(kind=ikind), intent(in) :: layer
+      !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
+      type(integpnt_str), intent(in), optional :: quadpnt 
+        real(kind=rkind) :: rh_air
+      real(kind=rkind) :: val
+        
+      real(kind=rkind) :: rh_soil_val, rho_l_val,rho_sv_val
+      
+      
+      
+      rh_soil_val = rh_soil(layer, quadpnt)
+      rho_l_val = rho_l(quadpnt) 
+      rho_sv_val = rho_sv(quadpnt) 
+      
+      val = (rh_soil_val*rho_sv_val  - rh_air* rho_sv_val )/(resistance*rho_l_val)
+  
   end function evaporation
+  
+   function sensible_heat(quadpnt, temp_air) result(val)
+      use typy
+      use globals
+      use global_objs
+      use pde_objs
+      use re_globals
+      use core_tools
+      use geom_tools
+      use debug_tools
+      use evap_fnc
+      use evap_auxfnc
+      use evap_globals
+      
     
-    
+      !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
+      type(integpnt_str), intent(in), optional :: quadpnt 
+        real(kind=rkind) :: temp_air
+      real(kind=rkind) :: val
+        
+      real(kind=rkind) ::T
+      
+      T = pde(Heat_order)%getval(quadpnt)
+      
+      
+      
+      val = C_air *((T -temp_air)/resistance)
+  
+  end function sensible_heat
+
 
 end module evap_bc
