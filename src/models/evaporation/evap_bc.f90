@@ -123,7 +123,7 @@ module evap_bc
           
           heat_soil_flux = rad - Hs - L*evap
       
-          normal_vct (1:D) = 0
+          
           val =  - heat_soil_flux - L*norm2(q_vap(1:D))
           acoef = -kappa
           bcoef = C_liq*norm2(q_liq(1:D)) + C_vap*norm2(q_vap(1:D))
