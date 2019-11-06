@@ -199,7 +199,7 @@ module pde_objs
 
  !> abstract interface for boundary value function
   abstract interface
-    subroutine bc_fnc(pde_loc, element, node, value, code) 
+    subroutine bc_fnc(pde_loc, element, node, value, code, valarray) 
       use typy
       import :: pde_str
       class(pde_str), intent(in) :: pde_loc
@@ -207,10 +207,12 @@ module pde_objs
       integer(kind=ikind), intent(in)  :: element
       !> node id
       integer(kind=ikind), intent(in)  :: node
-      !> return value
+      !> return value, array if Robin boundary
       real(kind=rkind), intent(out), optional    :: value
       !> return type of boundary condition
       integer(kind=ikind), intent(out), optional :: code
+      !> return vector of values, useful for Robin boundary
+      real(kind=rkind), dimension(:), intent(out), optional :: valarray
     end subroutine bc_fnc
   end interface 
 

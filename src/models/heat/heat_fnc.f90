@@ -171,7 +171,7 @@ module heat_fnc
       
     end function heat_source
     
-    subroutine heat_dirichlet(pde_loc, el_id, node_order, value, code) 
+    subroutine heat_dirichlet(pde_loc, el_id, node_order, value, code, array) 
       use typy
       use globals
       use global_objs
@@ -182,6 +182,8 @@ module heat_fnc
       integer(kind=ikind), intent(in)  :: el_id, node_order
       real(kind=rkind), intent(out), optional    :: value
       integer(kind=ikind), intent(out), optional :: code
+      !> unused for this model (implementation for Robin boundary)
+      real(kind=rkind), dimension(:), intent(out), optional :: array
       
       integer(kind=ikind) :: edge_id, i, j, proc
       real(kind=rkind) :: tempval
@@ -215,7 +217,7 @@ module heat_fnc
     end subroutine heat_dirichlet
     
     
-    subroutine heat_neumann(pde_loc, el_id, node_order, value, code) 
+    subroutine heat_neumann(pde_loc, el_id, node_order, value, code, array) 
       use typy
       use globals
       use global_objs
@@ -226,6 +228,8 @@ module heat_fnc
       integer(kind=ikind), intent(in)  :: el_id, node_order
       real(kind=rkind), intent(out), optional    :: value
       integer(kind=ikind), intent(out), optional :: code
+      !> unused for this model (implementation for Robin boundary)
+      real(kind=rkind), dimension(:), intent(out), optional :: array
       
       integer(kind=ikind) :: edge_id, i, j, proc
       real(kind=rkind) :: tempval

@@ -84,6 +84,7 @@ module femmat
             reps1=1e-11_rkind, itfin1=pcg_it, repsfin1=reps_err)
             
             
+            
         if (pcg_it > 0.75*fin) then 
           ierr=-1
         else

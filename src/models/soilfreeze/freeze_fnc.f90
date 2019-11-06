@@ -551,7 +551,7 @@ module freeze_fnc
     end subroutine heat_flux_freeze
     
     
-    subroutine Dirichlet_mass_bc(pde_loc, el_id, node_order, value, code) 
+    subroutine Dirichlet_mass_bc(pde_loc, el_id, node_order, value, code, array) 
       use typy
       use globals
       use global_objs
@@ -562,6 +562,8 @@ module freeze_fnc
       integer(kind=ikind), intent(in)  :: el_id, node_order
       real(kind=rkind), intent(out), optional    :: value
       integer(kind=ikind), intent(out), optional :: code
+      !> unused for this model (implementation for Robin boundary)
+      real(kind=rkind), dimension(:), intent(out), optional :: array
      
 
       integer(kind=ikind) :: i, edge_id, j
@@ -616,7 +618,7 @@ module freeze_fnc
 
     end subroutine Dirichlet_mass_bc
     
-    subroutine Dirichlet_Neumann_switch_bc(pde_loc, el_id, node_order, value, code) 
+    subroutine Dirichlet_Neumann_switch_bc(pde_loc, el_id, node_order, value, code, array) 
       use typy
       use globals
       use global_objs
@@ -627,6 +629,8 @@ module freeze_fnc
       integer(kind=ikind), intent(in)  :: el_id, node_order
       real(kind=rkind), intent(out), optional    :: value
       integer(kind=ikind), intent(out), optional :: code
+      !> unused for this model (implementation for Robin boundary)
+      real(kind=rkind), dimension(:), intent(out), optional :: array
      
 
       integer(kind=ikind) :: i, edge_id, j

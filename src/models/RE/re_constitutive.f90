@@ -1697,7 +1697,7 @@ module RE_constitutive
       end function rcza_check
 
 
-      subroutine re_dirichlet_bc(pde_loc, el_id, node_order, value, code) 
+      subroutine re_dirichlet_bc(pde_loc, el_id, node_order, value, code, array) 
         use typy
         use globals
         use global_objs
@@ -1707,6 +1707,7 @@ module RE_constitutive
         integer(kind=ikind), intent(in)  :: el_id, node_order
         real(kind=rkind), intent(out), optional    :: value
         integer(kind=ikind), intent(out), optional :: code
+        real(kind=rkind), dimension(:), intent(out), optional :: array
 
         integer(kind=ikind) :: edge_id, i, j
 
@@ -1737,7 +1738,7 @@ module RE_constitutive
       end subroutine re_dirichlet_bc
 
 
-      subroutine re_null_bc(pde_loc, el_id, node_order, value, code) 
+      subroutine re_null_bc(pde_loc, el_id, node_order, value, code, array) 
         use typy
         use globals
         use global_objs
@@ -1747,6 +1748,7 @@ module RE_constitutive
         integer(kind=ikind), intent(in)  :: el_id, node_order
         real(kind=rkind), intent(out), optional    :: value
         integer(kind=ikind), intent(out), optional :: code
+        real(kind=rkind), dimension(:), intent(out), optional :: array
 
         if (present(value)) then
           value = 0.0_rkind
@@ -1760,7 +1762,7 @@ module RE_constitutive
 
 
 
-      subroutine re_dirichlet_height_bc(pde_loc, el_id, node_order, value, code) 
+      subroutine re_dirichlet_height_bc(pde_loc, el_id, node_order, value, code, array) 
         use typy
         use globals
         use global_objs
@@ -1771,6 +1773,7 @@ module RE_constitutive
         integer(kind=ikind), intent(in)  :: el_id, node_order
         real(kind=rkind), intent(out), optional    :: value
         integer(kind=ikind), intent(out), optional :: code
+        real(kind=rkind), dimension(:), intent(out), optional :: array
 
         
         integer(kind=ikind) :: edge_id, i, j
@@ -1812,7 +1815,7 @@ module RE_constitutive
 
 
 
-      subroutine re_neumann_bc(pde_loc, el_id, node_order, value, code) 
+      subroutine re_neumann_bc(pde_loc, el_id, node_order, value, code, array) 
         use typy
         use globals
         use global_objs
@@ -1822,6 +1825,7 @@ module RE_constitutive
         integer(kind=ikind), intent(in)  :: el_id, node_order
         real(kind=rkind), intent(out), optional    :: value
         integer(kind=ikind), intent(out), optional :: code
+        real(kind=rkind), dimension(:), intent(out), optional :: array
         
         real(kind=rkind), dimension(3,3) :: K
 

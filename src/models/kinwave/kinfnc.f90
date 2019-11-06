@@ -248,7 +248,7 @@ module kinfnc
     
     
     
-    subroutine kinbor(pde_loc, el_id, node_order, value, code) 
+    subroutine kinbor(pde_loc, el_id, node_order, value, code, array) 
       use typy
       use globals
       use global_objs
@@ -259,6 +259,8 @@ module kinfnc
       integer(kind=ikind), intent(in)  :: el_id, node_order
       real(kind=rkind), intent(out), optional    :: value
       integer(kind=ikind), intent(out), optional :: code
+      !> unused for this model (implementation for Robin boundary)
+      real(kind=rkind), dimension(:), intent(out), optional :: array
 
       
       

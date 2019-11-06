@@ -854,7 +854,7 @@ module freeze_helper
     end function inverse_vangen_fr
     
     
-    subroutine freeze_coolant_bc(pde_loc, el_id, node_order, value, code) 
+    subroutine freeze_coolant_bc(pde_loc, el_id, node_order, value, code, array) 
       use typy
       use globals
       use global_objs
@@ -865,6 +865,8 @@ module freeze_helper
       integer(kind=ikind), intent(in)  :: el_id, node_order
       real(kind=rkind), intent(out), optional    :: value
       integer(kind=ikind), intent(out), optional :: code
+      !> unused for this model (implementation for Robin boundary)
+      real(kind=rkind), dimension(:), intent(out), optional :: array
      
 
       integer(kind=ikind) :: i, edge_id, j
