@@ -47,7 +47,6 @@ module manage_pointers
       use drutes_init
       use kinpointer
       use freeze_pointers
-      use ltne_pointers
 
       integer(kind=ikind) :: i, processes
       logical :: symetric

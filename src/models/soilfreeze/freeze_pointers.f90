@@ -21,7 +21,7 @@ module freeze_pointers
         case ("LTNE")
           if(fr_rate) then
             processes = 4
-          else
+          else 
             processes = 3
           end if
         case default
@@ -52,6 +52,7 @@ module freeze_pointers
       use heat_pointers
       use heat_reader
       use heat_fnc
+      use debug_tools
       
       integer(kind=ikind) :: i
       
@@ -73,7 +74,7 @@ module freeze_pointers
     ! pointers for water flow model
       pde(wat)%pde_fnc(wat)%elasticity => capacityhh
       
-      pde(wat)%pde_fnc(heat_proc)%elasticity => capacityhT
+      !pde(wat)%pde_fnc(heat_proc)%elasticity => capacityhT
       
       pde(wat)%pde_fnc(wat)%dispersion => diffhh
       
@@ -102,12 +103,14 @@ module freeze_pointers
       pde(wat)%flux_name(2) = "Darcian flow [L.T^{-1}]"
       pde(wat)%print_mass = .true.
       deallocate(pde(wat)%mass)
+
       select case (drutes_config%name)
         case ("freeze")
           if(fr_rate) then
             allocate(pde(wat)%mass_name(3,2))
             allocate(pde(wat)%mass(3))
-            
+            pde(heat_proc)%pde_fnc(heat_proc)%zerord => latent_heat
+            pde(ice)%pde_fnc(heat_proc)%reaction => mf_react
           else
             allocate(pde(wat)%mass_name(4,2))
             allocate(pde(wat)%mass(4))
@@ -116,6 +119,7 @@ module freeze_pointers
             pde(wat)%mass_name(4,2) = "theta_i [-]"
             
             pde(wat)%mass(4)%val => thetai
+
           end if
 
          
@@ -128,11 +132,14 @@ module freeze_pointers
             pde(wat)%mass_name(4,2) = "T_m [deg C]"
             
             pde(wat)%mass(4)%val => T_m        
- 
+            pde(heat_solid)%pde_fnc(heat_solid)%zerord => latent_heat_mf
+            pde(heat_proc)%pde_fnc(heat_proc)%zerord => latent_heat_vf
+            pde(ice)%pde_fnc(heat_solid)%reaction => mf_react
+
           else
             allocate(pde(wat)%mass_name(5,2))
             allocate(pde(wat)%mass(5))
-            
+
             pde(wat)%mass_name(4,1) = "T_m"
             pde(wat)%mass_name(4,2) = "T_m [deg C]"
             
@@ -165,18 +172,19 @@ module freeze_pointers
       
       pde(wat)%mass(3)%val => hl
       
-      
       if(fr_rate) then
+        !pde(ice)%diffusion = .false.
+        allocate(pde(ice)%mass_name(0,2))
         pde(ice)%print_mass = .false.
-        pde(ice)%problem_name(1) = "ice_content"
+        pde(ice)%problem_name(1) = "ice"
         pde(ice)%problem_name(2) = "Ice with freezing rate"
             
         pde(ice)%solution_name(1) = "ice_content" 
         pde(ice)%solution_name(2) = "theta_i " 
 
-        pde(ice)%pde_fnc(ice)%zerord => vf
-        pde(wat)%pde_fnc(wat)%zerord => neg_vf
-            
+        pde(ice)%pde_fnc(ice)%zerord => phase_ice
+        pde(wat)%pde_fnc(wat)%zerord => phase_wat
+
         do i=lbound(pde(ice)%bc,1), ubound(pde(ice)%bc,1)
           select case(pde(ice)%bc(i)%code)
             case(1)
@@ -186,6 +194,8 @@ module freeze_pointers
           end select
         end do
         pde(ice)%initcond => ice_initcond
+        pde(ice)%pde_fnc(ice)%elasticity => cap_ice
+
       end if
       
     ! pointers for heat flow model
@@ -193,7 +203,7 @@ module freeze_pointers
       pde(heat_proc)%problem_name(2) = "Heat conduction equation with convection"
 
       pde(heat_proc)%solution_name(1) = "temperature" 
-      pde(heat_proc)%solution_name(2) = "T " 
+      pde(heat_proc)%solution_name(2) = "T" 
 
       pde(heat_proc)%flux_name(1) = "flux"  
       pde(heat_proc)%flux_name(2) = "heat flux [W.L-2]"
@@ -252,7 +262,7 @@ module freeze_pointers
           pde(heat_solid)%flux => heat_flux_s_LTNE
         
           pde(heat_solid)%initcond => temp_s_initcond 
-          
+                    
           pde(heat_solid)%pde_fnc(heat_solid)%reaction => qsl_neg
           pde(heat_solid)%pde_fnc(heat_proc)%reaction => qsl_pos
           

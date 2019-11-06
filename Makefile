@@ -34,7 +34,6 @@ BOUSSINESQ_obj := boussglob.o boussread.o boussfnc.o bousspointers.o
 ADE_obj := ADE_fnc.o ADE_reader.o ADE_globals.o ADE_pointers.o
 REDUAL_obj := Re_dual_totH.o Re_dual_globals.o Re_dual_pointers.o Re_dual_reader.o Re_dual_tab.o Re_dual_coupling.o Re_dual_bc.o
 HEAT_obj := heat_fnc.o heat_pointers.o heat_globals.o heat_reader.o
-LTNE_obj := LTNE_fnc.o LTNE_globs.o LTNE_pointers.o LTNE_reader.o LTNE_helper.o
 KINWAVE_obj := kinreader.o kinglobs.o kinfnc.o kinpointer.o
 
 FROZEN_obj := freeze_globs.o freeze_helper.o freeze_fnc.o freeze_reader.o freeze_pointers.o
@@ -143,19 +142,6 @@ heat_pointers.o: $(CORE_obj) $(RE_obj) heat_globals.o heat_fnc.o heat_reader.o $
 	$c -c src/models/heat/heat_pointers.f90
 #------end HEAT_obj-------------------------------------
 
-
-#------begin LTNE_obj -----------------------------------
-LTNE_globs.o: $(CORE_obj) src/models/LTNE/LTNE_globs.f90
-	$c -c src/models/LTNE/LTNE_globs.f90
-LTNE_reader.o: $(CORE_obj) LTNE_globs.o src/models/LTNE/LTNE_reader.f90
-	$c -c src/models/LTNE/LTNE_reader.f90
-LTNE_helper.o: $(CORE_obj) LTNE_globs.o $(FROZEN_obj) src/models/LTNE/LTNE_helper.f90
-	$c -c src/models/LTNE/LTNE_helper.f90
-LTNE_fnc.o: $(CORE_obj) LTNE_globs.o LTNE_helper.o src/models/LTNE/LTNE_fnc.f90
-	$c -c src/models/LTNE/LTNE_fnc.f90
-LTNE_pointers.o: $(CORE_obj) LTNE_reader.o src/models/LTNE/LTNE_pointers.f90
-	$c -c src/models/LTNE/LTNE_pointers.f90
-#------end LTNE_obj -------------------------------------
 
 #------begin frozen_obj -----------------------------------
 freeze_globs.o: $(CORE_obj) src/models/soilfreeze/freeze_globs.f90

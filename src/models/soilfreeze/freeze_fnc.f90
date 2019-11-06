@@ -5,7 +5,7 @@ module freeze_fnc
   use debug_tools
   use freeze_helper
   
-  public :: capacityhh, capacityhT,  diffhh, diffhT, Dirichlet_mass_bc
+  public :: capacityhh,  diffhh, diffhT, Dirichlet_mass_bc
   public :: capacityTT, capacityTh, diffTT, convectTT, thermal_k, heat_flux_freeze, Dirichlet_Neumann_switch_bc
   public :: capacityTsTs, thermal_p, diffTsTs, heat_flux_s_LTNE
   public:: T_m, qsl_neg, qsl_pos
@@ -39,38 +39,43 @@ module freeze_fnc
         val = rwcap(pde_loc, layer, quadpnt)
 
       end if
-
     end function capacityhh
                  
     !> Capacity term due to temperature for flow model
     !> so pde(wat)
-    function capacityhT(pde_loc, layer, quadpnt, x) result(val)
-      use typy
-      use global_objs
-      use freeze_globs
-      use pde_objs
-    
-      class(pde_str), intent(in) :: pde_loc
-      !> value of the nonlinear function
-      real(kind=rkind), dimension(:), intent(in), optional    :: x
-      !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
-      type(integpnt_str), intent(in), optional :: quadpnt
-      !> material ID
-      integer(kind=ikind), intent(in) :: layer
-      !> return value
-      real(kind=rkind)                :: val
-    
-      real(kind=rkind) :: temp
-    
-      temp = pde(heat_proc)%getval(quadpnt)+273.15_rkind
-      if (iceswitch(quadpnt)) then
-        val = (rho_wat-rho_ice)/rho_wat*&
-        rwcap(pde_loc, layer, x=(/hl(pde_loc, layer, quadpnt)/)) * Lf/temp/grav
-      else
-        val = 0
-      end if
-
-    end function capacityhT
+!     function capacityhT(pde_loc, layer, quadpnt, x) result(val)
+!       use typy
+!       use global_objs
+!       use freeze_globs
+!       use pde_objs
+!     
+!       class(pde_str), intent(in) :: pde_loc
+!       !> value of the nonlinear function
+!       real(kind=rkind), dimension(:), intent(in), optional    :: x
+!       !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
+!       type(integpnt_str), intent(in), optional :: quadpnt
+!       !> material ID
+!       integer(kind=ikind), intent(in) :: layer
+!       !> return value
+!       real(kind=rkind)                :: val
+!     
+!       real(kind=rkind) :: temp
+!     
+!       temp = pde(heat_proc)%getval(quadpnt)+273.15_rkind
+!       if (iceswitch(quadpnt)) then
+!         if(fr_rate) then
+!           val = (rho_wat-rho_ice)/rho_wat*&
+!         rwcap(pde_loc, layer, quadpnt) * Lf/temp/grav
+!         else
+!           val = (rho_wat-rho_ice)/rho_wat*&
+!         rwcap(pde_loc, layer, x=(/hl(pde_loc, layer, quadpnt)/)) * Lf/temp/grav
+!         end if
+! 
+!       else
+!         val = 0
+!       end if
+! 
+!     end function capacityhT
 
     !> diffusion due to pressure head for flow model
     !> so pde(wat)
@@ -78,6 +83,8 @@ module freeze_fnc
       use typy
       use global_objs
       use freeze_globs
+      use debug_tools
+      
       class(pde_str), intent(in) :: pde_loc
       !> value of the nonlinear function
       real(kind=rkind), dimension(:), intent(in), optional    :: x
@@ -92,17 +99,29 @@ module freeze_fnc
       
       if (present(tensor)) then
         if(present(quadpnt)) then 
-          call mualem_fr(pde_loc, layer, x = (/hl(pde(wat), layer, quadpnt)/), tensor = tensor)
+          if(fr_rate) then
+            call mualem_fr(pde_loc, layer, quadpnt, tensor = tensor)
+          else
+            call mualem_fr(pde_loc, layer, x = (/hl(pde(wat), layer, quadpnt)/), tensor = tensor)
+          end if
+          if(isnan(tensor(1,1))) then
+           print*, hl(pde(wat), layer, quadpnt)
+           print*, "Q reduction", Q_reduction(layer, quadpnt)
+           call wait()
+          end if
           tensor = 10**(-Omega*Q_reduction(layer, quadpnt))*tensor
         end if
         if (present(x)) then
-          call mualem_fr(pde_loc, layer, x = x, tensor = tensor)
-          tensor = 10**(-Omega*Q_reduction(layer, x = x))*tensor
+          print*, "quadpnt required"
+          print *, "exited from diffhh::freeze_fnc"
+          ERROR STOP
+          !call mualem_fr(pde_loc, layer, x = x, tensor = tensor)      
+          !tensor = 10**(-Omega*Q_reduction(layer, x = x))*tensor
         end if
       else
         print *, "ERROR! output tensor undefined, exited from freeze_fnc::diffhh"
       end if
-
+     
     end subroutine diffhh
     
     !> diffusion due to temperature for flow model
@@ -133,10 +152,18 @@ module freeze_fnc
       if (present(tensor)) then
         if (present(quadpnt)) then
           call Kliquid_temp(pde_loc, layer, quadpnt, tensor = Klt(1:D, 1:D))
-          call mualem_fr(pde_loc, layer, x=(/hl(pde(wat), layer, quadpnt)/), tensor = Klh(1:D, 1:D))
+          if(fr_rate) then
+            call mualem_fr(pde_loc, layer, quadpnt, tensor = Klh(1:D, 1:D))
+          else
+            call mualem_fr(pde_loc, layer, x=(/hl(pde(wat), layer, quadpnt)/), tensor = Klh(1:D, 1:D))
+          end if
           Klh(1:D,1:D) = 10**(-Omega*Q_reduction(layer, quadpnt))*Klh(1:D, 1:D)
           if(iceswitch(quadpnt)) then
-            tensor = (Klt(1:D, 1:D) + Lf/temp/grav*Klh(1:D,1:D))
+            if(.not. fr_rate) then
+              tensor = (Klt(1:D, 1:D) + Lf/temp/grav*Klh(1:D,1:D))
+            else
+              tensor = Klt(1:D, 1:D)
+            end if
           else
             tensor = Klt(1:D, 1:D)
           end if
@@ -144,8 +171,8 @@ module freeze_fnc
       else
          print *, "ERROR! output tensor undefined, exited from freeze_fnc::diffhT"
       end if   
-      
-      end subroutine diffhT
+
+    end subroutine diffhT
     
     
     !> heat: pde(heat_proc)
@@ -173,9 +200,12 @@ module freeze_fnc
       if(iceswitch(quadpnt)) then
         val = rwcap(pde_loc, layer, quadpnt)
       end if
-      val = -val*Lf*rho_ice
       
-      !val = 0
+      if(.not. fr_rate) then
+        val = -val*Lf*rho_ice
+      else
+        val = 0
+      end if
     end function capacityTh
     
     !> Capacity term due to temperature for heat flow model
@@ -196,11 +226,22 @@ module freeze_fnc
       !> return value
       real(kind=rkind)                :: val
       
-      real(kind=rkind) :: temp, vol_soil, th_air
+      real(kind=rkind) :: temp, vol_soil, th_air, thice, C_p, dens_p, thtot, ths, theta
       
-      vol_soil = 1_rkind - freeze_par(layer)%Ths
-      th_air = freeze_par(layer)%Ths-thetai(pde_loc, layer, quadpnt)-&
-      vangen_fr(pde_loc, layer, x = (/hl(pde(wat), layer, quadpnt)/)) 
+      thice = thetai(pde_loc, layer, quadpnt)
+      ths = thetas(pde_loc, layer, quadpnt)
+
+      vol_soil = 1_rkind - ths
+      if(fr_rate) then
+        th_air = ths-&
+        vangen_fr(pde_loc, layer, quadpnt)
+        theta = vangen_fr(pde_loc, layer, quadpnt)
+      else
+        th_air = ths-thetai(pde_loc, layer, quadpnt)-&
+        vangen_fr(pde_loc, layer, x = (/hl(pde(wat), layer, quadpnt)/)) 
+        theta = vangen_fr(pde_loc, layer, x = (/hl(pde(wat), layer, quadpnt)/))
+      end if
+
       if(th_air < 0) then
         if(abs(th_air) > epsilon(th_air)) then
           print*, th_air
@@ -211,13 +252,46 @@ module freeze_fnc
         end if
       end if
       temp = pde(heat_proc)%getval(quadpnt)+ 273.15_rkind
-      val =  Cl*rho_wat*vangen_fr(pde_loc, layer, x = (/hl(pde(wat), layer, quadpnt)/)) 
-      val = val + Cs*rho_soil*vol_soil + Ca*rho_air*th_air
-      if(iceswitch(quadpnt)) then
-        val = (Ci*rho_ice*thetai(pde_loc, layer, quadpnt) + val &
-        + Lf*rho_ice*Lf/temp/grav*rwcap(pde_loc, layer, x = (/hl(pde(wat), layer, quadpnt)/)))
-      end if
-      
+      select case (drutes_config%name)
+        case ("LTNE")
+            if(air) then
+                thtot = theta+th_air+thice !+freeze_par(layer)%Ci*thice
+                C_P = (freeze_par(layer)%Cl*theta&
+                +freeze_par(layer)%Ca*th_air+freeze_par(layer)%Ci*thice)/(thtot)
+                ! rho_ice*thice+
+                dens_p = (rho_wat*theta&
+                +rho_air*th_air)/thtot
+            else
+                thtot = theta +thice
+                ! +freeze_par(layer)%Ci*thice
+                C_P = (freeze_par(layer)%Cl*theta+freeze_par(layer)%Ci*thice)&
+                /(thtot)
+                !+rho_ice*thice
+                dens_p = (rho_wat* theta+rho_ice*thice)/thtot
+            end if
+            val = C_P*dens_p
+            val = val*thtot          
+        case("freeze")
+          val =  Cl*rho_wat*theta
+          select case (freeze_par(layer)%material)
+          case ("Soil")
+            val = val + Cs*rho_soil*vol_soil + Ca*rho_air*th_air
+            if(iceswitch(quadpnt)) then
+              val = Ci*rho_ice*thice + val 
+            end if
+          case ("Snow")
+            val = val + Ca*rho_air*th_air + Ci*rho_ice*thice
+          end select
+       end select
+
+       if(.not. fr_rate) then
+         if(iceswitch(quadpnt)) then
+           val = val + Lf*rho_ice*Lf/temp/grav*&
+           rwcap(pde_loc, layer, x = (/hl(pde(wat), layer, quadpnt)/))
+         end if
+       end if
+
+
     end function capacityTT
     
     !> dispersion for heat flow model
@@ -237,16 +311,17 @@ module freeze_fnc
       real(kind=rkind), dimension(:,:), intent(out), optional :: tensor
       !> relative scalar value of the nonlinear function 
       real(kind=rkind), intent(out), optional                 :: scalar
-      real(kind=rkind), dimension(3) :: thermal_conduct
+      real(kind=rkind), dimension(3) :: thermal_conduct, ths
       integer(kind=ikind) :: D, i
-      
+    
+      ths = thetas(pde_loc, layer, quadpnt)
      
       D = drutes_config%dimen
       select case (drutes_config%name)
         case ("LTNE")
           if (present(tensor)) then
             do i= 1, D
-              tensor(i,i) =  thermal_p(pde_loc,layer, quadpnt)*freeze_par(layer)%Ths
+              tensor(i,i) =  thermal_p(pde_loc,layer, quadpnt)*ths(1)
             end do
           end if
         case("freeze")
@@ -258,7 +333,6 @@ module freeze_fnc
           end if
       end select 
 
-      
     end subroutine diffTT
     
     
@@ -279,16 +353,16 @@ module freeze_fnc
       
       
       if (present(flux)) then
-          call all_fluxes(pde_loc, layer, quadpnt,  flux = flux)
-          flux = freeze_par(layer)%Cl *rho_wat*flux
+        call all_fluxes(pde_loc, layer, quadpnt,  flux = flux)
+        flux = freeze_par(layer)%Cl *rho_wat*flux
           !flux = 0
-        end if
+      end if
         
-        if (present(flux_length)) then
-           call all_fluxes(pde_loc, layer, quadpnt, flux_length = flux_length)
-           flux_length = freeze_par(layer)%Cl *rho_wat*flux_length
+      if (present(flux_length)) then
+        call all_fluxes(pde_loc, layer, quadpnt, flux_length = flux_length)
+        flux_length = freeze_par(layer)%Cl *rho_wat*flux_length
            !flux_length = 0
-        end if
+      end if
               
     end subroutine convectTT
     
@@ -307,7 +381,11 @@ module freeze_fnc
       D = drutes_config%dimen
       
       thice = thetai(pde(wat), layer, quadpnt)
-      thl = vangen_fr(pde(wat), layer, x=(/hl(pde(wat), layer, quadpnt)/))
+      if(fr_rate) then
+        thl = vangen_fr(pde(wat), layer, quadpnt = quadpnt)
+      else
+        thl = vangen_fr(pde(wat), layer, quadpnt = quadpnt, x=(/hl(pde(wat), layer, quadpnt)/))
+      end if
       select case (freeze_par(layer)%material)
         case ("Soil")
           call all_fluxes(pde_loc, layer, quadpnt, flux = flux)
@@ -324,6 +402,7 @@ module freeze_fnc
             val(i) = tk
           end do 
       end select
+      
     end function thermal_k
     
     subroutine all_fluxes(pde_loc, layer, quadpnt, x, grad,  flux, flux_length)
@@ -364,7 +443,6 @@ module freeze_fnc
         quadpnt_loc = quadpnt
         quadpnt_loc%preproc=.true.
         h = hl(pde(wat), layer, quadpnt)
-        !call getgrad_freeze(pde(wat), quadpnt, gradient)
         call pde(wat)%getgrad(quadpnt, gradient)
         call pde(heat_proc)%getgrad(quadpnt, gradientT)
       else
@@ -394,8 +472,7 @@ module freeze_fnc
       end if
       
       if(present(quadpnt)) then
-        call pde(wat)%pde_fnc(wat)%dispersion(pde_loc, layer, x=(/hl(pde(wat), layer, quadpnt)/), tensor=Klh(1:D, 1:D))
-        Klh(1:D, 1:D) = 10**(-Omega*Q_reduction(layer, quadpnt))*Klh(1:D, 1:D)
+        call pde(wat)%pde_fnc(wat)%dispersion(pde_loc, layer, quadpnt, tensor = Klh(1:D, 1:D))
 
         call pde(wat)%pde_fnc(heat_proc)%dispersion(pde_loc, layer, quadpnt, tensor = Klt(1:D, 1:D))
 
@@ -420,8 +497,6 @@ module freeze_fnc
       end if
 
     end subroutine all_fluxes
-    
-        
     
     subroutine heat_flux_freeze(pde_loc, layer, quadpnt, x, grad,  flux, flux_length)
       use typy
@@ -614,18 +689,22 @@ module freeze_fnc
       real(kind=rkind), dimension(:), intent(in), optional    :: x
       real(kind=rkind) :: val 
       real(kind=rkind), dimension(3) :: flux
-      real(kind = rkind) :: thl, thice, tk, F
+      real(kind = rkind) :: thl, thice, tk, F, ths
       integer(kind = ikind) :: D, i
       D = drutes_config%dimen
-      
+      ths = thetas(pde_loc, layer, quadpnt)
       thice = thetai(pde(wat), layer, quadpnt)
-      thl = vangen_fr(pde(wat), layer, x=(/hl(pde(wat), layer, quadpnt)/))
-      if(air) then
-        val = thl*freeze_par(layer)%Ll+thice*freeze_par(layer)%Li+(freeze_par(layer)%ths-thl)*freeze_par(layer)%La
-      else 
-        val = (thl*freeze_par(layer)%Ll+thice*freeze_par(layer)%Li)/ vangen_fr(pde(wat), layer, quadpnt)
+      if(fr_rate) then
+        thl = vangen_fr(pde(wat), layer, quadpnt)
+      else
+        thl = vangen_fr(pde(wat), layer, x=(/hl(pde(wat), layer, quadpnt)/))
       end if
-      
+      if(air) then
+        !thice*freeze_par(layer)%Li
+        val = thl*freeze_par(layer)%Ll+(ths-thl)*freeze_par(layer)%La/ths
+      else 
+        val = (thl*freeze_par(layer)%Ll)/ vangen_fr(pde(wat), layer, quadpnt)
+      end if
     end function thermal_p
     
         ! pde(heat_solid)
@@ -645,10 +724,11 @@ module freeze_fnc
       !> return value
       real(kind=rkind)                :: val
       
-      real(kind=rkind) :: temp, vol_soil, th_air
-      
-      val = (1-freeze_par(layer)%Ths)*freeze_par(layer)%Cs
-      
+      real(kind=rkind) :: temp, vol_soil, th_air, ths
+      ths = thetas(pde_loc, layer, quadpnt)
+
+      val = (1-ths)*freeze_par(layer)%Cs
+
     end function capacityTsTs
     
     subroutine diffTsTs(pde_loc, layer, quadpnt, x, tensor, scalar)
@@ -666,15 +746,20 @@ module freeze_fnc
       real(kind=rkind), dimension(:,:), intent(out), optional :: tensor
       !> relative scalar value of the nonlinear function 
       real(kind=rkind), intent(out), optional                 :: scalar
-      real(kind=rkind), dimension(3) :: thermal_conduct
+      real(kind=rkind), dimension(3) :: thermal_conduct, ths
       integer(kind=ikind) :: D, i
       
      
       D = drutes_config%dimen
-      
+      ths = thetas(pde_loc, layer, quadpnt)
       if (present(tensor)) then
         do i= 1, D
-          tensor(i,i) =  freeze_par(layer)%Li * (1-freeze_par(layer)%Ths)
+          select case (freeze_par(layer)%material)
+            case ("Soil")
+              tensor(i,i) =  freeze_par(layer)%Li * (1-ths(1))
+            case("Snow")
+              tensor(i,i) =  freeze_par(layer)%Ls * (1-ths(1))
+          end select
         end do
       end if
       
@@ -743,29 +828,34 @@ module freeze_fnc
       integer(kind=ikind), intent(in) :: layer
       type(integpnt_str), intent(in), optional :: quadpnt
       real(kind=rkind), dimension(:), intent(in), optional    :: x
-      real(kind=rkind) :: val, h, A, Re, Pr, thice, thl, Cp, up, densp, tp, flux_tmp, thair, thtot
+      real(kind=rkind) :: val, h, A, Re, Pr, thice, thl, Cp, up, densp, tp, flux_tmp, thair, thtot, ths
       real(kind=rkind), dimension(3) :: flux
       
       integer(kind=ikind) :: D
 
       D = drutes_config%dimen
-
+      ths = thetas(pde_loc, layer, quadpnt)
       thice = thetai(pde(wat), layer, quadpnt)
-      thl = vangen_fr(pde(wat), layer, x=(/hl(pde(wat), layer, quadpnt)/))
-      thair = freeze_par(layer)%ths-thl
+      if(fr_rate) then
+        thl = vangen_fr(pde(wat), layer, quadpnt)
+      else
+        thl = vangen_fr(pde(wat), layer, x=(/hl(pde(wat), layer, quadpnt)/))
+      end if
+      thair = ths-thl
       if(air) then
         thtot = thice+thl+thair
-        Cp = (thl*freeze_par(layer)%Cl+thice*freeze_par(layer)%Ci +thair*freeze_par(layer)%Ca)/thtot
+        Cp = (thl*freeze_par(layer)%Cl+thice*freeze_par(layer)%Ci&
+        +thair*freeze_par(layer)%Ca)/thtot
         up = (thl*ul+thair*ua)/(thl+thair) !+thice*ui
         densp = (thl*rho_wat+thice*rho_ice+thair*rho_air)/thtot
       else
-       thtot = thice+thl
-       Cp = (thl*freeze_par(layer)%Cl+thice*freeze_par(layer)%Ci)/ thtot
-       up = ul !+thice*ui
-       densp = (thl*rho_wat+thice*rho_ice)/ thtot
+        thtot = thice+thl
+        Cp = (thl*freeze_par(layer)%Cl+thice*freeze_par(layer)%Ci)/ thtot
+        up = ul !+thice*ui
+        densp = (thl*rho_wat+thice*rho_ice)/ thtot
       end if 
       
-      A = 6*(1-freeze_par(layer)%Ths)/freeze_par(layer)%diameter
+      A = 6*(1-ths)/freeze_par(layer)%diameter
       tp = thermal_p(pde_loc, layer, quadpnt)
       Pr = Cp*up/tp
       call all_fluxes(pde_loc, layer, quadpnt, flux_length = flux_tmp)
@@ -773,8 +863,6 @@ module freeze_fnc
       h = tp/freeze_par(layer)%diameter*(2.4e-5+(285.6*Pr**2.7*Re**(0.33333333_rkind)))
       val = h * A
     end function qsl_pos
-    
-
     
     function qsl_neg(pde_loc, layer, quadpnt, x) result(val)
       use typy
@@ -801,25 +889,49 @@ module freeze_fnc
       type(integpnt_str), intent(in), optional :: quadpnt
       real(kind=rkind), dimension(:), intent(in), optional    :: x
       real(kind=rkind) :: val 
-      real(kind = rkind):: thair, Ths, thtot
+      real(kind = rkind):: thair, Thsol, thtot, ths
       real(kind=rkind), dimension(3) :: flux
       integer(kind=ikind) :: el_id
+      ths = thetas(pde_loc, layer, quadpnt)
 
       if(air) then
-        val = freeze_par(layer)%ths*pde(heat_proc)%getval(quadpnt)+(1-freeze_par(layer)%Ths)*pde(heat_solid)%getval(quadpnt)     
+        val = ths*pde(heat_proc)%getval(quadpnt)+(1-ths)*pde(heat_solid)%getval(quadpnt)     
       else
         thtot = vangen_fr(pde(wat), layer, quadpnt)
-        thair = freeze_par(layer)%Ths - thtot
-        Ths = (1-freeze_par(layer)%Ths)
+        thair = ths - thtot
+        Thsol = (1-ths)
         if(quadpnt%element >75) then
           el_id = elements%kolik
         else
           el_id = quadpnt%element
         end if
-        val = thtot*pde(heat_proc)%getval(quadpnt)+ths*pde(heat_solid)%getval(quadpnt)+thair*T_air(el_id) 
+        val = thtot*pde(heat_proc)%getval(quadpnt)+thsol*pde(heat_solid)%getval(quadpnt)+thair*T_air(el_id) 
 
       end if
 
     end function T_m
 
+    
+    ! > Capacity iceswitch
+    function cap_ice(pde_loc, layer, quadpnt, x) result(val)
+      use typy
+      use global_objs
+      use freeze_globs
+      use pde_objs
+
+      class(pde_str), intent(in) :: pde_loc
+      !> value of the nonlinear function
+      real(kind=rkind), dimension(:), intent(in), optional    :: x
+      !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
+      type(integpnt_str), intent(in), optional :: quadpnt
+      !> material ID
+      integer(kind=ikind), intent(in) :: layer
+      !> return value
+      real(kind=rkind)                :: val
+      
+      real(kind=rkind) :: temp, vol_soil, th_air, ths
+      
+      val = 1
+
+    end function cap_ice
 end module freeze_fnc

@@ -51,23 +51,20 @@ module freeze_globs
   real(kind=rkind), parameter, public :: Tref = 273.15
 
   !> density of water [kg.m^-3]
-  real(kind=rkind), parameter, public :: rho_wat = 1000
+  real(kind=rkind), parameter, public :: rho_wat = 980
   
   !> density of ice [kg.m^-3]
-  real(kind=rkind), parameter, public :: rho_ice = 1000
+  real(kind=rkind), parameter, public :: rho_ice = 980
   
     !> density of soil [kg.m^-3]
   real(kind=rkind), parameter, public :: rho_soil = 2650
   
   !> density of air [kg.m^-3]
-  real(kind=rkind), parameter, public :: rho_air = 1.2
+  real(kind=rkind), parameter, public :: rho_air = 1.29
   
    !> Gain factor [-]
   real(kind=rkind), parameter, public :: gwt = 7
-  
-  !> Impedance factor [-] (see Lundin 1990, tested 2,4,6,8,10)
-  real(kind=rkind), parameter, public :: Omega = 7
-  
+    
   !> Thermal conductivity [ W/m/K]
   real(kind=rkind), parameter, public :: thermal_cond = 0.5
   
@@ -91,8 +88,10 @@ module freeze_globs
   logical, public :: qlt_log
       
   logical, public:: air
-    
-  real(kind=rkind), public :: beta
+ !> Impedance factor [-] (see Lundin 1990, tested 2,4,6,8,10)
+  real(kind=rkind), public :: Omega
+
+  real(kind=rkind), public :: beta, beta_melt
   
   integer(kind = ikind), public :: wat, heat_proc, ice, heat_solid
 

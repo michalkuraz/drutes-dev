@@ -87,6 +87,7 @@ module freeze_read
       use globals
       use core_tools
       use readtools
+      use freeze_globs
       
       class(pde_str), intent(in out) :: pde_loc
       integer :: ierr, i, j, filewww,i_err
@@ -132,26 +133,13 @@ module freeze_read
       if(frz_pnt > 0) then
        fr_rate = .true.
         write(unit = msg, fmt = *) "beta should be positive"
-        call fileread(beta, file_freeze, ranges=(/0.0_rkind, huge(0.0_rkind)/), errmsg=trim(msg))     
+        call fileread(beta, file_freeze, ranges=(/0.0_rkind, huge(0.0_rkind)/), errmsg=trim(msg))    
+        call fileread(beta_melt, file_freeze, ranges=(/0.0_rkind, huge(0.0_rkind)/), errmsg=trim(msg))     
+
       else
        fr_rate = .false.
       end if
       
-      write(msg, *) "define method of evaluation of constitutive functions for the Richards equation", new_line("a"), &
-        "   0 - direct evaluation (not recommended, extremely resources consuming due to complicated exponential functions)", &
-        new_line("a"), &
-        "   1 - function values are precalculated in program initialization and values between are linearly approximated"
-
-      call fileread(drutes_config%fnc_method, file_freeze, ranges=(/0_ikind,1_ikind/),errmsg=msg)
-      
-      call fileread(maxpress, file_freeze, ranges=(/-huge(0.0_rkind), huge(0.0_rkind)/), &
-        errmsg="set a positive nonzero limit for maximum suction pressure (think in absolute values) ")
-        maxpress = abs(maxpress)
-      
-      call fileread(drutes_config%fnc_discr_length, file_freeze, ranges=(/tiny(0.0_rkind), maxpress/),  &
-        errmsg="the discretization step for precalculating constitutive functions must be positive and smaller &
-        than the bc")
-        
         
       allocate(freeze_par(maxval(elements%material)))
       
@@ -203,7 +191,8 @@ module freeze_read
       end if
       
       
-     
+     write(unit = msg, fmt = *) "Impedance factor should be positive"
+     call fileread(Omega, file_freeze, ranges=(/0.0_rkind, huge(0.0_rkind)/), errmsg=trim(msg))
 
      write(unit = msg, fmt = *) "Use qlt? yes - 1 or no -0"
      call fileread(tmp_int, file_freeze, ranges=(/0_ikind,1_ikind/), errmsg = trim(msg))
