@@ -212,6 +212,14 @@ module pde_objs
       !> return type of boundary condition
       integer(kind=ikind), intent(out), optional :: code
       !> return vector of values, useful for Robin boundary
+      !! Robin boundary is defined as
+      !! \f[ a \pdv {p}{\vec{n}} + b p = c \f]
+      !! where p is the solution (scalar function)
+      !! then
+      !! valarray(1) = a
+      !! valarray(2) = b
+      !! valarray(3) = c
+      !<
       real(kind=rkind), dimension(:), intent(out), optional :: valarray
     end subroutine bc_fnc
   end interface 

@@ -48,7 +48,7 @@ module fem_tools
     integer(kind=ikind), dimension(:), allocatable, save :: bc
     integer(kind=ikind), dimension(:), allocatable, save :: n_row, m_col
     integer(kind=ikind) :: i,j,m, iproc, jproc, limits
-    real(kind=rkind), dimension(:), allocatable, save :: bcval
+    real(kind=rkind), dimension(:,:), allocatable, save :: bcval
     real(kind=rkind), dimension(:), allocatable, save :: surface
     integer(kind=ikind), dimension(:), allocatable, save :: fin
     real(kind=rkind), dimension(3,3) :: d
@@ -58,7 +58,7 @@ module fem_tools
       allocate(bc(ubound(stiff_mat,1)))
       allocate(n_row(ubound(stiff_mat,1)))
       allocate(m_col(ubound(stiff_mat,1)))
-      allocate(bcval(ubound(stiff_mat,1)))
+      allocate(bcval(ubound(stiff_mat,1),3))
       allocate(surface(ubound(stiff_mat,1)))
       allocate(fin(ubound(pde,1)))
     end if
@@ -84,14 +84,28 @@ module fem_tools
         n_row(i+iproc*limits) = pde(iproc+1)%permut(j)
         if (nodes%edge(j) > 100) then
           m = nodes%edge(j)
-          call pde(iproc+1)%bc(m)%value_fnc(pde(iproc+1), el_id,i,bcval(i+iproc*limits),bc(i+iproc*limits))
+!           call pde(iproc+1)%bc(m)%value_fnc(pde(iproc+1), el_id,i,bcval(i+iproc*limits),bc(i+iproc*limits))
+          call pde(iproc+1)%bc(m)%value_fnc(pde(iproc+1), el_id,i,code=bc(i+iproc*limits))
         else
           bc(i) = 0
         end if
       end do
     end do
     
-    
+    do iproc = 0,ubound(pde,1)-1
+      do i=1, ubound(elements%data, 2)
+        select case(bc(i+iproc*limits))
+          case(0)
+            CONTINUE
+          case(3)
+            bcval(i+iproc*limits,1) = 0
+          case(1,2,4)
+            call pde(iproc+1)%bc(m)%value_fnc(pde(iproc+1), el_id,i,bcval(i+iproc*limits,1))
+          case(5)
+            call pde(iproc+1)%bc(m)%value_fnc(pde(iproc+1), el_id,i,valarray=bcval(i+iproc*limits,:))
+        end select
+      end do
+    end do
 
     
 
@@ -117,10 +131,10 @@ module fem_tools
           end if
         case(2)
           if (m_col(i) > 0) then
-            bvect(m_col(i)) = bvect(m_col(i)) - bcval(i)*surface(i)*time_step + bside(i)
+            bvect(m_col(i)) = bvect(m_col(i)) - bcval(i,1)*surface(i)*time_step + bside(i)
           end if
         case(4)
-          bvect(m_col(i)) = bcval(i)
+          bvect(m_col(i)) = bcval(i,1)
       end select
       
       ! fill stiffness matrix
@@ -128,7 +142,7 @@ module fem_tools
         select case(bc(m))
           case(1)
             if (m_col(i) > 0) then
-              bvect(m_col(i)) = bvect(m_col(i)) - stiff_mat(i,m)*bcval(m)
+              bvect(m_col(i)) = bvect(m_col(i)) - stiff_mat(i,m)*bcval(m,1)
             end if
                     
           case(4)
