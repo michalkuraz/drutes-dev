@@ -33,6 +33,7 @@ module fem_tools
     use typy
     use sparsematrix
     use global_objs
+    use globals
     use pde_objs
     use globals
     use debug_tools
@@ -47,11 +48,12 @@ module fem_tools
     
     integer(kind=ikind), dimension(:), allocatable, save :: bc
     integer(kind=ikind), dimension(:), allocatable, save :: n_row, m_col
-    integer(kind=ikind) :: i,j,m, iproc, jproc, limits
+    integer(kind=ikind) :: i,j,m, iproc, jproc, limits, dimen
     real(kind=rkind), dimension(:,:), allocatable, save :: bcval
     real(kind=rkind), dimension(:), allocatable, save :: surface
     integer(kind=ikind), dimension(:), allocatable, save :: fin
     real(kind=rkind), dimension(3,3) :: d
+    real(kind=rkind) :: tmp   
    
 
     if (.not. allocated(bc)) then	
@@ -135,6 +137,8 @@ module fem_tools
           end if
         case(4)
           bvect(m_col(i)) = bcval(i,1)
+        case(5)
+          bvect(m_col(i)) = bcval(i,3)*surface(i)
       end select
       
       ! fill stiffness matrix
@@ -152,6 +156,21 @@ module fem_tools
                 call locmatrix%rowsfilled%nrfill(n_row(i))
               end if
             end if
+          case(5)
+            dimen = 0
+            tmp = 0
+            do dimen=1, drutes_config%dimen
+              tmp = tmp + elements%ders(el_id, m, dimen) 
+            end do
+            
+            if (m /= i) then
+              tmp = tmp*bcval(m,1)*surface(i)
+            else
+              tmp = tmp*bcval(m,1)*surface(i) + bcval(m,2)
+            end if
+            
+            call locmatrix%add(tmp, n_row(i), m_col(m))
+            
         case default
                     
           if (bc(i) /= 4 ) then 
