@@ -166,7 +166,7 @@ module fem_tools
             if (m /= i) then
               tmp = tmp*bcval(m,1)*surface(i)
             else
-              tmp = tmp*bcval(m,1)*surface(i) + bcval(m,2)
+              tmp = tmp*bcval(m,1)*surface(i) + bcval(m,2)*surface(i)
             end if
             
             call locmatrix%add(tmp, n_row(i), m_col(m))
