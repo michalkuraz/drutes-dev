@@ -262,7 +262,7 @@ module freeze_fnc
                 dens_p = (rho_wat*theta&
                 +rho_air*th_air)/thtot
             else
-                thtot = theta +thice
+                thtot = theta + thice
                 ! +freeze_par(layer)%Ci*thice
                 C_P = (freeze_par(layer)%Cl*theta+freeze_par(layer)%Ci*thice)&
                 /(thtot)
@@ -481,14 +481,7 @@ module freeze_fnc
       vct(1:D) = matmul(-Klh(1:D,1:D), gradH(1:D))+matmul(-Klt(1:D,1:D), gradientT(1:D))
 
       if (present(flux_length)) then
-        select case(D)
-          case(1)
-                flux_length = vct(1)
-          case(2)
-                flux_length = sqrt(vct(1)*vct(1) + vct(2)*vct(2))
-          case(3)
-                flux_length = sqrt(vct(1)*vct(1) + vct(2)*vct(2) + vct(3)*vct(3))
-        end select
+        flux_length = norm2(vct(1:D))
       end if
 
 
