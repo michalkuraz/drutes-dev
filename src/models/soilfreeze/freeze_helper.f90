@@ -323,7 +323,8 @@ module freeze_helper
       real(kind=rkind) :: E
 
       real(kind=rkind) :: C, a, m, n, tr, ts 
-      type(integpnt_str) :: quadpnt_loc      
+      type(integpnt_str) :: quadpnt_loc  
+      real(kind=rkind) :: trsh = 1e-6
           
       
       if (present(quadpnt) .and. present(x)) then
@@ -363,11 +364,10 @@ module freeze_helper
         ts = freeze_par(layer)%Ths
         C = a*m*n*(-tr + ts)*(-(a*h))**(-1 + n)*(1 + (-(a*h))**n)**(-1 - m)
       else
-        E = 1e-9
-        RETURN
+        C = 0
       end if
 
-      E = C 
+      E = max(C,trsh)
       
 
     end function vangen_elast_fr

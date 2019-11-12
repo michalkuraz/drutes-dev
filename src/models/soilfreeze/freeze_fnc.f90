@@ -198,8 +198,10 @@ module freeze_fnc
       real(kind=rkind) :: temp, vol_soil, th_air
       
       vol_soil = 1_rkind - freeze_par(layer)%Ths
+      
       th_air = freeze_par(layer)%Ths-thetai(pde_loc, layer, quadpnt)-&
       vangen_fr(pde_loc, layer, x = (/hl(pde(wat), layer, quadpnt)/)) 
+      
       if(th_air < 0) then
         if(abs(th_air) > epsilon(th_air)) then
           print*, th_air
@@ -213,11 +215,13 @@ module freeze_fnc
       val =  Cl*rho_wat*vangen_fr(pde_loc, layer, x = (/hl(pde(wat), layer, quadpnt)/)) 
       val = val + Cs*rho_soil*vol_soil + Ca*rho_air*th_air
       if(iceswitch(quadpnt)) then
-        val = (Ci*rho_ice*thetai(pde_loc, layer, quadpnt) + val &
+        val = val + (Ci*rho_ice*thetai(pde_loc, layer, quadpnt)   &
         + Lf*rho_ice*Lf/temp/grav*rwcap(pde_loc, layer, x = (/hl(pde(wat), layer, quadpnt)/)))
       end if
       
     end function capacityTT
+    
+    
     
     !> dispersion for heat flow model
 
@@ -295,6 +299,7 @@ module freeze_fnc
       real(kind=rkind), dimension(3) :: flux
       real(kind = rkind) :: thl, thice, tk, F
       integer(kind = ikind) :: D, i
+      
       D = drutes_config%dimen
       
       thice = thetai(pde(wat), layer, quadpnt)
@@ -303,7 +308,7 @@ module freeze_fnc
         case ("Soil")
           call all_fluxes(pde_loc, layer, quadpnt, flux = flux)
           !> hansson changing campbell
-          F = 1+ freeze_par(layer)%F1*thice**freeze_par(layer)%F2
+          F = 1 + freeze_par(layer)%F1*thice**freeze_par(layer)%F2
           tk = freeze_par(layer)%C1 + freeze_par(layer)%C2*(thl+F*thice)-&
           (freeze_par(layer)%C1-freeze_par(layer)%C4)*exp(-(freeze_par(layer)%C3*(thl+F*thice))**freeze_par(layer)%C5)
           do i = 1, D
@@ -382,7 +387,6 @@ module freeze_fnc
       
       if(present(quadpnt)) then
         call pde(wat)%pde_fnc(wat)%dispersion(pde_loc, layer, x=(/hl(pde(wat), layer, quadpnt)/), tensor=Klh(1:D, 1:D))
-        Klh(1:D, 1:D) = 10**(-Omega*Q_reduction(layer, quadpnt))*Klh(1:D, 1:D)
 
         call pde(wat)%pde_fnc(heat_proc)%dispersion(pde_loc, layer, quadpnt, tensor = Klt(1:D, 1:D))
 
@@ -394,10 +398,8 @@ module freeze_fnc
         select case(D)
           case(1)
                 flux_length = vct(1)
-          case(2)
-                flux_length = sqrt(vct(1)*vct(1) + vct(2)*vct(2))
-          case(3)
-                flux_length = sqrt(vct(1)*vct(1) + vct(2)*vct(2) + vct(3)*vct(3))
+          case(2,3)
+                flux_length = norm2(vct)
         end select
       end if
 

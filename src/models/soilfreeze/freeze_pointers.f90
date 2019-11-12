@@ -91,6 +91,7 @@ module freeze_pointers
       deallocate(pde(wat)%mass)
       
       allocate(pde(wat)%mass_name(4,2))
+      
       allocate(pde(wat)%mass(4))
 
       pde(wat)%mass_name(1,1) = "theta_tot"
@@ -126,6 +127,7 @@ module freeze_pointers
       pde(heat_proc)%flux_name(2) = "heat flux [W.L-2]"
       
       allocate(pde(heat_proc)%mass_name(0,2))
+      
       pde(heat_proc)%print_mass = .false.
       
       pde(heat_proc)%pde_fnc(wat)%elasticity => capacityTh
@@ -133,6 +135,7 @@ module freeze_pointers
       pde(heat_proc)%pde_fnc(heat_proc)%elasticity => capacityTT
       
       pde(heat_proc)%pde_fnc(heat_proc)%dispersion => diffTT
+      
       
       pde(heat_proc)%pde_fnc(heat_proc)%convection => convectTT
       
