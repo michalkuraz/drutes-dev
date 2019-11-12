@@ -57,5 +57,10 @@ module re_globals
   type(soilpar), dimension(:), allocatable, public :: vgset
 
   integer, public :: file_waterm
+  integer, public :: file_evap
+  
+  !> evaporation input 
+  real(kind=rkind), public :: albedo,latitude,elevation
+  real(kind=rkind), public :: Tref = 273.15_rkind
    
 end module re_globals

@@ -47,6 +47,7 @@ module manage_pointers
       use drutes_init
       use kinpointer
       use freeze_pointers
+      use vapour_pointers
 
       integer(kind=ikind) :: i, processes
       logical :: symetric
@@ -136,6 +137,15 @@ module manage_pointers
           write(unit = drutes_config%fullname, fmt=*) "DRUtES solves local thermal non equilibrium"
           call frz_pointers()
           
+          
+        case("vapour")
+
+           call vapour_processes(pde_common%processes)
+           call pde_constructor(pde_common%processes)
+           write(unit = drutes_config%fullname, fmt=*) "DRUtES solves Rciahrds equation with vapour flow"
+ 
+           call vapour_linker()
+
         case default
           print *, "your new model: ", trim(drutes_config%name), " requires pointer linking"
           print *, "exited from manage_pointers::set_pointers"

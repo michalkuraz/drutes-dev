@@ -33,6 +33,7 @@ module re_reader
       use re_globals
       use core_tools
       use readtools
+      use Re_evap_reader
       
       class(pde_str), intent(in out) :: pde_loc
       integer :: ierr, i, j, filewww
@@ -239,6 +240,13 @@ module re_reader
 
 		      
       close(file_waterm)
+      
+       !> Calle reader if the user select atmospheric boundary
+      do i=lbound(pde_loc%bc,1), ubound(pde_loc%bc,1)
+        if (pde_loc%bc(i)%code == 5) then 
+          call Re_evap_var()
+        end if 
+      end do
             
 
     end subroutine res_read

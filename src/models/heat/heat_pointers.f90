@@ -21,7 +21,7 @@
 
 module heat_pointers
   public :: heat, heat_processes
-  private :: heatlinker
+  public :: heatlinker
 
   
   contains
