@@ -48,7 +48,7 @@ module fem_tools
     
     integer(kind=ikind), dimension(:), allocatable, save :: bc
     integer(kind=ikind), dimension(:), allocatable, save :: n_row, m_col
-    integer(kind=ikind) :: i,j,m, iproc, jproc, limits, dimen
+    integer(kind=ikind) :: i,j,m, iproc, jproc, limits, fnc
     real(kind=rkind), dimension(:,:), allocatable, save :: bcval
     real(kind=rkind), dimension(:), allocatable, save :: surface
     integer(kind=ikind), dimension(:), allocatable, save :: fin
@@ -157,10 +157,9 @@ module fem_tools
               end if
             end if
           case(5)
-            dimen = 0
             tmp = 0
-            do dimen=1, drutes_config%dimen
-              tmp = tmp + elements%ders(el_id, m, dimen) 
+            do fnc=1, ubound(elements%data,2)
+              tmp = tmp + elements%ders(el_id, m, fnc) 
             end do
             
             if (m /= i) then
