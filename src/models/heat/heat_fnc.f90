@@ -135,11 +135,11 @@ module heat_fnc
       
       if (present(quadpnt) .and. present(x)) then
         print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
-        print *, "exited from re_constitutive::vangen_elast"
+        print *, "exited from heat_fnc::heat_elast"
         ERROR stop
       else if (.not. present(quadpnt) .and. .not. present(x)) then
         print *, "ERROR: you have not specified either integ point or x value"
-        print *, "exited from re_constitutive::vangen_elast"
+        print *, "exited from heat_fnc::heat_elast"
         ERROR stop
       end if
 
@@ -187,15 +187,14 @@ module heat_fnc
       real(kind=rkind) :: tempval
       
       edge_id = nodes%edge(elements%data(el_id, node_order))
-      
       if (present(value)) then
         if (pde_loc%bc(edge_id)%file) then
           do i=1, ubound(pde_loc%bc(edge_id)%series,1)
             if (pde_loc%bc(edge_id)%series(i,1) > time) then
               if (i > 1) then
-          j = i-1
+                j = i-1
               else
-          j = i
+                j = i
               end if
               tempval = pde_loc%bc(edge_id)%series(j,2)
               EXIT
@@ -206,7 +205,6 @@ module heat_fnc
         end if
         value = tempval 
       end if
-
 
       
       if (present(code)) then
@@ -284,7 +282,6 @@ module heat_fnc
 
       real(kind=rkind), dimension(:), allocatable, save :: gradT
 
-      
       
       if (present(quadpnt) .and. (present(grad) .or. present(x))) then
         print *, "ERROR: the function can be called either with integ point or x value definition and gradient, not both of them"

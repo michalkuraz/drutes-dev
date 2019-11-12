@@ -52,9 +52,11 @@ module ADE_reader
 
       pde_loc%flux_name(1) = "conc_flux"  
       pde_loc%flux_name(2) = "concentration flux [M.L^{-2}.T^{-1}]"
+      
+      allocate(pde_loc%mass_name(1,2))
 
-      pde_loc%mass_name(1) = "conc_in_porous_medium"
-      pde_loc%mass_name(2) = "concetration [M/L^3]"
+      pde_loc%mass_name(1,1) = "conc_in_porous_medium"
+      pde_loc%mass_name(1,2) = "concetration [M/L^3]"
       
       
 
@@ -249,9 +251,11 @@ module ADE_reader
 
         pde(i)%flux_name(1) = "zero_flux"  
         pde(i)%flux_name(2) = "zero flux"
+        
+        allocate(pde(i)%mass_name(1,2))
 
-        pde(i)%mass_name(1) = "conc_in_solid_phase"
-        pde(i)%mass_name(2) = "concetration [M/M]"
+        pde(i)%mass_name(1,1) = "conc_in_solid_phase"
+        pde(i)%mass_name(1,2) = "concetration [M/M]"
       end do
       
       if (no_solids > 0) then
@@ -367,7 +371,6 @@ module ADE_reader
          end do
        end do
         
-!
       
       
     

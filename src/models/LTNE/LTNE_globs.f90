@@ -22,7 +22,6 @@ module LTNE_globs
   end type LTNE_sys
   
   type(LTNE_sys), dimension(:), allocatable, target, public :: LTNE_par
-
   
   real(kind=rkind), dimension(:), allocatable, public :: T_air
 
@@ -35,7 +34,6 @@ module LTNE_globs
   !>latent heat of fusion [J.kg^-1]
   real(kind=rkind), parameter, public :: Lf = 333.7e3
 
-  
   !> reference temperature for Clapeyron [K]
   real(kind=rkind), parameter, public :: Tref = 273.15
 
@@ -65,8 +63,10 @@ module LTNE_globs
   
   !> dynamic viscosities of liquid water [Pa s] at 0 deg C
   real(kind=rkind), parameter, public :: ul = 1.787e-3
+  
   !> dynamic viscosities of air [Pa s] at 0 deg C
   real(kind=rkind), parameter, public :: ua = 1.729e-5
+  
   !> dynamic viscosities of ice [Pa s]
   real(kind=rkind), parameter, public :: ui = 10e12
   

@@ -430,7 +430,7 @@ module fem_tools
       locmass = 0.0
       do pt=1, ubound(gauss_points%weight,1)
        quadpnt_loc%order = pt
-       locmass = locmass + pde_loc%mass(elements%material(i), quadpnt_loc)*gauss_points%weight(pt)
+       locmass = locmass + pde_loc%mass(1)%val(pde_loc, elements%material(i), quadpnt_loc)*gauss_points%weight(pt)
       end do
       locmass = locmass/gauss_points%area*elements%areas(i)
       mass = mass + locmass

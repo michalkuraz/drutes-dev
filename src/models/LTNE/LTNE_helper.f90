@@ -4,6 +4,7 @@ module LTNE_helper
   use LTNE_globs
   use debug_tools
   use RE_constitutive
+  use re_globals
 
   public :: iceswitch, rho_icewat, Q_reduction, hl, thetai, thetal
   public:: vangen_ltne, mualem_ltne, temp_l_initcond, temp_s_initcond, wat_init, getval_retotltne
@@ -16,6 +17,7 @@ module LTNE_helper
     function iceswitch(quadpnt) result(sw)
       use typy
       use global_objs
+      use re_globals
       
       type(integpnt_str), intent(in) :: quadpnt
       logical :: sw

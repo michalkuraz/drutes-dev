@@ -4,13 +4,10 @@ in := cd objs
 out := cd ..
 
 #options for debugging, use for development  
-
-c= gfortran -fimplicit-none  -fcoarray=single -fbounds-check -fbacktrace -g -g3 -fdefault-real-8 -O0 -finit-real=nan 
-
+c= gfortran -fimplicit-none  -fcoarray=single -fbounds-check -fbacktrace -g -g3 -fdefault-real-8 -O0 -finit-real=nan -Wsurprising
 
 #options for optimized compilation, use for production purposes on well debugged versions
 #c=gfortran -fimplicit-none  -fcoarray=single -fdefault-real-8 -O3 -finit-real=nan -ffpe-summary=none -fno-backtrace  
-
 
 d=drutes_obj-`date -I`
 
@@ -34,11 +31,14 @@ BOUSSINESQ_obj := boussglob.o boussread.o boussfnc.o bousspointers.o
 ADE_obj := ADE_fnc.o ADE_reader.o ADE_globals.o ADE_pointers.o
 REDUAL_obj := Re_dual_totH.o Re_dual_globals.o Re_dual_pointers.o Re_dual_reader.o Re_dual_tab.o Re_dual_coupling.o Re_dual_bc.o
 HEAT_obj := heat_fnc.o heat_pointers.o heat_globals.o heat_reader.o
-LTNE_obj := ltne_fnc.o ltne_globals.o ltne_pointers.o ltne_reader.o
-FROZEN_obj := refreeze_globs.o
-evaporation_obj := Re_evap_bc.o Re_evap_reader.o
+LTNE_obj := LTNE_fnc.o LTNE_globs.o LTNE_pointers.o LTNE_reader.o LTNE_helper.o
+KINWAVE_obj := kinreader.o kinglobs.o kinfnc.o kinpointer.o
+FROZEN_obj := freeze_globs.o freeze_helper.o freeze_fnc.o freeze_reader.o freeze_pointers.o
+EVAPORATION_obj := Re_evap_bc.o Re_evap_reader.o evap_globals.o evap_reader.o evap_fnc.o  evap_auxfnc.o   evap_bc.o
 
-ALL_objs := $(CORE_obj) $(TOOLS_obj) $(POINTERMAN_obj) $(MATHTOOLS_obj) $(FEMTOOLS_obj) $(DECOMPO_obj) $(RE_obj) $(PMAoo_obj) $(BOUSSINESQ_obj) $(ADE_obj) $(REDUAL_obj)  $(HEAT_obj) $(FROZEN_obj) $(evaporation_obj)
+MODEL_objs := $(RE_obj)  $(BOUSSINESQ_obj) $(ADE_obj) $(REDUAL_obj)  $(HEAT_obj) $(LTNE_obj) $(FROZEN_obj) $(KINWAVE_obj) $(EVAPORATION_obj)
+
+ALL_objs := $(CORE_obj) $(TOOLS_obj) $(POINTERMAN_obj) $(MATHTOOLS_obj) $(FEMTOOLS_obj) $(DECOMPO_obj)  $(PMAoo_obj) $(MODEL_objs)
 #-----------------------------------------------------------------
 
 #-------begin CORE_obj--------------------------------
@@ -120,9 +120,9 @@ re_constitutive.o: $(CORE_obj) $(TOOLS_obj) re_globals.o src/models/RE/re_consti
 	$c -c src/models/RE/re_constitutive.f90
 re_total.o: $(CORE_obj) $(TOOLS_obj) re_globals.o re_constitutive.o src/models/RE/re_total.f90
 	$c -c src/models/RE/re_total.f90
-re_reader.o: $(CORE_obj) $(TOOLS_obj) re_globals.o $(evaporation_obj) src/models/RE/re_reader.f90
+re_reader.o:  $(CORE_obj) $(TOOLS_obj) re_globals.o Re_evap_reader.o src/models/RE/re_reader.f90
 	$c -c src/models/RE/re_reader.f90	
-re_pointers.o:  $(CORE_obj) re_globals.o re_constitutive.o re_total.o re_reader.o Re_evap_bc.o src/models/RE/re_pointers.f90
+re_pointers.o:  $(CORE_obj) re_globals.o re_constitutive.o re_total.o re_reader.o src/models/RE/re_pointers.f90
 	$c -c src/models/RE/re_pointers.f90
 re_analytical.o:  $(CORE_obj) re_globals.o re_constitutive.o src/models/RE/re_analytical.f90
 	$c -c src/models/RE/re_analytical.f90
@@ -140,20 +140,30 @@ heat_pointers.o: $(CORE_obj) $(RE_obj) heat_globals.o heat_fnc.o heat_reader.o $
 #------end HEAT_obj-------------------------------------
 
 
-# ------begin LTNE_obj -----------------------------------
-# ltne_globals.o: $(CORE_obj) src/models/LTNE/ltne_globals.f90
-# 	$c -c src/models/LTNE/ltne_globals.f90
-# ltne_reader.o: $(CORE_obj) ltne_globals.o src/models/LTNE/ltne_reader.f90
-# 	$c -c src/models/LTNE/ltne_reader.f90
-# ltne_fnc.o: $(CORE_obj) src/models/LTNE/ltne_fnc.f90
-# 	$c -c src/models/LTNE/ltne_fnc.f90
-# ltne_pointers.o: $(CORE_obj) src/models/LTNE/ltne_pointers.f90
-# 	$c -c src/models/LTNE/ltne_pointers.f90
+#------begin LTNE_obj -----------------------------------
+LTNE_globs.o: $(CORE_obj) src/models/LTNE/LTNE_globs.f90
+	$c -c src/models/LTNE/LTNE_globs.f90
+LTNE_reader.o: $(CORE_obj) LTNE_globs.o src/models/LTNE/LTNE_reader.f90
+	$c -c src/models/LTNE/LTNE_reader.f90
+LTNE_helper.o: $(CORE_obj) LTNE_globs.o $(FROZEN_obj) src/models/LTNE/LTNE_helper.f90
+	$c -c src/models/LTNE/LTNE_helper.f90
+LTNE_fnc.o: $(CORE_obj) LTNE_globs.o LTNE_helper.o src/models/LTNE/LTNE_fnc.f90
+	$c -c src/models/LTNE/LTNE_fnc.f90
+LTNE_pointers.o: $(CORE_obj) LTNE_reader.o src/models/LTNE/LTNE_pointers.f90
+	$c -c src/models/LTNE/LTNE_pointers.f90
 #------end LTNE_obj -------------------------------------
 
 #------begin frozen_obj -----------------------------------
-refreeze_globs.o: $(CORE_obj) src/models/soilfreeze/refreeze_globs.f90
-	$c -c src/models/soilfreeze/refreeze_globs.f90
+freeze_globs.o: $(CORE_obj) src/models/soilfreeze/freeze_globs.f90
+	$c -c src/models/soilfreeze/freeze_globs.f90
+freeze_helper.o: $(CORE_obj) $(RE_obj) freeze_globs.o src/models/soilfreeze/freeze_helper.f90
+	$c -c src/models/soilfreeze/freeze_helper.f90
+freeze_fnc.o: $(CORE_obj) freeze_helper.o freeze_globs.o src/models/soilfreeze/freeze_fnc.f90
+	$c -c src/models/soilfreeze/freeze_fnc.f90
+freeze_reader.o: $(CORE_obj) freeze_globs.o src/models/soilfreeze/freeze_reader.f90
+	$c -c src/models/soilfreeze/freeze_reader.f90	
+freeze_pointers.o: $(CORE_obj) $(RE_obj) $(HEAT_obj) freeze_globs.o freeze_reader.o src/models/soilfreeze/freeze_pointers.f90
+	$c -c src/models/soilfreeze/freeze_pointers.f90
 #------end frozen_obj -----------------------------------
 
 #-------begin ADE_obj-------------------------------
@@ -199,14 +209,6 @@ bousspointers.o: $(CORE_obj)  boussfnc.o boussglob.o boussread.o src/models/bous
 
 
 
-#------begin evaporation_obj-------------------------
-Re_evap_reader.o: $(CORE_obj) $(TOOLS_obj) re_globals.o src/models/evaporation/Re_evap_reader.f90
-	$c -c src/models/evaporation/Re_evap_reader.f90
-Re_evap_bc.o: $(CORE_obj) $(TOOLS_obj) src/models/evaporation/Re_evap_bc.f90
-	$c -c src/models/evaporation/Re_evap_bc.f90
-#------end evaporation_obj---------------------------
-
-
 #------begin FEMTOOLS_obj-----------------------------
 fem_tools.o:  $(CORE_obj) $(MATHTOOLS_obj) $(TOOLS_obj) $(PMA++_obj) src/femtools/fem_tools.f90
 	$c -c  src/femtools/fem_tools.f90
@@ -223,11 +225,38 @@ fem.o: $(CORE_obj) $(LINALG_obj) $(DECOMPO_obj) $(TOOLS_obj) femmat.o src/femtoo
 #------end FEMTOOLS_obj------------------------------
 
 
+#------begin KINWAVE_obj-----------------------------
+kinglobs.o: $(CORE_obj) src/models/kinwave/kinglobs.f90
+	$c -c src/models/kinwave/kinglobs.f90
+kinfnc.o: $(CORE_obj) kinglobs.o src/models/kinwave/kinfnc.f90
+	$c -c src/models/kinwave/kinfnc.f90
+kinreader.o: $(CORE_obj) kinglobs.o src/models/kinwave/kinreader.f90
+	$c -c src/models/kinwave/kinreader.f90
+kinpointer.o: $(CORE_obj) $(TOOLS_obj) kinglobs.o kinreader.o src/models/kinwave/kinpointer.f90
+	$c -c src/models/kinwave/kinpointer.f90
+#------end KINWAVE_obj-------------------------------
 
+
+#------begin evaporation_obj-------------------------
+Re_evap_reader.o: $(CORE_obj) $(TOOLS_obj) re_globals.o src/models/evaporation/Re_evap_reader.f90
+	$c -c src/models/evaporation/Re_evap_reader.f90
+Re_evap_bc.o: $(CORE_obj) $(TOOLS_obj) src/models/evaporation/Re_evap_bc.f90
+	$c -c src/models/evaporation/Re_evap_bc.f90
+evap_globals.o: $(CORE_obj) src/models/evaporation/evap_globals.f90
+	$c -c src/models/evaporation/evap_globals.f90
+evap_reader.o: $(CORE_obj) $(TOOLS_obj) evap_globals.o re_globals.o src/models/evaporation/evap_reader.f90
+	$c -c src/models/evaporation/evap_reader.f90
+evap_fnc.o: $(CORE_obj) evap_globals.o re_globals.o  evap_auxfnc.o src/models/evaporation/evap_fnc.f90
+	$c -c src/models/evaporation/evap_fnc.f90
+evap_auxfnc.o: $(CORE_obj) re_globals.o evap_globals.o  src/models/evaporation/evap_auxfnc.f90
+	$c -c src/models/evaporation/evap_auxfnc.f90
+evap_bc.o:  $(CORE_obj) $(TOOLS_obj)  re_globals.o evap_globals.o evap_fnc.o  evap_auxfnc.o  Re_evap_bc.o  src/models/evaporation/evap_bc.f90
+	$c -c src/models/evaporation/evap_bc.f90
+#------end evaporation_obj---------------------------
 
 
 #-------begin POINTERS_obj--------------------------------
-manage_pointers.o: $(CORE_obj) $(TOOLS_obj) $(CORE_obj) $(FEMTOOLS_obj) $(LINALG_obj) $(RE_obj) $(DECOMPO_obj)  $(BOUSSINESQ_obj) $(ADE_obj) $(REDUAL_obj) $(HEAT_obj) src/pointerman/manage_pointers.f90
+manage_pointers.o: $(CORE_obj) $(TOOLS_obj) $(CORE_obj) $(FEMTOOLS_obj) $(LINALG_obj) $(DECOMPO_obj) $(MODEL_objs) src/pointerman/manage_pointers.f90
 	$c -c src/pointerman/manage_pointers.f90
 #-------end pointers_obj--------------------------------
 
@@ -244,6 +273,10 @@ schwarz_dd.o:  $(CORE_obj) $(MATHTOOLS_obj)  femmat.o decomp_vars.o decomposer.o
 schwarz_dd2subcyc.o: $(CORE_obj) $(MATHTOOLS_obj)  femmat.o decomp_vars.o decomposer.o decomp_tools.o src/decompo/schwarz_dd2subcyc.f90
 	$c -c src/decompo/schwarz_dd2subcyc.f90
 #-------end DECOMPO_obj--------------------------------
+
+
+
+
 
 
 #----build main---------

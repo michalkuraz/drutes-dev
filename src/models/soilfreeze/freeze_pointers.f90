@@ -6,12 +6,24 @@ module freeze_pointers
     subroutine freeze_processes(processes)
       use typy
       use globals
+      use freeze_globs
+      use freeze_read
       
       integer(kind=ikind), intent(out) :: processes
-      
+      call read_frrate()
       select case (drutes_config%name)
         case ("freeze")
-          processes = 2
+          if(fr_rate) then
+            processes = 3
+          else
+            processes = 2
+          end if
+        case ("LTNE")
+          if(fr_rate) then
+            processes = 4
+          else
+            processes = 3
+          end if
         case default
           print *, "procedure called when unexpected problem name"
           print *, "exited from freeze_pointers::freeze_processes"
@@ -46,12 +58,14 @@ module freeze_pointers
       select case (drutes_config%name)
         case ("freeze")
           call freeze_reader(pde(wat))
+        case ("LTNE")
+          call freeze_reader(pde(wat))
         case default
           print *, "procedure called when unexpected problem name"
           print *, "exited from freeze_pointers::frz_pointers"
-          error stop
+          error stop 
       end select
-   
+
       
       call RE_totheadbc(pde(wat))
       pde(wat)%getval => getval_retotfr
@@ -86,36 +100,101 @@ module freeze_pointers
 
       pde(wat)%flux_name(1) = "flux"  
       pde(wat)%flux_name(2) = "Darcian flow [L.T^{-1}]"
-      
       pde(wat)%print_mass = .true.
       deallocate(pde(wat)%mass)
+<<<<<<< HEAD
       
       allocate(pde(wat)%mass_name(4,2))
       
       allocate(pde(wat)%mass(4))
+=======
+      select case (drutes_config%name)
+        case ("freeze")
+          if(fr_rate) then
+            allocate(pde(wat)%mass_name(3,2))
+            allocate(pde(wat)%mass(3))
+            
+          else
+            allocate(pde(wat)%mass_name(4,2))
+            allocate(pde(wat)%mass(4))
+            
+            pde(wat)%mass_name(4,1) = "theta_i"
+            pde(wat)%mass_name(4,2) = "theta_i [-]"
+            
+            pde(wat)%mass(4)%val => thetai
+          end if
+>>>>>>> f0e521a9e1b4dcca48d4cc02aafb988569b13131
 
+         
+        case ("LTNE")
+          if(fr_rate) then
+            allocate(pde(wat)%mass_name(4,2))
+            allocate(pde(wat)%mass(4))
+
+            pde(wat)%mass_name(4,1) = "T_m"
+            pde(wat)%mass_name(4,2) = "T_m [deg C]"
+            
+            pde(wat)%mass(4)%val => T_m        
+ 
+          else
+            allocate(pde(wat)%mass_name(5,2))
+            allocate(pde(wat)%mass(5))
+            
+            pde(wat)%mass_name(4,1) = "T_m"
+            pde(wat)%mass_name(4,2) = "T_m [deg C]"
+            
+            pde(wat)%mass_name(5,1) = "theta_i"
+            pde(wat)%mass_name(5,2) = "theta_i [-]"
+            
+            pde(wat)%mass(4)%val => T_m        
+
+            pde(wat)%mass(5)%val => thetai
+          end if
+
+        case default
+          print *, "procedure called when unexpected problem name"
+          print *, "exited from freeze_pointers::frz_pointers"
+          error stop
+      end select
+      
       pde(wat)%mass_name(1,1) = "theta_tot"
       pde(wat)%mass_name(1,2) = "theta_tot [-]"
       
-      pde(wat)%mass_name(2,1) = "theta_i"
-      pde(wat)%mass_name(2,2) = "theta_i [-]"
+      pde(wat)%mass_name(2,1) = "theta_l"
+      pde(wat)%mass_name(2,2) = "theta_l [-]"
       
-      pde(wat)%mass_name(3,1) = "theta_l"
-      pde(wat)%mass_name(3,2) = "theta_l [-]"
+      pde(wat)%mass_name(3,1) = "h_l"
+      pde(wat)%mass_name(3,2) = "h_l [L]"
       
-      pde(wat)%mass_name(4,1) = "h_l"
-      pde(wat)%mass_name(4,2) = "h_l [L]"
-      
-
       pde(wat)%mass(1)%val => vangen_fr
+            
+      pde(wat)%mass(2)%val => thetal
       
-      pde(wat)%mass(2)%val => thetai
+      pde(wat)%mass(3)%val => hl
       
-      pde(wat)%mass(3)%val => thetal
       
-      pde(wat)%mass(4)%val => hl
-      ! allocate porosity as mass(3)?
+      if(fr_rate) then
+        pde(ice)%print_mass = .false.
+        pde(ice)%problem_name(1) = "ice_content"
+        pde(ice)%problem_name(2) = "Ice with freezing rate"
+            
+        pde(ice)%solution_name(1) = "ice_content" 
+        pde(ice)%solution_name(2) = "theta_i " 
 
+        pde(ice)%pde_fnc(ice)%zerord => vf
+        pde(wat)%pde_fnc(wat)%zerord => neg_vf
+            
+        do i=lbound(pde(ice)%bc,1), ubound(pde(ice)%bc,1)
+          select case(pde(ice)%bc(i)%code)
+            case(1)
+                pde(ice)%bc(i)%value_fnc => heat_dirichlet
+            case(2)
+                pde(ice)%bc(i)%value_fnc => heat_neumann
+          end select
+        end do
+        pde(ice)%initcond => ice_initcond
+      end if
+      
     ! pointers for heat flow model
       pde(heat_proc)%problem_name(1) = "heat"
       pde(heat_proc)%problem_name(2) = "Heat conduction equation with convection"
@@ -123,7 +202,7 @@ module freeze_pointers
       pde(heat_proc)%solution_name(1) = "temperature" 
       pde(heat_proc)%solution_name(2) = "T " 
 
-      pde(heat_proc)%flux_name(1) = "heat_flux"  
+      pde(heat_proc)%flux_name(1) = "flux"  
       pde(heat_proc)%flux_name(2) = "heat flux [W.L-2]"
       
       allocate(pde(heat_proc)%mass_name(0,2))
@@ -157,7 +236,62 @@ module freeze_pointers
             pde(heat_proc)%bc(i)%value_fnc => Dirichlet_Neumann_switch_bc
         end select
       end do  
+          !pointers for solid heat flow model
+
+      select case (drutes_config%name)
+        case ("freeze")
+         CONTINUE
+        case ("LTNE")
+          pde(heat_solid)%problem_name(1) = "heat_solid"
+          pde(heat_solid)%problem_name(2) = "Heat conduction equation with convection"
+
+          pde(heat_solid)%solution_name(1) = "Temperature" 
+          pde(heat_solid)%solution_name(2) = "T_s " 
+
+          pde(heat_solid)%flux_name(1) = "flux"  
+          pde(heat_solid)%flux_name(2) = "heat solid flux [W.L-2]"
         
+          allocate(pde(heat_solid)%mass_name(0,2))
+          pde(heat_solid)%print_mass = .false.
+                
+          pde(heat_solid)%pde_fnc(heat_solid)%elasticity => capacityTsTs
+        
+          pde(heat_solid)%pde_fnc(heat_solid)%dispersion => diffTsTs
+                
+          pde(heat_solid)%flux => heat_flux_s_LTNE
+        
+          pde(heat_solid)%initcond => temp_s_initcond 
+          
+          pde(heat_solid)%pde_fnc(heat_solid)%reaction => qsl_neg
+          pde(heat_solid)%pde_fnc(heat_proc)%reaction => qsl_pos
+          
+          pde(heat_proc)%pde_fnc(heat_solid)%reaction => qsl_pos
+          pde(heat_proc)%pde_fnc(heat_proc)%reaction => qsl_neg
+
+        
+          do i=lbound(pde(heat_solid)%bc,1), ubound(pde(heat_proc)%bc,1)
+            select case(pde(heat_solid)%bc(i)%code)
+              case(1)
+                pde(heat_solid)%bc(i)%value_fnc => heat_dirichlet
+              case(2)
+                pde(heat_solid)%bc(i)%value_fnc => heat_neumann
+              case(0)
+                pde(heat_solid)%bc(i)%value_fnc => re_null_bc
+              case(3)
+                pde(heat_solid)%bc(i)%value_fnc => freeze_coolant_bc
+              case(4)
+                pde(heat_solid)%bc(i)%value_fnc => Dirichlet_Neumann_switch_bc
+            end select
+        end do 
+        
+        
+        
+        case default
+          print *, "procedure called when unexpected problem name"
+          print *, "exited from freeze_pointers::frz_pointers"
+          error stop
+      end select
+
     end subroutine frz_pointers
   
 end module freeze_pointers

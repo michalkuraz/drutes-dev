@@ -379,6 +379,7 @@ module objfnc
       use debug_tools
       use pde_objs
     
+      integer(kind=ikind) :: massdim
     
       allocate(model_data(ubound(obs_ids,1)*no_pdes))
       
@@ -487,9 +488,19 @@ module objfnc
         allocate(model_data(i)%data(datacount, noprop(i)))
       end do
       
-      allocate(tmpdata(4+drutes_config%dimen))
+      
+      
 
       do i=1, ubound(model_data,1)
+        if (allocated(tmpdata)) deallocate(tmpdata)
+        
+        if(pde(pde_comp(i))%print_mass) then
+          massdim = ubound(pde(pde_comp(i))%mass,1)
+        else
+          massdim = 0
+        end if
+        
+        allocate(tmpdata(3 + drutes_config%dimen + massdim))
         n=0
         do l=1, counter
           processed=.false.
@@ -516,6 +527,7 @@ module objfnc
           end if
         end do
       end do  
+      
     
     end subroutine read_model
     

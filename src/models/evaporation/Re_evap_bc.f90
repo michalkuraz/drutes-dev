@@ -12,6 +12,11 @@
 ! You should have received a copy of the GNU General Public License
 ! along with DRUtES. If not, see <http://www.gnu.org/licenses/>.
 
+
+!> \file Re_evap_bc.f90
+!! \brief This module contains subroutines that read input information from config files and additional input files
+!<
+
 module Re_evap_bc
 
   public :: evap_pm_bc
@@ -152,12 +157,10 @@ module Re_evap_bc
           wind = pde_loc%bc(edge_id)%series(datapos,8)
           light = pde_loc%bc(edge_id)%series(datapos,9)
           solar = pde_loc%bc(edge_id)%series(datapos,10)
-          rain = pde_loc%bc(edge_id)%series(datapos,11)
-          theta =  pde_loc%mass(layer, quadpnt)
           
           
           rain = pde_loc%bc(edge_id)%series(datapos,11)
-          theta =  pde_loc%mass(layer, quadpnt)
+          theta =  pde_loc%mass(1)%val(pde_loc, layer, quadpnt)
           
           
           tmean = (tmax+tmin)/2.0_rkind
@@ -189,7 +192,6 @@ module Re_evap_bc
           print *, "evaporation boundary must be time dependent, check record for the boundary", edge_id
           ERROR STOP
         end if
-        !value = 
       end if
       
 

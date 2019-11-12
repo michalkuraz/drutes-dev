@@ -1,5 +1,5 @@
 
-! Copyright 2008 Michal Kuraz, Petr Mayer, Copyright 2016  Michal Kuraz, Petr Mayer, Johanna Bloecher, Copyright 2019  Michal Kuraz, Petr Mayer, Johanna Bloecher, Juliana Arbelaez
+! Copyright 2008 Michal Kuraz, Petr Mayer, Copyright 2016  Michal Kuraz, Petr Mayer, Johanna Bloecher
 
 ! This file is part of DRUtES.
 ! DRUtES is free software: you can redistribute it and/or modify
@@ -50,17 +50,18 @@ module re_reader
 
       pde_loc%flux_name(1) = "flux"  
       pde_loc%flux_name(2) = "Darcian flow [L.T^{-1}]"
+      
+      allocate(pde_loc%mass_name(1,2))
 
-      pde_loc%mass_name(1) = "theta"
-      pde_loc%mass_name(2) = "theta [-]"
+      pde_loc%mass_name(1,1) = "theta"
+      pde_loc%mass_name(1,2) = "theta [-]"
       
       pde_loc%print_mass = .true.
 
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       !water.conf/matrix.conf
-      call find_unit(file_waterm, 200)
 
-      open(unit=file_waterm, file="drutes.conf/water.conf/matrix.conf", action="read", status="old", iostat = ierr)
+      open(newunit=file_waterm, file="drutes.conf/water.conf/matrix.conf", action="read", status="old", iostat = ierr)
 
       
       if (ierr /= 0) then
@@ -238,16 +239,15 @@ module re_reader
 		      dirname="drutes.conf/water.conf/")
 
 		      
-      close(file_waterm)	
+      close(file_waterm)
       
-  !> Calle reader if the user select atmospheric boundary
+       !> Calle reader if the user select atmospheric boundary
       do i=lbound(pde_loc%bc,1), ubound(pde_loc%bc,1)
         if (pde_loc%bc(i)%code == 5) then 
           call Re_evap_var()
         end if 
       end do
-      
-    
+            
 
     end subroutine res_read
 

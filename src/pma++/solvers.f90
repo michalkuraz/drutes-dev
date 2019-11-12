@@ -534,7 +534,7 @@ module solvers
         dprev  = -1
         dstartnext = -1
         degsmin = 0
-!         print *,"step2.1"
+
         do i=1, A%getn()
             !print *,"i=",i
             call A%getrow(i,r1,ri1,sr1,mp1)
