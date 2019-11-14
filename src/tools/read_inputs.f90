@@ -592,7 +592,7 @@ module read_inputs
             
           case(2)
             jtmp = jtmp + 1
-            read(unit=file_mesh, fmt=*) k, l, i, elements%material(jtmp), j,  elements%data(jtmp,:)
+            read(unit=file_mesh, fmt=*) k, l, i,  j, elements%material(jtmp), elements%data(jtmp,:)
             if (i /= 2) then
               call write_log("number of tags for element must be equal 2")
               call write_log("update your GMSH input file!")
@@ -605,7 +605,7 @@ module read_inputs
                 allocate(tmp_array(i-1))
                 
                 backspace(file_mesh)
-                read(unit=file_mesh, fmt=*) k, l, i, elements%material(jtmp), tmp_array, elements%data(jtmp,:)
+                read(unit=file_mesh, fmt=*) k, l, i, tmp_array, elements%material(jtmp),  elements%data(jtmp,:)
                 elements%material(jtmp) = tmp_array(1)
                 call write_log(text="tags with position greater than 2 were ignored")
                 deallocate(tmp_array)
@@ -624,7 +624,7 @@ module read_inputs
 	 
       end do
       
-      
+
     
  
     end subroutine read_2dmesh_gmsh

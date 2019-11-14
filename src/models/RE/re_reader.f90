@@ -34,6 +34,7 @@ module re_reader
       use core_tools
       use readtools
       use Re_evap_reader
+      use debug_tools
       
       class(pde_str), intent(in out) :: pde_loc
       integer :: ierr, i, j, filewww
@@ -91,7 +92,8 @@ module re_reader
         the mesh defines", maxval(elements%material)  , "materials, and your input file defines", n, "material(s)."
 	
       backspace(file_waterm)
-     
+
+      
       call fileread(n, file_waterm, ranges=(/1_ikind*maxval(elements%material),1_ikind*maxval(elements%material)/),&
         errmsg=trim(msg))
 

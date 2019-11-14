@@ -39,13 +39,13 @@ module postpro
       character(len=*), intent(in), optional                :: behaviour
       real(kind=rkind), intent(in), optional                :: curtime
       character(len=*), intent(in), optional                :: name
-      logical                                               :: anime
+      logical                                               :: anime, op
       integer(kind=ikind)                                   :: mode, no_prints
       type :: filenames_str
         character(len=256), dimension(:), allocatable       :: names
       end type filenames_str
       type(filenames_str), dimension(:), allocatable        :: filenames
-      integer(kind=ikind)                                   :: i, i_err, j, layer, proc, run
+      integer(kind=ikind)                                   :: i, i_err, j, layer, proc, run, ii
       character(len=64)                                     :: forma
       integer, dimension(:,:), pointer, save                :: ids
       integer, dimension(:,:), allocatable, target, save    :: ids_obs
@@ -53,11 +53,12 @@ module postpro
       character(len=5)                                      :: extension
       character(len=15)                                     :: prefix
       real(kind=rkind)                                      :: distance, avgval, val1, val2, val3, tmp, flux
-      logical, save                                         :: first_run=.true.
+      logical, save                                         :: first_run=.true., first_anime=.true.
       type(integpnt_str)                                    :: quadpnt
       integer(kind=ikind), save                             :: anime_run, anime_dec
       integer                                               :: ierr
       integer(kind=ikind)                                   :: no_files
+      character(len=256) :: name_of_file
 
       if (present(name)) then
         select case(name)
@@ -98,8 +99,10 @@ module postpro
         postpro_run = postpro_run + 1
 
       else
-        if (first_run) then
+        if (first_anime) then
+          first_anime = .false.
           anime_run = 0
+          ierr=system("mkdir out/anime")
         end if
         anime_run = anime_run + 1
       end if
@@ -170,12 +173,11 @@ module postpro
                      trim(pde(proc)%flux_name(1)), "-", &
                      run,  trim(extension)
       
-
+         
         if ( (.not. anime .and. mode == 0)  .or. &
           (anime_run == 1 .and. anime) .or. & 
          ( .not. anime .and. (mode == -1 .and. postpro_run == 0 ) ) ) then
 
-         
          
           do i=1, 3+ubound(pde(proc)%mass_name,1)
             ! if gsmh don't print element average value 
@@ -184,7 +186,10 @@ module postpro
             else
               open(newunit=ids(proc, i), file=trim(filenames(proc)%names(i)), action="write", status="replace", iostat=ierr)
             end if
-          end do  
+
+
+          end do
+            
         end if
 
 
@@ -535,6 +540,7 @@ module postpro
         write(unit=ids(i), fmt=*) "clf(f,'reset');"
         write(unit=ids(i), fmt=*) "f.color_map=jetcolormap(256);"
         write(unit=ids(i), fmt=*) "colorbar(min(z),max(z));"
+!      write(unit=ids(i), fmt=*) "colorbar(0,0.5);"
         if (time_dec < 2) then
           write(unit=ids(i), fmt="(a,F10.2,a,a,a,a)")  "xtitle('$\mathbf{\LARGE t= ", curtime,"  ",&
           "} \quad \mbox{\Large ",   trim(time_units), "}$')"
@@ -546,7 +552,7 @@ module postpro
         end if
         
         
-        write(unit=ids(i), fmt=*) "plot3d1(x',y',z',alpha=30, theta=-60);"
+        write(unit=ids(i), fmt=*) "plot3d1(x',y',z',alpha=0, theta=-90);"
 
 
       end do 
