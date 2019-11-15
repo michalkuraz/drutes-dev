@@ -31,8 +31,7 @@ module vapour_pointers
       
       pde(re_order)%pde_fnc(heat_order)%dispersion => difussion_hT
       
-      !> function dtheta_vapordt doesn't contain root water uptake term, must be reformulated
-      pde(re_order)%pde_fnc(re_order)%zerord  =>  dtheta_vapordt
+      pde(re_order)%pde_fnc(re_order)%zerord  =>  reaction_h
       
       call heatlinker(pde(heat_order))
       
@@ -43,6 +42,8 @@ module vapour_pointers
       pde(heat_order)%pde_fnc(re_order)%dispersion => difussion_Th
       
       pde(heat_order)%pde_fnc(heat_order)%convection => convection_T
+      
+      pde(heat_order)%pde_fnc(heat_order)%zerord  =>  reaction_T
     
     end subroutine vapour_linker
 

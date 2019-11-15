@@ -32,6 +32,7 @@ module evap_fnc
   public :: hydraulic_lT
   public :: hydraulic_vh, hydraulic_vT
   public :: liquid_flux,vapor_flux, heatmod_flux
+  public :: reaction_h, reaction_T
 
   contains
   
@@ -142,6 +143,7 @@ module evap_fnc
       use re_globals
       use pde_objs
       use re_constitutive
+      
 
       class(pde_str), intent(in) :: pde_loc
       integer(kind=ikind), intent(in) :: layer
@@ -178,6 +180,34 @@ module evap_fnc
       vector_out = Kvect(1:D)
       
     end subroutine convection_h
+    
+    function reaction_h(pde_loc, layer, quadpnt_in, x)  result(val)
+      use typy
+      use global_objs
+      use pde_objs
+      use globals
+      use evap_globals
+      
+      class(pde_str), intent(in) :: pde_loc
+      !> material ID
+      integer(kind=ikind), intent(in) :: layer
+      !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
+      type(integpnt_str), intent(in), optional :: quadpnt_in
+       !> value of the nonlinear function
+      real(kind=rkind), dimension(:), intent(in), optional    :: x    
+      !> return value
+      real(kind=rkind) :: val
+      
+  
+      
+      
+      val = 0
+      val = sinkterm(pde(re_order, layer, quadpnt_in))
+      val =  val + dtheta_vapordt(pde_loc, layer, quadpnt_in)
+      
+    end function reaction_h
+    
+    
     
     !!> Coefficents for Heat equation
     !!> Capacity heat equation
@@ -319,7 +349,7 @@ module evap_fnc
         tensor(1:D,1:D) = C_liq*T*Klh(1:D,1:D) + C_vap*T*Kvh(1:D,1:D) +  Kvh(1:D,1:D)*L
           
           
-      end subroutine difussion_Th
+    end subroutine difussion_Th
       !! Convection term for heat flow
     subroutine convection_T(pde_loc, layer, quadpnt, x, vector_in, vector_out, scalar)
         use typy
@@ -366,6 +396,33 @@ module evap_fnc
 
     end subroutine convection_T
     
+     function reaction_T(pde_loc, layer, quadpnt_in, x)  result(val)
+      use typy
+      use global_objs
+      use pde_objs
+      use evap_auxfnc
+      use globals
+      use evap_globals
+      
+      class(pde_str), intent(in) :: pde_loc
+      !> material ID
+      integer(kind=ikind), intent(in) :: layer
+      !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
+      type(integpnt_str), intent(in), optional :: quadpnt_in
+       !> value of the nonlinear function
+      real(kind=rkind), dimension(:), intent(in), optional    :: x    
+      !> return value
+      real(kind=rkind) :: val
+      real(kind =rkind):: latent_heat
+      
+     
+      val = 0
+      val = sinkterm(pde(heat_order, layer, quadpnt_in))
+      latent_heat = latent_heat_wat(quadpnt_in) 
+      val =  val + dtheta_vapordt(pde_loc, layer, quadpnt_in)*latent_heat
+      
+      
+    end function reaction_T
 
     
     subroutine liquid_flux(pde_loc, layer, quadpnt, x, grad,  flux, flux_length)
@@ -620,9 +677,6 @@ module evap_fnc
       
     end subroutine heatmod_flux
     
-    
-    
-    
       !!> Thermal Properties of Liquid water
     function hydraulic_lT(pde_loc, layer, quadpnt) result(val)
         use typy
@@ -723,9 +777,6 @@ module evap_fnc
         val = (diff/rho_l_val)*enhancement_factor_val*drho_svdT_val*rh_soil_val
         
     end function hydraulic_vT
-
-        
-    
       !!> Water vapor time derivative
     function dtheta_vapordt(pde_loc, layer, quadpnt_in, x)  result(val)
       use typy
@@ -753,19 +804,11 @@ module evap_fnc
     
       quadpnt%column = 1
       theta_vapor_curr= theta_vapor(pde_loc,layer, quadpnt) 
-    
-    !to be modified
-!       val = sinkterm(pde(re_order, layer, quadpnt_in))
-      val = 0
-      val = val + (theta_vapor_curr - theta_vapor_prev)/ time_step !! check time
+      
+      val =  (theta_vapor_curr - theta_vapor_prev)/ time_step 
         
     end function dtheta_vapordt
     
-    
-    
-    
-
-      
       !!> Water vapor content
     function theta_vapor(pde_loc,layer, quadpnt) result(val)
       use typy
@@ -799,9 +842,4 @@ module evap_fnc
       
     end function theta_vapor
       
-      
-      
-      
-    
-  
 end module evap_fnc
