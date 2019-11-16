@@ -202,7 +202,7 @@ module evap_fnc
       
       
       val = 0
-      val = sinkterm(pde(re_order, layer, quadpnt_in))
+      val = vgset(layer)%sinkterm
       val =  val + dtheta_vapordt(pde_loc, layer, quadpnt_in)
       
     end function reaction_h
@@ -403,6 +403,7 @@ module evap_fnc
       use evap_auxfnc
       use globals
       use evap_globals
+      use heat_globals
       
       class(pde_str), intent(in) :: pde_loc
       !> material ID
@@ -417,7 +418,7 @@ module evap_fnc
       
      
       val = 0
-      val = sinkterm(pde(heat_order, layer, quadpnt_in))
+      val = heatpar(layer)%source
       latent_heat = latent_heat_wat(quadpnt_in) 
       val =  val + dtheta_vapordt(pde_loc, layer, quadpnt_in)*latent_heat
       
