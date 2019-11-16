@@ -32,7 +32,7 @@ module evap_fnc
   public :: hydraulic_lT
   public :: hydraulic_vh, hydraulic_vT
   public :: liquid_flux,vapor_flux, heatmod_flux
-  public :: reaction_h, reaction_T
+  public :: source_h, source_T
 
   contains
   
@@ -181,7 +181,7 @@ module evap_fnc
       
     end subroutine convection_h
     
-    function reaction_h(pde_loc, layer, quadpnt_in, x)  result(val)
+    function source_h(pde_loc, layer, quadpnt_in, x)  result(val)
       use typy
       use global_objs
       use pde_objs
@@ -205,7 +205,7 @@ module evap_fnc
       val = vgset(layer)%sinkterm
       val =  val + dtheta_vapordt(pde_loc, layer, quadpnt_in)
       
-    end function reaction_h
+    end function source_h
     
     
     
@@ -396,7 +396,7 @@ module evap_fnc
 
     end subroutine convection_T
     
-     function reaction_T(pde_loc, layer, quadpnt_in, x)  result(val)
+     function source_T(pde_loc, layer, quadpnt_in, x)  result(val)
       use typy
       use global_objs
       use pde_objs
@@ -423,7 +423,7 @@ module evap_fnc
       val =  val + dtheta_vapordt(pde_loc, layer, quadpnt_in)*latent_heat
       
       
-    end function reaction_T
+    end function source_T
 
     
     subroutine liquid_flux(pde_loc, layer, quadpnt, x, grad,  flux, flux_length)

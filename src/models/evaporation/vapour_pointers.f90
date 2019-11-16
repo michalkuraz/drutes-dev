@@ -31,7 +31,7 @@ module vapour_pointers
       
       pde(re_order)%pde_fnc(heat_order)%dispersion => difussion_hT
       
-      pde(re_order)%pde_fnc(re_order)%zerord  =>  reaction_h
+      pde(re_order)%pde_fnc(re_order)%zerord  =>  source_h
       
       call heatlinker(pde(heat_order))
       
@@ -43,7 +43,7 @@ module vapour_pointers
       
       pde(heat_order)%pde_fnc(heat_order)%convection => convection_T
       
-      pde(heat_order)%pde_fnc(heat_order)%zerord  =>  reaction_T
+      pde(heat_order)%pde_fnc(heat_order)%zerord  =>  source_T
     
     end subroutine vapour_linker
 
