@@ -32,7 +32,11 @@ module evap_auxfnc
   contains
   
   !< Relative Humudity soil rh_soil [-]
-  !Input: 
+  !Input: pressure head: h [m]
+  !Temperature: T [ºC]
+  !Garvity : grvity  [m.s^-2]
+  !Molecular weight of water: MolWat [kg mol^-1]
+  !Universal Gas constant: R_gas [J mol^-1 K^-1]
   function rh_soil(layer, quadpnt) result(val)
     use typy
     use global_objs
@@ -43,10 +47,10 @@ module evap_auxfnc
     type(integpnt_str), intent(in), optional :: quadpnt
     !> material ID
     integer(kind=ikind), intent(in) :: layer
-    !> return value
+    !> return value: Relative Humudity soil rh_soil [-]
     real(kind=rkind):: val
-    
-    real(kind=rkind):: h,T
+    !> Pressure head: h, Temperature T in ºC and TemperatureT_abs in Kelvin
+    real(kind=rkind):: h,T, T_abs
     
    
     if (.not. present(quadpnt)) then
@@ -57,26 +61,26 @@ module evap_auxfnc
     
     h = pde(RE_order)%getval(quadpnt)
     T = pde(Heat_order)%getval(quadpnt)
-
+    T_abs = T + Tref ! T from ºC to Kelvin
     
-    val = exp ((h*MolW*gravity)/R_gas*T)
+    val = exp ((h*MolWat*gravity)/R_gas*T_abs) 
     
   end function rh_soil
   
   !Saturated water vapor density rho_sv [kg/m^3]
-  !Input: Temperature in 
+  !Input: Temperature in T [ºC]
   function rho_sv(quadpnt) result(val)
     use typy
     use global_objs
     use pde_objs
     use evap_globals
-    
   
     !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
     type(integpnt_str), intent(in), optional :: quadpnt
-    !> return value
+    !> return value: Saturated water vapor density rho_sv [kg/m^3]
     real(kind=rkind):: val
-    real(kind=rkind):: T
+    !>  Temperature T in ºC and TemperatureT_abs in Kelvin
+    real(kind=rkind):: T, T_abs
     
     
     if (.not. present(quadpnt)) then
@@ -84,16 +88,16 @@ module evap_auxfnc
       print *, "exited from evap_auxfnc::rho_sv"
       ERROR stop
     end if
-    
-    
    
     T = pde(Heat_order)%getval(quadpnt)
-   
+    T_abs = T + Tref ! T from ºC to Kelvin
     
-    val = 1e-3 *exp(31.3716_rkind - (6014.79_rkind/T) - 7.92495e-3*T**3)/T
+    val = 1e-3 *(exp(31.3716_rkind - (6014.79_rkind/T_abs) - 7.92495e-3*T_abs**3))/T_abs
 
   end function rho_sv
   
+  !Derivative saturated water vapor density rho_sv [kg/m^3 K]
+  !Input: Temperature in T [ºC]
   function drho_sv_dT( quadpnt) result(val)
     use typy
     use global_objs
@@ -102,29 +106,27 @@ module evap_auxfnc
     
     !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
     type(integpnt_str), intent(in), optional :: quadpnt
-    !> return value
+    !> return value : Derivative saturated water vapor density rho_sv [kg/m^3 K]
     real(kind=rkind):: val
-    
-    real(kind=rkind):: T
-    
+    !>  Temperature T in ºC and TemperatureT_abs in Kelvin
+    real(kind=rkind):: T, T_abs
     
     if (.not. present(quadpnt)) then
       print *, "ERROR: you have not specified  integ point "
       print *, "exited from evap_auxfnc::drho_sv_dT"
       ERROR stop
     end if
-    
-    
-   
+  
     T = pde(Heat_order)%getval(quadpnt)
+    T_abs = T + Tref ! T from ºC to Kelvin
    
     
-    val = exp(- 7.92495e-3*T**3 - (6014.79_rkind/T))*(-1.00145e9*T**4 - 4.2122e10*T + 2.53357e14)*(1/T**3)
+    val = exp(- 7.92495e-3*T_abs**3 - (6014.79_rkind/T_abs))*(-1.00145e9*T_abs**4 - 4.2122e10*T_abs + 2.53357e14)*(1/T_abs**3)
 
   end function drho_sv_dT
   
   !Liquid water density  rho_l [kg/m^3]
-  !Input: Temperature in 
+  !Input: Temperature in ºC
   function rho_l( quadpnt) result(val)
     use typy
     use global_objs
@@ -133,10 +135,10 @@ module evap_auxfnc
     
     !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
     type(integpnt_str), intent(in), optional :: quadpnt
-    !> return value
+    !> return value:Liquid water density  rho_l [kg/m^3]
     real(kind=rkind):: val
-    
-     real(kind=rkind)::T
+    !>  Temperature T in ºC 
+    real(kind=rkind)::T
     
      if (.not. present(quadpnt)) then
       print *, "ERROR: you have not specified integ point "
@@ -149,20 +151,19 @@ module evap_auxfnc
 
   end function rho_l
   
-  !Latent heat of evaporation of liquid water  [kg/m^3]
+  !Specific Latent heat of evaporation of liquid water  [Jkg^-1]
   !Input: Temperature in ºC
   function latent_heat_wat(quadpnt) result(val)
     use typy
     use global_objs
     use pde_objs
     use evap_globals
-    
   
     !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
     type(integpnt_str), intent(in), optional :: quadpnt
-    !> return value
+    !> return value: specific Latent heat of evaporation of liquid water  [Jkg^-1]
     real(kind=rkind):: val
-    
+    !>  Temperature T in ºC 
     real(kind=rkind)::T
     
     if (.not. present(quadpnt)) then
@@ -171,10 +172,8 @@ module evap_auxfnc
       ERROR stop
     end if
   
-    T = pde(Heat_order)%getval(quadpnt)
-    
-    
-    val = 2.501e-6 - 2369*T
+    T = pde(Heat_order)%getval(quadpnt) !T is in ºC
+    val = 2.501e-6 - 2369.2_rkind*T
 
   end function latent_heat_wat
   
@@ -187,14 +186,12 @@ module evap_auxfnc
     use pde_objs
     use evap_globals
     
-  
     !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
     type(integpnt_str), intent(in), optional :: quadpnt
-    !> return value
+    !> return value: Surface Tension Soil-Water  [g/s^2]
     real(kind=rkind):: val
-    
+    !>  Temperature T in ºC 
      real(kind=rkind)::T
-    
     
      if (.not. present(quadpnt)) then
       print *, "ERROR: you have not specified  integ point "
@@ -208,7 +205,8 @@ module evap_auxfnc
 
   end function surf_tension_soilwat
   
-  
+  !Derivative Surface Tension Soil-Water  [g/s^2 ºC]
+  !Input: Temperature in ºC  
   function dsurf_tension_soilwat_dT(quadpnt) result(val)
     use typy
     use global_objs
@@ -218,9 +216,9 @@ module evap_auxfnc
 
     !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
     type(integpnt_str), intent(in), optional :: quadpnt
-    !> return value
+    !> return value: Derivative Surface Tension Soil-Water  [g/s^2 ºC]
     real(kind=rkind):: val
-    
+    !>Temperature in ºC 
      real(kind=rkind)::T
     
     
@@ -236,8 +234,8 @@ module evap_auxfnc
 
   end function dsurf_tension_soilwat_dT
   
-  !thermal conductivity  []
-  !Input: Liquid Water content
+  !thermal conductivity  [Wm^-1 K^-1]]
+  !Input: Liquid Water content [-]
   function thermal_conduc(pde_loc, layer, quadpnt) result(val)
     use typy
     use global_objs
@@ -249,11 +247,10 @@ module evap_auxfnc
     type(integpnt_str), intent(in), optional :: quadpnt
     !> material ID
     integer(kind=ikind), intent(in) :: layer
-    !> return value
+    !> return value: Thermal conductivity  [Wm^-1 K^-1]]
     real(kind=rkind):: val
-    
+    !>Liquid Water content [-]
     real(kind=rkind)::theta_l
-    
     
     if (.not. present(quadpnt)) then
       print *, "ERROR: you have not specified  integ point "
@@ -262,11 +259,13 @@ module evap_auxfnc
     end if
   
     theta_l = pde_loc%mass(1)%val(pde_loc, layer, quadpnt)
-    
     val = b1 + b2*theta_l + b3*theta_l**0.5
 
   end function thermal_conduc
   
+  
+  !Vapor Difussivity in soil  [m^2/s]
+  !Input: Water content,  Saturated water content, Volumetric air content
   function vapor_diff_soil(pde_loc, layer, quadpnt) result(val)
     use typy
     use global_objs
@@ -274,14 +273,13 @@ module evap_auxfnc
     use evap_globals
     
     class(pde_str), intent(in) :: pde_loc
-
     !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
     type(integpnt_str), intent(in), optional :: quadpnt
     !> material ID
     integer(kind=ikind), intent(in) :: layer
-    !> return value
+    !> return value: Vapor Difussivity in soil  [m^2/s]
     real(kind=rkind):: val
-    
+    !> Water content,  Saturated water content, Volumetric air content,
     real(kind=rkind)::theta_l, theta_sat, theta_air
     
     
@@ -299,23 +297,23 @@ module evap_auxfnc
 
   end function vapor_diff_soil
   
-  
+  !Tortuosity factor in gaseous phase [-]
+  !Input: Volumetric liquid water  content [-]
+  !Saturated water content [-]
   function tortuosity(theta_l, layer) result(val)
     use typy
     use global_objs
     use pde_objs
     use evap_globals
     
-    
+    !> Volumetric liquid water  content
     real(kind=rkind),intent (in):: theta_l
     !> material ID
     integer(kind=ikind), intent(in) :: layer
-    !> return value
+    !> return value: Tortuosity factor in gaseous phase [-]
     real(kind=rkind):: val
-    
+    !> Volumetric air content,  Saturated water content 
     real(kind=rkind):: theta_sat, theta_air
-    
-    
     
     theta_air = 1 - theta_l
     theta_sat = vgset(layer)%ths
@@ -324,21 +322,20 @@ module evap_auxfnc
 
   end function tortuosity
   
+  
+  !Vapor Difussivity in air  [m^2/s]
+  !Input: Temperature [ºC]
   function vapor_diff_air(quadpnt) result(val)
     use typy
     use global_objs
     use pde_objs
     use evap_globals
-    
-  
     !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
     type(integpnt_str), intent(in), optional :: quadpnt
-  
-    !> return value
+    !> return value: Vapor Difussivity in air  [m^2/s]
     real(kind=rkind):: val
-    
-    real(kind=rkind)::T
-    
+    !>Temperature T in ºC and TemperatureT_abs in Kelvin
+    real(kind=rkind)::T, T_abs
     
      if (.not. present(quadpnt)) then
       print *, "ERROR: you have not specified  integ point "
@@ -347,8 +344,9 @@ module evap_auxfnc
     end if
   
     T = pde(Heat_order)%getval(quadpnt)
+    T_abs = T + Tref ! T from ºC to Kelvin
     
-    val =  2.12e-5 * (T/Tref)**2
+    val =  2.12e-5 * (T_abs/Tref)**2
 
   end function vapor_diff_air
   

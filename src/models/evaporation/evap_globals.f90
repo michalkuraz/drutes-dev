@@ -12,28 +12,38 @@
 ! You should have received a copy of the GNU General Public License
 ! along with DRUtES. If not, see <http://www.gnu.org/licenses/>.
 
-!> \file evap_fnc.f90
-!! \brief This module contains subroutines that read input information from config files and additional input files
+!> \file: evap_globals.f90
+!! \brief: This module contains the global variable for the Vapour model 
 !<
 
 module evap_globals
   use typy
   
+  !> Empirical regression parameters for the Thermal conductivity [Wm^-1 K^-1]
   real(kind=rkind), public:: b1,b2,b3
-  integer, public :: file_vapor
+  
   real(kind=rkind), public:: resistance
   
-   
+  !> Universal Gas constant [J mol^-1 K^-1]
   real(kind=rkind), parameter, public :: R_gas = 8.314
   
-  real(kind=rkind), parameter, public :: MolW = 0.018015
-    !> gravity acceleration [m.s^-2]
+  !> Molecular weight of water [kg mol^-1]
+  real(kind=rkind), parameter, public :: MolWat = 0.018015
+  
+  !> gravity acceleration [m.s^-2]
   real(kind=rkind), parameter, public :: gravity = 9.18
-   !> Reference surface tension at 25 ~deg C g.s^-2
+  
+  !> Reference surface tension at 25 ~deg C g.s^-2
   real(kind=rkind), parameter, public :: gamma_0 = 71.89
+  
+  !> Richards modified equation ID
   integer(kind=ikind), parameter, public ::re_order = 1
+  
+  !> Heat  modified equation ID
   integer(kind=ikind), parameter, public ::heat_order = 2
+  
   real(kind=rkind), parameter, public :: f_c = 0.02
+  
    !> Gain factor [-]
   integer(kind=ikind), parameter, public :: GwT = 7
   
@@ -42,8 +52,9 @@ module evap_globals
   integer(kind=ikind), parameter, public :: C_vap = 1800
   
   integer(kind=ikind), parameter, public :: C_soil =  1920
+  
   integer(kind=ikind), parameter, public :: C_air =  1200
   
-
+  integer, public :: file_vapor
   
 end module evap_globals
