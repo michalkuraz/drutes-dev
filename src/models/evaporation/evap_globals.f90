@@ -42,18 +42,22 @@ module evap_globals
   !> Heat  modified equation ID
   integer(kind=ikind), parameter, public ::heat_order = 2
   
-   !> Mass fraction of clay [-]
+  !> Mass fraction of clay [-]
   real(kind=rkind), parameter, public :: f_c = 0.02
   
-   !> Gain factor [-]
+  !> Gain factor [-]
   integer(kind=ikind), parameter, public :: GwT = 7
   
+  !> specific heat capacity of liquid  water [J/kg K]
   integer(kind=ikind), parameter, public :: C_liq = 4188 
   
+  !> specific heat capacity of  water vapor [J/kg K]
   integer(kind=ikind), parameter, public :: C_vap = 1800
   
+  !> specific heat capacity of  soil[J/kg K]
   integer(kind=ikind), parameter, public :: C_soil =  1920
   
+  !> specific heat capacity of  air [J/kg K]
   integer(kind=ikind), parameter, public :: C_air =  1200
   
   !> Inout file for vapur model
