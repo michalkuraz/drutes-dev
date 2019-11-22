@@ -350,6 +350,10 @@ module evap_auxfnc
 
   end function vapor_diff_air
   
+  
+  !Enhacement Factor [-]
+  !Input: Volumetric liquid water  content [-]
+  !Saturated water content [-]
   function enhancement_factor(pde_loc, layer, quadpnt) result(val)
     use typy
     use global_objs
@@ -363,8 +367,8 @@ module evap_auxfnc
     integer(kind=ikind), intent(in) :: layer
     !> return value
     real(kind=rkind):: val
-    
-    real(kind=rkind)::T,theta_l, theta_sat, tmp, const
+    !> Volumetric liquid water  content, Saturated water content
+    real(kind=rkind)::theta_l, theta_sat, tmp, const
     
     
     if (.not. present(quadpnt)) then

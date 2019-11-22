@@ -48,6 +48,7 @@ module evap_fnc
       use re_constitutive
 
       class(pde_str), intent(in) :: pde_loc
+       !> material ID
       integer(kind=ikind), intent(in) :: layer
       !> pressure head
       real(kind=rkind), dimension(:), intent(in), optional :: x
@@ -58,6 +59,7 @@ module evap_fnc
       !> relative hydraulic conductivity, (scalar value)
       real(kind=rkind), intent(out), optional :: scalar
       
+      !> Klh: unsaturated non-thermal conductivity
       
       real(kind=rkind), dimension(3,3) :: Klh, Kvh
       integer(kind=ikind):: D, i
@@ -90,6 +92,8 @@ module evap_fnc
       tensor(1:D,1:D) = Klh(1:D,1:D) + Kvh(1:D,1:D)
       
     end subroutine difussion_hh
+    
+    
     !! Difussion due to temperature gradient
     subroutine difussion_hT(pde_loc, layer, quadpnt,  x, tensor, scalar)
       use re_globals
@@ -819,6 +823,7 @@ module evap_fnc
         use evap_auxfnc
       
         class(pde_str), intent(in) :: pde_loc
+        
         integer(kind=ikind), intent(in) :: layer
         !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
         type(integpnt_str), intent(in), optional :: quadpnt 

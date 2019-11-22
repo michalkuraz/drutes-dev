@@ -42,6 +42,7 @@ module evap_globals
   !> Heat  modified equation ID
   integer(kind=ikind), parameter, public ::heat_order = 2
   
+   !> Mass fraction of clay [-]
   real(kind=rkind), parameter, public :: f_c = 0.02
   
    !> Gain factor [-]
@@ -55,6 +56,7 @@ module evap_globals
   
   integer(kind=ikind), parameter, public :: C_air =  1200
   
+  !> Inout file for vapur model
   integer, public :: file_vapor
   
 end module evap_globals
