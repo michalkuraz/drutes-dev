@@ -60,6 +60,12 @@ module evap_globals
   !> specific heat capacity of  air [J/kg K]
   integer(kind=ikind), parameter, public :: C_air =  1200
   
+  !> density of soil [kg.m^-3]
+  real(kind=rkind), parameter, public :: rho_soil = 2650
+  
+  !> density of air [kg.m^-3]
+  real(kind=rkind), parameter, public :: rho_air = 1.29
+  
   !> Inout file for vapur model
   integer, public :: file_vapor
   

@@ -275,8 +275,6 @@ module evap_bc
       
       T = pde(Heat_order)%getval(quadpnt)
       
-      
-      
       val = C_air *((T -temp_air)/resistance)
   
   end function sensible_heat

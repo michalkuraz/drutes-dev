@@ -27,6 +27,8 @@ module vapour_pointers
 
       call evap_var()
       
+      !> Richards modified equation
+      
       pde(re_order)%pde_fnc(re_order)%dispersion => difussion_hh
       
       pde(re_order)%pde_fnc(heat_order)%dispersion => difussion_hT
@@ -34,6 +36,8 @@ module vapour_pointers
       pde(re_order)%pde_fnc(re_order)%zerord  =>  source_h
       
       call heatlinker(pde(heat_order))
+      
+      !> Heat modified equation
       
       pde(heat_order)%pde_fnc(heat_order)%elasticity => capacity_T
       

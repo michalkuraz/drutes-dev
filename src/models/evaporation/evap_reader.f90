@@ -44,14 +44,14 @@ module evap_reader
       end if 
 
         
-      call fileread(b1, file_vapor, ranges=(/0.0_rkind, huge(0.0_rkind)/), & 
-                      errmsg="specify elevation above sea level in m. This can be only positive")
-      call fileread(b2, file_vapor, ranges=(/0.0_rkind, huge(0.0_rkind)/), & 
-                      errmsg="specify elevation above sea level in m. This can be only positive")
-      call fileread(b2, file_vapor, ranges=(/0.0_rkind, huge(0.0_rkind)/), & 
-                      errmsg="specify elevation above sea level in m. This can be only positive")
+      call fileread(b1, file_vapor, ranges=(/- huge(0.0_rkind), huge(0.0_rkind)/), & 
+                      errmsg="Empirical regression parameters for the Thermal conductivity [Wm^-1 K^-1], see Chun&Horton, 1987")
+      call fileread(b2, file_vapor, ranges=(/-huge(0.0_rkind), huge(0.0_rkind)/), & 
+                      errmsg="Empirical regression parameters for the Thermal conductivity [Wm^-1 K^-1], see Chun&Horton, 1987")
+      call fileread(b2, file_vapor, ranges=(/-huge(0.0_rkind), huge(0.0_rkind)/), & 
+                      errmsg="Empirical regression parameters for the Thermal conductivity [Wm^-1 K^-1], see Chun&Horton, 1987")
       call fileread(resistance, file_vapor, ranges=(/0.0_rkind, huge(0.0_rkind)/), & 
-                      errmsg="specify elevation above sea level in m. This can be only positive")
+                      errmsg="specify the aerodynamic resistance to water vapor flow and heat transfer")
       close(file_evap)	
 
     end subroutine evap_var
