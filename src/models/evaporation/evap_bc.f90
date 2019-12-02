@@ -70,7 +70,7 @@ module evap_bc
     !> rho_l: liquid water density
     !> L: latent heat of vaporization
     !> kappa: thermal conductivity
-    real(kind =rkind):: T, L , kappa, rho_liq
+    real(kind =rkind):: T, L , kappa, rho_liq, rho_vapor
     !> temperature maximum, mininum and mean
     !> solar: solar radiation 
     real(kind=rkind) :: tmax, tmin,tmean,solar
@@ -80,14 +80,16 @@ module evap_bc
     real(kind=rkind) ::  e_act, evap, rh_air
     !> temperature maximum, mininum in Kelvin 
     real(kind=rkind) :: tmaxk,tmink
-    !Hs: sensible heat 
-    !rad: solar radiation 
-    !soil heat flux
+    !> Hs: sensible heat 
+    !> rad: solar radiation 
+    !> soil heat flux
     real(kind = rkind):: Hs, rad, heat_soil_flux
-    
     logical, save :: run1st=.true.
+    !> time units for evaporation
     character(len=8), save :: evap_units 
+    !> local variables
     integer(kind =ikind) :: D, i,  edge_id, datapos, dataprev
+    !> Number of te day in ten year, hour,day and month
     integer(kind =ikind) :: num_day,hour,day,month
     !> liquid water and watwer vapor flux
     real(kind=rkind), dimension(3) :: q_vap, q_liq
@@ -134,6 +136,7 @@ module evap_bc
           kappa = thermal_conduc(pde_loc, layer, quadpnt)
           L = latent_heat_wat(quadpnt)
           rho_liq = rho_l(quadpnt)
+          rho_vapor = rho_sv(quadpnt)*rh_soil(layer, quadpnt)
           !temperature shpuld be in K 
           Hs= sensible_heat(quadpnt, tmean)
           evap = evaporation(layer, quadpnt, rh_air)
@@ -148,7 +151,7 @@ module evap_bc
       
           val =  - heat_soil_flux - L*norm2(q_vap(1:D))*rho_liq
           acoef = -kappa
-          bcoef = C_liq*norm2(q_liq(1:D)) + C_vap*norm2(q_vap(1:D))
+          bcoef = C_liq*rho_liq*norm2(q_liq(1:D)) + C_vap*norm2(q_vap(1:D))*rho_vapor
               
   
         else
