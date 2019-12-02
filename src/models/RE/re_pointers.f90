@@ -124,6 +124,12 @@ module RE_pointers
             pde_loc%bc(i)%value_fnc => re_neumann_bc
           case(3)
             pde_loc%bc(i)%value_fnc => re_null_bc
+          case(4)
+            print *, "seepage face is not created yet for pressure head RE"
+            ERROR STOP
+          case(5)
+            print *, "If you want to use evaporation, then set mdoel type to vapour"
+            ERROR STOP
           case default
             print *, "ERROR! You have specified an unsupported boundary type definition for the Richards equation"
             print *, "the incorrect boundary code specified is:", pde_loc%bc(i)%code

@@ -1241,7 +1241,7 @@ module RE_constitutive
       
       gradH(1:D) = gradient(1:D) + nablaz(1:D)
 
-      call pde_loc%pde_fnc(1)%dispersion(pde_loc, layer, x=(/h/), tensor=K(1:D, 1:D))
+      call pde_loc%pde_fnc(1)%dispersion(pde_loc, layer, quadpnt, tensor=K(1:D, 1:D))
      
       
       vct(1:D) = matmul(-K(1:D,1:D), gradH(1:D))

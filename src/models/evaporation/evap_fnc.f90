@@ -64,16 +64,12 @@ module evap_fnc
       !> Kvh_scalar: scalar value of unsaturated non-thermal conductivity for water
       real(kind=rkind):: Kvh_scalar
       
-      if (.not. present(quadpnt) .or. present(tensor)) then
-        print *, "ERROR! output tensor undefined or integ point, exited from evap_fnc::difussion_hh"
-        ERROR STOP
-      end if
-      
-      if ( present(x) ) then
-        print *, "This option is not implemented"
+      if (present(x)) then
+        print *, "ERROR! use quadpnt only"
         print *, "exited from evap_fnc::difussion_hh"
         ERROR STOP
       end if
+
       
       D = drutes_config%dimen !Dimension of the problem
       call mualem(pde_loc, layer, quadpnt, tensor = Klh(1:D,1:D))
@@ -109,7 +105,7 @@ module evap_fnc
       !> local variab
       integer(kind=ikind):: D, i
        
-      if (.not. present(quadpnt) .or. present(tensor)) then
+      if (.not. present(quadpnt) .or. .not. present(tensor)) then
         print *, "ERROR! output tensor undefined or integ point, exited from evap_fnc::difussion_hT"
         ERROR STOP
       end if
@@ -134,50 +130,8 @@ module evap_fnc
       tensor(1:D,1:D) = KlT(1:D, 1:D) + KvT(1:D,1:D)
         
     end subroutine difussion_hT
-    !! Convection term for water flow
-!     subroutine convection_h(pde_loc, layer, quadpnt, x, vector_in, vector_out, scalar)
-!       use typy
-!       use re_globals
-!       use pde_objs
-!       use re_constitutive
-!       
-! 
-!       class(pde_str), intent(in) :: pde_loc
-!       integer(kind=ikind), intent(in) :: layer
-!       type(integpnt_str), intent(in), optional :: quadpnt    
-!       !> pressure head
-!       real(kind=rkind), dimension(:), intent(in), optional :: x
-!       !> this argument is required by the global vector_fnc procedure pointer, unused in this procedure
-!       real(kind=rkind), dimension(:), intent(in), optional :: vector_in
-!       !> first order tensor of the unsaturated hydraulic conductivity derivative in respect to h. it is the last column of the hydraulic conductivity second order tensor times  
-!       !!relative unsaturated hydraulic conductivity derivative in respect to h (scalar value)
-!       !<
-!       real(kind=rkind), dimension(:), intent(out), optional :: vector_out
-!       !> relative unsaturated hydraulic conductivity derivative in respect to h, scalar value
-!       real(kind=rkind), intent(out), optional :: scalar
-!       !> Kvect: unsaturated non-thermal conductivity for water
-!       real(kind=rkind), dimension(3) :: Kvect
-        !> local variables
-!       integer(kind=ikind):: D
-!       
-!         
-!       if (.not. present(quadpnt) .or. present(vector_out)) then
-!         print *, "ERROR! output vector undefined or integ point, exited from evap_fnc::convection_h"
-!         ERROR STOP
-!       end if 
-!       
-!       if ( present(x) ) then
-!         print *, "This option is not implemented"
-!         print *, "exited from evap_fnc::convection_h"
-!         ERROR STOP
-!       end if
-!         
-!       D = drutes_config%dimen
-!         
-!       call dmualem_dh(pde_loc, layer, quadpnt, x, vector_in, vector_out = Kvect(1:D))
-!       vector_out = Kvect(1:D)
-!       
-!     end subroutine convection_h
+
+    
     !! Source term of for water flow
     function source_h(pde_loc, layer, quadpnt_in, x)  result(val)
       use typy
@@ -249,6 +203,7 @@ module evap_fnc
       use re_globals
       use pde_objs
       use evap_auxfnc
+      use debug_tools
 
       class(pde_str), intent(in) :: pde_loc
       integer(kind=ikind), intent(in) :: layer
@@ -273,11 +228,9 @@ module evap_fnc
       !> local variables
       integer(kind=ikind):: D, i, j
       
-      if (.not. present(quadpnt) .or. present(tensor)) then
-        print *, "ERROR! output tensor undefined or integ point, exited from evap_fnc::difussion_TT"
-        ERROR STOP
-        
-      end if
+
+      D = drutes_config%dimen
+      
        if ( present(x) ) then
         print *, "This option is not implemented"
         print *, "exited from evap_fnc::difussion_TT"
@@ -301,13 +254,18 @@ module evap_fnc
       
       kappa_tensor = 0
       
-      do j=1, D
+      do i=1, D
         kappa_tensor(i,i) = kappa
       end do
+  
       
-      tensor(1:D,1:D) = kappa_tensor + C_vap*rho_vapor*T*(KvT(1:D,1:D)) + C_liq*rho_liq*T*(KlT(1:D,1:D)) + L*rho_liq*(KvT(1:D,1:D))
+      tensor(1:D,1:D) = kappa_tensor(1:D, 1:D) + C_vap*rho_vapor*T*(KvT(1:D,1:D)) +  &
+                      C_liq*rho_liq*T*(KlT(1:D,1:D)) + L*rho_liq*(KvT(1:D,1:D))
+                    
       
     end subroutine difussion_TT
+    
+    
     !! Difussion due to pressure gradient
     subroutine difussion_Th(pde_loc, layer, quadpnt,  x, tensor, scalar)
         use typy
@@ -339,16 +297,12 @@ module evap_fnc
         !> local variables
         integer(kind=ikind):: D, i
         
-        if (.not. present(quadpnt) .or. present(tensor)) then
-          print *, "ERROR! output tensor undefined or integ point, exited from evap_fnc::difussion_Th"
+        if (present(x)) then
+          print *, "ERROR! use quadpnt only"
+          print *, "exited from evap_fnc::difussion_Th"
           ERROR STOP
         end if
         
-        if ( present(x) ) then
-         print *, "This option is not implemented"
-         print *, "exited from evap_fnc::difussion_Th"
-        ERROR STOP
-       end if
         
         D = drutes_config%dimen 
         T = pde(Heat_order)%getval(quadpnt)
@@ -400,13 +354,10 @@ module evap_fnc
         real(kind=rkind) :: T, rho_liq
           
         
-        if (.not. present(quadpnt) .or. present(vector_out)) then
-          print *, "ERROR! output vector undefined or integ point, exited from evap_fnc::convection_T"
-          ERROR STOP
-         end if 
+
         
         if ( present(x) ) then
-         print *, "This option is not implemented"
+         print *, "ERROR: use quadpnt only."
          print *, "exited from evap_fnc::convection_T"
          ERROR STOP
         end if
@@ -420,6 +371,9 @@ module evap_fnc
         vector_out(1:D) = C_liq*rho_liq*T*Kvect(1:D)
 
     end subroutine convection_T
+    
+    
+    
     !> Source term heat flow
     function source_T(pde_loc, layer, quadpnt_in, x)  result(val)
       use typy
@@ -488,11 +442,8 @@ module evap_fnc
       !> Temperature gradient
       real(kind=rkind), dimension(:), allocatable, save :: gradT
       
-      if (present(quadpnt) .and. (present(grad) .or. present(x))) then
-        print *, "ERROR: the function can be called either with integ point or x value definition and gradient, not both of them"
-        ERROR stop
-      else if ((.not. present(grad) .or. .not. present(x)) .and. .not. present(quadpnt)) then
-        print *, "ERROR: you have not specified either integ point or x value"
+      if (present(x)) then
+        print *, "ERROR: use quadpnt only"
         print *, "exited from evap_fnc::liquid_flux"
         ERROR stop
       end if
@@ -506,10 +457,6 @@ module evap_fnc
       end if
       
       D = drutes_config%dimen
-      
-      if (present(x)) then
-        call darcy_law(pde_loc, layer, x=x, flux = q_liq(1:D))
-      end if
       
       if (present(quadpnt)) then
         call darcy_law(pde_loc, layer, quadpnt, flux = q_liq(1:D))
@@ -671,13 +618,13 @@ module evap_fnc
       !vct: result of te flux
       !q_vap water vapor liquid flux
       !q_liq liquid water flux
-      real(kind=rkind), dimension(3)  :: vct, q_vap, q_liq,rho_liq, rho_vap
+      real(kind=rkind), dimension(3)  :: vct, q_vap, q_liq
       !> Gauss quadrature point structure local
       type(integpnt_str) :: quadpnt_loc
       !> kappa:thermal hydraulic conductivity
       !> T:Temperature
       !> L:specif latent heat of vaporization
-      real(kind=rkind)::kappa,T, L
+      real(kind=rkind)::kappa,T, L, rho_liq, rho_vap
       !> Temperature gradient
       real(kind=rkind), dimension(:), allocatable, save :: gradT
       
@@ -722,15 +669,8 @@ module evap_fnc
       
       
        if (present(flux_length)) then
-        select case(D)
-          case(1)
-                flux_length = vct(1)
-          case(2)
-                flux_length = sqrt(vct(1)*vct(1) + vct(2)*vct(2))
-          case(3)
-                flux_length = sqrt(vct(1)*vct(1) + vct(2)*vct(2) + vct(3)*vct(3))
-        end select
-      end if
+         flux_length = norm2(vct(1:D))
+       end if
 
 
       if (present(flux)) then

@@ -25,7 +25,7 @@ module evap_bc
   use re_globals
 
   public :: heat_robin
-  public :: water_neumann
+  public :: water_evap
   public :: evaporation
   public :: sensible_heat
 
@@ -166,7 +166,7 @@ module evap_bc
   end subroutine  heat_robin
   
   
-  subroutine water_neumann(pde_loc, el_id, node_order, value, code, valarray) 
+  subroutine water_evap(pde_loc, el_id, node_order, value, code, valarray) 
       use typy
       use globals
       use global_objs
@@ -203,9 +203,10 @@ module evap_bc
       D = drutes_config%dimen
       call getcoor(quadpnt, xyz(1:D))
       
+      edge_id = nodes%edge(elements%data(el_id, node_order))
       
-         if (present(value)) then
-          if (pde_loc%bc(edge_id)%file) then
+      if (present(value)) then
+        if (pde_loc%bc(edge_id)%file) then
           do i = pde_loc%bc(edge_id)%series_pos, ubound(pde_loc%bc(edge_id)%series,1)
             if (pde_loc%bc(edge_id)%series(i,1) > time .and. i < ubound(pde_loc%bc(edge_id)%series,1)) then
               datapos = i + 1
@@ -217,31 +218,31 @@ module evap_bc
               EXIT
             end if
           end do
-      
-      
-          rhmean = pde_loc%bc(edge_id)%series(datapos,7)
-          rain = pde_loc%bc(edge_id)%series(datapos,11)
-          theta =  pde_loc%mass(1)%val(pde_loc, layer, quadpnt)
-          
-          evap = evaporation(layer, quadpnt, rhmean)
-              
-          if ((rain - evap) >= 0) then
-            value = rain - evap
-          else
-            value = rain - evap*theta**(2.0_rkind/3.0_rkind)
-          end if
+    
+    
+        rhmean = pde_loc%bc(edge_id)%series(datapos,7)
+        rain = pde_loc%bc(edge_id)%series(datapos,11)
+        theta =  pde_loc%mass(1)%val(pde_loc, layer, quadpnt)
+        
+        evap = evaporation(layer, quadpnt, rhmean)
+            
+        if ((rain - evap) >= 0) then
+          value = rain - evap
         else
-          print *, "evaporation boundary must be time dependent, check record for the boundary", edge_id
-          ERROR STOP
+          value = rain - evap*theta**(2.0_rkind/3.0_rkind)
         end if
+      else
+        print *, "evaporation boundary must be time dependent, check record for the boundary", edge_id
+        ERROR STOP
       end if
+    end if
 
 
-      if (present(code)) then
-        code = 2
-      end if
+    if (present(code)) then
+      code = 2
+    end if
 
-  end subroutine water_neumann
+  end subroutine water_evap
    
    
   !> Evaporation rate [m/s]
