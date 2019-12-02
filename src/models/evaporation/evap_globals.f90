@@ -58,7 +58,7 @@ module evap_globals
   integer(kind=ikind), parameter, public :: C_soil =  1920
   
   !> specific heat capacity of  air [J/kg K]
-  integer(kind=ikind), parameter, public :: C_air =  1200
+  integer(kind=ikind), parameter, public :: C_air =  1006
   
   !> density of soil [kg.m^-3]
   real(kind=rkind), parameter, public :: rho_soil = 2650

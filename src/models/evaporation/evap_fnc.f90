@@ -339,8 +339,6 @@ module evap_fnc
         !> local variables
         integer(kind=ikind):: D, i
         
-        
-        
         if (.not. present(quadpnt) .or. present(tensor)) then
           print *, "ERROR! output tensor undefined or integ point, exited from evap_fnc::difussion_Th"
           ERROR STOP
@@ -422,7 +420,7 @@ module evap_fnc
         vector_out(1:D) = C_liq*rho_liq*T*Kvect(1:D)
 
     end subroutine convection_T
-    !! Source term heat flow
+    !> Source term heat flow
     function source_T(pde_loc, layer, quadpnt_in, x)  result(val)
       use typy
       use global_objs
@@ -453,7 +451,7 @@ module evap_fnc
     end function source_T
 
 
-    
+    !> Liquid water flux
     subroutine liquid_flux(pde_loc, layer, quadpnt, x, grad,  flux, flux_length)
       use typy
       use pde_objs
@@ -540,6 +538,7 @@ module evap_fnc
     
     end subroutine liquid_flux
     
+    !> Water Vapour flux
     subroutine vapor_flux(pde_loc, layer, quadpnt, x, grad,  flux, flux_length)
       use typy
       use pde_objs
@@ -646,6 +645,7 @@ module evap_fnc
       
     end subroutine vapor_flux
     
+    !> Modified heat flux
     subroutine heatmod_flux(pde_loc, layer, quadpnt, x, grad,  flux, flux_length)
       use typy
       use pde_objs
@@ -739,7 +739,7 @@ module evap_fnc
       
     end subroutine heatmod_flux
     
-      !!> Thermal Properties of Liquid water
+    !> Thermal Properties of Liquid water
     function hydraulic_lT(pde_loc, layer, quadpnt) result(val)
         use typy
         use global_objs
@@ -779,7 +779,7 @@ module evap_fnc
         
     end function hydraulic_lT
       
-      !!> Isothermal Properties of water vapor
+    !> Isothermal Properties of water vapor
     function hydraulic_vh(pde_loc, layer, quadpnt) result(val)
         use typy
         use global_objs
@@ -795,7 +795,7 @@ module evap_fnc
         type(integpnt_str), intent(in), optional :: quadpnt 
         !>unsaturated non-thermal conductuvity of water vapor
         real(kind=rkind) :: val
-        !>T:temperature
+        !> T:temperature
         !> Rh: relatuive humidity of soil
         !> rho_l: liquid water density
         !> rho_sv: saturated vapor density
@@ -820,7 +820,7 @@ module evap_fnc
     
     end function hydraulic_vh
       
-      !!> Thermal Properties of water vapor
+    !> Thermal Properties of water vapor
     function hydraulic_vT(pde_loc, layer, quadpnt) result(val)
         use typy
         use global_objs
@@ -853,7 +853,7 @@ module evap_fnc
         val = (diff/rho_l_val)*enhancement_factor_val*drho_svdT_val*rh_soil_val
         
     end function hydraulic_vT
-      !!> Water vapor time derivative
+    !> Water vapor time derivative
     function dtheta_vapordt(pde_loc, layer, quadpnt_in, x)  result(val)
       use typy
       use global_objs
@@ -886,7 +886,7 @@ module evap_fnc
         
     end function dtheta_vapordt
     
-      !!> Water vapor content
+    !> Water vapor content
     function theta_vapor(pde_loc,layer, quadpnt) result(val)
       use typy
       use global_objs

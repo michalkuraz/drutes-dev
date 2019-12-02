@@ -146,8 +146,6 @@ module Re_evap_bc
       
           hour  = pde_loc%bc(edge_id)%series(datapos,1)
           day = pde_loc%bc(edge_id)%series(datapos,2)
-          hour  = pde_loc%bc(edge_id)%series(datapos,1)
-          day = pde_loc%bc(edge_id)%series(datapos,2)
           month = pde_loc%bc(edge_id)%series(datapos,3)
           year = pde_loc%bc(edge_id)%series(datapos,4)
           tmax = pde_loc%bc(edge_id)%series(datapos,5)
@@ -172,7 +170,7 @@ module Re_evap_bc
           e_act = ((e_o(tmax) + e_o(tmin))/2.0_rkind)*(rhmean/100.0_rkind)
           slope_vap = (4098.0_rkind*e_sat)/(tmean + Tref)**2.0_rkind
           
-          !num_day calculation
+          !> num_day calculation
           num_day = num_day_fcn (day, month,evap_units)
           !> Net Radiation calculation             
           radiation = radiation_fcn(num_day,latitude,elevation,albedo,e_act,solar,tmink,tmaxk)

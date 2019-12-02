@@ -49,28 +49,48 @@ module evap_bc
     use evap_globals
     use re_evap_bc
       
-      class(pde_str), intent(in) :: pde_loc
-      integer(kind=ikind), intent(in)  :: el_id, node_order
-      real(kind=rkind), intent(out), optional   :: val
-      real(kind = rkind), intent(out), optional :: acoef, bcoef
-      integer(kind=ikind), intent(out), optional :: code
-      real(kind=rkind), dimension(:), intent(out), optional :: valarray
+    class(pde_str), intent(in) :: pde_loc
+    !>Node id and order
+    integer(kind=ikind), intent(in)  :: el_id, node_order
+    !>return value
+    real(kind=rkind), intent(out), optional   :: val
+    !Robin boundary coeficients
+    real(kind = rkind), intent(out), optional :: acoef, bcoef
+    !> return type of boundary condition
+    integer(kind=ikind), intent(out), optional :: code
+    !> return value for Robin boundary
+    real(kind=rkind), dimension(:), intent(out), optional :: valarray
+    !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
+    type(integpnt_str) :: quadpnt
+    !Layer ID
+    integer(kind=ikind) :: layer
+    !> coordinates
+    real(kind=rkind), dimension(3) :: xyz
+    !> T:temperature
+    !> rho_l: liquid water density
+    !> L: latent heat of vaporization
+    !> kappa: thermal conductivity
+    real(kind =rkind):: T, L , kappa, rho_liq
+    !> temperature maximum, mininum and mean
+    !> solar: solar radiation 
+    real(kind=rkind) :: tmax, tmin,tmean,solar
+    !> evap: evaporation rate
+    !> rh_air: air relative humidity
+    !> e_act: Actual vapor pressure
+    real(kind=rkind) ::  e_act, evap, rh_air
+    !> temperature maximum, mininum in Kelvin 
+    real(kind=rkind) :: tmaxk,tmink
+    !Hs: sensible heat 
+    !rad: solar radiation 
+    !soil heat flux
+    real(kind = rkind):: Hs, rad, heat_soil_flux
     
-      type(integpnt_str) :: quadpnt
-      integer(kind=ikind) :: layer
-      real(kind=rkind), dimension(3) :: xyz
-      real(kind =rkind):: T, L , kappa
-      real(kind = rkind), dimension(3):: normal_vct
-      
-      real(kind=rkind) :: tmax, tmin,tmean,solar
-      real(kind=rkind) ::  e_act, evap, rhmean
-      real(kind=rkind) :: radiation, tmaxk,tmink
-      real(kind = rkind):: Hs, rad, heat_soil_flux
-      logical, save :: run1st=.true.
-      character(len=8), save :: evap_units 
-      integer(kind =ikind) :: D, i,  edge_id, datapos, dataprev
-      integer(kind =ikind) :: num_day,hour,day, month
-      real(kind=rkind), dimension(3) :: q_vap, q_liq
+    logical, save :: run1st=.true.
+    character(len=8), save :: evap_units 
+    integer(kind =ikind) :: D, i,  edge_id, datapos, dataprev
+    integer(kind =ikind) :: num_day,hour,day,month
+    !> liquid water and watwer vapor flux
+    real(kind=rkind), dimension(3) :: q_vap, q_liq
       
       
       quadpnt%type_pnt = "ndpt"
@@ -103,18 +123,20 @@ module evap_bc
           month = pde_loc%bc(edge_id)%series(datapos,3)
           tmax = pde_loc%bc(edge_id)%series(datapos,5)
           tmin = pde_loc%bc(edge_id)%series(datapos,6)
-          rhmean = pde_loc%bc(edge_id)%series(datapos,7)
+          rh_air = pde_loc%bc(edge_id)%series(datapos,7)
           solar = pde_loc%bc(edge_id)%series(datapos,10)
           
-          tmean = (tmax+tmin)/2.0_rkind
+          tmean = ((tmax+tmin)/2.0_rkind) + Tref
           tmink = tmin + Tref
           tmaxk = tmax + Tref
-          e_act = ((e_o(tmax) + e_o(tmin))/2.0_rkind)*(rhmean/100.0_rkind)
+          e_act = ((e_o(tmax) + e_o(tmin))/2.0_rkind)*(rh_air/100.0_rkind)
       
           kappa = thermal_conduc(pde_loc, layer, quadpnt)
           L = latent_heat_wat(quadpnt)
+          rho_liq = rho_l(quadpnt)
+          !temperature shpuld be in K 
           Hs= sensible_heat(quadpnt, tmean)
-          evap = evaporation(layer, quadpnt, rhmean)
+          evap = evaporation(layer, quadpnt, rh_air)
           num_day = num_day_fcn (day, month,evap_units)
           rad = radiation_fcn(num_day,latitude,elevation,albedo,e_act,solar,tmink,tmaxk)
           
@@ -122,10 +144,9 @@ module evap_bc
           
           call liquid_flux(pde_loc, layer, quadpnt, flux=q_liq(1:D))
           
-          heat_soil_flux = rad - Hs - L*evap
+          heat_soil_flux = rad - Hs - L*evap*rho_liq
       
-          normal_vct (1:D) = 0
-          val =  - heat_soil_flux - L*norm2(q_vap(1:D))
+          val =  - heat_soil_flux - L*norm2(q_vap(1:D))*rho_liq
           acoef = -kappa
           bcoef = C_liq*norm2(q_liq(1:D)) + C_vap*norm2(q_vap(1:D))
               
@@ -171,8 +192,7 @@ module evap_bc
       real(kind=rkind) ::  evap, rhmean, rain, theta
       
     
-      
-
+    
       quadpnt%type_pnt = "ndpt"
       quadpnt%order = elements%data(el_id, node_order)
       quadpnt%column = 2
@@ -219,30 +239,35 @@ module evap_bc
       end if
 
   end subroutine water_neumann
-    
+   
+   
+  !> Evaporation rate [m/s]
+  !> Input: Air Relative humiduty [-]
   function evaporation(layer, quadpnt, rh_air) result(val)
-      use typy
-      use globals
-      use global_objs
-      use pde_objs
-      use re_globals
-      use core_tools
-      use geom_tools
-      use debug_tools
-      use evap_fnc
-      use evap_auxfnc
-      use evap_globals
+    use typy
+    use globals
+    use global_objs
+    use pde_objs
+    use re_globals
+    use core_tools
+    use geom_tools
+    use debug_tools
+    use evap_fnc
+    use evap_auxfnc
+    use evap_globals
       
-      
-      integer(kind=ikind), intent(in) :: layer
-      !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
-      type(integpnt_str), intent(in), optional :: quadpnt 
-        real(kind=rkind) :: rh_air
-      real(kind=rkind) :: val
-        
-      real(kind=rkind) :: rh_soil_val, rho_l_val,rho_sv_val
-      
-      
+    !>material ID  
+    integer(kind=ikind), intent(in) :: layer
+    !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
+    type(integpnt_str), intent(in), optional :: quadpnt 
+    !> Relative humidity of air 
+    real(kind=rkind) :: rh_air
+    !> Evaporation rate [m/s]
+    real(kind=rkind) :: val
+    !> Relative humidity soil
+    !> liquid water density 
+    !> saturated water vapor density
+    real(kind=rkind) :: rh_soil_val, rho_l_val,rho_sv_val
       
       rh_soil_val = rh_soil(layer, quadpnt)
       rho_l_val = rho_l(quadpnt) 
@@ -252,7 +277,9 @@ module evap_bc
   
   end function evaporation
   
-   function sensible_heat(quadpnt, temp_air) result(val)
+  !> Sensible heat[W/m^2]
+  !> Input: Air temperature[K]
+  function sensible_heat(quadpnt, temp_air) result(val)
       use typy
       use globals
       use global_objs
@@ -275,7 +302,7 @@ module evap_bc
       
       T = pde(Heat_order)%getval(quadpnt)
       
-      val = C_air *((T -temp_air)/resistance)
+      val = C_air*rho_air*((T - temp_air)/resistance)
   
   end function sensible_heat
 

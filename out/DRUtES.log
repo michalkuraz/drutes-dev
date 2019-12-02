@@ -7,8 +7,10 @@
   
  DRUtES is initializing, reading input files
  ---------------------------------------------------------------
- 17hrs : 29min : 03.057s  -  2019/11/21    total number of parallel images is:                    1
+ 11hrs : 26min : 05.790s  -  2019/12/02    total number of parallel images is:                    1
  ---------------------------------------------------------------
- 17hrs : 29min : 03.076s  -  2019/11/21    reading input files and allocating...
+ 11hrs : 26min : 05.790s  -  2019/12/02    reading input files and allocating...
  ---------------------------------------------------------------
- 17hrs : 29min : 03.139s  -  2019/11/21    number of nodes:                   71 number of elements:                   70
+ 11hrs : 26min : 05.791s  -  2019/12/02    number of nodes:                   71 number of elements:                   70
+ ---------------------------------------------------------------
+ 11hrs : 26min : 05.792s  -  2019/12/02    Creating constitutive function table for Richards equation

@@ -1,6 +1,6 @@
 
 #hour 	day	month 	year	 MinTemp	 MaxTemp	 Humid.	Wind	Sunshine	Radiation	Rain
-1           	1	  1	     2019	     22.8	       29.6	          81	      78	         4.0	      15.7	        0
+1 1	1	2019	22.8	29.6	81	78	4.0	15.7	0
 
 2	1	2	2019	22.7	30.3	82	69	4.6	16.9	0
 
