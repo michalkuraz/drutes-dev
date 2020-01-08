@@ -7,10 +7,18 @@
   
  DRUtES is initializing, reading input files
  ---------------------------------------------------------------
- 16hrs : 19min : 46.873s  -  2020/01/08    total number of parallel images is:                    1
+ 18hrs : 42min : 45.855s  -  2020/01/08    total number of parallel images is:                    1
  ---------------------------------------------------------------
- 16hrs : 19min : 46.874s  -  2020/01/08    reading input files and allocating...
+ 18hrs : 42min : 45.855s  -  2020/01/08    reading input files and allocating...
  ---------------------------------------------------------------
- 16hrs : 19min : 46.874s  -  2020/01/08    number of nodes:                   21 number of elements:                   20
+ 18hrs : 42min : 45.856s  -  2020/01/08    number of nodes:                   21 number of elements:                   20
  ---------------------------------------------------------------
- 16hrs : 19min : 46.875s  -  2020/01/08    Creating constitutive function table for Richards equation
+ 18hrs : 42min : 45.857s  -  2020/01/08    analyzing mesh structure...
+ ---------------------------------------------------------------
+ 18hrs : 42min : 45.857s  -  2020/01/08    DRUtES solves DRUtES solves Rciahrds equation with vapour flow
+ ---------------------------------------------------------------
+ 18hrs : 42min : 45.857s  -  2020/01/08    making output files for observation time
+ ---------------------------------------------------------------
+ 18hrs : 42min : 45.860s  -  2020/01/08    go 4 solving
+ ---------------------------------------------------------------
+ 18hrs : 42min : 46.009s  -  2020/01/08    current simulation time:   0.0000000000000000 total iteration count:                   20

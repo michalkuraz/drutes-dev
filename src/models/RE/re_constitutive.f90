@@ -69,6 +69,8 @@ module RE_constitutive
       call write_log(msg)
       
       call make_print("separately")
+      
+      ERROR STOP
 	      
       
     end subroutine intoverflow
@@ -1922,6 +1924,7 @@ module RE_constitutive
         quadpnt_loc%type_pnt = "ndpt"
         quadpnt_loc%order = node_order
 
+        
         call pde_loc%pde_fnc(pde_loc%order)%dispersion(pde_loc, elements%material(el_id), quadpnt_loc, &
                   tensor=K(1:drutes_config%dimen, 1:drutes_config%dimen))
 
