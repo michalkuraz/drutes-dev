@@ -1833,14 +1833,19 @@ module RE_constitutive
         real(kind=rkind), dimension(3) :: gravflux, bcflux
         real(kind=rkind) :: bcval, gfluxval
         integer :: i1
+        type(integpnt_str) :: quadpnt_loc
 
             
         if (present(value)) then
           edge_id = nodes%edge(elements%data(el_id, node_order))
 
           i = pde_loc%permut(elements%data(el_id, node_order))
+          
+          quadpnt_loc%column = 2
+          quadpnt_loc%type_pnt = "ndpt"
+          quadpnt_loc%order = node_order
 
-          call pde_loc%pde_fnc(1)%dispersion(pde_loc, elements%material(el_id), x=(/pde_common%xvect(i,2)/), &
+          call pde_loc%pde_fnc(pde_loc%order)%dispersion(pde_loc, elements%material(el_id), quadpnt_loc, &
                   tensor=K(1:drutes_config%dimen, 1:drutes_config%dimen))
 
           gravflux(1:drutes_config%dimen) = K(drutes_config%dimen, 1:drutes_config%dimen)*elements%nvect_z(el_id, node_order)
@@ -1903,6 +1908,7 @@ module RE_constitutive
       integer(kind=ikind) :: layer
       real(kind=rkind) :: theta, bcval
       integer(kind=ikind) :: i, edge_id, j
+      type(integpnt_str) :: quadpnt_loc
   
   
       if (present(code)) then
@@ -1912,9 +1918,11 @@ module RE_constitutive
       if (present(value)) then
         edge_id = nodes%edge(elements%data(el_id, node_order))
 
-        i = pde_loc%permut(elements%data(el_id, node_order))
+        quadpnt_loc%column = 2
+        quadpnt_loc%type_pnt = "ndpt"
+        quadpnt_loc%order = node_order
 
-        call pde_loc%pde_fnc(1)%dispersion(pde_loc, elements%material(el_id), x=(/pde_common%xvect(i,2)/), &
+        call pde_loc%pde_fnc(pde_loc%order)%dispersion(pde_loc, elements%material(el_id), quadpnt_loc, &
                   tensor=K(1:drutes_config%dimen, 1:drutes_config%dimen))
 
               gravflux(1:drutes_config%dimen) = K(drutes_config%dimen, 1:drutes_config%dimen)*elements%nvect_z(el_id, node_order)
@@ -1924,9 +1932,9 @@ module RE_constitutive
           do i=1, ubound(pde_loc%bc(edge_id)%series,1)
             if (pde_loc%bc(edge_id)%series(i,1) > time) then
               if (i > 1) then
-          j = i-1
+                j = i-1
               else
-          j = i
+                j = i
               end if
               bcval = pde_loc%bc(edge_id)%series(j,2)
               EXIT

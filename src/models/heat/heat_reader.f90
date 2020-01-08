@@ -144,11 +144,12 @@ module heat_reader
        call fileread(r=heatpar(i)%source, fileid=file_heat, errmsg=trim(msg))
       end do
       
-      
+
       write(unit=msg, fmt=*) "The number of boundaries should be greater than zero and smaller or equal the number of nodes"
+      
       call fileread(n, file_heat, ranges=(/1_ikind, nodes%kolik/),&
         errmsg=trim(msg))
-      
+
       call readbcvals(unitW=file_heat, struct=pde_loc%bc, dimen=n, &
           dirname="drutes.conf/heat/")
 
