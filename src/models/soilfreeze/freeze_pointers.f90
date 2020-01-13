@@ -90,9 +90,7 @@ module freeze_pointers
         end select
       end do
       pde(wat)%initcond => wat_initcond
-      
-      rwcap => vangen_elast_fr
-      
+            
       pde(wat)%problem_name(1) = "RE_freeze_thaw"
       pde(wat)%problem_name(2) = "Richards' equation with freezing and thawing"
 

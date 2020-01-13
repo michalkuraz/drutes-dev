@@ -406,7 +406,7 @@ module freeze_helper
         theta = ths
         RETURN
       else
-        theta_e = 1/(1+(a*(abs(h)))**n)**m
+        theta_e = 1/(1+(a*abs(h))**n)**m
         theta = theta_e*(ths-freeze_par(layer)%Thr)+freeze_par(layer)%Thr
       end if
 
@@ -439,7 +439,7 @@ module freeze_helper
 
       real(kind=rkind) :: C, a, m, n, tr, ts 
       type(integpnt_str) :: quadpnt_loc  
-      real(kind=rkind) :: trsh = 1e-6    
+      real(kind=rkind) :: trsh = 1e-9    
           
       
       if (present(quadpnt) .and. present(x)) then

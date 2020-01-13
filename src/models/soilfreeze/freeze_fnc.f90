@@ -9,9 +9,7 @@ module freeze_fnc
   public :: capacityTT, capacityTh, diffTT, convectTT, thermal_k, heat_flux_freeze, Dirichlet_Neumann_switch_bc
   public :: capacityTsTs, thermal_p, diffTsTs, heat_flux_s_LTNE
   public:: T_m, qsl_neg, qsl_pos
-  
-  procedure(scalar_fnc), pointer, public :: rwcap
-      
+        
       
   
   contains
@@ -34,9 +32,9 @@ module freeze_fnc
       real(kind=rkind)                :: val
     
       if (iceswitch(quadpnt)) then
-        val = rho_ice/rho_wat*rwcap(pde_loc, layer, quadpnt)
+        val = rho_ice/rho_wat*vangen_elast_fr(pde_loc, layer, quadpnt)
       else
-        val = rwcap(pde_loc, layer, quadpnt)
+        val = vangen_elast_fr(pde_loc, layer, quadpnt)
 
       end if
     end function capacityhh
@@ -65,10 +63,10 @@ module freeze_fnc
 !       if (iceswitch(quadpnt)) then
 !         if(fr_rate) then
 !           val = (rho_wat-rho_ice)/rho_wat*&
-!         rwcap(pde_loc, layer, quadpnt) * Lf/temp/grav
+!         vangen_elast_fr(pde_loc, layer, quadpnt) * Lf/temp/grav
 !         else
 !           val = (rho_wat-rho_ice)/rho_wat*&
-!         rwcap(pde_loc, layer, x=(/hl(pde_loc, layer, quadpnt)/)) * Lf/temp/grav
+!         vangen_elast_fr(pde_loc, layer, x=(/hl(pde_loc, layer, quadpnt)/)) * Lf/temp/grav
 !         end if
 ! 
 !       else
@@ -198,7 +196,7 @@ module freeze_fnc
         val = 0
       end if
       if(iceswitch(quadpnt)) then
-        val = rwcap(pde_loc, layer, quadpnt)
+        val = vangen_elast_fr(pde_loc, layer, quadpnt)
       end if
       
       if(.not. fr_rate) then
@@ -287,7 +285,7 @@ module freeze_fnc
        if(.not. fr_rate) then
          if(iceswitch(quadpnt)) then
            val = val + Lf*rho_ice*Lf/temp/grav*&
-           rwcap(pde_loc, layer, x = (/hl(pde(wat), layer, quadpnt)/))
+           vangen_elast_fr(pde_loc, layer, x = (/hl(pde(wat), layer, quadpnt)/))
          end if
        end if
 
