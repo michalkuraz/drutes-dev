@@ -225,12 +225,8 @@ module evap_bc
         theta =  pde_loc%mass(1)%val(pde_loc, layer, quadpnt)
         
         evap = evaporation(layer, quadpnt, rhmean)
-            
-        if ((rain - evap) >= 0) then
-          value = rain - evap
-        else
-          value = rain - evap*theta**(2.0_rkind/3.0_rkind)
-        end if
+        value = evap
+       print*,"evaporation rate", value
       else
         print *, "evaporation boundary must be time dependent, check record for the boundary", edge_id
         ERROR STOP
