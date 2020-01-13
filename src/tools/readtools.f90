@@ -50,6 +50,8 @@ module readtools
       integer(kind=ikind), dimension(:), intent(in),  optional :: ranges
       integer, intent(in), optional :: minimal, maximal
       logical, intent(in), optional :: noexit
+      
+      logical :: go4exit = .false.
 
       !local vars
       integer :: ierr
@@ -68,7 +70,14 @@ module readtools
       if (present(ranges)) then
         if (i<ranges(1) .or. i> ranges(2)) then
           write(unit=terminal, fmt=*) " " //achar(27)//'[91m', "incorrect ranges of input parameter(s)" //achar(27)//'[0m'
-          if (.not. present(noexit) .or. .not. noexit) then
+          if (.not. present(noexit)) then
+            go4exit = .true.
+          else 
+            if (.not. noexit) then
+              go4exit = .true.
+            end if
+          end if
+          if (go4exit) then
             if (present(errmsg)) then
               call file_error(fileid,errmsg)
             else
@@ -91,6 +100,7 @@ module readtools
       logical, intent(in), optional :: noexit
 
 
+
       !local vars
       integer :: ierr
 
@@ -99,10 +109,7 @@ module readtools
       read(unit=fileid, fmt=*, iostat=ierr) i
 
       if (ierr /= 0) then
-        if (present(errmsg)) then
-          call file_error(fileid,errmsg)
-        end if
-        if (.not. present(noexit) .or. .not. noexit) then
+        if (.not. present(noexit)) then
           if (present(errmsg)) then
             call file_error(fileid,errmsg)
           else
@@ -111,11 +118,13 @@ module readtools
         end if
       end if
       
+       
+      
       
        if (present(ranges)) then
         if (i<ranges(1) .or. i> ranges(2)) then
           write(unit=terminal, fmt=*) " " //achar(27)//'[91m', "incorrect ranges of input parameter(s)" //achar(27)//'[0m'
-          if (.not. present(noexit) .or. .not. noexit) then
+          if (.not. present(noexit)) then
             if (present(errmsg)) then
               call file_error(fileid,errmsg)
             else
@@ -230,7 +239,7 @@ module readtools
         if (present(errmsg)) then
           call file_error(fileid,errmsg)
         end if
-        if (.not. present(noexit) .or. .not. noexit) then
+        if (.not. present(noexit)) then
           if (present(errmsg)) then
             call file_error(fileid,errmsg)
           else

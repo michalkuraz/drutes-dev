@@ -99,7 +99,6 @@ module femmat
         end if
         
 
-
         error = norm2(pde_common%xvect(1:fin,2)-pde_common%xvect(1:fin,3))/ubound(pde_common%xvect,1)
         
 
@@ -197,7 +196,7 @@ module femmat
 
        call build_stiff_np(i, time_step)
 
-       call pde_common%time_integ(i)  
+       call pde_common%time_integ(i)
 
        stiff_mat = stiff_mat + cap_mat
         

@@ -13,9 +13,8 @@
 ! along with DRUtES. If not, see <http://www.gnu.org/licenses/>.
 
 !> \file evap_fnc.f90
-!! \brief This module contains subroutines that read input information from config files and additional input files
+!! \brief: this module contains the primary function to construct the PDE equations for liquid water, water vapor and heat flow
 !<
-
 
 
 
@@ -35,11 +34,9 @@ module evap_fnc
   public :: source_h, source_T
 
   contains
-  
-  
     !!> Coefficents for modified Richards equation
     !!> Capacity water flow equation from RE equation 
-    !! Difussion due to pressure gradient
+    !!> Difussion due to pressure gradient
     subroutine difussion_hh(pde_loc, layer, quadpnt,  x, tensor, scalar)
       use typy
       use re_globals
@@ -48,6 +45,7 @@ module evap_fnc
       use re_constitutive
 
       class(pde_str), intent(in) :: pde_loc
+       !> material ID
       integer(kind=ikind), intent(in) :: layer
       !> pressure head
       real(kind=rkind), dimension(:), intent(in), optional :: x
@@ -58,39 +56,33 @@ module evap_fnc
       !> relative hydraulic conductivity, (scalar value)
       real(kind=rkind), intent(out), optional :: scalar
       
-      
+      !> Klh: unsaturated non-thermal conductivity for water
+      !> Klv: unsaturated thermal conductivity for water     
       real(kind=rkind), dimension(3,3) :: Klh, Kvh
+      !> local variables
       integer(kind=ikind):: D, i
+      !> Kvh_scalar: scalar value of unsaturated non-thermal conductivity for water
       real(kind=rkind):: Kvh_scalar
       
-      if (.not. present(quadpnt) .or. present(tensor)) then
-        print *, "ERROR! output tensor undefined or integ point, exited from evap_fnc::difussion_hh"
-        ERROR STOP
-      end if
-      
-      if ( present(x) ) then
-        print *, "This option is not implemented"
+      if (present(x)) then
+        print *, "ERROR! use quadpnt only"
         print *, "exited from evap_fnc::difussion_hh"
         ERROR STOP
       end if
+
       
-      D = drutes_config%dimen
-      
+      D = drutes_config%dimen !Dimension of the problem
       call mualem(pde_loc, layer, quadpnt, tensor = Klh(1:D,1:D))
-      
-      
       Kvh_scalar = hydraulic_vh( pde_loc,layer, quadpnt)
-    
-      
+      !Filling the tensor of Kvh
       Kvh = 0 
       do i=1, D
         Kvh(i,i) = Kvh_scalar 
       end do
-      
       tensor(1:D,1:D) = Klh(1:D,1:D) + Kvh(1:D,1:D)
       
     end subroutine difussion_hh
-    !! Difussion due to temperature gradient
+    !! Difussion due to temperature gradient: the same of normal RE
     subroutine difussion_hT(pde_loc, layer, quadpnt,  x, tensor, scalar)
       use re_globals
       use pde_objs
@@ -105,12 +97,15 @@ module evap_fnc
       real(kind=rkind), dimension(:,:), intent(out), optional :: tensor
       !> relative hydraulic conductivity, (scalar value)
       real(kind=rkind), intent(out), optional :: scalar
-      
+      !> Klt: total unsaturated non-thermal conductivity of liquid water
+      !> Kvt: total unsaturated thermal conductivity for water vapor
       real(kind=rkind), dimension(3,3) :: KlT, KvT
+      !> KvT_scalar: scalar value of unsaturated thermal conductivity for water
       real(kind=rkind) ::  KvT_scalar
+      !> local variab
       integer(kind=ikind):: D, i
        
-      if (.not. present(quadpnt) .or. present(tensor)) then
+      if (.not. present(quadpnt) .or. .not. present(tensor)) then
         print *, "ERROR! output tensor undefined or integ point, exited from evap_fnc::difussion_hT"
         ERROR STOP
       end if
@@ -128,59 +123,16 @@ module evap_fnc
       
 
       KvT = 0
-      
       do i=1, D
-        
         KvT(i,i) = KvT_scalar 
       end do
       
       tensor(1:D,1:D) = KlT(1:D, 1:D) + KvT(1:D,1:D)
         
     end subroutine difussion_hT
-    !! Convection term for water flow 
-    subroutine convection_h(pde_loc, layer, quadpnt, x, vector_in, vector_out, scalar)
-      use typy
-      use re_globals
-      use pde_objs
-      use re_constitutive
-      
 
-      class(pde_str), intent(in) :: pde_loc
-      integer(kind=ikind), intent(in) :: layer
-      type(integpnt_str), intent(in), optional :: quadpnt    
-      !> pressure head
-      real(kind=rkind), dimension(:), intent(in), optional :: x
-      !> this argument is required by the global vector_fnc procedure pointer, unused in this procedure
-      real(kind=rkind), dimension(:), intent(in), optional :: vector_in
-      !> first order tensor of the unsaturated hydraulic conductivity derivative in respect to h. it is the last column of the hydraulic conductivity second order tensor times  
-      !!relative unsaturated hydraulic conductivity derivative in respect to h (scalar value)
-      !<
-      real(kind=rkind), dimension(:), intent(out), optional :: vector_out
-      !> relative unsaturated hydraulic conductivity derivative in respect to h, scalar value
-      real(kind=rkind), intent(out), optional :: scalar
-      
-      real(kind=rkind), dimension(3) :: Kvect
-      integer(kind=ikind):: D
-      
-        
-      if (.not. present(quadpnt) .or. present(vector_out)) then
-        print *, "ERROR! output vector undefined or integ point, exited from evap_fnc::convection_h"
-        ERROR STOP
-      end if 
-      
-      if ( present(x) ) then
-        print *, "This option is not implemented"
-        print *, "exited from evap_fnc::convection_h"
-        ERROR STOP
-      end if
-        
-      D = drutes_config%dimen
-        
-      call dmualem_dh(pde_loc, layer, quadpnt, x, vector_in, vector_out = Kvect(1:D))
-      vector_out = Kvect(1:D)
-      
-    end subroutine convection_h
     
+    !! Source term of for water flow
     function source_h(pde_loc, layer, quadpnt_in, x)  result(val)
       use typy
       use global_objs
@@ -193,13 +145,10 @@ module evap_fnc
       integer(kind=ikind), intent(in) :: layer
       !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
       type(integpnt_str), intent(in), optional :: quadpnt_in
-       !> value of the nonlinear function
+      !> value of the nonlinear function
       real(kind=rkind), dimension(:), intent(in), optional    :: x    
       !> return value
       real(kind=rkind) :: val
-      
-  
-      
       
       val = 0
       val = vgset(layer)%sinkterm
@@ -216,6 +165,7 @@ module evap_fnc
       use re_globals
       use pde_objs
       use evap_globals
+      use evap_auxfnc
 
       class(pde_str), intent(in) :: pde_loc
       integer(kind=ikind), intent(in) :: layer
@@ -223,8 +173,14 @@ module evap_fnc
       real(kind=rkind), dimension(:), intent(in), optional :: x
       !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
       type(integpnt_str), intent(in), optional :: quadpnt      
+      !> return value
       real(kind=rkind) :: val 
-  
+      !> rho_liq: liquid water density
+      !> rho_vapor: water vapor density
+      real(kind=rkind) :: rho_liq,rho_vapor
+      
+      rho_liq = rho_l( quadpnt)
+      rho_vapor = rho_sv(quadpnt)*rh_soil(layer, quadpnt)
       
       if (.not. present(quadpnt)) then
         print *, "ERROR! integ point undefined, exited from evap_fnc::capacity_T"
@@ -237,46 +193,55 @@ module evap_fnc
         ERROR STOP
       end if
       
-      val = C_liq + C_vap + C_soil
-
-      
+      val = rho_liq*C_liq + rho_vapor*C_vap + rho_soil*C_soil
     end function capacity_T
+    
+    
     !! Difussion due to temperature gradient
     subroutine difussion_TT(pde_loc, layer, quadpnt,  x, tensor, scalar)
       use typy
       use re_globals
       use pde_objs
       use evap_auxfnc
+      use debug_tools
 
       class(pde_str), intent(in) :: pde_loc
       integer(kind=ikind), intent(in) :: layer
-      !> pressure head
+      !> temperature
       real(kind=rkind), dimension(:), intent(in), optional :: x
       !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
       type(integpnt_str), intent(in), optional :: quadpnt      
       !> second order tensor of the unsaturated hydraulic conductivity
       real(kind=rkind), dimension(:,:), intent(out), optional :: tensor
-      
       !> relative hydraulic conductivity, (scalar value)
       real(kind=rkind), intent(out), optional :: scalar
-      
-      real(kind=rkind) :: T, L, kappa, KvT_scalar
+      !> T:temperature
+      !> L: Specific latent heat
+      !> rho_liq: liquid water density
+      !> rho_vapor: water vapor density
+      !> Kvh_scalar: scalar value of unsaturated non-thermal conductivity for water
+      real(kind=rkind) :: T, L, kappa, KvT_scalar, rho_liq, rho_vapor
+      !> Klt: total unsaturated non-thermal conductivity of liquid water
+      !> Kvt: total unsaturated thermal conductivity for water vapor
+      !> kappa_tensor: tensor of thermal conductivity
       real(kind=rkind), dimension(3,3) :: KlT, KvT, kappa_tensor
+      !> local variables
       integer(kind=ikind):: D, i, j
       
-      if (.not. present(quadpnt) .or. present(tensor)) then
-        print *, "ERROR! output tensor undefined or integ point, exited from evap_fnc::difussion_TT"
-        ERROR STOP
-        
-      end if
+
+      D = drutes_config%dimen
+      
        if ( present(x) ) then
         print *, "This option is not implemented"
         print *, "exited from evap_fnc::difussion_TT"
         ERROR STOP
       end if
       
+      T = pde(Heat_order)%getval(quadpnt)
       kappa = thermal_conduc(pde_loc, layer, quadpnt)
       L = latent_heat_wat(quadpnt)
+      rho_liq = rho_l(quadpnt)
+      rho_vapor = rho_sv(quadpnt)*rh_soil(layer, quadpnt)
       
       KlT(1:D,1:D) = hydraulic_lT(pde_loc, layer, quadpnt)
       
@@ -289,13 +254,18 @@ module evap_fnc
       
       kappa_tensor = 0
       
-      do j=1, D
+      do i=1, D
         kappa_tensor(i,i) = kappa
       end do
+  
       
-      tensor(1:D,1:D) = kappa_tensor + C_vap*T*(KvT(1:D,1:D)) + L*(KvT(1:D,1:D))
+      tensor(1:D,1:D) = kappa_tensor(1:D, 1:D) + C_vap*rho_vapor*T*(KvT(1:D,1:D)) +  &
+                      C_liq*rho_liq*T*(KlT(1:D,1:D)) + L*rho_liq*(KvT(1:D,1:D))
+                    
       
     end subroutine difussion_TT
+    
+    
     !! Difussion due to pressure gradient
     subroutine difussion_Th(pde_loc, layer, quadpnt,  x, tensor, scalar)
         use typy
@@ -315,27 +285,30 @@ module evap_fnc
         
         !> relative hydraulic conductivity, (scalar value)
         real(kind=rkind), intent(out), optional :: scalar
-          
-        real(kind=rkind) :: T, L , Kvh_scalar 
+        !> T:temperature
+        !> L: Specific latent heat
+        !> rho_liq: liquid water density
+        !> rho_vapor: water vapor density
+        !> Kvh_scalar: scalar value of unsaturated non-thermal conductivity for water
+        real(kind=rkind) :: T, L , Kvh_scalar ,rho_liq, rho_vapor
+        !> Klh: unsaturated non-thermal conductivity for water
+        !> Klv: unsaturated thermal conductivity for water
         real(kind=rkind), dimension(3,3) :: Klh, Kvh
+        !> local variables
         integer(kind=ikind):: D, i
         
-        
-        
-        if (.not. present(quadpnt) .or. present(tensor)) then
-          print *, "ERROR! output tensor undefined or integ point, exited from evap_fnc::difussion_Th"
+        if (present(x)) then
+          print *, "ERROR! use quadpnt only"
+          print *, "exited from evap_fnc::difussion_Th"
           ERROR STOP
         end if
         
-        if ( present(x) ) then
-         print *, "This option is not implemented"
-         print *, "exited from evap_fnc::difussion_Th"
-        ERROR STOP
-       end if
         
         D = drutes_config%dimen 
         T = pde(Heat_order)%getval(quadpnt)
         L = latent_heat_wat(quadpnt)
+        rho_liq = rho_l( quadpnt)
+        rho_vapor = rho_sv(quadpnt)*rh_soil(layer, quadpnt)
         
       
         call mualem(pde_loc, layer, quadpnt,tensor = Klh(1:D,1:D))
@@ -346,16 +319,17 @@ module evap_fnc
           Kvh(i,i) = Kvh_scalar 
         end do
         
-        tensor(1:D,1:D) = C_liq*T*Klh(1:D,1:D) + C_vap*T*Kvh(1:D,1:D) +  Kvh(1:D,1:D)*L
+        tensor(1:D,1:D) = rho_liq*C_liq*T*Klh(1:D,1:D) + rho_vapor*C_vap*T*Kvh(1:D,1:D) +  Kvh(1:D,1:D)*L*rho_liq
           
           
     end subroutine difussion_Th
-      !! Convection term for heat flow
+    !! Convection term for heat flow
     subroutine convection_T(pde_loc, layer, quadpnt, x, vector_in, vector_out, scalar)
         use typy
         use re_globals
         use pde_objs
         use re_constitutive
+        use evap_auxfnc
 
         class(pde_str), intent(in) :: pde_loc
         integer(kind=ikind), intent(in) :: layer
@@ -364,39 +338,44 @@ module evap_fnc
         real(kind=rkind), dimension(:), intent(in), optional :: x
         !> this argument is required by the global vector_fnc procedure pointer, unused in this procedure
         real(kind=rkind), dimension(:), intent(in), optional :: vector_in
-        !> first order tensor of the unsaturated hydraulic conductivity derivative in respect to h. it is the last column of the hydraulic conductivity second order tensor times  
-        !!relative unsaturated hydraulic conductivity derivative in respect to h (scalar value)
-        !<
+        !> first order tensor of the unsaturated hydraulic conductivity derivative in respect to h. 
+        !> it is the last column of the hydraulic conductivity second order tensor times  
+        !>relative unsaturated hydraulic conductivity derivative in respect to h (scalar value)
         real(kind=rkind), dimension(:), intent(out), optional :: vector_out
         !> relative unsaturated hydraulic conductivity derivative in respect to h, scalar value
         real(kind=rkind), intent(out), optional :: scalar
         
+        !> Result from the derivative of mualem 
         real(kind=rkind), dimension(3) :: Kvect
+        !> local variable
         integer(kind=ikind) :: D
-        real(kind=rkind) :: T
+        !> T:temperature
+        !> rho_liq: liquid water density
+        real(kind=rkind) :: T, rho_liq
           
         
-        if (.not. present(quadpnt) .or. present(vector_out)) then
-          print *, "ERROR! output vector undefined or integ point, exited from evap_fnc::convection_T"
-          ERROR STOP
-         end if 
+
         
         if ( present(x) ) then
-         print *, "This option is not implemented"
+         print *, "ERROR: use quadpnt only."
          print *, "exited from evap_fnc::convection_T"
          ERROR STOP
         end if
         
         D = drutes_config%dimen
         T = pde(Heat_order)%getval(quadpnt)
+        rho_liq = rho_l( quadpnt)
           
         call dmualem_dh(pde_loc, layer, quadpnt, x,  vector_out = Kvect(1:D))
       
-        vector_out(1:D) = C_liq*T*Kvect(1:D)
+        vector_out(1:D) = C_liq*rho_liq*T*Kvect(1:D)
 
     end subroutine convection_T
     
-     function source_T(pde_loc, layer, quadpnt_in, x)  result(val)
+    
+    
+    !> Source term heat flow
+    function source_T(pde_loc, layer, quadpnt_in, x)  result(val)
       use typy
       use global_objs
       use pde_objs
@@ -414,9 +393,9 @@ module evap_fnc
       real(kind=rkind), dimension(:), intent(in), optional    :: x    
       !> return value
       real(kind=rkind) :: val
+      !> Laten heat of vaporization
       real(kind =rkind):: latent_heat
       
-     
       val = 0
       val = heatpar(layer)%source
       latent_heat = latent_heat_wat(quadpnt_in) 
@@ -425,7 +404,8 @@ module evap_fnc
       
     end function source_T
 
-    
+
+    !> Liquid water flux
     subroutine liquid_flux(pde_loc, layer, quadpnt, x, grad,  flux, flux_length)
       use typy
       use pde_objs
@@ -434,30 +414,36 @@ module evap_fnc
       
        
       class(pde_str), intent(in) :: pde_loc
+      !> Material ID
       integer(kind=ikind), intent(in) :: layer
-      type(integpnt_str), intent(in), optional :: quadpnt    
+      !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
+      type(integpnt_str), intent(in), optional :: quadpnt   
+      !> value of the nonlinear function
       real(kind=rkind), intent(in), dimension(:), optional :: x
       !> this value is optional, because it is required by the vector_fnc procedure pointer global definition
       real(kind=rkind), dimension(:), intent(in), optional :: grad
+      !> Vector of the flux
       real(kind=rkind), dimension(:), intent(out), optional :: flux
+      !> lengh of the flux vector
       real(kind=rkind), intent(out), optional :: flux_length
-
+      !> Klt: total unsaturated non-thermal conductivity of liquid water
       real(kind=rkind), dimension(3,3)  :: KlT
-      integer :: D
-      integer(kind=ikind)  :: i
+      !> local variable
+      integer(kind=ikind)  :: i, D
+      !> Liquid water flux
       real(kind=rkind), dimension(3)  ::  q_liq
+      !> resul of the modified flux of liquid water
       real(kind=rkind), dimension(3)  :: vct
+      !> pressure head
       real(kind=rkind) :: h
       real(kind=rkind), dimension(:), allocatable :: gradient
+      !> Gauss quadrature point structure local
       type(integpnt_str) :: quadpnt_loc
-      
+      !> Temperature gradient
       real(kind=rkind), dimension(:), allocatable, save :: gradT
       
-      if (present(quadpnt) .and. (present(grad) .or. present(x))) then
-        print *, "ERROR: the function can be called either with integ point or x value definition and gradient, not both of them"
-        ERROR stop
-      else if ((.not. present(grad) .or. .not. present(x)) .and. .not. present(quadpnt)) then
-        print *, "ERROR: you have not specified either integ point or x value"
+      if (present(x)) then
+        print *, "ERROR: use quadpnt only"
         print *, "exited from evap_fnc::liquid_flux"
         ERROR stop
       end if
@@ -472,17 +458,13 @@ module evap_fnc
       
       D = drutes_config%dimen
       
-      if (present(x)) then
-        call darcy_law(pde_loc, layer, x=x, flux = q_liq(1:D))
-      end if
-      
       if (present(quadpnt)) then
         call darcy_law(pde_loc, layer, quadpnt, flux = q_liq(1:D))
       end if
       
       KlT(1:D,1:D) = hydraulic_lT(pde_loc, layer, quadpnt) 
       
-      vct(1:D) = q_liq(1:D) - matmul(-KlT(1:D,1:D), gradT(1:D))
+      vct(1:D) = q_liq(1:D) + matmul(-KlT(1:D,1:D), gradT(1:D))
       
       if (present(flux_length)) then
         select case(D)
@@ -503,6 +485,7 @@ module evap_fnc
     
     end subroutine liquid_flux
     
+    !> Water Vapour flux
     subroutine vapor_flux(pde_loc, layer, quadpnt, x, grad,  flux, flux_length)
       use typy
       use pde_objs
@@ -510,21 +493,32 @@ module evap_fnc
       use evap_globals
        
       class(pde_str), intent(in) :: pde_loc
-      integer(kind=ikind), intent(in)                          :: layer
-      type(integpnt_str), intent(in), optional :: quadpnt    
-      real(kind=rkind), intent(in), dimension(:), optional                   :: x
+      !> Material ID
+      integer(kind=ikind), intent(in) :: layer
+      !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
+      type(integpnt_str), intent(in), optional :: quadpnt   
+      !> value of the nonlinear function
+      real(kind=rkind), intent(in), dimension(:), optional :: x
       !> this value is optional, because it is required by the vector_fnc procedure pointer global definition
-      real(kind=rkind), dimension(:), intent(in), optional     :: grad
-      real(kind=rkind), dimension(:), intent(out), optional    :: flux
-      real(kind=rkind), intent(out), optional                  :: flux_length
-
+      real(kind=rkind), dimension(:), intent(in), optional :: grad
+      !> Vector of the flux
+      real(kind=rkind), dimension(:), intent(out), optional :: flux
+      !> lengh of the flux vector
+      real(kind=rkind), intent(out), optional :: flux_length
+      !> KvT: unsaturated thermal conductivity for water
+      !> Kvh: unsaturated non-thermal  conductivity for water
       real(kind=rkind), dimension(3,3)  :: Kvh, KvT
-      integer  :: D
-      integer(kind=ikind) :: i
-      real(kind=rkind), dimension(3) :: gradh
-      real(kind=rkind), dimension(3) :: vct
-      real(kind=rkind) :: h, Kvh_scalar, KvT_scalar
+      !> local variables
+      integer(kind=ikind) :: i, D
+      !> pressure gradient
       real(kind=rkind), dimension(:), allocatable :: gradient
+      !result of the vapor flux vector
+      real(kind=rkind), dimension(3) :: vct
+      !> h: pressure head
+      !> Kvh_scalar: unsaturated non-thermal  conductivity for water
+      !> KvT_scalar: unsaturated thermal conductivity for water
+      real(kind=rkind) :: h, Kvh_scalar, KvT_scalar
+      !> Gauss quadrature point structure local
       type(integpnt_str) :: quadpnt_loc
       
       
@@ -577,7 +571,7 @@ module evap_fnc
       end do
       
       
-      vct(1:D) = - matmul(-Kvh(1:D,1:D), gradient(1:D)) - matmul(-KvT(1:D,1:D), gradT(1:D))
+      vct(1:D) =  matmul(-Kvh(1:D,1:D), gradient(1:D)) + matmul(-KvT(1:D,1:D), gradT(1:D))
       
       
        if (present(flux_length)) then
@@ -598,6 +592,7 @@ module evap_fnc
       
     end subroutine vapor_flux
     
+    !> Modified heat flux
     subroutine heatmod_flux(pde_loc, layer, quadpnt, x, grad,  flux, flux_length)
       use typy
       use pde_objs
@@ -606,20 +601,31 @@ module evap_fnc
       use evap_auxfnc
        
       class(pde_str), intent(in) :: pde_loc
-      integer(kind=ikind), intent(in)                          :: layer
-      type(integpnt_str), intent(in), optional :: quadpnt    
-      real(kind=rkind), intent(in), dimension(:), optional                   :: x
+      !> Material ID
+      integer(kind=ikind), intent(in) :: layer
+      !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
+      type(integpnt_str), intent(in), optional :: quadpnt   
+      !> value of the nonlinear function
+      real(kind=rkind), intent(in), dimension(:), optional :: x
       !> this value is optional, because it is required by the vector_fnc procedure pointer global definition
-      real(kind=rkind), dimension(:), intent(in), optional     :: grad
-      real(kind=rkind), dimension(:), intent(out), optional    :: flux
-      real(kind=rkind), intent(out), optional                  :: flux_length
-
-      real(kind=rkind), dimension(3,3)  :: K
-      integer                           :: D
-      integer(kind=ikind)               :: i
+      real(kind=rkind), dimension(:), intent(in), optional :: grad
+      !> Vector of the flux
+      real(kind=rkind), dimension(:), intent(out), optional :: flux
+      !> lengh of the flux vector
+      real(kind=rkind), intent(out), optional :: flux_length
+      !> local variables
+      integer(kind=ikind):: i,D
+      !vct: result of te flux
+      !q_vap water vapor liquid flux
+      !q_liq liquid water flux
       real(kind=rkind), dimension(3)  :: vct, q_vap, q_liq
+      !> Gauss quadrature point structure local
       type(integpnt_str) :: quadpnt_loc
-      real(kind=rkind)::kappa,T, L
+      !> kappa:thermal hydraulic conductivity
+      !> T:Temperature
+      !> L:specif latent heat of vaporization
+      real(kind=rkind)::kappa,T, L, rho_liq, rho_vap
+      !> Temperature gradient
       real(kind=rkind), dimension(:), allocatable, save :: gradT
       
        if (present(quadpnt) .and. (present(grad) .or. present(x))) then
@@ -655,21 +661,16 @@ module evap_fnc
       kappa = thermal_conduc(pde_loc, layer, quadpnt)
       L = latent_heat_wat(quadpnt)
       T = pde(Heat_order)%getval(quadpnt)
+      rho_liq = rho_l(quadpnt)
+      rho_vap = rho_sv(quadpnt)*rh_soil(layer, quadpnt)
       
       
-      vct(1:D) =  gradT(1:D)*kappa  + C_liq*T*q_liq(1:D) + C_vap*T*q_vap(1:D) + L*q_vap(1:D)
+      vct(1:D) =  gradT(1:D)*kappa  + C_liq*T*q_liq(1:D) *rho_liq + C_vap*T*q_vap(1:D)*rho_vap + L*q_vap(1:D)*rho_liq
       
       
        if (present(flux_length)) then
-        select case(D)
-          case(1)
-                flux_length = vct(1)
-          case(2)
-                flux_length = sqrt(vct(1)*vct(1) + vct(2)*vct(2))
-          case(3)
-                flux_length = sqrt(vct(1)*vct(1) + vct(2)*vct(2) + vct(3)*vct(3))
-        end select
-      end if
+         flux_length = norm2(vct(1:D))
+       end if
 
 
       if (present(flux)) then
@@ -678,7 +679,7 @@ module evap_fnc
       
     end subroutine heatmod_flux
     
-      !!> Thermal Properties of Liquid water
+    !> Thermal Properties of Liquid water
     function hydraulic_lT(pde_loc, layer, quadpnt) result(val)
         use typy
         use global_objs
@@ -692,11 +693,14 @@ module evap_fnc
         integer(kind=ikind), intent(in) :: layer
         !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
         type(integpnt_str), intent(in), optional :: quadpnt      
-        !> second order tensor of the unsaturated hydraulic conductivity
+        !> unsaturated thermal conductivity for liquid water
         real(kind=rkind), dimension(3, 3) :: val
-        
+        !> T:temperature
+        !> h: pressure head
         real(kind=rkind) :: T, h
+        !unsaturated non'thermal conductivity
         real(kind=rkind), dimension(3,3) :: Klh
+        !local variable: dimension
         integer(kind=ikind):: D
         
         if (.not. present(quadpnt)) then
@@ -711,11 +715,11 @@ module evap_fnc
         T = pde(Heat_order)%getval(quadpnt)
        
         call mualem(pde_loc, layer, quadpnt,  tensor = Klh(1:D,1:D))
-        val(1:D,1:D)  = Klh(1:D,1:D)*h*GwT*(1/gamma_0)*dsurf_tension_soilwat_dT( quadpnt)  
+        val(1:D,1:D)  = Klh(1:D,1:D)*h*GwT*(1/gamma_0)*dsurf_tension_soilwat_dT(quadpnt)  
         
     end function hydraulic_lT
       
-      !!> Isothermal Properties of water vapor
+    !> Isothermal Properties of water vapor
     function hydraulic_vh(pde_loc, layer, quadpnt) result(val)
         use typy
         use global_objs
@@ -725,12 +729,17 @@ module evap_fnc
         
        
         class(pde_str), intent(in) :: pde_loc
+        !> MaterialID
         integer(kind=ikind), intent(in) :: layer
-     
         !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
         type(integpnt_str), intent(in), optional :: quadpnt 
+        !>unsaturated non-thermal conductuvity of water vapor
         real(kind=rkind) :: val
-        
+        !> T:temperature
+        !> Rh: relatuive humidity of soil
+        !> rho_l: liquid water density
+        !> rho_sv: saturated vapor density
+        !> D: diffusitivity
         real(kind=rkind) :: rh_soil_val, rho_l_val,rho_sv_val,diff, T
         
         
@@ -747,11 +756,11 @@ module evap_fnc
         T = pde(Heat_order)%getval(quadpnt)
        
        
-        val = (diff/rho_l_val)*rho_sv_val*((Molw*gravity)/(R_gas*T))*rh_soil_val
+        val = (diff/rho_l_val)*rho_sv_val*((MolWat*gravity)/(R_gas*T))*rh_soil_val
     
     end function hydraulic_vh
       
-      !!> Thermal Properties of water vapor
+    !> Thermal Properties of water vapor
     function hydraulic_vT(pde_loc, layer, quadpnt) result(val)
         use typy
         use global_objs
@@ -761,11 +770,17 @@ module evap_fnc
         
         
         class(pde_str), intent(in) :: pde_loc
+        !Material ID
         integer(kind=ikind), intent(in) :: layer
         !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
         type(integpnt_str), intent(in), optional :: quadpnt 
+        !> unsaturated thermal hydraulic conductivity for water vapor
         real(kind=rkind) :: val
-        
+        !> Rh: relatuive humidity of soil
+        !> rho_l: liquid water density
+        !> rho_sv: saturated vapor density
+        !> D: diffusitivity
+        !> enhancement factor
         real(kind=rkind) :: rh_soil_val, rho_l_val,drho_svdT_val,diff, enhancement_factor_val
         
         
@@ -778,7 +793,7 @@ module evap_fnc
         val = (diff/rho_l_val)*enhancement_factor_val*drho_svdT_val*rh_soil_val
         
     end function hydraulic_vT
-      !!> Water vapor time derivative
+    !> Water vapor time derivative
     function dtheta_vapordt(pde_loc, layer, quadpnt_in, x)  result(val)
       use typy
       use global_objs
@@ -791,11 +806,12 @@ module evap_fnc
       integer(kind=ikind), intent(in) :: layer
       !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
       type(integpnt_str), intent(in), optional :: quadpnt_in
-       !> value of the nonlinear function
+      !> value of the nonlinear function
       real(kind=rkind), dimension(:), intent(in), optional    :: x    
-      !> return value
+      !> val:return value
+      !> vapor content current and previos
       real(kind=rkind) :: val, theta_vapor_curr, theta_vapor_prev
-      
+      !> Gauss quadrature point structure 
       type(integpnt_str) :: quadpnt
   
       quadpnt = quadpnt_in
@@ -810,36 +826,40 @@ module evap_fnc
         
     end function dtheta_vapordt
     
-      !!> Water vapor content
+    !> Water vapor content
     function theta_vapor(pde_loc,layer, quadpnt) result(val)
       use typy
-        use global_objs
-        use pde_objs
-        use evap_globals
-        use evap_auxfnc
+      use global_objs
+      use pde_objs
+      use evap_globals
+      use evap_auxfnc
       
-        class(pde_str), intent(in) :: pde_loc
-        integer(kind=ikind), intent(in) :: layer
-        !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
-        type(integpnt_str), intent(in), optional :: quadpnt 
-        real(kind=rkind) :: val
-        
-        real(kind=rkind) :: rh_soil_val, rho_l_val,rho_sv_val, theta_l
+      class(pde_str), intent(in) :: pde_loc
+      !>material ID
+      integer(kind=ikind), intent(in) :: layer
+      !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
+      type(integpnt_str), intent(in), optional :: quadpnt 
+      !vapor volumetric content
+      real(kind=rkind) :: val
+      !> Rh: relatuive humidity of soil
+      !> rho_l: liquid water density
+      !> rho_sv: saturated vapor density
+      !>theta_l: liquid water content
+      real(kind=rkind) :: rh_soil_val, rho_l_val,rho_sv_val, theta_l
       
       
-        if (.not. present(quadpnt)) then
-          print *, "ERROR: you have not specified either integ point "
-          print *, "exited from evap_auxfnc::theta_vapor"
-          ERROR stop
-        end if
+      if (.not. present(quadpnt)) then
+        print *, "ERROR: you have not specified either integ point "
+        print *, "exited from evap_auxfnc::theta_vapor"
+        ERROR stop
+      end if
         
-        theta_l = pde_loc%mass(1)%val(pde_loc, layer, quadpnt)
-        rh_soil_val = rh_soil(layer, quadpnt)
-        rho_l_val = rho_l(quadpnt) 
-        rho_sv_val = rho_sv(quadpnt) 
+      theta_l = pde_loc%mass(1)%val(pde_loc, layer, quadpnt)
+      rh_soil_val = rh_soil(layer, quadpnt)
+      rho_l_val = rho_l(quadpnt) 
+      rho_sv_val = rho_sv(quadpnt) 
         
-        
-        val = (1 - theta_l)*rho_sv_val*rh_soil_val*(1.0_rkind/rho_l_val)
+      val = (1 - theta_l)*rho_sv_val*rh_soil_val*(1.0_rkind/rho_l_val)
       
     end function theta_vapor
       

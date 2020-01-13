@@ -25,36 +25,33 @@ module evap_reader
   
   contains
     subroutine evap_var()
-       use typy
-       use globals
-       use global_objs
-       use core_tools
-       use readtools
-       use pde_objs
-       use debug_tools
-       use re_globals
-       use evap_globals
+      use typy
+      use globals
+      use global_objs
+      use core_tools
+      use readtools
+      use pde_objs
+      use debug_tools
+      use re_globals
+      use evap_globals
        
-       integer :: ierr
-
-
-       pde(re_order)%problem_name(2) = "Richards' equation with vapour flow"
-       
-        open(newunit=file_vapor, file="drutes.conf/evaporation/vapor.conf", action="read", status="old", iostat = ierr)
-        if (ierr /= 0) then
-          print *, "missing evap.conf file in drutes.conf/evaporation/vapor.conf"
-          ERROR STOP
-        end if 
+      integer :: ierr
+      pde(re_order)%problem_name(2) = "Richards' equation with vapour flow"
+      open(newunit=file_vapor, file="drutes.conf/evaporation/vapor.conf", action="read", status="old", iostat = ierr)
+      if (ierr /= 0) then
+        print *, "missing vapor.conf file in drutes.conf/evaporation/vapor.conf"
+        ERROR STOP
+      end if 
 
         
-        call fileread(b1, file_vapor, ranges=(/0.0_rkind, huge(0.0_rkind)/), & 
-                      errmsg="specify elevation above sea level in m. This can be only positive")
-        call fileread(b2, file_vapor, ranges=(/0.0_rkind, huge(0.0_rkind)/), & 
-                      errmsg="specify elevation above sea level in m. This can be only positive")
-        call fileread(b2, file_vapor, ranges=(/0.0_rkind, huge(0.0_rkind)/), & 
-                      errmsg="specify elevation above sea level in m. This can be only positive")
-          call fileread(resistance, file_vapor, ranges=(/0.0_rkind, huge(0.0_rkind)/), & 
-                      errmsg="specify elevation above sea level in m. This can be only positive")
+      call fileread(b1, file_vapor, ranges=(/- huge(0.0_rkind), huge(0.0_rkind)/), & 
+                      errmsg="Empirical regression parameters for the Thermal conductivity [Wm^-1 K^-1], see Chun&Horton, 1987")
+      call fileread(b2, file_vapor, ranges=(/-huge(0.0_rkind), huge(0.0_rkind)/), & 
+                      errmsg="Empirical regression parameters for the Thermal conductivity [Wm^-1 K^-1], see Chun&Horton, 1987")
+      call fileread(b2, file_vapor, ranges=(/-huge(0.0_rkind), huge(0.0_rkind)/), & 
+                      errmsg="Empirical regression parameters for the Thermal conductivity [Wm^-1 K^-1], see Chun&Horton, 1987")
+      call fileread(resistance, file_vapor, ranges=(/0.0_rkind, huge(0.0_rkind)/), & 
+                      errmsg="specify the aerodynamic resistance to water vapor flow and heat transfer")
       close(file_evap)	
 
     end subroutine evap_var
