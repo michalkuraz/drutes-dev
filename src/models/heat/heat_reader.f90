@@ -33,6 +33,7 @@ module heat_reader
       use heat_globals
       use readtools
       use pde_objs
+      use debug_tools
 
       class(pde_str), intent(in out) :: pde_loc
       integer :: i_err
@@ -152,6 +153,8 @@ module heat_reader
 
       call readbcvals(unitW=file_heat, struct=pde_loc%bc, dimen=n, &
           dirname="drutes.conf/heat/")
+          
+          
 
       
       

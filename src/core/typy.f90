@@ -23,7 +23,7 @@ module typy
 
     integer, parameter, public :: lowikind=selected_int_kind(5)
     
-    integer, parameter, public :: dprec=selected_real_kind(15,99) 
+    integer, parameter, public :: dprec=selected_real_kind(30,99) 
     
     integer, parameter, public :: sprec=selected_real_kind(8,9)
     

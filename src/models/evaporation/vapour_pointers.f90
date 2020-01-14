@@ -24,6 +24,9 @@ module vapour_pointers
       use heat_pointers
       use heat_fnc
       use re_constitutive
+      use heat_reader
+      
+      
       
 !       call RE_std(pde(re_order))
       call allREpointers(pde(re_order))
@@ -36,17 +39,18 @@ module vapour_pointers
       
       call evap_var()
       
-      !> Richards modified equation
+      
       
       pde(re_order)%pde_fnc(re_order)%dispersion => difussion_hh
       
       pde(re_order)%pde_fnc(heat_order)%dispersion => difussion_hT
       
       pde(re_order)%pde_fnc(re_order)%zerord  =>  source_h
+  
       
-      call heatlinker(pde(heat_order))
-      
-      !> Heat modified equation
+      call heat_read(pde(heat_order))
+
+    
       
       pde(heat_order)%pde_fnc(heat_order)%elasticity => capacity_T
       
@@ -60,8 +64,10 @@ module vapour_pointers
       
       pde(heat_order)%initcond => heat_icond  
       
-      
       pde(heat_order)%flux => heatmod_flux
+      
+      call set_heatbc(pde(heat_order))
+      
     
     end subroutine vapour_linker
     
@@ -103,10 +109,50 @@ module vapour_pointers
             print *, "the incorrect boundary code specified is:", pde_loc%bc(i)%code
             ERROR stop
         end select
+        
+
       end do
-	
+
+      
 
     end subroutine set_evapbc
     
+    
+    subroutine set_heatbc(pde_loc)
+      use typy
+      use globals
+      use global_objs
+      use pde_objs 
+      use heat_fnc
+      use evap_bc 
+      use re_constitutive
+      
+      class(pde_str), intent(in out) :: pde_loc
+      
+      integer(kind=ikind) :: i
+      
+      
+      do i=lbound(pde_loc%bc,1), ubound(pde_loc%bc,1)
+        select case(pde_loc%bc(i)%code)
+          case(1)
+            pde_loc%bc(i)%value_fnc => heat_dirichlet
+          case(2)
+            pde_loc%bc(i)%value_fnc => heat_neumann
+          case(0)
+            pde_loc%bc(i)%value_fnc => re_null_bc
+          case(5)
+            pde_loc%bc(i)%value_fnc => heat_dirichlet
+          case default
+            print *, "unrecognized bc option"
+            print *, "exited from heat_pointers::heatlinker"
+            ERROR STOP
+        end select
+      end do
+      
+      
+    
+    end subroutine set_heatbc
+    
 
 end module vapour_pointers
+
