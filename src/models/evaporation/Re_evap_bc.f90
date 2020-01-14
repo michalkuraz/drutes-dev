@@ -113,7 +113,9 @@ module Re_evap_bc
       
       edge_id = nodes%edge(elements%data(el_id, node_order))
       
+      
       if (run1st) then
+
         call evap_datadt_bc(evap_units, pde_loc%bc(edge_id)%series)
         run1st = .false.
       end if

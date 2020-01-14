@@ -109,6 +109,13 @@ module feminittools
           end do
       end select
 
+      ! create for each node list of elements where the node belongs     
+      do i=1, elements%kolik
+        do j=1, ubound(elements%data,2)
+          nd = elements%data(i,j)
+          call nodes%element(nd)%fill(i)
+        end do
+      end do
       
       call reorder()
 
@@ -121,14 +128,6 @@ module feminittools
       allocate(pde_common%bvect(maxval(pde(i)%permut(:)))) 
       allocate(pde_common%xvect(maxval(pde(i)%permut(:)),4))
       
-      ! create for each node list of elements where the node belongs     
-      do i=1, elements%kolik
-        do j=1, ubound(elements%data,2)
-          nd = elements%data(i,j)
-          call nodes%element(nd)%fill(i)
-        end do
-    
-      end do
 
       ! fill nodes%el2integ
       !--------------
@@ -476,12 +475,10 @@ module feminittools
       use core_tools
       use debug_tools
 
-      integer(kind=ikind) :: i, counter, bc, j, last, proc, proc_start
+      integer(kind=ikind) :: i, counter, bc, j, last, proc, proc_start, el_id, nd_id
 
       counter = 1
       proc_start = 0
-
-       
   
       do proc=1, ubound(pde,1)
         pde(proc)%procbase_fnc(1) = counter
@@ -489,7 +486,14 @@ module feminittools
         do i=1, nodes%kolik
           pde(proc)%permut(i) = i
           if (nodes%edge(i) /= 0) then
-            call pde(proc)%bc(nodes%edge(i))%value_fnc(pde(proc), 1_ikind,1_ikind, code=bc)
+            el_id = nodes%element(i)%data(1)
+            do j=1, ubound(elements%data,2)
+              if (i == elements%data(el_id, j)) then
+                nd_id = j
+                EXIT
+              end if
+            end do
+            call pde(proc)%bc(nodes%edge(i))%value_fnc(pde(proc), el_id,nd_id, code=bc)
           else
             bc = 0
           end if

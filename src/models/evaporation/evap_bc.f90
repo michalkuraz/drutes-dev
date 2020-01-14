@@ -33,9 +33,12 @@ module evap_bc
 
   !> implementation for Robin boundary condition
   !! solution is a scalar function \f[ p \f]
-  !! \f val = acoef  \pdv{p}{\vec{n}}  + bcoef p ||\vec{q} ||_2 \f]
-  !<
-  subroutine heat_robin(pde_loc, el_id, node_order, val, acoef, bcoef, code, valarray) 
+  !! \f ccoef = acoef  \pdv{p}{\vec{n}}  + bcoef p ||\vec{q} ||_2 \f]
+  !!  valarray(1) = acoef
+  !!  valarray(2) = bcoef 
+  !!  valarray(3) = ccoef
+  !< 
+  subroutine heat_robin(pde_loc, el_id, node_order, val, code, valarray) 
     use typy
     use globals
     use global_objs
@@ -54,13 +57,18 @@ module evap_bc
     integer(kind=ikind), intent(in)  :: el_id, node_order
     !>return value
     real(kind=rkind), intent(out), optional   :: val
-    !Robin boundary coeficients
-    real(kind = rkind), intent(out), optional :: acoef, bcoef
+
     !> return type of boundary condition
     integer(kind=ikind), intent(out), optional :: code
     !> return value for Robin boundary
     real(kind=rkind), dimension(:), intent(out), optional :: valarray
     !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
+    
+    
+    
+    !!!!-----local variables------------
+    !Robin boundary coeficients
+    real(kind = rkind) :: acoef, bcoef, ccoef
     type(integpnt_str) :: quadpnt
     !Layer ID
     integer(kind=ikind) :: layer
@@ -103,11 +111,12 @@ module evap_bc
       call getcoor(quadpnt, xyz(1:D))
       edge_id = nodes%edge(elements%data(el_id, node_order))
       
+      
       if (run1st) then
         call evap_datadt_bc(evap_units, pde_loc%bc(edge_id)%series)
         run1st = .false.
       end if    
-      if (present(acoef) .and. present(bcoef)) then
+      if (present(valarray)) then
         if (pde_loc%bc(edge_id)%file) then
           do i = pde_loc%bc(edge_id)%series_pos, ubound(pde_loc%bc(edge_id)%series,1)
             if (pde_loc%bc(edge_id)%series(i,1) > time .and. i < ubound(pde_loc%bc(edge_id)%series,1)) then
@@ -149,9 +158,15 @@ module evap_bc
           
           heat_soil_flux = rad - Hs - L*evap*rho_liq
       
-          val =  - heat_soil_flux - L*norm2(q_vap(1:D))*rho_liq
+          ccoef =  - heat_soil_flux - L*norm2(q_vap(1:D))*rho_liq
           acoef = -kappa
           bcoef = C_liq*rho_liq*norm2(q_liq(1:D)) + C_vap*norm2(q_vap(1:D))*rho_vapor
+          
+          valarray(1) = acoef
+          
+          valarray(2) = bcoef
+          
+          valarray(3) = ccoef
               
   
         else
@@ -192,7 +207,7 @@ module evap_bc
       real(kind=rkind), dimension(3) :: xyz
       integer(kind=ikind) :: edge_id, i, datapos, dataprev, D
     
-      real(kind=rkind) ::  evap, rhmean, rain, theta
+      real(kind=rkind) ::  evap, rhmean, theta
       
     
     
@@ -221,16 +236,11 @@ module evap_bc
     
     
         rhmean = pde_loc%bc(edge_id)%series(datapos,7)
-        rain = pde_loc%bc(edge_id)%series(datapos,11)
         theta =  pde_loc%mass(1)%val(pde_loc, layer, quadpnt)
         
         evap = evaporation(layer, quadpnt, rhmean)
-            
-        if ((rain - evap) >= 0) then
-          value = rain - evap
-        else
-          value = rain - evap*theta**(2.0_rkind/3.0_rkind)
-        end if
+        value = evap
+        print *, "evaporation rate", value
       else
         print *, "evaporation boundary must be time dependent, check record for the boundary", edge_id
         ERROR STOP
@@ -278,6 +288,7 @@ module evap_bc
       rho_sv_val = rho_sv(quadpnt) 
       
       val = (rh_soil_val*rho_sv_val  - rh_air* rho_sv_val )/(resistance*rho_l_val)
+      
   
   end function evaporation
   

@@ -1712,9 +1712,9 @@ module RE_constitutive
         real(kind=rkind), dimension(:), intent(out), optional :: array
 
         integer(kind=ikind) :: edge_id, i, j
-
         
         edge_id = nodes%edge(elements%data(el_id, node_order))
+        
 
         if (present(value)) then
           if (pde_loc%bc(edge_id)%file) then

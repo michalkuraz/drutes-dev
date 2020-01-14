@@ -52,6 +52,7 @@ module fem_tools
     real(kind=rkind), dimension(:,:), allocatable, save :: bcval
     real(kind=rkind), dimension(:), allocatable, save :: surface
     integer(kind=ikind), dimension(:), allocatable, save :: fin
+    integer(kind=ikind) :: space_dim, space_i
     real(kind=rkind), dimension(3,3) :: d
     real(kind=rkind) :: tmp   
    
@@ -158,8 +159,15 @@ module fem_tools
             end if
           case(5)
             tmp = 0
-            do fnc=1, ubound(elements%data,2)
-              tmp = tmp + elements%ders(el_id, m, fnc) 
+            space_dim = ubound(stiff_mat,1)/ubound(pde,1)
+            if (m > space_dim) then
+              space_i = m - space_dim
+            else
+              space_i = m
+            end if
+            
+            do fnc=1, drutes_config%dimen
+              tmp = tmp + elements%ders(el_id, space_i, fnc) 
             end do
             
             if (m /= i) then

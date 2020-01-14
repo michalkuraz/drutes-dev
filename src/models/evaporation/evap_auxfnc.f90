@@ -63,7 +63,7 @@ module evap_auxfnc
     T = pde(Heat_order)%getval(quadpnt)
     T_abs = T + Tref ! T from ºC to Kelvin
     
-    val = exp ((h*MolWat*gravity)/R_gas*T_abs) 
+    val = exp ((h*MolWat*gravity)/(R_gas*T_abs))
     
   end function rh_soil
   
@@ -92,7 +92,7 @@ module evap_auxfnc
     T = pde(Heat_order)%getval(quadpnt)
     T_abs = T + Tref ! T from ºC to Kelvin
     
-    val = 1e-3 *(exp(31.3716_rkind - (6014.79_rkind/T_abs) - 7.92495e-3*T_abs**3))/T_abs
+    val = 1e-3 *(exp(31.3716_rkind - (6014.79_rkind/T_abs) - 7.92495e-3*T_abs))/T_abs
 
   end function rho_sv
   
@@ -147,6 +147,7 @@ module evap_auxfnc
     end if
   
     T = pde(Heat_order)%getval(quadpnt)
+    
     val = 1000.0_rkind - 7.37e-3*(T - 4.0_rkind)**2 + 3.79e-5*(T -4.0_rkind)**3
 
   end function rho_l

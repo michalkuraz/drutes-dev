@@ -111,6 +111,10 @@ module heat_pointers
             pde_loc%bc(i)%value_fnc => heat_neumann
           case(0)
             pde_loc%bc(i)%value_fnc => re_null_bc
+          case default
+            print *, "unrecognized bc option"
+            print *, "exited from heat_pointers::heatlinker"
+            ERROR STOP
         end select
       end do    
 	

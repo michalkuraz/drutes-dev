@@ -122,7 +122,7 @@ re_constitutive.o: $(CORE_obj) $(TOOLS_obj) re_globals.o src/models/RE/re_consti
 	$c -c src/models/RE/re_constitutive.f90
 re_total.o: $(CORE_obj) $(TOOLS_obj) re_globals.o re_constitutive.o src/models/RE/re_total.f90
 	$c -c src/models/RE/re_total.f90
-re_reader.o:  $(CORE_obj) $(TOOLS_obj) re_globals.o Re_evap_reader.o src/models/RE/re_reader.f90
+re_reader.o:  $(CORE_obj) $(TOOLS_obj) re_globals.o  src/models/RE/re_reader.f90
 	$c -c src/models/RE/re_reader.f90	
 re_pointers.o:  $(CORE_obj) re_globals.o re_constitutive.o re_total.o re_reader.o src/models/RE/re_pointers.f90
 	$c -c src/models/RE/re_pointers.f90
@@ -137,7 +137,7 @@ heat_fnc.o: $(CORE_obj) heat_globals.o src/models/heat/heat_fnc.f90
 	$c -c src/models/heat/heat_fnc.f90
 heat_reader.o: $(CORE_obj) heat_globals.o heat_fnc.o src/models/heat/heat_reader.f90
 	$c -c src/models/heat/heat_reader.f90
-heat_pointers.o: $(CORE_obj) $(RE_obj) heat_globals.o heat_fnc.o heat_reader.o  src/models/heat/heat_pointers.f90
+heat_pointers.o: $(CORE_obj) $(RE_obj) heat_globals.o heat_fnc.o heat_reader.o src/models/heat/heat_pointers.f90
 	$c -c src/models/heat/heat_pointers.f90
 #------end HEAT_obj-------------------------------------
 
@@ -241,7 +241,7 @@ evap_auxfnc.o: $(CORE_obj) re_globals.o evap_globals.o  src/models/evaporation/e
 	$c -c src/models/evaporation/evap_auxfnc.f90
 evap_bc.o:  $(CORE_obj) $(TOOLS_obj)  re_globals.o evap_globals.o evap_fnc.o  evap_auxfnc.o  Re_evap_bc.o  src/models/evaporation/evap_bc.f90
 	$c -c src/models/evaporation/evap_bc.f90
-vapour_pointers.o: $(CORE_obj) $(RE_obj) evap_bc.o $(HEAT_obj) evap_fnc.o evap_reader.o evap_bc.o
+vapour_pointers.o: $(CORE_obj) $(RE_obj) evap_bc.o $(HEAT_obj) evap_fnc.o evap_reader.o evap_bc.o src/models/evaporation/vapour_pointers.f90
 	$c -c src/models/evaporation/vapour_pointers.f90
 #------end evaporation_obj---------------------------
 
