@@ -192,7 +192,7 @@ module evap_bc
       real(kind=rkind), dimension(3) :: xyz
       integer(kind=ikind) :: edge_id, i, datapos, dataprev, D
     
-      real(kind=rkind) ::  evap, rhmean, rain, theta
+      real(kind=rkind) ::  evap, rhmean, theta
       
     
     
@@ -221,7 +221,6 @@ module evap_bc
     
     
         rhmean = pde_loc%bc(edge_id)%series(datapos,7)
-        rain = pde_loc%bc(edge_id)%series(datapos,11)
         theta =  pde_loc%mass(1)%val(pde_loc, layer, quadpnt)
         
         evap = evaporation(layer, quadpnt, rhmean)
