@@ -5,7 +5,7 @@ module freeze_helper
   use debug_tools
   use RE_constitutive
 
-  public :: iceswitch, rho_icewat, Q_reduction, surf_tens_deriv, Kliquid_temp, hl, hcl, thetai, thetal, vf, mf
+  public :: iceswitch,icefac, rho_icewat, Q_reduction, surf_tens_deriv, Kliquid_temp, hl, hcl, thetai, thetal, vf, mf
   public:: vangen_fr, mualem_fr, temp_initcond, temp_s_initcond, wat_initcond, getval_retotfr, ice_initcond, thetas
   public:: phase_ice, phase_wat, latent_heat_vf, latent_heat_mf
     
@@ -45,6 +45,36 @@ module freeze_helper
           
     end function iceswitch
 
+    function icefac(quadpnt) result(fac)
+      use typy
+      use global_objs
+      
+      type(integpnt_str), intent(in) :: quadpnt
+      real(kind=rkind) :: Tf, fac, x
+      type(integpnt_str) :: quadpnt_loc
+      
+      quadpnt_loc = quadpnt
+      quadpnt_loc%preproc=.true.
+      
+      if(clap) then
+        Tf = Tref*exp(pde(wat)%getval(quadpnt_loc)*grav/Lf)
+        Tf = Tf - 273.15_rkind
+      else
+        Tf = 0
+      end if
+      
+
+      if (pde(heat_proc)%getval(quadpnt_loc) > Tf) then
+      !> melting
+        fac = 0
+      else
+      !> freezing sigmoid function
+        x = pde(heat_proc)%getval(quadpnt_loc)-Tf 
+        fac = 1_rkind/(1_rkind+exp(x*fac_scale + fac_add))
+      end if
+          
+    end function icefac
+    
     function rho_icewat(quadpnt) result(rho)
 
       use typy
@@ -190,7 +220,7 @@ module freeze_helper
       integer(kind=ikind), intent(in) :: layer
       type(integpnt_str), intent(in), optional :: quadpnt
       real(kind=rkind), dimension(:), intent(in), optional    :: x
-      real(kind=rkind) :: val, T_f
+      real(kind=rkind) :: val, T_f, fac
       real(kind=rkind) :: hw, temp
       type(integpnt_str) :: quadpnt_loc
       
@@ -205,14 +235,15 @@ module freeze_helper
         if(fr_rate) then
           val = hw
         else
-          val = hw+Lf/grav*log((temp+273.15_rkind)/T_f) !units
+          fac = icefac(quadpnt)
+          val = hw+fac*Lf/grav*log((temp+273.15_rkind)/T_f) !units       
         end if        
       else
         val = hw
       end if
       
       if(isnan(val)) then
-        print*, "hw is not a number!from freeze_helper::hl"
+        print*, "hw is not a number! from freeze_helper::hl"
         print*, "hw", hw
         print*, "temp", temp
       end if

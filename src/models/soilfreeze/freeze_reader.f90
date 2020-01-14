@@ -190,7 +190,11 @@ module freeze_read
        clap = .false.
       end if
       
-      
+     write(unit = msg, fmt = *) "Add factor should be real"
+     call fileread(fac_add, file_freeze, ranges=(/-huge(0.0_rkind), huge(0.0_rkind)/), errmsg=trim(msg))
+     write(unit = msg, fmt = *) "Scaling factor should be real"
+     call fileread(fac_scale, file_freeze, ranges=(/-huge(0.0_rkind), huge(0.0_rkind)/), errmsg=trim(msg))
+
      write(unit = msg, fmt = *) "Impedance factor should be positive"
      call fileread(Omega, file_freeze, ranges=(/0.0_rkind, huge(0.0_rkind)/), errmsg=trim(msg))
 

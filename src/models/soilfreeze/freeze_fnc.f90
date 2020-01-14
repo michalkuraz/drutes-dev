@@ -142,7 +142,7 @@ module freeze_fnc
       
       real(kind=rkind), dimension(3,3) :: Klh, Klt, E
       integer(kind=ikind) :: D, i,j
-      real(kind=rkind) :: temp
+      real(kind=rkind) :: temp, fac
       
       D = drutes_config%dimen
 
@@ -158,7 +158,8 @@ module freeze_fnc
           Klh(1:D,1:D) = 10**(-Omega*Q_reduction(layer, quadpnt))*Klh(1:D, 1:D)
           if(iceswitch(quadpnt)) then
             if(.not. fr_rate) then
-              tensor = (Klt(1:D, 1:D) + Lf/temp/grav*Klh(1:D,1:D))
+              fac = icefac(quadpnt)
+              tensor = (Klt(1:D, 1:D) + fac*Lf/temp/grav*Klh(1:D,1:D))
             else
               tensor = Klt(1:D, 1:D)
             end if
@@ -222,7 +223,7 @@ module freeze_fnc
       !> material ID
       integer(kind=ikind), intent(in) :: layer
       !> return value
-      real(kind=rkind)                :: val
+      real(kind=rkind)                :: val, fac
       
       real(kind=rkind) :: temp, vol_soil, th_air, thice, C_p, dens_p, thtot, ths, theta
       
@@ -284,7 +285,8 @@ module freeze_fnc
 
        if(.not. fr_rate) then
          if(iceswitch(quadpnt)) then
-           val = val + Lf*rho_ice*Lf/temp/grav*&
+           fac = icefac(quadpnt)
+           val = val + fac*Lf*rho_ice*Lf/temp/grav*&
            vangen_elast_fr(pde_loc, layer, x = (/hl(pde(wat), layer, quadpnt)/))
          end if
        end if
@@ -422,7 +424,7 @@ module freeze_fnc
       integer(kind=ikind), dimension(3) :: nablaz
       real(kind=rkind), dimension(3)  :: gradH
       real(kind=rkind), dimension(3)  :: vct
-      real(kind=rkind) :: h
+      real(kind=rkind) :: h, fac
       real(kind=rkind), dimension(:), allocatable :: gradient, gradientT
       type(integpnt_str) :: quadpnt_loc
       
@@ -463,7 +465,8 @@ module freeze_fnc
        if(fr_rate) then
          gradH(1:D) = gradient(1:D)
        else
-        gradH(1:D) = gradient(1:D) + Lf/grav*gradientT(1:D)/(pde(heat_proc)%getval(quadpnt) + 273.15_rkind)
+         fac = icefac(quadpnt)
+         gradH(1:D) = gradient(1:D) + fac*Lf/grav*gradientT(1:D)/(pde(heat_proc)%getval(quadpnt) + 273.15_rkind)
        end if
       else
         gradH(1:D) = gradient(1:D)

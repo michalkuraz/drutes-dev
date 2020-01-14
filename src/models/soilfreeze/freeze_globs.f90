@@ -93,6 +93,8 @@ module freeze_globs
 
   real(kind=rkind), public :: beta, beta_melt
   
+  real(kind=rkind), public :: fac_scale, fac_add
+
   integer(kind = ikind), public :: wat, heat_proc, ice, heat_solid
 
 end module freeze_globs
