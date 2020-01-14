@@ -241,7 +241,7 @@ evap_auxfnc.o: $(CORE_obj) re_globals.o evap_globals.o  src/models/evaporation/e
 	$c -c src/models/evaporation/evap_auxfnc.f90
 evap_bc.o:  $(CORE_obj) $(TOOLS_obj)  re_globals.o evap_globals.o evap_fnc.o  evap_auxfnc.o  Re_evap_bc.o  src/models/evaporation/evap_bc.f90
 	$c -c src/models/evaporation/evap_bc.f90
-vapour_pointers.o: $(CORE_obj) $(RE_obj) evap_bc.o $(HEAT_obj) evap_fnc.o evap_reader.o evap_bc.o
+vapour_pointers.o: $(CORE_obj) $(RE_obj) evap_bc.o $(HEAT_obj) evap_fnc.o evap_reader.o evap_bc.o src/models/evaporation/vapour_pointers.f90
 	$c -c src/models/evaporation/vapour_pointers.f90
 #------end evaporation_obj---------------------------
 
