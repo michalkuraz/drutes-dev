@@ -394,12 +394,12 @@ module evap_fnc
       !> return value
       real(kind=rkind) :: val
       !> Laten heat of vaporization, liquid water density
-      real(kind =rkind):: latent_heat, rho_l_val,
+      real(kind =rkind):: latent_heat, rho_l_val
       
       val = 0
       val = heatpar(layer)%source
       latent_heat = latent_heat_wat(quadpnt_in) 
-     rho_l_val = rho_l(quadpnt) 
+     rho_l_val = rho_l(quadpnt_in) 
       val =  val + dtheta_vapordt(pde_loc, layer, quadpnt_in)*latent_heat*rho_l_val 
       
       
