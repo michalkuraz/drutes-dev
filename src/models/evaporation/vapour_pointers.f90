@@ -140,6 +140,8 @@ module vapour_pointers
             pde_loc%bc(i)%value_fnc => heat_neumann
           case(0)
             pde_loc%bc(i)%value_fnc => re_null_bc
+          case(3)
+            pde_loc%bc(i)%value_fnc => heat_robin
           case(5)
             pde_loc%bc(i)%value_fnc => heat_dirichlet
           case default

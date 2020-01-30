@@ -240,7 +240,6 @@ module evap_bc
         
         evap = evaporation(layer, quadpnt, rhmean)
         value = evap
-        print *, "evaporation rate", value
       else
         print *, "evaporation boundary must be time dependent, check record for the boundary", edge_id
         ERROR STOP
@@ -283,11 +282,14 @@ module evap_bc
     !> saturated water vapor density
     real(kind=rkind) :: rh_soil_val, rho_l_val,rho_sv_val
       
-      rh_soil_val = rh_soil(layer, quadpnt)
-      rho_l_val = rho_l(quadpnt) 
-      rho_sv_val = rho_sv(quadpnt) 
-      
-      val = (rh_soil_val*rho_sv_val  - rh_air* rho_sv_val )/(resistance*rho_l_val)
+
+    
+    rh_soil_val = rh_soil(layer, quadpnt)
+    rho_l_val = rho_l(quadpnt) 
+    rho_sv_val = rho_sv(quadpnt) 
+    
+    val = (rh_soil_val*rho_sv_val  - rh_air* rho_sv_val )/(resistance*rho_l_val)
+     
       
   
   end function evaporation

@@ -195,8 +195,9 @@ module global_objs
     logical :: anime
     integer(kind=ikind) :: nframes
     !> format of output files for observation  real(kind=rkind), dimension(:,:), allocatable, private :: exp_data
-  real(kind=rkind), dimension(:,:), allocatable, private :: model_data
+    real(kind=rkind), dimension(:,:), allocatable, private :: model_data
     character(len=4) :: output_fmt
+    logical :: isboundary = .true.
   end type observe_info_str
 
   type, public, extends(observation) :: measured
