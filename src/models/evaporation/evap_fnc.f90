@@ -399,7 +399,7 @@ module evap_fnc
       val = 0
       val = heatpar(layer)%source
       latent_heat = latent_heat_wat(quadpnt_in) 
-     rho_l_val = rho_l(quadpnt_in) 
+      rho_l_val = rho_l(quadpnt_in) 
       val =  val + dtheta_vapordt(pde_loc, layer, quadpnt_in)*latent_heat*rho_l_val 
       
       
@@ -861,6 +861,45 @@ module evap_fnc
       rho_sv_val = rho_sv(quadpnt) 
         
       val = (1 - theta_l)*rho_sv_val*rh_soil_val*(1.0_rkind/rho_l_val)
+      
+    end function theta_vapor
+    
+      !> For printing
+    function evap4print(pde_loc,layer, quadpnt) result(val)
+      use typy
+      use global_objs
+      use pde_objs
+      use evap_globals
+      use evap_auxfnc
+      
+      class(pde_str), intent(in) :: pde_loc
+      !>material ID
+      integer(kind=ikind), intent(in) :: layer
+      !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
+      type(integpnt_str), intent(in), optional :: quadpnt 
+      !vapor volumetric content
+      real(kind=rkind) :: val
+      !> Rh: relatuive humidity of soil
+      !> rho_l: liquid water density
+      !> rho_sv: saturated vapor density
+      !>theta_l: liquid water content
+      real(kind=rkind) :: rhmean, evap
+      
+      
+      if (.not. present(quadpnt)) then
+        print *, "ERROR: you have not specified either integ point "
+        print *, "exited from evap_auxfnc::theta_vapor"
+        ERROR stop
+      end if
+      
+      
+      !if (boundary)
+      rhmean = pde_loc%bc(edge_id)%series(datapos,7)
+      evap = evaporation(layer, quadpnt, rhmean)
+      !else
+      
+      !evap= dtheta_vapordt(pde_loc, layer, quadpnt, x)* volume_element
+      !end if 
       
     end function theta_vapor
       
