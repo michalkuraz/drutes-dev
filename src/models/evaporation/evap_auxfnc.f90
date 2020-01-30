@@ -121,7 +121,7 @@ module evap_auxfnc
     T_abs = T + Tref ! T from ºC to Kelvin
    
     
-    val = exp(- 7.92495e-3*T_abs**3 - (6014.79_rkind/T_abs))*(-1.00145e9*T_abs**4 - 4.2122e10*T_abs + 2.53357e14)*(1/T_abs**3)
+    val = exp(- 7.92495e-3*T_abs - (6014.79_rkind/T_abs))*((-3.33818e8*T_abs - 4.2122e10)*T_abs + 2.53357e14)*(1/T_abs**3)
 
   end function drho_sv_dT
   
@@ -280,8 +280,8 @@ module evap_auxfnc
     integer(kind=ikind), intent(in) :: layer
     !> return value: Vapor Difussivity in soil  [m^2/s]
     real(kind=rkind):: val
-    !> Water content,  Saturated water content, Volumetric air content,
-    real(kind=rkind)::theta_l, theta_sat, theta_air
+    !> Water content,Volumetric air content,
+    real(kind=rkind)::theta_l, theta_air
     
     
     if (.not. present(quadpnt)) then
@@ -292,7 +292,7 @@ module evap_auxfnc
   
     theta_l = pde_loc%mass(1)%val(pde_loc, layer, quadpnt)
     theta_air = 1 - theta_l
-    theta_sat = vgset(layer)%ths
+   
     
     val = tortuosity(theta_l, layer)*theta_air*vapor_diff_air(quadpnt)
 
