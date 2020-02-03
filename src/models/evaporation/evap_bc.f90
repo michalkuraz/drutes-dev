@@ -28,6 +28,7 @@ module evap_bc
   public :: water_evap
   public :: evaporation
   public :: sensible_heat
+  public ::evap4print
 
   contains
 
@@ -322,6 +323,49 @@ module evap_bc
       val = C_air*rho_air*((T - temp_air)/resistance)
   
   end function sensible_heat
+  
+  
+    !> For printing
+    function evap4print(pde_loc,layer, quadpnt) result(val)
+      use typy
+      use global_objs
+      use pde_objs
+      use evap_globals
+      use evap_auxfnc
+      use evap_fnc
+      
+      class(pde_str), intent(in) :: pde_loc
+      integer(kind=ikind) :: el_id, node_order
+      !>material ID
+      integer(kind=ikind), intent(in) :: layer
+      !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
+      type(integpnt_str), intent(in), optional :: quadpnt 
+      !vapor volumetric content
+      real(kind=rkind) :: val
+      !> Rhmean: relatuive humidity of air
+      !> evap: evaporation arte
+      real(kind=rkind) :: rhmean, evap
+      integer(kind=ikind) :: edge_id, datapos
+      
+      
+      if (.not. present(quadpnt)) then
+        print *, "ERROR: you have not specified either integ point "
+        print *, "exited from evap_auxfnc::theta_vapor"
+        ERROR stop
+      end if
+      
+      
+       edge_id = nodes%edge(elements%data(el_id, node_order))
+      
+      !if (boundary)
+      rhmean = pde_loc%bc(edge_id)%series(datapos,7)
+      evap = evaporation(layer, quadpnt, rhmean)
+      !else
+      
+      !evap= dtheta_vapordt(pde_loc, layer, quadpnt, x)* volume_element
+      !end if 
+      
+    end function evap4print
 
 
 end module evap_bc

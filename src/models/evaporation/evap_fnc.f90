@@ -864,43 +864,6 @@ module evap_fnc
       
     end function theta_vapor
     
-      !> For printing
-    function evap4print(pde_loc,layer, quadpnt) result(val)
-      use typy
-      use global_objs
-      use pde_objs
-      use evap_globals
-      use evap_auxfnc
-      
-      class(pde_str), intent(in) :: pde_loc
-      !>material ID
-      integer(kind=ikind), intent(in) :: layer
-      !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
-      type(integpnt_str), intent(in), optional :: quadpnt 
-      !vapor volumetric content
-      real(kind=rkind) :: val
-      !> Rh: relatuive humidity of soil
-      !> rho_l: liquid water density
-      !> rho_sv: saturated vapor density
-      !>theta_l: liquid water content
-      real(kind=rkind) :: rhmean, evap
-      
-      
-      if (.not. present(quadpnt)) then
-        print *, "ERROR: you have not specified either integ point "
-        print *, "exited from evap_auxfnc::theta_vapor"
-        ERROR stop
-      end if
-      
-      
-      !if (boundary)
-      rhmean = pde_loc%bc(edge_id)%series(datapos,7)
-      evap = evaporation(layer, quadpnt, rhmean)
-      !else
-      
-      !evap= dtheta_vapordt(pde_loc, layer, quadpnt, x)* volume_element
-      !end if 
-      
-    end function theta_vapor
+  
       
 end module evap_fnc
