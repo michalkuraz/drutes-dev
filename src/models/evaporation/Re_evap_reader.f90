@@ -29,6 +29,7 @@ module Re_evap_reader
       use pde_objs
       use debug_tools
       use re_globals
+      
        
       integer :: ierr
       open(newunit=file_evap, file="drutes.conf/evaporation/evap.conf", action="read", status="old", iostat = ierr)
@@ -43,6 +44,11 @@ module Re_evap_reader
                       errmsg="specify latitude in radians. This can be negative or positive depend on hemisphere")
       call fileread(albedo, file_evap, ranges=(/0.0_rkind, 1.0_rkind/), &
                       errmsg="specify albedo or canopy reflection coefficient between 0 and 1")
+                      
+      call fileread(day_in_month, file_evap, ranges=(/1_ikind, 31_ikind/), &
+                      errmsg="Days in a month can't be more than 31...:)")
+      call fileread(month_in_year, file_evap, ranges=(/1_ikind, 12_ikind/), &
+                      errmsg="Month in a year can't be more than 12...:)")              
       close(file_evap)	
 
     end subroutine Re_evap_var

@@ -26,9 +26,8 @@ module evap_bc
 
   public :: heat_robin
   public :: water_evap
-  public :: evaporation
-  public :: sensible_heat
-  public ::evap4print
+  public :: evap4print
+  private :: get_datapos
 
   contains
 
@@ -99,7 +98,7 @@ module evap_bc
     !> local variables
     integer(kind =ikind) :: D, i,  edge_id, datapos, dataprev
     !> Number of te day in ten year, hour,day and month
-    integer(kind =ikind) :: num_day,hour,day,month
+    integer(kind =ikind) :: num_day,hour, day, month
     !> liquid water and watwer vapor flux
     real(kind=rkind), dimension(3) :: q_vap, q_liq
       
@@ -131,8 +130,8 @@ module evap_bc
             end if
           end do
       
-          day = pde_loc%bc(edge_id)%series(datapos,2)
-          month = pde_loc%bc(edge_id)%series(datapos,3)
+          call get_daymonth(day, month)
+
           tmax = pde_loc%bc(edge_id)%series(datapos,5)
           tmin = pde_loc%bc(edge_id)%series(datapos,6)
           rh_air = pde_loc%bc(edge_id)%series(datapos,7)
@@ -183,60 +182,51 @@ module evap_bc
   
   
   subroutine water_evap(pde_loc, el_id, node_order, value, code, valarray) 
-      use typy
-      use globals
-      use global_objs
-      use pde_objs
-      use re_globals
-      use core_tools
-      use geom_tools
-      use debug_tools
-      use evap_fnc
-      use evap_auxfnc
-      use evap_globals
-      
-      
-      class(pde_str), intent(in) :: pde_loc
-      integer(kind=ikind), intent(in)  :: el_id, node_order
-      real(kind=rkind), intent(out), optional   :: value
-      integer(kind=ikind), intent(out), optional :: code
-      real(kind=rkind), dimension(:), intent(out), optional :: valarray
+    use typy
+    use globals
+    use global_objs
+    use pde_objs
+    use re_globals
+    use core_tools
+    use geom_tools
+    use debug_tools
+    use evap_fnc
+    use evap_auxfnc
+    use evap_globals
+    
+    
+    class(pde_str), intent(in) :: pde_loc
+    integer(kind=ikind), intent(in)  :: el_id, node_order
+    real(kind=rkind), intent(out), optional   :: value
+    integer(kind=ikind), intent(out), optional :: code
+    real(kind=rkind), dimension(:), intent(out), optional :: valarray
 
-      
-      type(integpnt_str) :: quadpnt
-      integer(kind=ikind) :: layer
-      real(kind=rkind), dimension(3) :: xyz
-      integer(kind=ikind) :: edge_id, i, datapos, dataprev, D
     
-      real(kind=rkind) ::  evap, rhmean, theta
-      
+    type(integpnt_str) :: quadpnt
+    integer(kind=ikind) :: layer
+    real(kind=rkind), dimension(3) :: xyz
+    integer(kind=ikind) :: edge_id, i, datapos, D
+    integer(kind=ikind), save :: datainit=1
     
+  
+    real(kind=rkind) ::  evap, rhmean, theta
     
-      quadpnt%type_pnt = "ndpt"
-      quadpnt%order = elements%data(el_id, node_order)
-      quadpnt%column = 2
-      layer = elements%material(el_id)
-      D = drutes_config%dimen
-      call getcoor(quadpnt, xyz(1:D))
-      
-      edge_id = nodes%edge(elements%data(el_id, node_order))
-      
-      if (present(value)) then
-        if (pde_loc%bc(edge_id)%file) then
-          do i = pde_loc%bc(edge_id)%series_pos, ubound(pde_loc%bc(edge_id)%series,1)
-            if (pde_loc%bc(edge_id)%series(i,1) > time .and. i < ubound(pde_loc%bc(edge_id)%series,1)) then
-              datapos = i + 1
-              dataprev = i
-              EXIT
-            else if (pde_loc%bc(edge_id)%series(i,1) > time .and. i == ubound(pde_loc%bc(edge_id)%series,1)) then
-              datapos = i
-              dataprev = i-1 
-              EXIT
-            end if
-          end do
+  
+  
+    quadpnt%type_pnt = "ndpt"
+    quadpnt%order = elements%data(el_id, node_order)
+    quadpnt%column = 2
+    layer = elements%material(el_id)
+    D = drutes_config%dimen
+    call getcoor(quadpnt, xyz(1:D))
     
+    edge_id = nodes%edge(elements%data(el_id, node_order))
     
-        rhmean = pde_loc%bc(edge_id)%series(datapos,7)
+    if (present(value)) then
+      if (pde_loc%bc(edge_id)%file) then
+        call get_datapos(pde_loc%bc(edge_id), datapos, datainit=datainit)
+        print *, datapos ; call wait()
+        rhmean = pde_loc%bc(edge_id)%series(datapos,4)
         theta =  pde_loc%mass(1)%val(pde_loc, layer, quadpnt)
         
         evap = evaporation(layer, quadpnt, rhmean)
@@ -254,75 +244,6 @@ module evap_bc
 
   end subroutine water_evap
    
-   
-  !> Evaporation rate [m/s]
-  !> Input: Air Relative humiduty [-]
-  function evaporation(layer, quadpnt, rh_air) result(val)
-    use typy
-    use globals
-    use global_objs
-    use pde_objs
-    use re_globals
-    use core_tools
-    use geom_tools
-    use debug_tools
-    use evap_fnc
-    use evap_auxfnc
-    use evap_globals
-      
-    !>material ID  
-    integer(kind=ikind), intent(in) :: layer
-    !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
-    type(integpnt_str), intent(in), optional :: quadpnt 
-    !> Relative humidity of air 
-    real(kind=rkind) :: rh_air
-    !> Evaporation rate [m/s]
-    real(kind=rkind) :: val
-    !> Relative humidity soil
-    !> liquid water density 
-    !> saturated water vapor density
-    real(kind=rkind) :: rh_soil_val, rho_l_val,rho_sv_val
-      
-
-    
-    rh_soil_val = rh_soil(layer, quadpnt)
-    rho_l_val = rho_l(quadpnt) 
-    rho_sv_val = rho_sv(quadpnt) 
-    
-    val = (rh_soil_val*rho_sv_val  - rh_air* rho_sv_val )/(resistance*rho_l_val)
-     
-      
-  
-  end function evaporation
-  
-  !> Sensible heat[W/m^2]
-  !> Input: Air temperature[K]
-  function sensible_heat(quadpnt, temp_air) result(val)
-      use typy
-      use globals
-      use global_objs
-      use pde_objs
-      use re_globals
-      use core_tools
-      use geom_tools
-      use debug_tools
-      use evap_fnc
-      use evap_auxfnc
-      use evap_globals
-      
-    
-      !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
-      type(integpnt_str), intent(in), optional :: quadpnt 
-        real(kind=rkind) :: temp_air
-      real(kind=rkind) :: val
-        
-      real(kind=rkind) ::T
-      
-      T = pde(Heat_order)%getval(quadpnt)
-      
-      val = C_air*rho_air*((T - temp_air)/resistance)
-  
-  end function sensible_heat
   
   
     !> For printing
@@ -346,6 +267,7 @@ module evap_bc
       !> evap: evaporation arte
       real(kind=rkind) :: rhmean, evap
       integer(kind=ikind) :: edge_id, datapos
+      integer(kind=ikind), save :: datainit=1
       
       
       if (.not. present(quadpnt)) then
@@ -355,17 +277,68 @@ module evap_bc
       end if
       
       
-       edge_id = nodes%edge(elements%data(el_id, node_order))
+      edge_id = nodes%edge(elements%data(el_id, node_order))
+      
+      call get_datapos(pde_loc%bc(edge_id), datapos, datainit=datainit)
+      
       
       !if (boundary)
       rhmean = pde_loc%bc(edge_id)%series(datapos,7)
       evap = evaporation(layer, quadpnt, rhmean)
       !else
       
-      !evap= dtheta_vapordt(pde_loc, layer, quadpnt, x)* volume_element
+      !evap = dtheta_vapordt(pde_loc, layer, quadpnt, x)* volume_element
       !end if 
       
     end function evap4print
+    
+    subroutine get_datapos(bcstr, datapos, dataprev, datainit)
+      use typy
+      use pde_objs
+      use globals
+      
+      type(boundary_vals), intent(in) :: bcstr
+      integer(kind=ikind), intent(out), optional :: dataprev
+      integer(kind=ikind), intent(out) :: datapos
+      integer(kind=ikind), intent(in out), optional :: datainit
+      
+      integer(kind=ikind) :: i, start, fin
+      
+      
+      if (present(datainit)) then 
+        start = datainit
+      else
+        start = 1
+      end if
+      
+      fin = ubound(bcstr%series,1)
+       do i = start, ubound(bcstr%series,1) - 1
+         ! inside the table
+         if (time > bcstr%series(i,1) .and. time < bcstr%series(i+1,1)) then
+           datapos = i
+           if (present(dataprev)) dataprev = i-1
+           if (present(datainit)) datainit = datapos
+           EXIT
+         !above the upper row of the boundary, the table always starts with zero
+         else if (i == fin-1 .and. time > bcstr%series(fin,1)) then
+           print *, "Insufficient meteo data provided!!!"
+           print *, "Actual simulation time is greater than final record in your meteo data file"
+           print *, "Meteorological data doesn't overlap the simulation perion, exiting now..."
+           print *, "exited from evap_bc::get_datapos"
+           ERROR STOP
+         else if (i == 1 .and.  bcstr%series(i,1) > time ) then
+           print *, "Insufficient meteo data provided!!!"
+           print *, "Your meteo data should provide at least one record prior to simulation start time"
+           print *, "HINT: add negative value for the first time record"
+           print *, "exited from evap_bc::get_datapos"
+           ERROR STOP
+          end if
+       end do
+       
+
+      
+       
+     end subroutine get_datapos 
 
 
 end module evap_bc

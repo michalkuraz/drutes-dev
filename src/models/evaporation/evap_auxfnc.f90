@@ -21,13 +21,16 @@ module evap_auxfnc
   use global_objs
   use re_globals
   use evap_globals
+
   
   public :: rh_soil, rho_sv, drho_sv_dT,rho_l
   public :: latent_heat_wat, surf_tension_soilwat
   public :: dsurf_tension_soilwat_dT, thermal_conduc
   public :: vapor_diff_air,vapor_diff_soil, tortuosity
   public :: enhancement_factor
-  
+  public :: evaporation
+  public :: sensible_heat
+  public :: get_daymonth
 
   contains
   
@@ -386,5 +389,70 @@ module evap_auxfnc
     val =  9.5_rkind + 3.0_rkind*(theta_l/theta_sat) -8.5_rkind *tmp
   end function enhancement_factor
   
+    !> Evaporation rate [m/s]
+  !> Input: Air Relative humiduty [-]
+  function evaporation(layer, quadpnt, rh_air) result(val)
+    use typy
+    use evap_globals
+      
+    !>material ID  
+    integer(kind=ikind), intent(in) :: layer
+    !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
+    type(integpnt_str), intent(in), optional :: quadpnt 
+    !> Relative humidity of air 
+    real(kind=rkind) :: rh_air
+    !> Evaporation rate [m/s]
+    real(kind=rkind) :: val
+    !> Relative humidity soil
+    !> liquid water density 
+    !> saturated water vapor density
+    real(kind=rkind) :: rh_soil_val, rho_l_val,rho_sv_val
+      
+
+    
+    rh_soil_val = rh_soil(layer, quadpnt)
+    rho_l_val = rho_l(quadpnt) 
+    rho_sv_val = rho_sv(quadpnt) 
+    
+    val = (rh_soil_val*rho_sv_val  - rh_air* rho_sv_val )/(resistance*rho_l_val)
+     
+      
+  
+  end function evaporation
+  
+  
+    !> Sensible heat[W/m^2]
+  !> Input: Air temperature[K]
+  function sensible_heat(quadpnt, temp_air) result(val)
+    use typy
+    use pde_objs
+    use evap_globals
+    use global_objs
+    
+  
+    !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
+    type(integpnt_str), intent(in), optional :: quadpnt 
+    real(kind=rkind) :: temp_air
+    real(kind=rkind) :: val
+      
+    real(kind=rkind) ::T
+    
+    T = pde(Heat_order)%getval(quadpnt)
+    
+    val = C_air*rho_air*((T - temp_air)/resistance)
+  
+  end function sensible_heat
+  
+  
+  subroutine get_daymonth(day, month)
+    use typy
+    use re_globals
+    
+    integer(kind=ikind), intent(out) :: day, month
+    
+    day = day_in_month
+    month = month_in_year
+  
+  end subroutine get_daymonth
   
 end module evap_auxfnc
