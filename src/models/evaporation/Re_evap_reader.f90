@@ -48,7 +48,9 @@ module Re_evap_reader
       call fileread(day_in_month, file_evap, ranges=(/1_ikind, 31_ikind/), &
                       errmsg="Days in a month can't be more than 31...:)")
       call fileread(month_in_year, file_evap, ranges=(/1_ikind, 12_ikind/), &
-                      errmsg="Month in a year can't be more than 12...:)")              
+                      errmsg="Month in a year can't be more than 12...:)")          
+      call fileread(init_year, file_evap, ranges=(/1_ikind, huge(0_ikind)/), &
+                      errmsg="Year can be only positive:)")         
       close(file_evap)	
 
     end subroutine Re_evap_var

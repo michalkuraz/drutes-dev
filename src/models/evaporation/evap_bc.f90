@@ -132,10 +132,10 @@ module evap_bc
       
           call get_daymonth(day, month)
 
-          tmax = pde_loc%bc(edge_id)%series(datapos,5)
-          tmin = pde_loc%bc(edge_id)%series(datapos,6)
-          rh_air = pde_loc%bc(edge_id)%series(datapos,7)
-          solar = pde_loc%bc(edge_id)%series(datapos,10)
+          tmax = pde_loc%bc(edge_id)%series(datapos,3)
+          tmin = pde_loc%bc(edge_id)%series(datapos,2)
+          rh_air = pde_loc%bc(edge_id)%series(datapos,4)
+          solar = pde_loc%bc(edge_id)%series(datapos,7)
           
           tmean = ((tmax+tmin)/2.0_rkind) + Tref
           tmink = tmin + Tref
@@ -146,7 +146,7 @@ module evap_bc
           L = latent_heat_wat(quadpnt)
           rho_liq = rho_l(quadpnt)
           rho_vapor = rho_sv(quadpnt)*rh_soil(layer, quadpnt)
-          !temperature shpuld be in K 
+          !temperature should be in K 
           Hs= sensible_heat(quadpnt, tmean)
           evap = evaporation(layer, quadpnt, rh_air)
           num_day = num_day_fcn (day, month,evap_units)
@@ -272,7 +272,7 @@ module evap_bc
       
       if (.not. present(quadpnt)) then
         print *, "ERROR: you have not specified either integ point "
-        print *, "exited from evap_auxfnc::theta_vapor"
+        print *, "exited from evap_bc::evap4print"
         ERROR stop
       end if
       
@@ -283,7 +283,7 @@ module evap_bc
       
       
       !if (boundary)
-      rhmean = pde_loc%bc(edge_id)%series(datapos,7)
+      rhmean = pde_loc%bc(edge_id)%series(datapos,4)
       evap = evaporation(layer, quadpnt, rhmean)
       !else
       
@@ -334,9 +334,6 @@ module evap_bc
            ERROR STOP
           end if
        end do
-       
-
-      
        
      end subroutine get_datapos 
 

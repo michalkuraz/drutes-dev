@@ -146,21 +146,20 @@ module Re_evap_bc
             end if
           end do
       
-          hour  = pde_loc%bc(edge_id)%series(datapos,1)
-          day = pde_loc%bc(edge_id)%series(datapos,2)
-          month = pde_loc%bc(edge_id)%series(datapos,3)
-          year = pde_loc%bc(edge_id)%series(datapos,4)
-          tmax = pde_loc%bc(edge_id)%series(datapos,5)
-          tmin = pde_loc%bc(edge_id)%series(datapos,6)
-          tmax_prev = pde_loc%bc(edge_id)%series(dataprev,5)
-          tmin_prev =  pde_loc%bc(edge_id)%series(dataprev,6)
-          rhmean = pde_loc%bc(edge_id)%series(datapos,7)
-          wind = pde_loc%bc(edge_id)%series(datapos,8)
-          light = pde_loc%bc(edge_id)%series(datapos,9)
-          solar = pde_loc%bc(edge_id)%series(datapos,10)
           
           
-          rain = pde_loc%bc(edge_id)%series(datapos,11)
+          !get_daymonth(evap_units, hour, day , month, year)
+          tmax = pde_loc%bc(edge_id)%series(datapos,3)
+          tmin = pde_loc%bc(edge_id)%series(datapos,2)
+          tmax_prev = pde_loc%bc(edge_id)%series(dataprev,3)
+          tmin_prev =  pde_loc%bc(edge_id)%series(dataprev,2)
+          rhmean = pde_loc%bc(edge_id)%series(datapos,4)
+          wind = pde_loc%bc(edge_id)%series(datapos,4)
+          light = pde_loc%bc(edge_id)%series(datapos,6)
+          solar = pde_loc%bc(edge_id)%series(datapos,7)
+          
+          
+          rain = pde_loc%bc(edge_id)%series(datapos,8)
           theta =  pde_loc%mass(1)%val(pde_loc, layer, quadpnt)
           
           

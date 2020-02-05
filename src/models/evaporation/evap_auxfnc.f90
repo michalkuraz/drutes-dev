@@ -444,14 +444,84 @@ module evap_auxfnc
   end function sensible_heat
   
   
-  subroutine get_daymonth(day, month)
+  subroutine get_daymonth(pde_loc,evap_time,hour, day, month, year)
     use typy
     use re_globals
+    use global_objs
+    use pde_objs
+    use evap_bc
     
-    integer(kind=ikind), intent(out) :: day, month
+    class(pde_str), intent(in) :: pde_loc
+    character(len=*), intent(in) :: evap_time
+    integer(kind=ikind), intent(out) :: hour, day, month, year
+    integer(kind =ikind), dimension(12):: days_in_month
+    integer(kind=ikind) :: edge_id, datapos, dataprev, increase
+    integer(kind=ikind) :: el_id, node_order
+    integer(kind=ikind), save :: datainit=1
+    real(kind = rkind):: plus_days
     
+    !read from imput
     day = day_in_month
     month = month_in_year
+    hour = pde_loc%bc(edge_id)%series(1,1)
+    year = init_year
+    
+
+    if ((modulo(year,4_ikind) == 0 .and. modulo(year,100_ikind) /= 0) .or. &
+     (modulo(year,4_ikind) == 0 .and. modulo(year,100_ikind) == 0 .and. modulo(year,400_ikind) == 0)) then
+        days_in_month = (/31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31/)
+    else
+        days_in_month = (/31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31/)
+    end if      
+    
+    edge_id = nodes%edge(elements%data(el_id, node_order))
+    call get_datapos(pde_loc%bc(edge_id), datapos = datapos, dataprev = dataprev, datainit=datainit)
+    increase = pde_loc%bc(edge_id)%series(datapos,1) - pde_loc%bc(edge_id)%series(dataprev,1)
+    
+    select case(evap_time)
+        case("hourly")
+            hour = hour + increase
+            plus_days = nint(hour/24)
+            hour = modulo(hour, 24)
+            day = day + plus_days
+        
+            do while(day > days_in_month(month )) 
+                day = day - days_in_month(month)
+                month = month +  1
+                if  (month == 13) then
+                    month = 1
+                    year = year +1
+                end if
+            end do
+        case("daily")
+            hour = 12
+            day = day + increase
+        
+            do while(day > days_in_month(month )) 
+                day = day - days_in_month(month)
+                month = month +  1
+                if  (month == 13) then
+                    month = 1
+                    year = year +1
+                end if
+            end do
+        case("monthly")
+           hour = 12
+           day = 1
+           month =  month + increase
+            if  (month == 13) then
+                    month = 1
+                    year = year +1
+            end if
+            
+        case("yearly")
+            !summer conditions
+            hour = 12
+            day = 1
+            month = 6
+            year = year + increase
+      end select
+
   
   end subroutine get_daymonth
   
