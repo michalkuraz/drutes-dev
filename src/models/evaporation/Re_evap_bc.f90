@@ -94,6 +94,7 @@ module Re_evap_bc
       use core_tools
       use geom_tools
       use debug_tools
+      use evap_auxfnc
       
       class(pde_str), intent(in) :: pde_loc
       integer(kind=ikind), intent(in)  :: el_id, node_order
@@ -115,7 +116,6 @@ module Re_evap_bc
       
       
       if (run1st) then
-
         call evap_datadt_bc(evap_units, pde_loc%bc(edge_id)%series)
         run1st = .false.
       end if
@@ -148,7 +148,7 @@ module Re_evap_bc
       
           
           
-          !get_daymonth(evap_units, hour, day , month, year)
+          call get_daymonth(pde_loc,evap_units, hour, day , month, year)
           tmax = pde_loc%bc(edge_id)%series(datapos,3)
           tmin = pde_loc%bc(edge_id)%series(datapos,2)
           tmax_prev = pde_loc%bc(edge_id)%series(dataprev,3)

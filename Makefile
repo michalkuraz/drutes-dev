@@ -229,7 +229,7 @@ kinpointer.o: $(CORE_obj) $(TOOLS_obj) kinglobs.o kinreader.o src/models/kinwave
 #------begin evaporation_obj-------------------------
 Re_evap_reader.o: $(CORE_obj) $(TOOLS_obj) re_globals.o src/models/evaporation/Re_evap_reader.f90
 	$c -c src/models/evaporation/Re_evap_reader.f90
-Re_evap_bc.o: $(CORE_obj) $(TOOLS_obj) src/models/evaporation/Re_evap_bc.f90
+Re_evap_bc.o: $(CORE_obj) $(TOOLS_obj) evap_auxfnc.o  src/models/evaporation/Re_evap_bc.f90
 	$c -c src/models/evaporation/Re_evap_bc.f90
 evap_globals.o: $(CORE_obj) src/models/evaporation/evap_globals.f90
 	$c -c src/models/evaporation/evap_globals.f90

@@ -21,6 +21,7 @@ module evap_auxfnc
   use global_objs
   use re_globals
   use evap_globals
+  
 
   
   public :: rh_soil, rho_sv, drho_sv_dT,rho_l
@@ -31,6 +32,7 @@ module evap_auxfnc
   public :: evaporation
   public :: sensible_heat
   public :: get_daymonth
+  public :: get_datapos
 
   contains
   
@@ -449,7 +451,7 @@ module evap_auxfnc
     use re_globals
     use global_objs
     use pde_objs
-    use evap_bc
+    
     
     class(pde_str), intent(in) :: pde_loc
     character(len=*), intent(in) :: evap_time
@@ -463,7 +465,6 @@ module evap_auxfnc
     !read from imput
     day = day_in_month
     month = month_in_year
-    hour = pde_loc%bc(edge_id)%series(1,1)
     year = init_year
     
 
@@ -480,8 +481,9 @@ module evap_auxfnc
     
     select case(evap_time)
         case("hourly")
+            hour = pde_loc%bc(edge_id)%series(1,1)
             hour = hour + increase
-            plus_days = nint(hour/24)
+            plus_days = nint(hour/24.0_rkind)
             hour = modulo(hour, 24)
             day = day + plus_days
         
@@ -524,5 +526,50 @@ module evap_auxfnc
 
   
   end subroutine get_daymonth
+  
+    subroutine get_datapos(bcstr, datapos, dataprev, datainit)
+      use typy
+      use pde_objs
+      use globals
+      
+      type(boundary_vals), intent(in) :: bcstr
+      integer(kind=ikind), intent(out), optional :: dataprev
+      integer(kind=ikind), intent(out) :: datapos
+      integer(kind=ikind), intent(in out), optional :: datainit
+      
+      integer(kind=ikind) :: i, start, fin
+      
+      
+      if (present(datainit)) then 
+        start = datainit
+      else
+        start = 1
+      end if
+      
+      fin = ubound(bcstr%series,1)
+       do i = start, ubound(bcstr%series,1) - 1
+         ! inside the table
+         if (time > bcstr%series(i,1) .and. time < bcstr%series(i+1,1)) then
+           datapos = i
+           if (present(dataprev)) dataprev = i-1
+           if (present(datainit)) datainit = datapos
+           EXIT
+         !above the upper row of the boundary, the table always starts with zero
+         else if (i == fin-1 .and. time > bcstr%series(fin,1)) then
+           print *, "Insufficient meteo data provided!!!"
+           print *, "Actual simulation time is greater than final record in your meteo data file"
+           print *, "Meteorological data doesn't overlap the simulation perion, exiting now..."
+           print *, "exited from evap_bc::get_datapos"
+           ERROR STOP
+         else if (i == 1 .and.  bcstr%series(i,1) > time ) then
+           print *, "Insufficient meteo data provided!!!"
+           print *, "Your meteo data should provide at least one record prior to simulation start time"
+           print *, "HINT: add negative value for the first time record"
+           print *, "exited from evap_bc::get_datapos"
+           ERROR STOP
+          end if
+       end do
+       
+     end subroutine get_datapos 
   
 end module evap_auxfnc
