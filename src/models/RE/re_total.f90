@@ -607,6 +607,7 @@ module re_total
 	
         quadpnt%type_pnt = "ndpt"
         quadpnt%order = elements%data(el_id,node_order)
+        quadpnt%column = 3
         layer = elements%material(el_id)
         theta =  pde_loc%mass(1)%val(pde_loc,layer, quadpnt)
         value = rain - evap*theta**(2.0_rkind/3.0_rkind)

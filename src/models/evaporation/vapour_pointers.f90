@@ -56,6 +56,8 @@ module vapour_pointers
       
       pde(re_order)%mass(2)%val => evap4print
       
+      deallocate(pde(re_order)%mass_name)
+      
       allocate(pde(re_order)%mass_name(2,2))
 
       pde(re_order)%mass_name(1,1) = "theta"

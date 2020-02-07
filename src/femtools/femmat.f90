@@ -79,7 +79,7 @@ module femmat
         call assemble_mat(ierr)
 !  		          call printmtx(spmatrix) 
         
-        if (drutes_config%dimen >  0) then
+        if (drutes_config%dimen >  1) then
           call diag_precond(a=spmatrix, x=pde_common%xvect(1:fin,3), mode=1)
         end if
 
@@ -96,7 +96,7 @@ module femmat
         end if
 		  
 
-        if (drutes_config%dimen >  0) then
+        if (drutes_config%dimen >  1) then
           write(unit=file_itcg, fmt = *) time, pcg_it, reps_err
           call flush(file_itcg)
           call diag_precond(a=spmatrix, x=pde_common%xvect(1:fin,3), mode=-1)

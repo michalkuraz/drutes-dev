@@ -18,7 +18,7 @@
 !! - \subpage ridka "Ridka matice"
 module mtx
     use typy
-    implicit none 
+    implicit none
     private
 
     !> obecna matice
@@ -91,12 +91,12 @@ module mtx
         !> cteni ze souboru
         procedure :: Read
         !> zapis do souboru
-        procedure :: Write => writematrix
+        procedure :: Write
         !> nasobi jeden radek
         procedure  mulrow
     end type matrix
-! 
-! 
+
+
     !> interface pro ziskani prvku
     abstract interface
         !> funkce pro ziskani prvku
@@ -128,17 +128,17 @@ module mtx
             real(kind=rkind), intent(in) :: r
         end subroutine
     end interface
-! 
-!     public :: mtxtest
-!     public :: estimeigvalues
-! 
+
+    public :: mtxtest
+    public :: estimeigvalues
+
     contains
-! 
-!     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!     !! veci pro matrix - zcela univerzalni
-!     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-! 
-! 
+
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    !! veci pro matrix - zcela univerzalni
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
     !> nastavi podrobnost behovych reportu
     !! \param A ovlivnena matice
     !! \param level pozadovana uroven podrobnosti
@@ -169,7 +169,7 @@ module mtx
         v = v + r
         call a%set(v,i,j)
     end subroutine addmatrix
-! 
+
     !> rutina pro inicializaci
     subroutine initmatrix(a,n,m)
         use typy
@@ -186,7 +186,7 @@ module mtx
 
 
     !> vrati pocet radku
-   pure function getnmatrix(a) result(res)
+    pure function getnmatrix(a) result(res)
         use typy
         implicit none
         !> matice
@@ -367,30 +367,24 @@ module mtx
         !> matice
         class(matrix), intent(in) :: a
         integer(kind=ikind) :: i,j, nz
-!         character(len=a%getm()) :: radek
-        character(len=8) :: fmts
-        
-        
-        write(fmts,fmt=*) "function disabled due gcc 8.0 bugs"
 
-!         nz = 0
-!         write(fmts,fmt="(a2,i5,a1)") "(a",a%m,")"
-!         do i=1,a%getn()
-!             do j=1,a%getm()
-!                 if (a%get(i,j) == 0.0_rkind) then
-!                 radek(j:j) = '.'
-!                 else
-!                     radek(j:j) = 'X'
-!                     nz = nz + 1
-!                 end if
-!             end do
-!             print fmts,radek
-!         end do
-!         print *, " pocet radek=", A%getn()
-!         print *, " pocet sloupcu",A%getm()
-!         print *,"celkovy pocet nenul=",nz
+        nz = 0
+        do i=1,a%getn()
+            do j=1,a%getm()
+                if (a%get(i,j) == 0.0_rkind) then
+                write(*,"(a1)", advance="no") '.'
+                else
+                    write(*,"(a1)", advance="no") 'X'
+                    nz = nz + 1
+                end if
+            end do
+            print *
+        end do
+        print *, " pocet radek=", A%getn()
+        print *, " pocet sloupcu",A%getm()
+        print *,"celkovy pocet nenul=",nz
     end subroutine spymatrix
-! 
+
     !> vytiskne matici
     subroutine printmatrix(a,ncol, width, caption)
         use typy
@@ -449,72 +443,6 @@ module mtx
         end do
 
     end subroutine printmatrix
-    
-    
-    subroutine writematrix(a, filename,ncol, width, caption)
-        use typy
-        implicit none
-
-        !> matice
-        class(matrix), intent(in) :: a
-        !> pozadovany pocet sloupcu tisku, nepovinne
-        integer(kind=ikind), intent(in), optional :: ncol
-        !> pozadovane sirka sloupce, nepovinne
-        integer(kind=ikind), intent(in), optional :: width
-        !> nadpis, nepovinne
-        character(len=*), intent(in),    optional :: caption
-        character(len=*), intent(in)              :: filename
-        character(len=100) :: cpt,fmts
-        integer(kind=ikind) :: nc
-        integer(kind=ikind) :: wd
-        integer(kind=ikind) :: i,j, col1,col2
-        real(kind=rkind), dimension(:), allocatable :: data
-        integer :: fileid
-        
-        open(newunit=fileid, file=trim(filename), action="write", status="replace")
-
-        if ( present(ncol) ) then
-        nc = ncol
-        else
-            nc = 5
-        end if
-
-        if ( present(width) ) then
-        wd = width
-        else
-            wd = 15
-        end if
-
-        if ( present(caption) ) then
-        cpt = adjustl(caption)
-        else
-            cpt ="matice"
-        end if
-
-        allocate(data(1:nc))
-        write(fileid, *) trim(cpt)
-        write(fileid, *) " pocet radku=",a%n, " pocet sloupcu=", a%m
-        !write(fmts,fmt="(i3,a2,i3,a2,i3,a2)") ncol,"(es",width,".",width-8,",a)"
-        write(unit=fmts,fmt="(A1,I0,A2,I0,A1,I0,A1)")   "(",nc,"Es",wd+8,".",wd,")"
-        !print *,fmts
-        col1 = 1
-        col2 = min(nc,a%getm())
-        do
-            write(fileid, *) "tisknu sloupce ",col1," az ",col2
-            do i=1,a%getn()
-                do j=col1,col2
-                    data(j-col1+1) = a%get(i,j)
-                end do
-                write(fileid, *) fmts, data(1:col2-col1+1)
-            end do
-            col1 = col2+1
-            col2 = min(col2+nc,a%getm())
-            if (col1>a%getm()) exit
-        end do
-        
-        close(fileid)
-    
-    end subroutine writematrix
 
     !> zakladni dump
     subroutine dumpmatrix(a)
@@ -773,8 +701,8 @@ module mtx
         y = sqrt(y)
         print *,"normF konci"
     end function normFmatrix
-! 
-! 
+
+
     !> vybere submatici
     !! \param A matice
     !! \param ii radkove indexy
@@ -1047,7 +975,7 @@ module mtx
             v3 = v3/sqrt(w1)
             lmin1 = lmin
             lmin = lmax-w/w1
-            if ( cnt == 10) then
+            if ( cnt == 100) then
                 print *, it, lmin,lmax, rc
                 cnt  = 0
             end if

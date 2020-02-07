@@ -3,12 +3,44 @@
 !!
 !<
 
-!> \page resice Resice soustav linearnich rovnic
-!! --
+
+
+
+
+!> \page resice "Resice soustav linearnich rovnic"
 !! Metody jsou ve dvou zakladnich tridach
 !! - \subpage iterace "Iteracni metody"
 !! - \subpage elim  "Prime metody"
+!!
 !<
+
+
+module solvers
+    use typy
+    implicit none
+
+    type :: vrstvy
+        integer(kind=ikind), dimension(:), allocatable, private :: levlist
+        integer(kind=ikind), dimension(:), allocatable, private :: levstart
+        integer(kind=ikind), private :: nlev
+    end type vrstvy
+
+
+
+    public :: LDU
+    public :: LDUd
+    public :: Split
+    public :: LDUback
+    public :: jacobi
+    public :: GS
+    public :: SD
+    public :: SDnormal
+    public :: CG
+    public :: CGnormal
+    public :: PCG
+    public :: PCGnormal
+    private :: vycdet
+    private :: esteig
 
 !> \page iterace "Iteracni metody"
 !! Zakladem iteracnich metod je postupne zpresnovani aktualni aproximace.
@@ -30,31 +62,6 @@
 !! \subpage ldu "LDU"
 !<
 
-!> resice soustav
-module solvers
-    use typy
-    implicit none
-
-    type :: vrstvy
-        integer(kind=ikind), dimension(:), allocatable, private :: levlist
-        integer(kind=ikind), dimension(:), allocatable, private :: levstart
-        integer(kind=ikind), private :: nlev
-    end type vrstvy
-
-    public :: LDU
-    public :: LDUd
-    public :: Split
-    public :: LDUback
-    public :: jacobi
-    public :: GS
-    public :: SD
-    public :: SDnormal
-    public :: CG
-    public :: CGnormal
-    public :: PCG
-    public :: PCGnormal
-    private :: vycdet
-    private :: esteig
     contains
     !> \page Jacobi Jacobiova metoda
     !!
@@ -534,7 +541,7 @@ module solvers
         dprev  = -1
         dstartnext = -1
         degsmin = 0
-
+        print *,"step2.1"
         do i=1, A%getn()
             !print *,"i=",i
             call A%getrow(i,r1,ri1,sr1,mp1)
@@ -765,6 +772,7 @@ module solvers
                     piv2 = mj
                     case (4)
                     continue
+
                     case (5)
                         ! symetricke minimal degree
                         !! napred jem primitivne
@@ -1401,8 +1409,8 @@ module solvers
             opcnt%div = opcnt%div + 1
 
             !! odhadnout vlastni cisla
-!             call esteig(l1,l2,cnt,alfa,beta)
-!             print *, "odhad vl. cisel:",l1,l2
+            call esteig(l1,l2,cnt,alfa,beta)
+            print *, "odhad vl. cisel:",l1,l2
             !! hotovo
 
             cnt = cnt + 1
@@ -1626,8 +1634,8 @@ module solvers
             opcnt%div = opcnt%div + 1
 
             !! odhadnout vlastni cisla
-            call esteig(l1,l2,cnt,alfa,beta)
-            print *, "odhad vl. cisel:",l1,l2
+!             call esteig(l1,l2,cnt,alfa,beta)
+!             print *, "odhad vl. cisel:",l1,l2
             !! hotovo
 
             cnt = cnt + 1
@@ -1873,9 +1881,9 @@ module solvers
             opcnt%mul = opcnt%mul + 4*n   + n
             opcnt%div = opcnt%div + 1
 
-             !! odhadnout vlastni cisla
-!             call esteig(l1,l2,cnt,alfa,beta)
-!             print *, "odhad vl. cisel:",l1,l2
+            !! odhadnout vlastni cisla
+            call esteig(l1,l2,cnt,alfa,beta)
+            print *, "odhad vl. cisel:",l1,l2
             !! hotovo
 
             cnt = cnt + 1
