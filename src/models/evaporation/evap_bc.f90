@@ -130,7 +130,7 @@ module evap_bc
             end if
           end do
       
-          call get_daymonth(pde_loc,evap_units, hour, day , month, year)
+          call get_calendar(hour, day , month, year)
 
           tmax = pde_loc%bc(edge_id)%series(datapos,3)
           tmin = pde_loc%bc(edge_id)%series(datapos,2)
@@ -247,22 +247,28 @@ module evap_bc
   
   
     !> For printing
-    function evap4print(pde_loc,layer, quadpnt) result(val)
+    function evap4print(pde_loc,layer, quadpnt, x) result(val)
       use typy
       use global_objs
       use pde_objs
       use evap_globals
       use evap_auxfnc
       use evap_fnc
+      use geom_tools
       
       class(pde_str), intent(in) :: pde_loc
-      integer(kind=ikind) :: el_id, node_order
-      !>material ID
-      integer(kind=ikind), intent(in) :: layer
+      !> value of the nonlinear function
+      real(kind=rkind), dimension(:), intent(in), optional    :: x
       !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
-      type(integpnt_str), intent(in), optional :: quadpnt 
-      !vapor volumetric content
-      real(kind=rkind) :: val
+      type(integpnt_str), intent(in), optional :: quadpnt
+      !> material ID
+      integer(kind=ikind), intent(in) :: layer
+      !> return value
+      real(kind=rkind)                :: val
+      
+      
+      !-- local i/o variables----
+      integer(kind=ikind) :: el_id, node_order
       !> Rhmean: relatuive humidity of air
       !> evap: evaporation arte
       real(kind=rkind) :: rhmean, evap
@@ -281,14 +287,19 @@ module evap_bc
       
       call get_datapos(pde_loc%bc(edge_id), datapos, datainit=datainit)
       
-      
-      !if (boundary)
-      rhmean = pde_loc%bc(edge_id)%series(datapos,4)
-      evap = evaporation(layer, quadpnt, rhmean)
-      !else
-      
-      !evap = dtheta_vapordt(pde_loc, layer, quadpnt, x)* volume_element
-      !end if 
+      select case(quadpnt%type_pnt)
+       case ("obpt", "gqnd") 
+          el_id = quadpnt%element
+        case ("ndpt") 
+          el_id = nodes%element(quadpnt%order)%data(1)
+      end select
+        
+      if (isboundary(quadpnt)) then
+        rhmean = pde_loc%bc(edge_id)%series(datapos,4)
+        evap = evaporation(layer, quadpnt, rhmean)
+      else
+        evap = dtheta_vapordt(pde_loc, layer, quadpnt, x)*elements%areas(el_id)
+      end if 
       
     end function evap4print
     

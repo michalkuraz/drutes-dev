@@ -132,6 +132,7 @@ module freeze_helper
       end if
       thice = thetai(pde(wat), layer, quadpnt)
       val = thice/(thice+thl*1.09)
+      
        
     end function Q_reduction
     
@@ -470,7 +471,7 @@ module freeze_helper
 
       real(kind=rkind) :: C, a, m, n, tr, ts 
       type(integpnt_str) :: quadpnt_loc  
-      real(kind=rkind) :: trsh = 1e-9    
+      real(kind=rkind) :: trsh = 1e-2   
           
       
       if (present(quadpnt) .and. present(x)) then

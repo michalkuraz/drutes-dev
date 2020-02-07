@@ -25,6 +25,7 @@ module vapour_pointers
       use heat_fnc
       use re_constitutive
       use heat_reader
+      use evap_bc
       
   
       
@@ -46,12 +47,28 @@ module vapour_pointers
       pde(re_order)%pde_fnc(heat_order)%dispersion => difussion_hT
       
       pde(re_order)%pde_fnc(re_order)%zerord  =>  source_h
+      
+      deallocate(pde(re_order)%mass)
+      
+      allocate(pde(re_order)%mass(2))
+      
+      pde(re_order)%mass(1)%val => vangen
+      
+      pde(re_order)%mass(2)%val => evap4print
+      
+      allocate(pde(re_order)%mass_name(2,2))
+
+      pde(re_order)%mass_name(1,1) = "theta"
+      
+      pde(re_order)%mass_name(1,2) = "theta [-]"
+      
+      pde(re_order)%mass_name(2,1) = "evap_rate_norm"
+      
+      pde(re_order)%mass_name(2,2) = "evaporation rate norm [L.T^{-1}]"
   
       
       call heat_read(pde(heat_order))
 
-    
-      
       pde(heat_order)%pde_fnc(heat_order)%elasticity => capacity_T
       
       pde(heat_order)%pde_fnc(heat_order)%dispersion => difussion_TT
@@ -65,6 +82,12 @@ module vapour_pointers
       pde(heat_order)%initcond => heat_icond  
       
       pde(heat_order)%flux => heatmod_flux
+      
+      pde(heat_order)%print_mass = .false.
+      
+      deallocate(pde(heat_order)%mass)
+      
+      allocate(pde(heat_order)%mass(0))
       
       call set_heatbc(pde(heat_order))
       

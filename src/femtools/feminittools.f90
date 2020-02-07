@@ -666,8 +666,8 @@ module feminittools
         if (ang < 360 - 100*epsilon(ang)) then
           nodes%boundary(id) = .true.
           found = .true.
-              else
-                nodes%boundary(id) = .false.
+        else
+          nodes%boundary(id) = .false.
           found = .false.
         end if
 

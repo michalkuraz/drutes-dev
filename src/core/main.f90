@@ -47,6 +47,7 @@ program main
   use objfnc
   use printtools
   use readtools
+
   
   character(len=256) :: writer
   character(len=2)   :: ch
@@ -54,9 +55,6 @@ program main
   real ::  stop_time
   real(kind=rkind) :: r, t
   integer :: fileid, i, j, ierrtime
-
-  
-
   
   call system("rm -rf out/*")
   

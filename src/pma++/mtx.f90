@@ -91,7 +91,7 @@ module mtx
         !> cteni ze souboru
         procedure :: Read
         !> zapis do souboru
-        procedure :: Write
+        procedure :: Write => writematrix
         !> nasobi jeden radek
         procedure  mulrow
     end type matrix
@@ -449,6 +449,72 @@ module mtx
         end do
 
     end subroutine printmatrix
+    
+    
+    subroutine writematrix(a, filename,ncol, width, caption)
+        use typy
+        implicit none
+
+        !> matice
+        class(matrix), intent(in) :: a
+        !> pozadovany pocet sloupcu tisku, nepovinne
+        integer(kind=ikind), intent(in), optional :: ncol
+        !> pozadovane sirka sloupce, nepovinne
+        integer(kind=ikind), intent(in), optional :: width
+        !> nadpis, nepovinne
+        character(len=*), intent(in),    optional :: caption
+        character(len=*), intent(in)              :: filename
+        character(len=100) :: cpt,fmts
+        integer(kind=ikind) :: nc
+        integer(kind=ikind) :: wd
+        integer(kind=ikind) :: i,j, col1,col2
+        real(kind=rkind), dimension(:), allocatable :: data
+        integer :: fileid
+        
+        open(newunit=fileid, file=trim(filename), action="write", status="replace")
+
+        if ( present(ncol) ) then
+        nc = ncol
+        else
+            nc = 5
+        end if
+
+        if ( present(width) ) then
+        wd = width
+        else
+            wd = 15
+        end if
+
+        if ( present(caption) ) then
+        cpt = adjustl(caption)
+        else
+            cpt ="matice"
+        end if
+
+        allocate(data(1:nc))
+        write(fileid, *) trim(cpt)
+        write(fileid, *) " pocet radku=",a%n, " pocet sloupcu=", a%m
+        !write(fmts,fmt="(i3,a2,i3,a2,i3,a2)") ncol,"(es",width,".",width-8,",a)"
+        write(unit=fmts,fmt="(A1,I0,A2,I0,A1,I0,A1)")   "(",nc,"Es",wd+8,".",wd,")"
+        !print *,fmts
+        col1 = 1
+        col2 = min(nc,a%getm())
+        do
+            write(fileid, *) "tisknu sloupce ",col1," az ",col2
+            do i=1,a%getn()
+                do j=col1,col2
+                    data(j-col1+1) = a%get(i,j)
+                end do
+                write(fileid, *) fmts, data(1:col2-col1+1)
+            end do
+            col1 = col2+1
+            col2 = min(col2+nc,a%getm())
+            if (col1>a%getm()) exit
+        end do
+        
+        close(fileid)
+    
+    end subroutine writematrix
 
     !> zakladni dump
     subroutine dumpmatrix(a)

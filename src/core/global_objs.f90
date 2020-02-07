@@ -172,6 +172,7 @@ module global_objs
     real(kind=rkind), dimension(:), allocatable :: xyz
     integer(kind=ikind) :: element
     real(kind=rkind), dimension(:), allocatable :: cumflux
+    logical :: boundary = .false.
   end type observation
   
   

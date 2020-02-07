@@ -148,7 +148,7 @@ module Re_evap_bc
       
           
           
-          call get_daymonth(pde_loc,evap_units, hour, day , month, year)
+          call get_calendar(hour, day , month, year)
           tmax = pde_loc%bc(edge_id)%series(datapos,3)
           tmin = pde_loc%bc(edge_id)%series(datapos,2)
           tmax_prev = pde_loc%bc(edge_id)%series(dataprev,3)

@@ -40,9 +40,37 @@ module geom_tools
   public :: map1d2d,map1d2dJ !later modified by J due to laziness
   public :: getnormal
   public :: get_layer
+  public :: isboundary
 
   
   contains
+  
+  function isboundary(quadpnt) result(answer)
+    use typy
+    use global_objs
+    use globals
+    
+    type(integpnt_str), intent(in) :: quadpnt
+    logical :: answer
+    
+    select case(quadpnt%type_pnt)
+      case("obpt")
+        if (observation_array(quadpnt%order)%boundary) then
+          answer = .true.
+        else
+          answer = .false.
+        end if
+      case("ndpt")
+        if (nodes%boundary(quadpnt%order)) then
+          answer = .true.
+        else
+          answer = .false.
+        end if
+      case default
+        answer = .false.
+    end select
+    
+  end function isboundary 
   
   function get_layer(quadpnt) result(layer)
     use typy
@@ -390,89 +418,99 @@ module geom_tools
     integer(kind=ikind) :: zasah, i, l, p, j, k
     integer(kind=ikind), dimension(:), allocatable :: checked
     logical, dimension(:), allocatable :: valid
-    logical :: true
+    logical, dimension(2) :: true
     real(kind=rkind), dimension(:), allocatable :: smer
     
-    select case(drutes_config%dimen)
-      case(1)
-        if ((domain(1,1) <= bod(1) .and. domain(2,1) >= bod(1)) .or. &
-            (domain(1,1) >= bod(1) .and. domain(2,1) <= bod(1)) ) then
-          true = .true.
-        else
-          true = .false.
-        end if
-
-      case(2)
-
-        allocate(smer(ubound(domain,1)+1))
-        allocate(inter(ubound(smer,1),ubound(domain,1),2))
-        allocate(valid(ubound(domain,1)))
-        allocate(checked(ubound(smer,1)))
-        checked = 0
-
-
-        do i=1, ubound(domain,1)
-          if (i < ubound(domain,1)) then
-            l = i
-            p = i+1
-          else
-            l = i
-            p = 1
-          end if
-	  
-          a = domain(l,:)
-          
-          b = domain(p,:)
-          
-
-          if (inline(domain(l,:), domain(p,:), bod)) then
-            true = .TRUE.
-            RETURN
-          end if
-
-          do j=1, ubound(smer,1)
-            smer(j) = rand() + 0.25
-            call shoot(bod, smer(j), domain,  inter(j,:,:), valid)
-            zasah = 0
-            do k=1, ubound(domain,1)
-              if (valid(k)) then
-                if (dist(a,inter(j,k,:)) > 10*epsilon(smer(1)) .and. dist(b,inter(j,k,:)) > 10*epsilon(smer(1))) then
-                  zasah = zasah + 1
-                else
-                  print *, inter(j,k,:), a, b, dist(a,inter(j,k,:)) , dist(b,inter(j,k,:))
-                  checked(j) = -1
-                end if
-              end if
-            end do
-            
-            if (checked(j) /= -1) then
-              if (modulo(zasah,2) /= 0 .and. zasah /= ubound(domain,1)) then
-                checked(j) = 1
-              end if
-            end if
-  
-	      
-          end do
-        end do
-        j=0
-        do i=1, ubound(checked,1) 
-          if (checked(i) == 0) then
-            true = .false.
-            RETURN
-          end if
-          j = j + checked(i)
-        end do
-        
-        if (j == -ubound(checked,1)) then
-          print *, "bug in geom_tools::inside, contact developer with a full bug report"
-          ERROR stop
-        end if
-        
-        true = .true.
-      
-      case default
-        ERROR stop "generated from geom_tools::inside"
-    end select
+    TRUE = .false.
+    
+!     select case(drutes_config%dimen)
+!       case(1)
+!         if ((domain(1,1) <= bod(1) .and. domain(2,1) >= bod(1)) .or. &
+!             (domain(1,1) >= bod(1) .and. domain(2,1) <= bod(1)) ) then
+!           true(1) = .true.
+!           
+!           if (abs( bod(1) - domain(1,1)) < epsilon(bod(1)) .or. abs( bod(1) - domain(2,1)) < epsilon(bod(1))) then
+!             true(2) = .true.
+!           else
+!             true(2) = .false.
+!           end if
+!         else
+!           true = .false.
+!         end if
+! 
+!       case(2)
+! 
+!         allocate(smer(ubound(domain,1)+1))
+!         allocate(inter(ubound(smer,1),ubound(domain,1),2))
+!         allocate(valid(ubound(domain,1)))
+!         allocate(checked(ubound(smer,1)))
+!         checked = 0
+! 
+! 
+!         do i=1, ubound(domain,1)
+!           if (i < ubound(domain,1)) then
+!             l = i
+!             p = i+1
+!           else
+!             l = i
+!             p = 1
+!           end if
+! 	  
+!           a = domain(l,:)
+!           
+!           b = domain(p,:)
+!           
+! 
+!           if (inline(domain(l,:), domain(p,:), bod)) then
+!             true(1) = .TRUE.
+!             true(2) = .TRUE.
+!             RETURN
+!           end if
+! 
+!           do j=1, ubound(smer,1)
+!             smer(j) = rand() + 0.25
+!             call shoot(bod, smer(j), domain,  inter(j,:,:), valid)
+!             zasah = 0
+!             do k=1, ubound(domain,1)
+!               if (valid(k)) then
+!                 if (dist(a,inter(j,k,:)) > 10*epsilon(smer(1)) .and. dist(b,inter(j,k,:)) > 10*epsilon(smer(1))) then
+!                   zasah = zasah + 1
+!                 else
+!                   print *, inter(j,k,:), a, b, dist(a,inter(j,k,:)) , dist(b,inter(j,k,:))
+!                   checked(j) = -1
+!                 end if
+!               end if
+!             end do
+!             
+!             if (checked(j) /= -1) then
+!               if (modulo(zasah,2) /= 0 .and. zasah /= ubound(domain,1)) then
+!                 checked(j) = 1
+!               end if
+!             end if
+!   
+! 	      
+!           end do
+!         end do
+!         j=0
+!         do i=1, ubound(checked,1) 
+!           if (checked(i) == 0) then
+!             true = .false.
+!             RETURN
+!           end if
+!           j = j + checked(i)
+!         end do
+!         
+!         if (j == -ubound(checked,1)) then
+!           print *, "bug in geom_tools::inside, contact developer with a full bug report"
+!           ERROR stop
+!         end if
+!         
+!         true(1) = .true.
+!         true(2) = .false.
+!       
+!       case default
+!         ERROR stop "generated from geom_tools::inside"
+!     end select
 
   end function inside
   

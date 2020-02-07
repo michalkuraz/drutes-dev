@@ -60,6 +60,7 @@ module decomposer
       integer :: ierr
       integer :: file_conf
       integer(kind=ikind) :: method
+      logical, dimension(2) :: setin
 
       call find_unit(file_conf,100)
 
@@ -126,7 +127,8 @@ module decomposer
         call progressbar(int(100*i/coarse_elements%kolik))
         do j=1, elements%kolik
           if (.not. cluster_def(j)) then
-            if (inside(domain, elements%gc(j,1:2))) then
+            setin = inside(domain, elements%gc(j,1:2))
+            if (setin(1)) then
               counter = counter + 1
               elcounter(counter) = j
               cluster_def(j) = .true.

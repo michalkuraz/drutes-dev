@@ -31,7 +31,8 @@ module evap_auxfnc
   public :: enhancement_factor
   public :: evaporation
   public :: sensible_heat
-  public :: get_daymonth
+  public :: get_calendar
+  private :: set_february
   public :: get_datapos
 
   contains
@@ -446,86 +447,80 @@ module evap_auxfnc
   end function sensible_heat
   
   
-  subroutine get_daymonth(pde_loc,evap_time,hour, day, month, year)
+  subroutine get_calendar(hour,day,month,year)
+    use globals
     use typy
     use re_globals
-    use global_objs
-    use pde_objs
     
-    
-    class(pde_str), intent(in) :: pde_loc
-    character(len=*), intent(in) :: evap_time
     integer(kind=ikind), intent(out) :: hour, day, month, year
-    integer(kind =ikind), dimension(12):: days_in_month
-    integer(kind=ikind) :: edge_id, datapos, dataprev, increase
-    integer(kind=ikind) :: el_id, node_order
-    integer(kind=ikind), save :: datainit=1
-    real(kind = rkind):: plus_days
+    integer(kind=ikind), dimension(12):: days_in_month   
     
-    !read from imput
-    day = day_in_month
-    month = month_in_year
+    integer(kind=ikind) :: cum_hour, cum_day, days2end, oldmonth, newmonth, daystotal, day2count
+
     year = init_year
     
+    days_in_month = set_february(year)
 
-    if ((modulo(year,4_ikind) == 0 .and. modulo(year,100_ikind) /= 0) .or. &
-     (modulo(year,4_ikind) == 0 .and. modulo(year,100_ikind) == 0 .and. modulo(year,400_ikind) == 0)) then
-        days_in_month = (/31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31/)
+    cum_hour = int(time/3600)
+    
+    cum_day = int(time/86400)
+    
+    hour = cum_hour - cum_day*24
+
+    days2end = days_in_month(month_in_year) - day_in_month
+    
+    
+    if (days2end >= cum_day) then
+      month = month_in_year
+      day = day_in_month + cum_day
+      year = init_year
+      RETURN
     else
-        days_in_month = (/31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31/)
-    end if      
-    
-    edge_id = nodes%edge(elements%data(el_id, node_order))
-    call get_datapos(pde_loc%bc(edge_id), datapos = datapos, dataprev = dataprev, datainit=datainit)
-    increase = pde_loc%bc(edge_id)%series(datapos,1) - pde_loc%bc(edge_id)%series(dataprev,1)
-    
-    select case(evap_time)
-        case("hourly")
-            hour = pde_loc%bc(edge_id)%series(1,1)
-            hour = hour + increase
-            plus_days = nint(hour/24.0_rkind)
-            hour = modulo(hour, 24)
-            day = day + plus_days
+      oldmonth = month_in_year
+      year = init_year
+      cum_day = days_in_month(oldmonth) - days2end + cum_day
+      daystotal = 0
+      day2count = cum_day
+      do        
+        if (oldmonth < 12) then
+          newmonth = oldmonth + 1
+        else
+          newmonth = 1
+          year = year + 1
+          days_in_month = set_february(year)
+        end if
         
-            do while(day > days_in_month(month )) 
-                day = day - days_in_month(month)
-                month = month +  1
-                if  (month == 13) then
-                    month = 1
-                    year = year +1
-                end if
-            end do
-        case("daily")
-            hour = 12
-            day = day + increase
-        
-            do while(day > days_in_month(month )) 
-                day = day - days_in_month(month)
-                month = month +  1
-                if  (month == 13) then
-                    month = 1
-                    year = year +1
-                end if
-            end do
-        case("monthly")
-           hour = 12
-           day = 1
-           month =  month + increase
-            if  (month == 13) then
-                    month = 1
-                    year = year +1
-            end if
-            
-        case("yearly")
-            !summer conditions
-            hour = 12
-            day = 1
-            month = 6
-            year = year + increase
-      end select
+        daystotal = daystotal + days_in_month(oldmonth) + days_in_month(newmonth)
 
+        if (daystotal > cum_day) then
+          month = newmonth
+          day = day2count - days_in_month(oldmonth)
+          EXIT
+        else
+          oldmonth = newmonth
+          day2count = cum_day - days_in_month(oldmonth)
+        end if
+      end do    
+    end if
+      
+      
+  end subroutine get_calendar  
   
-  end subroutine get_daymonth
+
+  function set_february(year) result(days_in_month)
+    use typy
+    
+    integer(kind=ikind), intent(in) :: year
+    integer(kind=ikind), dimension(12) :: days_in_month
+    
+    if ((modulo(year,4_ikind) == 0 .and. modulo(year,100_ikind) /= 0) .or. &
+           (modulo(year,4_ikind) == 0 .and. modulo(year,100_ikind) == 0 .and. modulo(year,400_ikind) == 0)) then
+      days_in_month = (/31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31/)
+    else
+      days_in_month = (/31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31/)
+    end if
+    
+  end function set_february
   
     subroutine get_datapos(bcstr, datapos, dataprev, datainit)
       use typy

@@ -121,6 +121,13 @@ module heat_pointers
       pde_loc%flux => heat_flux
       
       pde_loc%initcond => heat_icond  
+      
+      pde_loc%print_mass = .false.
+      
+      deallocate(pde_loc%mass)
+      
+      allocate(pde_loc%mass(0))
+      
 
     
     end subroutine heatlinker

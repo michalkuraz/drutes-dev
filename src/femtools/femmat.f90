@@ -46,6 +46,7 @@ module femmat
       use simplelinalg
       use debug_tools
       use mtxiotools
+      use core_tools
 
 !       use decomposer
 
@@ -60,6 +61,9 @@ module femmat
       integer :: ierr_loc, ll
       real(kind=rkind), dimension(:), allocatable :: vcttmp
       real(kind=rkind) :: lambda_l, lambda_h, tmpxx=0, maxtime=0
+      
+      integer, save :: pocitac=0
+      character(len=100) :: soubor
 
       proc = ubound(pde,1)
       fin = maxval(pde(proc)%permut(:))
@@ -75,7 +79,7 @@ module femmat
         call assemble_mat(ierr)
 !  		          call printmtx(spmatrix) 
         
-        if (drutes_config%dimen >  1) then
+        if (drutes_config%dimen >  0) then
           call diag_precond(a=spmatrix, x=pde_common%xvect(1:fin,3), mode=1)
         end if
 
@@ -92,14 +96,18 @@ module femmat
         end if
 		  
 
-        if (drutes_config%dimen >  1) then
+        if (drutes_config%dimen >  0) then
           write(unit=file_itcg, fmt = *) time, pcg_it, reps_err
           call flush(file_itcg)
           call diag_precond(a=spmatrix, x=pde_common%xvect(1:fin,3), mode=-1)
         end if
-        
 
-!         print *, pde_common%xvect(1:fin,3) ; call wait()
+!         if (time > 1796) then
+!           pocitac = pocitac + 1
+!           write(soubor, *) pocitac
+!           call printmtx(pde_common%xvect(1:fin,3)) ; call wait()
+!           call spmatrix%Write(cut(soubor))
+!         end if
 
         error = norm2(pde_common%xvect(1:fin,2)-pde_common%xvect(1:fin,3))/ubound(pde_common%xvect,1)
         
