@@ -388,7 +388,6 @@ module drutes_init
       integer(kind=ikind) :: i, j, k, point, dec
       real(kind=rkind), dimension(:,:), allocatable :: domain
       logical :: error_stop = .false.
-      logical, dimension(2) :: setin
 
       allocate(domain(ubound(elements%data,2), drutes_config%dimen))
 
@@ -405,11 +404,9 @@ module drutes_init
           do k=1, ubound(elements%data,2)
             domain(k,:) = nodes%data(elements%data(j,k),:)
           end do
-          setin = inside(domain, observation_array(i)%xyz)
-          if (setin(1)) then
+          if (inside(domain, observation_array(i)%xyz)) then
             observation_array(i)%element = j
-            if (setin(2)) observation_array(i)%boundary = .true.
-            EXIT
+              EXIT
           else
             CONTINUE
           end if
