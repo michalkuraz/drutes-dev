@@ -629,7 +629,6 @@ module postpro
             write(unit=ids(j), fmt=*)  i, pts, tmp
           end do
         end if
-        
       
         
         flux = 0
@@ -639,6 +638,8 @@ module postpro
           flux = flux + flux_tmp*gauss_points%weight(jj)
         end do
         flux = flux / gauss_points%area
+        
+        print *, "za flux"
         
         if (.not. pde(proc)%print_mass) then
           velocity_id = 3

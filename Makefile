@@ -29,7 +29,7 @@ MATHTOOLS_obj :=  linalg.o integral.o solver_interfaces.o simplelinalg.o
 TOOLS_obj := printtools.o simegen.o read_inputs.o drutes_init.o geom_tools.o postpro.o readtools.o objfnc.o
 FEMTOOLS_obj := feminittools.o capmat.o stiffmat.o fem.o fem_tools.o femmat.o
 DECOMPO_obj :=  decomp_tools.o schwarz_dd.o  decomp_vars.o decomposer.o schwarz_dd2subcyc.o
-PMAoo_obj := fullmatrix.o mtx.o mtx_int.o mtxiotools.o pmatools.o solvers.o sparsematrix.o sparsematrix_int.o
+PMAoo_obj := fullmatrix.o mtx.o mtx_int.o mtxiotools.o pmatools.o solvers.o sparsematrix.o sparsematrix_int.o matmod.o
 BOUSSINESQ_obj := boussglob.o boussread.o boussfnc.o bousspointers.o
 ADE_obj := ADE_fnc.o ADE_reader.o ADE_globals.o ADE_pointers.o
 REDUAL_obj := Re_dual_totH.o Re_dual_globals.o Re_dual_pointers.o Re_dual_reader.o Re_dual_tab.o Re_dual_coupling.o Re_dual_bc.o
@@ -94,6 +94,8 @@ sparsematrix_int.o: typy.o mtx.o src/pma++/sparsematrix_int.f90
 	$c -c src/pma++/sparsematrix_int.f90	
 solvers.o: typy.o mtx.o src/pma++/solvers.f90
 	$c -c src/pma++/solvers.f90
+matmod.o: typy.o mtx.o src/pma++/matmod.f90
+	$c -c  src/pma++/matmod.f90
 #-------end PMA++_obj---------------------------
 
 #-------begin TOOLS_obj----------------------------------

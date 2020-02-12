@@ -283,9 +283,7 @@ module evap_bc
       end if
       
       
-      edge_id = nodes%edge(elements%data(el_id, node_order))
-      
-      call get_datapos(pde_loc%bc(edge_id), datapos, datainit=datainit)
+
       
       select case(quadpnt%type_pnt)
        case ("obpt", "gqnd") 
@@ -295,6 +293,8 @@ module evap_bc
       end select
         
       if (isboundary(quadpnt)) then
+        edge_id = nodes%edge(elements%data(el_id, node_order))
+        call get_datapos(pde_loc%bc(edge_id), datapos, datainit=datainit)
         rhmean = pde_loc%bc(edge_id)%series(datapos,4)
         evap = evaporation(layer, quadpnt, rhmean)
       else

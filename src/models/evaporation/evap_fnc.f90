@@ -646,26 +646,33 @@ module evap_fnc
         gradT = grad
       end if
       
+      print *, "ve fluxu", present(x), present(quadpnt)
+      
       D = drutes_config%dimen
       
       if (present(x)) then
+      ! this option is forbideen in your liquid flux!!!!!!!
         call vapor_flux(pde_loc, layer, x=x, flux = q_vap(1:D))
         call liquid_flux(pde_loc, layer, x=x,  flux=q_liq(1:D))
       end if
       
       if (present(quadpnt)) then
-        call vapor_flux(pde_loc, layer, quadpnt, flux = q_vap(1:D))
-        call liquid_flux(pde_loc, layer, quadpnt, flux=q_liq(1:D))
+             print *, "ve fluxu 2"
+        call vapor_flux(pde(1), layer, quadpnt, flux = q_vap(1:D))
+               print *, "ve fluxu 3"
+        call liquid_flux(pde(1), layer, quadpnt, flux=q_liq(1:D))
       end if
       
+  print *, "ve fluxu 4"
       
-      kappa = thermal_conduc(pde_loc, layer, quadpnt)
+      kappa = thermal_conduc(pde(1), layer, quadpnt)
       L = latent_heat_wat(quadpnt)
       T = pde(Heat_order)%getval(quadpnt)
       rho_liq = rho_l(quadpnt)
       rho_vap = rho_sv(quadpnt)*rh_soil(layer, quadpnt)
       
       
+      print *, "ve fluxu 4.5"
       vct(1:D) =  gradT(1:D)*kappa  + C_liq*T*q_liq(1:D) *rho_liq + C_vap*T*q_vap(1:D)*rho_vap + L*q_vap(1:D)*rho_liq
       
       
@@ -677,6 +684,8 @@ module evap_fnc
       if (present(flux)) then
         flux(1:D) = vct(1:D)
       end if
+      
+      print *, "ve fluxu 5"
       
     end subroutine heatmod_flux
     

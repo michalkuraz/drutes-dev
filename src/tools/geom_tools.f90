@@ -70,6 +70,8 @@ module geom_tools
         answer = .false.
     end select
     
+    answer = .false.
+    
   end function isboundary 
   
   function get_layer(quadpnt) result(layer)
