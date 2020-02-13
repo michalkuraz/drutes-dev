@@ -47,6 +47,7 @@ module femmat
       use debug_tools
       use mtxiotools
       use core_tools
+      use solver_interfaces
 
 !       use decomposer
 
@@ -56,7 +57,7 @@ module femmat
       integer(kind=ikind) ::  fin, pcg_it
       logical, intent(out) :: success
       integer(kind=ikind) :: i, proc,j, m, l, k, top, bot
-      real(kind=rkind) :: error, loc_error, reps_err
+      real(kind=rkind) :: error, loc_error, reps_err, l1, l2
       logical :: dt_fine
       integer :: ierr_loc, ll
       real(kind=rkind), dimension(:), allocatable :: vcttmp
@@ -83,11 +84,12 @@ module femmat
           call diag_precond(a=spmatrix, x=pde_common%xvect(1:fin,3), mode=1)
         end if
 
+!                 call geteigenvals(spmatrix, l1, l2)
         
         call solve_matrix(spmatrix, pde_common%bvect(1:fin), pde_common%xvect(1:fin,3),  itmax1=fin, &
             reps1=1e-11_rkind, itfin1=pcg_it, repsfin1=reps_err)
             
-            
+
             
         if (pcg_it > 0.75*fin) then 
           ierr=-1

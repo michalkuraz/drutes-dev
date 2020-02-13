@@ -471,7 +471,7 @@ module freeze_helper
 
       real(kind=rkind) :: C, a, m, n, tr, ts 
       type(integpnt_str) :: quadpnt_loc  
-      real(kind=rkind) :: trsh = 1e-2   
+      real(kind=rkind) :: trsh = 0   
           
       
       if (present(quadpnt) .and. present(x)) then

@@ -639,7 +639,6 @@ module postpro
         end do
         flux = flux / gauss_points%area
         
-        print *, "za flux"
         
         if (.not. pde(proc)%print_mass) then
           velocity_id = 3

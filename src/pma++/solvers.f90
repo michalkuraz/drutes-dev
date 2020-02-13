@@ -541,7 +541,7 @@ module solvers
         dprev  = -1
         dstartnext = -1
         degsmin = 0
-        print *,"step2.1"
+!         print *,"step2.1"
         do i=1, A%getn()
             !print *,"i=",i
             call A%getrow(i,r1,ri1,sr1,mp1)
@@ -1409,8 +1409,10 @@ module solvers
             opcnt%div = opcnt%div + 1
 
             !! odhadnout vlastni cisla
-            call esteig(l1,l2,cnt,alfa,beta)
-            print *, "odhad vl. cisel:",l1,l2
+            if (ilev > 0) then
+              call esteig(l1,l2,cnt,alfa,beta)
+              print *, "odhad vl. cisel:",l1,l2
+            end if
             !! hotovo
 
             cnt = cnt + 1
@@ -1612,7 +1614,7 @@ module solvers
             Ap =A%mul(p,opcnt)
             r1 = dot_product(Ap,Ap)
             wrk = r2/r1
-            if (ilev>0) print *,"alfa=",wrk
+            if (ilev>1) print *,"alfa=",wrk
             alfa(cnt) = wrk
             ! tenhle usek je jen kvuli vypoctu energie
             en = -dot_product(x,b1+res) ! je to vychozi energie
@@ -1624,8 +1626,9 @@ module solvers
             !! Step 6
             r3 = r2
             r2 = dot_product(res,res)
+            if (ilev>0) print *, "residual:", r2 
             wrk = r2/r3
-            if (ilev>0) print *,"beta=",wrk
+            if (ilev>1) print *,"beta=",wrk
             beta(cnt) = wrk
             !! Step 7
             p = res + wrk*p
@@ -1634,8 +1637,13 @@ module solvers
             opcnt%div = opcnt%div + 1
 
             !! odhadnout vlastni cisla
-!             call esteig(l1,l2,cnt,alfa,beta)
-!             print *, "odhad vl. cisel:",l1,l2
+            if (ilev >0) then
+              call esteig(l1,l2,cnt,alfa,beta)
+              print *, "-----start-------"
+              print *, "eigen values estimate:",l1,l2
+              print *, "conditioning estimate:", l1/l2
+              print *, "------end--------"
+            end if
             !! hotovo
 
             cnt = cnt + 1
