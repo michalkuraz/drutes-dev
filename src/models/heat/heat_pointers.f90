@@ -85,6 +85,7 @@ module heat_pointers
       use heat_fnc
       use heat_reader
       use re_constitutive
+      use evap_bc
       
       
       class(pde_str),  intent(in out) :: pde_loc
@@ -111,6 +112,8 @@ module heat_pointers
             pde_loc%bc(i)%value_fnc => heat_neumann
           case(0)
             pde_loc%bc(i)%value_fnc => re_null_bc
+          case(3)
+            pde_loc%bc(i)%value_fnc => heat_robin
           case default
             print *, "unrecognized bc option"
             print *, "exited from heat_pointers::heatlinker"

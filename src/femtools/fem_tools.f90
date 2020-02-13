@@ -140,6 +140,7 @@ module fem_tools
           bvect(m_col(i)) = bcval(i,1)
         case(5)
           bvect(m_col(i)) = bcval(i,3)*surface(i)
+          print *, bcval(i,3)
       end select
       
       ! fill stiffness matrix
@@ -172,8 +173,10 @@ module fem_tools
             
             if (m /= i) then
               tmp = tmp*bcval(m,1)*surface(i)
+              tmp = 0
             else
               tmp = tmp*bcval(m,1)*surface(i) + bcval(m,2)*surface(i)
+              tmp = 1
             end if
             
             call locmatrix%add(tmp, n_row(i), m_col(m))

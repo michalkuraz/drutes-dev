@@ -142,7 +142,7 @@ module manage_pointers
 
            call vapour_processes(pde_common%processes)
            call pde_constructor(pde_common%processes)
-           write(unit = drutes_config%fullname, fmt=*) "DRUtES solves Rciahrds equation with vapour flow"
+           write(unit = drutes_config%fullname, fmt=*) "DRUtES solves Richards equation with vapour flow"
  
            call vapour_linker()
 
@@ -156,8 +156,8 @@ module manage_pointers
 
       select case(drutes_config%dimen)
         case(1)
-!             solve_matrix => LDU_face
-            solve_matrix => CG_normal_face
+            solve_matrix => LDU_face
+!             solve_matrix => CG_normal_face
         case(2)
           symetric = .true.
           do i=1, ubound(pde,1)

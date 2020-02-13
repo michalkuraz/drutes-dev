@@ -230,7 +230,7 @@ module solver_interfaces
       integer :: ilevel
 
       if (.not. present(ilev1) ) then
-        ilevel = 0
+        ilevel = 1
       else
         ilevel = ilev1
       end if

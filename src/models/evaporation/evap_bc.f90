@@ -113,17 +113,17 @@ module evap_bc
       
       
       if (run1st) then
-        call evap_datadt_bc(evap_units, pde_loc%bc(edge_id)%series)
+        call evap_datadt_bc(evap_units, pde(re_order)%bc(edge_id)%series)
         run1st = .false.
       end if    
       if (present(valarray)) then
-        if (pde_loc%bc(edge_id)%file) then
-          do i = pde_loc%bc(edge_id)%series_pos, ubound(pde_loc%bc(edge_id)%series,1)
-            if (pde_loc%bc(edge_id)%series(i,1) > time .and. i < ubound(pde_loc%bc(edge_id)%series,1)) then
+        if (pde(re_order)%bc(edge_id)%file) then
+          do i = pde(re_order)%bc(edge_id)%series_pos, ubound(pde(re_order)%bc(edge_id)%series,1)
+            if (pde(re_order)%bc(edge_id)%series(i,1) > time .and. i < ubound(pde(re_order)%bc(edge_id)%series,1)) then
               datapos = i + 1
               dataprev = i
               EXIT
-            else if (pde_loc%bc(edge_id)%series(i,1) > time .and. i == ubound(pde_loc%bc(edge_id)%series,1)) then
+            else if (pde(re_order)%bc(edge_id)%series(i,1) > time .and. i == ubound(pde(re_order)%bc(edge_id)%series,1)) then
               datapos = i
               dataprev = i-1 
               EXIT
@@ -132,17 +132,17 @@ module evap_bc
       
           call get_calendar(hour, day , month, year)
 
-          tmax = pde_loc%bc(edge_id)%series(datapos,3)
-          tmin = pde_loc%bc(edge_id)%series(datapos,2)
-          rh_air = pde_loc%bc(edge_id)%series(datapos,4)
-          solar = pde_loc%bc(edge_id)%series(datapos,7)
+          tmax = pde(re_order)%bc(edge_id)%series(datapos,3)
+          tmin = pde(re_order)%bc(edge_id)%series(datapos,2)
+          rh_air = pde(re_order)%bc(edge_id)%series(datapos,4)
+          solar = pde(re_order)%bc(edge_id)%series(datapos,7)
           
           tmean = ((tmax+tmin)/2.0_rkind) + Tref
           tmink = tmin + Tref
           tmaxk = tmax + Tref
           e_act = ((e_o(tmax) + e_o(tmin))/2.0_rkind)*(rh_air/100.0_rkind)
       
-          kappa = thermal_conduc(pde_loc, layer, quadpnt)
+          kappa = thermal_conduc(pde(re_order), layer, quadpnt)
           L = latent_heat_wat(quadpnt)
           rho_liq = rho_l(quadpnt)
           rho_vapor = rho_sv(quadpnt)*rh_soil(layer, quadpnt)
@@ -152,9 +152,9 @@ module evap_bc
           num_day = num_day_fcn (day, month,evap_units)
           rad = radiation_fcn(num_day,latitude,elevation,albedo,e_act,solar,tmink,tmaxk)
           
-          call vapor_flux(pde_loc, layer , quadpnt=quadpnt, flux=q_vap(1:D))
+          call vapor_flux(pde(re_order), layer , quadpnt=quadpnt, flux=q_vap(1:D))
           
-          call liquid_flux(pde_loc, layer, quadpnt, flux=q_liq(1:D))
+          call liquid_flux(pde(re_order), layer, quadpnt, flux=q_liq(1:D))
           
           heat_soil_flux = rad - Hs - L*evap*rho_liq
       
@@ -167,6 +167,8 @@ module evap_bc
           valarray(2) = bcoef
           
           valarray(3) = ccoef
+          
+          valarray = 1
               
   
         else
@@ -223,11 +225,10 @@ module evap_bc
     edge_id = nodes%edge(elements%data(el_id, node_order))
     
     if (present(value)) then
-      if (pde_loc%bc(edge_id)%file) then
-        call get_datapos(pde_loc%bc(edge_id), datapos, datainit=datainit)
-        print *, datapos ; call wait()
-        rhmean = pde_loc%bc(edge_id)%series(datapos,4)
-        theta =  pde_loc%mass(1)%val(pde_loc, layer, quadpnt)
+      if (pde(re_order)%bc(edge_id)%file) then
+        call get_datapos(pde(re_order)%bc(edge_id), datapos, datainit=datainit)
+        rhmean = pde(re_order)%bc(edge_id)%series(datapos,4)
+        theta =  pde(re_order)%mass(1)%val(pde(re_order), layer, quadpnt)
         
         evap = evaporation(layer, quadpnt, rhmean)
         value = evap
@@ -270,7 +271,8 @@ module evap_bc
       !-- local i/o variables----
       integer(kind=ikind) :: el_id, node_order
       !> Rhmean: relatuive humidity of air
-      !> evap: evaporation arte
+      !> evap: evaporation arteProgram received signal SIGSEGV: Segmentation fault - invalid memory reference.
+
       real(kind=rkind) :: rhmean, evap
       integer(kind=ikind) :: edge_id, datapos
       integer(kind=ikind), save :: datainit=1
@@ -292,14 +294,9 @@ module evap_bc
           el_id = nodes%element(quadpnt%order)%data(1)
       end select
         
-      if (isboundary(quadpnt)) then
-        edge_id = nodes%edge(elements%data(el_id, node_order))
-        call get_datapos(pde_loc%bc(edge_id), datapos, datainit=datainit)
-        rhmean = pde_loc%bc(edge_id)%series(datapos,4)
-        evap = evaporation(layer, quadpnt, rhmean)
-      else
-        evap = dtheta_vapordt(pde_loc, layer, quadpnt, x)*elements%areas(el_id)
-      end if 
+
+      val = dtheta_vapordt(pde(re_order), layer, quadpnt, x)*elements%areas(el_id)*dtprev
+ 
       
     end function evap4print
     

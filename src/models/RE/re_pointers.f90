@@ -106,6 +106,8 @@ module RE_pointers
       use pde_objs
       use re_globals
       use re_constitutive
+      use core_tools
+      use evap_bc
       
       class(pde_str), intent(in out) :: pde_loc
       
@@ -128,8 +130,12 @@ module RE_pointers
             print *, "seepage face is not created yet for pressure head RE"
             ERROR STOP
           case(5)
-            print *, "If you want to use evaporation, then set mdoel type to vapour"
-            ERROR STOP
+            if (cut(drutes_config%name) == "vapour") then
+              pde_loc%bc(i)%value_fnc => water_evap
+            else
+              print *, "if you want to use atmospheric bc, set problem type to RE"
+              ERROR stop
+            end if
           case default
             print *, "ERROR! You have specified an unsupported boundary type definition for the Richards equation"
             print *, "the incorrect boundary code specified is:", pde_loc%bc(i)%code
@@ -148,6 +154,8 @@ module RE_pointers
       use re_globals
       use re_constitutive
       use re_total
+      use evap_bc
+      use core_tools
       
       class(pde_str), intent(in out) :: pde_loc
       integer(kind=ikind) :: i
@@ -167,7 +175,11 @@ module RE_pointers
           case(4)
             pde_loc%bc(i)%value_fnc => retot_seepage	
           case(5)
-            pde_loc%bc(i)%value_fnc => retot_atmospheric
+            if (cut(drutes_config%name) == "vapour") then
+              pde_loc%bc(i)%value_fnc => water_evap
+            else
+              pde_loc%bc(i)%value_fnc => retot_atmospheric
+            end if
           case(6,7)
           case default
           print *, "ERROR! You have specified an unsupported boundary type definition for the Richards equation"

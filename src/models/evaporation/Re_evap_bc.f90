@@ -110,13 +110,14 @@ module Re_evap_bc
       real(kind=rkind) :: radiation, tmaxk,tmink,wind2,rain, theta
       logical, save :: run1st=.true.
       character(len=8), save :: evap_units 
+      integer(kind=ikind), save :: datainit=1
       
       
       edge_id = nodes%edge(elements%data(el_id, node_order))
       
       
       if (run1st) then
-        call evap_datadt_bc(evap_units, pde_loc%bc(edge_id)%series)
+        call evap_datadt_bc(evap_units, pde(re_order)%bc(edge_id)%series)
         run1st = .false.
       end if
       
@@ -133,66 +134,55 @@ module Re_evap_bc
       
       
       if (present(value)) then
-        if (pde_loc%bc(edge_id)%file) then
-          do i = pde_loc%bc(edge_id)%series_pos, ubound(pde_loc%bc(edge_id)%series,1)
-            if (pde_loc%bc(edge_id)%series(i,1) > time .and. i < ubound(pde_loc%bc(edge_id)%series,1)) then
-              datapos = i + 1
-              dataprev = i
-              EXIT
-            else if (pde_loc%bc(edge_id)%series(i,1) > time .and. i == ubound(pde_loc%bc(edge_id)%series,1)) then
-              datapos = i
-              dataprev = i-1 
-              EXIT
-            end if
-          end do
-      
-          
-          
-          call get_calendar(hour, day , month, year)
-          tmax = pde_loc%bc(edge_id)%series(datapos,3)
-          tmin = pde_loc%bc(edge_id)%series(datapos,2)
-          tmax_prev = pde_loc%bc(edge_id)%series(dataprev,3)
-          tmin_prev =  pde_loc%bc(edge_id)%series(dataprev,2)
-          rhmean = pde_loc%bc(edge_id)%series(datapos,4)
-          wind = pde_loc%bc(edge_id)%series(datapos,4)
-          light = pde_loc%bc(edge_id)%series(datapos,6)
-          solar = pde_loc%bc(edge_id)%series(datapos,7)
-          
-          
-          rain = pde_loc%bc(edge_id)%series(datapos,8)
-          theta =  pde_loc%mass(1)%val(pde_loc, layer, quadpnt)
-          
-          
-          tmean = (tmax+tmin)/2.0_rkind
-          tmean_prev = (tmax_prev+tmin_prev)/2.0_rkind
-          tmink = tmin + Tref
-          tmaxk = tmax + Tref
-          e_sat = ((e_o(tmax) + e_o(tmin))/2.0_rkind)
-          e_act = ((e_o(tmax) + e_o(tmin))/2.0_rkind)*(rhmean/100.0_rkind)
-          slope_vap = (4098.0_rkind*e_sat)/(tmean + Tref)**2.0_rkind
-          
-          !> num_day calculation
-          num_day = num_day_fcn (day, month,evap_units)
-          !> Net Radiation calculation             
-          radiation = radiation_fcn(num_day,latitude,elevation,albedo,e_act,solar,tmink,tmaxk)
-          !> Wind velocity calculation
-          wind2 = wind*wind_fcn(elevation)
-          !> Soil Flux calculation
-          soil = soilheat_fcn(tmean,tmean_prev,radiation,hour,evap_units)
-          !Evaporation rate
-          evap = (0.408_rkind*(radiation - soil)*gp*(900.0_rkind/(tmean + Tref))*wind2*(e_sat - e_act))&
-          / (slope_vap + gp*(1.0_rkind + 0.34_rkind*wind2))
-              
-          if ((rain - evap) >= 0) then
-            value = rain - evap
-          else
-            value = rain - evap*theta**(2.0_rkind/3.0_rkind)
-          end if
+        
+        call get_datapos(pde(re_order)%bc(edge_id), datapos, datainit=datainit)
+        
+        
+        call get_calendar(hour, day , month, year)
+        tmax = pde(re_order)%bc(edge_id)%series(datapos,3)
+        tmin = pde(re_order)%bc(edge_id)%series(datapos,2)
+        tmax_prev = pde(re_order)%bc(edge_id)%series(dataprev,3)
+        tmin_prev =  pde(re_order)%bc(edge_id)%series(dataprev,2)
+        rhmean = pde(re_order)%bc(edge_id)%series(datapos,4)
+        wind = pde(re_order)%bc(edge_id)%series(datapos,4)
+        light = pde(re_order)%bc(edge_id)%series(datapos,6)
+        solar = pde(re_order)%bc(edge_id)%series(datapos,7)
+        
+        
+        rain = pde(re_order)%bc(edge_id)%series(datapos,8)
+        theta =  pde(re_order)%mass(1)%val(pde(re_order), layer, quadpnt)
+        
+        
+        tmean = (tmax+tmin)/2.0_rkind
+        tmean_prev = (tmax_prev+tmin_prev)/2.0_rkind
+        tmink = tmin + Tref
+        tmaxk = tmax + Tref
+        e_sat = ((e_o(tmax) + e_o(tmin))/2.0_rkind)
+        e_act = ((e_o(tmax) + e_o(tmin))/2.0_rkind)*(rhmean/100.0_rkind)
+        slope_vap = (4098.0_rkind*e_sat)/(tmean + Tref)**2.0_rkind
+        
+        !> num_day calculation
+        num_day = num_day_fcn (day, month,evap_units)
+        !> Net Radiation calculation             
+        radiation = radiation_fcn(num_day,latitude,elevation,albedo,e_act,solar,tmink,tmaxk)
+        !> Wind velocity calculation
+        wind2 = wind*wind_fcn(elevation)
+        !> Soil Flux calculation
+        soil = soilheat_fcn(tmean,tmean_prev,radiation,hour,evap_units)
+        !Evaporation rate
+        evap = (0.408_rkind*(radiation - soil)*gp*(900.0_rkind/(tmean + Tref))*wind2*(e_sat - e_act))&
+        / (slope_vap + gp*(1.0_rkind + 0.34_rkind*wind2))
+            
+        if ((rain - evap) >= 0) then
+          value = rain - evap
         else
-          print *, "evaporation boundary must be time dependent, check record for the boundary", edge_id
-          ERROR STOP
+          value = rain - evap*theta**(2.0_rkind/3.0_rkind)
         end if
+      else
+        print *, "evaporation boundary must be time dependent, check record for the boundary", edge_id
+        ERROR STOP
       end if
+  
       
 
       if (present(code)) then

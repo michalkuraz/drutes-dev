@@ -265,7 +265,7 @@ module evap_auxfnc
       ERROR stop
     end if
   
-    theta_l = pde_loc%mass(1)%val(pde_loc, layer, quadpnt)
+    theta_l = pde(re_order)%mass(1)%val(pde(re_order), layer, quadpnt)
     val = b1 + b2*theta_l + b3*theta_l**0.5
 
   end function thermal_conduc
@@ -296,7 +296,7 @@ module evap_auxfnc
       ERROR stop
     end if
   
-    theta_l = pde_loc%mass(1)%val(pde_loc, layer, quadpnt)
+    theta_l = pde(re_order)%mass(1)%val(pde(re_order), layer, quadpnt)
     theta_air = 1 - theta_l
    
     
@@ -385,7 +385,7 @@ module evap_auxfnc
     end if
     
     theta_sat = vgset(layer)%ths
-    theta_l = pde_loc%mass(1)%val(pde_loc, layer, quadpnt)
+    theta_l = pde(re_order)%mass(1)%val(pde(re_order), layer, quadpnt)
     const = 1 + (2.6_rkind/sqrt(f_c))
     tmp = exp(- (const * (theta_l/theta_sat))**4)
     
@@ -397,6 +397,8 @@ module evap_auxfnc
   function evaporation(layer, quadpnt, rh_air) result(val)
     use typy
     use evap_globals
+    use re_constitutive
+    use pde_objs
       
     !>material ID  
     integer(kind=ikind), intent(in) :: layer
@@ -410,6 +412,7 @@ module evap_auxfnc
     !> liquid water density 
     !> saturated water vapor density
     real(kind=rkind) :: rh_soil_val, rho_l_val,rho_sv_val
+    real(kind=rkind), dimension(3,3) :: Ks
       
 
     
@@ -418,7 +421,14 @@ module evap_auxfnc
     rho_sv_val = rho_sv(quadpnt) 
     
     val = (rh_soil_val*rho_sv_val  - rh_air* rho_sv_val )/(resistance*rho_l_val)
-     
+    
+    call mualem(pde(re_order), layer, quadpnt, tensor=Ks(1:drutes_config%dimen, 1:drutes_config%dimen))
+    
+    
+    val = min(100*Ks(1,1),abs(val))
+
+    val = -val
+
       
   
   end function evaporation

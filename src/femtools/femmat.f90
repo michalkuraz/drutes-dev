@@ -80,7 +80,7 @@ module femmat
         call assemble_mat(ierr)
 !  		          call printmtx(spmatrix) 
         
-        if (drutes_config%dimen >  1) then
+        if (drutes_config%dimen >  0) then
           call diag_precond(a=spmatrix, x=pde_common%xvect(1:fin,3), mode=1)
         end if
 
@@ -91,14 +91,14 @@ module femmat
             
 
             
-        if (pcg_it > 0.75*fin) then 
+        if (pcg_it > 0.25*fin) then 
           ierr=-1
         else
           ierr=0
         end if
 		  
 
-        if (drutes_config%dimen >  1) then
+        if (drutes_config%dimen >  0) then
           write(unit=file_itcg, fmt = *) time, pcg_it, reps_err
           call flush(file_itcg)
           call diag_precond(a=spmatrix, x=pde_common%xvect(1:fin,3), mode=-1)
@@ -112,8 +112,7 @@ module femmat
 !         end if
 
         error = norm2(pde_common%xvect(1:fin,2)-pde_common%xvect(1:fin,3))/ubound(pde_common%xvect,1)
-        
-!         print *, error ; call wait()
+ 
          
         if (itcount == 1 .or. error <= iter_criterion) then
           do proc=1, ubound(pde,1)
@@ -207,12 +206,11 @@ module femmat
        call build_bvect(i, time_step)
 
        call build_stiff_np(i, time_step)
-       
-!        call printmtx(stiff_mat) ; call wait()
 
        call pde_common%time_integ(i)
 
        stiff_mat = stiff_mat + cap_mat
+       
         
        call in2global(i,spmatrix, pde_common%bvect)
 

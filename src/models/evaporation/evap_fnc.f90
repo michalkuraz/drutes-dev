@@ -72,8 +72,8 @@ module evap_fnc
 
       
       D = drutes_config%dimen !Dimension of the problem
-      call mualem(pde_loc, layer, quadpnt, tensor = Klh(1:D,1:D))
-      Kvh_scalar = hydraulic_vh( pde_loc,layer, quadpnt)
+      call mualem(pde(RE_order), layer, quadpnt, tensor = Klh(1:D,1:D))
+      Kvh_scalar = hydraulic_vh(pde(RE_order),layer, quadpnt)
       !Filling the tensor of Kvh
       Kvh = 0 
       do i=1, D
@@ -82,6 +82,9 @@ module evap_fnc
       tensor(1:D,1:D) = Klh(1:D,1:D) + Kvh(1:D,1:D)
       
     end subroutine difussion_hh
+    
+    
+    
     !! Difussion due to temperature gradient: the same of normal RE
     subroutine difussion_hT(pde_loc, layer, quadpnt,  x, tensor, scalar)
       use re_globals
@@ -118,8 +121,8 @@ module evap_fnc
         ERROR STOP
       end if
       
-      KlT(1:D,1:D) = hydraulic_lT(pde_loc, layer, quadpnt) 
-      KvT_scalar = hydraulic_vT(pde_loc, layer, quadpnt)
+      KlT(1:D,1:D) = hydraulic_lT(pde(heat_order), layer, quadpnt) 
+      KvT_scalar = hydraulic_vT(pde(heat_order), layer, quadpnt)
       
 
       KvT = 0
@@ -152,7 +155,7 @@ module evap_fnc
       
       val = 0
       val = vgset(layer)%sinkterm
-      val =  val + dtheta_vapordt(pde_loc, layer, quadpnt_in)
+      val =  val + dtheta_vapordt(pde(re_order), layer, quadpnt_in)
       
     end function source_h
     
@@ -179,7 +182,7 @@ module evap_fnc
       !> rho_vapor: water vapor density
       real(kind=rkind) :: rho_liq,rho_vapor
       
-      rho_liq = rho_l( quadpnt)
+      rho_liq = rho_l(quadpnt)
       rho_vapor = rho_sv(quadpnt)*rh_soil(layer, quadpnt)
       
       if (.not. present(quadpnt)) then
@@ -193,7 +196,9 @@ module evap_fnc
         ERROR STOP
       end if
       
+
       val = rho_liq*C_liq + rho_vapor*C_vap + rho_soil*C_soil
+
     end function capacity_T
     
     
@@ -238,14 +243,14 @@ module evap_fnc
       end if
       
       T = pde(Heat_order)%getval(quadpnt)
-      kappa = thermal_conduc(pde_loc, layer, quadpnt)
+      kappa = thermal_conduc(pde(heat_order), layer, quadpnt)
       L = latent_heat_wat(quadpnt)
       rho_liq = rho_l(quadpnt)
       rho_vapor = rho_sv(quadpnt)*rh_soil(layer, quadpnt)
       
-      KlT(1:D,1:D) = hydraulic_lT(pde_loc, layer, quadpnt)
+      KlT(1:D,1:D) = hydraulic_lT(pde(re_order), layer, quadpnt)
       
-      KvT_scalar = hydraulic_vT(pde_loc, layer, quadpnt)
+      KvT_scalar = hydraulic_vT(pde(heat_order), layer, quadpnt)
       
       KvT = 0 
       do i=1, D
@@ -311,9 +316,9 @@ module evap_fnc
         rho_vapor = rho_sv(quadpnt)*rh_soil(layer, quadpnt)
         
       
-        call mualem(pde_loc, layer, quadpnt,tensor = Klh(1:D,1:D))
+        call mualem(pde(re_order), layer, quadpnt,tensor = Klh(1:D,1:D))
         
-        Kvh_scalar = hydraulic_vh(pde_loc, layer, quadpnt)
+        Kvh_scalar = hydraulic_vh(pde(re_order), layer, quadpnt)
         Kvh = 0 
         do i=1, D
           Kvh(i,i) = Kvh_scalar 
@@ -363,10 +368,10 @@ module evap_fnc
         end if
         
         D = drutes_config%dimen
-        T = pde(Heat_order)%getval(quadpnt)
+        T = pde(heat_order)%getval(quadpnt)
         rho_liq = rho_l( quadpnt)
           
-        call dmualem_dh(pde_loc, layer, quadpnt, x,  vector_out = Kvect(1:D))
+        call dmualem_dh(pde(re_order), layer, quadpnt, x,  vector_out = Kvect(1:D))
       
         vector_out(1:D) = C_liq*rho_liq*T*Kvect(1:D)
 
@@ -400,7 +405,7 @@ module evap_fnc
       val = heatpar(layer)%source
       latent_heat = latent_heat_wat(quadpnt_in) 
       rho_l_val = rho_l(quadpnt_in) 
-      val =  val + dtheta_vapordt(pde_loc, layer, quadpnt_in)*latent_heat*rho_l_val 
+      val =  val + dtheta_vapordt(pde(re_order), layer, quadpnt_in)*latent_heat*rho_l_val 
       
       
     end function source_T
@@ -460,22 +465,15 @@ module evap_fnc
       D = drutes_config%dimen
       
       if (present(quadpnt)) then
-        call darcy_law(pde_loc, layer, quadpnt, flux = q_liq(1:D))
+        call darcy_law(pde(re_order), layer, quadpnt, flux = q_liq(1:D))
       end if
       
-      KlT(1:D,1:D) = hydraulic_lT(pde_loc, layer, quadpnt) 
+      KlT(1:D,1:D) = hydraulic_lT(pde(heat_order), layer, quadpnt) 
       
       vct(1:D) = q_liq(1:D) + matmul(-KlT(1:D,1:D), gradT(1:D))
       
-      if (present(flux_length)) then
-        select case(D)
-          case(1)
-                flux_length = vct(1)
-          case(2)
-                flux_length = sqrt(vct(1)*vct(1) + vct(2)*vct(2))
-          case(3)
-                flux_length = sqrt(vct(1)*vct(1) + vct(2)*vct(2) + vct(3)*vct(3))
-        end select
+      if (present(flux_length)) then      
+        flux_length = norm2(vct(1:D))
       end if
 
 
@@ -523,9 +521,9 @@ module evap_fnc
       type(integpnt_str) :: quadpnt_loc
       
       
-       real(kind=rkind), dimension(:), allocatable, save :: gradT
+     real(kind=rkind), dimension(:), allocatable, save :: gradT
       
-        if (present(quadpnt) .and. (present(grad) .or. present(x))) then
+      if (present(quadpnt) .and. (present(grad) .or. present(x))) then
         print *, "ERROR: the function can be called either with integ point or x value definition and gradient, not both of them"
         ERROR stop
       else if ((.not. present(grad) .or. .not. present(x)) .and. .not. present(quadpnt)) then
@@ -560,8 +558,8 @@ module evap_fnc
       end if
       D = drutes_config%dimen
       
-      Kvh_scalar = hydraulic_vh(pde_loc, layer, quadpnt)
-      KvT_scalar = hydraulic_vT(pde_loc, layer, quadpnt)
+      Kvh_scalar = hydraulic_vh(pde(re_order), layer, quadpnt)
+      KvT_scalar = hydraulic_vT(pde(heat_order), layer, quadpnt)
       
       Kvh = 0
       KvT = 0
@@ -576,14 +574,7 @@ module evap_fnc
       
       
        if (present(flux_length)) then
-        select case(D)
-          case(1)
-                flux_length = vct(1)
-          case(2)
-                flux_length = sqrt(vct(1)*vct(1) + vct(2)*vct(2))
-          case(3)
-                flux_length = sqrt(vct(1)*vct(1) + vct(2)*vct(2) + vct(3)*vct(3))
-        end select
+         flux_length = norm2(vct(1:D))
       end if
 
 
@@ -645,34 +636,29 @@ module evap_fnc
       else
         gradT = grad
       end if
-      
-      print *, "ve fluxu", present(x), present(quadpnt)
+    
       
       D = drutes_config%dimen
       
       if (present(x)) then
-      ! this option is forbideen in your liquid flux!!!!!!!
-        call vapor_flux(pde_loc, layer, x=x, flux = q_vap(1:D))
-        call liquid_flux(pde_loc, layer, x=x,  flux=q_liq(1:D))
+        print *, "function undefined for input x"
+        print *, "exited from evap_fnc::heatmod_flux"
+        ERROR STOP
       end if
       
       if (present(quadpnt)) then
-             print *, "ve fluxu 2"
-        call vapor_flux(pde(1), layer, quadpnt, flux = q_vap(1:D))
-               print *, "ve fluxu 3"
-        call liquid_flux(pde(1), layer, quadpnt, flux=q_liq(1:D))
+        call vapor_flux(pde(re_order), layer, quadpnt, flux = q_vap(1:D))
+        call liquid_flux(pde(re_order), layer, quadpnt, flux=q_liq(1:D))
       end if
       
-  print *, "ve fluxu 4"
       
-      kappa = thermal_conduc(pde(1), layer, quadpnt)
+      kappa = thermal_conduc(pde(heat_order), layer, quadpnt)
       L = latent_heat_wat(quadpnt)
-      T = pde(Heat_order)%getval(quadpnt)
+      T = pde(heat_order)%getval(quadpnt)
       rho_liq = rho_l(quadpnt)
       rho_vap = rho_sv(quadpnt)*rh_soil(layer, quadpnt)
       
       
-      print *, "ve fluxu 4.5"
       vct(1:D) =  gradT(1:D)*kappa  + C_liq*T*q_liq(1:D) *rho_liq + C_vap*T*q_vap(1:D)*rho_vap + L*q_vap(1:D)*rho_liq
       
       
@@ -685,7 +671,6 @@ module evap_fnc
         flux(1:D) = vct(1:D)
       end if
       
-      print *, "ve fluxu 5"
       
     end subroutine heatmod_flux
     
@@ -724,10 +709,12 @@ module evap_fnc
         h = pde(RE_order)%getval(quadpnt)
         T = pde(Heat_order)%getval(quadpnt)
        
-        call mualem(pde_loc, layer, quadpnt,  tensor = Klh(1:D,1:D))
+        call mualem(pde(re_order), layer, quadpnt,  tensor = Klh(1:D,1:D))
         val(1:D,1:D)  = Klh(1:D,1:D)*h*GwT*(1/gamma_0)*dsurf_tension_soilwat_dT(quadpnt)  
         
     end function hydraulic_lT
+    
+    
       
     !> Isothermal Properties of water vapor
     function hydraulic_vh(pde_loc, layer, quadpnt) result(val)
@@ -762,7 +749,7 @@ module evap_fnc
         rh_soil_val = rh_soil(layer, quadpnt)
         rho_l_val= rho_l( quadpnt) 
         rho_sv_val = rho_sv( quadpnt) 
-        diff = vapor_diff_soil(pde_loc, layer, quadpnt)
+        diff = vapor_diff_soil(pde(heat_order), layer, quadpnt)
         T = pde(Heat_order)%getval(quadpnt)
        
        
@@ -796,13 +783,15 @@ module evap_fnc
         
         rh_soil_val= rh_soil( layer, quadpnt)
         rho_l_val = rho_l(quadpnt) 
-        diff = vapor_diff_soil(pde_loc, layer, quadpnt)
+        diff = vapor_diff_soil(pde(re_order), layer, quadpnt)
         drho_svdT_val = drho_sv_dT(quadpnt)
-        enhancement_factor_val = enhancement_factor(pde_loc, layer, quadpnt)
+        enhancement_factor_val = enhancement_factor(pde(re_order), layer, quadpnt)
         
         val = (diff/rho_l_val)*enhancement_factor_val*drho_svdT_val*rh_soil_val
         
     end function hydraulic_vT
+    
+    
     !> Water vapor time derivative
     function dtheta_vapordt(pde_loc, layer, quadpnt_in, x)  result(val)
       use typy
@@ -827,10 +816,10 @@ module evap_fnc
       quadpnt = quadpnt_in
     
       quadpnt%column = 2
-      theta_vapor_prev = theta_vapor(pde_loc,layer, quadpnt) 
+      theta_vapor_prev = theta_vapor(pde(re_order),layer, quadpnt) 
     
       quadpnt%column = 1
-      theta_vapor_curr= theta_vapor(pde_loc,layer, quadpnt) 
+      theta_vapor_curr= theta_vapor(pde(re_order),layer, quadpnt) 
       
       val =  (theta_vapor_curr - theta_vapor_prev)/ time_step 
         
@@ -864,7 +853,7 @@ module evap_fnc
         ERROR stop
       end if
         
-      theta_l = pde_loc%mass(1)%val(pde_loc, layer, quadpnt)
+      theta_l = pde(re_order)%mass(1)%val(pde(re_order), layer, quadpnt)
       rh_soil_val = rh_soil(layer, quadpnt)
       rho_l_val = rho_l(quadpnt) 
       rho_sv_val = rho_sv(quadpnt) 
