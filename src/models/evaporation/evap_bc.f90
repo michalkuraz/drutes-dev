@@ -31,7 +31,7 @@ module evap_bc
 
   contains
 
-  !> implementation for Robin boundary condition
+   !> implementation for Robin boundary condition
   !! solution is a scalar function \f[ p \f]
   !! \f ccoef = acoef  \pdv{p}{\vec{n}}  + bcoef p ||\vec{q} ||_2 \f]
   !!  valarray(1) = acoef
@@ -103,82 +103,79 @@ module evap_bc
     real(kind=rkind), dimension(3) :: q_vap, q_liq
       
       
-      quadpnt%type_pnt = "ndpt"
-      quadpnt%order = elements%data(el_id, node_order)
-      quadpnt%column = 2
-      layer = elements%material(el_id)
-      D = drutes_config%dimen
-      call getcoor(quadpnt, xyz(1:D))
-      edge_id = nodes%edge(elements%data(el_id, node_order))
-      
-      
-      if (run1st) then
-        call evap_datadt_bc(evap_units, pde(re_order)%bc(edge_id)%series)
-        run1st = .false.
-      end if    
-      if (present(valarray)) then
-        if (pde(re_order)%bc(edge_id)%file) then
-          do i = pde(re_order)%bc(edge_id)%series_pos, ubound(pde(re_order)%bc(edge_id)%series,1)
-            if (pde(re_order)%bc(edge_id)%series(i,1) > time .and. i < ubound(pde(re_order)%bc(edge_id)%series,1)) then
-              datapos = i + 1
-              dataprev = i
-              EXIT
-            else if (pde(re_order)%bc(edge_id)%series(i,1) > time .and. i == ubound(pde(re_order)%bc(edge_id)%series,1)) then
-              datapos = i
-              dataprev = i-1 
-              EXIT
-            end if
-          end do
-      
-          call get_calendar(hour, day , month, year)
+    quadpnt%type_pnt = "ndpt"
+    quadpnt%order = elements%data(el_id, node_order)
+    quadpnt%column = 2
+    layer = elements%material(el_id)
+    D = drutes_config%dimen
+    call getcoor(quadpnt, xyz(1:D))
+    edge_id = nodes%edge(elements%data(el_id, node_order))
+    
+    
+    if (run1st) then
+      call evap_datadt_bc(evap_units, pde(re_order)%bc(edge_id)%series)
+      run1st = .false.
+    end if    
+    if (present(val)) then
+      if (pde(re_order)%bc(edge_id)%file) then
+        do i = pde(re_order)%bc(edge_id)%series_pos, ubound(pde(re_order)%bc(edge_id)%series,1)
+          if (pde(re_order)%bc(edge_id)%series(i,1) > time .and. i < ubound(pde(re_order)%bc(edge_id)%series,1)) then
+            datapos = i + 1
+            dataprev = i
+            EXIT
+          else if (pde(re_order)%bc(edge_id)%series(i,1) > time .and. i == ubound(pde(re_order)%bc(edge_id)%series,1)) then
+            datapos = i
+            dataprev = i-1 
+            EXIT
+          end if
+        end do
+    
+        call get_calendar(hour, day , month, year)
 
-          tmax = pde(re_order)%bc(edge_id)%series(datapos,3)
-          tmin = pde(re_order)%bc(edge_id)%series(datapos,2)
-          rh_air = pde(re_order)%bc(edge_id)%series(datapos,4)
-          solar = pde(re_order)%bc(edge_id)%series(datapos,7)
-          
-          tmean = ((tmax+tmin)/2.0_rkind) + Tref
-          tmink = tmin + Tref
-          tmaxk = tmax + Tref
-          e_act = ((e_o(tmax) + e_o(tmin))/2.0_rkind)*(rh_air/100.0_rkind)
+        tmax = pde(re_order)%bc(edge_id)%series(datapos,3)
+        tmin = pde(re_order)%bc(edge_id)%series(datapos,2)
+        rh_air = pde(re_order)%bc(edge_id)%series(datapos,4)
+        solar = pde(re_order)%bc(edge_id)%series(datapos,7)
+        
+        tmean = ((tmax+tmin)/2.0_rkind) + Tref
+        tmink = tmin + Tref
+        tmaxk = tmax + Tref
+        e_act = ((e_o(tmax) + e_o(tmin))/2.0_rkind)*(rh_air/100.0_rkind)
+    
+        kappa = thermal_conduc(pde(re_order), layer, quadpnt)
+        L = latent_heat_wat(quadpnt)
+        rho_liq = rho_l(quadpnt)
+        rho_vapor = rho_sv(quadpnt)*rh_soil(layer, quadpnt)
+        !temperature should be in K 
+        Hs= sensible_heat(quadpnt, tmean)
+        evap = evaporation(layer, quadpnt, rh_air)
+        num_day = num_day_fcn (day, month,evap_units)
+        rad = 1e6/86400.0* &
+        radiation_fcn(num_day,latitude,elevation,albedo,e_act,solar,tmink,tmaxk)
+        
+        call vapor_flux(pde(re_order), layer , quadpnt=quadpnt, flux=q_vap(1:D))
+        
+        call liquid_flux(pde(re_order), layer, quadpnt, flux=q_liq(1:D))
+        
+        heat_soil_flux = rad - Hs - L*evap*rho_liq
+    
+        ccoef =  - heat_soil_flux - L*norm2(q_vap(1:D))*rho_liq
+        acoef = -kappa
+        bcoef = C_liq*rho_liq*norm2(q_liq(1:D)) + C_vap*norm2(q_vap(1:D))*rho_vapor
       
-          kappa = thermal_conduc(pde(re_order), layer, quadpnt)
-          L = latent_heat_wat(quadpnt)
-          rho_liq = rho_l(quadpnt)
-          rho_vapor = rho_sv(quadpnt)*rh_soil(layer, quadpnt)
-          !temperature should be in K 
-          Hs= sensible_heat(quadpnt, tmean)
-          evap = evaporation(layer, quadpnt, rh_air)
-          num_day = num_day_fcn (day, month,evap_units)
-          rad = radiation_fcn(num_day,latitude,elevation,albedo,e_act,solar,tmink,tmaxk)
-          
-          call vapor_flux(pde(re_order), layer , quadpnt=quadpnt, flux=q_vap(1:D))
-          
-          call liquid_flux(pde(re_order), layer, quadpnt, flux=q_liq(1:D))
-          
-          heat_soil_flux = rad - Hs - L*evap*rho_liq
-      
-          ccoef =  - heat_soil_flux - L*norm2(q_vap(1:D))*rho_liq
-          acoef = -kappa
-          bcoef = C_liq*rho_liq*norm2(q_liq(1:D)) + C_vap*norm2(q_vap(1:D))*rho_vapor
-          
-          valarray(1) = acoef
-          
-          valarray(2) = bcoef
-          
-          valarray(3) = ccoef
-          
-          valarray = 1
-              
-  
-        else
-          print *, "evaporation boundary must be time dependent, check record for the boundary", edge_id
-          ERROR STOP
-        end if
+        T = pde_loc%getval(quadpnt)
+        
+        val = ccoef - bcoef*T
+        
+
+      else
+        print *, "evaporation boundary must be time dependent, check record for the boundary", edge_id
+        ERROR STOP
       end if
-      if (present(code)) then
-        code = 5 ! should be 5? 1: Direchlet, 2: Neumann, 3: no boundary, 4: Dirichlet bc (node is not excluded from x vector),  5: Robin  
-      end if
+    end if
+    if (present(code)) then
+      code = 2 ! should be 5? 1: Direchlet, 2: Neumann, 3: no boundary, 4: Dirichlet bc (node is not excluded from x vector),  5: Robin  
+    end if
 
   end subroutine  heat_robin
   

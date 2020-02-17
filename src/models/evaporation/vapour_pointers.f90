@@ -61,50 +61,45 @@ module vapour_pointers
       
       pde(heat_order)%pde_fnc(heat_order)%elasticity => capacity_T
       
-!       deallocate(pde(re_order)%mass)
-!       
-!       allocate(pde(re_order)%mass(2))
-!       
-!       pde(re_order)%mass(1)%val => vangen
-!       
-!       pde(re_order)%mass(2)%val => evap4print
-!       
-!       deallocate(pde(re_order)%mass_name)
-!       
-!       allocate(pde(re_order)%mass_name(2,2))
-! 
-!       pde(re_order)%mass_name(1,1) = "theta"
-!       
-!       pde(re_order)%mass_name(1,2) = "theta [-]"
-!       
-!       pde(re_order)%mass_name(2,1) = "evap_rate_norm"
-!       
-!       pde(re_order)%mass_name(2,2) = "evaporation rate norm [L.T^{-1}]"
-  
+      deallocate(pde(re_order)%mass)
       
-!       call heat_read(pde(heat_order))
-! 
-!       pde(heat_order)%pde_fnc(heat_order)%elasticity => capacity_T
-!       
-!       pde(heat_order)%pde_fnc(heat_order)%dispersion => difussion_TT
-!       
-!       pde(heat_order)%pde_fnc(re_order)%dispersion => difussion_Th
-!       
-!       pde(heat_order)%pde_fnc(heat_order)%convection => convection_T
-!       
-!       pde(heat_order)%pde_fnc(heat_order)%zerord  =>  source_T
-!       
-!       pde(heat_order)%initcond => heat_icond  
-!       
-!       pde(heat_order)%flux => heatmod_flux
-!       
-!       pde(heat_order)%print_mass = .false.
-!       
-!       deallocate(pde(heat_order)%mass)
-!       
-!       allocate(pde(heat_order)%mass(0))
-!       
-!       call set_heatbc(pde(heat_order))
+      allocate(pde(re_order)%mass(2))
+      
+      pde(re_order)%mass(1)%val => vangen
+      
+      pde(re_order)%mass(2)%val => evap4print
+      
+      deallocate(pde(re_order)%mass_name)
+      
+      allocate(pde(re_order)%mass_name(2,2))
+
+      pde(re_order)%mass_name(1,1) = "theta"
+      
+      pde(re_order)%mass_name(1,2) = "theta [-]"
+      
+      pde(re_order)%mass_name(2,1) = "evap_rate_norm"
+      
+      pde(re_order)%mass_name(2,2) = "evaporation rate norm [L.T^{-1}]"
+      
+      call set_evapbc(pde(re_order))
+
+      pde(heat_order)%pde_fnc(heat_order)%elasticity => capacity_T
+      
+      pde(heat_order)%pde_fnc(heat_order)%dispersion => difussion_TT
+      
+      pde(heat_order)%pde_fnc(re_order)%dispersion => difussion_Th
+      
+      pde(heat_order)%pde_fnc(heat_order)%convection => convection_T
+      
+      pde(heat_order)%pde_fnc(heat_order)%zerord  =>  source_T
+       
+      pde(heat_order)%initcond => heat_icond  
+       
+      pde(heat_order)%flux => heatmod_flux
+      
+      pde(heat_order)%print_mass = .false.
+     
+      call set_heatbc(pde(heat_order))
       
     
     end subroutine vapour_linker
@@ -127,19 +122,9 @@ module vapour_pointers
       
       do i=lbound(pde_loc%bc,1), ubound(pde_loc%bc,1)
         select case(pde_loc%bc(i)%code)
-          case(-1)
-            pde_loc%bc(i)%value_fnc => re_dirichlet_height_bc
-          case(0)
-            pde_loc%bc(i)%value_fnc => re_null_bc
-          case(1)
-            pde_loc%bc(i)%value_fnc => re_dirichlet_bc
-          case(2)
-            pde_loc%bc(i)%value_fnc => re_neumann_bc
-          case(3)
-            pde_loc%bc(i)%value_fnc => re_null_bc
-          case(4)
-            print *, "seepage face is not created yet for pressure head RE"
-            ERROR STOP
+          case(-1:4)
+            continue
+            !all done in re_pointers
           case(5)
             pde_loc%bc(i)%value_fnc => water_evap
           case default
@@ -172,16 +157,11 @@ module vapour_pointers
       
       do i=lbound(pde_loc%bc,1), ubound(pde_loc%bc,1)
         select case(pde_loc%bc(i)%code)
-          case(1)
-            pde_loc%bc(i)%value_fnc => heat_dirichlet
-          case(2)
-            pde_loc%bc(i)%value_fnc => heat_neumann
-          case(0)
-            pde_loc%bc(i)%value_fnc => re_null_bc
+          case(0:2)
+            CONTINUE
+            !already linked from heatpointers
           case(3)
             pde_loc%bc(i)%value_fnc => heat_robin
-          case(5)
-            pde_loc%bc(i)%value_fnc => heat_dirichlet
           case default
             print *, "unrecognized bc option"
             print *, "exited from heat_pointers::heatlinker"
