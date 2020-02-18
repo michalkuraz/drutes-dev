@@ -53,6 +53,7 @@ module freeze_pointers
       use heat_reader
       use heat_fnc
       use debug_tools
+      use freeze_linalg
       
       integer(kind=ikind) :: i
       
@@ -290,6 +291,8 @@ module freeze_pointers
           print *, "exited from freeze_pointers::frz_pointers"
           error stop
       end select
+      
+     ! solve_matrix => freeze_solver_face
 
     end subroutine frz_pointers
   
