@@ -91,7 +91,7 @@ module mtx
         !> cteni ze souboru
         procedure :: Read
         !> zapis do souboru
-        procedure :: Write
+        procedure :: Write => Write
         !> nasobi jeden radek
         procedure  mulrow
     end type matrix

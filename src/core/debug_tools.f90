@@ -133,23 +133,11 @@ module debug_tools
       integer :: filloc
       integer :: ierr
       logical :: op
-      
+    
       if (present(name)) then
-        call find_unit(filloc)
-        open(unit=filloc, file=name, action="write", status="replace", iostat=ierr)
-        if (ierr /= 0) then
-          print *, "unable to open dump file, called from debug_tools::printmtx"
-          error stop
-        end if
-      else if (present(filunit)) then
-        filloc = filunit
-        inquire(unit=filloc, opened=op)
-        if (.not. op) then
-          print *, "file not opened, called from debug_tools::printmtx"
-          error stop
-        end if
-      else
-        filloc = terminal
+  		print *, "cdswav"
+        call a%write(name)
+		return
       end if
       
 
