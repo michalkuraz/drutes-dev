@@ -135,7 +135,7 @@ module Re_evap_bc
       
       if (present(value)) then
         
-        call get_datapos(pde(re_order)%bc(edge_id), datapos, datainit=datainit)
+        call get_datapos(pde(re_order)%bc(edge_id), datapos, dataprev, datainit=datainit)
         
         
         call get_calendar(hour, day , month, year)
@@ -193,16 +193,20 @@ module Re_evap_bc
  
    
   !> Actual vapor pressure function
+  !> val: Actual vapor pressure[kPa]
     function e_o(x) result (val) 
       use typy
+        !x: Temperature in [°C]
       real (kind=rkind), intent(in) :: x
       real (kind=rkind) :: val
       val = 0.6108_rkind*exp(17.27_rkind*x/(x + 237.3_rkind))
     end function e_o
     
   !> Atmospheric  pressure function
+  !> val: Atmospheric  pressure [kPa]
     function pressure_atm (x) result (val) 
       use typy
+      !x: elevation [m]
       real (kind=rkind), intent(in) :: x
       real (kind=rkind) :: val
       val = 101.3_rkind*((293.0_rkind- 0.0065_rkind*x)/293.0_rkind)**5.26_rkind
@@ -229,7 +233,7 @@ module Re_evap_bc
       dr = 1.0_rkind + 0.033_rkind*cos((2.0_rkind*pi()*x)/365.0_rkind)
       delta = 0.409_rkind*sin(((2.0_rkind*pi()*x)/365.0_rkind) -1.39_rkind)
       omega = acos(-tan(y)*tan(delta))
-              
+      !Extraterrestrial radiation [MJ/m2 day]        
       R_a = ((24.0_rkind*60.0_rkind)/pi())*dr*0.0820_rkind*(omega*sin(y)*sin(delta)&
               + cos(y)*cos(delta)*sin(omega))
       R_so = (0.75_rkind + z*2e-5)*R_a

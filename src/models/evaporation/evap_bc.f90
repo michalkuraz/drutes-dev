@@ -69,6 +69,7 @@ module evap_bc
     !!!!-----local variables------------
     !Robin boundary coeficients
     real(kind = rkind) :: acoef, bcoef, ccoef
+    !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
     type(integpnt_str) :: quadpnt
     !Layer ID
     integer(kind=ikind) :: layer
@@ -101,7 +102,7 @@ module evap_bc
     integer(kind =ikind) :: num_day,hour, day, month,year
     !> liquid water and watwer vapor flux
     real(kind=rkind), dimension(3) :: q_vap, q_liq
-      
+    integer(kind=ikind), save :: datainit=1
       
     quadpnt%type_pnt = "ndpt"
     quadpnt%order = elements%data(el_id, node_order)
@@ -117,6 +118,7 @@ module evap_bc
       run1st = .false.
     end if    
     if (present(val)) then
+    !call get_datapos(pde(re_order)%bc(edge_id), datapos, dataprev, datainit=datainit)
       if (pde(re_order)%bc(edge_id)%file) then
         do i = pde(re_order)%bc(edge_id)%series_pos, ubound(pde(re_order)%bc(edge_id)%series,1)
           if (pde(re_order)%bc(edge_id)%series(i,1) > time .and. i < ubound(pde(re_order)%bc(edge_id)%series,1)) then

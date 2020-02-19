@@ -420,7 +420,7 @@ module evap_auxfnc
     rho_l_val = rho_l(quadpnt) 
     rho_sv_val = rho_sv(quadpnt) 
     
-    val = (rh_soil_val*rho_sv_val  - rh_air* rho_sv_val )/(resistance*rho_l_val)
+    val = (rh_soil_val*rho_sv_val  - (rh_air/100.0_rkind)* rho_sv_val )/(resistance*rho_l_val)
     
     call mualem(pde(re_order), layer, quadpnt, tensor=Ks(1:drutes_config%dimen, 1:drutes_config%dimen))
     
