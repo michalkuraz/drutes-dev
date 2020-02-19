@@ -134,6 +134,19 @@ module Re_evap_bc
       
       
       if (present(value)) then
+      
+!      if (pde(re_order)%bc(edge_id)%file) then
+!        do i = pde(re_order)%bc(edge_id)%series_pos, ubound(pde(re_order)%bc(edge_id)%series,1)
+!          if (pde(re_order)%bc(edge_id)%series(i,1) > time .and. i < ubound(pde(re_order)%bc(edge_id)%series,1)) then
+!            datapos = i + 1
+!            dataprev = i
+!            EXIT
+!          else if (pde(re_order)%bc(edge_id)%series(i,1) > time .and. i == ubound(pde(re_order)%bc(edge_id)%series,1)) then
+!            datapos = i
+!            dataprev = i-1 
+!            EXIT
+!          end if
+!        end do
         
         call get_datapos(pde(re_order)%bc(edge_id), datapos, dataprev, datainit=datainit)
         
@@ -182,7 +195,7 @@ module Re_evap_bc
         print *, "evaporation boundary must be time dependent, check record for the boundary", edge_id
         ERROR STOP
       end if
-  
+!		end if
       
 
       if (present(code)) then
