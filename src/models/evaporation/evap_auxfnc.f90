@@ -532,48 +532,44 @@ module evap_auxfnc
     
   end function set_february
   
-    subroutine get_datapos(bcstr, datapos, dataprev, datainit)
+    subroutine get_datapos(bcstr, datapos, dataprev)
       use typy
       use pde_objs
       use globals
+      use debug_tools
       
       type(boundary_vals), intent(in) :: bcstr
-      integer(kind=ikind), intent(out), optional :: dataprev
-      integer(kind=ikind), intent(out) :: datapos
-      integer(kind=ikind), intent(in out), optional :: datainit
+      integer(kind=ikind), intent(in out) :: dataprev
+      integer(kind=ikind), intent(in out) :: datapos
       
       integer(kind=ikind) :: i, start, fin
       
       
-      if (present(datainit)) then 
-        start = datainit
-      else
-        start = 1
-      end if
+      start = datapos
+      
       
       fin = ubound(bcstr%series,1)
-       do i = start, ubound(bcstr%series,1) - 1
-         ! inside the table
-         if (time > bcstr%series(i,1) .and. time < bcstr%series(i+1,1)) then
-           datapos = i
-           if (present(dataprev)) dataprev = i-1
-           if (present(datainit)) datainit = datapos
-           EXIT
-         !above the upper row of the boundary, the table always starts with zero
-         else if (i == fin-1 .and. time > bcstr%series(fin,1)) then
-           print *, "Insufficient meteo data provided!!!"
-           print *, "Actual simulation time is greater than final record in your meteo data file"
-           print *, "Meteorological data doesn't overlap the simulation perion, exiting now..."
-           print *, "exited from evap_bc::get_datapos"
-           ERROR STOP
-         else if (i == 1 .and.  bcstr%series(i,1) > time ) then
-           print *, "Insufficient meteo data provided!!!"
-           print *, "Your meteo data should provide at least one record prior to simulation start time"
-           print *, "HINT: add negative value for the first time record"
-           print *, "exited from evap_bc::get_datapos"
-           ERROR STOP
-          end if
-       end do
+	  do i = start, fin - 1
+		 ! inside the table
+	  	if (time - bcstr%series(i,1) > -epsilon(time) .and. time < bcstr%series(i+1,1)) then
+			datapos = i
+			dataprev = i-1
+			RETURN
+		 !above the upper row of the boundary, the table always starts with zero
+		else if (i == fin .and. time > bcstr%series(fin,1)) then
+		   print *, "Insufficient meteo data provided!!!"
+		   print *, "Actual simulation time is greater than final record in your meteo data file"
+		   print *, "Meteorological data doesn't overlap the simulation perion, exiting now..."
+		   print *, "exited from evap_bc::get_datapos"
+		   ERROR STOP
+		else if (i == 1 .and.  bcstr%series(i,1) > time ) then
+		   print *, "Insufficient meteo data provided!!!"
+		   print *, "Your meteo data should provide at least one record prior to simulation start time"
+		   print *, "HINT: add negative value for the first time record"
+		   print *, "exited from evap_bc::get_datapos"
+		   ERROR STOP
+		 end if
+	   end do
        
      end subroutine get_datapos 
   

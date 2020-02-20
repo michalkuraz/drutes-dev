@@ -213,8 +213,7 @@ module femmat
 
        call pde_common%time_integ(i)
 
-       stiff_mat = stiff_mat + cap_mat
-       
+       stiff_mat = stiff_mat + cap_mat     
         
        call in2global(i,spmatrix, pde_common%bvect)
 

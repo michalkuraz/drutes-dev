@@ -97,12 +97,13 @@ module evap_bc
     !> time units for evaporation
     character(len=8), save :: evap_units 
     !> local variables
-    integer(kind =ikind) :: D, i,  edge_id, datapos, dataprev
+    integer(kind =ikind) :: D, i,  edge_id
+	integer(kind=ikind), save :: datapos=1, dataprev=1
     !> Number of te day in ten year, hour,day and month
     integer(kind =ikind) :: num_day,hour, day, month,year
     !> liquid water and watwer vapor flux
     real(kind=rkind), dimension(3) :: q_vap, q_liq
-    integer(kind=ikind), save :: datainit=1
+  
       
     quadpnt%type_pnt = "ndpt"
     quadpnt%order = elements%data(el_id, node_order)
@@ -118,20 +119,10 @@ module evap_bc
       run1st = .false.
     end if    
     if (present(val)) then
-    !call get_datapos(pde(re_order)%bc(edge_id), datapos, dataprev, datainit=datainit)
-      if (pde(re_order)%bc(edge_id)%file) then
-        do i = pde(re_order)%bc(edge_id)%series_pos, ubound(pde(re_order)%bc(edge_id)%series,1)
-          if (pde(re_order)%bc(edge_id)%series(i,1) > time .and. i < ubound(pde(re_order)%bc(edge_id)%series,1)) then
-            datapos = i + 1
-            dataprev = i
-            EXIT
-          else if (pde(re_order)%bc(edge_id)%series(i,1) > time .and. i == ubound(pde(re_order)%bc(edge_id)%series,1)) then
-            datapos = i
-            dataprev = i-1 
-            EXIT
-          end if
-        end do
     
+      if (pde(re_order)%bc(edge_id)%file) then
+      	call get_datapos(pde(re_order)%bc(edge_id), datapos, dataprev)
+
         call get_calendar(hour, day , month, year)
 
         tmax = pde(re_order)%bc(edge_id)%series(datapos,3)
@@ -206,8 +197,8 @@ module evap_bc
     type(integpnt_str) :: quadpnt
     integer(kind=ikind) :: layer
     real(kind=rkind), dimension(3) :: xyz
-    integer(kind=ikind) :: edge_id, i, datapos, D
-    integer(kind=ikind), save :: datainit=1
+    integer(kind=ikind) :: edge_id, i, D
+    integer(kind=ikind), save :: datapos = 1, dataprev = 1
     
   
     real(kind=rkind) ::  evap, rhmean, theta
@@ -225,7 +216,7 @@ module evap_bc
     
     if (present(value)) then
       if (pde(re_order)%bc(edge_id)%file) then
-        call get_datapos(pde(re_order)%bc(edge_id), datapos, datainit=datainit)
+        call get_datapos(pde(re_order)%bc(edge_id), datapos, dataprev)
         rhmean = pde(re_order)%bc(edge_id)%series(datapos,4)
         theta =  pde(re_order)%mass(1)%val(pde(re_order), layer, quadpnt)
         
