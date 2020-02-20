@@ -1,3 +1,24 @@
+! Copyright 2008 Michal Kuraz, Petr Mayer, Copyright 2016  Michal Kuraz, Petr Mayer, Johanna Bloecher
+! Copyright 2019  Michal Kuraz, Petr Mayer, Johanna Bloecher, Juliana Arbelaez
+! Copyright 2020  Michal Kuraz, Petr Mayer, Johanna Bloecher, Juliana Arbelaez
+! This file is part of DRUtES.
+! DRUtES is free software: you can redistribute it and/or modify
+! it under the terms of the GNU General Public License as published by
+! the Free Software Foundation, either version 3 of the License, or
+! (at your option) any later version.
+! DRUtES is distributed in the hope that it will be useful,
+! but WITHOUT ANY WARRANTY; without even the implied warranty of
+! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+! GNU General Public License for more details.
+! You should have received a copy of the GNU General Public License
+! along with DRUtES. If not, see <http://www.gnu.org/licenses/>.
+
+!> \file: vapour_pointers.f90
+!! \brief: This module contains subroutines that linkes the functions to the PDE
+!<
+
+
+
 module vapour_pointers
   public :: vapour_processes
   public :: vapour_linker
@@ -29,27 +50,11 @@ module vapour_pointers
       use RE_evap_reader
       
 
-!       
-! !       call RE_std(pde(re_order))
-!       call allREpointers(pde(re_order))
-!       
-!       call set_evapbc(pde(re_order))
-!       
-!       pde(re_order)%flux => liquid_flux
-!       
-!       pde(re_order)%initcond => re_initcond
-!       
+       
       call evap_var()
       
       call Re_evap_var()
-!       
-!       
-!       
-!       pde(re_order)%pde_fnc(re_order)%dispersion => difussion_hh
-!       
-!       pde(re_order)%pde_fnc(heat_order)%dispersion => difussion_hT
-!       
-!       pde(re_order)%pde_fnc(re_order)%zerord  =>  source_h
+
       
       call RE_std(pde(1))
       pde(re_order)%pde_fnc(re_order)%dispersion => difussion_hh
@@ -132,12 +137,7 @@ module vapour_pointers
             print *, "the incorrect boundary code specified is:", pde_loc%bc(i)%code
             ERROR stop
         end select
-        
-
       end do
-
-      
-
     end subroutine set_evapbc
     
     

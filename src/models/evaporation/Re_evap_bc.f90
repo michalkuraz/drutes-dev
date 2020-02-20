@@ -128,6 +128,7 @@ module Re_evap_bc
       
       
       if (present(value)) then
+
         if (pde(re_order)%bc(edge_id)%file) then
           call get_datapos(pde(re_order)%bc(edge_id), datapos, dataprev)
           
@@ -182,12 +183,13 @@ module Re_evap_bc
             value = rain - evap*theta**(2.0_rkind/3.0_rkind)
           end if
 
+
         else
           print *, "evaporation boundary must be time dependent, check record for the boundary", edge_id
           ERROR STOP
         end if
       end if
-  
+!		end if
       
 
       if (present(code)) then
