@@ -97,7 +97,7 @@ module Re_evap_bc
       type(integpnt_str) :: quadpnt
       real(kind=rkind), dimension(3) :: xyz
       real(kind=rkind) :: tmax, tmin,tmean,tmean_prev,tmax_prev,tmin_prev,wind,solar,soil
-      real(kind=rkind) ::  slope_vap,e_sat,e_act, Patm,gp, light,evap, rhmean
+      real(kind=rkind) ::  slope_vap,e_sat,e_act, Patm,gp, light,evap, rhmean,wind_elev
       real(kind=rkind) :: radiation, tmaxk,tmink,wind2,rain, theta
       logical, save :: run1st=.true.
       character(len=8), save :: evap_units 
@@ -124,7 +124,7 @@ module Re_evap_bc
       call getcoor(quadpnt, xyz(1:D))
       
       Patm = pressure_atm(elevation) 
-      gp = 0.665e-3*Patm
+      gp = 0.665e-3*Patm !psychrometric constant [kPa/•C]
       
       
       if (present(value)) then
@@ -152,6 +152,7 @@ module Re_evap_bc
           tmean_prev = (tmax_prev+tmin_prev)/2.0_rkind
           tmink = tmin + Tref
           tmaxk = tmax + Tref
+          wind_elev = 10.0_rkind
           e_sat = ((e_o(tmax) + e_o(tmin))/2.0_rkind)
           e_act = ((e_o(tmax) + e_o(tmin))/2.0_rkind)*(rhmean/100.0_rkind)
           slope_vap = (4098.0_rkind*e_sat)/(tmean + Tref)**2.0_rkind
@@ -161,7 +162,7 @@ module Re_evap_bc
           !> Net Radiation calculation             
           radiation = radiation_fcn(num_day,latitude,elevation,albedo,e_act,solar,tmink,tmaxk)
           !> Wind velocity calculation
-          wind2 = wind*wind_fcn(elevation)
+          wind2 = wind*wind_fcn(wind_elev)
           !> Soil Flux calculation
           soil = soilheat_fcn(tmean,tmean_prev,radiation,hour,evap_units)
           !Evaporation rate [mm/day]
@@ -222,40 +223,61 @@ module Re_evap_bc
   !> Wind velocity function
     function wind_fcn(x) result (val) 
       use typy
+      !x: elevation of the wind measured [m]
       real (kind=rkind), intent(in) :: x
       real (kind=rkind) :: val
       val = (4.87_rkind/log(67.82_rkind*x - 5.42_rkind))
     end function wind_fcn
     
   !> Net radiation function
+	!> val: Net Radiation [MJ/m2 day]
     function radiation_fcn(x,y,z,a,e,s,t_max,t_min) result (val) 
       use typy
       use core_tools
       real (kind=rkind), intent(in) :: y,z,a,e,s,t_max,t_min
+      !x: # of the day in the year 
+      !y: latitude [rad]
+      !z: elevation [m]
+      !a: albedo[-]
+      !s: incoming solar radiation [MJ/m2 day]   
+      !e: actual vapor pressure
+      !t_min: air temperature min in [K]
+      !t_max: air temperature max in [K]
       integer (kind=ikind), intent(in) :: x
       real (kind=rkind) :: val
       real(kind=rkind) :: omega, R_nl,R_so,R_ns,R_a,dr,delta
       
-      
+      !inverse distance Earth-sun [rad]
       dr = 1.0_rkind + 0.033_rkind*cos((2.0_rkind*pi()*x)/365.0_rkind)
+      !solar declination [rad]
       delta = 0.409_rkind*sin(((2.0_rkind*pi()*x)/365.0_rkind) -1.39_rkind)
+      !sunset hour angle [rad]
       omega = acos(-tan(y)*tan(delta))
       !Extraterrestrial radiation [MJ/m2 day]        
       R_a = ((24.0_rkind*60.0_rkind)/pi())*dr*0.0820_rkind*(omega*sin(y)*sin(delta)&
               + cos(y)*cos(delta)*sin(omega))
+      !Clear-sky solar radiation [MJ/m2 day] 
       R_so = (0.75_rkind + z*2e-5)*R_a
+      !net shortwave radiation MJ/m2 day]
       R_ns = (1.0_rkind-a)*s
+      !Net longwave radiation [MJ/m2 day] 
       R_nl = 4.903e-9*((t_min**4.0_rkind + t_max**4.0_rkind)/2.0_rkind)*(0.34_rkind - &
                0.14_rkind*sqrt(e))*(1.35_rkind*(s/R_so) - 0.35_rkind)
+      !Net radiation [MJ/m2 day]         
       val = R_ns - R_nl
     end function radiation_fcn
     
   !>Soil heat flux function
+  !val: 
     function soilheat_fcn(t1,t2,r,h,u) result(val)
       use typy
       use core_tools
-      
+      !t1: temp mean current [°C]
+      !t2: temp mean max [°C]
+      !r: Net radiation [MJ/m2 day] 
       real (kind=rkind), intent(in) :: t1,t2,r
+      !h: hour
+      !u: evap_units (e.g hourly, daily, monthly,yearly)
       character(len=*), intent(in) :: u
       integer(kind =ikind), intent(in) :: h 
       real (kind=rkind) :: val
@@ -270,16 +292,20 @@ module Re_evap_bc
         case("daily")
           val = 0.0_rkind
         case("monthly")
-          val = 0.14_rkind*(t1- t2)
+          val = 0.07_rkind*(t1- t2)
         case("yearly")
           val = 0.14_rkind*(t1- t2)
       end select
     end function soilheat_fcn
     
     !>Day of the year function
+    !val: # of day in the year
     function num_day_fcn(x,y,z) result(val)
       use typy
+      !z: evap_units (e.g hourly, daily, monthly,yearly)
       character(len=*), intent(in) :: z
+      !x: day
+      !y:month
       integer(kind =ikind), intent(in) :: x,y
       real (kind=rkind) :: val
       
