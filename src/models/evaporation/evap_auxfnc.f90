@@ -462,6 +462,7 @@ module evap_auxfnc
   subroutine get_calendar(hour,day,month,year)
     use globals
     use typy
+    use debug_tools
     use re_globals
     
     integer(kind=ikind), intent(out) :: hour, day, month, year
@@ -472,6 +473,7 @@ module evap_auxfnc
     year = init_year
     
     days_in_month = set_february(year)
+    
 
     cum_hour = int(time/3600)
     
@@ -515,7 +517,7 @@ module evap_auxfnc
       end do    
     end if
       
-      
+     
   end subroutine get_calendar  
   
 

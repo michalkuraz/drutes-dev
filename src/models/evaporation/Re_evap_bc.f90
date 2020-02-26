@@ -134,19 +134,20 @@ module Re_evap_bc
           
           
           call get_calendar(hour, day , month, year)
+          print*, hour, day,month, year 
           tmax = pde(re_order)%bc(edge_id)%series(datapos,3)
           tmin = pde(re_order)%bc(edge_id)%series(datapos,2)
           tmax_prev = pde(re_order)%bc(edge_id)%series(dataprev,3)
           tmin_prev =  pde(re_order)%bc(edge_id)%series(dataprev,2)
           rhmean = pde(re_order)%bc(edge_id)%series(datapos,4)
-          wind = pde(re_order)%bc(edge_id)%series(datapos,4)
+          wind = pde(re_order)%bc(edge_id)%series(datapos,5)
           light = pde(re_order)%bc(edge_id)%series(datapos,6)
           solar = pde(re_order)%bc(edge_id)%series(datapos,7)
           
+         
           
           rain = pde(re_order)%bc(edge_id)%series(datapos,8)
           theta =  pde(re_order)%mass(1)%val(pde(re_order), layer, quadpnt)
-          
           
           tmean = (tmax+tmin)/2.0_rkind
           tmean_prev = (tmax_prev+tmin_prev)/2.0_rkind
@@ -155,7 +156,10 @@ module Re_evap_bc
           wind_elev = 10.0_rkind
           e_sat = ((e_o(tmax) + e_o(tmin))/2.0_rkind)
           e_act = ((e_o(tmax) + e_o(tmin))/2.0_rkind)*(rhmean/100.0_rkind)
+          
+         
           slope_vap = (4098.0_rkind*e_sat)/(tmean + Tref)**2.0_rkind
+
           
           !> num_day calculation
           num_day = num_day_fcn (day, month,evap_units)
@@ -171,7 +175,7 @@ module Re_evap_bc
           
           
           
-          write(unit=fileid, fmt=*) time, evap    
+          write(unit=fileid, fmt=*) time, evap, soil, radiation 
            
           !conversion to [m/s]
           evap = evap/(1e3*86400.0)   
