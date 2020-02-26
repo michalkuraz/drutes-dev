@@ -78,21 +78,14 @@ module femmat
 
         
         call assemble_mat(ierr)
-!  		          call printmtx(spmatrix) 
         
         if (drutes_config%dimen >  0) then
           call diag_precond(a=spmatrix, x=pde_common%xvect(1:fin,3), mode=1)
         end if
 
-!                 call geteigenvals(spmatrix, l1, l2)
         
         call solve_matrix(spmatrix, pde_common%bvect(1:fin), pde_common%xvect(1:fin,3),  itmax1=fin, &
             reps1=1e-11_rkind, itfin1=pcg_it, repsfin1=reps_err)
-
-		
-!		if (something is true) then
-!		  call printmtx(spmatrix, name="myfile") ; stop
-!		end if
 
             
         if (pcg_it > 0.25*fin) then 
@@ -107,13 +100,8 @@ module femmat
           call flush(file_itcg)
           call diag_precond(a=spmatrix, x=pde_common%xvect(1:fin,3), mode=-1)
         end if
-
-!         if (time > 1796) then
-!           pocitac = pocitac + 1
-!           write(soubor, *) pocitac
-!           call printmtx(pde_common%xvect(1:fin,3)) ; call wait()
-!           call spmatrix%Write(cut(soubor))
-!         end if
+        
+    
 
         error = norm2(pde_common%xvect(1:fin,2)-pde_common%xvect(1:fin,3))/ubound(pde_common%xvect,1)
  
@@ -213,8 +201,8 @@ module femmat
 
        call pde_common%time_integ(i)
 
-       stiff_mat = stiff_mat + cap_mat     
-        
+       stiff_mat = stiff_mat + cap_mat  
+		        
        call in2global(i,spmatrix, pde_common%bvect)
 
       end do
