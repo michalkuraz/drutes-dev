@@ -42,7 +42,7 @@ module postpro
       logical                                               :: anime, op
       integer(kind=ikind)                                   :: mode, no_prints
       type :: filenames_str
-        character(len=256), dimension(:), allocatable       :: names
+      character(len=256), dimension(:), allocatable       :: names
       end type filenames_str
       type(filenames_str), dimension(:), allocatable        :: filenames
       integer(kind=ikind)                                   :: i, i_err, j, layer, proc, run, ii
@@ -66,6 +66,12 @@ module postpro
             anime = .false.
             mode = 0
           case("avi")
+          	if (drutes_config%dimen == 1) then
+							print *, "animations are supported for 2 dimensional domains only"
+							print *, "your setup is 1D"
+							print *, "exited from postpro:: make_print"
+							ERROR STOP
+          	end if
             anime = .true.
             mode = -1
           case default
@@ -247,7 +253,8 @@ module postpro
             end if
           end do
         end do
-	
+
+
       end if
       
 
