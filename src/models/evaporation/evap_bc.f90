@@ -98,7 +98,7 @@ module evap_bc
     character(len=8), save :: evap_units 
     !> local variables
     integer(kind =ikind) :: D, i,  edge_id
-	integer(kind=ikind), save :: datapos=1, dataprev=1
+	  integer(kind=ikind), save :: datapos=1, dataprev=1
     !> Number of te day in ten year, hour,day and month
     integer(kind =ikind) :: num_day,hour, day, month,year
     !> liquid water and watwer vapor flux
@@ -159,6 +159,8 @@ module evap_bc
         T = pde_loc%getval(quadpnt)
         
         val = ccoef - bcoef*T
+        
+!        val = 0
         
 
       else

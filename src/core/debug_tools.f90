@@ -281,7 +281,7 @@ module debug_tools
      
 
       do i=lbound(V,1),ubound(V,1)
-       write(unit=filloc, fmt=*) "radek:", i, "hodnota:", V(i)
+       write(unit=filloc, fmt=*) "row:", i, "value:", V(i)
       end do
 
       if (terminal /= filloc) then
@@ -329,7 +329,7 @@ module debug_tools
      
 
       do i=lbound(V,1),ubound(V,1)
-       write(unit=filloc, fmt=*) "radek:", i, "hodnota:", V(i)
+       write(unit=filloc, fmt=*) "row:", i, "value:", V(i)
       end do
 
       if (terminal /= filloc) then
@@ -376,7 +376,7 @@ module debug_tools
       end if
 
       do i=lbound(V,1),ubound(V,1)
-         write(unit=filloc, fmt=*) "radek:", i, "hodnota:", V(i)
+         write(unit=filloc, fmt=*) "row:", i, "value:", V(i)
       end do
   
       if (terminal /= filloc) then

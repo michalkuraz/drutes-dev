@@ -51,9 +51,7 @@ module Re_evap_bc
         datascale = series(1,1)
       end if
      
- 	do i=1, ubound(series,1)
- 		print *, series(i,:)
- 	end do
+
       
       select case(nint(datascale))
         case(0:3600)
