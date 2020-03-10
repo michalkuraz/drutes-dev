@@ -49,23 +49,26 @@ module vapour_pointers
       use evap_bc
       use RE_evap_reader
       
-
        
       call evap_var()
       
       call Re_evap_var()
-
       
       call RE_std(pde(1))
+      
+      
       pde(re_order)%pde_fnc(re_order)%dispersion => difussion_hh
+      
       pde(re_order)%flux => liquid_flux
+      
       pde(re_order)%pde_fnc(heat_order)%dispersion => difussion_hT
+      
       pde(re_order)%pde_fnc(re_order)%zerord  =>  source_h
+  
       
       call heatlinker(pde(2))
       
-      pde(heat_order)%pde_fnc(heat_order)%elasticity => capacity_T
-      
+     
       deallocate(pde(re_order)%mass)
       
       allocate(pde(re_order)%mass(2))

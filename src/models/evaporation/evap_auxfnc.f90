@@ -394,7 +394,7 @@ module evap_auxfnc
     val =  9.5_rkind + 3.0_rkind*(theta_l/theta_sat) -8.5_rkind *tmp
   end function enhancement_factor
   
-    !> Evaporation rate [m/s]
+  !> Evaporation rate [m/s]
   !> Input: Air Relative humiduty [-]
   function evaporation(layer, quadpnt, rh_air) result(val)
     use typy
@@ -431,7 +431,6 @@ module evap_auxfnc
 
     val = -val
 
-      
   
   end function evaporation
   
