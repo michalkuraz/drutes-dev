@@ -429,13 +429,13 @@ module evap_auxfnc
     
     val = min(100*Ks(1,1),abs(val))
 
-    val = -val
+    val = - val
 
   
   end function evaporation
   
   
-    !> Sensible heat[W/m^2]
+  !> Sensible heat[W/m^2]
   !> Input: Air temperature[K]
   function sensible_heat(quadpnt, temp_air) result(val)
     use typy
@@ -456,6 +456,46 @@ module evap_auxfnc
     val = C_air*rho_air*((T - temp_air)/resistance)
   
   end function sensible_heat
+  
+  
+  function net_radiation(quadpnt, layer, T_air, rad, rh_air) result(val)
+		use typy
+    use pde_objs
+    use evap_globals
+    use global_objs
+    
+    !>material ID  
+    integer(kind=ikind), intent(in) :: layer
+    !> Gauss quadrature point structure
+    type(integpnt_str), intent(in), optional :: quadpnt 
+    !rad : incoming solar radiation in W m^-2
+    !T_air: air temperature in K
+    real(kind =rkind), intent(in) :: rad,T_air, rh_air
+		!emi_s: emissivity of the soil
+		!emi_air: emissivity of the atmosphere
+    real(kind = rkind):: emi_s, emi_a,e_a
+    real(kind = rkind) :: T,theta 
+    real(kind = rkind) :: R_nl, R_ns
+    real(kind=rkind) :: val
+    
+    theta = pde(re_order)%mass(1)%val(pde(re_order), layer, quadpnt)
+    T =  pde(Heat_order)%getval(quadpnt)
+    T =  T + Tref
+   
+    
+    !net shortwave radiation
+    R_ns = (1.0_rkind-albedo)*rad
+    !soil emissivity
+    emi_s = min(0.90_rkind + 0.180_rkind*theta, 1.0_rkind)
+    !atmospheric vapor pressure
+    e_a = (0.611_rkind*exp((17.27_rkind*(T_air -273.15_rkind))/(T_air -35.85_rkind)))*(rh_air/100)
+    !atmosphere emissivity 
+    emi_a = 0.70_rkind + 5.95e-5*e_a*exp(1500/T_air)
+    !Net longwave radiation
+    R_nl = emi_s*emi_a*5.67e-8*T_air**4 - emi_s*5.67e-8*T**4
+    val = R_ns + R_nl
+    
+  end function net_radiation
   
   
   subroutine get_calendar(hour,day,month,year)

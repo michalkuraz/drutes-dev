@@ -51,7 +51,6 @@ module Re_evap_bc
         datascale = series(1,1)
       end if
      
-
       
       select case(nint(datascale))
         case(0:3600)

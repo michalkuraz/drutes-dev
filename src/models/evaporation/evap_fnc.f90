@@ -751,7 +751,7 @@ module evap_fnc
         rho_sv_val = rho_sv( quadpnt) 
         diff = vapor_diff_soil(pde(heat_order), layer, quadpnt)
         T = pde(Heat_order)%getval(quadpnt)
-       
+				T = T + Tref
        
         val = (diff/rho_l_val)*rho_sv_val*((MolWat*gravity)/(R_gas*T))*rh_soil_val
     

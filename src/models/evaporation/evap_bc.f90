@@ -128,7 +128,7 @@ module evap_bc
         tmax = pde(re_order)%bc(edge_id)%series(datapos,3)
         tmin = pde(re_order)%bc(edge_id)%series(datapos,2)
         rh_air = pde(re_order)%bc(edge_id)%series(datapos,4)
-        solar = pde(re_order)%bc(edge_id)%series(datapos,7)
+        solar = (1e6/86400.0)*pde(re_order)%bc(edge_id)%series(datapos,7)
         
         tmean = ((tmax+tmin)/2.0_rkind) + Tref
         tmink = tmin + Tref
@@ -143,8 +143,9 @@ module evap_bc
         Hs= sensible_heat(quadpnt, tmean)
         evap = evaporation(layer, quadpnt, rh_air)
         num_day = num_day_fcn (day, month,evap_units)
-        rad = 1e6/86400.0* &
-        radiation_fcn(num_day,latitude,elevation,albedo,e_act,solar,tmink,tmaxk)
+        rad = net_radiation(quadpnt, layer, tmean, solar, rh_air)
+        !rad = 1e6/86400.0* &
+        !radiation_fcn(num_day,latitude,elevation,albedo,e_act,solar,tmink,tmaxk)
         
         call vapor_flux(pde(re_order), layer , quadpnt=quadpnt, flux=q_vap(1:D))
         
@@ -160,7 +161,7 @@ module evap_bc
         
         val = ccoef - bcoef*T
         
-!        val = 0
+!       val = 0
         
 
       else
@@ -219,8 +220,9 @@ module evap_bc
     if (present(value)) then
       if (pde(re_order)%bc(edge_id)%file) then
         call get_datapos(pde(re_order)%bc(edge_id), datapos, dataprev)
+        
         rhmean = pde(re_order)%bc(edge_id)%series(datapos,4)
-        theta =  pde(re_order)%mass(1)%val(pde(re_order), layer, quadpnt)
+        !theta =  pde(re_order)%mass(1)%val(pde(re_order), layer, quadpnt)
         
         evap = evaporation(layer, quadpnt, rhmean)
         value = evap
