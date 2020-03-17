@@ -107,7 +107,7 @@ module evap_bc
       
     quadpnt%type_pnt = "ndpt"
     quadpnt%order = elements%data(el_id, node_order)
-    quadpnt%column = 2
+    quadpnt%column = 1
     layer = elements%material(el_id)
     D = drutes_config%dimen
     call getcoor(quadpnt, xyz(1:D))
@@ -170,7 +170,7 @@ module evap_bc
       end if
     end if
     if (present(code)) then
-      code = 2 ! should be 3 when robin boubndary interfac is implemented. 
+      code = 2 ! should be 3 when robin boubndary interface is implemented. 
     end if
 
   end subroutine  heat_robin
@@ -210,7 +210,7 @@ module evap_bc
   
     quadpnt%type_pnt = "ndpt"
     quadpnt%order = elements%data(el_id, node_order)
-    quadpnt%column = 2
+    quadpnt%column = 1
     layer = elements%material(el_id)
     D = drutes_config%dimen
     call getcoor(quadpnt, xyz(1:D))
@@ -226,6 +226,7 @@ module evap_bc
         
         evap = evaporation(layer, quadpnt, rhmean)
         value = evap
+     
       else
         print *, "evaporation boundary must be time dependent, check record for the boundary", edge_id
         ERROR STOP

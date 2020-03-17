@@ -429,7 +429,7 @@ module evap_auxfnc
     if (abs(val) > 100*Ks(1,1)) then
 			print*, "the evaporation rate is exploiding"
 			print*,"exited from evap_auxfnc::evaporation"
-			ERROR stop
+			!ERROR stop
     end if
 
     !val = min(100*Ks(1,1), abs(val)) 
