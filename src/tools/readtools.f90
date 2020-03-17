@@ -778,10 +778,10 @@ module readtools
           RETURN
         case(2)
 
-          T(1,1) = cos(4.0_dprec*atan(1.0_dprec)/180.0_rkind*angle(1))
-          T(1,2) = cos(4.0_dprec*atan(1.0_dprec)/180.0_rkind*(90-angle(1)))
-          T(2,1) = cos(4.0_dprec*atan(1.0_dprec)/180.0_rkind*(90+angle(1)))
-          T(2,2) = cos(4.0_dprec*atan(1.0_dprec)/180.0_rkind*(angle(1)))
+          T(1,1) = cos(4.0_rkind*atan(1.0_rkind)/180.0_rkind*angle(1))
+          T(1,2) = cos(4.0_rkind*atan(1.0_rkind)/180.0_rkind*(90-angle(1)))
+          T(2,1) = cos(4.0_rkind*atan(1.0_rkind)/180.0_rkind*(90+angle(1)))
+          T(2,2) = cos(4.0_rkind*atan(1.0_rkind)/180.0_rkind*(angle(1)))
 
         case(3)
           print *, "tensors not implemented in 3D"

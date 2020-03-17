@@ -68,9 +68,9 @@ module read_inputs
         new_line("a"),  new_line("a"), &
         "   heat = Heat conduction equation (Sophoclea, 1979)", &
         new_line("a"),  new_line("a"), &
-        "   LTNE = Local Thermal Non-Equilibrium heat transport model (unfinished yet)", &
+        "   LTNE = Local Thermal Non-Equilibrium heat transport model (under development)", &
         new_line("a"),  new_line("a"), &
-        "   freeze = Richards equation with freezing/thawing processes (unfinished yet)", &
+        "   freeze = Richards equation with freezing/thawing processes (under development)", &
         new_line("a"),  new_line("a"), &
         "   kinwave = Kinematic wave equation for 2D catchments", &
                 new_line("a"),  new_line("a"), &
@@ -468,7 +468,7 @@ module read_inputs
       character(len=256) :: ch
       character(len=11) :: msh
       real(kind=rkind) :: mshfmt
-      integer(kind=ikind) :: i, itmp, jtmp, itmp2, edge, nd1, nd2, i_err, k, l, j, n, id, el
+      integer(kind=ikind) :: i, itmp, jtmp, itmp2, edge, nd1, nd2, i_err, k, l, j, n, id, el, iitmp
       integer(kind=ikind), dimension(:), allocatable :: tmp_array
       logical :: use_filemat=.false., update
       integer :: file_mat
@@ -592,29 +592,12 @@ module read_inputs
             
           case(2)
             jtmp = jtmp + 1
-            read(unit=file_mesh, fmt=*) k, l, i,  j, elements%material(jtmp), elements%data(jtmp,:)
+            read(unit=file_mesh, fmt=*) k, l, i,  elements%material(jtmp), j,  elements%data(jtmp,:)
             if (i /= 2) then
               call write_log("number of tags for element must be equal 2")
               call write_log("update your GMSH input file!")
-              if (i > pde_common%processes + 1) then
-          
-              call write_log("the number of tags is greater than the number of solution components")
-              
-              if (allocated(tmp_array)) deallocate(tmp_array)
-              
-                allocate(tmp_array(i-1))
-                
-                backspace(file_mesh)
-                read(unit=file_mesh, fmt=*) k, l, i, tmp_array, elements%material(jtmp),  elements%data(jtmp,:)
-                elements%material(jtmp) = tmp_array(1)
-                call write_log(text="tags with position greater than 2 were ignored")
-                deallocate(tmp_array)
-              else
-                call write_log("the number of tags is lower than the number of solution components, I don't know what to do :(")
-                      print *, "called from read_inputs::read_2dmesh_gmsh"
-                error STOP
-              end if
-              end if
+              ERROR STOP    
+            end if
                   
             case default
               print *, "your GMSH input file contains unsupported element type"
