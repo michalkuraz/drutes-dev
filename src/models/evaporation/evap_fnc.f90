@@ -85,7 +85,7 @@ module evap_fnc
     
     
     
-    !! Difussion due to temperature gradient: the same of normal RE
+    !! Difussion due to temperature gradient
     subroutine difussion_hT(pde_loc, layer, quadpnt,  x, tensor, scalar)
       use re_globals
       use pde_objs
@@ -220,16 +220,16 @@ module evap_fnc
       real(kind=rkind), dimension(:,:), intent(out), optional :: tensor
       !> relative hydraulic conductivity, (scalar value)
       real(kind=rkind), intent(out), optional :: scalar
-      !> T:temperature
+      
       !> L: Specific latent heat
       !> rho_liq: liquid water density
       !> rho_vapor: water vapor density
       !> Kvh_scalar: scalar value of unsaturated non-thermal conductivity for water
-      real(kind=rkind) :: T, L, kappa, KvT_scalar, rho_liq, rho_vapor
+      real(kind=rkind) :: L, kappa, KvT_scalar, rho_liq
       !> Klt: total unsaturated non-thermal conductivity of liquid water
       !> Kvt: total unsaturated thermal conductivity for water vapor
       !> kappa_tensor: tensor of thermal conductivity
-      real(kind=rkind), dimension(3,3) :: KlT, KvT, kappa_tensor
+      real(kind=rkind), dimension(3,3) :: KvT, kappa_tensor
       !> local variables
       integer(kind=ikind):: D, i, j
       
@@ -242,13 +242,11 @@ module evap_fnc
         ERROR STOP
       end if
       
-      T = pde(Heat_order)%getval(quadpnt)
+      
       kappa = thermal_conduc(pde(heat_order), layer, quadpnt)
       L = latent_heat_wat(quadpnt)
       rho_liq = rho_l(quadpnt)
-      rho_vapor = rho_sv(quadpnt)*rh_soil(layer, quadpnt)
       
-      KlT(1:D,1:D) = hydraulic_lT(pde(re_order), layer, quadpnt)
       
       KvT_scalar = hydraulic_vT(pde(heat_order), layer, quadpnt)
       
@@ -264,8 +262,7 @@ module evap_fnc
       end do
   
       
-      tensor(1:D,1:D) = kappa_tensor(1:D, 1:D) + C_vap*rho_vapor*T*(KvT(1:D,1:D)) +  &
-                      C_liq*rho_liq*T*(KlT(1:D,1:D)) + L*rho_liq*(KvT(1:D,1:D))
+      tensor(1:D,1:D) = kappa_tensor(1:D, 1:D) + L*rho_liq*(KvT(1:D,1:D))
                     
       
     end subroutine difussion_TT
@@ -290,15 +287,13 @@ module evap_fnc
         
         !> relative hydraulic conductivity, (scalar value)
         real(kind=rkind), intent(out), optional :: scalar
-        !> T:temperature
         !> L: Specific latent heat
         !> rho_liq: liquid water density
-        !> rho_vapor: water vapor density
         !> Kvh_scalar: scalar value of unsaturated non-thermal conductivity for water
-        real(kind=rkind) :: T, L , Kvh_scalar ,rho_liq, rho_vapor
+        real(kind=rkind) ::  L , Kvh_scalar ,rho_liq
         !> Klh: unsaturated non-thermal conductivity for water
         !> Klv: unsaturated thermal conductivity for water
-        real(kind=rkind), dimension(3,3) :: Klh, Kvh
+        real(kind=rkind), dimension(3,3) :: Kvh
         !> local variables
         integer(kind=ikind):: D, i
         
@@ -310,13 +305,10 @@ module evap_fnc
         
         
         D = drutes_config%dimen 
-        T = pde(Heat_order)%getval(quadpnt)
+      
         L = latent_heat_wat(quadpnt)
         rho_liq = rho_l( quadpnt)
-        rho_vapor = rho_sv(quadpnt)*rh_soil(layer, quadpnt)
         
-      
-        call mualem(pde(re_order), layer, quadpnt,tensor = Klh(1:D,1:D))
         
         Kvh_scalar = hydraulic_vh(pde(re_order), layer, quadpnt)
         Kvh = 0 
@@ -324,7 +316,7 @@ module evap_fnc
           Kvh(i,i) = Kvh_scalar 
         end do
         
-        tensor(1:D,1:D) = rho_liq*C_liq*T*Klh(1:D,1:D) + rho_vapor*C_vap*T*Kvh(1:D,1:D) +  Kvh(1:D,1:D)*L*rho_liq
+        tensor(1:D,1:D) = Kvh(1:D,1:D)*L*rho_liq
           
           
     end subroutine difussion_Th
@@ -356,10 +348,10 @@ module evap_fnc
         integer(kind=ikind) :: D
         !> T:temperature
         !> rho_liq: liquid water density
-        real(kind=rkind) :: T, rho_liq
-          
-        
-
+        real(kind=rkind) :: T, rho_liq, rho_vapor
+        !> liquid water and watwer vapor flux
+				real(kind=rkind), dimension(3) :: q_vap, q_liq
+  
         
         if ( present(x) ) then
          print *, "ERROR: use quadpnt only."
@@ -368,12 +360,17 @@ module evap_fnc
         end if
         
         D = drutes_config%dimen
+        call vapor_flux(pde(re_order), layer , quadpnt=quadpnt, flux=q_vap(1:D))
+        
+        call liquid_flux(pde(re_order), layer, quadpnt, flux=q_liq(1:D))
+        
+       
         T = pde(heat_order)%getval(quadpnt)
         rho_liq = rho_l( quadpnt)
-          
-        call dmualem_dh(pde(re_order), layer, quadpnt, x,  vector_out = Kvect(1:D))
+        rho_vapor = rho_sv(quadpnt)*rh_soil(layer, quadpnt)
       
-        vector_out(1:D) = C_liq*rho_liq*T*Kvect(1:D)
+      
+        vector_out(1:D) = - (C_liq*rho_liq*q_liq(1:D) +  rho_vapor*C_vap*q_vap(1:D))
 
     end subroutine convection_T
     
