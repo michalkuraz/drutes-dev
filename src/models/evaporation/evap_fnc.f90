@@ -25,8 +25,8 @@ module evap_fnc
   use debug_tools
   use re_globals
   
-  public :: difussion_hh, difussion_hT
-  public :: capacity_T, difussion_Th, difussion_TT, convection_T
+  public :: diffusion_hh, diffusion_hT
+  public :: capacity_T, diffusion_Th, diffusion_TT, convection_T
   public :: theta_vapor, dtheta_vapordt
   public :: hydraulic_lT
   public :: hydraulic_vh, hydraulic_vT
@@ -37,7 +37,7 @@ module evap_fnc
     !!> Coefficents for modified Richards equation
     !!> Capacity water flow equation from RE equation 
     !!> Difussion due to pressure gradient
-    subroutine difussion_hh(pde_loc, layer, quadpnt,  x, tensor, scalar)
+    subroutine diffusion_hh(pde_loc, layer, quadpnt,  x, tensor, scalar)
       use typy
       use re_globals
       use pde_objs
@@ -81,12 +81,12 @@ module evap_fnc
       end do
       tensor(1:D,1:D) = Klh(1:D,1:D) + Kvh(1:D,1:D)
       
-    end subroutine difussion_hh
+    end subroutine diffusion_hh
     
     
     
     !! Difussion due to temperature gradient
-    subroutine difussion_hT(pde_loc, layer, quadpnt,  x, tensor, scalar)
+    subroutine diffusion_hT(pde_loc, layer, quadpnt,  x, tensor, scalar)
       use re_globals
       use pde_objs
 
@@ -132,7 +132,7 @@ module evap_fnc
       
       tensor(1:D,1:D) = KlT(1:D, 1:D) + KvT(1:D,1:D)
         
-    end subroutine difussion_hT
+    end subroutine diffusion_hT
 
     
     !! Source term of for water flow
@@ -180,7 +180,7 @@ module evap_fnc
       real(kind=rkind) :: val 
       !> rho_liq: liquid water density
       !> rho_vapor: water vapor density
-      real(kind=rkind) :: rho_liq,rho_vapor
+      real(kind=rkind) :: rho_liq,rho_vapor, theta_l, theta_v, theta_s
       
       rho_liq = rho_l(quadpnt)
       rho_vapor = rho_sv(quadpnt)*rh_soil(layer, quadpnt)
@@ -196,14 +196,16 @@ module evap_fnc
         ERROR STOP
       end if
       
+      theta_l = pde(re_order)%mass(1)%val(pde(re_order), layer, quadpnt)
+      theta_v = theta_vapor(pde(re_order),layer, quadpnt)
+      theta_s = 1 - vgset(layer)%Ths
 
-      val = rho_liq*C_liq + rho_vapor*C_vap + rho_soil*C_soil
-
+      val = rho_liq*C_liq*theta_l + rho_vapor*C_vap*theta_v + rho_soil*C_soil*theta_s
     end function capacity_T
     
     
     !! Difussion due to temperature gradient
-    subroutine difussion_TT(pde_loc, layer, quadpnt,  x, tensor, scalar)
+    subroutine diffusion_TT(pde_loc, layer, quadpnt,  x, tensor, scalar)
       use typy
       use re_globals
       use pde_objs
@@ -265,11 +267,11 @@ module evap_fnc
       tensor(1:D,1:D) = kappa_tensor(1:D, 1:D) + L*rho_liq*(KvT(1:D,1:D))
                     
       
-    end subroutine difussion_TT
+    end subroutine diffusion_TT
     
     
     !! Difussion due to pressure gradient
-    subroutine difussion_Th(pde_loc, layer, quadpnt,  x, tensor, scalar)
+    subroutine diffusion_Th(pde_loc, layer, quadpnt,  x, tensor, scalar)
         use typy
         use re_globals
         use pde_objs
@@ -319,7 +321,7 @@ module evap_fnc
         tensor(1:D,1:D) = Kvh(1:D,1:D)*L*rho_liq
           
           
-    end subroutine difussion_Th
+    end subroutine diffusion_Th
     !! Convection term for heat flow
     subroutine convection_T(pde_loc, layer, quadpnt, x, vector_in, vector_out, scalar)
         use typy

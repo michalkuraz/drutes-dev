@@ -57,11 +57,11 @@ module vapour_pointers
       call RE_std(pde(1))
       
       
-      pde(re_order)%pde_fnc(re_order)%dispersion => difussion_hh
+      pde(re_order)%pde_fnc(re_order)%dispersion => diffusion_hh
       
       pde(re_order)%flux => liquid_flux
       
-      pde(re_order)%pde_fnc(heat_order)%dispersion => difussion_hT
+      pde(re_order)%pde_fnc(heat_order)%dispersion => diffusion_hT
       
       pde(re_order)%pde_fnc(re_order)%zerord  =>  source_h
   
@@ -93,9 +93,9 @@ module vapour_pointers
 
       pde(heat_order)%pde_fnc(heat_order)%elasticity => capacity_T
       
-      pde(heat_order)%pde_fnc(heat_order)%dispersion => difussion_TT
+      pde(heat_order)%pde_fnc(heat_order)%dispersion => diffusion_TT
       
-      pde(heat_order)%pde_fnc(re_order)%dispersion => difussion_Th
+      pde(heat_order)%pde_fnc(re_order)%dispersion => diffusion_Th
       
       pde(heat_order)%pde_fnc(heat_order)%convection => convection_T
       

@@ -299,7 +299,7 @@ module evap_auxfnc
     end if
   
     theta_l = pde(re_order)%mass(1)%val(pde(re_order), layer, quadpnt)
-    theta_air = 1 - theta_l
+    theta_air = vgset(layer)%Ths - theta_l
    
     
     val = tortuosity(theta_l, layer)*theta_air*vapor_diff_air(quadpnt)
@@ -324,8 +324,8 @@ module evap_auxfnc
     !> Volumetric air content,  Saturated water content 
     real(kind=rkind):: theta_sat, theta_air
     
-    theta_air = 1 - theta_l
-    theta_sat = vgset(layer)%ths
+    theta_air = vgset(layer)%Ths - theta_l
+    theta_sat = vgset(layer)%Ths
     
     val = ((theta_air)**(7/3))/ (theta_sat**2)
 
@@ -426,10 +426,14 @@ module evap_auxfnc
     
     call mualem(pde(re_order), layer, quadpnt, tensor=Ks(1:drutes_config%dimen, 1:drutes_config%dimen))
     
-    
-    val = min(100*Ks(1,1),abs(val))
+    if (abs(val) > 100*Ks(1,1)) then
+			print*, "the evaporation rate is exploiding"
+			print*,"exited from evap_auxfnc::evaporation"
+			ERROR stop
+    end if
 
-    val = - val
+    !val = min(100*Ks(1,1), abs(val)) 
+    !val = -val
 
   
   end function evaporation

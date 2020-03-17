@@ -159,18 +159,18 @@ module evap_bc
       
         T = pde_loc%getval(quadpnt)
         
-        val = ccoef - bcoef*T
+        !val = (ccoef - bcoef*T)/acoef !! check 
+        val = - heat_soil_flux
         
 !       val = 0
         
-
       else
         print *, "evaporation boundary must be time dependent, check record for the boundary", edge_id
         ERROR STOP
       end if
     end if
     if (present(code)) then
-      code = 2 ! should be 5? 1: Direchlet, 2: Neumann, 3: no boundary, 4: Dirichlet bc (node is not excluded from x vector),  5: Robin  
+      code = 2 ! should be 3 when robin boubndary interfac is implemented. 
     end if
 
   end subroutine  heat_robin
