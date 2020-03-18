@@ -857,7 +857,7 @@ module evap_fnc
       rho_l_val = rho_l(quadpnt) 
       rho_sv_val = rho_sv(quadpnt) 
         
-      val = (1 - theta_l)*rho_sv_val*rh_soil_val*(1.0_rkind/rho_l_val)
+      val = (vgset(layer)%Ths - theta_l)*rho_sv_val*rh_soil_val*(1.0_rkind/rho_l_val)
       
     end function theta_vapor
     

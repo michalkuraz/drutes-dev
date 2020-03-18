@@ -225,7 +225,7 @@ module evap_bc
         !theta =  pde(re_order)%mass(1)%val(pde(re_order), layer, quadpnt)
         
         evap = evaporation(layer, quadpnt, rhmean)
-        value = evap
+        value = - evap
      
       else
         print *, "evaporation boundary must be time dependent, check record for the boundary", edge_id
