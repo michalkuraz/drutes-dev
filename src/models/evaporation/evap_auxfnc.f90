@@ -456,7 +456,6 @@ module evap_auxfnc
     real(kind=rkind) ::T
     
     T = pde(Heat_order)%getval(quadpnt)
-    T_air = temp_air + Tref
     T = T + Tref
     
     val = C_air*rho_air*((T - T_air)/resistance)
