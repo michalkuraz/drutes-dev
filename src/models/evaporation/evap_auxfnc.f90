@@ -449,8 +449,8 @@ module evap_auxfnc
     
   
     !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
-    type(integpnt_str), intent(in), optional :: quadpnt 
-    real(kind=rkind) :: temp_air, T_air
+    type(integpnt_str), intent(in) :: quadpnt 
+    real(kind=rkind), intent(in) :: temp_air
     real(kind=rkind) :: val
       
     real(kind=rkind) ::T
@@ -458,7 +458,8 @@ module evap_auxfnc
     T = pde(Heat_order)%getval(quadpnt)
     T = T + Tref
     
-    val = C_air*rho_air*((T - T_air)/resistance)
+    val = C_air*rho_air*((T - temp_air)/resistance)
+    
   
   end function sensible_heat
   

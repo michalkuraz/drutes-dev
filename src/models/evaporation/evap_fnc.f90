@@ -814,11 +814,12 @@ module evap_fnc
   
       quadpnt = quadpnt_in
     
-      quadpnt%column = 2
+      quadpnt%column = 1
       theta_vapor_prev = theta_vapor(pde(re_order),layer, quadpnt) 
     
-      quadpnt%column = 1
+      quadpnt%column = 2
       theta_vapor_curr= theta_vapor(pde(re_order),layer, quadpnt) 
+      
       
       val =  (theta_vapor_curr - theta_vapor_prev)/ time_step 
         

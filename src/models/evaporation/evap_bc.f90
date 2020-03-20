@@ -158,7 +158,7 @@ module evap_bc
         bcoef = C_liq*rho_liq*norm2(q_liq(1:D)) + C_vap*norm2(q_vap(1:D))*rho_vapor
       
         T = pde_loc%getval(quadpnt)
-        
+
         !val = (ccoef - bcoef*T)/acoef !! check 
         val = - heat_soil_flux
         
