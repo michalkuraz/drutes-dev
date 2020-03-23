@@ -67,10 +67,14 @@ module heat_pointers
       integer(kind=ikind) :: i, pos
       
       if (ubound(pde,1) == 1) then
-	     call heatlinker(pde_loc(1))
+        call heatlinker(pde(1))
 	    else
-	     call REstdH(pde_loc(1))
-	     call heatlinker(pde_loc(2))
+        if (drutes_config%name == "REevap") then
+          call RE_std(pde(1))
+        else
+          call REstdH(pde(1))
+        end if
+	     call heatlinker(pde(2))
       end if
             
     

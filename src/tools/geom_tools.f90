@@ -87,7 +87,7 @@ module geom_tools
       case("ndpt")
         el = nodes%element(quadpnt%order)%data(1)
         layer=elements%material(el)
-      case("obpt", "gqnd","xypt")
+      case("obpt", "gqnd","xypt", "numb")
         el = quadpnt%element
         if (.not. (el >= 1 .and. el<=elements%kolik)) then
           print *, "error in quadpnt data", el, quadpnt%type_pnt

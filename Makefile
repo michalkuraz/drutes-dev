@@ -37,8 +37,9 @@ HEAT_obj := heat_fnc.o heat_pointers.o heat_globals.o heat_reader.o
 KINWAVE_obj := kinreader.o kinglobs.o kinfnc.o kinpointer.o
 FROZEN_obj := freeze_globs.o freeze_helper.o freeze_fnc.o freeze_reader.o freeze_pointers.o freeze_linalg.o
 EVAPORATION_obj := Re_evap_bc.o Re_evap_reader.o evap_globals.o evap_reader.o evap_fnc.o  evap_auxfnc.o   evap_bc.o vapour_pointers.o
+REevap_obj :=  evapglob.o evap_heat_fnc.o evap_RE_fnc.o evapextras.o evappointers.o
 
-MODEL_objs := $(RE_obj)  $(BOUSSINESQ_obj) $(ADE_obj) $(REDUAL_obj)  $(HEAT_obj) $(LTNE_obj) $(FROZEN_obj) $(KINWAVE_obj) $(EVAPORATION_obj)
+MODEL_objs := $(RE_obj)  $(BOUSSINESQ_obj) $(ADE_obj) $(REDUAL_obj)  $(HEAT_obj) $(LTNE_obj) $(FROZEN_obj) $(KINWAVE_obj) $(EVAPORATION_obj) $(REevap_obj)
 
 ALL_objs := $(CORE_obj) $(TOOLS_obj) $(POINTERMAN_obj) $(MATHTOOLS_obj) $(FEMTOOLS_obj) $(DECOMPO_obj)  $(PMAoo_obj) $(MODEL_objs)
 #-----------------------------------------------------------------
@@ -230,7 +231,7 @@ kinpointer.o: $(CORE_obj) $(TOOLS_obj) kinglobs.o kinreader.o src/models/kinwave
 #------end KINWAVE_obj-------------------------------
 
 
-#------begin evaporation_obj-------------------------
+#------begin evaporation_obj version I-------------------------
 Re_evap_reader.o: $(CORE_obj) $(TOOLS_obj) re_globals.o src/models/evaporation/Re_evap_reader.f90
 	$c -c src/models/evaporation/Re_evap_reader.f90
 Re_evap_bc.o: $(CORE_obj) $(TOOLS_obj) evap_auxfnc.o Re_evap_reader.o src/models/evaporation/Re_evap_bc.f90
@@ -247,7 +248,22 @@ evap_bc.o:  $(CORE_obj) $(TOOLS_obj)  re_globals.o evap_globals.o evap_fnc.o  ev
 	$c -c src/models/evaporation/evap_bc.f90
 vapour_pointers.o: $(CORE_obj) $(RE_obj) evap_bc.o $(HEAT_obj) evap_fnc.o evap_reader.o evap_bc.o src/models/evaporation/vapour_pointers.f90
 	$c -c src/models/evaporation/vapour_pointers.f90
-#------end evaporation_obj---------------------------
+#------end evaporation_obj version I---------------------------
+
+#------begin evaporation_obj version II-------------------------
+evapglob.o: $(CORE_obj) src/models/REevap/evapglob.f90
+	$c -c src/models/REevap/evapglob.f90
+evapextras.o: $(CORE_obj) evapglob.o src/models/REevap/evapextras.f90
+	$c -c src/models/REevap/evapextras.f90
+evap_heat_fnc.o: $(CORE_obj) $(HEAT_obj) src/models/REevap/evap_heat_fnc.f90
+	$c -c src/models/REevap/evap_heat_fnc.f90
+evap_RE_fnc.o: $(CORE_obj) $(RE_obj) evapextras.o src/models/REevap/evap_RE_fnc.f90
+	$c -c src/models/REevap/evap_RE_fnc.f90
+evappointers.o: $(CORE_obj) $(HEAT_obj) $(RE_obj) evap_heat_fnc.o evap_RE_fnc.o src/models/REevap/evappointers.f90
+	$c -c src/models/REevap/evappointers.f90
+#------end evaporation_obj version II-------------------------
+
+
 
 
 #-------begin POINTERS_obj--------------------------------

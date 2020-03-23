@@ -379,6 +379,7 @@ module pde_objs
         allocate(quadpntloc(ubound(elements%data,2)))
       end if
       
+      
       select case(quadpnt%type_pnt)
         case("gqnd", "obpt", "xypt")
           top = 1
@@ -503,6 +504,11 @@ module pde_objs
       integer(kind=ikind) :: i, edge, el, j, order
       real(kind=rkind) :: xder, yder
       real(kind=rkind), dimension(3,3) :: a
+      
+       if (quadpnt%type_pnt=="numb") then
+         val = quadpnt%this_is_the_value
+         RETURN
+       end if
       
       if (.not. allocated(pde_common%xvect)) then
         print *, "runtime error, you are probably calling getval function too early, vector with solution is not yet allocated"

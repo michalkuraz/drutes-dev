@@ -42,7 +42,7 @@ module read_inputs
       character(len=4096) :: filename
       character(len=8192) :: msg
       integer :: local, global
-      character(len=256), dimension(11) :: probnames
+      character(len=256), dimension(12) :: probnames
       character(len=2) :: dimensions
       
       if (.not. www) then
@@ -74,8 +74,11 @@ module read_inputs
         new_line("a"),  new_line("a"), &
         "   kinwave = Kinematic wave equation for 2D catchments", &
                 new_line("a"),  new_line("a"), &
-        "   vapour = Richards equation coupled with heat equation, phase changes due evaporation, vapour flow ", &
-        new_line("a"),  new_line("a"), new_line("a")
+        "   vapour = Richards equation coupled with heat equation, phase changes due evaporation, vapour flow (testing I)", &
+        new_line("a"),  new_line("a"), &
+        "   REevap = Richards equation coupled with heat equation, phase changes due evaporation, vapour flow (testing II)", &
+        new_line("a"),  new_line("a"), &
+         new_line("a")
         
 	
 
@@ -90,6 +93,7 @@ module read_inputs
       probnames(9) = "freeze"
       probnames(10) = "kinwave"
       probnames(11) = "vapour"
+      probnames(12) = "REevap"
       
 	
       call fileread(drutes_config%name, local, trim(msg), options=probnames)

@@ -200,6 +200,8 @@ module femmat
        call build_stiff_np(i, time_step)
 
        call pde_common%time_integ(i)
+       
+!call printmtx(stiff_mat) ; call wait()
 
        stiff_mat = stiff_mat + cap_mat  
 		        
