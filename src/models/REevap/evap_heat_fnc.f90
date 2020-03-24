@@ -89,12 +89,14 @@ module evap_heat_fnc
     end subroutine evapdiffTh
     
     
-    subroutine evap_convect(pde_loc, layer, quadpnt, x, vector_in, vector_out, scalar)
+    subroutine evap_heatconvect(pde_loc, layer, quadpnt, x, vector_in, vector_out, scalar)
       use typy
       use global_objs
       use pde_objs
       use heat_globals
       use evap_RE_fnc
+      use evapextras
+      use evapglob
       
       class(pde_str), intent(in) :: pde_loc
       !> value of the nonlinear function
@@ -117,17 +119,22 @@ module evap_heat_fnc
       
       D = drutes_config%dimen
 
-      call liquid_flux(pde(re_ord), layer, quadpnt, vector_out=ql(1:D))
+      call liquid_flux(pde(re_ord), layer, quadpnt, flux=ql(1:D))
       
-      call vapor_flux(pde(re_ord), layer, quadpnt, vector_out=qv(1:D))
+      call vapor_flux(pde(re_ord), layer, quadpnt, flux=qv(1:D))
 
       rhol = rho_l( quadpnt)
       
       rhov = rho_sv(quadpnt)*rh_soil(layer, quadpnt)
     
-      vector_out(1:D) = -(C_l*rhol*ql(1:D) + C_v*rhos*qv(1:D))
-
-            
-   end subroutine evap_convect
+      if (present(vector_out)) then
+        vector_out(1:D) = -(C_liq*rhol*ql(1:D) + C_vap*rhov*qv(1:D))
+      end if
+      
+      if (present(scalar)) then
+        scalar = norm2(-(C_liq*rhol*ql(1:D) + C_vap*rhov*qv(1:D)))
+      end if
+      
+   end subroutine evap_heatconvect
     
 end module evap_heat_fnc

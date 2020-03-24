@@ -201,10 +201,7 @@ module femmat
        call pde_common%time_integ(i)
 
        stiff_mat = stiff_mat + cap_mat  
-       
-       if (i == elements%kolik) then
-          call printmtx(stiff_mat) ; stop
-      end if
+
        call in2global(i,spmatrix, pde_common%bvect)
 
       end do

@@ -32,6 +32,8 @@ module evappointers
       pde(heat_ord)%pde_fnc(heat_ord)%dispersion => evapdiffTT
       
       pde(heat_ord)%pde_fnc(re_ord)%dispersion => evapdiffTh
+      
+      pde(heat_ord)%pde_fnc(heat_ord)%convection => evap_heatconvect
           
     end subroutine REevap_linker
   
