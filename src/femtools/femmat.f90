@@ -86,7 +86,6 @@ module femmat
 
         call solve_matrix(spmatrix, pde_common%bvect(1:fin), pde_common%xvect(1:fin,3),  itmax1=fin, &
             reps1=1e-11_rkind, itfin1=pcg_it, repsfin1=reps_err)
-
             
         if (pcg_it > 0.25*fin) then 
           ierr=-1
@@ -200,11 +199,12 @@ module femmat
        call build_stiff_np(i, time_step)
 
        call pde_common%time_integ(i)
-       
-!call printmtx(stiff_mat) ; call wait()
 
        stiff_mat = stiff_mat + cap_mat  
-		        
+       
+       if (i == elements%kolik) then
+          call printmtx(stiff_mat) ; stop
+      end if
        call in2global(i,spmatrix, pde_common%bvect)
 
       end do

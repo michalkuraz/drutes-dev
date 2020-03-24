@@ -16,6 +16,16 @@ module evapglob
   !> Reference surface tension at 25 ~deg C g.s^-2 (units will cancel out)
   real(kind=rkind), parameter, public :: gamma_0 = 71.89
   
+    !> Mass fraction of clay [-]
+  real(kind=rkind), parameter, public :: fraction_clay = 0.02
+  
+    
+  !> specific heat capacity of liquid  water [J/kg K]
+  integer(kind=ikind), parameter, public :: C_liq = 4188 
+  
+  !> specific heat capacity of  water vapor [J/kg K]
+  integer(kind=ikind), parameter, public :: C_vap = 1800
+  
   
   
 

@@ -255,7 +255,7 @@ evapglob.o: $(CORE_obj) src/models/REevap/evapglob.f90
 	$c -c src/models/REevap/evapglob.f90
 evapextras.o: $(CORE_obj) evapglob.o src/models/REevap/evapextras.f90
 	$c -c src/models/REevap/evapextras.f90
-evap_heat_fnc.o: $(CORE_obj) $(HEAT_obj) src/models/REevap/evap_heat_fnc.f90
+evap_heat_fnc.o: $(CORE_obj) $(HEAT_obj) evap_RE_fnc.o src/models/REevap/evap_heat_fnc.f90
 	$c -c src/models/REevap/evap_heat_fnc.f90
 evap_RE_fnc.o: $(CORE_obj) $(RE_obj) evapextras.o src/models/REevap/evap_RE_fnc.f90
 	$c -c src/models/REevap/evap_RE_fnc.f90
