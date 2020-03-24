@@ -113,20 +113,21 @@ module evap_heat_fnc
       real(kind=rkind), dimension(3) :: ql, qv
       
       real(kind=rkind) :: rhol, rhov
+      integer(kind=ikind) :: D
+      
+      D = drutes_config%dimen
 
       call liquid_flux(pde(re_ord), layer, quadpnt, vector_out=ql(1:D))
       
-      call vapor_flux(pde(re_ord), layer, quadpnt, vector_out=ql(1:D))
+      call vapor_flux(pde(re_ord), layer, quadpnt, vector_out=qv(1:D))
 
-      rhol = 1000.0
+      rhol = rho_l( quadpnt)
       
-      rhov = rho_sv(quadpnt)
+      rhov = rho_sv(quadpnt)*rh_soil(layer, quadpnt)
     
-      Cl = 
+      vector_out(1:D) = -(C_l*rhol*ql(1:D) + C_v*rhos*qv(1:D))
 
-      
-
-      
+            
    end subroutine evap_convect
     
 end module evap_heat_fnc
