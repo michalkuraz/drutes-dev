@@ -1846,7 +1846,7 @@ module RE_constitutive
           
           quadpnt_loc%column = 2
           quadpnt_loc%type_pnt = "ndpt"
-          quadpnt_loc%order = node_order
+          quadpnt_loc%order = elements%data(el_id, node_order)
 
           call pde_loc%pde_fnc(pde_loc%order)%dispersion(pde_loc, elements%material(el_id), quadpnt_loc, &
                   tensor=K(1:drutes_config%dimen, 1:drutes_config%dimen))

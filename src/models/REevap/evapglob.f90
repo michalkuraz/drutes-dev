@@ -26,6 +26,28 @@ module evapglob
   !> specific heat capacity of  water vapor [J/kg K]
   integer(kind=ikind), parameter, public :: C_vap = 1800
   
+  !> aerodynamic resistance [s/m]
+  real(kind=rkind), public :: resistance = 100.0
+  
+  !> current air temperature [dg. C]
+  real(kind=rkind), public :: temp_air = 50
+  
+  !> incoming short wave radiation [W.m^-2]
+  real(kind=rkind), public :: radiation  =  500
+  
+  !> relative air huminidity
+  real(kind=rkind), public :: rel_air_hum  = 50.0
+  
+  !> reflactance of short wave radiation
+  real(kind=rkind), public :: wave_albedo = 0.2
+  
+  !> specific heat capacity of  air [J/kg K]
+  integer(kind=ikind), parameter, public :: C_air =  1006
+  
+  !> density of air [kg.m^-3]
+  real(kind=rkind), parameter, public :: rho_air = 1.29
+  
+  
   
   
 

@@ -85,42 +85,42 @@ module evap_RE_fnc
      end subroutine evapdiffhT
       
       
+    
+    function dtheta_vdt(pde_loc, layer, quadpnt, x) result(val)
+      use typy
+      use global_objs
+      use globals
+      use pde_objs
+      use evapglob
+      use evapextras
       
-      function dtheta_vdt(pde_loc, layer, quadpnt, x) result(val)
-        use typy
-        use global_objs
-        use globals
-        use pde_objs
-        use evapglob
-        use evapextras
-        
-        class(pde_str), intent(in) :: pde_loc
-        !> value of the nonlinear function
-        real(kind=rkind), dimension(:), intent(in), optional    :: x
-        !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
-        type(integpnt_str), intent(in), optional :: quadpnt
-        !> material ID
-        integer(kind=ikind), intent(in) :: layer
-        !> return value
-        real(kind=rkind)                :: val
-        
-        type(integpnt_str) :: quadpnt_loc
-        real(kind=rkind) :: thvap_prev, thvap_curr
-        
-        quadpnt_loc = quadpnt
-        
-        quadpnt_loc%column = 4
-        
-        thvap_prev = theta_vapor(pde(re_ord),layer, quadpnt_loc)
-        
-        quadpnt_loc%column = 1
-        
-        thvap_curr = theta_vapor(pde(re_ord),layer, quadpnt_loc)
-        
-        val = -(thvap_curr  - thvap_prev) / time_step
+      class(pde_str), intent(in) :: pde_loc
+      !> value of the nonlinear function
+      real(kind=rkind), dimension(:), intent(in), optional    :: x
+      !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
+      type(integpnt_str), intent(in), optional :: quadpnt
+      !> material ID
+      integer(kind=ikind), intent(in) :: layer
+      !> return value
+      real(kind=rkind)                :: val
+      
+      type(integpnt_str) :: quadpnt_loc
+      real(kind=rkind) :: thvap_prev, thvap_curr
+      
+      quadpnt_loc = quadpnt
+      
+      quadpnt_loc%column = 4
+      
+      thvap_prev = theta_vapor(pde(re_ord),layer, quadpnt_loc)
+      
+      quadpnt_loc%column = 1
+      
+      thvap_curr = theta_vapor(pde(re_ord),layer, quadpnt_loc)
+      
+      val = -(thvap_curr  - thvap_prev) / time_step
 
-        
-      end function dtheta_vdt
+      
+    end function dtheta_vdt
       
       !> Liquid water flux
     subroutine liquid_flux(pde_loc, layer, quadpnt, x, grad,  flux, flux_length)

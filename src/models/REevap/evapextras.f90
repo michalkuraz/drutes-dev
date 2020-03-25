@@ -37,6 +37,8 @@ module evapextras
       h = pde(RE_ord)%getval(quadpnt)
       T = pde(Heat_ord)%getval(quadpnt)
       T_abs = T + Tref ! T from ºC to Kelvin
+
+
       
       val = exp ((h*MolWat*gravity)/(R_gas*T_abs))
       

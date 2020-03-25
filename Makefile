@@ -37,7 +37,7 @@ HEAT_obj := heat_fnc.o heat_pointers.o heat_globals.o heat_reader.o
 KINWAVE_obj := kinreader.o kinglobs.o kinfnc.o kinpointer.o
 FROZEN_obj := freeze_globs.o freeze_helper.o freeze_fnc.o freeze_reader.o freeze_pointers.o freeze_linalg.o
 EVAPORATION_obj := Re_evap_bc.o Re_evap_reader.o evap_globals.o evap_reader.o evap_fnc.o  evap_auxfnc.o   evap_bc.o vapour_pointers.o
-REevap_obj :=  evapglob.o evap_heat_fnc.o evap_RE_fnc.o evapextras.o evappointers.o
+REevap_obj :=  evapglob.o evap_heat_fnc.o evap_RE_fnc.o evapextras.o evappointers.o REevapbc.o heatevapbc.o
 
 MODEL_objs := $(RE_obj)  $(BOUSSINESQ_obj) $(ADE_obj) $(REDUAL_obj)  $(HEAT_obj) $(LTNE_obj) $(FROZEN_obj) $(KINWAVE_obj) $(EVAPORATION_obj) $(REevap_obj)
 
@@ -259,8 +259,12 @@ evap_heat_fnc.o: $(CORE_obj) $(HEAT_obj) evap_RE_fnc.o src/models/REevap/evap_he
 	$c -c src/models/REevap/evap_heat_fnc.f90
 evap_RE_fnc.o: $(CORE_obj) $(RE_obj) evapextras.o src/models/REevap/evap_RE_fnc.f90
 	$c -c src/models/REevap/evap_RE_fnc.f90
-evappointers.o: $(CORE_obj) $(HEAT_obj) $(RE_obj) evap_heat_fnc.o evap_RE_fnc.o src/models/REevap/evappointers.f90
+evappointers.o: $(CORE_obj) $(HEAT_obj) $(RE_obj) evap_heat_fnc.o evap_RE_fnc.o REevapbc.o heatevapbc.o src/models/REevap/evappointers.f90
 	$c -c src/models/REevap/evappointers.f90
+REevapbc.o:  $(CORE_obj) evapglob.o evapextras.o src/models/REevap/REevapbc.f90
+	$c -c src/models/REevap/REevapbc.f90
+heatevapbc.o: $(CORE_obj) REevapbc.o evapglob.o evapextras.o src/models/REevap/heatevapbc.f90
+	$c -c src/models/REevap/heatevapbc.f90
 #------end evaporation_obj version II-------------------------
 
 

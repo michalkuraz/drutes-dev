@@ -136,5 +136,34 @@ module evap_heat_fnc
       end if
       
    end subroutine evap_heatconvect
+   
+   
+   function Ldtheta_vdt(pde_loc, layer, quadpnt, x) result(val)
+     use typy
+     use global_objs
+     use globals
+     use pde_objs
+     use evapglob
+     use evapextras
+     use evap_RE_fnc
+
+     class(pde_str), intent(in) :: pde_loc
+     !> value of the nonlinear function
+     real(kind=rkind), dimension(:), intent(in), optional    :: x
+     !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
+     type(integpnt_str), intent(in), optional :: quadpnt
+     !> material ID
+     integer(kind=ikind), intent(in) :: layer
+     !> return value
+     real(kind=rkind)                :: val
+     
+     real(kind=rkind) :: L
+     
+     L = latent_heat_wat(quadpnt)
+     
+     val = L*dtheta_vdt(pde(re_ord), layer, quadpnt, x)
+     
+   end function Ldtheta_vdt  
+     
     
 end module evap_heat_fnc
