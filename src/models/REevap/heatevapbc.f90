@@ -96,9 +96,9 @@ module heatevapbc
       integer(kind=ikind) :: i
       
       if (.not. is_opened) then
-        open(newunit = fileid, file = "out/evap.out", action="write", status = "replace")
+        open(newunit = fileid, file = "out/surface_energy.out", action="write", status = "replace")
         call print_logo(fileid)
-        write(unit=fileid, fmt=*) "# time            Rn              Hs               Ev            G"
+        write(unit=fileid, fmt=*) "# time            Rn              -Hs               -LEv                Ev       G"
         is_opened = .true.
       end if
 
@@ -123,7 +123,7 @@ module heatevapbc
         
 !        value  = 500
    
-        write(unit=fileid, fmt=*) time, Rn, Hs, Ev, value
+        write(unit=fileid, fmt=*) time, Rn, -Hs, L*Ev, Ev, value
       
       end if
       

@@ -292,7 +292,8 @@ module evapextras
       end if
     
       T = pde(Heat_ord)%getval(quadpnt) !T is in ºC
-      val = 2.501e-6 - 2369.2_rkind*T
+      val = 2.501e+6 - 2369.2_rkind*T
+      val = val*rho_l(quadpnt)
 
     end function latent_heat_wat
     

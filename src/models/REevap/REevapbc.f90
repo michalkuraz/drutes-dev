@@ -40,7 +40,7 @@
             
       val = (rh_soil_val*rho_sv_val_soil  - (rel_air_hum/100.0_rkind)* rho_sv_val_air )/(resistance*rho_l_val)
       
-      val = min(val, 0.0_rkind)
+      val = max(val, 0.0_rkind)
     
     end function evaporation
     
@@ -59,7 +59,9 @@
       !> unused for this model (implementation for Robin boundary)
       real(kind=rkind), dimension(:), intent(out), optional :: array
       type(integpnt_str) :: quadpnt_loc
-      
+      real(kind=rkind), dimension(3) :: gravflux
+      real(kind=rkind), dimension(3,3) :: K
+      integer(kind=ikind) :: i, edge_id, j
       integer(kind=ikind) :: layer
       
       if (present(value)) then
@@ -68,6 +70,12 @@
         quadpnt_loc%order = elements%data(el_id,node_order)
         layer = elements%material(el_id)
         value = evaporation(layer, quadpnt_loc)
+        call pde_loc%pde_fnc(pde_loc%order)%dispersion(pde_loc, elements%material(el_id), quadpnt_loc, &
+                  tensor=K(1:drutes_config%dimen, 1:drutes_config%dimen))
+
+        gravflux(1:drutes_config%dimen) = K(drutes_config%dimen, 1:drutes_config%dimen)*elements%nvect_z(el_id, node_order)
+        value = -value-gravflux(1)
+
       end if
       
       if (present(code)) then

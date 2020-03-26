@@ -30,10 +30,10 @@ module evapglob
   real(kind=rkind), public :: resistance = 100.0
   
   !> current air temperature [dg. C]
-  real(kind=rkind), public :: temp_air = 50
+  real(kind=rkind), public :: temp_air = 25
   
   !> incoming short wave radiation [W.m^-2]
-  real(kind=rkind), public :: radiation  =  500
+  real(kind=rkind), public :: radiation  =  0
   
   !> relative air huminidity
   real(kind=rkind), public :: rel_air_hum  = 50.0

@@ -1,5 +1,5 @@
 module evap_RE_fnc
-  public :: evapdiffhh, evapdiffhT
+  public :: evapdiffhh, evapdiffhT, dtheta_vdt
   
   
     contains
@@ -122,6 +122,63 @@ module evap_RE_fnc
       
     end function dtheta_vdt
       
+      
+    !> total water flux
+    subroutine water_flux(pde_loc, layer, quadpnt, x, grad,  flux, flux_length)
+      use typy
+      use pde_objs
+      use global_objs
+      use re_constitutive
+      use evapglob
+      use evapextras
+      
+       
+      class(pde_str), intent(in) :: pde_loc
+      !> Material ID
+      integer(kind=ikind), intent(in) :: layer
+      !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
+      type(integpnt_str), intent(in), optional :: quadpnt   
+      !> value of the nonlinear function
+      real(kind=rkind), intent(in), dimension(:), optional :: x
+      !> this value is optional, because it is required by the vector_fnc procedure pointer global definition
+      real(kind=rkind), dimension(:), intent(in), optional :: grad
+      !> Vector of the flux
+      real(kind=rkind), dimension(:), intent(out), optional :: flux
+      !> lengh of the flux vector
+      real(kind=rkind), intent(out), optional :: flux_length
+      !> local variable
+      integer(kind=ikind)  :: i, D
+      !> Liquid water flux
+      real(kind=rkind), dimension(3)  ::  q_liq, q_l, q_v
+      !> resul of the modified flux of liquid water
+      real(kind=rkind), dimension(3)  :: vct
+      
+      if (present(x)) then
+        print *, "ERROR: use quadpnt only"
+        print *, "exited from evap_RE_fnc::water_flux"
+        ERROR stop
+      end if
+    
+            
+      D = drutes_config%dimen
+
+      call liquid_flux(pde(re_ord), layer, quadpnt, flux=q_l(1:D))
+      
+      call vapor_flux(pde(re_ord), layer, quadpnt, flux=q_v(1:D))
+      vct(1:D) = q_l(1:D) +q_v(1:D)
+      
+      if (present(flux_length)) then      
+        flux_length = norm2(vct(1:D))
+      end if
+
+
+      if (present(flux)) then
+        flux(1:D) = vct(1:D)
+      end if
+      
+    
+    end subroutine water_flux
+
       !> Liquid water flux
     subroutine liquid_flux(pde_loc, layer, quadpnt, x, grad,  flux, flux_length)
       use typy

@@ -29,13 +29,14 @@ module evappointers
 
       call heat(pde(:))
 
-
       pde(re_ord)%pde_fnc(re_ord)%dispersion => evapdiffhh
       
       pde(re_ord)%pde_fnc(heat_ord)%dispersion => evapdiffhT
       
       pde(re_ord)%pde_fnc(re_ord)%zerord  =>  dtheta_vdt
-      
+
+      pde(re_ord)%flux  =>  water_flux
+
       pde(heat_ord)%pde_fnc(heat_ord)%dispersion => evapdiffTT
       
       pde(heat_ord)%pde_fnc(re_ord)%dispersion => evapdiffTh
