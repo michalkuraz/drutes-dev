@@ -1,6 +1,8 @@
 
 # replace filename as necessary
-filename <- "out/surface-balance.out"
+filename <- "~/Desktop/CS_07/surface_energy.out"
+
+
 clean_seb <- function(filename){
   dta <- read.table(filename, skip = 6)
   dta_new <- as.data.frame(matrix(ncol = ncol(dta), nrow = length(unique(dta$V1))))
@@ -26,8 +28,10 @@ clean_seb <- function(filename){
   return(dta_new)
 }
 
-data_clean <- clean_seb(filename )
+data_clean<- clean_seb(filename)
+
 names(data_clean) <- c("time","Rad", "Hs", "LE","E", "G")
+
 
 
 plot(data_clean$time/86400, data_clean$E*86400*100,

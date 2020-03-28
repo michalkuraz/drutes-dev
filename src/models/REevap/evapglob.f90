@@ -27,13 +27,13 @@ module evapglob
   integer(kind=ikind), parameter, public :: C_vap = 1800
   
   !> aerodynamic resistance [s/m]
-  real(kind=rkind), public :: resistance = 100.0
+  real(kind=rkind), public :: resistance = 30
   
   !> current air temperature [dg. C]
   real(kind=rkind), public :: temp_air = 25
   
   !> incoming short wave radiation [W.m^-2]
-  real(kind=rkind), public :: radiation  =  0
+  real(kind=rkind), public :: radiation  =  100
   
   !> relative air huminidity
   real(kind=rkind), public :: rel_air_hum  = 50.0
@@ -47,8 +47,6 @@ module evapglob
   !> density of air [kg.m^-3]
   real(kind=rkind), parameter, public :: rho_air = 1.29
   
-  
-  
-  
+ 
 
 end module evapglob
