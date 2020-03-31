@@ -655,7 +655,7 @@ module re_total
             gravflux(2) = K(2,2) * elements%nvect_z(el_id, node_order) * (-1)
         end select
     
-        value = -norm2(gravflux(1:D))
+        value = norm2(gravflux(1:D))
       end if
       
       if (present(code)) then
