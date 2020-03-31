@@ -1822,6 +1822,7 @@ module RE_constitutive
         use globals
         use global_objs
         use pde_objs
+        use debug_tools
 
         
         class(pde_str), intent(in) :: pde_loc
@@ -1850,8 +1851,14 @@ module RE_constitutive
 
           call pde_loc%pde_fnc(pde_loc%order)%dispersion(pde_loc, elements%material(el_id), quadpnt_loc, &
                   tensor=K(1:drutes_config%dimen, 1:drutes_config%dimen))
-
-          gravflux(1:drutes_config%dimen) = K(drutes_config%dimen, 1:drutes_config%dimen)*elements%nvect_z(el_id, node_order)
+                  
+          select case (drutes_config%dimen)
+            case(1)
+              gravflux(1) = K(1,1) * elements%nvect_z(el_id, node_order)*(-1)
+            case(2)
+              gravflux(1) = K(2,1) * elements%nvect_x(el_id, node_order)*(-1)
+              gravflux(2) = K(2,2) * elements%nvect_z(el_id, node_order) * (-1)
+          end select
           
 
           if (pde_loc%bc(edge_id)%file) then
@@ -1878,10 +1885,11 @@ module RE_constitutive
             case(1)
               value = bcval - gravflux(1)
             case(2)
-              bcflux(1) = sqrt(1-elements%nvect_z(el_id, node_order)*elements%nvect_z(el_id, node_order))*bcval
+              bcflux(1) = elements%nvect_x(el_id, node_order)*bcval
               bcflux(2) = elements%nvect_z(el_id, node_order)*bcval
-              bcflux = bcflux + gravflux
-              value = sign(1.0_rkind, bcval)*sqrt(bcflux(1)*bcflux(1) + bcflux(2)*bcflux(2))
+              
+              value = norm2(bcflux(1:2) - gravflux(1:2))
+              
           end select
         end if
         

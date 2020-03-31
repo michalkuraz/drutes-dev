@@ -284,6 +284,8 @@ module global_objs
     real(kind=rkind), dimension(:,:), allocatable   :: length
     !> vertical component of the inner boundary normal vector
     real(kind=rkind), dimension(:,:), allocatable   :: nvect_z
+    !> horizontal component of the inner boundary normal vector
+    real(kind=rkind), dimension(:,:), allocatable   :: nvect_x
     !> material = id number of material at current element, a constant material properties are required for each element
     integer(kind=ikind), dimension(:), allocatable   :: material
     !> domain id -- array, type smartarray_int, carries id number of subdomain, the subdomain split is of an overlap type

@@ -567,13 +567,13 @@ module feminittools
 
             elements%nvect_z = 0.0_rkind
 
-            elements%nvect_z(1,1) = -1.0_rkind
+            elements%nvect_z(1,1) = 1.0_rkind
 
-            elements%nvect_z(elements%kolik,2) = 1.0_rkind
+            elements%nvect_z(elements%kolik,2) = -1.0_rkind
 
           case(2)
           
-            if (drutes_config%check4mass) then
+!            if (drutes_config%check4mass) then
             
               call write_log("creating graph of the discretization mesh, and searching for boundary nodes...")
               
@@ -581,11 +581,13 @@ module feminittools
               
               call set_boundary()
               
-            end if
+!            end if
 
             elements%length = 0.0_rkind
 
             elements%nvect_z = 0.0_rkind
+            
+      
 
             do i=1, elements%kolik
               found = -1
@@ -597,6 +599,7 @@ module feminittools
 
                       elements%length(i,j) = elements%length(i,j) + &
                                              dist(nodes%data(elements%data(i,j),:), nodes%data(elements%data(i,k),:))/2.0
+                                             
                       elements%nvect_z(i,j) = get_nz(i,j,k)
 
                       elements%length(i,k) = elements%length(i,k) + &
@@ -635,10 +638,9 @@ module feminittools
         real(kind=rkind), dimension(2) :: A,B,C
         real(kind=rkind) :: ang
 
-
-
         ang = 0.0_rkind
         do i=1, nodes%el2integ(id)%pos
+        
           j=nodes%el2integ(id)%data(i)
           do k=1,3
             if (elements%data(j,k) == id) then
@@ -694,6 +696,7 @@ module feminittools
           allocate(nd_processed(nodes%kolik))
           nd_processed = .false.
         end if
+        
 
         do i=1, elements%kolik
           outer: do j=1, ubound(elements%data,2)

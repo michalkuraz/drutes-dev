@@ -167,6 +167,7 @@ module core_tools
       allocate(nodes%element(nodes%kolik))
       allocate(elements%length(elements%kolik,drutes_config%dimen + 1))
       allocate(elements%nvect_z(elements%kolik,drutes_config%dimen + 1))
+      allocate(elements%nvect_x(elements%kolik,drutes_config%dimen + 1))
       allocate(elements%id(elements%kolik))
       allocate(elements%data(elements%kolik, drutes_config%dimen+1))
       allocate(elements%areas(elements%kolik))

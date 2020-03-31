@@ -646,21 +646,16 @@ module re_total
         layer = elements%material(el_id)
         D = drutes_config%dimen
         call pde_loc%pde_fnc(pde_loc%order)%dispersion(pde_loc, layer, quadpnt, tensor=K(1:D,1:D))
-    
-      	select case(D)
+        
+        select case (drutes_config%dimen)
           case(1)
-            if (node_order == 1) then
-              value = -K(1,1) 
-            else
-              value = K(1,1)
-            end if
-          case(2)	  
-            gravflux(1) = sqrt(1-elements%nvect_z(el_id, node_order)*elements%nvect_z(el_id, node_order))*K(1,2)
-            
-            gravflux(2) = elements%nvect_z(el_id, node_order)*K(2,2)
-
-            value = -sign(1.0_rkind, elements%nvect_z(el_id, node_order))*sqrt(gravflux(1)*gravflux(1) + gravflux(2)*gravflux(2))
+            gravflux(1) = K(1,1) * elements%nvect_z(el_id, node_order)*(-1)
+          case(2)
+            gravflux(1) = K(2,1) * elements%nvect_x(el_id, node_order)*(-1)
+            gravflux(2) = K(2,2) * elements%nvect_z(el_id, node_order) * (-1)
         end select
+    
+        value = -norm2(gravflux(1:D))
       end if
       
       if (present(code)) then

@@ -365,7 +365,7 @@ module geom_tools
   end subroutine  init_transform
 
 
-  !> function that provides z coordinate of boundary normal vector, the boundary is defined by two points: bod1, bod2
+  !> function that provides z coordinate of inner boundary normal vector, the boundary is defined by two points: bod1, bod2
   function get_nz(el_id, order1, order2) result(zcoord)
     use typy
     use globals
@@ -404,7 +404,59 @@ module geom_tools
 
   end function get_nz
 
+  !> function that provides x coordinate of inner boundary normal vector, the boundary is defined by two points: bod1, bod2
+  function get_nx(el_id, order1, order2) result(xcoord)
+    use typy
+    use globals
+    use global_objs
 
+    integer(kind=ikind), intent(in) :: el_id, order1, order2
+    real(kind=rkind), dimension(2) :: bod1, bod2
+    real(kind=rkind) :: xcoord
+
+    real(kind=rkind) :: tg, zcoord, slope
+    integer(kind=ikind) :: order3
+
+
+    bod1 = nodes%data(elements%data(el_id,order1),:)
+    bod2 = nodes%data(elements%data(el_id,order2),:)
+
+    if (abs(bod1(1)-bod2(1)) > epsilon(tg)) then
+      tg = (abs(bod2(2)-bod1(2))/abs(bod1(1)-bod2(1)))
+      zcoord = 1/sqrt(1+tg*tg)
+    else
+      zcoord = 0
+    end if
+
+    select case(order1+order2)
+      case(3)
+        order3=3
+      case(4)
+        order3=2
+      case(5)
+        order3=1
+    end select
+    
+    xcoord = sqrt(1-zcoord*zcoord)
+    
+    if (abs(bod1(1)-bod2(1)) < 10*epsilon(bod1(1)) ) then
+      if (nodes%data(elements%data(el_id, order3),1) < bod1(1) ) then
+        xcoord = -xcoord
+      end if
+    else
+      slope = (bod2(2) - bod1(2))/(bod2(1) - bod1(1))
+      if (slope < 0) then
+        if (.not. aboveline(bod1, bod2, nodes%data(elements%data(el_id, order3),:))) then
+          xcoord = -xcoord
+        end if
+      else
+        if ( aboveline(bod1, bod2, nodes%data(elements%data(el_id, order3),:))) then
+          xcoord = -xcoord
+        end if
+      end if
+    end if
+
+  end function get_nx
 
  function inside(domain,bod, atboundary) result(true)
     use typy
