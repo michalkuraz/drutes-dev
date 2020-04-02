@@ -79,26 +79,33 @@ module femmat
         
         call assemble_mat(ierr)
         
-        if (drutes_config%dimen >  1) then
-          call diag_precond(a=spmatrix, x=pde_common%xvect(1:fin,3), mode=1)
+!        if (drutes_config%dimen >  1) then
+!          call diag_precond(a=spmatrix, x=pde_common%xvect(1:fin,3), mode=1)
+!        end if
+        
+        call unify_rows(spmatrix, pde_common%bvect(1:fin))
+
+        if (time > 15) then
+          call spmatrix%write("mtx")
         end if
 
 
         call solve_matrix(spmatrix, pde_common%bvect(1:fin), pde_common%xvect(1:fin,3),  itmax1=fin, &
             reps1=1e-11_rkind, itfin1=pcg_it, repsfin1=reps_err)
             
-        if (pcg_it > 0.25*fin) then 
+        if (pcg_it > 0.55*fin) then 
+        print *, pcg_it
           ierr=-1
         else
           ierr=0
         end if
 		  
 
-        if (drutes_config%dimen >  1) then
-          write(unit=file_itcg, fmt = *) time, pcg_it, reps_err
-          call flush(file_itcg)
-          call diag_precond(a=spmatrix, x=pde_common%xvect(1:fin,3), mode=-1)
-        end if
+!        if (drutes_config%dimen >  1) then
+!          write(unit=file_itcg, fmt = *) time, pcg_it, reps_err
+!          call flush(file_itcg)
+!          call diag_precond(a=spmatrix, x=pde_common%xvect(1:fin,3), mode=-1)
+!        end if
         
     
 

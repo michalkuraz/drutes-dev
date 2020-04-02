@@ -28,5 +28,7 @@ module globals1D
   !> permutation array - how-to permutate, for 1D
   integer(kind=ikind), dimension(:), allocatable, public :: permut_vector
   integer(kind=ikind), dimension(:), allocatable, public :: permut_inverse
+  !> environment aniso angle (specific for 1D -- angle of flow direction
+  real(kind=rkind), public :: angle_1D
 
 end module globals1D

@@ -1492,7 +1492,7 @@ module solvers
     !<
 
     !> metoda sdruzenych gradientu pro normalni rovnice \ref cgn
-    subroutine CGnormal(A,b,x,itmax1,reps1,ilev1,itfin1,repsfin1,&
+   subroutine CGnormal(A,b,x,itmax1,reps1,ilev1,itfin1,repsfin1,&
         ll1,ll2,cond1,opcnt1,errcode1)
         use mtx
         use typy
@@ -1614,7 +1614,7 @@ module solvers
             Ap =A%mul(p,opcnt)
             r1 = dot_product(Ap,Ap)
             wrk = r2/r1
-            if (ilev>1) print *,"alfa=",wrk
+            if (ilev>0) print *,"alfa=",wrk
             alfa(cnt) = wrk
             ! tenhle usek je jen kvuli vypoctu energie
             en = -dot_product(x,b1+res) ! je to vychozi energie
@@ -1626,9 +1626,8 @@ module solvers
             !! Step 6
             r3 = r2
             r2 = dot_product(res,res)
-            if (ilev>0) print *, "residual:", r2 
             wrk = r2/r3
-            if (ilev>1) print *,"beta=",wrk
+            if (ilev>0) print *,"beta=",wrk
             beta(cnt) = wrk
             !! Step 7
             p = res + wrk*p
@@ -1637,13 +1636,8 @@ module solvers
             opcnt%div = opcnt%div + 1
 
             !! odhadnout vlastni cisla
-            if (ilev >0) then
-              call esteig(l1,l2,cnt,alfa,beta)
-              print *, "-----start-------"
-              print *, "eigen values estimate:",l1,l2
-              print *, "conditioning estimate:", l1/l2
-              print *, "------end--------"
-            end if
+!             call esteig(l1,l2,cnt,alfa,beta)
+!             print *, "odhad vl. cisel:",l1,l2
             !! hotovo
 
             cnt = cnt + 1

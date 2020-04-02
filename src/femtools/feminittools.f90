@@ -546,6 +546,7 @@ module feminittools
       subroutine surface_integ()
         use typy
         use globals
+        use globals1D
         use global_objs
         use geom_tools
         use core_tools
@@ -567,9 +568,9 @@ module feminittools
 
             elements%nvect_z = 0.0_rkind
 
-            elements%nvect_z(1,1) = 1.0_rkind
+            elements%nvect_z(1,1) = cos(angle_1D)
 
-            elements%nvect_z(elements%kolik,2) = -1.0_rkind
+            elements%nvect_z(elements%kolik,2) = -cos(angle_1D)
 
           case(2)
           

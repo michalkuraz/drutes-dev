@@ -757,6 +757,7 @@ module readtools
       use typy
       use globals
       use global_objs
+      use globals1D
 !       use debug_tools
 
       !>local anisothoropy values with respect to local x, local y and local z
@@ -775,6 +776,7 @@ module readtools
       select case(drutes_config%dimen)
         case(1)
           tensor(1,1) = values(1)
+          angle_1D = angle(1)
           RETURN
         case(2)
 

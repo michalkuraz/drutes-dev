@@ -28,11 +28,48 @@ module simplelinalg
   public :: invert_matrix
   private ::  determinant
   public :: factorial
+  public :: unify_rows
 
 
     contains
+    
+    subroutine unify_rows(a,b)
+      use typy
+      use sparsematrix
+      use global_objs
+      use debug_tools
+      
+      !> matrix in sparse format
+      class(extsmtx), intent(in out) :: a    
+      real(kind=rkind), dimension(:), intent(in out) :: b
+      
+      integer(kind=ikind) :: fin
+      integer(kind=ikind), dimension(:), allocatable, save :: indices
+      real(kind=rkind), dimension(:), allocatable, save :: values
+      integer(kind=ikind) :: nelem, i, j
+      real(kind=rkind) :: the_sum
+      
+      fin = a%getn()
+      
+      do i=1, fin
+        call a%getrow(i=i, v=values, jj=indices, nelem=nelem)
+        the_sum = 0
+        do j=1, nelem
+          the_sum = the_sum + abs(values(j))
+        end do
+        do j=1, nelem
+          call a%set(values(j)/the_sum, i, indices(j))
+        end do
+        b(i) = b(i)/the_sum
+      end do
+      
+      
+    
+    end subroutine unify_rows
+    
+    
         
-          !> right hand side diagonal preconditioner - preprocessor and postprocesor
+    !> right hand side diagonal preconditioner - preprocessor and postprocesor
     !! preforms the diagonal matrix scaling as described in Kuraz & Mayer: Algorithms for solving Darcian flow in structured porous media
     !! 
     !! the postprocesor performs following operation with the vector of solution
