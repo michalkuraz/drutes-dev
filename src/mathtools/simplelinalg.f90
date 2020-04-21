@@ -33,39 +33,37 @@ module simplelinalg
 
     contains
     
-    subroutine unify_rows(a,b)
-      use typy
-      use sparsematrix
-      use global_objs
-      use debug_tools
-      
-      !> matrix in sparse format
-      class(extsmtx), intent(in out) :: a    
-      real(kind=rkind), dimension(:), intent(in out) :: b
-      
-      integer(kind=ikind) :: fin
-      integer(kind=ikind), dimension(:), allocatable, save :: indices
-      real(kind=rkind), dimension(:), allocatable, save :: values
-      integer(kind=ikind) :: nelem, i, j
-      real(kind=rkind) :: the_sum
-      
-      fin = a%getn()
-      
-      do i=1, fin
-        call a%getrow(i=i, v=values, jj=indices, nelem=nelem)
-        the_sum = 0
-        do j=1, nelem
-          the_sum = the_sum + abs(values(j))
-        end do
-        do j=1, nelem
-          call a%set(values(j)/the_sum, i, indices(j))
-        end do
-        b(i) = b(i)/the_sum
-      end do
-      
-      
-    
-    end subroutine unify_rows
+  subroutine unify_rows(a,b)
+       use typy
+       use sparsematrix
+       use global_objs
+       use debug_tools
+
+       !> matrix in sparse format
+       class(matrix), intent(in out) :: a
+       real(kind=rkind), dimension(:), intent(in out) :: b
+
+       integer(kind=ikind) :: fin
+       integer(kind=ikind), dimension(:), allocatable, save :: indices
+       real(kind=rkind), dimension(:), allocatable, save :: values
+       integer(kind=ikind) :: nelem, i, j
+       real(kind=rkind) :: the_sum
+
+       fin = a%getn()
+
+       do i=1, fin
+         call a%getrow(i=i, v=values, jj=indices, nelem=nelem)
+
+         the_sum = sum(abs(values(1:nelem)))
+
+         do j=1, nelem
+           call a%set(values(j)/the_sum, i, indices(j))
+         end do
+         b(i) = b(i)/the_sum
+       end do
+
+     end subroutine unify_rows
+
     
     
         

@@ -39,6 +39,7 @@ module solvers
     public :: CGnormal
     public :: PCG
     public :: PCGnormal
+    public :: MinRes
     private :: vycdet
     private :: esteig
 
@@ -541,7 +542,7 @@ module solvers
         dprev  = -1
         dstartnext = -1
         degsmin = 0
-!         print *,"step2.1"
+        print *,"step2.1"
         do i=1, A%getn()
             !print *,"i=",i
             call A%getrow(i,r1,ri1,sr1,mp1)
@@ -1409,10 +1410,8 @@ module solvers
             opcnt%div = opcnt%div + 1
 
             !! odhadnout vlastni cisla
-            if (ilev > 0) then
-              call esteig(l1,l2,cnt,alfa,beta)
-              print *, "odhad vl. cisel:",l1,l2
-            end if
+            call esteig(l1,l2,cnt,alfa,beta)
+            print *, "odhad vl. cisel:",l1,l2
             !! hotovo
 
             cnt = cnt + 1
@@ -1492,7 +1491,7 @@ module solvers
     !<
 
     !> metoda sdruzenych gradientu pro normalni rovnice \ref cgn
-   subroutine CGnormal(A,b,x,itmax1,reps1,ilev1,itfin1,repsfin1,&
+    subroutine CGnormal(A,b,x,itmax1,reps1,ilev1,itfin1,repsfin1,&
         ll1,ll2,cond1,opcnt1,errcode1)
         use mtx
         use typy
@@ -1636,8 +1635,8 @@ module solvers
             opcnt%div = opcnt%div + 1
 
             !! odhadnout vlastni cisla
-!             call esteig(l1,l2,cnt,alfa,beta)
-!             print *, "odhad vl. cisel:",l1,l2
+            call esteig(l1,l2,cnt,alfa,beta)
+            print *, "odhad vl. cisel:",l1,l2
             !! hotovo
 
             cnt = cnt + 1
@@ -1938,6 +1937,99 @@ module solvers
 
     subroutine PCGnormal
     end subroutine PCGnormal
+
+
+        !> metoda sdruzenych gradientu pro normalni rovnice \ref cgn
+    subroutine MinRes(A,b,x,itmax1,reps1,ilev1,itfin1,repsfin1,&
+        ll1,ll2,cond1,opcnt1,errcode1)
+        use mtx
+        use typy
+        implicit none
+        !> matice soustavy\n
+        !! musi poskytovat getn, getm, mul (nasobeni vektorem)
+        class(matrix), intent(in) :: A
+        !> vektor prave strany
+        real(kind=rkind), dimension(:), intent(in) :: b
+        !> aproximace reseni, postupne menena
+        real(kind=rkind), dimension(:), intent(in out) :: x
+        !> maximalni povoleny pocet iteraci, default = n ( Rozmer matice)
+        integer(kind=ikind), intent(in), optional :: itmax1
+        !> pozadovana relativni zmena rezidua, default = 1e-6
+        real(kind=rkind), intent(in), optional :: reps1
+        !> informacni podrobnost\n
+        !> - 0 ... pracuj tise
+        !! - 1 ... minimalni informace
+        !! - 10 ... maximalni ukecanost
+        integer, intent(in), optional :: ilev1
+        !> skutecne provedeny pocet iteraci
+        integer(kind=ikind), intent(out), optional :: itfin1
+        !> skutecne dosazena relativni zmena residua
+        real(kind=rkind), intent(out), optional :: repsfin1
+        !> odhad nejvetsiho vlastniho cisla
+        real(kind=rkind), intent(out), optional :: ll1
+        !> odhad nejmensiho vlastniho cisla
+        real(kind=rkind), intent(out), optional :: ll2
+        !> odhad cisla podminenosti : cond1 = ll1/ll2
+        real(kind=rkind), intent(out), optional :: cond1
+        !> celkovy pocet provedenych operaci a cas behu
+        type(tcount), intent(out), optional :: opcnt1
+        !> kod pripadne chyby
+        !! - 0 ... OK
+        !! - 1 ... matice neni ctvercova
+        !! - 2 ... nesouhlasi b
+        !! - 3 ... nesouhasi x
+        !! - 4 ... ani jeden z vektoru nesouhlasi
+        !! - 5 ... vycerpan povoleny pocet iteraci
+        !! - 6 ... prestalo klesat residuum i energie
+        integer, intent(out), optional :: errcode1
+
+        real(rkind), dimension(1:ubound(x,1)) :: y,r
+        integer(ikind) :: itcnt, itmax, ilev
+        real(rkind) :: r2, alfa, reps, r0
+        
+        if(present(itmax1)) then
+          itmax = itmax1
+        else
+          itmax = A%getn()
+        end if
+        
+        if(present(reps1)) then
+          reps = reps1
+        else
+          reps = 10e-10 !default 
+        end if
+        
+        if(present(ilev1)) then
+          ilev = ilev1
+        else
+          ilev = 0
+        end if
+        
+        do itcnt=1,itmax
+            y = A%mul(x)
+            r = b-y
+            y = A%mul(r)
+            r2 = sqrt(dot_product(r,r))
+            if(itcnt == 1) r0 = r2
+            if(r0 < epsilon(r0)*1e-5) then 
+              EXIT
+            end if
+            if(r2/r0 < reps) then 
+              EXIT
+            end if
+            alfa = dot_product(r,y)/dot_product(y,y)
+            x = x + alfa*r
+            if(ilev > 0) print *, itcnt, r2, alfa
+        end do
+        if(present(errcode1)) then
+          if(r2/r0 > reps) then
+            errcode1 = 5
+          else 
+            errcode1 = 0
+          end if
+        end if
+
+end subroutine MinRes
 
     function vycdet(x,a,b,n) result(y)
         use typy
