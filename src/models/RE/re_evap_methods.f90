@@ -1,8 +1,15 @@
 module re_evap_methods
-contains
-  !####################################################################
+  use typy
+  !> if units [m/s] conv_const = 1e-3/86400
+  !! if units [mm/day] conv_const = 1.0
+  !! if different units find on your own
+  !<
+  real(kind=rkind), private :: conv_const = 1.0
+  contains
+
+
     !> 1. McGuiness and Border Method
-	!> val: McGuiness and Border 
+    !> val: McGuiness and Border 
     function McGuinessBorder_fcn(t,Rs) result (val) 
       use typy
       real (kind=rkind), intent(in) ::t,Rs
@@ -12,6 +19,7 @@ contains
       real (kind=rkind) :: val
       !McGuiness and Border [MJ/m2 day]         
       val = ((0.0082*t)-0.19)*(Rs/1500)*2.54
+      val = val*conv_const
     end function McGuinessBorder_fcn
     
    !#################################################################
@@ -143,11 +151,14 @@ contains
     !> 7. Turc Method
     !> val: Turc
     function Turc_fcn (t,Rs) result (val)
-     use typy
-     real (kind=rkind), intent(in) :: t,Rs
-    real (kind=rkind) :: val
+      use typy
+      !> t: input temperature, Rs: solar radiation [m/day]
+      real (kind=rkind), intent(in) :: t,Rs
+      real (kind=rkind) :: val
     !Turc
-     val = 0.013_rkind*(23.88_rkind*(Rs)+ 50_rkind)*(t)*(t+15_rkind)**(-1)
+    
+    
+     val = 0.013_rkind*(23.88_rkind*(Rs)+ 50_rkind)*(t)*(t+15_rkind)**(-1) 
     end function Turc_fcn
     
     
