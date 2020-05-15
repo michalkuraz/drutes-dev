@@ -237,6 +237,68 @@ module simplelinalg
       end do
       
     end function factorial
+    
+    
+    subroutine block_jacobi(A,x,b,no_diag_blocks)
+      use typy
+      use sparsematrix
+      
+      !> input global matrix
+      class(smtx), intent(in) :: A
+      !> global vector with solution
+      real(kind=rkind), dimension(:), intent(in) :: x
+      !> global b-vector
+      real(kind=rkind), dimension(:), intent(out) :: b
+      !> number of diagonal blocks
+      integer(kind=ikind), intent(in) :: no_diag_blocks
+      
+      class(smtx), dimension(:,:), allocatable, save :: blockmat
+      integer(kind=ikind) :: finbig
+      integer(kind=ikind), dimension(:), allocatable, save :: indices
+      real(kind=rkind), dimension(:), allocatable, save :: values
+      integer(kind=ikind) :: nelem, i, j, block_size
+      
+      
+      
+      finbig = A%getn()
+      
+      if (finbig /= A%getm()) then
+        print *, "runtime error, matrix is not square matrix"
+        print *, "exited from simplelinalg::block_jacobi"
+        ERROR STOP
+      end if
+      
+      if (modulo(finbig, no_diag_blocks) /= 0) then
+        print *, "runtime error, matrix cannot be split into required number of blocks"
+        print *, "modulo matrix size vs. number of diagonal blocks is non-zero"
+        print *, "exited from simplelinalg::block_jacobi"
+        ERROR STOP
+      end if
+      
+      block_size = finbig
+      
+      if (.not. allocated(blockmat)) then
+        allocate(blockmat(no_diag_blocks, no_diag_blocks))
+        do i=1, no_diag_blocks
+          do j=1, no_diag_blocks
+            call blockmat(i,j)%init(finbig/no_diag_blocks, finbig/no_diag_blocks)
+          end do
+        end do
+      end if
+      
+!      do i=1, finbig
+!        call a%getrow(i=i, v=values, jj=indices, nelem=nelem)
+        
+      
+!      do i=1, no_diag_blocks
+!        do j=1, no_diag_blocks
+          
+        
+      
+    
+      
+    
+    end subroutine block_jacobi
 
  
 
