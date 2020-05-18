@@ -150,7 +150,7 @@ module evapextras
       use typy
       use global_objs
       use pde_objs
-      use evap_globals
+      use evapglob
       use re_globals
       
       !> Volumetric liquid water  content

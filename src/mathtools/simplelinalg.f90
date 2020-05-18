@@ -239,24 +239,30 @@ module simplelinalg
     end function factorial
     
     
-    subroutine block_jacobi(A,x,b,no_diag_blocks)
+    subroutine block_jacobi(A,xvect,bvect,no_diag_blocks, itcount, repsexit)
       use typy
       use sparsematrix
+      use pde_objs
       
       !> input global matrix
       class(smtx), intent(in) :: A
       !> global vector with solution
-      real(kind=rkind), dimension(:), intent(in) :: x
+      real(kind=rkind), dimension(:), intent(in out) :: xvect
       !> global b-vector
-      real(kind=rkind), dimension(:), intent(out) :: b
+      real(kind=rkind), dimension(:), intent(out) :: bvect
       !> number of diagonal blocks
       integer(kind=ikind), intent(in) :: no_diag_blocks
+      !> iteration count 
+      integer(kind=ikind), intent(out) :: itcount
+      !> required minimal residual
+      real(kind=rkind) :: repsexit
       
       class(smtx), dimension(:,:), allocatable, save :: blockmat
       integer(kind=ikind) :: finbig
       integer(kind=ikind), dimension(:), allocatable, save :: indices
-      real(kind=rkind), dimension(:), allocatable, save :: values
-      integer(kind=ikind) :: nelem, i, j, block_size
+      real(kind=rkind), dimension(:), allocatable, save :: values, xold, biter
+      integer(kind=ikind) :: nelem, i, j, block_size, iblock, jblock, ilocal, jlocal, low, high, pcg_it
+      real(kind=rkind) :: repstot, repslocal
       
       
       
@@ -275,29 +281,83 @@ module simplelinalg
         ERROR STOP
       end if
       
-      block_size = finbig
+      if (ubound(xvect,1) /= finbig) then
+        print *, "x vector has incorrect dimension"
+        print *, "x vector has:", ubound(xvect,1), "components, matrix A has dimension:", finbig
+        print *, "exited from simplelinalg::blockjacobi"
+        ERROR STOP
+      end if
+      
+      if (ubound(bvect,1) /= finbig) then
+        print *, "b vector has incorrect dimension"
+        print *, "b vector has:", ubound(bvect,1), "components, matrix A has dimension:", finbig
+        print *, "exited from simplelinalg::blockjacobi"
+        ERROR STOP
+      end if      
+      
+      block_size = finbig/no_diag_blocks
       
       if (.not. allocated(blockmat)) then
         allocate(blockmat(no_diag_blocks, no_diag_blocks))
-        do i=1, no_diag_blocks
-          do j=1, no_diag_blocks
-            call blockmat(i,j)%init(finbig/no_diag_blocks, finbig/no_diag_blocks)
+        do iblock=1, no_diag_blocks
+          do jblock=1, no_diag_blocks
+            call blockmat(iblock,jblock)%init(finbig/no_diag_blocks, finbig/no_diag_blocks)
           end do
         end do
+        allocate(xold(ubound(xvect,1)))
+        allocate(biter(ubound(xvect,1)))
       end if
       
-!      do i=1, finbig
-!        call a%getrow(i=i, v=values, jj=indices, nelem=nelem)
-        
       
-!      do i=1, no_diag_blocks
-!        do j=1, no_diag_blocks
+      do i=1, finbig
+        call a%getrow(i=i, v=values, jj=indices, nelem=nelem)
+        do j=1, nelem
+          if (modulo(block_size, i) /= 0) then
+            iblock = i/block_size + 1
+          else
+            iblock = i/block_size
+          end if
           
+          if (modulo(block_size,indices(j)) /=0 ) then
+            jblock = indices(j)/block_size + 1
+          else
+            jblock = indices(j)/block_size
+          end if
+          
+          ilocal = i - (iblock-1)*block_size
+          jlocal = indices(j) - (jblock-1)*block_size
+          
+          call blockmat(iblock,jblock)%set(values(j), ilocal, jlocal)
+        end do
+      end do
+          
+      
+      itcount = 0    
+      do    
+        itcount = itcount + 1
+        xold = xvect    
+        do iblock=1, ubound(blockmat,1)
+          low = (iblock-1)*block_size + 1
+          high = iblock*block_size
+          do jblock=1, ubound(blockmat,1)
+            if (iblock /= jblock) then
+              biter(low:high) = bvect(low:high) - blockmat(iblock, jblock)%mul(xold(low:high))
+            else
+              call solve_matrix(blockmat(iblock, iblock), biter(low:high), xvect(low:high), itmax1=block_size, reps1=1e-12, & 
+                                itfin1=pcg_it, repsfin1=repslocal)
+            end if
+          end do
+        end do
         
+        repstot = norm2(bvect - A%mul(xvect))
+        
+        if (repstot < repsexit) then
+          EXIT
+        end if
+      end do
+          
       
-    
-      
-    
+        
     end subroutine block_jacobi
 
  

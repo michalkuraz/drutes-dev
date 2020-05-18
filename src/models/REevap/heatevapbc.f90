@@ -120,8 +120,6 @@ module heatevapbc
         L = latent_heat_wat(quadpnt_loc) 
           
         value = Rn - Hs - L*Ev
-        
-!        value  = 500
    
         write(unit=fileid, fmt=*) time, Rn, -Hs, L*Ev, Ev, value
       

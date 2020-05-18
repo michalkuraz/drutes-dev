@@ -155,9 +155,7 @@ module RE_pointers
       use re_globals
       use re_constitutive
       use re_total
-!       use evap_bc
       use core_tools
-      use  Re_evap_bc
       
       class(pde_str), intent(in out) :: pde_loc
       integer(kind=ikind) :: i
@@ -177,11 +175,14 @@ module RE_pointers
           case(4)
             pde_loc%bc(i)%value_fnc => retot_seepage	
           case(5)
-            if (cut(drutes_config%name) == "vapour") then
+            if (cut(drutes_config%name) == "REevap") then
               CONTINUE
               ! to be linked in vapour_pointers
             else
-              pde_loc%bc(i)%value_fnc => evap_pm_bc
+               print *, "veaporation boundary for Richards eq. currently disbaled"
+               print *, "exited from re_pointers::RE_totheadbc"
+               ERROR STOP
+!              pde_loc%bc(i)%value_fnc => evap_pm_bc
             end if
           case(6,7)
           case default
