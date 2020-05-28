@@ -266,8 +266,7 @@ module simplelinalg
       real(kind=rkind), dimension(:), allocatable, save :: values, xold, biter
       integer(kind=ikind) :: nelem, i, j, iblock, jblock, ilocal, jlocal, xlow, xhigh, blow, bhigh, pcg_it
       integer(kind=ikind) :: i_prev, j_prev, k
-      real(kind=rkind) :: repstot, repslocal
-      
+      real(kind=rkind) :: repstot, repslocal, repsinit
       
       
       finbig = A%getn()
@@ -339,17 +338,28 @@ module simplelinalg
           ilocal = i - i_prev
           jlocal = indices(j) - j_prev
           
-          
+
           call blockmat(iblock,jblock)%set(values(j), ilocal, jlocal)
+
         end do
       end do
           
           
 
-      itcount = 0    
+      itcount = 0   
+      
+      do iblock=1,  ubound(blockmat,1)
+		call LDUd(blockmat(iblock, iblock))
+	  end do
+	  
+	  repsinit = norm2(bvect - A%mul(xvect))
+	  
+	  call A%print() ; stop
+		
       do    
         itcount = itcount + 1
-        xold = xvect    
+        xold = xvect
+        biter = bvect    
         do iblock=1, ubound(blockmat,1)
           blow = blindex(iblock,1)
           bhigh = blindex(iblock,2)
@@ -357,27 +367,21 @@ module simplelinalg
             xlow = blindex(jblock,1)
             xhigh = blindex(jblock,2)
             if (iblock /= jblock) then
-!              (blockmat(iblock, jblock)%mul(xold(xlow:xhigh)))
-
-!              biter(blow:bhigh) =  blockmat(iblock, jblock)%mul(xold(xlow:xhigh))
-!              biter(blow:bhigh) = bvect(blow:bhigh) -  biter(blow:bhigh) 
-                print *, "start", iblock, jblock
-                call  blockmat(iblock, jblock)%print()
-                biter(blow:bhigh) =  blockmat(iblock, jblock)%mul(xold(xlow:xhigh))
-              biter(blow:bhigh) = bvect(blow:bhigh) -  biter(blow:bhigh) 
-              print *, "read"
-              call wait()
+!			  call printmtx(biter(blow:bhigh))
+              
+              biter(blow:bhigh) = bvect(blow:bhigh) - blockmat(iblock, jblock)%mul(xold(xlow:xhigh))
+!              call blockmat(iblock, jblock)%print()
             else
-!              call LDUface(blockmat(iblock, iblock), biter(blow:bhigh), xvect(blow:bhigh))
-              call LDUd(blockmat(iblock, iblock))
               call LDUback(blockmat(iblock, iblock), biter(blow:bhigh), xvect(blow:bhigh))
             end if
           end do
         end do
         
         repstot = norm2(bvect - A%mul(xvect))
+       
         
-        print *, repstot ; call wait()
+        print *, "repstot", repstot, repsinit , itcount
+        call wait()
         
         if (repstot < repsexit) then
           EXIT

@@ -465,7 +465,12 @@ contains
 
         !! spocitame delku
         !!print *, "jsem v getrow sparse"
-        j = a%rowstart(i)
+        if (a%nz == 0) then
+		  nelem = 0
+		  RETURN
+		end if
+		
+		j = a%rowstart(i)
         if (j == -1) then
             !! je to prazdny sloupec
             nelem = 0

@@ -192,7 +192,7 @@ module solver_interfaces
       
 
       
-      call block_jacobi(A, x, b, blindex, iters, 1e-20_rkind)
+      call block_jacobi(A, x, b, blindex, iters, 1e-10_rkind)
       
       
       
