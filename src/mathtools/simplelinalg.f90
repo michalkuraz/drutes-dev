@@ -348,13 +348,13 @@ module simplelinalg
 
       itcount = 0   
       
-      do iblock=1,  ubound(blockmat,1)
-		call LDUd(blockmat(iblock, iblock))
+    do iblock=1,  ubound(blockmat,1)
+      call LDUd(blockmat(iblock, iblock))
 	  end do
 	  
 	  repsinit = norm2(bvect - A%mul(xvect))
 	  
-	  call A%print() ; stop
+
 		
       do    
         itcount = itcount + 1
@@ -377,11 +377,11 @@ module simplelinalg
           end do
         end do
         
-        repstot = norm2(bvect - A%mul(xvect))
+        repstot = norm2(xvect - xold)
        
         
         print *, "repstot", repstot, repsinit , itcount
-        call wait()
+!        call wait()
         
         if (repstot < repsexit) then
           EXIT
