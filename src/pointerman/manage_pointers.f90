@@ -157,7 +157,8 @@ module manage_pointers
 
       select case(drutes_config%dimen)
         case(1)
-            solve_matrix => LDU_face
+!            solve_matrix => LDU_face
+            solve_matrix => blockjacobi_face
             !solve_matrix => Minres_face
 !             solve_matrix => CG_normal_face
         case(2)

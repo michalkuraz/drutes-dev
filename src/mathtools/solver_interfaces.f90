@@ -121,7 +121,83 @@ module solver_interfaces
         end if
 
     end subroutine LDU_face
+    
+    
+    subroutine blockjacobi_face(A,b,x,itmax1,reps1,ilev1,itfin1,repsfin1,&
+                ll1,ll2,cond1,opcnt1,errcode1)
+      use mtx
+      use typy
+      use sparsematrix
+      use solvers
+      use simplelinalg
+      use pde_objs
+      use debug_tools
 
+      implicit none
+      !> matice soustavy\n
+      !! musi poskytovat getn, getm, mul (nasobeni vektorem)
+      class(matrix), intent(in out) :: A
+      !> vektor prave strany
+      real(kind=rkind), dimension(:), intent(in) :: b
+      !> aproximace reseni, postupne menena
+      real(kind=rkind), dimension(:), intent(in out) :: x
+      !> maximalni povoleny pocet iteraci, default = n ( Rozmer matice)
+      integer(kind=ikind), intent(in), optional :: itmax1
+      !> pozadovana relativni zmena rezidua, default = 1e-6
+      real(kind=rkind), intent(in), optional :: reps1
+      !> informacni podrobnost\n
+      !> - 0 ... pracuj tise
+      !! - 1 ... minimalni informace
+      !! - 10 ... maximalni ukecanost
+      integer, intent(in), optional :: ilev1
+      !> skutecne provedeny pocet iteraci
+      integer(kind=ikind), intent(out), optional :: itfin1
+      !> skutecne dosazena relativni zmena residua
+      real(kind=rkind), intent(out), optional :: repsfin1
+      !> odhad nejvetsiho vlastniho cisla
+      real(kind=rkind), intent(out), optional :: ll1
+      !> odhad nejmensiho vlastniho cisla
+      real(kind=rkind), intent(out), optional :: ll2
+      !> odhad cisla podminenosti : cond1 = ll1/ll2
+      real(kind=rkind), intent(out), optional :: cond1
+      !> celkovy pocet provedenych operaci a cas behu
+      type(tcount), intent(out), optional :: opcnt1
+      !> kod pripadnr chyby
+      !! - 0 ... OK
+      !! - 1 ... matice neni ctvercova
+      !! - 2 ... nesouhlasi b
+      !! - 3 ... nesouhasi x
+      !! - 4 ... ani jeden z vektoru nesouhlasi
+      !! - 5 ... vycerpan povoleny pocet iteraci
+      !! - 6 ... prestalo klesat residuum i energie
+      integer, intent(out), optional :: errcode1
+      integer :: ilevel
+      integer(kind=ikind), dimension(:,:), allocatable, save :: blindex
+      integer(kind=ikind) :: i, start, iters
+
+      if (.not. present(ilev1) ) then
+        ilevel = 0
+      else
+        ilevel = ilev1
+      end if
+  
+
+      if (.not. allocated(blindex)) then
+        allocate(blindex(ubound(pde,1),2))
+        do i=1, ubound(pde,1)
+          blindex(i,1) = minval(pde(i)%permut)
+          blindex(i,2) = maxval(pde(i)%permut)
+        end do  
+      end if
+      
+
+      
+      call block_jacobi(A, x, b, blindex, iters, 1e-20_rkind)
+      
+      
+      
+      
+    end subroutine blockjacobi_face
 
     subroutine CG_face(A,b,x,itmax1,reps1,ilev1,itfin1,repsfin1,&
                 ll1,ll2,cond1,opcnt1,errcode1)

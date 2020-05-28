@@ -239,29 +239,33 @@ module simplelinalg
     end function factorial
     
     
-    subroutine block_jacobi(A,xvect,bvect,no_diag_blocks, itcount, repsexit)
+    subroutine block_jacobi(A,xvect,bvect,blindex, itcount, repsexit)
       use typy
       use sparsematrix
       use pde_objs
+      use solvers
+      use debug_tools
       
       !> input global matrix
-      class(smtx), intent(in) :: A
+      class(matrix), intent(in out) :: A
       !> global vector with solution
       real(kind=rkind), dimension(:), intent(in out) :: xvect
       !> global b-vector
-      real(kind=rkind), dimension(:), intent(out) :: bvect
-      !> number of diagonal blocks
-      integer(kind=ikind), intent(in) :: no_diag_blocks
+      real(kind=rkind), dimension(:), intent(in) :: bvect
+      !> indeces of matrix diagonal blocks, 1st column start indices, 2nd column end indices
+      integer(kind=ikind), dimension(:,:), intent(in) :: blindex
       !> iteration count 
       integer(kind=ikind), intent(out) :: itcount
       !> required minimal residual
       real(kind=rkind) :: repsexit
       
       class(smtx), dimension(:,:), allocatable, save :: blockmat
+      integer(kind=ikind) :: no_blocks
       integer(kind=ikind) :: finbig
       integer(kind=ikind), dimension(:), allocatable, save :: indices
       real(kind=rkind), dimension(:), allocatable, save :: values, xold, biter
-      integer(kind=ikind) :: nelem, i, j, block_size, iblock, jblock, ilocal, jlocal, low, high, pcg_it
+      integer(kind=ikind) :: nelem, i, j, iblock, jblock, ilocal, jlocal, xlow, xhigh, blow, bhigh, pcg_it
+      integer(kind=ikind) :: i_prev, j_prev, k
       real(kind=rkind) :: repstot, repslocal
       
       
@@ -274,12 +278,6 @@ module simplelinalg
         ERROR STOP
       end if
       
-      if (modulo(finbig, no_diag_blocks) /= 0) then
-        print *, "runtime error, matrix cannot be split into required number of blocks"
-        print *, "modulo matrix size vs. number of diagonal blocks is non-zero"
-        print *, "exited from simplelinalg::block_jacobi"
-        ERROR STOP
-      end if
       
       if (ubound(xvect,1) /= finbig) then
         print *, "x vector has incorrect dimension"
@@ -295,13 +293,15 @@ module simplelinalg
         ERROR STOP
       end if      
       
-      block_size = finbig/no_diag_blocks
+      no_blocks = ubound(blindex,1)
+
+
       
       if (.not. allocated(blockmat)) then
-        allocate(blockmat(no_diag_blocks, no_diag_blocks))
-        do iblock=1, no_diag_blocks
-          do jblock=1, no_diag_blocks
-            call blockmat(iblock,jblock)%init(finbig/no_diag_blocks, finbig/no_diag_blocks)
+        allocate(blockmat(no_blocks, no_blocks))
+        do iblock=1, no_blocks
+          do jblock=1, no_blocks
+            call blockmat(iblock,jblock)%init(blindex(iblock,2)-blindex(iblock,1)+1, blindex(iblock,2)-blindex(iblock,1)+1)
           end do
         end do
         allocate(xold(ubound(xvect,1)))
@@ -312,44 +312,72 @@ module simplelinalg
       do i=1, finbig
         call a%getrow(i=i, v=values, jj=indices, nelem=nelem)
         do j=1, nelem
-          if (modulo(block_size, i) /= 0) then
-            iblock = i/block_size + 1
+          do k=1, no_blocks
+            if (i >= blindex(k,1) .and. i <= blindex(k,2) ) then
+              iblock = k
+            end if
+            
+            if (indices(j) >= blindex(k,1) .and. indices(j) <= blindex(k,2) ) then
+              jblock = k
+            end if
+          end do
+        
+          
+          if (iblock > 1) then
+            i_prev = blindex(iblock-1,2)
           else
-            iblock = i/block_size
+            i_prev = 0
           end if
           
-          if (modulo(block_size,indices(j)) /=0 ) then
-            jblock = indices(j)/block_size + 1
+          if (jblock > 1) then
+            j_prev = blindex(jblock-1,2)
           else
-            jblock = indices(j)/block_size
+            j_prev = 0
           end if
+            
           
-          ilocal = i - (iblock-1)*block_size
-          jlocal = indices(j) - (jblock-1)*block_size
+          ilocal = i - i_prev
+          jlocal = indices(j) - j_prev
+          
           
           call blockmat(iblock,jblock)%set(values(j), ilocal, jlocal)
         end do
       end do
           
-      
+          
+
       itcount = 0    
       do    
         itcount = itcount + 1
         xold = xvect    
         do iblock=1, ubound(blockmat,1)
-          low = (iblock-1)*block_size + 1
-          high = iblock*block_size
+          blow = blindex(iblock,1)
+          bhigh = blindex(iblock,2)
           do jblock=1, ubound(blockmat,1)
+            xlow = blindex(jblock,1)
+            xhigh = blindex(jblock,2)
             if (iblock /= jblock) then
-              biter(low:high) = bvect(low:high) - blockmat(iblock, jblock)%mul(xold(low:high))
+!              (blockmat(iblock, jblock)%mul(xold(xlow:xhigh)))
+
+!              biter(blow:bhigh) =  blockmat(iblock, jblock)%mul(xold(xlow:xhigh))
+!              biter(blow:bhigh) = bvect(blow:bhigh) -  biter(blow:bhigh) 
+                print *, "start", iblock, jblock
+                call  blockmat(iblock, jblock)%print()
+                biter(blow:bhigh) =  blockmat(iblock, jblock)%mul(xold(xlow:xhigh))
+              biter(blow:bhigh) = bvect(blow:bhigh) -  biter(blow:bhigh) 
+              print *, "read"
+              call wait()
             else
-              call solve_matrix(blockmat(iblock, iblock), biter(low:high), xvect(low:high), itmax1=block_size, reps1=1e-12, & 
-                                itfin1=pcg_it, repsfin1=repslocal)
+!              call LDUface(blockmat(iblock, iblock), biter(blow:bhigh), xvect(blow:bhigh))
+              call LDUd(blockmat(iblock, iblock))
+              call LDUback(blockmat(iblock, iblock), biter(blow:bhigh), xvect(blow:bhigh))
             end if
           end do
         end do
         
         repstot = norm2(bvect - A%mul(xvect))
+        
+        print *, repstot ; call wait()
         
         if (repstot < repsexit) then
           EXIT
