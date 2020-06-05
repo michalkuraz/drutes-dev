@@ -153,11 +153,12 @@ module pde_objs
       subroutine matrix_solver(A,b,x,itmax1,reps1,ilev1,itfin1,repsfin1,&
                   ll1,ll2,cond1,opcnt1,errcode1)
         use mtx
+        use sparsematrix
         use typy
         implicit none
         !> matice soustavy\n
         !! musi poskytovat getn, getm, mul (nasobeni vektorem)
-        class(matrix), intent(in out) :: A
+        class(smtx), intent(in out) :: A
         !> vektor prave strany
         real(kind=rkind), dimension(:), intent(in) :: b
         !> aproximace reseni, postupne menena

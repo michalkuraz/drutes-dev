@@ -54,11 +54,12 @@ module solver_interfaces
                 ll1,ll2,cond1,opcnt1,errcode1)
       use mtx
       use typy
+      use sparsematrix
       use solvers
       implicit none
       !> matice soustavy\n
       !! musi poskytovat getn, getm, mul (nasobeni vektorem)
-      class(matrix), intent(in out) :: A
+      class(smtx), intent(in out) :: A
       !> vektor prave strany
       real(kind=rkind), dimension(:), intent(in) :: b
       !> aproximace reseni, postupne menena
@@ -126,6 +127,7 @@ module solver_interfaces
     subroutine blockjacobi_face(A,b,x,itmax1,reps1,ilev1,itfin1,repsfin1,&
                 ll1,ll2,cond1,opcnt1,errcode1)
       use mtx
+      use sparsematrix
       use typy
       use sparsematrix
       use solvers
@@ -136,7 +138,7 @@ module solver_interfaces
       implicit none
       !> matice soustavy\n
       !! musi poskytovat getn, getm, mul (nasobeni vektorem)
-      class(matrix), intent(in out) :: A
+      class(smtx), intent(in out) :: A
       !> vektor prave strany
       real(kind=rkind), dimension(:), intent(in) :: b
       !> aproximace reseni, postupne menena
@@ -173,7 +175,7 @@ module solver_interfaces
       integer, intent(out), optional :: errcode1
       integer :: ilevel
       integer(kind=ikind), dimension(:,:), allocatable, save :: blindex
-      integer(kind=ikind) :: i, start, iters
+      integer(kind=ikind) :: i, start, iters, itmax
 
       if (.not. present(ilev1) ) then
         ilevel = 0
@@ -190,9 +192,10 @@ module solver_interfaces
         end do  
       end if
       
-
+!      itmax =  int(itfin1/10.0)+1
+      itmax = itmax1
       
-      call block_jacobi(A, x, b, blindex, iters, 1e-10_rkind)
+      call block_jacobi(A, x, b, blindex, iters, reps1, itmax)
       
       
       
@@ -208,7 +211,7 @@ module solver_interfaces
       implicit none
       !> matice soustavy\n
       !! musi poskytovat getn, getm, mul (nasobeni vektorem)
-      class(matrix), intent(in out) :: A
+      class(smtx), intent(in out) :: A
       !> vektor prave strany
       real(kind=rkind), dimension(:), intent(in) :: b
       !> aproximace reseni, postupne menena
@@ -268,7 +271,7 @@ module solver_interfaces
       implicit none
       !> matice soustavy\n
       !! musi poskytovat getn, getm, mul (nasobeni vektorem)
-      class(matrix), intent(in out) :: A
+      class(smtx), intent(in out) :: A
       !> vektor prave strany
       real(kind=rkind), dimension(:), intent(in) :: b
       !> aproximace reseni, postupne menena
@@ -321,12 +324,13 @@ module solver_interfaces
     subroutine jacobi_face(A,b,x,itmax1,reps1,ilev1,itfin1,repsfin1,&
                 ll1,ll2,cond1,opcnt1,errcode1)
       use mtx
+      use sparsematrix
       use typy
       use solvers
       implicit none
       !> matice soustavy\n
       !! musi poskytovat getn, getm, mul (nasobeni vektorem)
-      class(matrix), intent(in out) :: A
+      class(smtx), intent(in out) :: A
       !> vektor prave strany
       real(kind=rkind), dimension(:), intent(in) :: b
       !> aproximace reseni, postupne menena
@@ -401,7 +405,7 @@ module solver_interfaces
       implicit none
       !> matice soustavy\n
       !! musi poskytovat getn, getm, mul (nasobeni vektorem)
-      class(matrix), intent(in out) :: A
+      class(smtx), intent(in out) :: A
       !> vektor prave strany
       real(kind=rkind), dimension(:), intent(in) :: b
       !> aproximace reseni, postupne menena

@@ -74,7 +74,7 @@ program main
       close(fileid)
     end if
 
-    version_id%number = "6.0/2019"
+    version_id%number = "6.0/2020"
     version_id%reliability = "beta "
     
     call get_cmd_options()

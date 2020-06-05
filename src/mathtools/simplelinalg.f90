@@ -239,15 +239,17 @@ module simplelinalg
     end function factorial
     
     
-    subroutine block_jacobi(A,xvect,bvect,blindex, itcount, repsexit)
+    subroutine block_jacobi(A,xvect,bvect,blindex, itcount, repsexit, maxitcount)
       use typy
       use sparsematrix
       use pde_objs
       use solvers
       use debug_tools
+      use globals
+      use printtools
       
       !> input global matrix
-      class(matrix), intent(in out) :: A
+      class(smtx), intent(in out) :: A
       !> global vector with solution
       real(kind=rkind), dimension(:), intent(in out) :: xvect
       !> global b-vector
@@ -258,6 +260,8 @@ module simplelinalg
       integer(kind=ikind), intent(out) :: itcount
       !> required minimal residual
       real(kind=rkind) :: repsexit
+      !> maximal iteration count
+      integer(kind=ikind), intent(in) :: maxitcount
       
       class(smtx), dimension(:,:), allocatable, save :: blockmat
       integer(kind=ikind) :: no_blocks
@@ -266,10 +270,12 @@ module simplelinalg
       real(kind=rkind), dimension(:), allocatable, save :: values, xold, biter
       integer(kind=ikind) :: nelem, i, j, iblock, jblock, ilocal, jlocal, xlow, xhigh, blow, bhigh, pcg_it
       integer(kind=ikind) :: i_prev, j_prev, k
-      real(kind=rkind) :: repstot, repslocal, repsinit
-      
+      real(kind=rkind) :: repstot, repslocal
+      integer, save :: itfile
+    
       
       finbig = A%getn()
+
       
       if (finbig /= A%getm()) then
         print *, "runtime error, matrix is not square matrix"
@@ -294,7 +300,6 @@ module simplelinalg
       
       no_blocks = ubound(blindex,1)
 
-
       
       if (.not. allocated(blockmat)) then
         allocate(blockmat(no_blocks, no_blocks))
@@ -305,6 +310,9 @@ module simplelinalg
         end do
         allocate(xold(ubound(xvect,1)))
         allocate(biter(ubound(xvect,1)))
+        open(newunit=itfile, file="out/BJ.iterations", status="replace", action="write")
+        call print_logo(itfile)
+        write(unit=itfile, fmt=*) "# time                            iterations       final iteration increment" 
       end if
       
       
@@ -341,55 +349,56 @@ module simplelinalg
 
           call blockmat(iblock,jblock)%set(values(j), ilocal, jlocal)
 
+
         end do
       end do
           
-          
 
-      itcount = 0   
-      
-    do iblock=1,  ubound(blockmat,1)
-      call LDUd(blockmat(iblock, iblock))
-	  end do
-	  
-	  repsinit = norm2(bvect - A%mul(xvect))
-	  
+      itcount = 0
+    
 
-		
+      do iblock=1,  ubound(blockmat,1)
+        call LDUd(blockmat(iblock, iblock))
+      end do
+
+	
       do    
         itcount = itcount + 1
         xold = xvect
-        biter = bvect    
         do iblock=1, ubound(blockmat,1)
           blow = blindex(iblock,1)
           bhigh = blindex(iblock,2)
           do jblock=1, ubound(blockmat,1)
             xlow = blindex(jblock,1)
             xhigh = blindex(jblock,2)
-            if (iblock /= jblock) then
-!			  call printmtx(biter(blow:bhigh))
-              
+            if (iblock /= jblock) then          
               biter(blow:bhigh) = bvect(blow:bhigh) - blockmat(iblock, jblock)%mul(xold(xlow:xhigh))
-!              call blockmat(iblock, jblock)%print()
-            else
-              call LDUback(blockmat(iblock, iblock), biter(blow:bhigh), xvect(blow:bhigh))
             end if
           end do
         end do
         
+        do iblock=1, ubound(blockmat,1)
+          blow = blindex(iblock,1)
+          bhigh = blindex(iblock,2)
+          call LDUback(blockmat(iblock, iblock), biter(blow:bhigh), xvect(blow:bhigh))
+        end do  
+  
         repstot = norm2(xvect - xold)
        
-        
-        print *, "repstot", repstot, repsinit , itcount
-!        call wait()
-        
         if (repstot < repsexit) then
+          write(unit=terminal, fmt=*) "Block Jacobi iteration count:", itcount
+          write(unit=itfile, fmt=*) time, itcount, repstot
           EXIT
         end if
-      end do
-          
-      
         
+        if (itcount > maxitcount) then
+          write(unit=terminal, fmt=*) "Block Jacobi failed to converge, the maximal allowed number of iterations was:", maxitcount
+          ERROR STOP
+        end if
+        
+      end do
+
+    
     end subroutine block_jacobi
 
  
