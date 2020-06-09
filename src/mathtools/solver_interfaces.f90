@@ -195,7 +195,7 @@ module solver_interfaces
 !      itmax =  int(itfin1/10.0)+1
       itmax = itmax1
       
-      call block_jacobi(A, x, b, blindex, iters, reps1, itmax)
+      call block_jacobi(A, x, b, blindex, iters, reps1, itmax, .true.)
       
       
       

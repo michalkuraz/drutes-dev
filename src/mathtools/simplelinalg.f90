@@ -239,7 +239,7 @@ module simplelinalg
     end function factorial
     
     
-    subroutine block_jacobi(A,xvect,bvect,blindex, itcount, repsexit, maxitcount)
+    subroutine block_jacobi(A,xvect,bvect,blindex, itcount, repsexit, maxitcount, details)
       use typy
       use sparsematrix
       use pde_objs
@@ -247,6 +247,7 @@ module simplelinalg
       use debug_tools
       use globals
       use printtools
+      use core_tools
       
       !> input global matrix
       class(smtx), intent(in out) :: A
@@ -262,6 +263,8 @@ module simplelinalg
       real(kind=rkind) :: repsexit
       !> maximal iteration count
       integer(kind=ikind), intent(in) :: maxitcount
+      !> if present and true prints Frobenius norms of submatrices
+      logical, intent(in), optional :: details
       
       class(smtx), dimension(:,:), allocatable, save :: blockmat
       integer(kind=ikind) :: no_blocks
@@ -272,6 +275,8 @@ module simplelinalg
       integer(kind=ikind) :: i_prev, j_prev, k
       real(kind=rkind) :: repstot, repslocal
       integer, save :: itfile
+      real(kind=rkind), dimension(:,:), allocatable, save :: frobnorms
+      character(len=4096) :: text
     
       
       finbig = A%getn()
@@ -312,7 +317,18 @@ module simplelinalg
         allocate(biter(ubound(xvect,1)))
         open(newunit=itfile, file="out/BJ.iterations", status="replace", action="write")
         call print_logo(itfile)
-        write(unit=itfile, fmt=*) "# time                            iterations       final iteration increment" 
+        if (.not. present(details)) then
+          write(unit=itfile, fmt=*) "# time                            iterations       final iteration increment" 
+        else
+          write(unit=itfile, fmt=*) "# time                            iterations       final iteration increment,   frobnorm(1,2) &
+                    .          frobnorm(2,1)"
+          write(unit=itfile, fmt=*) "#                                                                               ------------- &
+                    .          -------------"
+          write(unit=itfile, fmt=*) "#                                                                               frobnorm(1,1) &
+                    .         frobnorm(2,2)"
+          write(unit=itfile, fmt=*) "# "          
+          write(unit=itfile, fmt=*) "#  ------------------------------------------------------------------------------------------"
+        end if
       end if
       
       
@@ -355,7 +371,23 @@ module simplelinalg
           
 
       itcount = 0
-    
+      
+      if (present(details)) then
+        if (details) then
+          if (.not. allocated(frobnorms)) allocate(frobnorms(ubound(blockmat,1),ubound(blockmat,2) ))
+          frobnorms = 0
+          do iblock=1, ubound(blockmat,1)
+            do jblock=1, ubound(blockmat,2)
+              do i=1, blockmat(iblock, jblock)%getn()
+                call blockmat(iblock, jblock)%getrow(i=i, v=values, jj=indices, nelem=nelem)
+                do j=1, nelem
+                  frobnorms(iblock, jblock) = frobnorms(iblock, jblock) + abs(values(j))
+                end do
+              end do
+            end do  
+          end do        
+        end if
+      end if
 
       do iblock=1,  ubound(blockmat,1)
         call LDUd(blockmat(iblock, iblock))
@@ -387,16 +419,26 @@ module simplelinalg
        
         if (repstot < repsexit) then
           write(unit=terminal, fmt=*) "Block Jacobi iteration count:", itcount
-          write(unit=itfile, fmt=*) time, itcount, repstot
+          write(unit=itfile, fmt=*) time, itcount, repstot, frobnorms(1,2)/frobnorms(1,1), frobnorms(2,1)/frobnorms(2,2)
           EXIT
         end if
         
         if (itcount > maxitcount) then
-          write(unit=terminal, fmt=*) "Block Jacobi failed to converge, the maximal allowed number of iterations was:", maxitcount
+          call write_log(text="Block Jacobi failed to converge, the maximal allowed number of iterations was:", int1=maxitcount)
+          if (present(details)) then
+            if (details) then
+              write(unit=text, fmt=*) frobnorms(1,2)/frobnorms(1,1), frobnorms(2,1)/frobnorms(2,2)
+              call write_log(text="Frobenius submatrices norms were:", text2=cut(text))
+            end if
+          end if
+              
           ERROR STOP
         end if
         
       end do
+      
+
+                  
 
     
     end subroutine block_jacobi
