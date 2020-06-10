@@ -156,9 +156,11 @@ module RE_pointers
       use re_constitutive
       use re_total
       use core_tools
+      use re_evap_methods
       
       class(pde_str), intent(in out) :: pde_loc
       integer(kind=ikind) :: i
+      
       
       do i=lbound(pde_loc%bc,1), ubound(pde_loc%bc,1)
         select case(pde_loc%bc(i)%code)
@@ -179,10 +181,8 @@ module RE_pointers
               CONTINUE
               ! to be linked in vapour_pointers
             else
-               print *, "veaporation boundary for Richards eq. currently disbaled"
-               print *, "exited from re_pointers::RE_totheadbc"
-               ERROR STOP
-!              pde_loc%bc(i)%value_fnc => evap_pm_bc
+
+              pde_loc%bc(i)%value_fnc => REevapbc_face
             end if
           case(6,7)
           case default

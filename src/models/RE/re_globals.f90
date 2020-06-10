@@ -64,5 +64,7 @@ module re_globals
   real(kind=rkind), public :: Tref = 273.15_rkind
   !> for evaporation
   integer(kind=ikind), public :: day_in_month, month_in_year,  init_year
+  
+  character(len=256) :: evap_name
    
 end module re_globals

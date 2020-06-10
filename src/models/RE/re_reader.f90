@@ -242,15 +242,43 @@ module re_reader
 		      
       close(file_waterm)
       
-!        !> Calle reader if the user select atmospheric boundary
-!       do i=lbound(pde_loc%bc,1), ubound(pde_loc%bc,1)
-!         if (pde_loc%bc(i)%code == 5) then 
-!           call Re_evap_var()
-!         end if 
-!       end do
+      !> Call reader if the user select atmospheric boundary
+       do i=lbound(pde_loc%bc,1), ubound(pde_loc%bc,1)
+         if (pde_loc%bc(i)%code == 5) then 
+           call REevapbc_read()
+           exit
+         end if 
+       end do
             
 
     end subroutine res_read
+    
+    
+    
+    subroutine REevapbc_read()
+      use typy
+      use globals
+      use readtools
+      use re_globals
+      
+      integer :: fileid, ierr
+      character(len=256), dimension(1) :: evapnames
+      
+      open(newunit=fileid, file="drutes.conf/water.conf/evap.conf", status="old", action="read", iostat=ierr)
+      
+      if (ierr /= 0) then
+        print *, "file drutes.conf/water.conf/evap.conf doesn't exist, exiting...."
+        ERROR STOP
+      end if
+      
+      evapnames(1) = "thorn"
+      
+      call fileread(evap_name, fileid, options=evapnames)
+    
+      
+      
+    
+    end subroutine REevapbc_read
 
 
    

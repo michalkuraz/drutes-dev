@@ -1,6 +1,8 @@
 module re_evap_methods
  use typy
  
+  public :: REevapbc_face
+  
   
   public :: McGuinessBorder_fcn
   public :: makkink_fcn
@@ -26,10 +28,70 @@ module re_evap_methods
   !! if different units find on your own
   !<
   
-  real(kind=rkind), private :: conv_const = 1.0
+  real(kind=rkind), private :: conv_const = 1e-3/86400
   
   
   contains
+  
+  
+    subroutine REevapbc_face(pde_loc, el_id, node_order, value, code, array) 
+      use typy
+      use globals
+      use global_objs
+      use pde_objs
+      use re_globals
+      use core_tools
+
+      class(pde_str), intent(in) :: pde_loc
+      integer(kind=ikind), intent(in)  :: el_id, node_order
+      real(kind=rkind), intent(out), optional    :: value
+      integer(kind=ikind), intent(out), optional :: code
+      real(kind=rkind), dimension(:), intent(out), optional :: array
+      
+      real(kind=rkind) :: avgtemp, theta
+      integer(kind=ikind) :: i,j, edge_id, layer
+      integer(kind=ikind), save :: pos=1
+      type(integpnt_str) :: quadpnt
+  
+      if (present(value)) then
+        edge_id = nodes%edge(elements%data(el_id, node_order))
+        quadpnt%type_pnt = "ndpt"
+        quadpnt%order = elements%data(el_id,node_order)
+        quadpnt%column = 2
+        
+        layer = elements%material(el_id)
+  !      print *, "tady"
+        theta = pde_loc%mass(1)%val(pde_loc, layer, quadpnt)
+    
+        
+        do i=pos, ubound(pde_loc%bc(edge_id)%series,1)
+          if (pde_loc%bc(edge_id)%series(i,1) > time) then
+            if (i > 1) then
+              pos = i-1
+            else
+              pos = i
+            end if
+            EXIT
+          end if
+        end do
+    
+        
+        
+        select case(cut(evap_name))
+          case ("thorn")
+            avgtemp = pde_loc%bc(edge_id)%series(pos,2)
+            value =  theta*Thornthwaite_fcn (avgtemp)
+        end select
+      end if
+      
+      if (present(code)) then
+        code = 2
+      end if
+            
+      
+      
+      
+    end subroutine REevapbc_face
 
     ! 1. METHOD BASED IN TEMPERATURE 
     

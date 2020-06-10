@@ -111,9 +111,9 @@ program main
     call init_measured()
   
     call write_log("number of nodes:", int1=nodes%kolik, text2="number of elements:", int2=elements%kolik)
-        
-    call set_pointers()
 
+    call set_pointers()
+    
     call init_observe()
 
     call feminit()

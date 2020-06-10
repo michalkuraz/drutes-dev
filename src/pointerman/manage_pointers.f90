@@ -68,10 +68,11 @@ module manage_pointers
           write(unit=drutes_config%fullname, fmt=*) "Richards' equation, in", drutes_config%dimen, &
             "D, in total hydraulic head form."
           call RE_processes(pde_common%processes)
+
           call pde_constructor(pde_common%processes)
 
           call REstdH(pde(1))
-        
+              
               
         case("boussi")   
            write(unit=drutes_config%fullname, fmt=*) " Boussinesq equation for hillslope runoff", &
@@ -157,8 +158,8 @@ module manage_pointers
 
       select case(drutes_config%dimen)
         case(1)
-!            solve_matrix => LDU_face
-            solve_matrix => blockjacobi_face
+            solve_matrix => LDU_face
+!            solve_matrix => blockjacobi_face
             !solve_matrix => Minres_face
 !             solve_matrix => CG_normal_face
         case(2)
