@@ -22,7 +22,7 @@ servers="miguel@neptun01.fsv.cvut.cz:~  miguel@matsrv-lin01.fsv.cvut.cz:~ miguel
 
 
 #----------------objects definitions-------------------------------
-CORE_obj := typy.o global_objs.o globals.o globals1D.o globals2D.o  debug_tools.o core_tools.o pde_objs.o dummy_procs.o
+CORE_obj := typy.o global_objs.o globals.o globals1D.o globals2D.o  debug_tools.o core_tools.o pde_objs.o dummy_procs.o global4solver.o
 POINTERMAN_obj := manage_pointers.o
 RE_obj := re_constitutive.o re_reader.o re_globals.o re_total.o re_pointers.o re_analytical.o re_evap_methods.o
 MATHTOOLS_obj :=  linalg.o integral.o solver_interfaces.o simplelinalg.o
@@ -48,6 +48,8 @@ typy.o: src/core/typy.f90
 	$c -c src/core/typy.f90 
 global_objs.o: typy.o $(PMAoo_obj) src/core/global_objs.f90
 	$c -c src/core/global_objs.f90
+global4solver.o: typy.o src/core/global4solver.f90
+	$c -c src/core/global4solver.f90
 pde_objs.o: typy.o global_objs.o $(PMAoo_obj) globals.o decomp_vars.o  src/core/pde_objs.f90
 	$c -c src/core/pde_objs.f90
 globals.o: typy.o global_objs.o src/core/globals.f90
