@@ -275,7 +275,7 @@ module re_evap_methods
     !> val: BlaneyCriddle method
     function BlaneyCriddle_fcn (p,tmin) result (val)
         use typy
-            real (kind=rkind), intent(in) :: q,tmin
+            real (kind=rkind), intent(in) :: p,tmin
             real (kind=rkind) :: val
             !>p: daily percentage of annual daytime hours
             !>tmin = minimum temperarure [°C]
