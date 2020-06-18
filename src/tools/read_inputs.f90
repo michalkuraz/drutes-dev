@@ -41,17 +41,9 @@ module read_inputs
       real(kind=rkind), dimension(3) :: tmp
       character(len=4096) :: filename
       character(len=8192) :: msg
-      integer :: local, global
       character(len=256), dimension(12) :: probnames
       character(len=2) :: dimensions
       
-      if (.not. www) then
-        local = file_global
-        global = file_global
-      else
-        local = file_global
-        global = file_wwwglob
-      end if
 
       
        write(msg, *) "Incorrect option for problem type, the available options are:", new_line("a"),  new_line("a"), new_line("a"),&
@@ -96,9 +88,9 @@ module read_inputs
       probnames(12) = "REevap"
       
 	
-      call fileread(drutes_config%name, local, trim(msg), options=probnames)
+      call fileread(drutes_config%name, file_global, trim(msg), options=probnames)
 
-      call fileread(dimensions, local, options=(/"1 ","2 ","2r","3 "/))
+      call fileread(dimensions, file_global, options=(/"1 ","2 ","2r","3 "/))
       
       select case(cut(dimensions))
         case("1","2")
@@ -115,7 +107,7 @@ module read_inputs
         write(msg, fmt=*) 'You have selected Boussinesq equation, Boussinesq equation originates from Dupuit &
 		   approximation, and so it is assumed for 1D only!!! &
 		   '//NEW_LINE('A')//'    But your domain was specified for: ', drutes_config%dimen, "D"
-        call file_error(local, msg)
+        call file_error(file_global, msg)
       end if
       
 
@@ -126,28 +118,28 @@ module read_inputs
        "                           3 - gmsh mesh generator"
 
 
-      call fileread(drutes_config%mesh_type, local,msg,ranges=(/1_ikind,3_ikind/))
+      call fileread(drutes_config%mesh_type, file_global,msg,ranges=(/1_ikind,3_ikind/))
       
-      call fileread(max_itcount, local, ranges=(/1_ikind, huge(1_ikind)/), &
+      call fileread(max_itcount, file_global, ranges=(/1_ikind, huge(1_ikind)/), &
       errmsg="maximal number of iterations must be positive, greater than 1, &
 	      and smaller than the maximal number your computer can handle :)")
       
-      call fileread(iter_criterion, local, ranges=(/0.0_rkind, huge(0.0_rkind)/), &
+      call fileread(iter_criterion, file_global, ranges=(/0.0_rkind, huge(0.0_rkind)/), &
       errmsg="iteration criterion must be positive, and smaller than the maximal number your computer can handle :)")
       
-      call fileread(time_units, local)
+      call fileread(time_units, file_global)
       
-      call fileread(init_dt, local, ranges=(/tiny(0.0_rkind), huge(0.0_rkind)/),&
+      call fileread(init_dt, file_global, ranges=(/tiny(0.0_rkind), huge(0.0_rkind)/),&
       errmsg="initial time step must be positive, and smaller than the maximal number your computer can handle :)")
       
-      call fileread(end_time, local, ranges=(/init_dt, huge(tmp(1))/), &
+      call fileread(end_time, file_global, ranges=(/init_dt, huge(tmp(1))/), &
       errmsg="end time must be greater than the minimal time step, and smaller than the maximal number your computer can handle :)")
       
       
-      call fileread(dtmin, local, ranges=(/0.0_rkind, init_dt/), &
+      call fileread(dtmin, file_global, ranges=(/0.0_rkind, init_dt/), &
       errmsg="minimal time step must be positive, and smaller than the initial time step")
       
-      call fileread(dtmax, local, ranges=(/dtmin, huge(tmp(1))/), &
+      call fileread(dtmax, file_global, ranges=(/dtmin, huge(tmp(1))/), &
        errmsg="maximal time step must be greater than the minimal time step, &
 		  and smaller than the maximal number your computer can handle :)")
       
@@ -156,27 +148,27 @@ module read_inputs
 	     "	1 - adjust time stepping to observation time values",  new_line('a'), &
 	     "	2 - linearly interpolate solution between two consecutive solutions (recommended)"
       
-      call fileread(observe_info%method, local, ranges=(/1_ikind, 2_ikind/), errmsg=msg)
+      call fileread(observe_info%method, file_global, ranges=(/1_ikind, 2_ikind/), errmsg=msg)
       
       write(msg, fmt=*) "set correct name for the observation time outputs format", new_line('a'), &
       	"	scil - scilab output files",  new_line('a'), &
       	"	pure - just raw data with nodes IDs and FEM coefficients", new_line('a'), &  
       	"       gmsh - gmsh output files"
       
-      call fileread(observe_info%fmt, global, options=(/"scil", "pure", "gmsh"/))
+      call fileread(observe_info%fmt, file_global, options=(/"scil", "pure", "gmsh"/))
       
       
-      call fileread(observe_info%anime, global)
+      call fileread(observe_info%anime, file_global)
       
       if (observe_info%anime) then
-        call fileread(observe_info%nframes, global, ranges=(/1_ikind, huge(1_ikind)/), &
+        call fileread(observe_info%nframes, file_global, ranges=(/1_ikind, huge(1_ikind)/), &
         errmsg="number of frames for animation must be greater than zero &
         and smaller than the maximal number your computer can handle :)")
       else
 	     observe_info%nframes = 0
       end if
       
-      call fileread(n, local)
+      call fileread(n, file_global)
 
       allocate(observe_time(n + observe_info%nframes))
       
@@ -191,12 +183,12 @@ module read_inputs
       
       
       do i=1, n
-      	call fileread(observe_time(i)%value, local, errmsg=msg)
+      	call fileread(observe_time(i)%value, file_global, errmsg=msg)
       end do
       
 
       ! reads the observation points number
-      call fileread(n, local,ranges=(/0_ikind, huge(1_ikind)/), &
+      call fileread(n, file_global,ranges=(/0_ikind, huge(1_ikind)/), &
 	     errmsg="number of observation times cannot be negative :)")
       
       allocate(observation_array(n))   
@@ -219,12 +211,12 @@ module read_inputs
       
       
       do i=1,n
-	     call fileread(observation_array(i)%xyz(:), local, errmsg=msg, checklen=.true.)
+	     call fileread(observation_array(i)%xyz(:), file_global, errmsg=msg, checklen=.true.)
       end do  
       !----
       
       ! reads coordinates with measured points
-      call fileread(n, global, errmsg="Incorrect number of points with measurement data.")
+      call fileread(n, file_global, errmsg="Incorrect number of points with measurement data.")
 
       allocate(measured_pts(n))
       do i=1, n
@@ -232,16 +224,16 @@ module read_inputs
       end do
       
       do i=1, n
-	       call fileread(measured_pts(i)%xyz(:), global, errmsg="HINT: check coordinates of the points with measurement data")
+	       call fileread(measured_pts(i)%xyz(:), file_global, errmsg="HINT: check coordinates of the points with measurement data")
       end do  
       
       write(msg, *) "set correct value for the terminal outputs", new_line("a"), "     0 - standard output", &
     	new_line("a"),  "     1 - everything goes to out/screen.log", new_line("a"), &
   	"    -1 - everything goes to /dev/null (use only on Linux based systems (I have no idea what will happen in MAC OS X))"
-      call fileread(print_level, global, ranges=(/-1_ikind, 1_ikind/), errmsg=msg)
+      call fileread(print_level, file_global, ranges=(/-1_ikind, 1_ikind/), errmsg=msg)
       
 
-      call fileread(i=drutes_config%it_method, fileid=local, ranges=(/0_ikind,2_ikind/),&
+      call fileread(i=drutes_config%it_method, fileid=file_global, ranges=(/0_ikind,2_ikind/),&
 	       errmsg="you have selected an improper iteration method")
       
       write(msg, *) "Define method of time integration", new_line("a"), &
@@ -251,21 +243,21 @@ module read_inputs
       "   2 - unsteady problem with consistent capacity matrix"
       
       
-      call fileread(pde_common%timeint_method, global, ranges=(/0_ikind,2_ikind/), errmsg=msg)
+      call fileread(pde_common%timeint_method, file_global, ranges=(/0_ikind,2_ikind/), errmsg=msg)
       
-      call fileread(objval%compute, global, errmsg="Set correct value [y/n] for evaluating objective function")
+      call fileread(objval%compute, file_global, errmsg="Set correct value [y/n] for evaluating objective function")
       
-      call fileread(drutes_config%check4mass, global, & 
+      call fileread(drutes_config%check4mass, file_global, & 
         errmsg="Set correct value [y/n] for evaluating integral mass balance accuracy")
       
-      call fileread(drutes_config%run_from_backup, global, errmsg="specify [y/n] if you want to relaunch your computation")
+      call fileread(drutes_config%run_from_backup, file_global, errmsg="specify [y/n] if you want to relaunch your computation")
       
       
       if (drutes_config%run_from_backup) then
-      	call fileread(backup_file, global, errmsg="backup file not specified")
+      	call fileread(backup_file, file_global, errmsg="backup file not specified")
       end if
       
-      call fileread(integ_method, global)
+      call fileread(integ_method, file_global)
       
       if (integ_method/10 < 1 .or. integ_method/10 > 12 .or. modulo(integ_method,10_ikind)/=0  &
           .or. integ_method == 100 .or. integ_method == 110) then
@@ -273,7 +265,7 @@ module read_inputs
           10, 20, 30, 40, 50, 60, 70, 80, 90, 120", new_line("a") ,&
           "10 - for single Gauss quadrature node, 120 - for 12 points Gauss quadrature", new_line("a"), &
          "Your unrecognized setup was:", integ_method
-        call file_error(global, msg)
+        call file_error(file_global, msg)
       end if
       
 !       call fileread(debugmode, global,"specify [y/n] for debugging (development option, not recommended)" )
@@ -724,6 +716,27 @@ module read_inputs
       
     
     end subroutine read_scilab
+    
+    
+    subroutine read_solverconfig()
+      use typy
+      use globals
+      use readtools
+      use global4solver
+      
+      character(len=256), dimension(5) :: options
+      
+      options(1) = "LDU"
+      options(2) = "LDUbalanced"
+      options(3) = "PCGdiag"
+      options(4) = "PCGbalanced"
+      options(5) = "BJLDU"
+      
+      call fileread(solver_name, file_solver, options=options)
+      
+  
+    
+    end subroutine read_solverconfig
 
 
 

@@ -56,7 +56,10 @@ module solver_interfaces
       use typy
       use sparsematrix
       use solvers
-      implicit none
+      use pde_objs
+      use reorder
+      
+      
       !> matice soustavy\n
       !! musi poskytovat getn, getm, mul (nasobeni vektorem)
       class(smtx), intent(in out) :: A
@@ -94,8 +97,10 @@ module solver_interfaces
       !! - 5 ... vycerpan povoleny pocet iteraci
       !! - 6 ... prestalo klesat residuum i energie
       integer, intent(out), optional :: errcode1
+      type(smtx) :: mtx2
       
       integer(kind=ikind), dimension(:), allocatable, save :: p1, p2
+      real(kind=rkind), dimension(:), allocatable, save :: bpermut
       
   !! pivtype -- method of pivoting
   !! 0 ... no pivoting (not recommended)
@@ -105,14 +110,13 @@ module solver_interfaces
   !! 4 ... diagonal pivoting (symmetric matrix only)
   !! 5 ... diagonal pivoting with minimal degree (symmetric matrix only)
       
-      
-      
-      
       if (.not. allocated(p1)) then
         allocate(p1(ubound(b,1)))
         allocate(p2(ubound(b,1)))
       end if
-  
+      
+      
+      if (ubound(pde,1) < 2) then    
         call LDUd(A, pivtype=0, ilev=0, perm1=p1, perm2=p2)
         
         call LDUback(A, b, x, p1=p1, p2=p2)
@@ -120,6 +124,16 @@ module solver_interfaces
         if (present(itfin1)) then 
           itfin1 = 1
         end if
+      else
+        call RCM(A,p1)
+        call copyperm(source=A, dest=mtx2,permi=p1, permj=p1)
+        call LDUd(mtx2)
+        if (.not. allocated(bpermut)) allocate(bpermut(ubound(b,1)))
+        bpermut = b(p1)
+        call LDUback(mtx2,bpermut,x)
+        x(p1) = x
+      end if
+        
 
     end subroutine LDU_face
     
@@ -134,6 +148,7 @@ module solver_interfaces
       use simplelinalg
       use pde_objs
       use debug_tools
+      use readtools
 
       implicit none
       !> matice soustavy\n
@@ -176,6 +191,7 @@ module solver_interfaces
       integer :: ilevel
       integer(kind=ikind), dimension(:,:), allocatable, save :: blindex
       integer(kind=ikind) :: i, start, iters, itmax
+      character(len=4096) :: msg
 
       if (.not. present(ilev1) ) then
         ilevel = 0
@@ -195,10 +211,15 @@ module solver_interfaces
 !      itmax =  int(itfin1/10.0)+1
       itmax = itmax1
       
+      if (ubound(pde,1) == 1) then
+        write(msg, fmt=*) "incorrect solver setup from drutes.conf/solver.conf", new_line("a"), &
+                           "this is not a coupled problem, don't use Block-Jacobi", new_line("a"), &
+                           "correct solver is either PCG or LDU"
+        call file_error(file_solver, msg)
+      end if
+      
       call block_jacobi(A, x, b, blindex, iters, reps1, itmax, .true.)
-      
-      
-      
+    
       
     end subroutine blockjacobi_face
 
@@ -268,7 +289,14 @@ module solver_interfaces
       use typy
       use sparsematrix
       use solvers
-      implicit none
+      use global4solver
+      use globals
+      use core_tools
+      use pde_objs
+      use simplelinalg
+      
+      
+      
       !> matice soustavy\n
       !! musi poskytovat getn, getm, mul (nasobeni vektorem)
       class(smtx), intent(in out) :: A
@@ -307,15 +335,29 @@ module solver_interfaces
       !! - 6 ... prestalo klesat residuum i energie
       integer, intent(out), optional :: errcode1
       integer :: ilevel
+      integer(kind=ikind) :: fin, proc
 
       if (.not. present(ilev1) ) then
         ilevel = 0
       else
         ilevel = ilev1
       end if
+      
+      proc = ubound(pde,1)
+      fin = maxval(pde(proc)%permut(:))
+      
+      select case(cut(solver_name))
+        case("PCGdiag")
+          call diag_precond(a=spmatrix, x=pde_common%xvect(1:fin,3), mode=1)
+          call CGnormal(A=A, b=b,x=x,ilev1=ilevel,itmax1=itmax1,reps1=reps1, itfin1=itfin1, repsfin1=repsfin1)
+          call diag_precond(a=spmatrix, x=pde_common%xvect(1:fin,3), mode=-1)
+        case("PCGbalanced")
+          call unify_rows(spmatrix, pde_common%bvect(1:fin))
+          call CGnormal(A=A, b=b,x=x,ilev1=ilevel,itmax1=itmax1,reps1=reps1, itfin1=itfin1, repsfin1=repsfin1)
+      end select
 
-
-      call CGnormal(A=A, b=b,x=x,ilev1=ilevel,itmax1=itmax1,reps1=reps1, itfin1=itfin1, repsfin1=repsfin1)
+      write(unit=file_itcg, fmt = *) time, itfin1, repsfin1
+      call flush(file_itcg)
 
 
     end subroutine CG_normal_face

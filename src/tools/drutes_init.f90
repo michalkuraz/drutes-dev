@@ -42,9 +42,7 @@ module drutes_init
       real(kind=rkind) :: const
 
 
-      call find_unit(logfile, 2000)
-
-      open(unit=logfile, file="out/DRUtES.log", action="write", status="replace", iostat=i_err)
+      open(newunit=logfile, file="out/DRUtES.log", action="write", status="replace", iostat=i_err)
       
       if (i_err /= 0) then
         i_err=system("mkdir out")
@@ -60,46 +58,30 @@ module drutes_init
     
       write(unit=logfile, fmt=*, iostat = i_err) "DRUtES is initializing, reading input files"
 
-      call find_unit(file_itcg, 2000)
-
-      open(unit=file_itcg, file="out/cgit.count", action="write", status="replace", iostat=i_err)
+      open(newunit=file_itcg, file="out/cgit.count", action="write", status="replace", iostat=i_err)
       
       call write_log(text="total number of parallel images is:", int1=1_ikind*NUM_IMAGES())
 
       call write_log("reading input files and allocating...")
 
-      !global.conf
-      call find_unit(file_global, 200)
-      
-      open(unit=file_global,file="drutes.conf/global.conf", action="read", status="old", iostat = i_err)
-
+      open(newunit=file_global,file="drutes.conf/global.conf", action="read", status="old", iostat = i_err)
 
       if (i_err /= 0) then
         print *, "missing drutes.conf/global.conf file"
         ERROR STOP
       end if
       
+      open(newunit=file_solver,file="drutes.conf/solver.conf", action="read", status="old", iostat = i_err)
       
-      if (www) then
-        if (.not. dirglob%valid) then
-          print *, "if you have specified option www you MUST specify location with global settings"
-          print *, "specify option --dir-global path/to/your/global/settings"
-          ERROR STOP
-        end if
-        call find_unit(file_wwwglob, 200)
-        write(dirname, fmt=*) trim(dirglob%dir), "drutes_global.conf/global.conf" 
-        open(unit=file_wwwglob,file=trim(adjustl(dirname)), action="read", status="old", iostat = i_err)
-        if (i_err /= 0) then
-          print *, "incorrect definition of global configuration file"
-          print *, "your definition was: ", trim(dirglob%dir)
-          print *, "the constructed path was: ", trim(adjustl(dirname))
-          ERROR stop
-        end if
-
+      
+      if (i_err /= 0) then
+        print *, "missing drutes.conf/solver.conf file"
+        ERROR STOP
       end if
-     
       
       call read_global()
+      
+      call read_solverconfig()
      
       call set_global_vars()
       
@@ -225,6 +207,7 @@ module drutes_init
                   optim=.true.
                 case default
                   print *, "unrecognized option after -o , exiting...."
+                  ERROR STOP
               end select
 
               skip = 1
@@ -321,15 +304,7 @@ module drutes_init
               end if
             end if
         end do
-      
-      if (www) then
-        call find_unit(fileid,1000)
-        call system("rm -rf 4www")
-        call system("mkdir 4www")
-        open(unit=fileid, file="4www/mypid", action="write", status="replace")
-        write(unit=fileid, fmt=*) getpid()
-        close(fileid)
-      end if
+    
     
     end subroutine get_cmd_options
 
