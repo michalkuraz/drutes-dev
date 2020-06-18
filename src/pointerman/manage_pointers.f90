@@ -29,6 +29,7 @@ module manage_pointers
       use global_objs
       use pde_objs
       use globals
+      use global4solver
       use core_tools
       use capmat
       use fem_tools
@@ -155,30 +156,40 @@ module manage_pointers
 
 	  
       end select
-
-      select case(drutes_config%dimen)
-        case(1)
-            solve_matrix => LDU_face
-!            solve_matrix => blockjacobi_face
-            !solve_matrix => Minres_face
-!             solve_matrix => CG_normal_face
-        case(2)
-          symetric = .true.
-          do i=1, ubound(pde,1)
-            if (.not. pde(i)%symmetric) then
-              symetric = .false.
-              EXIT 
-            end if
-          end do
-          
-          if (.not. symetric) then
-            solve_matrix => CG_normal_face
-          else
-            solve_matrix => cg_face
-          end if
-
-
+      
+      
+      select case(cut(solver_name))
+        case("LDU","LDUbalanced")
+          solve_matrix => LDU_face
+        case("BJLDU")
+          solve_matrix => blockjacobi_face
+        case("PCGdiag","PCGbalanced")
+          solve_matrix => CG_normal_face
       end select
+!      select case(drutes_config%dimen)
+!        case(1)
+!          print *, cut(solver_name) ; stop
+!!            solve_matrix => LDU_face
+!            solve_matrix => blockjacobi_face
+!            !solve_matrix => Minres_face
+!!             solve_matrix => CG_normal_face
+!        case(2)
+!          symetric = .true.
+!          do i=1, ubound(pde,1)
+!            if (.not. pde(i)%symmetric) then
+!              symetric = .false.
+!              EXIT 
+!            end if
+!          end do
+          
+!          if (.not. symetric) then
+!            solve_matrix => CG_normal_face
+!          else
+!            solve_matrix => cg_face
+!          end if
+
+
+!      end select
       
       select case (drutes_config%it_method)
         case(0) 

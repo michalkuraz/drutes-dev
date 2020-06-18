@@ -712,7 +712,7 @@ module readtools
 
       
       if (present(message)) then
-        write(unit=terminal, fmt=*) " " //achar(27)//'[91m', trim(message) //achar(27)//'[0m'
+        write(unit=terminal, fmt=*) " " //achar(27)//'[91m', cut(message) //achar(27)//'[0m'
       end if
 	
       
