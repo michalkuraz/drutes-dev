@@ -35,26 +35,14 @@ module freeze_globs
   !>latent heat of fusion [J.kg^-1]
   real(kind=rkind), parameter, public :: Lf = 333.7e3
   
-  !> specific heat capacity ice [J/kg/K]
-  real(kind=rkind), parameter, public :: Ci = 2117
-  
-  !> specific heat capacity water [J/kg/K]
-  real(kind=rkind), parameter, public :: Cl = 4188  
-  
-  !> specific heat capacity air[J/kg/K]
-  real(kind=rkind), parameter, public :: Ca = 1006  
-  
-  !> specific heat capacity soil[J/kg/K]
-  real(kind=rkind), parameter, public :: Cs = 800 
-  
   !> reference temperature for Clapeyron [K] (defined in RE globals now)
 !   real(kind=rkind), parameter, public :: Tref = 273.15
 
   !> density of water [kg.m^-3]
-  real(kind=rkind), parameter, public :: rho_wat = 980
+  !real(kind=rkind), parameter, public :: rho_wat = 980
   
   !> density of ice [kg.m^-3]
-  real(kind=rkind), parameter, public :: rho_ice = 980
+  real(kind=rkind), parameter, public :: rho_ice = 910
   
     !> density of soil [kg.m^-3]
   real(kind=rkind), parameter, public :: rho_soil = 2650

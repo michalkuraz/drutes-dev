@@ -8,10 +8,32 @@ module freeze_helper
   public :: iceswitch,icefac, rho_icewat, Q_reduction, surf_tens_deriv, Kliquid_temp, hl, hcl, thetai, thetal, vf, mf
   public:: vangen_fr, mualem_fr, temp_initcond, temp_s_initcond, wat_initcond, getval_retotfr, ice_initcond, thetas
   public:: phase_ice, phase_wat, latent_heat_vf, latent_heat_mf
+  public:: rho_wat, thetai_wat_eq
     
       
   
   contains
+     function rho_wat(quadpnt) result(val)
+      use typy
+      use global_objs
+
+      !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
+      type(integpnt_str), intent(in), optional :: quadpnt
+      !> return value:Liquid water density  rho_l [kg/m^3]
+      real(kind=rkind):: val
+      !>  Temperature T in ºC 
+      real(kind=rkind):: T
+      
+       if (.not. present(quadpnt)) then
+        print *, "ERROR: you have not specified integ point "
+        print *, "exited from evap_auxfnc::rho_l"
+        ERROR stop
+      end if
+    
+      T = pde(heat_proc)%getval(quadpnt)
+      val = 1000.0_rkind - 7.37e-3*(T - 4.0_rkind)**2 + 3.79e-5*(T -4.0_rkind)**3
+
+    end function rho_wat
 
       !> switch for freezing condition based on Clapeyron equation 
     function iceswitch(quadpnt) result(sw)
@@ -104,7 +126,7 @@ module freeze_helper
         thall = vangen_fr(pde(wat), layer, quadpnt)
         thice = thall - thl
       end if
-      rho = (thl * rho_wat + thice * rho_ice)/thall
+      rho = (thl * rho_wat(quadpnt) + thice * rho_ice)/thall
        
     end function rho_icewat
     
@@ -306,17 +328,35 @@ module freeze_helper
         thl = vangen_fr(pde(wat), layer, x=(/hl(pde(wat), layer, quadpnt)/))
         thall = vangen_fr(pde(wat), layer, quadpnt)
         val = thall - thl
+        !val = rho_wat(quadpnt)/rho_ice*val
       end if
-!       if( val < epsilon(val)) then
-!         val = 0
-!       end if
-!       
-!       if( val > 1.0) then
-!         val = 1.0
-!       end if
+
     end function thetai
     
 
+    function thetai_wat_eq(pde_loc, layer, quadpnt, x) result(val)
+      use typy
+      use global_objs
+      use pde_objs
+      use debug_tools
+      class(pde_str), intent(in) :: pde_loc
+      integer(kind=ikind), intent(in) :: layer
+      type(integpnt_str), intent(in), optional :: quadpnt
+      real(kind=rkind), dimension(:), intent(in), optional    :: x
+      real(kind=rkind) :: val
+      type(integpnt_str) :: quadpnt_loc
+      real(kind=rkind) :: thi
+      
+      if(.not. present(quadpnt)) then
+        print*, x
+        print*, "Quadpnt needed"
+        print *, "exited from freeze_helper::thetai"
+        ERROR STOP
+      end if
+       thi = thetai(pde_loc, layer, quadpnt)
+       val = thi*rho_ice/rho_wat(quadpnt)
+
+    end function thetai_wat_eq
     
     function thetal(pde_loc, layer, quadpnt, x) result(val)
       use typy
@@ -1125,7 +1165,7 @@ module freeze_helper
       real(kind=rkind), dimension(:), intent(in), optional    :: x
       real(kind=rkind) :: val
 
-      val = Lf*rho_wat*vf(pde_loc, layer, quadpnt)
+      val = Lf*rho_wat(quadpnt)*vf(pde_loc, layer, quadpnt)
 
     end function latent_heat_vf
     
@@ -1141,7 +1181,7 @@ module freeze_helper
       real(kind=rkind), dimension(:), intent(in), optional    :: x
       real(kind=rkind) :: val
       val = mf_react(pde_loc, layer, quadpnt)-mf(pde_loc, layer, quadpnt)
-      val = Lf*rho_wat*val
+      val = Lf*rho_wat(quadpnt)*val
 
     end function latent_heat_mf
     
@@ -1158,7 +1198,7 @@ module freeze_helper
       real(kind=rkind) :: val
       
       val = mf_react(pde_loc, layer, quadpnt)-mf(pde_loc, layer, quadpnt)
-      val = Lf*rho_wat*(vf(pde_loc, layer, quadpnt)-val)
+      val = Lf*rho_wat(quadpnt)*(vf(pde_loc, layer, quadpnt)-val)
     end function latent_heat
     
 end module freeze_helper

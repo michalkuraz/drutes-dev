@@ -75,7 +75,7 @@ module freeze_pointers
     ! pointers for water flow model
       pde(wat)%pde_fnc(wat)%elasticity => capacityhh
       
-      !pde(wat)%pde_fnc(heat_proc)%elasticity => capacityhT
+      pde(wat)%pde_fnc(heat_proc)%elasticity => capacityhT
       
       pde(wat)%pde_fnc(wat)%dispersion => diffhh
       
@@ -109,16 +109,19 @@ module freeze_pointers
             allocate(pde(wat)%mass_name(3,2))
             allocate(pde(wat)%mass(3))
             pde(heat_proc)%pde_fnc(heat_proc)%zerord => latent_heat
-            pde(ice)%pde_fnc(heat_proc)%reaction => mf_react
+            !pde(ice)%pde_fnc(heat_proc)%reaction => mf_react
           else
-            allocate(pde(wat)%mass_name(4,2))
-            allocate(pde(wat)%mass(4))
+            allocate(pde(wat)%mass_name(5,2))
+            allocate(pde(wat)%mass(5))
             
             pde(wat)%mass_name(4,1) = "theta_i"
             pde(wat)%mass_name(4,2) = "theta_i [-]"
             
+            pde(wat)%mass_name(5,1) = "theta_i_eqwat"
+            pde(wat)%mass_name(5,2) = "thi eq. wat [-]"
+            
             pde(wat)%mass(4)%val => thetai
-
+            pde(wat)%mass(5)%val => thetai_wat_eq
           end if
 
          
@@ -170,7 +173,7 @@ module freeze_pointers
       pde(wat)%mass(2)%val => thetal
       
       pde(wat)%mass(3)%val => hl
-      
+
       if(fr_rate) then
         !pde(ice)%diffusion = .false.
         allocate(pde(ice)%mass_name(0,2))
