@@ -48,6 +48,7 @@ module femmat
       use mtxiotools
       use core_tools
       use solver_interfaces
+      use global4solver
 
 !       use decomposer
 
@@ -61,7 +62,7 @@ module femmat
       logical :: dt_fine
       integer :: ierr_loc, ll
       real(kind=rkind), dimension(:), allocatable :: vcttmp
-      real(kind=rkind) :: lambda_l, lambda_h, tmpxx=0, maxtime=0
+      real(kind=rkind) :: lambda_l, lambda_h, tmpxx=0, maxtime=0, solver_start, solver_end
       
       integer, save :: pocitac=0
       character(len=100) :: soubor
@@ -79,19 +80,18 @@ module femmat
         
         call assemble_mat(ierr)
         
-        if (drutes_config%dimen >  1) then
-          call diag_precond(a=spmatrix, x=pde_common%xvect(1:fin,3), mode=1)
-        end if
-        
-!        call unify_rows(spmatrix, pde_common%bvect(1:fin))
 
-        if (time > 15) then
-          call spmatrix%write("mtx")
-        end if
-
+        if (record_solver_time) call cpu_time(solver_start)
 
         call solve_matrix(spmatrix, pde_common%bvect(1:fin), pde_common%xvect(1:fin,3),  itmax1=fin, &
             reps1=1e-12_rkind, itfin1=pcg_it, repsfin1=reps_err)
+            
+        if (record_solver_time) then
+          call cpu_time(solver_end)
+          write(unit=solver_time_file, fmt=*) time, solver_end - solver_start
+          call flush(solver_time_file)
+        end if
+          
             
         if (pcg_it > 0.55*fin) then 
           ierr=-1
@@ -99,13 +99,6 @@ module femmat
           ierr=0
         end if
 		  
-
-!        if (drutes_config%dimen >  1) then
-!          write(unit=file_itcg, fmt = *) time, pcg_it, reps_err
-!          call flush(file_itcg)
-!          call diag_precond(a=spmatrix, x=pde_common%xvect(1:fin,3), mode=-1)
-!        end if
-        
     
 
         error = norm2(pde_common%xvect(1:fin,2)-pde_common%xvect(1:fin,3))/ubound(pde_common%xvect,1)

@@ -734,6 +734,9 @@ module read_inputs
       
       call fileread(solver_name, file_solver, options=options)
       
+      
+      call fileread(record_solver_time, file_solver)
+      
   
     
     end subroutine read_solverconfig

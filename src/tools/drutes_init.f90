@@ -34,6 +34,7 @@ module drutes_init
       use readtools
       use debug_tools
       use printtools
+      use global4solver
 
 
       integer :: i_err, i
@@ -82,6 +83,8 @@ module drutes_init
       call read_global()
       
       call read_solverconfig()
+      
+      if (record_solver_time) open(newunit=solver_time_file,file="out/solver.time", action="write", status="replace")
      
       call set_global_vars()
       
