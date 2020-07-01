@@ -40,7 +40,7 @@ module simplelinalg
        use debug_tools
 
        !> matrix in sparse format
-       class(matrix), intent(in out) :: a
+       class(smtx), intent(in out) :: a
        real(kind=rkind), dimension(:), intent(in out) :: b
 
        integer(kind=ikind) :: fin
