@@ -144,7 +144,13 @@ module solver_interfaces
         call copyperm(source=A, dest=mtx2,permi=p1, permj=p1)
         call LDUd(mtx2)
         if (.not. allocated(bpermut)) allocate(bpermut(ubound(b,1)))
-        bpermut = b(p1)
+        
+        if (cut(solver_name) == "LDUbalanced") then
+          bpermut = bbalanced(p1)
+        else
+          bpermut = b(p1)
+        end if
+        
         call LDUback(mtx2,bpermut,x)
         x(p1) = x
       end if
