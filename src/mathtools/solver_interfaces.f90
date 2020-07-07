@@ -58,6 +58,9 @@ module solver_interfaces
       use solvers
       use pde_objs
       use reorder
+      use core_tools
+      use global4solver
+      use simplelinalg
       
       
       !> matice soustavy\n
@@ -100,7 +103,7 @@ module solver_interfaces
       type(smtx) :: mtx2
       
       integer(kind=ikind), dimension(:), allocatable, save :: p1, p2
-      real(kind=rkind), dimension(:), allocatable, save :: bpermut
+      real(kind=rkind), dimension(:), allocatable, save :: bpermut, bbalanced
       
   !! pivtype -- method of pivoting
   !! 0 ... no pivoting (not recommended)
@@ -114,12 +117,24 @@ module solver_interfaces
         allocate(p1(ubound(b,1)))
         allocate(p2(ubound(b,1)))
       end if
+
+
+      if ( cut(solver_name) == "LDUbalanced") then
+        if (.not. allocated(bbalanced)) allocate(bbalanced(ubound(b,1)))
+        bbalanced = b
+        call unify_rows(A, bbalanced)
+      end if
+                
       
-      
-      if (ubound(pde,1) < 2) then    
+      if (ubound(pde,1) < 2) then  
+          
         call LDUd(A, pivtype=0, ilev=0, perm1=p1, perm2=p2)
         
-        call LDUback(A, b, x, p1=p1, p2=p2)
+        if ( cut(solver_name) == "LDUbalanced") then
+          call LDUback(A, bbalanced, x, p1=p1, p2=p2)
+        else
+          call LDUback(A, b, x, p1=p1, p2=p2)
+        end if
         
         if (present(itfin1)) then 
           itfin1 = 1
@@ -129,7 +144,13 @@ module solver_interfaces
         call copyperm(source=A, dest=mtx2,permi=p1, permj=p1)
         call LDUd(mtx2)
         if (.not. allocated(bpermut)) allocate(bpermut(ubound(b,1)))
-        bpermut = b(p1)
+        
+        if (cut(solver_name) == "LDUbalanced") then
+          bpermut = bbalanced(p1)
+        else
+          bpermut = b(p1)
+        end if
+        
         call LDUback(mtx2,bpermut,x)
         x(p1) = x
       end if
