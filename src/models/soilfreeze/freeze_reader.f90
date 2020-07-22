@@ -362,7 +362,7 @@ module freeze_read
           call find_unit(file_freeze, 200)
           open(unit = file_freeze, file="drutes.conf/freeze/freeze_heat_LTNE.conf", action="read", status="old", iostat=i_err)
           if (i_err /= 0) then
-            print *, "missing drutes.conf/freeze/freeze_heat_LTNE.conf.conf"
+            print *, "missing drutes.conf/freeze/freeze_heat_LTNE.conf"
             ERROR STOP
           end if
         case default
@@ -494,6 +494,8 @@ module freeze_read
         select case(pde(heat_proc)%bc(i)%code)
           case(3)
             call fileread(hc, file_freeze)
+          case(42)
+            call fileread(hcbot, file_freeze)
         end select
       end do
       
@@ -537,6 +539,8 @@ module freeze_read
         select case(pde(heat_solid)%bc(i)%code)
           case(3)
             call fileread(hc, file_freeze)
+          case(42)
+            call fileread(hcbot, file_freeze)
         end select
       end do  
         

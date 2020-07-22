@@ -235,8 +235,10 @@ module freeze_pointers
             pde(heat_proc)%bc(i)%value_fnc => re_null_bc
           case(3)
             pde(heat_proc)%bc(i)%value_fnc => freeze_coolant_bc
-           case(4)
+          case(4)
             pde(heat_proc)%bc(i)%value_fnc => Dirichlet_Neumann_switch_bc
+          case(42)
+            pde(heat_proc)%bc(i)%value_fnc => freeze_coolant_bc_bot
         end select
       end do  
           !pointers for solid heat flow model
@@ -284,6 +286,8 @@ module freeze_pointers
                 pde(heat_solid)%bc(i)%value_fnc => freeze_coolant_bc
               case(4)
                 pde(heat_solid)%bc(i)%value_fnc => Dirichlet_Neumann_switch_bc
+              case(42)
+                pde(heat_solid)%bc(i)%value_fnc => freeze_coolant_bc_bot
             end select
         end do 
         

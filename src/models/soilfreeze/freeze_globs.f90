@@ -27,7 +27,7 @@ module freeze_globs
   real(kind=rkind), dimension(:), allocatable, public :: T_air
 
   !> freeze exchange conductivity
-  real(kind=rkind), public :: hc, cumfilt 
+  real(kind=rkind), public :: hc, cumfilt , hcbot
   
   !> gravity acceleration [m.s^-2]
   real(kind=rkind), parameter, public :: grav = 9.81

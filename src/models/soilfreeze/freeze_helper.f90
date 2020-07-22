@@ -982,6 +982,63 @@ module freeze_helper
 
     end subroutine freeze_coolant_bc
     
+    
+    subroutine freeze_coolant_bc_bot(pde_loc, el_id, node_order, value, code, array) 
+      use typy
+      use globals
+      use global_objs
+      use pde_objs
+      use re_globals
+
+      class(pde_str), intent(in) :: pde_loc
+      integer(kind=ikind), intent(in)  :: el_id, node_order
+      real(kind=rkind), intent(out), optional    :: value
+      integer(kind=ikind), intent(out), optional :: code
+      !> unused for this model (implementation for Robin boundary)
+      real(kind=rkind), dimension(:), intent(out), optional :: array
+     
+
+      integer(kind=ikind) :: i, edge_id, j
+      real(kind=rkind), dimension(3) :: gravflux, bcflux
+      real(kind=rkind) :: bcval, gfluxval, T
+      integer :: i1
+      type(integpnt_str) :: quadpnt
+      integer(kind=ikind) :: layer
+      
+      if (present(value)) then
+        edge_id = nodes%edge(elements%data(el_id, node_order))        
+        if (pde_loc%bc(edge_id)%file) then
+          do i=1, ubound(pde_loc%bc(edge_id)%series,1)
+            if (pde_loc%bc(edge_id)%series(i,1) > time) then
+              if (i > 1) then
+                j = i-1
+              else
+                j = i
+              end if
+              quadpnt%type_pnt = "ndpt"
+              quadpnt%column=1
+              quadpnt%order = elements%data(el_id,node_order)
+              T =  pde_loc%getval(quadpnt)
+              bcval = -hcbot*(T-pde_loc%bc(edge_id)%series(j,2))
+              value = bcval
+              EXIT
+            end if
+          end do
+        else
+          quadpnt%type_pnt = "ndpt"
+          quadpnt%column=1
+          quadpnt%order = elements%data(el_id,node_order)
+          T =  pde_loc%getval(quadpnt)
+          bcval = -hcbot*(T-pde_loc%bc(edge_id)%value)
+          value = bcval
+        end if
+      end if
+      if (present(code)) then
+        code = 2
+      end if
+
+    end subroutine freeze_coolant_bc_bot
+    
   !> Functions below are ONLY relevant for freezing rate  
     function vf(pde_loc, layer, quadpnt, x) result(val)
       use typy
