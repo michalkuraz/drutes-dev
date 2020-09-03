@@ -126,7 +126,7 @@ module solver_interfaces
       end if
                 
       
-      if (ubound(pde,1) < 2) then  
+      if (ubound(pde,1) < 2 .or. cut(solver_name) == "LDUdefault") then  
           
         call LDUd(A, pivtype=0, ilev=0, perm1=p1, perm2=p2)
         

@@ -724,13 +724,14 @@ module read_inputs
       use readtools
       use global4solver
       
-      character(len=256), dimension(5) :: options
+      character(len=256), dimension(6) :: options
       
       options(1) = "LDU"
       options(2) = "LDUbalanced"
       options(3) = "PCGdiag"
       options(4) = "PCGbalanced"
       options(5) = "BJLDU"
+      options(6) = "LDUdefault"
       
       call fileread(solver_name, file_solver, options=options)
       

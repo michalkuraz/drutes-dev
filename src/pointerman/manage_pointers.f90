@@ -159,7 +159,7 @@ module manage_pointers
       
       
       select case(cut(solver_name))
-        case("LDU","LDUbalanced")
+        case("LDU","LDUbalanced","LDUdefault")
           solve_matrix => LDU_face
         case("BJLDU")
           solve_matrix => blockjacobi_face
