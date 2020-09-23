@@ -985,7 +985,7 @@ module RE_constitutive
     !> \brief convection term for the Richards equation for axisymmetric problems
     !! the vertical convection is equal as for the Richards equation in standard coordinates, the horizontal
     !! convection equals
-    !! [\ \frac{1}{r}K(h)
+    !! \f[ \frac{1}{r}K(h) \f]
     !<
     subroutine convection_rerot(pde_loc, layer, quadpnt, x, vector_in, vector_out, scalar)
       use typy

@@ -4,10 +4,10 @@ in := cd objs
 out := cd ..
 
 #options for debugging, use for development  
-#c= gfortran -fimplicit-none  -fcoarray=single -fbounds-check -fbacktrace -g -g3 -fdefault-real-8 -O0 -finit-real=nan -Wsurprising
+c= gfortran -fimplicit-none  -fcoarray=single -fbounds-check -fbacktrace -g -g3 -fdefault-real-8 -O0 -finit-real=nan -Wsurprising
 
 #options for optimized compilation, use for production purposes on well debugged versions
- c=gfortran -fimplicit-none  -fcoarray=single -fdefault-real-8 -O3 -finit-real=nan -ffpe-summary=none -fno-backtrace  
+# c=gfortran -fimplicit-none  -fcoarray=single -fdefault-real-8 -O3 -finit-real=nan -ffpe-summary=none -fno-backtrace  
 
 d=drutes_obj-`date -I`
 
@@ -36,7 +36,7 @@ REDUAL_obj := Re_dual_totH.o Re_dual_globals.o Re_dual_pointers.o Re_dual_reader
 HEAT_obj := heat_fnc.o heat_pointers.o heat_globals.o heat_reader.o
 KINWAVE_obj := kinreader.o kinglobs.o kinfnc.o kinpointer.o
 FROZEN_obj := freeze_globs.o freeze_helper.o freeze_fnc.o freeze_reader.o freeze_pointers.o freeze_linalg.o
-REevap_obj :=  evapglob.o evap_heat_fnc.o evap_RE_fnc.o evapextras.o evappointers.o REevapbc.o heatevapbc.o
+REevap_obj :=  evapglob.o evap_heat_fnc.o evap_RE_fnc.o evapextras.o evappointers.o REevapbc.o heatevapbc.o evap_RE_constitutive.o
 
 MODEL_objs := $(RE_obj)  $(BOUSSINESQ_obj) $(ADE_obj) $(REDUAL_obj)  $(HEAT_obj) $(LTNE_obj) $(FROZEN_obj) $(KINWAVE_obj) $(REevap_obj)
 
@@ -242,6 +242,8 @@ kinpointer.o: $(CORE_obj) $(TOOLS_obj) kinglobs.o kinreader.o src/models/kinwave
 #------begin evaporation_obj-------------------------
 evapglob.o: $(CORE_obj) src/models/REevap/evapglob.f90
 	$c -c src/models/REevap/evapglob.f90
+evap_RE_constitutive.o: $(CORE_obj) $(RE_obj) evapglob.o src/models/REevap/evap_RE_constitutive.f90
+	$c -c src/models/REevap/evap_RE_constitutive.f90
 evapextras.o: $(CORE_obj) evapglob.o src/models/REevap/evapextras.f90
 	$c -c src/models/REevap/evapextras.f90
 evap_heat_fnc.o: $(CORE_obj) $(HEAT_obj) evap_RE_fnc.o src/models/REevap/evap_heat_fnc.f90
