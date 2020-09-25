@@ -1,22 +1,24 @@
 module evap_RE_constitutive
   public :: thetav, dthetav_dtemp, dthetav_dh
-  private :: dens_satvap, dens_liquid, T2kelv, drelhumiddh, drelhumiddT, drho_svdT, invdrhol_dT, cond_vapour4h, vapour_diff
+  private :: dens_satvap, dens_liquid, T2kelv, drelhumiddh, drelhumiddT, drhosv_dT, invdrhol_dT, vapour_diff, cond_vapour4h, cond_ht
   
   contains
   
   
-  
-  
-  
-  
-  
-     !> Isothermal Properties of water vapor
+    !> hydraulic conductivity for vapour
+    !! \f[  K_{vh} = \frac{D}{\rho_{w}} \rho_{sv} \frac{Mg}{RT}H_{r}, \f]
+    !! where
+    !! \f[ D = \tau (\theta_{s} - \theta_{l}) D_{a},  \f],
+    !! and
+    !! \f[ \tau = \frac{(\theta_{s}-\theta_{l})^{\nicefrac{7}{3}}}{\theta_{s}^{2}}. \f]
+    !<
     subroutine cond_vapour4h(layer, quadpnt, Kvh)
       use typy
       use global_objs
       use pde_objs
       use evapglob
       use re_globals
+      use globals
       
       !> MaterialID
       integer(kind=ikind), intent(in) :: layer
@@ -26,24 +28,104 @@ module evap_RE_constitutive
       real(kind=rkind), dimension(:,:), intent(out) :: Kvh 
 
       real(kind=rkind) :: val, tort, ths, theta, Da, D, T
+      integer(kind=ikind) :: i
       
       
-      
+      T = T2kelv(pde(heat_ord)%getval(quadpnt))
 
+      val = vapour_diff(layer, quadpnt) / dens_liquid(quadpnt) * MolWat * gravity / (T*R_gas)*relhumid(quadpnt)
       
-
+      Kvh = 0
       
-!      rh_soil_val = rh_soil(layer, quadpnt)
-!      rho_l_val= rho_l( quadpnt) 
-!      rho_sv_val = rho_sv( quadpnt) 
-!      diff = vapor_diff_soil(pde(heat_ord), layer, quadpnt)
-      
-!      T = pde(Heat_ord)%getval(quadpnt)
-!      T = T + Tref
-     
-!      val = (diff/rho_l_val)*rho_sv_val*((MolWat*gravity)/(R_gas*T))*rh_soil_val
+      do i = 1, drutes_config%dimen
+        Kvh(i,i) = val
+      end do
   
     end subroutine cond_vapour4h
+    
+    
+    !> cross factor term heat in liquid
+    !! \f[ K_{lt} = K_{lh} \left( h G_{w} \frac{1}{\gamma_{0}} \dv{\gamma}{T} \right), \f]
+    !! \f[  \dv{\gamma}{T} = -0.1425 - \num{4.76e-4} T. \f]
+    !<
+    subroutine cond_ht(layer, quadpnt, Klht)
+      use typy
+      use global_objs
+      use pde_objs
+      use evapglob
+      use re_globals
+      use globals
+      use re_constitutive
+    
+      !> MaterialID
+      integer(kind=ikind), intent(in) :: layer
+      !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
+      type(integpnt_str), intent(in) :: quadpnt 
+      !>unsaturated non-thermal conductuvity of water vapor
+      real(kind=rkind), dimension(:,:), intent(out) :: Klht
+      
+      real(kind=rkind) :: dgamma, T, h
+      
+      
+      T = pde(heat_ord)%getval(quadpnt)
+      
+      h = pde(re_ord)%getval(quadpnt)
+      
+      dgamma = -0.1425 - 4.76e-4*T
+      
+      call mualem(pde(re_ord), layer, quadpnt, tensor=Klht)
+      
+      Klht = Klht * dgamma * 5 * 1.0_rkind/71.89 * dgamma 
+        
+      
+      
+    end subroutine cond_ht
+    
+    
+    !> cross factor term heat in liquid for vapour
+    !! \f[ K_{vt} = \frac{D}{\rho_{l}} \eta H_{r} \dv{\rho_{sv}}{T},  \f]
+    !! \f[  \eta = 9.5 + 3\frac{\theta_{l}}{\theta_{s}} - 8.5 \exp \left( - \left( \left( 1 + \frac{2.6}{\sqrt{f_{c}}} \right) \frac{\theta_{l}}{\theta_{s}} \right)^{4} \right). \f]
+    !! mass fraction of clay \f[ f_c = 0.04 \f]
+    !<
+    subroutine cond_vt(layer, quadpnt, Klvt)
+      use typy
+      use global_objs
+      use pde_objs
+      use evapglob
+      use re_globals
+      use globals
+      use re_constitutive
+    
+      !> MaterialID
+      integer(kind=ikind), intent(in) :: layer
+      !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
+      type(integpnt_str), intent(in) :: quadpnt 
+      !>unsaturated non-thermal conductuvity of water vapor
+      real(kind=rkind), dimension(:,:), intent(out) :: Klvt
+      
+      real(kind=rkind) :: h, ths, theta, eta, val
+
+      integer(kind=ikind) :: i
+      
+      h = pde(re_ord)%getval(quadpnt)
+      
+      ths = vgset(layer)%ths
+      
+      theta = vangen(pde(re_ord), layer, quadpnt)
+      
+      eta = 9.5 + 3*theta/ths - 8.5*exp(-((1+2.6/sqrt(fraction_clay)) * theta/ths)**4)
+    
+      val = vapour_diff(layer, quadpnt) / dens_liquid(quadpnt) * relhumid(quadpnt) * drhosv_dT(quadpnt)      
+      
+      Klvt = 0
+      
+      do i=1, drutes_config%dimen
+        Klvt(i,i) = val
+      end do
+      
+      
+    end subroutine cond_vt
+  
     
     function thetav(pde_loc,layer, quadpnt, x) result(val)
       use typy
@@ -100,7 +182,7 @@ module evap_RE_constitutive
       theta = vangen(pde(re_ord), layer, quadpnt)
       
       val = (ths-theta)*(drelhumiddT(quadpnt)*dens_satvap(quadpnt)/dens_liquid(quadpnt) + &
-            relhumid(quadpnt) * drho_svdT(quadpnt)/dens_liquid(quadpnt) + &
+            relhumid(quadpnt) * drhosv_dT(quadpnt)/dens_liquid(quadpnt) + &
             relhumid(quadpnt)*dens_liquid(quadpnt)*invdrhol_dT(quadpnt))
     
     end function dthetav_dtemp
@@ -272,7 +354,7 @@ module evap_RE_constitutive
     !> Derivative of the saturated vapour density with a respect to temperature
     !! \f[ \dv{\rho_{sv}}{T} = -\dfrac{\left(317x^2+40000x-240591600\right)\exp\left(-\frac{317x}{40000}-\frac{601479}{100x}+\frac{78429}{2500}\right)}{40000000x^3} \f]
     !<
-    function drho_svdT(quadpnt) result(val)
+    function drhosv_dT(quadpnt) result(val)
       use typy
       use global_objs
       use pde_objs
@@ -287,11 +369,12 @@ module evap_RE_constitutive
     
       val = -((317.0*T*T+40000.0*T-240591600.0_rkind)*exp(-(317.0*T)/40000.0-601479.0/(100.0*T)+78429.0/2500.0))/(400000000.0*T*T*T)
       
-    end function drho_svdT
+    end function drhosv_dT
     
     
     !>  derivative of the term \f[ \rho_{l}^{-1} \f] with a respect to temperature is given by
-    !! \f[ 
+    !! \f[ -\dfrac{3c\left(x-r\right)^2-2b\left(x-r\right)}{\left(c\left(x-r\right)^3-b\left(x-r\right)^2+a\right)^2} \f]
+    !<
     function invdrhol_dT(quadpnt) result(val)
       use typy
       use global_objs
@@ -301,12 +384,15 @@ module evap_RE_constitutive
       type(integpnt_str), intent(in) :: quadpnt
       real(kind=rkind) :: val
       
-      real(kind=rkind) ::  T   
+      real(kind=rkind) ::  x, a,b,c,r   
       
-      T = pde(heat_ord)%getval(quadpnt)
+      x = pde(heat_ord)%getval(quadpnt)
+      a=1000.0
+      b=7.37e-3
+      c=3.79e-5
+      r=3.98
       
-      val = -(62500000000000.0*(50*T-199)*(56850.0*T-7596263.0))/(47375000.0*T**3-9778157500.0_rkind*T**2+75582816850.0_rkind*T &
-              +1249851083567979.0_rkind)**2
+      val =-(3*c*(x-r)**2-2*b*(x-r))/(c*(x-r)**3-b*(x-r)**2+a)**2
               
     end function invdrhol_dT
 

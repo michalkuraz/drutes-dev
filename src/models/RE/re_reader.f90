@@ -165,10 +165,32 @@ module re_reader
         call set_tensor(vgset(i)%Ks_local(:), vgset(i)%anisoangle(:),  vgset(i)%Ks)
       end do
 
+      allocate(roots(ubound(vgset,1)))
       
-      do i=1, ubound(vgset,1)
-        call fileread(vgset(i)%sinkterm, file_waterm,  errmsg="Have you defined sink term for each layer?")
-      end do
+      call fileread(roots(1)%use, file_waterm)
+      
+      if (roots(1)%use) then
+        open(newunit=file_roots, file="drutes.conf/water.conf/root4uptake.conf", action="read", status="old", iostat = ierr)
+
+      
+        if (ierr /= 0) then
+          print *, "missing drutes.conf/water.conf/root4uptake.conf file"
+          ERROR STOP
+        end if
+        
+        deallocate(tmpdata)
+        allocate(tmpdata(5))
+        
+        msg = "Have you defined for each layer all parameters for root water uptake?"
+        do i=1, ubound(vgset,1)
+          call fileread(tmpdata, file_roots, errmsg=msg, checklen=.TRUE.)
+          roots(i)%h_low = tmpdata(1)
+          roots(i)%h_start = tmpdata(2)
+          roots(i)%h_end = tmpdata(3)
+          roots(i)%h_high = tmpdata(4)
+          roots(i)%smax = tmpdata(5)
+        end do
+      end if
       
       if (.not. www) then
         do i=1, ubound(vgset,1)

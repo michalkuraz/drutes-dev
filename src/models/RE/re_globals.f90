@@ -43,6 +43,20 @@ module re_globals
     real(kind=rkind) :: top, bottom
     real(kind=rkind) :: sinkterm
   end type soilpar
+  
+  
+  type, public :: root_str
+    logical :: use
+    !> parameter description
+    !!  h_low - system is overwetted
+    !!  h_start - system starts to be overwetted
+    !!  h_end - system starts to be dry
+    !!  h_end - system is overdried
+    !<
+    real(kind=rkind) :: h_low, h_start, h_end, h_high
+    !> maximal water consumption
+    real(kind=rkind) :: Smax
+  end type root_str
 
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -52,12 +66,15 @@ module re_globals
   type(soilpar), dimension(:), allocatable, target, public :: vgmatrix
   !> formula of the retention curve
   integer(kind=ikind), public :: retc_method
+  
+  type(root_str), dimension(:), allocatable, public :: roots
 
   !> soil properties defined for each layer
   type(soilpar), dimension(:), allocatable, public :: vgset
 
   integer, public :: file_waterm
   integer, public :: file_evap
+  integer, public :: file_roots
   
   !> evaporation input 
   real(kind=rkind), public :: albedo,latitude,elevation
