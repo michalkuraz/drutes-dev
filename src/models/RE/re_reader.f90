@@ -20,6 +20,7 @@
 
 module re_reader
   public :: res_read
+  private :: read_roots, REevapbc_read
 
   contains
 
@@ -170,26 +171,7 @@ module re_reader
       call fileread(roots(1)%use, file_waterm)
       
       if (roots(1)%use) then
-        open(newunit=file_roots, file="drutes.conf/water.conf/root4uptake.conf", action="read", status="old", iostat = ierr)
-
-      
-        if (ierr /= 0) then
-          print *, "missing drutes.conf/water.conf/root4uptake.conf file"
-          ERROR STOP
-        end if
-        
-        deallocate(tmpdata)
-        allocate(tmpdata(5))
-        
-        msg = "Have you defined for each layer all parameters for root water uptake?"
-        do i=1, ubound(vgset,1)
-          call fileread(tmpdata, file_roots, errmsg=msg, checklen=.TRUE.)
-          roots(i)%h_low = tmpdata(1)
-          roots(i)%h_start = tmpdata(2)
-          roots(i)%h_end = tmpdata(3)
-          roots(i)%h_high = tmpdata(4)
-          roots(i)%smax = tmpdata(5)
-        end do
+        call read_roots()
       end if
       
       if (.not. www) then
@@ -215,7 +197,7 @@ module re_reader
               print *, "                        H_tot = total hydraulic head"
               print *, "                        hpres = pressure head"
               print *, "                        theta = water content"
-                    print *, "                        input = read from input file (drutes output file)"
+              print *, "                        input = read from input file (drutes output file)"
               call file_error(file_waterm)
           end select
           if (ierr /= 0) then
@@ -271,9 +253,64 @@ module re_reader
            exit
          end if 
        end do
+       
+       if (roots(1)%use) then
+         call read_roots()
+       end if
             
 
     end subroutine res_read
+    
+    
+    subroutine read_roots()
+      use typy
+      use globals
+      use readtools
+      use re_globals
+      
+      integer :: fileid, ierr
+      
+      integer(kind=ikind) :: i
+      real(kind=rkind), dimension(5) :: tmpdata
+      character(len=4096) :: msg
+      
+      
+      open(newunit=fileid, file="drutes.conf/water.conf/root4uptake.conf", status="old", action="read", iostat=ierr)
+      
+      if (ierr /= 0) then
+        print *, "file drutes.conf/water.conf/root4uptake.conf doesn't exist, exiting...."
+        ERROR STOP
+      end if
+      
+    
+      do i=1, ubound(roots,1)
+        call fileread(tmpdata, fileid, checklen=.true.)
+        roots(i)%h_wet = tmpdata(1)
+        roots(i)%h_start = tmpdata(2)
+        roots(i)%h_end = tmpdata(3)
+        roots(i)%h_dry = tmpdata(4)
+        roots(i)%Smax = tmpdata(5)
+        
+        if (.not. roots(i)%h_wet >= roots(i)%h_start) then
+          msg = "h_1 has to be greater or equal to h_2 -- see Feddes et al. (1978)"
+          call file_error(fileid, msg)
+        end if
+        
+        if (.not. roots(i)%h_start >= roots(i)%h_end) then
+          msg = "h_2 has to be greater or equal to h_3 -- see Feddes et al. (1978)"
+          call file_error(fileid, msg)
+        end if
+        
+        if (.not. roots(i)%h_end >= roots(i)%h_dry) then
+          msg = "h_3 has to be greater or equal to h_4 -- see Feddes et al. (1978)"
+          call file_error(fileid, msg)
+        end if
+        
+      end do
+        
+    
+    
+    end subroutine read_roots
     
     
     

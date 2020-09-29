@@ -53,7 +53,7 @@ module re_globals
     !!  h_end - system starts to be dry
     !!  h_end - system is overdried
     !<
-    real(kind=rkind) :: h_low, h_start, h_end, h_high
+    real(kind=rkind) :: h_wet, h_start, h_end, h_dry
     !> maximal water consumption
     real(kind=rkind) :: Smax
   end type root_str

@@ -1082,9 +1082,49 @@ module RE_constitutive
       !> return value
       real(kind=rkind)                :: val
       
+      real(kind=rkind) :: h
       
-      val = vgset(layer)%sinkterm
-     
+      type(integpnt_str) :: quadpnt_loc  
+      
+      quadpnt_loc = quadpnt
+      
+      quadpnt_loc%preproc = .true.
+      
+      h = pde_loc%getval(quadpnt_loc)
+      
+      if (h >= roots(layer)%h_wet) then
+        val = 0
+        RETURN
+      end if
+      
+      if (h < roots(layer)%h_wet .and. h >= roots(layer)%h_start) then
+        if (abs(roots(layer)%h_start - roots(layer)%h_wet) > 100*epsilon(h)) then
+          val = roots(layer)%Smax * abs(h - roots(layer)%h_wet)/abs(roots(layer)%h_start - roots(layer)%h_wet)
+        else
+          val = 0
+        end if
+        RETURN
+      end if
+      
+      if (h < roots(layer)%h_start .and. h >= roots(layer)%h_end) then
+        val = roots(layer)%Smax
+        RETURN
+      end if
+      
+      if (h < roots(layer)%h_end .and. h >= roots(layer)%h_dry) then
+        if (abs(roots(layer)%h_end - roots(layer)%h_dry) > 100*epsilon(h)) then
+          val = roots(layer)%Smax * abs(h - roots(layer)%h_dry)/abs(roots(layer)%h_end - roots(layer)%h_dry)
+        else
+          val = roots(layer)%Smax
+        end if
+        RETURN
+      end if
+      
+      if (h < roots(layer)%h_dry) then
+        val = 0
+        RETURN
+      end if  
+      
     
     
     end function sinkterm

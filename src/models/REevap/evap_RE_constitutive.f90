@@ -1,8 +1,154 @@
 module evap_RE_constitutive
-  public :: thetav, dthetav_dtemp, dthetav_dh
+  public :: thetav, REdiffhh, REdiffhT, REcapacityhh, REcapacityhT
   private :: dens_satvap, dens_liquid, T2kelv, drelhumiddh, drelhumiddT, drhosv_dT, invdrhol_dT, vapour_diff, cond_vapour4h, cond_ht
+  private :: dthetav_dtemp, dthetav_dh
   
   contains
+  
+  
+    subroutine REdiffhh(pde_loc, layer, quadpnt, x, tensor, scalar)
+      use typy
+      use global_objs
+      use pde_objs
+      use re_constitutive
+      use evapglob
+      
+      class(pde_str), intent(in) :: pde_loc
+      !> value of the nonlinear function
+      real(kind=rkind), dimension(:), intent(in), optional    :: x
+      !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
+      type(integpnt_str), intent(in), optional :: quadpnt
+      !> material ID
+      integer(kind=ikind), intent(in) :: layer
+      !> return tensor
+      real(kind=rkind), dimension(:,:), intent(out), optional :: tensor
+      !> relative scalar value of the nonlinear function 
+      real(kind=rkind), intent(out), optional                 :: scalar
+      
+      integer(kind=ikind) :: D
+      real(kind=rkind), dimension(3,3) :: Klh, Kvh
+      
+      if (.not. present(quadpnt)) then
+        print *, "runtime error evap_RE_consitutive::REdiffhh"
+        ERROR STOP
+      end if
+      
+      if (present(scalar)) then
+        print *, "runtime error evap_RE_consitutive::REdiffhh"
+        ERROR STOP
+      end if
+      
+      D = drutes_config%dimen
+      
+      if (present(tensor)) then
+        call mualem(pde(re_ord), layer, quadpnt, tensor=Klh(1:D, 1:D))
+        call cond_vapour4h(layer, quadpnt, Kvh(1:D, 1:D))
+        tensor(1:D, 1:D) = Klh(1:D, 1:D) + Kvh(1:D, 1:D)
+      end if
+      
+
+      
+      
+    end subroutine REdiffhh
+    
+    
+    
+    subroutine REdiffhT(pde_loc, layer, quadpnt, x, tensor, scalar)
+      use typy
+      use global_objs
+      use pde_objs
+            
+      class(pde_str), intent(in) :: pde_loc
+      !> value of the nonlinear function
+      real(kind=rkind), dimension(:), intent(in), optional    :: x
+      !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
+      type(integpnt_str), intent(in), optional :: quadpnt
+      !> material ID
+      integer(kind=ikind), intent(in) :: layer
+      !> return tensor
+      real(kind=rkind), dimension(:,:), intent(out), optional :: tensor
+      !> relative scalar value of the nonlinear function 
+      real(kind=rkind), intent(out), optional                 :: scalar
+      
+      integer(kind=ikind) :: D
+      real(kind=rkind), dimension(3,3) :: KlT, KvT
+      
+      if (.not. present(quadpnt)) then
+        print *, "runtime error evap_RE_consitutive::REdiffhT"
+        ERROR STOP
+      end if
+      
+      if (present(scalar)) then
+        print *, "runtime error evap_RE_consitutive::REdiffhT"
+        ERROR STOP
+      end if
+      
+      D = drutes_config%dimen
+      
+      if (present(tensor)) then
+        call cond_hT(layer, quadpnt, KlT(1:D, 1:D))
+        call cond_vT(layer, quadpnt, KvT(1:D, 1:D))
+        tensor(1:D, 1:D) = Klt(1:D,1:D) + KvT(1:D, 1:D)
+      end if
+      
+      
+    end subroutine REdiffhT
+    
+    
+    function REcapacityhh(pde_loc, layer, quadpnt, x) result(val)
+      use typy
+      use global_objs
+      use pde_objs
+      use re_constitutive
+      use evapglob
+      
+      class(pde_str), intent(in) :: pde_loc
+      !> value of the nonlinear function
+      real(kind=rkind), dimension(:), intent(in), optional    :: x
+      !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
+      type(integpnt_str), intent(in), optional :: quadpnt
+      !> material ID
+      integer(kind=ikind), intent(in) :: layer
+      !> return value
+      real(kind=rkind)                :: val
+      
+      
+      if (.not. present(quadpnt)) then
+        print *, "runtime error evap_RE_consitutive::REcapacityhh"
+        ERROR STOP
+      end if
+      
+      val = vangen_elast(pde(re_ord),layer, quadpnt) + dthetav_dh(pde(re_ord),layer, quadpnt) 
+      
+    end function REcapacityhh
+    
+    
+    
+        
+    function REcapacityhT(pde_loc, layer, quadpnt, x) result(val)
+      use typy
+      use global_objs
+      use pde_objs
+      use evapglob
+      
+      class(pde_str), intent(in) :: pde_loc
+      !> value of the nonlinear function
+      real(kind=rkind), dimension(:), intent(in), optional    :: x
+      !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
+      type(integpnt_str), intent(in), optional :: quadpnt
+      !> material ID
+      integer(kind=ikind), intent(in) :: layer
+      !> return value
+      real(kind=rkind)                :: val
+      
+      if (.not. present(quadpnt)) then
+        print *, "runtime error evap_RE_consitutive::REcapacityhT"
+        ERROR STOP
+      end if
+      
+      val = dthetav_dtemp(pde(re_ord),layer, quadpnt) 
+      
+    end function REcapacityhT
   
   
     !> hydraulic conductivity for vapour
