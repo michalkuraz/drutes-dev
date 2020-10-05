@@ -17,38 +17,37 @@ module evappointers
       use pde_objs
       use globals
       use heat_pointers
-      use re_pointers
       use evapglob
-      use evap_heat_fnc
-      use evap_RE_fnc
-      use REevapbc
-      use heatevapbc
+      use evap_RE_constitutive
+
       
       
 
 
       call heat(pde(:))
 
-      pde(re_ord)%pde_fnc(re_ord)%dispersion => evapdiffhh
+      pde(re_ord)%pde_fnc(re_ord)%dispersion => REdiffhh
       
-      pde(re_ord)%pde_fnc(heat_ord)%dispersion => evapdiffhT
+      pde(re_ord)%pde_fnc(heat_ord)%dispersion => REdiffhT
       
-      pde(re_ord)%pde_fnc(re_ord)%zerord  =>  dtheta_vdt
+      pde(re_ord)%pde_fnc(re_ord)%elasticity  =>  REcapacityhh
+      
+      pde(re_ord)%pde_fnc(heat_ord)%elasticity  =>  REcapacityhT
 
-      pde(re_ord)%flux  =>  water_flux
+!      pde(re_ord)%flux  =>  water_flux
 
-      pde(heat_ord)%pde_fnc(heat_ord)%dispersion => evapdiffTT
+!      pde(heat_ord)%pde_fnc(heat_ord)%dispersion => evapdiffTT
       
-      pde(heat_ord)%pde_fnc(re_ord)%dispersion => evapdiffTh
+!      pde(heat_ord)%pde_fnc(re_ord)%dispersion => evapdiffTh
       
-      pde(heat_ord)%pde_fnc(heat_ord)%convection => evap_heatconvect
+!      pde(heat_ord)%pde_fnc(heat_ord)%convection => evap_heatconvect
       
-      pde(heat_ord)%pde_fnc(heat_ord)%zerord  =>  Ldtheta_vdt
+!      pde(heat_ord)%pde_fnc(heat_ord)%zerord  =>  Ldtheta_vdt
       
       
-      pde(re_ord)%bc(102)%value_fnc => evap4bc
+!      pde(re_ord)%bc(102)%value_fnc => evap4bc
       
-      pde(heat_ord)%bc(102)%value_fnc => soil_heat_flux
+!      pde(heat_ord)%bc(102)%value_fnc => soil_heat_flux
       
       
           

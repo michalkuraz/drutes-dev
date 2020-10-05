@@ -1,7 +1,9 @@
 module evap_RE_constitutive
-  public :: thetav, REdiffhh, REdiffhT, REcapacityhh, REcapacityhT
-  private :: dens_satvap, dens_liquid, T2kelv, drelhumiddh, drelhumiddT, drhosv_dT, invdrhol_dT, vapour_diff, cond_vapour4h, cond_ht
-  private :: dthetav_dtemp, dthetav_dh
+  public :: REdiffhh, REdiffhT, REcapacityhh, REcapacityhT
+  private :: T2kelv, drelhumiddh, drelhumiddT, drhosv_dT, invdrhol_dT, vapour_diff, cond_vapour4h, cond_ht
+              
+  
+  public :: dens_liquid, dens_satvap, relhumid, thetav, dthetav_dtemp, dthetav_dh
   
   contains
   
@@ -273,7 +275,7 @@ module evap_RE_constitutive
     end subroutine cond_vt
   
     
-    function thetav(pde_loc,layer, quadpnt, x) result(val)
+    function thetav(pde_loc, layer, quadpnt, x) result(val)
       use typy
       use global_objs
       use pde_objs
@@ -292,6 +294,11 @@ module evap_RE_constitutive
       real(kind=rkind)                :: val
       
       real(kind=rkind) :: theta, theta_s
+      
+      if (.not. present(quadpnt)) then
+        print *, "runtime error evap_RE_constitutive::thetav"
+        ERROR STOP
+      end if
       
       theta_s = vgset(layer)%ths
       
