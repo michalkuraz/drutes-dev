@@ -19,12 +19,15 @@ module evappointers
       use heat_pointers
       use evapglob
       use evap_RE_constitutive
+      use evapreader
 
       
       
 
 
       call heat(pde(:))
+      
+      call evapread()
 
       pde(re_ord)%pde_fnc(re_ord)%dispersion => REdiffhh
       

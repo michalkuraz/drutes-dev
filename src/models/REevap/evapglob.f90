@@ -49,6 +49,12 @@ module evapglob
   !> density of air [kg.m^-3]
   real(kind=rkind), parameter, public :: rho_air = 1.29
   
+  type, public :: soil_heat_str
+    real(kind=rkind) :: b1, b2, b3
+  end type soil_heat_str
+  
+  type(soil_heat_str), dimension(:), allocatable :: soil_heat_coef
+  
  
 
 end module evapglob

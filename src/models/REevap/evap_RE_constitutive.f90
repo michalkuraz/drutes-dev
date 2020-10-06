@@ -1,6 +1,6 @@
 module evap_RE_constitutive
-  public :: REdiffhh, REdiffhT, REcapacityhh, REcapacityhT
-  private :: T2kelv, drelhumiddh, drelhumiddT, drhosv_dT, invdrhol_dT, vapour_diff, cond_vapour4h, cond_ht
+  public :: REdiffhh, REdiffhT, REcapacityhh, REcapacityhT, darcy4liq, darcy4vap, totalflux, cond_vapour4h
+  private :: T2kelv, drelhumiddh, drelhumiddT, drhosv_dT, invdrhol_dT, vapour_diff, cond_ht
               
   
   public :: dens_liquid, dens_satvap, relhumid, thetav, dthetav_dtemp, dthetav_dh
@@ -47,9 +47,6 @@ module evap_RE_constitutive
         call cond_vapour4h(layer, quadpnt, Kvh(1:D, 1:D))
         tensor(1:D, 1:D) = Klh(1:D, 1:D) + Kvh(1:D, 1:D)
       end if
-      
-
-      
       
     end subroutine REdiffhh
     
@@ -311,7 +308,7 @@ module evap_RE_constitutive
     !> derivative of the vapour water content with respect to temperature
     !! \dv{\theta_{v}}{T} = (\theta_{s} - \theta_{l})\left( \dv{H_{r}}{T} \frac{\rho_{sv}}{\rho_{l}} + H_{r}  \dv{\rho_{sv}}{T} \frac{1}{\rho_{l}} + H_{r} \rho_{sv} \dv{\frac{1}{\rho_{l}}}{T} \right) \f]
     !<
-    function   dthetav_dtemp(pde_loc,layer, quadpnt, x) result(val)
+    function  dthetav_dtemp(pde_loc,layer, quadpnt, x) result(val)
       use typy
       use global_objs
       use pde_objs
@@ -583,6 +580,193 @@ module evap_RE_constitutive
       val = tort*theta_air*Da
 
     end function vapour_diff
+    
+      !> Liquid water flux
+      !! \f[ \vec{q} = - \mathbf{K}_ll (\nabla h + \nabla z) - \mathbf{K}_{lT} \nabla T \f]
+      !<
+    subroutine darcy4liq(pde_loc, layer, quadpnt, x, grad,  flux, flux_length)
+      use typy
+      use pde_objs
+      use global_objs
+      use re_constitutive
+      use evapglob
+      use evapextras
+      
+       
+      class(pde_str), intent(in) :: pde_loc
+      !> Material ID
+      integer(kind=ikind), intent(in) :: layer
+      !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
+      type(integpnt_str), intent(in), optional :: quadpnt   
+      !> value of the nonlinear function
+      real(kind=rkind), intent(in), dimension(:), optional :: x
+      !> this value is optional, because it is required by the vector_fnc procedure pointer global definition
+      real(kind=rkind), dimension(:), intent(in), optional :: grad
+      !> Vector of the flux
+      real(kind=rkind), dimension(:), intent(out), optional :: flux
+      
+      
+      !> lengh of the flux vector
+      real(kind=rkind), intent(out), optional :: flux_length
+      !> Klt: total unsaturated non-thermal conductivity of liquid water
+      real(kind=rkind), dimension(3,3)  :: KlT
+      !> local variable
+      integer(kind=ikind)  :: i, D
+      !> Liquid water flux
+      real(kind=rkind), dimension(3)  ::  q_liq
+      !> resul of the modified flux of liquid water
+      real(kind=rkind), dimension(3)  :: vct
+      !> pressure head
+      real(kind=rkind) :: h
+      real(kind=rkind), dimension(:), allocatable :: gradient
+      !> Gauss quadrature point structure local
+      type(integpnt_str) :: quadpnt_loc
+      !> Temperature gradient
+      real(kind=rkind), dimension(:), allocatable, save :: gradT
+      
+      if (present(x)) then
+        print *, "ERROR: use quadpnt only"
+        print *, "exited from evap_fnc::liquid_flux"
+        ERROR stop
+      end if
+    
+      
+      if (present(quadpnt)) then
+        call pde(heat_ord)%getgrad(quadpnt, gradT)
+      else
+        gradT = grad
+      end if
+      
+      D = drutes_config%dimen
+      
+      if (present(quadpnt)) then
+        call darcy_law(pde(re_ord), layer, quadpnt, flux = q_liq(1:D))
+      end if
+      
+      call cond_ht(layer, quadpnt, KlT(1:D,1:D)) 
+      
+      vct(1:D) = q_liq(1:D) + matmul(-KlT(1:D,1:D), gradT(1:D))
+      
+      if (present(flux_length)) then      
+        flux_length = norm2(vct(1:D))
+      end if
+
+
+      if (present(flux)) then
+        flux(1:D) = vct(1:D)
+      end if
+      
+    
+    end subroutine darcy4liq
+        
+        
+      !> Vapour flux
+      !! \f[ \vec{q} = - \mathbf{K}_vh \nabla h  - \mathbf{K}_{vT} \nabla T \f]
+      !<
+    subroutine darcy4vap(pde_loc, layer, quadpnt, x, grad,  flux, flux_length)
+      use typy
+      use pde_objs
+      use global_objs
+      use evapglob
+      use evapextras
+       
+      class(pde_str), intent(in) :: pde_loc
+      !> Material ID
+      integer(kind=ikind), intent(in) :: layer
+      !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
+      type(integpnt_str), intent(in), optional :: quadpnt   
+      !> value of the nonlinear function
+      real(kind=rkind), intent(in), dimension(:), optional :: x
+      !> this value is optional, because it is required by the vector_fnc procedure pointer global definition
+      real(kind=rkind), dimension(:), intent(in), optional :: grad
+      !> Vector of the flux
+      real(kind=rkind), dimension(:), intent(out), optional :: flux
+      !> lengh of the flux vector
+      real(kind=rkind), intent(out), optional :: flux_length
+      !> KvT: unsaturated thermal conductivity for water
+      !> Kvh: unsaturated non-thermal  conductivity for water
+      real(kind=rkind), dimension(3,3)  :: Kvh, KvT
+      !> local variables
+      integer(kind=ikind) :: i, D
+      !> pressure gradient
+      real(kind=rkind), dimension(:), allocatable :: gradh,  gradT
+      
+      !result of the vapor flux vector
+      real(kind=rkind), dimension(3) :: vct
+
+
+      
+      if (present(x)) then
+        print *, "ERROR: use quadpnt only"
+        print *, "exited from evap_fnc::liquid_flux"
+        ERROR stop
+      end if
+    
+      call pde(heat_ord)%getgrad(quadpnt, gradT)
+
+      call pde(re_ord)%getgrad(quadpnt, gradh)
+      
+      
+      D = drutes_config%dimen
+      
+      call cond_vapour4h(layer, quadpnt, Kvh(1:D, 1:D))
+      call cond_vt(layer, quadpnt, KvT(1:D, 1:D))
+      
+      
+      vct(1:D) =  matmul(-Kvh(1:D,1:D), gradh(1:D)) + matmul(-KvT(1:D,1:D), gradT(1:D))
+      
+      
+       if (present(flux_length)) then
+         flux_length = norm2(vct(1:D))
+      end if
+
+
+      if (present(flux)) then
+        flux(1:D) = vct(1:D)
+      end if
+      
+    end subroutine darcy4vap
+    
+    
+    subroutine totalflux(pde_loc, layer, quadpnt, x, grad,  flux, flux_length)
+      use typy
+      use pde_objs
+      use global_objs
+      use evapglob
+      use evapextras
+       
+      class(pde_str), intent(in) :: pde_loc
+      !> Material ID
+      integer(kind=ikind), intent(in) :: layer
+      !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
+      type(integpnt_str), intent(in), optional :: quadpnt   
+      !> value of the nonlinear function
+      real(kind=rkind), intent(in), dimension(:), optional :: x
+      !> this value is optional, because it is required by the vector_fnc procedure pointer global definition
+      real(kind=rkind), dimension(:), intent(in), optional :: grad
+      !> Vector of the flux
+      real(kind=rkind), dimension(:), intent(out), optional :: flux
+      !> lengh of the flux vector
+      real(kind=rkind), intent(out), optional :: flux_length
+      
+      integer(kind=ikind) :: D
+      real(kind=rkind), dimension(3) :: vctvapour, vctliquid
+      
+      D = drutes_config%dimen
+      
+      call darcy4liq(pde(re_ord), layer, flux=vctliquid)
+      
+      call darcy4vap(pde(re_ord), layer, flux=vctliquid)
+      
+      if (present(flux)) flux(1:D) = vctliquid(1:D) + vctvapour(1:D)
+      
+      if (present(flux_length)) flux_length = norm2(vctliquid(1:D) + vctvapour(1:D)) 
+      
+      
+    end subroutine totalflux
+    
+    
+    
     
     
 
