@@ -47,6 +47,7 @@ module evap_heat_constitutive
       use global_objs
       use pde_objs
       use evapglob
+      use evap_RE_constitutive
       
       class(pde_str), intent(in) :: pde_loc
       !> value of the nonlinear function
@@ -62,6 +63,8 @@ module evap_heat_constitutive
         print *, "runtime error evap_heat_constitutive::heatcap_hT"
         ERROR STOP
       end if
+    
+      val = latentheat(quadpnt)*dthetav_dh(pde(re_ord), layer, quadpnt)
       
     end function heatcap_hT
     
