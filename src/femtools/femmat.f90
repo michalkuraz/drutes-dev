@@ -196,8 +196,6 @@ module femmat
        call build_bvect(i, time_step)
 
        call build_stiff_np(i, time_step)
-       
-!       call printmtx(stiff_mat) ; call wait()
 
        call pde_common%time_integ(i)
 

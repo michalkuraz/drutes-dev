@@ -609,43 +609,40 @@ module evap_RE_constitutive
       !> lengh of the flux vector
       real(kind=rkind), intent(out), optional :: flux_length
       !> Klt: total unsaturated non-thermal conductivity of liquid water
-      real(kind=rkind), dimension(3,3)  :: KlT
+      real(kind=rkind), dimension(3,3)  :: KlT, Klh
       !> local variable
       integer(kind=ikind)  :: i, D
       !> Liquid water flux
       real(kind=rkind), dimension(3)  ::  q_liq
       !> resul of the modified flux of liquid water
       real(kind=rkind), dimension(3)  :: vct
-      !> pressure head
-      real(kind=rkind) :: h
-      real(kind=rkind), dimension(:), allocatable :: gradient
-      !> Gauss quadrature point structure local
-      type(integpnt_str) :: quadpnt_loc
       !> Temperature gradient
-      real(kind=rkind), dimension(:), allocatable, save :: gradT
+      real(kind=rkind), dimension(:), allocatable, save :: gradT, gradH
       
-      if (present(x)) then
+      if (.not. present(quadpnt)) then
         print *, "ERROR: use quadpnt only"
-        print *, "exited from evap_fnc::liquid_flux"
-        ERROR stop
+        print *, "exited from evap_RE_constitutive::darcy4liq"
+        ERROR STOP
       end if
-    
+
+      call pde(heat_ord)%getgrad(quadpnt, gradT)
       
-      if (present(quadpnt)) then
-        call pde(heat_ord)%getgrad(quadpnt, gradT)
-      else
-        gradT = grad
-      end if
-      
+      call pde(re_ord)%getgrad(quadpnt, gradH)
+
       D = drutes_config%dimen
       
-      if (present(quadpnt)) then
-        call darcy_law(pde(re_ord), layer, quadpnt, flux = q_liq(1:D))
+      if (drutes_config%dimen == 1) then
+        gradH(D) = gradH(D) + cos(vgset(layer)%anisoangle(1))
+      else
+        gradH(D) = gradH(D) + 1
       end if
+      
+      call mualem(pde(re_ord), layer, quadpnt, tensor=Klh(1:D, 1:D))
       
       call cond_ht(layer, quadpnt, KlT(1:D,1:D)) 
       
-      vct(1:D) = q_liq(1:D) + matmul(-KlT(1:D,1:D), gradT(1:D))
+      vct(1:D) = matmul(-Klh(1:D, 1:D), gradH) + matmul(-KlT(1:D,1:D), gradT(1:D))
+       
       
       if (present(flux_length)) then      
         flux_length = norm2(vct(1:D))
@@ -669,6 +666,7 @@ module evap_RE_constitutive
       use global_objs
       use evapglob
       use evapextras
+      use debug_tools
        
       class(pde_str), intent(in) :: pde_loc
       !> Material ID
@@ -712,6 +710,8 @@ module evap_RE_constitutive
       call cond_vapour4h(layer, quadpnt, Kvh(1:D, 1:D))
       call cond_vt(layer, quadpnt, KvT(1:D, 1:D))
       
+
+      
       
       vct(1:D) =  matmul(-Kvh(1:D,1:D), gradh(1:D)) + matmul(-KvT(1:D,1:D), gradT(1:D))
       
@@ -754,9 +754,10 @@ module evap_RE_constitutive
       
       D = drutes_config%dimen
       
-      call darcy4liq(pde(re_ord), layer, flux=vctliquid)
+      call darcy4liq(pde(re_ord), layer, quadpnt, flux=vctliquid(1:D))
       
-      call darcy4vap(pde(re_ord), layer, flux=vctliquid)
+      call darcy4vap(pde(re_ord), layer, quadpnt, flux=vctvapour(1:D))
+    
       
       if (present(flux)) flux(1:D) = vctliquid(1:D) + vctvapour(1:D)
       

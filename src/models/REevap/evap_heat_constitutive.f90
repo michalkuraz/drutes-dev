@@ -129,6 +129,9 @@ module evap_heat_constitutive
       call darcy4liq(pde(re_ord), layer, quadpnt, flux=ql)
       call darcy4vap(pde(re_ord), layer, quadpnt, flux=qv)
       
+!      ql =0
+!      qv = 0
+      
       if (present(vector_out)) then
         vector_out(1:D) = C_liq*dens_liquid(quadpnt)*ql + C_vap*relhumid(quadpnt)*dens_satvap(quadpnt)*qv
       end if
@@ -201,7 +204,7 @@ module evap_heat_constitutive
       real(kind=rkind)                :: val 
       
       
-      val = C_liq*dens_liquid(quadpnt)*sinkterm(pde(re_ord), layer, quadpnt) +  heatpar(layer)%source
+      val = -C_liq*dens_liquid(quadpnt)*sinkterm(pde(re_ord), layer, quadpnt) +  heatpar(layer)%source
       
       
     end function heatsrc_w_roots
