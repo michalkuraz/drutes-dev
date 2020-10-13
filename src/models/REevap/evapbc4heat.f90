@@ -14,6 +14,37 @@
 
 
 module evapbc4heat
+  private :: RNterm, Hterm, Eterm
+  public :: ebalance_flux
+  
+  contains
+    function RNterm(quadpnt) result(Rn)
+      use typy
+      use global_objs
+      type(integpnt_str), intent(in) :: quadpnt
+      real(kind=rkind) :: Rn
+    
+    end function RNterm
+    
+    
+    function Hterm(quadpnt) result(H)
+      use typy
+      use global_objs
+      type(integpnt_str), intent(in) :: quadpnt
+      real(kind=rkind) :: H
+    end function Hterm
+    
+    function Eterm(quadpnt) result(E)
+      use typy
+      use global_objs
+      type(integpnt_str), intent(in) :: quadpnt
+      real(kind=rkind) :: E
+    
+    end function Eterm
+    
+    subroutine ebalance_flux()
+    
+    end subroutine ebalance_flux
 
 
 end module evapbc4heat

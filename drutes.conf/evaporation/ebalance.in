@@ -11,4 +11,4 @@
 #--------------------------d r u t e s . c o n f / e v a p o r a t i o n / e b a l a n c e . i n -----------------------------------------------
 # input file with time dependent energy balance data
 
-# t [s]    S_tm [W.m-2]    Ra [W.m-2]     T_a [dg C]   wind speed [m/s]  fraction of cloud cover [-]
+# t [s]    S_t [W.m-2]    Ra [W.m-2]     T_a [dg C]   wind speed [m/s]  fraction of cloud cover [-]
