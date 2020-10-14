@@ -331,8 +331,16 @@ module readtools
       integer(kind=ikind) :: i, i1, i2, arraybound, current_pos, chpos
       real(kind=rkind), dimension(:), allocatable :: tmpdata
       logical :: terminate = .false.
+      logical :: noexit_local
       
       call comment(fileid)
+      
+      if (present(noexit)) then
+        noexit_local = noexit
+      else
+        noexit_local = .false.
+      end if
+
       
       arraybound=1
       
@@ -389,7 +397,7 @@ module readtools
           if (arraybound /= ubound(r,1)) then
             write(unit=terminal, fmt=*) " " //achar(27)//'[91m', "the line in your input file has &
                incorrect number of values, check your inputs" //achar(27)//'[0m'
-            call file_error(fileid, errmsg)
+            if (.not. noexit_local) call file_error(fileid, errmsg)
          end if
         end if
       end if
@@ -400,23 +408,15 @@ module readtools
             
       
       if (ierr /= 0) then
-        if (.not. present(noexit)) then
-          terminate = .true.
-        else
-          if (noexit) then
-            terminate = .false.
-          else
-            terminate = .true.
-          end if
-        end if
+         terminate = .true.
       end if
       
       
       if (terminate) then
         if (present(errmsg)) then
-          call file_error(fileid,errmsg)
+          if (.not. noexit_local) call file_error(fileid,errmsg)
         else
-            call file_error(fileid)
+           if (.not. noexit_local) call file_error(fileid)
         end if
       end if
       
@@ -424,7 +424,7 @@ module readtools
         do i=1, ubound(r,1)
           if (r(i) < ranges(1) .or. r(i) > ranges(2)) then
             write(unit=terminal, fmt=*) " " //achar(27)//'[91m', "incorrect ranges of input parameter(s)" //achar(27)//'[0m'
-            call file_error(fileid, errmsg)
+            if (.not. noexit_local) call file_error(fileid, errmsg)
           end if
         end do
       end if

@@ -15,9 +15,9 @@
 
 module evap_heat_constitutive
 
-  public :: heatcap_TT, heatcap_hT, heat_cond, convection4heat, heatdiffTh,  heatsrc_w_roots
+  public :: heatcap_TT, heatcap_hT, heat_cond, convection4heat, heatdiffTh,  heatsrc_w_roots, latentheat
 
-  private :: water_cap, vapour_cap, latentheat
+  private :: water_cap, vapour_cap
   
   contains
   

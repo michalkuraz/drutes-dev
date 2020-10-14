@@ -15,10 +15,10 @@
 
 module evap_RE_constitutive
   public :: REdiffhh, REdiffhT, REcapacityhh, REcapacityhT, darcy4liq, darcy4vap, totalflux, cond_vapour4h
-  private :: T2kelv, drelhumiddh, drelhumiddT, drhosv_dT, invdrhol_dT, vapour_diff, cond_ht
+  private ::  drelhumiddh, drelhumiddT, drhosv_dT, invdrhol_dT, vapour_diff, cond_ht
               
   
-  public :: dens_liquid, dens_satvap, relhumid, thetav, dthetav_dtemp, dthetav_dh
+  public :: dens_liquid, dens_satvap, relhumid, thetav, dthetav_dtemp, dthetav_dh, T2kelv
   
   contains
   

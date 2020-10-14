@@ -260,7 +260,7 @@ REevapbc.o:  $(CORE_obj) evapglob.o evapextras.o src/models/REevap/REevapbc.f90
 	$c -c src/models/REevap/REevapbc.f90
 heatevapbc.o: $(CORE_obj) REevapbc.o evapglob.o evapextras.o src/models/REevap/heatevapbc.f90
 	$c -c src/models/REevap/heatevapbc.f90
-evapbc4heat.o: $(CORE_obj) src/models/REevap/evapbc4heat.f90
+evapbc4heat.o: $(CORE_obj) $(RE_obj) src/models/REevap/evapbc4heat.f90
 	$c -c src/models/REevap/evapbc4heat.f90
 evapbc4RE.o: $(CORE_obj) src/models/REevap/evapbc4RE.f90
 	$c -c src/models/REevap/evapbc4RE.f90
