@@ -194,20 +194,20 @@ module evapreader
       
       allocate(meteo4evap(counter))
       
-      if (datafiller%pos /= counter*6) then
+      if (datafiller%pos /= counter*7) then
         call file_error(ebalancein, "You have defined incorrect number of columns for energy balance time dependent parameters...")
       end if
       
       do i=1, counter
-        low = (i-1)*6
-        high = i*6
+        low = (i-1)*7
+        high = i*7
         meteo4evap%time = datafiller%data(low+1)
         meteo4evap(i)%inradiation = datafiller%data(low+2)
         meteo4evap(i)%extraterrad = datafiller%data(low+3)
         meteo4evap(i)%T_air = datafiller%data(low+4)
         meteo4evap(i)%wind_speed = datafiller%data(low+5)
         meteo4evap(i)%cloudiness = datafiller%data(low+6)
-        meteo4evap(i)%atm_vap_dens = datafiller%data(low+7)
+        meteo4evap(i)%relhum = datafiller%data(low+7)
       end do
       
     

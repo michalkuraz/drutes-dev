@@ -605,7 +605,6 @@ module evap_RE_constitutive
       use global_objs
       use re_constitutive
       use evapglob
-      use evapextras
       
        
       class(pde_str), intent(in) :: pde_loc
@@ -680,7 +679,6 @@ module evap_RE_constitutive
       use pde_objs
       use global_objs
       use evapglob
-      use evapextras
       use debug_tools
        
       class(pde_str), intent(in) :: pde_loc
@@ -748,7 +746,6 @@ module evap_RE_constitutive
       use pde_objs
       use global_objs
       use evapglob
-      use evapextras
        
       class(pde_str), intent(in) :: pde_loc
       !> Material ID

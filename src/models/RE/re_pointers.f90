@@ -181,8 +181,8 @@ module RE_pointers
               CONTINUE
               ! to be linked in vapour_pointers
             else
-
-              pde_loc%bc(i)%value_fnc => REevapbc_face
+              print *, "atmospheric boundary only allowed for REevap model"
+              ERROR STOP
             end if
           case(6,7)
           case default

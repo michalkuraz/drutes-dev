@@ -246,13 +246,13 @@ module re_reader
 		      
       close(file_waterm)
       
-      !> Call reader if the user select atmospheric boundary
-       do i=lbound(pde_loc%bc,1), ubound(pde_loc%bc,1)
-         if (pde_loc%bc(i)%code == 5) then 
-           call REevapbc_read()
-           exit
-         end if 
-       end do
+!      !> Call reader if the user select atmospheric boundary
+!       do i=lbound(pde_loc%bc,1), ubound(pde_loc%bc,1)
+!         if (pde_loc%bc(i)%code == 5) then 
+!           call REevapbc_read()
+!           exit
+!         end if 
+!       end do
        
        if (roots(1)%use) then
          call read_roots()

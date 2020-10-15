@@ -36,9 +36,10 @@ module evappointers
       use evap_RE_constitutive
       use evapreader
       use evap_heat_constitutive
+      use re_constitutive
+      use evapbc4heat
 
-      
-      
+      integer(kind=ikind) :: i
 
 
       call heat(pde(:))
@@ -65,12 +66,32 @@ module evappointers
       
       pde(heat_ord)%pde_fnc(heat_ord)%zerord  => heatsrc_w_roots 
       
+      deallocate(pde(re_ord)%mass)
+      deallocate(pde(re_ord)%mass_name)
       
-!      pde(re_ord)%bc(102)%value_fnc => evap4bc
+      allocate(pde(re_ord)%mass(2))
+      allocate(pde(re_ord)%mass_name(2,2))
       
-!      pde(heat_ord)%bc(102)%value_fnc => soil_heat_flux
+      pde(re_ord)%mass(1)%val => vangen
+      pde(re_ord)%mass(2)%val => thetav
       
+      pde(re_ord)%mass_name(1,1) = "theta_l"
+      pde(re_ord)%mass_name(1,2) = "theta_l [-]"
       
+      pde(re_ord)%mass_name(2,1) = "theta_v"
+      pde(re_ord)%mass_name(2,2) = " theta_v [-]"
+      
+      do i=lbound(pde(heat_ord)%bc,1), ubound(pde(heat_ord)%bc,1)
+        if (pde(heat_ord)%bc(i)%code == 3) then
+          pde(heat_ord)%bc(i)%value_fnc => ebalance_flux
+        end if
+      end do
+      
+      do i=lbound(pde(re_ord)%bc,1), ubound(pde(re_ord)%bc,1)
+        if (pde(heat_ord)%bc(i)%code == 5) then
+          pde(heat_ord)%bc(i)%value_fnc => evaporation_bcflux
+        end if
+      end do   
           
     end subroutine REevap_linker
     

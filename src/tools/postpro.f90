@@ -170,7 +170,7 @@ module postpro
         if (ubound(pde(proc)%mass_name,1) > 0 ) then
           do i=1, ubound(pde(proc)%mass_name,1)
             write(unit=filenames(proc)%names(2+i), fmt=forma) trim(prefix), trim(pde(proc)%problem_name(1)), "_",  &
-              trim(pde(proc)%mass_name(i,1)), "-", run,  trim(extension)
+              cut(pde(proc)%mass_name(i,1)), "-", run,  trim(extension)
           end do
         end if
 

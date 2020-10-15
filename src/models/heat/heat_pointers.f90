@@ -31,6 +31,7 @@ module heat_pointers
       use readtools
       use heat_globals
       use core_tools
+      use globals
       
       integer(kind=ikind) processes
       integer :: heatconf, ierr
@@ -46,7 +47,7 @@ module heat_pointers
       
       close(heatconf)
       
-      if (with_richards) then
+      if (with_richards .or. cut(drutes_config%name) == "REevap" ) then
         processes = 2
       else
         processes = 1

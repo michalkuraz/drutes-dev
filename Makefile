@@ -36,7 +36,7 @@ REDUAL_obj := Re_dual_totH.o Re_dual_globals.o Re_dual_pointers.o Re_dual_reader
 HEAT_obj := heat_fnc.o heat_pointers.o heat_globals.o heat_reader.o
 KINWAVE_obj := kinreader.o kinglobs.o kinfnc.o kinpointer.o
 FROZEN_obj := freeze_globs.o freeze_helper.o freeze_fnc.o freeze_reader.o freeze_pointers.o freeze_linalg.o
-REevap_obj :=  evapglob.o evap_heat_fnc.o evap_RE_fnc.o evapextras.o evappointers.o REevapbc.o heatevapbc.o evap_RE_constitutive.o evap_heat_constitutive.o evapreader.o evapbc4RE.o evapbc4heat.o
+REevap_obj :=  evapglob.o evappointers.o evap_RE_constitutive.o evap_heat_constitutive.o evapreader.o evapbc4heat.o
 
 MODEL_objs := $(RE_obj)  $(BOUSSINESQ_obj) $(ADE_obj) $(REDUAL_obj)  $(HEAT_obj) $(LTNE_obj) $(FROZEN_obj) $(KINWAVE_obj) $(REevap_obj)
 
@@ -246,24 +246,12 @@ evapreader.o: $(CORE_obj) $(TOOLS_obj) evapglob.o src/models/REevap/evapreader.f
 	$c -c src/models/REevap/evapreader.f90
 evap_RE_constitutive.o: $(CORE_obj) $(RE_obj) evapglob.o src/models/REevap/evap_RE_constitutive.f90
 	$c -c src/models/REevap/evap_RE_constitutive.f90
-evapextras.o: $(CORE_obj) $(RE_obj) evapglob.o src/models/REevap/evapextras.f90
-	$c -c src/models/REevap/evapextras.f90
 evap_heat_constitutive.o: $(CORE_obj) $(HEAT_obj) evap_RE_constitutive.o src/models/REevap/evap_heat_constitutive.f90
 	$c -c src/models/REevap/evap_heat_constitutive.f90	
-evap_heat_fnc.o: $(CORE_obj) $(HEAT_obj) evap_RE_fnc.o src/models/REevap/evap_heat_fnc.f90
-	$c -c src/models/REevap/evap_heat_fnc.f90
-evap_RE_fnc.o: $(CORE_obj) $(RE_obj) evapextras.o src/models/REevap/evap_RE_fnc.f90
-	$c -c src/models/REevap/evap_RE_fnc.f90
-evappointers.o: $(CORE_obj) $(HEAT_obj) evapreader.o evapglob.o evap_RE_constitutive.o  evap_heat_constitutive.o  src/models/REevap/evappointers.f90
+evappointers.o: $(CORE_obj) $(HEAT_obj) evapbc4heat.o evapreader.o evapglob.o evap_RE_constitutive.o  evap_heat_constitutive.o  src/models/REevap/evappointers.f90
 	$c -c src/models/REevap/evappointers.f90
-REevapbc.o:  $(CORE_obj) evapglob.o evapextras.o src/models/REevap/REevapbc.f90
-	$c -c src/models/REevap/REevapbc.f90
-heatevapbc.o: $(CORE_obj) REevapbc.o evapglob.o evapextras.o src/models/REevap/heatevapbc.f90
-	$c -c src/models/REevap/heatevapbc.f90
-evapbc4heat.o: $(CORE_obj) $(RE_obj) src/models/REevap/evapbc4heat.f90
+evapbc4heat.o: $(CORE_obj) $(RE_obj) evap_RE_constitutive.o evap_heat_constitutive.o src/models/REevap/evapbc4heat.f90
 	$c -c src/models/REevap/evapbc4heat.f90
-evapbc4RE.o: $(CORE_obj) src/models/REevap/evapbc4RE.f90
-	$c -c src/models/REevap/evapbc4RE.f90
 #------end evaporation_obj-------------------------
 
 

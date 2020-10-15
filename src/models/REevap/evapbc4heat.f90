@@ -15,7 +15,7 @@
 
 module evapbc4heat
   private :: RNterm, Hterm, Eterm, albedo_fnc, getmeteopos, resH
-  public :: ebalance_flux
+  public :: ebalance_flux, evaporation_bcflux
   
   contains
     function RNterm(quadpnt, layer) result(Rn)
@@ -69,15 +69,20 @@ module evapbc4heat
       integer(kind=ikind) :: pos
       integer(kind=ikind) :: i
       
+      
       do i=meteo4evap(1)%datapos, ubound(meteo4evap,1) - 1
         if (time >= meteo4evap(i)%time .and. time <  meteo4evap(i+1)%time ) then
           meteo4evap(1)%datapos = i
           pos = i
-          EXIT
+          RETURN
         else if ( i == ubound(meteo4evap,1) - 1 .and. time >=   meteo4evap(i+1)%time) then
           meteo4evap(1)%datapos = i+1
           pos = i+1
+        else if (i == 1 .and. time < meteo4evap(i)%time) then
+          pos = 1
+          RETURN
         end if
+        
       end do
         
     
@@ -135,17 +140,20 @@ module evapbc4heat
       
       real(kind=rkind) :: rs, theta, ths
       integer(kind=ikind) :: pos
+      type(integpnt_str) :: quad4atm
       
       theta = vangen(pde(re_ord), layer, quadpnt)
       ths = vgset(layer)%ths
       
-      rs = -805 + 4140*(ths-theta)
+      rs = max(-805 + 4140*(ths-theta), 0.0_rkind)
       
       pos = getmeteopos()
       
-      E = min((meteo4evap(pos)%atm_vap_dens - dens_satvap(quadpnt)*relhumid(quadpnt))/(resH() + rs), 0.0_rkind)
+      quad4atm%type_pnt = "numb"
+      quad4atm%this_is_the_value = meteo4evap(pos)%T_air
       
-    
+      E = min((dens_satvap(quad4atm)*meteo4evap(pos)%relhum - dens_satvap(quadpnt)*relhumid(quadpnt))/(resH() + rs), 0.0_rkind)
+      
     end function Eterm
     
     subroutine ebalance_flux(pde_loc, el_id, node_order, value, code, array) 
@@ -166,6 +174,8 @@ module evapbc4heat
       integer(kind=ikind) :: layer, el
       type(integpnt_str) :: quadpnt_loc
       
+
+      
       if (present(code)) code = 2
       
       if (present(value)) then
@@ -173,12 +183,41 @@ module evapbc4heat
         quadpnt_loc%type_pnt = "ndpt"
         quadpnt_loc%order = elements%data(el_id, node_order)
         layer = elements%material(el_id)
-        value = Rnterm(quadpnt_loc, layer) - Hterm(quadpnt_loc) - latentheat(quadpnt_loc)*Eterm(quadpnt_loc, layer)
+        value = Rnterm(quadpnt_loc, layer) - Hterm(quadpnt_loc) + latentheat(quadpnt_loc)*Eterm(quadpnt_loc, layer)
       end if
       
- 
     
     end subroutine ebalance_flux
+    
+    subroutine evaporation_bcflux(pde_loc, el_id, node_order, value, code, array) 
+      use typy
+      use globals
+      use global_objs
+      use pde_objs
+      use debug_tools
+      use evap_heat_constitutive
+      
+      class(pde_str), intent(in) :: pde_loc
+      integer(kind=ikind), intent(in)  :: el_id, node_order
+      real(kind=rkind), intent(out), optional    :: value
+      integer(kind=ikind), intent(out), optional :: code
+      !> unused for this model (implementation for Robin boundary)
+      real(kind=rkind), dimension(:), intent(out), optional :: array
+      
+      integer(kind=ikind) :: layer, el
+      type(integpnt_str) :: quadpnt_loc
+      
+      
+      if (present(code)) code = 2
+      
+      if (present(value)) then
+        quadpnt_loc%column = 2
+        quadpnt_loc%type_pnt = "ndpt"
+        quadpnt_loc%order = elements%data(el_id, node_order)
+        value = Eterm(quadpnt_loc, layer)
+      end if
+      
+    end subroutine evaporation_bcflux
     
     function albedo_fnc(quadpnt, layer) result(val)
       use typy
