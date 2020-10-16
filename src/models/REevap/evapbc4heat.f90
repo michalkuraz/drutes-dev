@@ -148,7 +148,6 @@ module evapbc4heat
       rs = max(-805 + 4140*(ths-theta), 0.0_rkind)
       
       pos = getmeteopos()
-      
       quad4atm%type_pnt = "numb"
       quad4atm%this_is_the_value = meteo4evap(pos)%T_air
       
@@ -196,6 +195,7 @@ module evapbc4heat
       use pde_objs
       use debug_tools
       use evap_heat_constitutive
+      use evap_RE_constitutive
       
       class(pde_str), intent(in) :: pde_loc
       integer(kind=ikind), intent(in)  :: el_id, node_order
@@ -204,6 +204,7 @@ module evapbc4heat
       !> unused for this model (implementation for Robin boundary)
       real(kind=rkind), dimension(:), intent(out), optional :: array
       
+      real(kind=rkind):: dens_wat
       integer(kind=ikind) :: layer, el
       type(integpnt_str) :: quadpnt_loc
       
@@ -214,7 +215,8 @@ module evapbc4heat
         quadpnt_loc%column = 2
         quadpnt_loc%type_pnt = "ndpt"
         quadpnt_loc%order = elements%data(el_id, node_order)
-        value = Eterm(quadpnt_loc, layer)
+        dens_wat = dens_liquid(quadpnt_loc)
+        value = Eterm(quadpnt_loc, layer)/dens_wat
       end if
       
     end subroutine evaporation_bcflux
