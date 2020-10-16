@@ -198,9 +198,7 @@ module femmat
        call build_stiff_np(i, time_step)
 
        call pde_common%time_integ(i)
-
        stiff_mat = stiff_mat + cap_mat  
-
        call in2global(i,spmatrix, pde_common%bvect)
 
       end do

@@ -15,7 +15,7 @@
 
 module evap_heat_constitutive
 
-  public :: heatcap_TT, heatcap_hT, heat_cond, convection4heat, heatdiffTh,  heatsrc_w_roots, latentheat
+  public :: heatcap_TT, heat_cond, convection4heat, heatdiffTh,  heatsrc_w_roots, latentheat
 
   private :: water_cap, vapour_cap
   
@@ -99,7 +99,7 @@ module evap_heat_constitutive
       theta_v = thetav(pde(re_ord), layer, quadpnt) 
       
       val = heatpar(layer)%C*(1-ths) + water_cap(quadpnt)*theta + vapour_cap(quadpnt)*theta_v + &
-            latentheat(quadpnt)*dthetav_dtemp(pde(re_ord), layer, quadpnt)
+            dens_liquid(quadpnt)*latentheat(quadpnt)*dthetav_dtemp(pde(re_ord), layer, quadpnt)
       
     end function heatcap_TT
     
@@ -189,11 +189,11 @@ module evap_heat_constitutive
       call cond_vapour4h(layer, quadpnt, Kvh(1:D, 1:D))
       
       if (present(tensor)) then
-        tensor(1:D, 1:D) = latentheat(quadpnt)*Kvh(1:D, 1:D)
+        tensor(1:D, 1:D) = dens_liquid(quadpnt)*latentheat(quadpnt)*Kvh(1:D, 1:D)
       end if
       
       if (present(scalar)) then
-        scalar = latentheat(quadpnt)*Kvh(1,1)
+        scalar = dens_liquid(quadpnt)*latentheat(quadpnt)*Kvh(1,1)
       end if
       
     end subroutine heatdiffTh
@@ -221,35 +221,9 @@ module evap_heat_constitutive
       
       val = -C_liq*dens_liquid(quadpnt)*sinkterm(pde(re_ord), layer, quadpnt) +  heatpar(layer)%source
       
-      
     end function heatsrc_w_roots
     
-    
-    function heatcap_hT(pde_loc, layer, quadpnt, x) result(val)
-      use typy
-      use global_objs
-      use pde_objs
-      use evapglob
-      use evap_RE_constitutive
-      
-      class(pde_str), intent(in) :: pde_loc
-      !> value of the nonlinear function
-      real(kind=rkind), dimension(:), intent(in), optional    :: x
-      !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
-      type(integpnt_str), intent(in), optional :: quadpnt
-      !> material ID
-      integer(kind=ikind), intent(in) :: layer
-      !> return value
-      real(kind=rkind)                :: val
-      
-      if (.not. present(quadpnt)) then
-        print *, "runtime error evap_heat_constitutive::heatcap_hT"
-        ERROR STOP
-      end if
-    
-      val = latentheat(quadpnt)*dthetav_dh(pde(re_ord), layer, quadpnt)
-      
-    end function heatcap_hT
+
     
     function water_cap(quadpnt) result(val)
       use typy

@@ -133,7 +133,6 @@ module evap_RE_constitutive
       end if
       
       val = vangen_elast(pde(re_ord),layer, quadpnt) + dthetav_dh(pde(re_ord),layer, quadpnt) 
-      
     end function REcapacityhh
     
     

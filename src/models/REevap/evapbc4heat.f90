@@ -31,31 +31,32 @@ module evapbc4heat
       integer(kind=ikind) :: layer
       real(kind=rkind) :: Rn
       
-      real(kind=rkind) :: Rns, Rnl, eps_s, Rld, Rlu, eps_a, ea, sigm = 5.67e-8, T_s, T_a, c
+      real(kind=rkind) :: Rns, Rnl, eps_s, Rld, Rlu, eps_a, ea, sigm = 5.67e-8, T_s, T_a, c, T_a_K, T_s_K 
       integer(kind=ikind) :: pos
       
       pos = getmeteopos()
-      
+      ! T_a for Boltzman law in kelvin
       T_a = meteo4evap(pos)%T_air
-      
+      T_a_K = T2kelv(T_a)
       c = meteo4evap(pos)%cloudiness
       
       Rns = (1-albedo_fnc(quadpnt, layer))*meteo4evap(pos)%inradiation
 
       eps_s = min(0.9 + 0.18*vangen(pde(re_ord),  layer, quadpnt), 1.0_rkind)
       
-      ea = 0.611 * relhumid(quadpnt) * exp(17.27*T_a/(T2kelv(T_a) - 35.85))
+      ea = 0.611 * relhumid(quadpnt) * exp(17.27*T_a/(T_a_K - 35.85))
       
-      eps_a = 0.7 + 5.95e-5 * ea *exp (1500/T2kelv(T_a))
+      eps_a = 1! 0.7 + 5.95e-5 * ea *exp (1500/T2kelv(T_a))
       
-      Rld = ((1-0.84*c)*eps_a + 0.84*c) * sigm * T_a**4
+      Rld = ((1-0.84*c)*eps_a + 0.84*c) * sigm * T_a_K**4
       
       T_s = pde(heat_ord)%getval(quadpnt)
+
+      T_s_K= T2kelv(T_s)
       
-      Rlu = eps_s*sigm*T_s**4 - eps_s*eps_a*sigm* T_a**4 + eps_s*sigm*T_a**4*((1-0.84*c)*eps_a + 0.84*c)
+      Rlu = eps_s*sigm*T_s_K**4
       
-      Rnl = eps_s*Rld + Rlu
-      
+      Rnl = eps_s*Rld - Rlu
       Rn = Rnl + Rns
     
     end function RNterm
@@ -196,6 +197,7 @@ module evapbc4heat
       use debug_tools
       use evap_heat_constitutive
       use evap_RE_constitutive
+      use evapglob
       
       class(pde_str), intent(in) :: pde_loc
       integer(kind=ikind), intent(in)  :: el_id, node_order
@@ -203,21 +205,39 @@ module evapbc4heat
       integer(kind=ikind), intent(out), optional :: code
       !> unused for this model (implementation for Robin boundary)
       real(kind=rkind), dimension(:), intent(out), optional :: array
-      
+      real(kind=rkind), dimension(3,3) :: K
+      real(kind=rkind), dimension(3) :: gravflux, bcflux
+
       real(kind=rkind):: dens_wat
       integer(kind=ikind) :: layer, el
       type(integpnt_str) :: quadpnt_loc
       
-      
+      layer = elements%material(el_id)
+
       if (present(code)) code = 2
-        layer = elements%material(el_id)
       if (present(value)) then
         quadpnt_loc%column = 2
         quadpnt_loc%type_pnt = "ndpt"
         quadpnt_loc%order = elements%data(el_id, node_order)
+        call pde_loc%pde_fnc(pde_loc%order)%dispersion(pde_loc, elements%material(el_id), quadpnt_loc, &
+                  tensor=K(1:drutes_config%dimen, 1:drutes_config%dimen))
+        gravflux(1:drutes_config%dimen) = K(drutes_config%dimen, 1:drutes_config%dimen)*elements%nvect_z(el_id, node_order)
+        
         dens_wat = dens_liquid(quadpnt_loc)
         value = Eterm(quadpnt_loc, layer)/dens_wat
+        
+        select case(drutes_config%dimen)
+         case(1)
+           value = value + gravflux(1)
+         case(2)
+           bcflux(1) = sqrt(1-elements%nvect_z(el_id, node_order)*elements%nvect_z(el_id, node_order))*value
+           bcflux(2) = elements%nvect_z(el_id, node_order)*value
+           bcflux = bcflux + gravflux
+           value = sqrt(bcflux(1)*bcflux(1) + bcflux(2)*bcflux(2))
+       end select 
       end if
+      
+
       
     end subroutine evaporation_bcflux
     
