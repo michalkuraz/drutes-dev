@@ -130,7 +130,7 @@ module RE_pointers
             print *, "seepage face is not created yet for pressure head RE"
             ERROR STOP
           case(5)
-            if (cut(drutes_config%name) == "vapour") then
+            if (cut(drutes_config%name) == "REevap") then
               CONTINUE
               ! to be linked in vapour_pointers
             else

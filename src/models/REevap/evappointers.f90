@@ -88,8 +88,8 @@ module evappointers
       end do
       
       do i=lbound(pde(re_ord)%bc,1), ubound(pde(re_ord)%bc,1)
-        if (pde(heat_ord)%bc(i)%code == 5) then
-          pde(heat_ord)%bc(i)%value_fnc => evaporation_bcflux
+        if (pde(re_ord)%bc(i)%code == 5) then
+          pde(re_ord)%bc(i)%value_fnc => evaporation_bcflux
         end if
       end do   
           
