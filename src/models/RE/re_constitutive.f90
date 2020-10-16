@@ -122,8 +122,7 @@ module RE_constitutive
         h = x(1)
       end if
       
-      
-      
+
       a = vgset(layer)%alpha
       n = vgset(layer)%n
       m = vgset(layer)%m
@@ -223,11 +222,11 @@ module RE_constitutive
 
       if (present(quadpnt) .and. present(x)) then
         print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
-        print *, "exited from re_constitutive::vangen"
+        print *, "exited from re_constitutive::inverse_vangen"
         ERROR stop
       else if (.not. present(quadpnt) .and. .not. present(x)) then
         print *, "ERROR: you have not specified either integ point or x value"
-        print *, "exited from re_constitutive::vangen"
+        print *, "exited from re_constitutive::inverse_vangen"
         ERROR stop
       end if
       
@@ -239,7 +238,7 @@ module RE_constitutive
         if (ubound(x,1) /=1) then
           print *, "ERROR: van Genuchten function is a function of a single variable h"
           print *, "       your input data has:", ubound(x,1), "variables"
-          print *, "exited from re_constitutive::vangen"
+          print *, "exited from re_constitutive::inverse_vangen"
           ERROR STOP
         end if
         theta = x(1)
@@ -1941,90 +1940,7 @@ module RE_constitutive
       end subroutine re_neumann_bc
       
       
-    subroutine re_atmospheric(pde_loc, el_id, node_order, value, code) 
-      use typy
-      use globals
-      use global_objs
-      use pde_objs
-
-      class(pde_str), intent(in) :: pde_loc
-      integer(kind=ikind), intent(in)  :: el_id, node_order
-      real(kind=rkind), intent(out), optional    :: value
-      integer(kind=ikind), intent(out), optional :: code
-      
-      real(kind=rkind), dimension(3,3) :: K
-      
-      real(kind=rkind), dimension(3) :: gravflux, bcflux
-      
-      type(integpnt_str) :: quadpnt
-      integer(kind=ikind) :: layer
-      real(kind=rkind) :: theta, bcval
-      integer(kind=ikind) :: i, edge_id, j
-      type(integpnt_str) :: quadpnt_loc
-  
-  
-      if (present(code)) then
-        code = 2
-      end if
-      
-      if (present(value)) then
-        edge_id = nodes%edge(elements%data(el_id, node_order))
-
-        quadpnt_loc%column = 2
-        quadpnt_loc%type_pnt = "ndpt"
-        quadpnt_loc%order = node_order
-
-        
-        call pde_loc%pde_fnc(pde_loc%order)%dispersion(pde_loc, elements%material(el_id), quadpnt_loc, &
-                  tensor=K(1:drutes_config%dimen, 1:drutes_config%dimen))
-
-              gravflux(1:drutes_config%dimen) = K(drutes_config%dimen, 1:drutes_config%dimen)*elements%nvect_z(el_id, node_order)
-        
-
-        if (pde_loc%bc(edge_id)%file) then
-          do i=1, ubound(pde_loc%bc(edge_id)%series,1)
-            if (pde_loc%bc(edge_id)%series(i,1) > time) then
-              if (i > 1) then
-                j = i-1
-              else
-                j = i
-              end if
-              bcval = pde_loc%bc(edge_id)%series(j,2)
-              EXIT
-            end if
-          end do
-        else
-          bcval = pde_loc%bc(edge_id)%value
-        end if
-        
-        if (bcval < 0) then
-          quadpnt%type_pnt = "ndpt"
-          quadpnt%order = elements%data(el_id,node_order)
-          layer = elements%material(el_id)
-          theta =  pde_loc%mass(1)%val(pde_loc, layer, quadpnt)
-          bcval = bcval*(theta*theta)**(1.0_rkind/3.0_rkind)
-        end if
-          
-          
-         select case(drutes_config%dimen)
-            case(1)
-              value = bcval - gravflux(1)
-            case(2)
-              bcflux(1) = sqrt(1-elements%nvect_z(el_id, node_order)*elements%nvect_z(el_id, node_order))*bcval
-              bcflux(2) = elements%nvect_z(el_id, node_order)*bcval
-              bcflux = bcflux + gravflux
-              value = sqrt(bcflux(1)*bcflux(1) + bcflux(2)*bcflux(2))
-        ! 	    print *, value, gravflux, el_id, elements%data(el_id,:) ; stop 
-          end select 
-        
-    
-
-      end if
-      
-      
-    end subroutine re_atmospheric
-
-
+   
       subroutine re_initcond(pde_loc) 
         use typy
         use globals

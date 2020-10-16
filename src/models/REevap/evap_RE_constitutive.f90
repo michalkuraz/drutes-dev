@@ -270,7 +270,7 @@ module evap_RE_constitutive
       h = pde(re_ord)%getval(quadpnt)
       
       ths = vgset(layer)%ths
-      
+
       theta = vangen(pde(re_ord), layer, quadpnt)
       
       eta = 9.5 + 3*theta/ths - 8.5*exp(-((1+2.6/sqrt(fraction_clay)) * theta/ths)**4)
@@ -313,7 +313,6 @@ module evap_RE_constitutive
       end if
       
       theta_s = vgset(layer)%ths
-      
       theta = vangen(pde(re_ord), layer, quadpnt)
       
       val = (theta_s - theta)*relhumid(quadpnt) * dens_satvap(quadpnt) / dens_liquid(quadpnt)

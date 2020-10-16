@@ -41,7 +41,7 @@ module evapbc4heat
       c = meteo4evap(pos)%cloudiness
       
       Rns = (1-albedo_fnc(quadpnt, layer))*meteo4evap(pos)%inradiation
-      
+
       eps_s = min(0.9 + 0.18*vangen(pde(re_ord),  layer, quadpnt), 1.0_rkind)
       
       ea = 0.611 * relhumid(quadpnt) * exp(17.27*T_a/(T2kelv(T_a) - 35.85))
@@ -209,7 +209,7 @@ module evapbc4heat
       
       
       if (present(code)) code = 2
-      
+        layer = elements%material(el_id)
       if (present(value)) then
         quadpnt_loc%column = 2
         quadpnt_loc%type_pnt = "ndpt"
@@ -228,7 +228,7 @@ module evapbc4heat
       use re_constitutive
       
       type(integpnt_str), intent(in) :: quadpnt
-      integer(kind=ikind) :: layer
+      integer(kind=ikind), intent(in) :: layer
       real(kind=rkind) :: val
       
       integer(kind=ikind) :: i

@@ -50,7 +50,7 @@ module evap_heat_constitutive
         print *, "runtime error evap_heat_constitutive::heat_cond"
         ERROR STOP
       end if
-      
+
       theta = vangen(pde(re_ord), layer, quadpnt)
       
       val = soil_heat_coef(layer)%b1 + soil_heat_coef(layer)%b2*theta + soil_heat_coef(layer)%b3*sqrt(theta)
@@ -93,7 +93,7 @@ module evap_heat_constitutive
         print *, "runtime error evap_heat_constitutive::heatcap_TT"
         ERROR STOP
       end if
-      
+
       ths = vgset(layer)%ths
       theta = vangen(pde(re_ord), layer, quadpnt)
       theta_v = thetav(pde(re_ord), layer, quadpnt) 
