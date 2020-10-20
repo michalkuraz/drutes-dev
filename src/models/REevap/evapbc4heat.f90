@@ -227,7 +227,7 @@ module evapbc4heat
             header_written = .true.
           end if
           i = 1
-          write(unit=outfile, fmt=*) time, (/ ( ebalance_vals(i,:), i=1, ubound(ebalance_vals,1) ) /)
+          write(unit=outfile, fmt=*) time-dtprev, (/ ( ebalance_vals(i,:), i=1, ubound(ebalance_vals,1) ) /)
         end if
         quadpnt_loc%column = 2
         quadpnt_loc%type_pnt = "ndpt"

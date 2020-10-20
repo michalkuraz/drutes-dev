@@ -154,6 +154,8 @@ module solver_interfaces
         call LDUback(mtx2,bpermut,x)
         x(p1) = x
       end if
+      
+      if (present(itfin1)) itfin1 = 1
         
 
     end subroutine LDU_face
