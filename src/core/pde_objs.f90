@@ -331,10 +331,9 @@ module pde_objs
 
 
   abstract interface
-    subroutine treat_pde_subrt(ierr, itcount, success)
+    subroutine treat_pde_subrt(ierr, success)
       use typy
       integer, intent(out) :: ierr
-      integer(kind=ikind), intent(out) :: itcount
       logical, intent(out) :: success
     end subroutine treat_pde_subrt
   end interface

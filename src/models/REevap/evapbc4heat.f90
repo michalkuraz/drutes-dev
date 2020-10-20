@@ -163,6 +163,7 @@ module evapbc4heat
       use pde_objs
       use debug_tools
       use evap_heat_constitutive
+      use printtools
       
       class(pde_str), intent(in) :: pde_loc
       integer(kind=ikind), intent(in)  :: el_id, node_order
@@ -171,23 +172,81 @@ module evapbc4heat
       !> unused for this model (implementation for Robin boundary)
       real(kind=rkind), dimension(:), intent(out), optional :: array
       
-      integer(kind=ikind) :: layer, el
+      integer(kind=ikind) :: layer, nodeid, i
       type(integpnt_str) :: quadpnt_loc
       
+      integer, save :: outfile
+      integer :: ierr, D
+      logical, save :: opened=.false., header_written = .false.
+      logical, dimension(:), allocatable, save :: nodesmarker
+      character(len=1), dimension(3) :: xyz = (/"x", "z", "y"/)
+      integer(kind=ikind), save :: bc_nds = 0
+      real(kind=rkind), dimension(:,:), allocatable, save :: ebalance_vals
+      real(kind=rkind) R, H, LE
+      
+      D = drutes_config%dimen
+      
+      if (.not. allocated(nodesmarker)) then
+        allocate(nodesmarker(nodes%kolik))
+        nodesmarker = .false.
+      end if
 
       
-      if (present(code)) code = 2
+      if (present(code)) then
+        code = 2
+        if (.not. opened) then
+          open(newunit=outfile, file="out/ebalance.out", status="replace", action="write", iostat=ierr)
+          if (ierr /=0) then
+            print *, "error opening file out/ebalance.out"
+            ERROR STOP
+          end if
+          call print_logo(outfile)
+          write(unit=outfile, fmt=*) "#----------------------------------------------------------------------------"
+          write(unit=outfile, fmt=*) "#----------------------------------------------------------------------------"
+          write(unit=outfile, fmt=*) "# node id                  | coordinates: ", xyz(1:D)
+          write(unit=outfile, fmt=*) "#- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - "
+          opened = .true.
+        end if
+        nodeid = elements%data(el_id, node_order)
+        if (.not. nodesmarker(nodeid)) then
+          write(unit=outfile, fmt=*) "#", nodeid, nodes%data(nodeid,:)
+          nodesmarker(nodeid) = .true.
+          bc_nds = bc_nds + 1
+        end if
+      end if
+      
       
       if (present(value)) then
+        if (.not. allocated(ebalance_vals)) allocate(ebalance_vals(bc_nds,3))
+        if (time > epsilon(time) .and. itcount == 1 .and. bc_nds == 1) then
+          if (.not. header_written) then
+            write(unit=outfile, fmt=*) "#-----------------------------------------------------------------------------------------"
+            write(unit=outfile, fmt=*) "#-----------------------------------------------------------------------------------------"
+            write(unit=outfile, fmt=*) "#time                               R                           H                        LE"
+            write(unit=outfile, fmt=*) "#- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -"
+            header_written = .true.
+          end if
+          i = 1
+          write(unit=outfile, fmt=*) time, (/ ( ebalance_vals(i,:), i=1, ubound(ebalance_vals,1) ) /)
+        end if
         quadpnt_loc%column = 2
         quadpnt_loc%type_pnt = "ndpt"
         quadpnt_loc%order = elements%data(el_id, node_order)
         layer = elements%material(el_id)
-        value = Rnterm(quadpnt_loc, layer) - Hterm(quadpnt_loc) + latentheat(quadpnt_loc)*Eterm(quadpnt_loc, layer)
+        R = Rnterm(quadpnt_loc, layer)
+        H = Hterm(quadpnt_loc)
+        LE = latentheat(quadpnt_loc)*Eterm(quadpnt_loc, layer)
+        ebalance_vals(bc_nds,1) = R
+        ebalance_vals(bc_nds,2) = H
+        ebalance_vals(bc_nds,3) = LE
+        value = R - H + LE
       end if
       
     
     end subroutine ebalance_flux
+    
+    
+    
     
     subroutine evaporation_bcflux(pde_loc, el_id, node_order, value, code, array) 
       use typy
@@ -198,6 +257,7 @@ module evapbc4heat
       use evap_heat_constitutive
       use evap_RE_constitutive
       use evapglob
+      use printtools
       
       class(pde_str), intent(in) :: pde_loc
       integer(kind=ikind), intent(in)  :: el_id, node_order
@@ -209,13 +269,53 @@ module evapbc4heat
       real(kind=rkind), dimension(3) :: gravflux, bcflux
 
       real(kind=rkind):: dens_wat
-      integer(kind=ikind) :: layer, el
+      integer(kind=ikind) :: layer, nodeid, D
       type(integpnt_str) :: quadpnt_loc
+!      integer, save :: outfile
+!      integer :: ierr
+!      logical, save :: opened=.false.
+!      logical, dimension(:), allocatable, save :: nodesmarker
+!      character(len=1), dimension(3) :: xyz = (/"x", "z", "y"/)
+!      integer(kind=ikind), save :: bc_nds = 0
+!      real(kind=rkind), dimension(:), allocatable, save :: ebalance_vals
+      
       
       layer = elements%material(el_id)
+!      D = drutes_config%dimen
+      
+!      if (.not. allocated(nodesmarker)) then
+!        allocate(nodesmarker(nodes%kolik))
+!        nodesmarker = .false.
+!      end if
 
-      if (present(code)) code = 2
+      if (present(code)) then
+        code = 2
+!        if (.not. opened) then
+!          open(newunit=outfile, file="out/ebalance.out", status="replace", action="write", iostat=ierr)
+!          if (ierr /=0) then
+!            print *, "error opening file out/ebalance.out"
+!            ERROR STOP
+!          end if
+!          call print_logo(outfile)
+!          write(unit=outfile, fmt=*) "#----------------------------------------------------------------------------"
+!          write(unit=outfile, fmt=*) "#----------------------------------------------------------------------------"
+!          write(unit=outfile, fmt=*) "# node id                  | coordinates: ", xyz(1:D)
+!           write(unit=outfile, fmt=*) "#- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - "
+!          opened = .true.
+!        end if
+!        nodeid = elements%data(el_id, node_order)
+!        if (.not. nodesmarker(nodeid)) then
+!          write(unit=outfile, fmt=*) "#", nodeid, nodes%data(nodeid,:)
+!          nodesmarker(nodeid) = .true.
+!          bc_nds = bc_nds + 1
+!        end if
+      end if
+        
+        
+          
+      
       if (present(value)) then
+!        if (.not. allocated(ebalance_vals)) allocate(ebalance
         quadpnt_loc%column = 2
         quadpnt_loc%type_pnt = "ndpt"
         quadpnt_loc%order = elements%data(el_id, node_order)

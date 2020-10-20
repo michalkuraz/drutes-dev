@@ -12,56 +12,55 @@ module schwarz_dd2subcyc
     contains
 
       !>solves the problem using Picard method with Schwarz multiplicative domain decomposition reflecting the nonlinear problem
-      subroutine schwarz_subcyc(ierr, itcount, success)
-	use typy
-	use globals
-	use global_objs
-	use pde_objs
-	use feminittools
-	use fem_tools
-	use linAlg
-	use debug_tools
-	use sparsematrix
-	use decomp_vars
-	use decomp_tools
-	use decomposer
-	use postpro
+      subroutine schwarz_subcyc(ierr, success)
+        use typy
+        use globals
+        use global_objs
+        use pde_objs
+        use feminittools
+        use fem_tools
+        use linAlg
+        use debug_tools
+        use sparsematrix
+        use decomp_vars
+        use decomp_tools
+        use decomposer
+        use postpro
         use femmat
         use core_tools
         use simplelinalg
         use printtools
         use debug_tools
 
-	integer, intent(out) :: ierr
-	integer(kind=ikind), intent(out) :: itcount
-	integer(kind=ikind) ::  fin, pcg_it, subfin
-	logical, intent(out) :: success
-	integer(kind=ikind) :: i, proc,j, m, l, k, ii, nd
-	real(kind=rkind) :: error, loc_error, res_error, reps, cumerr
-	real(kind=rkind), dimension(:), allocatable, save :: coarse2fine
-	logical :: dt_fine, first_run, picard_done, reset_domains
-	integer :: ierr_loc
-	integer(kind=ikind), dimension(:), allocatable :: radek, radek2, radek3
-	character(len=128) :: text
-	real(4), dimension(2,2) :: taaray
-	real(4), dimension(2) :: rslt
-	real(kind=rkind) :: val
+        integer, intent(out) :: ierr
+        integer(kind=ikind) ::  fin, pcg_it, subfin
+        logical, intent(out) :: success
+        integer(kind=ikind) :: i, proc,j, m, l, k, ii, nd
+        real(kind=rkind) :: error, loc_error, res_error, reps, cumerr
+        real(kind=rkind), dimension(:), allocatable, save :: coarse2fine
+        logical :: dt_fine, first_run, picard_done, reset_domains
+        integer :: ierr_loc
+        integer(kind=ikind), dimension(:), allocatable :: radek, radek2, radek3
+        character(len=128) :: text
+        real(4), dimension(2,2) :: taaray
+        real(4), dimension(2) :: rslt
+        real(kind=rkind) :: val
 
 
         call etime(taaray(1,:), rslt(1))
-	proc = ubound(pde,1)
-	fin = maxval(pde(proc)%permut(:))
-	itcount = 0
-	inner_criterion = 1e-4
+        proc = ubound(pde,1)
+        fin = maxval(pde(proc)%permut(:))
+        itcount = 0
+        inner_criterion = 1e-4
 
 	!reset local-local cluster iteration count
         ddcoarse_mesh(:)%iter_count = 4
 	
 	!the residual vector is not allocated, thus we are at the beginning
-	if (.not. allocated(resvct)) then
+        if (.not. allocated(resvct)) then
           first_run = .true.
-	  allocate(resvct(fin))
-	  allocate(corrvct(fin))          
+          allocate(resvct(fin))
+          allocate(corrvct(fin))          
           call set_subdomains()
         else
           first_run = .false.
@@ -84,7 +83,7 @@ module schwarz_dd2subcyc
         !reset successes on domains
         subdomain(:)%solved = .false.
    	
-	picard_done = .false.
+        picard_done = .false.
 	
 
         write(unit=terminal, fmt="(a)") "  "
@@ -340,40 +339,40 @@ module schwarz_dd2subcyc
 	
       end subroutine build_xvect_loc
 
-      subroutine search_error_cluster(sub, itcount)
-	use typy
-	use globals
-	use global_objs
-	use decomp_vars
-	use debug_tools
-	use pde_objs
+      subroutine search_error_cluster(sub, itcnt)
+        use typy
+        use globals
+        use global_objs
+        use decomp_vars
+        use debug_tools
+        use pde_objs
 
-	type(subdomain_str), intent(in) :: sub
-	integer(kind=ikind), intent(in) :: itcount
+        type(subdomain_str), intent(in) :: sub
+        integer(kind=ikind), intent(in) :: itcnt
 
-	integer(kind=ikind) :: i, j, ii, jj, el, nd, xpos, xpos_loc
-	real(kind=rkind) :: loc_error
-	
+        integer(kind=ikind) :: i, j, ii, jj, el, nd, xpos, xpos_loc
+        real(kind=rkind) :: loc_error
+        
 
-	do i=1, ubound(sub%coarse_el,1)
-	  j = sub%coarse_el(i)
-	  loc_error = 0
-	  do ii=1, ubound(ddcoarse_mesh(j)%elements,1)
-	    el = ddcoarse_mesh(j)%elements(ii)
-	    do jj = 1, ubound(elements%data,2)
-	      nd = elements%data(el,jj)
-	      xpos = pde(1)%permut(nd)
-	      if (xpos > 0) then
-		xpos_loc = sub%invpermut(xpos)
-		loc_error = max(loc_error, abs(sub%xvect(xpos_loc,3)-sub%xvect(xpos_loc,2)) )
-	      end if
-	    end do
-	  end do
-	  if (loc_error > iter_criterion) then
-	    ddcoarse_mesh(j)%iter_count = ddcoarse_mesh(j)%iter_count + 1
-	  end if
-	end do
-  
+        do i=1, ubound(sub%coarse_el,1)
+          j = sub%coarse_el(i)
+          loc_error = 0
+          do ii=1, ubound(ddcoarse_mesh(j)%elements,1)
+            el = ddcoarse_mesh(j)%elements(ii)
+            do jj = 1, ubound(elements%data,2)
+              nd = elements%data(el,jj)
+              xpos = pde(1)%permut(nd)
+              if (xpos > 0) then
+          xpos_loc = sub%invpermut(xpos)
+          loc_error = max(loc_error, abs(sub%xvect(xpos_loc,3)-sub%xvect(xpos_loc,2)) )
+              end if
+            end do
+          end do
+          if (loc_error > iter_criterion) then
+            ddcoarse_mesh(j)%iter_count = ddcoarse_mesh(j)%iter_count + 1
+          end if
+        end do
+        
 
       end subroutine search_error_cluster
 

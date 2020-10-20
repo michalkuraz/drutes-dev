@@ -35,7 +35,7 @@ module schwarz_dd
     contains
     
       !>solves the problem using Picard method with Schwarz multiplicative domain decomposition reflecting the nonlinear problem
-      subroutine schwarz_picard(ierr, itcount, success)
+      subroutine schwarz_picard(ierr,  success)
         use typy
         use globals
         use global_objs
@@ -56,7 +56,6 @@ module schwarz_dd
         use debug_tools
 
         integer, intent(out) :: ierr
-        integer(kind=ikind), intent(out) :: itcount
         integer(kind=ikind) ::  fin, pcg_it, subfin
         logical, intent(out) :: success
         integer(kind=ikind) :: i, proc,j, m, l, k, ii, nd
@@ -300,7 +299,7 @@ module schwarz_dd
 
       end subroutine build_xvect
 
-      subroutine search_error_cluster(sub, itcount)
+      subroutine search_error_cluster(sub, itcnt)
         use typy
         use globals
         use global_objs
@@ -309,7 +308,7 @@ module schwarz_dd
         use pde_objs
 
         type(subdomain_str), intent(in) :: sub
-        integer(kind=ikind), intent(in) :: itcount
+        integer(kind=ikind), intent(in) :: itcnt
 
         integer(kind=ikind) :: i, j, ii, jj, el, nd, xpos, xpos_loc
         real(kind=rkind) :: loc_error
@@ -324,8 +323,8 @@ module schwarz_dd
               nd = elements%data(el,jj)
               xpos = pde(1)%permut(nd)
               if (xpos > 0) then
-          xpos_loc = sub%invpermut(xpos)
-          loc_error = max(loc_error, abs(sub%xvect(xpos_loc,3)-sub%xvect(xpos_loc,2)) )
+                xpos_loc = sub%invpermut(xpos)
+                loc_error = max(loc_error, abs(sub%xvect(xpos_loc,3)-sub%xvect(xpos_loc,2)) )
               end if
             end do
           end do

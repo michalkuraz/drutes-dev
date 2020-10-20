@@ -26,7 +26,7 @@ module fem
   use typy  
   public :: solve_pde
   private :: terminal_info, exitme, close_all_observe
-  integer(kind=ikind), private :: itcount, obs_pos, obs_count, nptimes
+  integer(kind=ikind), private ::  obs_pos, obs_count, nptimes
   logical, private :: go_clusters
   logical, private :: printtime
 
@@ -97,7 +97,7 @@ module fem
           minimal_dt = time_step
         end if
 
-        call pde_common%treat_pde(ierr, itcount, success)
+        call pde_common%treat_pde(ierr,  success)
         
         itcum = itcum + itcount
 
@@ -129,7 +129,7 @@ module fem
           end if
         end if
 
-        call evol_dt(ierr, itcount)
+        call evol_dt(ierr)
 
         call terminal_info(ierr)
         
@@ -174,7 +174,7 @@ module fem
     end subroutine close_all_observe
         
 
-    subroutine evol_dt(ierr, itcount)
+    subroutine evol_dt(ierr)
       use typy
       use globals
       use feminittools
@@ -183,7 +183,6 @@ module fem
       use pde_objs
       
       integer, intent(in) :: ierr
-      integer(kind=ikind), intent(in) :: itcount
       logical :: success_it
 
 

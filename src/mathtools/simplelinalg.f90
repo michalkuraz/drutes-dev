@@ -239,7 +239,7 @@ module simplelinalg
     end function factorial
     
     
-    subroutine block_jacobi(A,xvect,bvect,blindex, itcount, repsexit, maxitcount, details)
+    subroutine block_jacobi(A,xvect,bvect,blindex, itcnt, repsexit, maxitcount, details)
       use typy
       use sparsematrix
       use pde_objs
@@ -258,7 +258,7 @@ module simplelinalg
       !> indeces of matrix diagonal blocks, 1st column start indices, 2nd column end indices
       integer(kind=ikind), dimension(:,:), intent(in) :: blindex
       !> iteration count 
-      integer(kind=ikind), intent(out) :: itcount
+      integer(kind=ikind), intent(out) :: itcnt
       !> required minimal residual
       real(kind=rkind) :: repsexit
       !> maximal iteration count
@@ -370,7 +370,7 @@ module simplelinalg
       end do
           
 
-      itcount = 0
+      itcnt = 0
       
       if (present(details)) then
         if (details) then
@@ -395,7 +395,7 @@ module simplelinalg
 
 	
       do    
-        itcount = itcount + 1
+        itcnt = itcnt + 1
         xold = xvect
         do iblock=1, ubound(blockmat,1)
           blow = blindex(iblock,1)
@@ -418,12 +418,12 @@ module simplelinalg
         repstot = norm2(xvect - xold)
        
         if (repstot < repsexit) then
-          write(unit=terminal, fmt=*) "Block Jacobi iteration count:", itcount
-          write(unit=itfile, fmt=*) time, itcount, repstot, frobnorms(1,2)/frobnorms(1,1), frobnorms(2,1)/frobnorms(2,2)
+          write(unit=terminal, fmt=*) "Block Jacobi iteration count:", itcnt
+          write(unit=itfile, fmt=*) time, itcnt, repstot, frobnorms(1,2)/frobnorms(1,1), frobnorms(2,1)/frobnorms(2,2)
           EXIT
         end if
         
-        if (itcount > maxitcount) then
+        if (itcnt > maxitcount) then
           call write_log(text="Block Jacobi failed to converge, the maximal allowed number of iterations was:", int1=maxitcount)
           if (present(details)) then
             if (details) then

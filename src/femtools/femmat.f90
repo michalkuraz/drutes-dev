@@ -29,7 +29,7 @@ module femmat
 
   contains
   !>solves the problem using Picard method
-    subroutine solve_picard(ierr, itcount, success)
+    subroutine solve_picard(ierr, success)
       use typy
       use globals
       use global_objs
@@ -54,7 +54,6 @@ module femmat
 
 
       integer, intent(out) :: ierr
-      integer(kind=ikind), intent(out) :: itcount
       integer(kind=ikind) ::  fin, pcg_it
       logical, intent(out) :: success
       integer(kind=ikind) :: i, proc,j, m, l, k, top, bot

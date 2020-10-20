@@ -47,6 +47,8 @@ module globals
   type(configuration), public :: drutes_config
   !> maximal number of iterations of Picard method for nonlinear problems
   integer(kind=ikind), public :: max_itcount
+  !> current iteration count
+  integer(kind=ikind), public :: itcount
   !> Picard iteration threshold value
   real(kind=rkind), public :: iter_criterion
   !> an intial dt
