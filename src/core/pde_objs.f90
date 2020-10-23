@@ -52,6 +52,12 @@ module pde_objs
     procedure(scalar_fnc), nopass, pointer  :: val
   end type mass_fnc_str
   
+  type, public :: fluxes_fnc_str
+    character(len=128), dimension(2) :: name
+    procedure(vector_fnc), nopass, pointer  :: val
+    real(kind=rkind) :: cumval = 0
+  end type fluxes_fnc_str
+  
 
   type, public :: pde_common_str
     real(kind=rkind), dimension(:), allocatable :: bvect
@@ -105,6 +111,7 @@ module pde_objs
     character(len=1)                                 :: mfswitch          
     type(pde_fnc_str), dimension(:), allocatable     :: pde_fnc
     type(mass_fnc_str), dimension(:), allocatable    :: mass
+    type(fluxes_fnc_str), dimension(:), allocatable  :: fluxes
     procedure(vector_fnc), pass(pde_loc), pointer    :: flux
     procedure(time_check), pass(pde_loc), pointer    :: dt_check
     procedure(icond_fnc), pass(pde_loc), pointer     :: initcond

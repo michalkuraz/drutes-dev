@@ -474,13 +474,15 @@ module drutes_init
       use pde_objs
       use printtools
       use debug_tools
+      use core_tools
 
       class(pde_str), intent(in out) :: pde_loc
       integer(kind=ikind), intent(in) :: name
       integer(kind=ikind), intent(in) :: decimals
       character(len=64) :: forma
       character(len=10), dimension(3) :: xyz
-      integer(kind=ikind) :: i
+      integer(kind=ikind) :: i, j
+      character(len=512), dimension(:), allocatable :: fluxname
 
 
       xyz(1) = "x"
@@ -490,6 +492,14 @@ module drutes_init
       write(unit=forma, fmt="(a, I16, a)") "(a, a, a, I", decimals, ", a)"
       write(unit=pde_loc%obspt_filename(name), fmt=forma) "out/obspt_", adjustl(trim(pde_loc%problem_name(1))), "-", name, ".out"
       
+      if (allocated(pde_loc%fluxes)) then
+        allocate(fluxname(ubound(pde_loc%fluxes,1)))
+        do i=1, ubound(fluxname,1)
+          write(fluxname(i), fmt=*) cut(pde_loc%fluxes(i)%name(2)),  " for: ", xyz(1:drutes_config%dimen), "     directions", &
+            "   cumulative flux", "|----| "
+        end do
+      end if
+      
      
       if (.not. drutes_config%run_from_backup) then
         if (ubound(pde_loc%mass_name,1) > 0) then
@@ -497,28 +507,47 @@ module drutes_init
           
           call print_logo(pde_loc%obspt_unit(name))
           
-           i=1
-            write(unit=pde_loc%obspt_unit(name), fmt=*) "#        time                      ", &
-              trim(pde_loc%solution_name(2)), "            ", &
-             "       ",  (/ (trim(pde_loc%mass_name(i,2)), i=1,ubound(pde_loc%mass_name,1) )   /), "       ",&
-              trim(pde_loc%flux_name(2)), "   in    ", xyz(1:drutes_config%dimen), "     directions", "   cumulative flux"
-            write(unit=pde_loc%obspt_unit(name), fmt=*) &
-              "#-----------------------------------------------------------------------------------------------"
-            write(unit=pde_loc%obspt_unit(name), fmt=*)
+            i=1
+            if (.not. allocated(pde_loc%fluxes)) then
+              write(unit=pde_loc%obspt_unit(name), fmt=*) "#        time                      ", &
+                trim(pde_loc%solution_name(2)), "            ", &
+               "       ",  (/ (trim(pde_loc%mass_name(i,2)), i=1,ubound(pde_loc%mass_name,1) )   /), "       ",&
+                trim(pde_loc%flux_name(2)), "   in    ", xyz(1:drutes_config%dimen), "     directions", "   cumulative flux"
+              write(unit=pde_loc%obspt_unit(name), fmt=*) &
+                "#-----------------------------------------------------------------------------------------------"
+              write(unit=pde_loc%obspt_unit(name), fmt=*)
+            else
+              i = 1
+              write(unit=pde_loc%obspt_unit(name), fmt=*) "#        time                      ", &
+                trim(pde_loc%solution_name(2)), "            ", &
+               "       ",  (/ (trim(pde_loc%mass_name(i,2)), i=1,ubound(pde_loc%mass_name,1) )   /), "       ",&
+                (/ (cut(fluxname(i)),  i=1, ubound(fluxname,1) ) /)
+              write(unit=pde_loc%obspt_unit(name), fmt=*) &
+                "#-----------------------------------------------------------------------------------------------"
+              write(unit=pde_loc%obspt_unit(name), fmt=*)
+            end if
             
         else
           open(unit=pde_loc%obspt_unit(name), file=adjustl(trim(pde_loc%obspt_filename(name))), action="write", status="replace")
           
           call print_logo(pde_loc%obspt_unit(name))
           
-
+          if (.not. allocated(pde_loc%fluxes)) then
             write(unit=pde_loc%obspt_unit(name), fmt=*) "#        time                      ", &
               trim(pde_loc%solution_name(2)), "            ", &
               trim(pde_loc%flux_name(2)), "   in    ", xyz(1:drutes_config%dimen), "     directions", "   cumulative flux"
             write(unit=pde_loc%obspt_unit(name), fmt=*) &
               "#-----------------------------------------------------------------------------------------------"
             write(unit=pde_loc%obspt_unit(name), fmt=*)
-          
+          else
+            i=1
+            write(unit=pde_loc%obspt_unit(name), fmt=*) "#        time                      ", &
+              trim(pde_loc%solution_name(2)), "            ", &
+             (/ (cut(fluxname(i)),  i=1, ubound(fluxname,1) ) /)
+            write(unit=pde_loc%obspt_unit(name), fmt=*) &
+              "#-----------------------------------------------------------------------------------------------"
+            write(unit=pde_loc%obspt_unit(name), fmt=*)
+          end if
         end if
 
 

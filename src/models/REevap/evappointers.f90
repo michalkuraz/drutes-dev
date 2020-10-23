@@ -81,6 +81,21 @@ module evappointers
       pde(re_ord)%mass_name(2,1) = "theta_v"
       pde(re_ord)%mass_name(2,2) = " theta_v [-]"
       
+      allocate(pde(re_ord)%fluxes(3))
+      pde(re_ord)%fluxes(1)%name(1) = "liq_flux"
+      pde(re_ord)%fluxes(1)%name(2) = "liquid flux [L/T]"
+      pde(re_ord)%fluxes(1)%val => darcy4liq
+      
+      pde(re_ord)%fluxes(2)%name(1) = "vap_flux"
+      pde(re_ord)%fluxes(2)%name(2) = "vapour flux [L/T]"
+      pde(re_ord)%fluxes(2)%val => darcy4vap
+      
+      pde(re_ord)%fluxes(3)%name(1) = "total_flux"
+      pde(re_ord)%fluxes(3)%name(2) = "total flux [L/T]"
+      pde(re_ord)%fluxes(3)%val => totalflux
+      
+
+      
       do i=lbound(pde(heat_ord)%bc,1), ubound(pde(heat_ord)%bc,1)
         if (pde(heat_ord)%bc(i)%code == 3) then
           pde(heat_ord)%bc(i)%value_fnc => ebalance_flux

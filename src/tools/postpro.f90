@@ -126,7 +126,12 @@ module postpro
   
       i=1
       
-      no_files = maxval( (/ (ubound(pde(i)%mass_name,1), i=1, ubound(pde,1)) /) ) + 3
+      if (.not. allocated(pde(i)%fluxes)) then
+        no_files = maxval( (/ (ubound(pde(i)%mass_name,1), i=1, ubound(pde,1)) /) ) + 3
+      else
+        no_files = maxval( (/ (ubound(pde(i)%mass_name,1) + ubound(pde(i)%fluxes,1), i=1, ubound(pde,1)) /) ) + 2
+      end if
+      
 
       if (.not. allocated(ids_obs)) then
         allocate(ids(ubound(pde,1), no_files))
@@ -143,7 +148,11 @@ module postpro
       allocate(filenames(ubound(pde,1)))
       
       do i=1, ubound(filenames,1)
-        allocate(filenames(i)%names(3+ubound(pde(i)%mass_name,1)))
+        if (.not. allocated(pde(i)%fluxes)) then
+          allocate(filenames(i)%names(3+ubound(pde(i)%mass_name,1)))
+        else
+          allocate(filenames(i)%names(2+ubound(pde(i)%mass_name,1)+ubound(pde(i)%fluxes,1)))
+        end if
       end do
  
 
@@ -174,10 +183,20 @@ module postpro
           end do
         end if
 
-        write(unit=filenames(proc)%names(3+ubound(pde(proc)%mass_name,1)), fmt=forma) trim(prefix),&
-                     trim(pde(proc)%problem_name(1)), "_", &
-                     trim(pde(proc)%flux_name(1)), "-", &
-                     run,  trim(extension)
+        if (.not. allocated(pde(proc)%fluxes)) then
+        
+          write(unit=filenames(proc)%names(3+ubound(pde(proc)%mass_name,1)), fmt=forma) trim(prefix),&
+                       trim(pde(proc)%problem_name(1)), "_", &
+                       trim(pde(proc)%flux_name(1)), "-", &
+                      run,  trim(extension)
+        else
+          do i=1, ubound(pde(proc)%fluxes,1)
+             write(unit=filenames(proc)%names(2+i+ubound(pde(proc)%mass_name,1)), fmt=forma) trim(prefix),&
+                       trim(pde(proc)%problem_name(1)), "_", &
+                       trim(pde(proc)%fluxes(i)%name(1)), "-", &
+                      run,  trim(extension)
+          end do
+        end if
       
          
         if ( (.not. anime .and. mode == 0)  .or. &
@@ -185,7 +204,8 @@ module postpro
          ( .not. anime .and. (mode == -1 .and. postpro_run == 0 ) ) ) then
 
          
-          do i=1, 3+ubound(pde(proc)%mass_name,1)
+!          do i=1, 3+ubound(pde(proc)%mass_name,1)
+          do i=1, ubound(filenames(proc)%names,1)
             ! if gsmh don't print element average value 
             if (i == 2 .and. observe_info%fmt == "gmsh" .and. drutes_config%dimen > 1) then
               CONTINUE
@@ -228,7 +248,6 @@ module postpro
           end select
         end if
       end do
-
 
       if (.not. anime) then
         do proc=1, ubound(pde,1)
@@ -276,10 +295,11 @@ module postpro
       use pde_objs
       use debug_tools
       
-      integer(kind=ikind) :: i, layer, proc, D, j, massdim, printdim
+      integer(kind=ikind) :: i, layer, proc, D, j, massdim, printdim, fluxid
       real(kind=rkind) :: val
       real(kind=rkind), dimension(:), allocatable, save :: massval
       real(kind=rkind), dimension(3) :: advectval
+      real(kind=rkind), dimension(:,:), allocatable :: extrafluxes
       type(integpnt_str) :: quadpnt
 
       quadpnt%type_pnt = "obpt"
@@ -305,7 +325,21 @@ module postpro
           
           quadpnt%preproc=.true.
 
-          call pde(proc)%flux(layer=layer, quadpnt=quadpnt,  vector_out=advectval(1:D))
+          if (.not. allocated(pde(proc)%fluxes)) then
+            call pde(proc)%flux(layer=layer, quadpnt=quadpnt,  vector_out=advectval(1:D))
+            observation_array(i)%cumflux(proc) = observation_array(i)%cumflux(proc) + norm2(advectval(1:D))*dtprev
+          else
+            if (.not. allocated(extrafluxes)) allocate(extrafluxes(ubound(pde(proc)%fluxes,1),D+1))
+            do fluxid=1, ubound(pde(proc)%fluxes,1)
+              call pde(proc)%fluxes(fluxid)%val(pde(proc),layer=layer, quadpnt=quadpnt, vector_out=extrafluxes(fluxid,1:D))
+              pde(proc)%fluxes(fluxid)%cumval = pde(proc)%fluxes(fluxid)%cumval + norm2(extrafluxes(fluxid,1:D))*dtprev
+              extrafluxes(fluxid, D+1) = pde(proc)%fluxes(fluxid)%cumval
+            end do
+          end if
+          
+          
+          
+            
           
           if (pde(proc)%print_mass) then
             printdim  = ubound(pde(proc)%mass,1)
@@ -320,15 +354,20 @@ module postpro
             massval(j) = pde(proc)%mass(j)%val(pde(proc),layer, quadpnt)
           end do
           
-          observation_array(i)%cumflux(proc) = observation_array(i)%cumflux(proc) + norm2(advectval(1:D))*dtprev
-  
-          write(unit=pde(proc)%obspt_unit(i), fmt=*) time, val, massval(1:printdim), advectval(1:D), &
-                  observation_array(i)%cumflux(proc)
-          
+          if (.not. allocated(pde(proc)%fluxes)) then
+            write(unit=pde(proc)%obspt_unit(i), fmt=*) time, val, massval(1:printdim), advectval(1:D), &
+                    observation_array(i)%cumflux(proc)
+          else
+            fluxid = 1
+            write(unit=pde(proc)%obspt_unit(i), fmt=*) time, val, massval(1:printdim), &
+                (/ ( extrafluxes(fluxid,:), fluxid=1, ubound(extrafluxes,1)) /)
+          end if
 
           call flush(pde(proc)%obspt_unit(i))
         end do
+        if (allocated(extrafluxes)) deallocate(extrafluxes)
       end do
+      
     end subroutine write_obs
  
 
