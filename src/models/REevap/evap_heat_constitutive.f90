@@ -15,7 +15,7 @@
 
 module evap_heat_constitutive
 
-  public :: heatcap_TT, heat_cond, convection4heat, heatdiffTh,  heatsrc_w_roots, latentheat
+  public :: heatcap_TT, heat_cond, convection4heat, heatdiffTh,  heatsrc_w_roots, latentheat, heat_flux4evap
 
   private :: water_cap, vapour_cap
   
@@ -29,7 +29,9 @@ module evap_heat_constitutive
       use pde_objs
       use re_constitutive
       use evapglob
+      use evap_RE_constitutive
       
+            
       class(pde_str), intent(in) :: pde_loc
       !> value of the nonlinear function
       real(kind=rkind), dimension(:), intent(in), optional    :: x
@@ -43,15 +45,20 @@ module evap_heat_constitutive
       real(kind=rkind), intent(out), optional                 :: scalar
       
       real(kind=rkind) :: theta, val
-      integer(kind=ikind) :: i
+      integer(kind=ikind) :: i, D
       
+      real(kind=rkind), dimension(3,3) :: Klvt
+      
+      D = drutes_config%dimen
       
       if (.not. present(quadpnt)) then
         print *, "runtime error evap_heat_constitutive::heat_cond"
         ERROR STOP
       end if
-
+      
       theta = vangen(pde(re_ord), layer, quadpnt)
+      
+      call cond_vt(layer, quadpnt, Klvt)
       
       val = soil_heat_coef(layer)%b1 + soil_heat_coef(layer)%b2*theta + soil_heat_coef(layer)%b3*sqrt(theta)
       
@@ -60,9 +67,10 @@ module evap_heat_constitutive
         do i=1, drutes_config%dimen
           tensor(i,i) = val
         end do
+        tensor = tensor + latentheat(quadpnt)*dens_liquid(quadpnt)*Klvt(1:D, 1:D)
       end if
       
-      if (present(scalar)) scalar = val
+      if (present(scalar)) scalar = tensor(1,1)
           
       
     end subroutine heat_cond
@@ -103,6 +111,62 @@ module evap_heat_constitutive
       
     end function heatcap_TT
     
+    
+     
+    subroutine heat_flux4evap(pde_loc, layer, quadpnt, x, grad,  flux, flux_length)
+      use typy
+      use pde_objs
+      use global_objs
+      use debug_tools
+      use evapglob
+      use evap_RE_constitutive
+       
+      class(pde_str), intent(in) :: pde_loc
+      integer(kind=ikind), intent(in)                          :: layer
+      type(integpnt_str), intent(in), optional :: quadpnt    
+      real(kind=rkind), intent(in), dimension(:), optional                   :: x
+      !> this value is optional, because it is required by the vector_fnc procedure pointer global definition
+      real(kind=rkind), dimension(:), intent(in), optional     :: grad
+      real(kind=rkind), dimension(:), intent(out), optional    :: flux
+      real(kind=rkind), intent(out), optional                  :: flux_length
+      real(kind=rkind), dimension(:), allocatable, save :: gradT, gradh
+      
+      real(kind=rkind), dimension(3,3) :: cond, Kvh, Klvt
+      real(kind=rkind), dimension(3) :: qconvect, flux_loc
+      integer(kind=ikind) :: D
+      
+      D = drutes_config%dimen
+      
+      if (.not. present(quadpnt)) then
+        print *, "runtime error evap_heat_constitutive::heat_flux4evap"
+        ERROR STOP
+      end if
+      
+      call pde(heat_ord)%getgrad(quadpnt, gradT)
+      
+      call pde(re_ord)%getgrad(quadpnt, gradh)
+
+      call heat_cond(pde(heat_ord), layer, quadpnt, tensor = cond(1:D, 1:D))
+      
+      call convection4heat(pde(heat_ord), layer, quadpnt, vector_out = qconvect(1:D))
+      
+      call cond_vapour4h(layer, quadpnt, Kvh(1:D, 1:D))
+      
+      call cond_vt(layer, quadpnt, Klvt(1:D, 1:D))
+      
+      flux_loc(1:D) = -matmul(cond(1:D, 1:D), gradT) +  qconvect(1:D)*pde(heat_ord)%getval(quadpnt)  &
+                - latentheat(quadpnt)*dens_liquid(quadpnt)*matmul(Kvh(1:D, 1:D),gradh) &
+                - latentheat(quadpnt)*dens_liquid(quadpnt)*matmul(Klvt(1:D, 1:D),gradT)
+      
+      if (present(flux)) then
+        flux = flux_loc(1:D)
+      end if
+      
+      if (present(flux_length)) then
+        flux_length = norm2(flux_loc(1:D))
+      end if
+    
+    end subroutine heat_flux4evap
     
     subroutine convection4heat(pde_loc, layer, quadpnt, x, vector_in, vector_out, scalar)
       use typy
@@ -156,6 +220,9 @@ module evap_heat_constitutive
       end if
       
     end subroutine convection4heat
+    
+    
+    
     
     
     subroutine heatdiffTh(pde_loc, layer, quadpnt, x, tensor, scalar)

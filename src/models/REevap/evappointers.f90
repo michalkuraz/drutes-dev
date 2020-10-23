@@ -66,6 +66,8 @@ module evappointers
       
       pde(heat_ord)%pde_fnc(heat_ord)%zerord  => heatsrc_w_roots 
       
+      pde(heat_ord)%flux  =>  heat_flux4evap
+      
       deallocate(pde(re_ord)%mass)
       deallocate(pde(re_ord)%mass_name)
       

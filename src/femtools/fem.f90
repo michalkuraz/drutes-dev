@@ -190,7 +190,7 @@ module fem
         case(-1, 0)
           dtprev = time_step
           if (itcount < 0.25*max_itcount) then
-            time_step = min(dtmax, 1.06*time_step) 
+            time_step = min(dtmax, 1.0006*time_step) 
           else
             time_step = time_step
           end if
@@ -202,7 +202,7 @@ module fem
           success_it = .true.
         case(1,2)
           dtprev = time_step
-          time_step = max(dtmin, 0.8*time_step)
+          time_step = max(dtmin, 0.9*time_step)
           success_it = .false.
           if (abs(time_step - dtmin) < epsilon(dtmin)) then
             call exitme()

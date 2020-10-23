@@ -135,6 +135,7 @@ module femmat
           call results_extractor()
           
           success = .true.
+          iter_succesfull = .true.
           RETURN
         else
           pde_common%xvect(:,2) = pde_common%xvect(:,3)
@@ -143,6 +144,7 @@ module femmat
         if (itcount >= max_itcount) then
           ierr = 1
           success = .false.
+          iter_succesfull = .false.
           EXIT
         end if
       end do

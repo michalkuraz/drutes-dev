@@ -192,7 +192,7 @@ module evap_RE_constitutive
       
       T = T2kelv(pde(heat_ord)%getval(quadpnt))
 
-      val = vapour_diff(layer, quadpnt) / dens_liquid(quadpnt) * MolWat * gravity / (T*R_gas)*relhumid(quadpnt)
+      val = vapour_diff(layer, quadpnt) / dens_liquid(quadpnt) * MolWat * gravity / (T*R_gas)*relhumid(quadpnt)*dens_satvap(quadpnt)
       
       Kvh = 0
       
@@ -234,7 +234,8 @@ module evap_RE_constitutive
       
       call mualem(pde(re_ord), layer, quadpnt, tensor=Klht)
       
-      Klht = Klht * dgamma * 5 * 1.0_rkind/71.89 * dgamma 
+      Klht = Klht * h * dgamma * 5 * 1.0_rkind/71.89 * dgamma 
+
         
       
       
@@ -274,7 +275,7 @@ module evap_RE_constitutive
       
       eta = 9.5 + 3*theta/ths - 8.5*exp(-((1+2.6/sqrt(fraction_clay)) * theta/ths)**4)
     
-      val = vapour_diff(layer, quadpnt) / dens_liquid(quadpnt) * relhumid(quadpnt) * drhosv_dT(quadpnt)      
+      val = vapour_diff(layer, quadpnt) / dens_liquid(quadpnt) * relhumid(quadpnt) * drhosv_dT(quadpnt) * eta      
       
       Klvt = 0
       

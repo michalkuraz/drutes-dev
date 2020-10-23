@@ -147,6 +147,7 @@ module evapbc4heat
       ths = vgset(layer)%ths
       
       rs = max(-805 + 4140*(ths-theta), 0.0_rkind)
+!      rs = 0
       
       pos = getmeteopos()
       quad4atm%type_pnt = "numb"
@@ -227,7 +228,7 @@ module evapbc4heat
             header_written = .true.
           end if
           i = 1
-          write(unit=outfile, fmt=*) time-dtprev, (/ ( ebalance_vals(i,:), i=1, ubound(ebalance_vals,1) ) /)
+          if (iter_succesfull) write(unit=outfile, fmt=*) time-dtprev, (/ ( ebalance_vals(i,:), i=1, ubound(ebalance_vals,1) ) /)
         end if
         quadpnt_loc%column = 2
         quadpnt_loc%type_pnt = "ndpt"

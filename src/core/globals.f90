@@ -180,6 +180,9 @@ module globals
   integer(kind=ikind), public :: postpro_dec
  
   character(len=1024), public :: backup_file
+  
+  !> if true, previous iteration level was succesfull
+  logical, public :: iter_succesfull = .false.
 
   real(kind=rkind), dimension(:,:), allocatable :: integnode_now, integnode_prev
   real(kind=rkind), dimension(:), allocatable :: elnode_prev
