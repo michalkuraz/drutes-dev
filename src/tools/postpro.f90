@@ -617,15 +617,18 @@ module postpro
       integer(kind=ikind), intent(in) :: proc
       type(integpnt_str),  intent(in out) :: quadpnt
       real(kind=rkind) :: curtime, tmp
-      integer(kind=ikind) :: i, layer, j, velocity_id, ii, jj
+      integer(kind=ikind) :: i, layer, j, velocity_id, ii, jj, D, iflux
       real(kind=rkind) ::  distance,  avgval
       type(integpnt_str) :: qpntloc
       real(kind=rkind), dimension(3) :: flux, flux_tmp
+      real(kind=rkind), dimension(:,:), allocatable :: fluxes
       real(kind=rkind), dimension(:), allocatable :: massval
       real(kind=rkind), dimension(:), allocatable, save :: pts
 
  
       if (.not. allocated(pts)) allocate(pts(ubound(nodes%data,2)))
+      
+      D = drutes_config%dimen
       
       do i=1, nodes%kolik
         quadpnt%type_pnt = "ndpt"
@@ -661,6 +664,9 @@ module postpro
         
         layer = elements%material(i)
         
+        if (allocated(pde(proc)%fluxes)) then
+          if (.not. allocated(fluxes)) allocate(fluxes(ubound(pde(proc)%fluxes,1),D))
+        end if
 
         
         ! 3 is for mass
@@ -677,22 +683,40 @@ module postpro
         end if
       
         
-        flux = 0
-        do jj=1, ubound(gauss_points%weight,1)
-          quadpnt%order = jj
-          call pde(proc)%flux(layer, quadpnt, vector_out=flux_tmp(1:drutes_config%dimen))
-          flux = flux + flux_tmp*gauss_points%weight(jj)
-        end do
-        flux = flux / gauss_points%area
         
+        if (.not. allocated(fluxes)) then 
+          flux = 0
+          do jj=1, ubound(gauss_points%weight,1)
+            quadpnt%order = jj
+            call pde(proc)%flux(layer, quadpnt, vector_out=flux_tmp(1:D))
+            flux = flux + flux_tmp*gauss_points%weight(jj)
+          end do
+          flux = flux / gauss_points%area
+        else
+          do iflux=1, ubound(fluxes,1)
+            fluxes(iflux,:) = 0 
+              do jj=1, ubound(gauss_points%weight,1)
+                quadpnt%order = jj
+                call pde(proc)%fluxes(iflux)%val(pde(proc),layer, quadpnt, vector_out=flux_tmp(1:D))
+                fluxes(iflux,:) = fluxes(iflux,:)  + flux_tmp(1:D)
+              end do
+          end do
+          fluxes = fluxes / gauss_points%area
+        end if
         
         if (.not. pde(proc)%print_mass) then
           velocity_id = 3
         else
           velocity_id = 3 + ubound(pde(proc)%mass,1)
         end if
-
-        write(unit=ids(velocity_id), fmt=*) i,  pts, flux(1:drutes_config%dimen)
+        
+        if (.not. allocated(fluxes)) then
+          write(unit=ids(velocity_id), fmt=*) i,  pts, flux(1:drutes_config%dimen)
+        else
+          do iflux=1, ubound(fluxes,1)
+            write(unit=ids(velocity_id-1+iflux), fmt=*) i,  pts, fluxes(iflux,:)
+          end do
+        end if
       end do
 
       do i=1, ubound(ids,1)
