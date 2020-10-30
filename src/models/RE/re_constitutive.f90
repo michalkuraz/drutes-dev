@@ -35,6 +35,7 @@ module RE_constitutive
   public :: derKz
   public :: re_dirichlet_bc, re_neumann_bc, re_null_bc, re_dirichlet_height_bc, re_initcond
   public :: sinkterm
+  public :: logtablesearch
   private :: zone_error_val, secondder_retc,  rcza_check_old, setmatflux, intoverflow
 
  
@@ -84,6 +85,8 @@ module RE_constitutive
       use typy
       use re_globals
       use pde_objs
+      use core_tools
+      
       class(pde_str), intent(in) :: pde_loc
       integer(kind=ikind), intent(in) :: layer
       !> pressure head
@@ -132,8 +135,12 @@ module RE_constitutive
         theta = vgset(layer)%Ths
         RETURN
       else
-        theta_e = 1/(1+(a*(abs(h)))**n)**m
-        theta = theta_e*(vgset(layer)%Ths-vgset(layer)%Thr)+vgset(layer)%Thr
+        if (cut(vgset(layer)%method) == "vgfnc") then
+          theta_e = 1/(1+(a*(abs(h)))**n)**m
+          theta = theta_e*(vgset(layer)%Ths-vgset(layer)%Thr)+vgset(layer)%Thr
+        else
+          theta = logtablesearch(h,vgset(layer)%logh, vgset(layer)%theta, vgset(layer)%step4fnc)
+        end if
       end if
 
     end function vangen
@@ -405,19 +412,23 @@ module RE_constitutive
         h = x(1)
       end if
 
-      if (h < 0) then
-        a = vgset(layer)%alpha
-        n = vgset(layer)%n
-        m = vgset(layer)%m
-        tr = vgset(layer)%Thr
-        ts = vgset(layer)%Ths
-        C = a*m*n*(-tr + ts)*(-(a*h))**(-1 + n)*(1 + (-(a*h))**n)**(-1 - m)
-      else
-        E = vgset(layer)%Ss
-        RETURN
-      end if
+      if (cut(vgset(layer)%method) == "vgfnc") then
+        if (h < 0) then
+          a = vgset(layer)%alpha
+          n = vgset(layer)%n
+          m = vgset(layer)%m
+          tr = vgset(layer)%Thr
+          ts = vgset(layer)%Ths
+          C = a*m*n*(-tr + ts)*(-(a*h))**(-1 + n)*(1 + (-(a*h))**n)**(-1 - m)
+        else
+          E = vgset(layer)%Ss
+          RETURN
+        end if
 
-      E = C + vangen(pde_loc, layer, x=(/h/))/vgset(layer)%Ths*vgset(layer)%Ss
+        E = C + vangen(pde_loc, layer, x=(/h/))/vgset(layer)%Ths*vgset(layer)%Ss
+      else
+        E = logtablesearch(h, vgset(layer)%logh, vgset(layer)%C, vgset(layer)%step4fnc)
+      end if
       
 
     end function vangen_elast
@@ -577,6 +588,7 @@ module RE_constitutive
       use typy
       use re_globals
       use pde_objs
+      use core_tools
 
       class(pde_str), intent(in) :: pde_loc
       integer(kind=ikind), intent(in) :: layer
@@ -619,16 +631,20 @@ module RE_constitutive
       end if
       
       
-      if (h >= 0) then
-        tmp = 1
-      else
-        a = vgset(layer)%alpha
-        n = vgset(layer)%n
-        m = vgset(layer)%m
+      if (cut(vgset(layer)%method) == "vgfnc") then
+        if (h >= 0) then
+          tmp = 1
+        else
+          a = vgset(layer)%alpha
+          n = vgset(layer)%n
+          m = vgset(layer)%m
 
-        tmp =  (1 - (-(a*h))**(m*n)/(1 + (-(a*h))**n)**m)**2/(1 + (-(a*h))**n)**(m/2.0_rkind)
+          tmp =  (1 - (-(a*h))**(m*n)/(1 + (-(a*h))**n)**m)**2/(1 + (-(a*h))**n)**(m/2.0_rkind)
+        end if
+      else
+        tmp = logtablesearch(h, vgset(layer)%logh, vgset(layer)%Kr, vgset(layer)%step4fnc)
       end if
-	
+  
       if (present(tensor)) then
         tensor = tmp* vgset(layer)%Ks
       end if
@@ -636,6 +652,8 @@ module RE_constitutive
       if (present(scalar)) then
         scalar = tmp
       end if
+      
+        
     end subroutine mualem
     
     
@@ -812,6 +830,7 @@ module RE_constitutive
       use globals
       use pde_objs
       use re_globals
+      use core_tools
 
       class(pde_str), intent(in) :: pde_loc
       integer(kind=ikind), intent(in) :: layer
@@ -856,20 +875,26 @@ module RE_constitutive
         h = x(1)
       end if
       
-
-      if (h < 0) then
-        a = vgset(layer)%alpha
-        n = vgset(layer)%n
-        m = vgset(layer)%m
-        Kr = (    (a*(-(a*h))**(-1 + n)*(1 + (-(a*h))**n)**(-1 - m/2.0)* &
-            (1 - (-(a*h))**(m*n)/(1 + (-(a*h))**n)**m)**2*m*n)/2.0 + &
-         (2*(1 - (-(a*h))**(m*n)/(1 + (-(a*h))**n)**m)* &
-            (-(a*(-(a*h))**(-1 + n + m*n)*(1 + (-(a*h))**n)**(-1 - m)*m*n) + &
-              (a*(-(a*h))**(-1 + m*n)*m*n)/(1 + (-(a*h))**n)**m))/ &
-          (1 + (-(a*h))**n)**(m/2.0))
+      
+      if (cut(vgset(layer)%method) == "vgfnc") then
+        if (h < 0) then
+          a = vgset(layer)%alpha
+          n = vgset(layer)%n
+          m = vgset(layer)%m
+          Kr = (    (a*(-(a*h))**(-1 + n)*(1 + (-(a*h))**n)**(-1 - m/2.0)* &
+              (1 - (-(a*h))**(m*n)/(1 + (-(a*h))**n)**m)**2*m*n)/2.0 + &
+           (2*(1 - (-(a*h))**(m*n)/(1 + (-(a*h))**n)**m)* &
+              (-(a*(-(a*h))**(-1 + n + m*n)*(1 + (-(a*h))**n)**(-1 - m)*m*n) + &
+                (a*(-(a*h))**(-1 + m*n)*m*n)/(1 + (-(a*h))**n)**m))/ &
+            (1 + (-(a*h))**n)**(m/2.0))
+        else
+          Kr = 0
+        end if
       else
-        Kr = 0
+        Kr = logtablesearch(h, vgset(layer)%logh, vgset(layer)%dKdh, vgset(layer)%step4fnc)
       end if
+      
+      
       if (present(vector_out)) then
         ! must be negative, because the commnon scheme of the CDE problem has negative convection, but RE has positive convection
         vector_out = -vgset(layer)%Ks(drutes_config%dimen,:) * Kr
@@ -2020,6 +2045,34 @@ module RE_constitutive
 
       
       end subroutine setmatflux
+      
+      
+      
+      function logtablesearch(hval, hdat, fncdat, step) result(val)
+        use typy
+        real(kind=rkind), dimension(:), intent(in) :: hdat, fncdat
+        real(kind=rkind), intent(in) :: step, hval
+        real(kind=rkind) :: val
+        
+        real(kind=rkind) :: dist
+        integer(kind=ikind) :: pos
+        
+          
+        if (hval<0) then
+            pos = int((log10(-hval)-hdat(1))/step, ikind)
+          
+            if (pos < ubound(fncdat,1)+1 ) then
+              dist = log10(-hval) - pos*step
+              val = (fncdat(pos+1) - fncdat(pos))/step*dist + fncdat(pos)
+            else
+              val = fncdat(ubound(fncdat,1))
+            end if
+        else
+          val = fncdat(lbound(fncdat,1))
+        end if
+        
+      
+      end function logtablesearch
 
 
 

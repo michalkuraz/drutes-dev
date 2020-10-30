@@ -22,7 +22,7 @@ module readtools
   public :: file_error
   public :: fileread
   private :: read_int, read_int_std, read_int_array, read_real,  read_real_array, read_char, read_char_array
-  public :: comment
+  public :: comment, reverse_comment
   public :: readbcvals
   public :: set_tensor
   public :: read_sep
@@ -315,7 +315,7 @@ module readtools
     
     
 
-    subroutine read_real_array(r, fileid, ranges, errmsg, checklen, noexit)
+    subroutine read_real_array(r, fileid, ranges, errmsg, checklen, noexit, eof)
       use typy
       use globals
       real(kind=rkind), dimension(:), intent(out) :: r
@@ -325,6 +325,7 @@ module readtools
       !> checks if the array length is equal to the length of line in file
       logical, intent(in), optional :: checklen
       logical, intent(in), optional :: noexit
+      logical, intent(out), optional :: eof
       
             !logical vars
       integer :: ierr, ierr2
@@ -394,10 +395,14 @@ module readtools
             end if
           end do
   
-          if (arraybound /= ubound(r,1)) then
-            write(unit=terminal, fmt=*) " " //achar(27)//'[91m', "the line in your input file has &
-               incorrect number of values, check your inputs" //achar(27)//'[0m'
-            if (.not. noexit_local) call file_error(fileid, errmsg)
+          if (arraybound /= ubound(r,1) ) then
+            if (.not. noexit_local) then
+              write(unit=terminal, fmt=*) " " //achar(27)//'[91m', "the line in your input file has &
+                 incorrect number of values, check your inputs" //achar(27)//'[0m'
+              call file_error(fileid, errmsg)
+            else
+              RETURN
+            end if
          end if
         end if
       end if
@@ -409,6 +414,7 @@ module readtools
       
       if (ierr /= 0) then
          terminate = .true.
+          print *, ierr
       end if
       
       
@@ -738,7 +744,7 @@ module readtools
         
       do
         read(unit=Unit,fmt = *, iostat = i_err ) String
-        if (i_err < 0) then
+        if (i_err /= 0) then
           RETURN
         end if
         if (String == symbol) then
@@ -750,6 +756,43 @@ module readtools
       end do
           
     end subroutine comment
+    
+    
+    subroutine reverse_comment(Unit,mark)
+      use debug_tools
+      integer, intent(in) :: Unit
+      character(len=1), intent(in), optional :: mark
+      character(len=1) :: symbol
+      character(len=1) :: String
+      integer :: i_err
+      
+      if (present(mark)) then
+        symbol = mark
+      else
+        symbol = "#"
+      end if
+    
+      do
+        read(unit=Unit,fmt = *, iostat = i_err ) String
+        print *, String , i_err
+        print *, ftell(unit) ; call wait()
+        
+        if (i_err /= 0) then
+          RETURN
+        end if
+        
+        if (String == symbol) then
+          print *, "vifu", String, symbol
+          backspace Unit
+          backspace Unit
+        else
+          backspace Unit
+          RETURN
+        end if
+      end do
+      
+    end subroutine reverse_comment
+      
 
 
     !> this procedure set up an anisothropy tensor, the local anisothrophy values are supllied in values array, angle is the angle between the local and global system, tensor is the resulting secodn order tensor

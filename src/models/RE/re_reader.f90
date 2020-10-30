@@ -20,7 +20,7 @@
 
 module re_reader
   public :: res_read
-  private :: read_roots, REevapbc_read
+  private :: read_roots, REevapbc_read, read_shp_tab
 
   contains
 
@@ -35,13 +35,19 @@ module re_reader
       use core_tools
       use readtools
       use debug_tools
+      use, intrinsic :: ieee_arithmetic, only: IEEE_Value, IEEE_QUIET_NAN
+      use, intrinsic :: iso_fortran_env, only: real32
+
       
       class(pde_str), intent(in out) :: pde_loc
-      integer :: ierr, i, j, filewww
+      integer :: ierr,  filewww
+      integer(kind=ikind) :: i, j
       integer(kind=ikind) :: n
       character(len=1) :: yn
       character(len=4096) :: msg
       real(kind=rkind), dimension(:), allocatable :: tmpdata
+
+      real(kind=rkind) :: nan
 
       pde_loc%problem_name(1) = "RE_matrix"
       pde_loc%problem_name(2) = "Richards' equation"
@@ -115,14 +121,44 @@ module re_reader
          "         alpha   n   m   theta_r   theta_s   S_s "
       allocate(tmpdata(6))
       do i = 1, ubound(vgset,1)
-        call fileread(tmpdata, errmsg=msg, fileid=file_waterm, checklen=.true.)
-        vgset(i)%alpha=tmpdata(1)
-        vgset(i)%n=tmpdata(2)
-        vgset(i)%m=tmpdata(3)
-        vgset(i)%thr=tmpdata(4)
-        vgset(i)%ths=tmpdata(5)
-        vgset(i)%Ss=tmpdata(6)
+      
+        call comment(file_waterm)
+        
+        read(file_waterm, fmt = *, iostat=ierr) tmpdata
+        
+        if (ierr == 0) then 
+          backspace file_waterm
+          call fileread(tmpdata, errmsg=msg, fileid=file_waterm, checklen=.true., ranges=(/ 0.0_rkind, huge(0.0_rkind) /))
+          vgset(i)%method = "vgfnc"
+        else
+          backspace file_waterm
+          call fileread(vgset(i)%method, fileid=file_waterm, errmsg="set correct option for soil hydraulic functions", &
+                      options=(/"vgfnc", "table"/))
+          if (cut(vgset(i)%method) == "vgfnc") then
+            backspace file_waterm
+            tmpdata = IEEE_VALUE(nan, IEEE_QUIET_NAN)
+            read(unit=file_waterm, fmt = *) vgset(i)%method, tmpdata
+            do j=1, ubound(tmpdata,1)
+              if (isnan(tmpdata(j))) then
+                write(msg, *) "not enough data for soil hydraulic properties for layer:", i
+                call file_error(file_waterm, cut(msg))
+              end if
+            end do
+          end if
+        end if
+        if (cut(vgset(i)%method) == "vgfnc") then
+          vgset(i)%alpha=tmpdata(1)
+          vgset(i)%n=tmpdata(2)
+          vgset(i)%m=tmpdata(3)
+          vgset(i)%thr=tmpdata(4)
+          vgset(i)%ths=tmpdata(5)
+          vgset(i)%Ss=tmpdata(6)
+        else
+          call read_shp_tab(i)
+        end if
       end do
+                
+
       
      
 
@@ -338,6 +374,170 @@ module re_reader
       
     
     end subroutine REevapbc_read
+    
+    
+    subroutine read_shp_tab(layer)
+      use typy
+      use readtools
+      use core_tools
+      use re_globals
+      use debug_tools
+      
+      integer(kind=ikind), intent(in) :: layer
+      
+      character(len=128)              :: filename
+      integer(kind=ikind)             :: decimals=1
+      character(len=64)               :: forma
+      integer                         :: fileid, ierr
+      real(kind=rkind), dimension(4)  :: tmpdata
+      real(kind=rkind) :: tmpreal, step
+      integer(kind=ikind) :: counter, i, tablesize, pos, j
+      character(len=2048) :: msg
+      real(kind=rkind), dimension(:,:), allocatable :: constable
+    
+      
+      do 
+        if (layer/(10**decimals) < 1) then
+          EXIT
+        else
+          decimals = decimals + 1
+        end if
+      end do
+      
+      write(unit=forma, fmt="(a, I16, a)") "(a, I", decimals," a)"
+      
+      write(filename, fmt=forma) "drutes.conf/water.conf/SHP-", layer, ".in"
+      
+      open(newunit=fileid, file=cut(filename), status="old", action="read", iostat=ierr)
+      
+      if (ierr /= 0) then
+        print *, "unable to open the file: ", cut(filename)
+        print *, "check your configuration in: drutes.conf/water.conf where you assign soil hydraulic properties..."
+        call file_error(file_waterm)
+      end if
+      
+      call fileread(tmpdata(1:2), fileid, checklen=.true., ranges=(/0.0_rkind, 1.0_rkind /))
+      
+      if (tmpdata(1) >= tmpdata(2) ) then
+        call file_error(fileid, "residual water content can't be greater or equal to saturated water content")
+      else
+        vgset(layer)%thr = tmpdata(1)
+        vgset(layer)%ths = tmpdata(2)
+      end if
+      
+      counter = 0
+      do 
+        call comment(fileid)
+        read(fileid, fmt=*, iostat=ierr) tmpreal
+        if (ierr == 0) then
+          counter = counter + 1
+        else
+          EXIT
+        end if
+      end do
+      
+      close(fileid)
+      open(newunit=fileid, file=cut(filename), status="old", action="read", iostat=ierr)
+      
+      call fileread(tmpdata(1:2), fileid, checklen=.true., ranges=(/0.0_rkind, 1.0_rkind /))
+      
+      !! constable(1) = h
+      !! constable(2) = theta
+      !! constable(3) = K
+      !! constable(4) = C
+      allocate(constable(counter,4))
+      do i=1, counter
+        call fileread(constable(i,:), fileid, checklen=.true.)
+      end do
+      
+      if ( abs(constable(1,1)) > epsilon(tmpreal) ) then
+        write(msg, fmt=*) "first value must be for h=0, in your data the first value is: ", constable(1,1)
+        call file_error(fileid, cut(msg))
+      end if
+      
+      if (abs(constable(1,2) - vgset(layer)%ths) > epsilon(tmpreal)) then
+        write(msg, fmt = *) "Your saturated water content is:", vgset(layer)%ths, &
+          "but in your data the water content for h=0 is: ", constable(1,2)
+          
+        call file_error(fileid, msg)
+      end if 
+        
+      if (abs(constable(1,3) - 1.0_rkind) > epsilon(tmpreal)) then
+        write(msg, fmt = *) "For h=0 the residual water content is 1.0, but in your data K_r(0)= ", constable(1,3)
+        call file_error(fileid, msg)
+      end if
+      
+      if (abs(constable(1,4)) > epsilon(tmpreal)) then
+        write(msg, fmt = *) "For h=0 the rentention water capacity should be equal 0.0, but in your data C(0)=", constable(1,4)
+        call file_error(fileid, msg)
+      end if
+       
+      
+      step = huge(step)
+      
+      tmpreal = 0
+      
+      do i=3, ubound(constable,1)
+        tmpreal = tmpreal + abs(log10(-constable(i,1)) - log10(-constable(i-1,1)))
+        if (abs(log10(-constable(i,1)) - log10(-constable(i-1,1))) < step) then
+          step  = abs(log10(-constable(i,1)) - log10(-constable(i-1,1)))
+        end if
+      end do
+      
+      tablesize = int((log10(-constable(ubound(constable,1),1))-log10(-constable(2,1)))/step) + 1
+      
+      step = (log10(-constable(ubound(constable,1),1))-log10(-constable(2,1)))/tablesize
+      
+      allocate(vgset(layer)%logh(tablesize+1))
+      allocate(vgset(layer)%Kr(0:tablesize+1))
+      allocate(vgset(layer)%theta(0:tablesize+1))
+      allocate(vgset(layer)%C(0:tablesize+1))
+      allocate(vgset(layer)%dKdh(0:tablesize+1))
+      
+      vgset(layer)%logh(1) = log10(-constable(2,1))
+      
+      do i=2, tablesize+1
+        vgset(layer)%logh(i) = vgset(layer)%logh(i-1) + step
+      end do
+      
+      vgset(layer)%step4fnc = step
+      
+      vgset(layer)%theta(1) = constable(2,2)
+      vgset(layer)%Kr(1) = constable(2,3)
+      vgset(layer)%C(1) = constable(2,4)
+      
+      vgset(layer)%theta(0) = constable(1,2)
+      vgset(layer)%Kr(0) = constable(1,3)
+      vgset(layer)%C(0) = constable(1,4)
+
+      pos = 1
+      do i=2, ubound(vgset(layer)%logh,1)
+        searchme: do j = pos, ubound(constable,1) - 1
+          if (-10**(vgset(layer)%logh(i)) <= constable(j,1) .and. -10**(vgset(layer)%logh(i)) > constable(j+1,1)) then
+            pos = j
+            vgset(layer)%theta(i) = (constable(j+1,2)-constable(j,2))/(log10(-constable(j+1,1)- log10(-constable(j,1)))) * &
+                                     (vgset(layer)%logh(i) - log10(-constable(j,1))) + constable(j,2)
+            vgset(layer)%Kr(i) = (constable(j+1,3)-constable(j,3))/(log10(-constable(j+1,1)- log10(-constable(j,1)))) * &
+                                     (vgset(layer)%logh(i) - log10(-constable(j,1))) + constable(j,3)
+            vgset(layer)%C(i) = (constable(j+1,4)-constable(j,4))/(log10(-constable(j+1,1)- log10(-constable(j,1)))) * &
+                                     (vgset(layer)%logh(i) - log10(-constable(j,1))) + constable(j,4)
+            EXIT searchme
+          end if
+        end do searchme
+      end do
+      
+      vgset(layer)%dKdh(0) = 0
+      
+      vgset(layer)%dKdh(1) = (vgset(layer)%Kr(0) - vgset(layer)%Kr(1))/10**vgset(layer)%logh(1)
+        
+      do i=2, ubound(vgset(layer)%dKdh,1)
+        vgset(layer)%dKdh(i) = (vgset(layer)%Kr(i-1) - vgset(layer)%Kr(i))/(-10**vgset(layer)%logh(i-1) + 10**vgset(layer)%logh(i))
+      end do
+  
+ 
+      
+    
+    end subroutine read_shp_tab
 
 
    

@@ -19,6 +19,7 @@
 
 module re_globals
   use typy
+  use global_objs
 
 
   !> rcza structure
@@ -30,6 +31,18 @@ module re_globals
 
 
   type, public :: soilpar
+    !> if method = vgfnc - van Genuuchten functions are used
+    !! if method = table - constituve values are provided in table
+    !<
+    character(len=16) :: method
+    !> use only if method = table 
+    !! constable(1) = h
+    !! constable(2) = theta
+    !! constable(3) = K
+    !! constable(4) = C
+    !<
+    real(kind=rkind), dimension(:), allocatable :: logh, Kr, theta, C, dKdh
+    real(kind=rkind) :: step4fnc
     real(kind=rkind) :: alpha, n, m, Thr, Ths, Ss
     !> hydraulic conductivity tensor of second order
     real(kind=rkind), dimension(:,:), allocatable :: Ks
