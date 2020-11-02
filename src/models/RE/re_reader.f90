@@ -515,12 +515,14 @@ module re_reader
         searchme: do j = pos, ubound(constable,1) - 1
           if (-10**(vgset(layer)%logh(i)) <= constable(j,1) .and. -10**(vgset(layer)%logh(i)) > constable(j+1,1)) then
             pos = j
-            vgset(layer)%theta(i) = (constable(j+1,2)-constable(j,2))/(log10(-constable(j+1,1)- log10(-constable(j,1)))) * &
-                                     (vgset(layer)%logh(i) - log10(-constable(j,1))) + constable(j,2)
-            vgset(layer)%Kr(i) = (constable(j+1,3)-constable(j,3))/(log10(-constable(j+1,1)- log10(-constable(j,1)))) * &
-                                     (vgset(layer)%logh(i) - log10(-constable(j,1))) + constable(j,3)
-            vgset(layer)%C(i) = (constable(j+1,4)-constable(j,4))/(log10(-constable(j+1,1)- log10(-constable(j,1)))) * &
-                                     (vgset(layer)%logh(i) - log10(-constable(j,1))) + constable(j,4)
+            vgset(layer)%theta(i) = (constable(j+1,2)-constable(j,2))/(constable(j+1,1)- constable(j,1)) * &
+                                     (-10**vgset(layer)%logh(i) - constable(j,1)) + constable(j,2)
+
+            vgset(layer)%Kr(i) = (constable(j+1,3)-constable(j,3))/(constable(j+1,1)- constable(j,1)) * &
+                                     (-10**vgset(layer)%logh(i) - constable(j,1)) + constable(j,3)
+                                     
+            vgset(layer)%C(i) = (constable(j+1,4)-constable(j,4))/(constable(j+1,1)- constable(j,1)) * &
+                                     (-10**vgset(layer)%logh(i) - constable(j,1)) + constable(j,4)
             EXIT searchme
           end if
         end do searchme
@@ -533,7 +535,7 @@ module re_reader
       do i=2, ubound(vgset(layer)%dKdh,1)
         vgset(layer)%dKdh(i) = (vgset(layer)%Kr(i-1) - vgset(layer)%Kr(i))/(-10**vgset(layer)%logh(i-1) + 10**vgset(layer)%logh(i))
       end do
-  
+      
  
       
     

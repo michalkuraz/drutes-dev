@@ -2050,28 +2050,33 @@ module RE_constitutive
       
       function logtablesearch(hval, hdat, fncdat, step) result(val)
         use typy
-        real(kind=rkind), dimension(:), intent(in) :: hdat, fncdat
-        real(kind=rkind), intent(in) :: step, hval
+        use debug_tools
+        
+        real(kind=rkind), dimension(:), intent(in) :: hdat
+        real(kind=rkind), dimension(0:), intent(in) :: fncdat
+        real(kind=rkind), intent(in out) :: step, hval
         real(kind=rkind) :: val
         
         real(kind=rkind) :: dist
-        integer(kind=ikind) :: pos
+        integer(kind=ikind) :: pos, i
         
+
           
-        if (hval<0) then
-            pos = int((log10(-hval)-hdat(1))/step, ikind)
+        if (hval<-10**hdat(1)) then
+            pos = int((log10(-hval)-hdat(1))/step, ikind) + 1
           
             if (pos < ubound(fncdat,1)+1 ) then
-              dist = log10(-hval) - pos*step
+              dist = log10(-hval) - ((pos-1)*step + hdat(1))
               val = (fncdat(pos+1) - fncdat(pos))/step*dist + fncdat(pos)
             else
               val = fncdat(ubound(fncdat,1))
             end if
+
         else
           val = fncdat(lbound(fncdat,1))
         end if
         
-      
+
       end function logtablesearch
 
 
