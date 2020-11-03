@@ -153,6 +153,7 @@ module re_reader
           vgset(i)%thr=tmpdata(4)
           vgset(i)%ths=tmpdata(5)
           vgset(i)%Ss=tmpdata(6)
+!          call check4tables()
         else
           call read_shp_tab(i)
         end if
@@ -540,6 +541,30 @@ module re_reader
       
     
     end subroutine read_shp_tab
+    
+    
+    subroutine check4tables()
+      use typy
+      use re_constitutive
+      use global_objs
+      use pde_objs
+      
+      integer(kind=ikind) :: i
+      type(integpnt_str) :: quadpnt
+      real(kind=rkind) :: hinit = -1e-3, logstep, Kr
+      
+      logstep = 0.05
+      quadpnt%type_pnt="numb"
+      do i=1, 200
+        hinit = -10**(log10(-hinit) + logstep)
+        quadpnt%this_is_the_value = hinit
+        call  mualem(pde(1), 1_ikind, quadpnt, scalar=Kr)
+        print *,  hinit, vangen(pde(1), 1_ikind, quadpnt), Kr, vangen_elast(pde(1), 1_ikind, quadpnt)
+      end do
+      
+      stop
+    
+    end subroutine check4tables
 
 
    
