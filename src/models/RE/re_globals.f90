@@ -34,7 +34,7 @@ module re_globals
     !> if method = vgfnc - van Genuuchten functions are used
     !! if method = table - constituve values are provided in table
     !<
-    character(len=16) :: method
+    character(len=5) :: method
     !> use only if method = table 
     !! constable(1) = h
     !! constable(2) = theta
@@ -76,7 +76,6 @@ module re_globals
   !!!!!!!!!!!!!--material parameters and methods for matrix--!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-  type(soilpar), dimension(:), allocatable, target, public :: vgmatrix
   !> formula of the retention curve
   integer(kind=ikind), public :: retc_method
   

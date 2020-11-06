@@ -135,7 +135,7 @@ module RE_constitutive
         theta = vgset(layer)%Ths
         RETURN
       else
-        if (cut(vgset(layer)%method) == "vgfnc") then
+        if (vgset(layer)%method == "vgfnc") then
           theta_e = 1/(1+(a*(abs(h)))**n)**m
           theta = theta_e*(vgset(layer)%Ths-vgset(layer)%Thr)+vgset(layer)%Thr
         else
@@ -412,7 +412,7 @@ module RE_constitutive
         h = x(1)
       end if
 
-      if (cut(vgset(layer)%method) == "vgfnc") then
+      if (vgset(layer)%method == "vgfnc") then
         if (h < 0) then
           a = vgset(layer)%alpha
           n = vgset(layer)%n
@@ -631,7 +631,7 @@ module RE_constitutive
       end if
       
       
-      if (cut(vgset(layer)%method) == "vgfnc") then
+      if (vgset(layer)%method == "vgfnc") then
         if (h >= 0) then
           tmp = 1
         else
@@ -876,7 +876,7 @@ module RE_constitutive
       end if
       
       
-      if (cut(vgset(layer)%method) == "vgfnc") then
+      if (vgset(layer)%method == "vgfnc") then
         if (h < 0) then
           a = vgset(layer)%alpha
           n = vgset(layer)%n

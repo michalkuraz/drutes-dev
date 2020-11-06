@@ -230,18 +230,15 @@ module RE_pointers
       end if
       
 
-      do i=1, ubound(vgmatrix,1)
-        if (vgmatrix(i)%rcza_set%use) then
-          call init_zones(vgmatrix)
+      do i=1, ubound(vgset,1)
+        if (vgset(i)%rcza_set%use) then
+          call init_zones(vgset)
           pde_loc%dt_check => rcza_check
           EXIT
         end if
       end do
       
       pde_loc%pde_fnc(pde_loc%order)%zerord  => sinkterm
-      
-
-      
       
     
     end subroutine allREpointers
