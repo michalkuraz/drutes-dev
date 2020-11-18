@@ -57,7 +57,7 @@ module postpro
       type(integpnt_str)                                    :: quadpnt
       integer(kind=ikind), save                             :: anime_run, anime_dec
       integer                                               :: ierr
-      integer(kind=ikind)                                   :: no_files
+      integer(kind=ikind)                                   :: no_files, masscnt, fluxcnt
       character(len=256) :: name_of_file
 
       if (present(name)) then
@@ -126,10 +126,23 @@ module postpro
   
       i=1
       
-      if (.not. allocated(pde(i)%fluxes)) then
-        no_files = maxval( (/ (ubound(pde(i)%mass_name,1), i=1, ubound(pde,1)) /) ) + 3
+      masscnt=0
+      fluxcnt=0
+      do i=1, ubound(pde,1)
+        if (allocated(pde(i)%mass_name) ) then
+          masscnt = max(masscnt, 1_ikind*ubound(pde(i)%mass_name,1))
+        end if
+        
+        if (allocated(pde(i)%fluxes)) then
+          fluxcnt = max(fluxcnt , 1_ikind*ubound(pde(i)%fluxes,1))
+        end if
+      end do
+        
+      
+      if (fluxcnt == 0) then
+        no_files = masscnt + 3
       else
-        no_files = maxval( (/ (ubound(pde(i)%mass_name,1) + ubound(pde(i)%fluxes,1), i=1, ubound(pde,1)) /) ) + 2
+        no_files = masscnt + fluxcnt + 2
       end if
       
 
@@ -137,7 +150,10 @@ module postpro
         allocate(ids(ubound(pde,1), no_files))
         allocate(ids_obs(ubound(pde,1), no_files))
         allocate(ids_anime(ubound(pde,1), no_files))
+        ids_obs = 0
+        ids_anime = 0
       end if
+      
       
       if (anime) then
         ids => ids_anime
@@ -254,9 +270,9 @@ module postpro
           do i=1,ubound(ids,2)
             if (i /= 3 .or. pde(proc)%print_mass) then
               if (mode == 0) then
-                close(ids(proc,i))
+                if (ids(proc,i) /= 0) close(ids(proc,i))
               else
-                call flush(ids(proc,i))
+                 if (ids(proc,i) /= 0) call flush(ids(proc,i))
               end if
             end if
           end do
@@ -720,7 +736,7 @@ module postpro
       end do
 
       do i=1, ubound(ids,1)
-        close(ids(i))
+        if (ids(i) /= 0) close(ids(i))
       end do
 
     end subroutine print_pure
