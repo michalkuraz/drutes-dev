@@ -247,6 +247,119 @@ module kinfnc
     end subroutine kinconvect
     
     
+     subroutine kinconvectcl(pde_loc, layer, quadpnt, x, vector_in, vector_out, scalar)
+      use typy
+      use globals
+      use global_objs
+      use pde_objs
+      use re_globals
+      use geom_tools
+      use debug_tools
+      use kinglobs
+
+      class(pde_str), intent(in) :: pde_loc
+      integer(kind=ikind), intent(in) :: layer
+      type(integpnt_str), intent(in), optional :: quadpnt    
+      !> pressure head
+      real(kind=rkind), dimension(:), intent(in), optional :: x
+      !> this argument is required by the global vector_fnc procedure pointer, unused in this procedure
+      real(kind=rkind), dimension(:), intent(in), optional :: vector_in
+      !> first order tensor of the unsaturated hydraulic conductivity derivative in respect to h. it is the last column of the hydraulic conductivity second order tensor times  
+      !!relative unsaturated hydraulic conductivity derivative in respect to h (scalar value)
+      !<
+      real(kind=rkind), dimension(:), intent(out), optional :: vector_out
+      !> relative unsaturated hydraulic conductivity derivative in respect to h, scalar value
+      real(kind=rkind), intent(out), optional :: scalar
+      
+      integer(kind=ikind) :: el, D, i
+      real(kind=rkind) :: hsurf, m
+      type(integpnt_str) :: quadpnt_loc
+      real(kind=rkind), dimension(:), allocatable, save :: ndvals, slopes
+      real(kind=rkind), dimension(:,:), allocatable, save :: abc
+      
+      
+      el = quadpnt%element
+      
+      hsurf = max(0.0_rkind, pde_loc%getval(quadpnt))
+      
+      m = 5.0_rkind/3
+      
+      D = drutes_config%dimen
+      
+      if (.not. allocated(slopes)) allocate(slopes(drutes_config%dimen))
+      
+      if (backwater) then
+        if (.not. allocated(ndvals)) allocate(ndvals(ubound(elements%data,2)))
+        
+        quadpnt_loc%type_pnt = "ndpt"
+        quadpnt_loc%column = 3
+        
+        do i=1, ubound(ndvals,1)
+          quadpnt_loc%order = elements%data(el,i)
+          ndvals(i) = pde_loc%getval(quadpnt_loc)
+        end do
+        
+        select case(D)
+          case(1)
+            slopes(1) = (ndvals(2) - ndvals(1))/(nodes%data(elements%data(el,2),1) - nodes%data(elements%data(el,1),1))
+            slopes(1) = slopes(1) +  watershed_el(el)%sx
+          case(2)
+            if (.not. allocated(abc)) allocate(abc(ubound(elements%data,2),3))
+            
+            do i=1, ubound(elements%data,2)
+              abc(i, 1:2) = nodes%data(elements%data(el,i),:)
+              abc(i,3) = ndvals(i)
+            end do
+            
+            call plane_derivative(abc(1,:), abc(2,:), abc(3,:), slopes(1), slopes(2))
+            
+            slopes(1) = slopes(1) + watershed_el(el)%sx
+            slopes(2) = slopes(2) + watershed_el(el)%sy
+            
+          case(3)
+            print *, "kinematic wave has no sense for three-dimensions"
+            print *, "exited from kinfnc::kinconvect"
+            ERROR STOP
+          end select
+        else
+          select case(D)
+            case(1)
+              slopes(1) = watershed_el(el)%sx
+            case(2)
+              slopes(1) = watershed_el(el)%sx
+              slopes(2) = watershed_el(el)%sy
+            case(3)
+            print *, "kinematic wave has no sense for three-dimensions"
+            print *, "exited from kinfnc::kinconvect"
+            ERROR STOP
+          end select
+        end if
+        
+        vector_out(1:D) = -1.49_rkind * sign(1.0_rkind, slopes(1:D)) * & 
+                            sqrt(abs( slopes(1:D)))/manning(layer)*hsurf**m
+  
+!         select case (drutes_config%dimen)
+!         
+!           case(1)
+!             vector_out(1) = -1.49_rkind * sign(1.0_rkind, watershed_el(el)%sx) * & 
+!                             sqrt(abs( watershed_el(el)%sx))/manning(layer)*m*hsurf**(m-1)
+!         
+!           case(2)
+!         
+!             vector_out(1) = -1.49_rkind * sign(1.0_rkind, watershed_el(el)%sx) * & 
+!                             sqrt(abs( watershed_el(el)%sx))/manning(layer)*m*hsurf**(m-1)
+!             
+!             vector_out(2) = -1.49_rkind * sign(1.0_rkind, watershed_el(el)%sy) * & 
+!                             sqrt(abs( watershed_el(el)%sy))/manning(layer)*m*hsurf**(m-1)
+!                             
+!             
+! 
+!             
+!         end select
+        
+    end subroutine kinconvectcl
+    
+    
     
     subroutine kinbor(pde_loc, el_id, node_order, value, code, array) 
       use typy
@@ -355,9 +468,56 @@ module kinfnc
     end function rainfall
     
     
+    
+    function kincl_source(pde_loc, layer, quadpnt, x) result(val)
+      use typy
+      use global_objs
+      use pde_objs
+      use kinglobs
+      
+      class(pde_str), intent(in) :: pde_loc
+      !> value of the nonlinear function
+      real(kind=rkind), dimension(:), intent(in), optional    :: x
+      !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
+      type(integpnt_str), intent(in), optional :: quadpnt
+      !> material ID
+      integer(kind=ikind), intent(in) :: layer
+      !> return value
+      real(kind=rkind)                :: val 
+      
+      
+      val = -kinsols(layer)%lambda
+      
+      
+    end function kincl_source
+    
+    function kincs_source(pde_loc, layer, quadpnt, x) result(val)
+      use typy
+      use global_objs
+      use pde_objs
+      use kinglobs
+      
+      class(pde_str), intent(in) :: pde_loc
+      !> value of the nonlinear function
+      real(kind=rkind), dimension(:), intent(in), optional    :: x
+      !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
+      type(integpnt_str), intent(in), optional :: quadpnt
+      !> material ID
+      integer(kind=ikind), intent(in) :: layer
+      !> return value
+      real(kind=rkind)                :: val 
+      
+      
+      val = kinsols(layer)%lambda*kinsols(layer)%rhos
+      
+      
+    end function kincs_source
+    
+    
+    
     function kin_elast(pde_loc,layer, quadpnt, x) result(E)
       use typy
-      use heat_globals
+      use kinglobs
       use pde_objs
       use core_tools
 
@@ -389,6 +549,111 @@ module kinfnc
 
     end function kin_elast 
     
+    
+        
+    function kin_clelast(pde_loc,layer, quadpnt, x) result(E)
+      use typy
+      use heat_globals
+      use pde_objs
+      use core_tools
+
+      class(pde_str), intent(in) :: pde_loc 
+      integer(kind=ikind), intent(in) :: layer
+      !> pressure head
+      real(kind=rkind), intent(in), dimension(:),  optional :: x
+      !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
+      type(integpnt_str), intent(in), optional :: quadpnt
+      real(kind=rkind) :: h
+      !> resulting system elasticity
+      real(kind=rkind) :: E
+
+       
+      
+      if (present(quadpnt) .and. present(x)) then
+        print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
+        print *, "exited from heat_fnc::heat_elast"
+        ERROR stop
+      else if (.not. present(quadpnt) .and. .not. present(x)) then
+        print *, "ERROR: you have not specified either integ point or x value"
+        print *, "exited from heat_fnc::heat_elast"
+        ERROR stop
+      end if
+
+
+      E = pde(1)%getval(quadpnt)
+      
+
+    end function kin_clelast
+    
+    
+    function kin_cselast(pde_loc,layer, quadpnt, x) result(E)
+      use typy
+      use kinglobs
+      use pde_objs
+      use core_tools
+
+      class(pde_str), intent(in) :: pde_loc 
+      integer(kind=ikind), intent(in) :: layer
+      !> pressure head
+      real(kind=rkind), intent(in), dimension(:),  optional :: x
+      !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
+      type(integpnt_str), intent(in), optional :: quadpnt
+      real(kind=rkind) :: h
+      !> resulting system elasticity
+      real(kind=rkind) :: E
+
+       
+      
+      if (present(quadpnt) .and. present(x)) then
+        print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
+        print *, "exited from heat_fnc::heat_elast"
+        ERROR stop
+      else if (.not. present(quadpnt) .and. .not. present(x)) then
+        print *, "ERROR: you have not specified either integ point or x value"
+        print *, "exited from heat_fnc::heat_elast"
+        ERROR stop
+      end if
+
+
+      E = kinsols(layer)%horb*kinsols(layer)%rhos
+      
+
+    end function kin_cselast
+    
+        
+    function kin_csclelast(pde_loc,layer, quadpnt, x) result(E)
+      use typy
+      use heat_globals
+      use pde_objs
+      use core_tools
+
+      class(pde_str), intent(in) :: pde_loc 
+      integer(kind=ikind), intent(in) :: layer
+      !> pressure head
+      real(kind=rkind), intent(in), dimension(:),  optional :: x
+      !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
+      type(integpnt_str), intent(in), optional :: quadpnt
+      real(kind=rkind) :: h
+      !> resulting system elasticity
+      real(kind=rkind) :: E
+
+       
+      
+      if (present(quadpnt) .and. present(x)) then
+        print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
+        print *, "exited from heat_fnc::heat_elast"
+        ERROR stop
+      else if (.not. present(quadpnt) .and. .not. present(x)) then
+        print *, "ERROR: you have not specified either integ point or x value"
+        print *, "exited from heat_fnc::heat_elast"
+        ERROR stop
+      end if
+
+
+      E = pde(1)%getval(quadpnt)
+      
+
+    end function kin_csclelast
 
 
 end module kinfnc

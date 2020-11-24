@@ -122,7 +122,7 @@ module manage_pointers
           call kinwaveprocs(pde_common%processes)
           call pde_constructor(pde_common%processes)
           write(unit=drutes_config%fullname, fmt=*) "kinematic wave equation for real catchments"
-          call kinwavelinker(pde(1))
+          call kinwavelinker()
           
 	  
         case("freeze")

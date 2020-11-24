@@ -124,7 +124,7 @@ module kinreader
     
 
     
-    subroutine kininit(pde_loc)
+    subroutine kininit()
       use typy
       use pde_objs
       use kinglobs
@@ -134,7 +134,6 @@ module kinreader
       use global_objs
       use debug_tools
       
-      class(pde_str), intent(in out) :: pde_loc
       integer :: file_kinematix, ierr, filerain, frainpts
       integer(kind=ikind) :: n, i, counter, j, k
       character(len=512) :: msg
@@ -160,19 +159,19 @@ module kinreader
         end select
       end if
       
-      pde_loc%problem_name(1) = "runoff"
-      pde_loc%problem_name(2) = "Kinematic wave equation for real catchments"
+      pde(1)%problem_name(1) = "runoff"
+      pde(1)%problem_name(2) = "Kinematic wave equation for real catchments"
 
-      pde_loc%solution_name(1) = "runoff_depth" !nazev vystupnich souboru
-      pde_loc%solution_name(2) = "[L] " !popisek grafu
+      pde(1)%solution_name(1) = "runoff_depth" !nazev vystupnich souboru
+      pde(1)%solution_name(2) = "[L] " !popisek grafu
 
-      pde_loc%flux_name(1) = "runoff_flux"  
-      pde_loc%flux_name(2) = "runoff flux [L3.T-1.L-2]"
+      pde(1)%flux_name(1) = "runoff_flux"  
+      pde(1)%flux_name(2) = "runoff flux [L3.T-1.L-2]"
     
-      allocate(pde_loc%mass_name(1,2))
+      allocate(pde(1)%mass_name(1,2))
       
-      pde_loc%mass_name(1,1) = "runoff_height"
-      pde_loc%mass_name(1,2) = "runoff elevation [m a.m.s.l]"
+      pde(1)%mass_name(1,1) = "runoff_height"
+      pde(1)%mass_name(1,2) = "runoff elevation [m a.m.s.l]"
       
       open(newunit=file_kinematix, file="drutes.conf/kinwave/kinwave.conf", action="read", status="old", iostat = ierr)
       
@@ -181,6 +180,8 @@ module kinreader
       write(msg, fmt=*) "You have specified incorrect number of subregions with different Manning cofficients,", new_line("a"),  &
       "according to mesh definitions, you should define", n, "different Manning values." 
       
+      
+      call fileread(with_solutes, fileid=file_kinematix, errmsg="set y/n if you want to couple your model with solute transport")
       
       allocate(manning(n))
       
@@ -242,10 +243,19 @@ module kinreader
         end select
       end do
       
-      call fileread(with_solutes, fileid=file_kinematix)
+
       
       if (with_solutes) then
-        
+        allocate(kinsols(n))
+        deallocate(tmp_array)
+        allocate(tmp_array(4))
+        do i=1,n
+          call fileread(tmp_array, fileid=file_kinematix, checklen=.true.)
+          kinsols(i)%horb = tmp_array(1)
+          kinsols(i)%csinit = tmp_array(2)
+          kinsols(i)%rhos = tmp_array(3)
+          kinsols(i)%lambda = tmp_array(4)
+        end do
       end if
             
       
@@ -272,6 +282,7 @@ module kinreader
       close(frainpts)
       
       open(newunit=frainpts, file="drutes.conf/kinwave/rain.pts", status="old", action="read", iostat=ierr)
+
       
       allocate(raindata(counter))
       

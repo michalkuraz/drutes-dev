@@ -19,28 +19,46 @@ module kinpointer
   
     subroutine kinwaveprocs(number) 
       use typy
-      integer(kind=ikind), intent(out) :: number
+      use readtools
       
-      number = 1
+      integer(kind=ikind), intent(out) :: number
+      integer :: fileid, ierr
+      logical :: yes
+      
+      open(newunit=fileid, file="drutes.conf/kinwave/kinwave.conf",action="read", status="old", iostat=ierr)
+      
+      if (ierr /= 0) then
+        print *, "unable to open drutes.conf/kinwave/kinwave.conf, exiting..."
+        error stop
+      end if
+      
+      call fileread(yes, fileid, errmsg="set y/n if you want to couple your model with solute transport")
+      
+      close(fileid)
+      
+      if (yes) then
+        number = 3
+      else
+        number = 1
+      end if
       
     end subroutine kinwaveprocs
     
-    subroutine kinwavelinker(pde_loc)
+    subroutine kinwavelinker()
       use typy
       use kinfnc
       use kinreader
       use pde_objs
       use debug_tools
       
-      class(pde_str), intent(in out) :: pde_loc
       
-      call kininit(pde_loc)
+      call kininit()
       
-      pde_loc%pde_fnc(pde_loc%order)%convection => kinconvect
+      pde(1)%pde_fnc(1)%convection => kinconvect
       
-      allocate(pde_loc%bc(101:101))
+      allocate(pde(1)%bc(101:101))
       
-      pde_loc%bc(101)%value_fnc => kinbor
+      pde(1)%bc(101)%value_fnc => kinbor
       
 !       pde_loc%bc(102)%value_fnc => kinbor
 
@@ -50,19 +68,19 @@ module kinpointer
         nodes%edge(1) = 0
       end if
     
-      pde_loc%initcond => kinematixinit
+      pde(1)%initcond => kinematixinit
       
-      pde_loc%pde_fnc(pde_loc%order)%zerord => rainfall
+      pde(1)%pde_fnc(1)%zerord => rainfall
       
-      pde_loc%pde_fnc(pde_loc%order)%elasticity => kin_elast
+      pde(1)%pde_fnc(1)%elasticity => kin_elast
       
-      pde_loc%diffusion = .false.
+      pde(1)%diffusion = .false.
       
-      pde_loc%getval => getval_kinwave
+      pde(1)%getval => getval_kinwave
       
-      pde_loc%flux => kinflux
+      pde(1)%flux => kinflux
       
-      pde_loc%symmetric = .true.
+      pde(1)%symmetric = .true.
       
     end subroutine kinwavelinker
     

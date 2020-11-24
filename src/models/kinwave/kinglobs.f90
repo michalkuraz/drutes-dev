@@ -32,6 +32,10 @@ module kinglobs
     character(len=7) :: name
     real(kind=rkind) :: Ks, S, A
   end type inf_model_str
+  
+  type, public :: solute_str
+    real(kind=rkind) :: horb, csinit, rhos, lambda
+  end type solute_str
 
   type(surfacend_str), dimension(:), allocatable, public :: watershed_nd
   type(surface_el_str), dimension(:), allocatable, public :: watershed_el
@@ -54,6 +58,8 @@ module kinglobs
   type(inf_model_str), dimension(:), allocatable :: inf_model
   
   logical, public :: with_solutes
+  
+  type(solute_str), dimension(:), allocatable, public :: kinsols
   
   
   
