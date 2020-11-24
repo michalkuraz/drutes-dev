@@ -241,6 +241,12 @@ module kinreader
              inf_model(i)%Ks = tmp_array(3)
         end select
       end do
+      
+      call fileread(with_solutes, fileid=file_kinematix)
+      
+      if (with_solutes) then
+        
+      end if
             
       
       open(newunit=frainpts, file="drutes.conf/kinwave/rain.pts", status="old", action="read", iostat=ierr)

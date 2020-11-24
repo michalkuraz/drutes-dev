@@ -254,8 +254,8 @@ module postpro
           call print_pure(ids(proc,:), proc, quadpnt)
 
         else
-          select case(observe_info%fmt)
-            case("pure")
+          select case(cut(observe_info%fmt))
+            case("pure", "csv")
               call print_pure(ids(proc,:), proc, quadpnt)
             case("scil")
               call print_scilab(ids(proc,:), proc, quadpnt)
@@ -310,6 +310,7 @@ module postpro
       use geom_tools
       use pde_objs
       use debug_tools
+      use core_tools
       
       integer(kind=ikind) :: i, layer, proc, D, j, massdim, printdim, fluxid
       real(kind=rkind) :: val
@@ -317,10 +318,17 @@ module postpro
       real(kind=rkind), dimension(3) :: advectval
       real(kind=rkind), dimension(:,:), allocatable :: extrafluxes
       type(integpnt_str) :: quadpnt
+      character(len=1) :: csv
 
       quadpnt%type_pnt = "obpt"
       quadpnt%column=3
       D = drutes_config%dimen
+      
+      if (cut(observe_info%fmt) == "csv" ) then
+        csv = ","
+      else
+        csv = " "
+      end if
       
       massdim=0
       if (.not. allocated(massval)) then
@@ -371,11 +379,11 @@ module postpro
           end do
           
           if (.not. allocated(pde(proc)%fluxes)) then
-            write(unit=pde(proc)%obspt_unit(i), fmt=*) time, val, massval(1:printdim), advectval(1:D), &
-                    observation_array(i)%cumflux(proc)
+            write(unit=pde(proc)%obspt_unit(i), fmt=*) time, csv, val, csv,  massval(1:printdim), csv, advectval(1:D), &
+                    csv, observation_array(i)%cumflux(proc)
           else
             fluxid = 1
-            write(unit=pde(proc)%obspt_unit(i), fmt=*) time, val, massval(1:printdim), &
+            write(unit=pde(proc)%obspt_unit(i), fmt=*) time, csv, val, csv,  massval(1:printdim), csv, &
                 (/ ( extrafluxes(fluxid,:), fluxid=1, ubound(extrafluxes,1)) /)
           end if
 
@@ -628,6 +636,7 @@ module postpro
       use global_objs
       use pde_objs
       use debug_tools
+      use core_tools
       
       integer, dimension(:), intent(in) :: ids
       integer(kind=ikind), intent(in) :: proc
@@ -640,7 +649,13 @@ module postpro
       real(kind=rkind), dimension(:,:), allocatable :: fluxes
       real(kind=rkind), dimension(:), allocatable :: massval
       real(kind=rkind), dimension(:), allocatable, save :: pts
+      character(len=1) :: csv
 
+      if (cut(observe_info%fmt) == "csv") then
+        csv = ","
+      else
+        csv = " "
+      end if
  
       if (.not. allocated(pts)) allocate(pts(ubound(nodes%data,2)))
       
@@ -650,7 +665,7 @@ module postpro
         quadpnt%type_pnt = "ndpt"
         quadpnt%order = i
         quadpnt%preproc=.true.
-        write(unit=ids(1), fmt=*) i,  nodes%data(i,:), pde(proc)%getval(quadpnt) 
+        write(unit=ids(1), fmt=*) i, csv,  nodes%data(i,:), csv,  pde(proc)%getval(quadpnt) 
       end do
       
       
@@ -671,7 +686,7 @@ module postpro
         end do
         pts = pts/ubound(elements%data,2)
 
-        write(unit=ids(2), fmt=*)  i, pts, avgval
+        write(unit=ids(2), fmt=*)  i, csv, pts, csv, avgval
 
         quadpnt%element = i
         quadpnt%column = 3
@@ -694,7 +709,7 @@ module postpro
               tmp = tmp + pde(proc)%mass(j-2)%val(pde(proc),layer, quadpnt)*gauss_points%weight(jj)
             end do
             tmp = tmp/gauss_points%area
-            write(unit=ids(j), fmt=*)  i, pts, tmp
+            write(unit=ids(j), fmt=*)  i, csv, pts, csv, tmp
           end do
         end if
       
@@ -727,10 +742,10 @@ module postpro
         end if
         
         if (.not. allocated(fluxes)) then
-          write(unit=ids(velocity_id), fmt=*) i,  pts, flux(1:drutes_config%dimen)
+          write(unit=ids(velocity_id), fmt=*) i, csv,  pts, csv, flux(1:drutes_config%dimen)
         else
           do iflux=1, ubound(fluxes,1)
-            write(unit=ids(velocity_id-1+iflux), fmt=*) i,  pts, fluxes(iflux,:)
+            write(unit=ids(velocity_id-1+iflux), fmt=*) i, csv, pts, csv, fluxes(iflux,:)
           end do
         end if
       end do

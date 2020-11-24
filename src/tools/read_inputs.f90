@@ -150,9 +150,10 @@ module read_inputs
       write(msg, fmt=*) "set correct name for the observation time outputs format", new_line('a'), &
       	"	scil - scilab output files",  new_line('a'), &
       	"	pure - just raw data with nodes IDs and FEM coefficients", new_line('a'), &  
-      	"       gmsh - gmsh output files"
+      	" gmsh - gmsh output files", new_line('a'), &
+        " csv - when csv enabled, then also outputs for observation points affected"
       
-      call fileread(observe_info%fmt, file_global, options=(/"scil", "pure", "gmsh"/))
+      call fileread(observe_info%fmt, file_global, options=(/"scil", "pure", "gmsh", "csv "/))
       
       
       call fileread(observe_info%anime, file_global)
@@ -614,11 +615,7 @@ module read_inputs
               print *, "called from read_inputs::read_2dmesh_gmsh"
               STOP
          end select
-	 
       end do
-      
-
-    
  
     end subroutine read_2dmesh_gmsh
     
@@ -662,8 +659,7 @@ module read_inputs
         print *, "called from read_inputs::read_scilab"
         error stop
       end if
-      
-
+    
       
       read(unit=fileid, fmt=*) ch
       read(unit=fileid, fmt=*) ch

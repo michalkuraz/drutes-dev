@@ -505,7 +505,8 @@ module drutes_init
         if (ubound(pde_loc%mass_name,1) > 0) then
           open(unit=pde_loc%obspt_unit(name), file=adjustl(trim(pde_loc%obspt_filename(name))), action="write", status="replace")
           
-          call print_logo(pde_loc%obspt_unit(name))
+          if (cut(observe_info%fmt) == "pure") call print_logo(pde_loc%obspt_unit(name))
+          
           
             i=1
             if (.not. allocated(pde_loc%fluxes)) then
@@ -530,7 +531,7 @@ module drutes_init
         else
           open(unit=pde_loc%obspt_unit(name), file=adjustl(trim(pde_loc%obspt_filename(name))), action="write", status="replace")
           
-          call print_logo(pde_loc%obspt_unit(name))
+          if (cut(observe_info%fmt) == "pure") call print_logo(pde_loc%obspt_unit(name))
           
           if (.not. allocated(pde_loc%fluxes)) then
             write(unit=pde_loc%obspt_unit(name), fmt=*) "#        time                      ", &
