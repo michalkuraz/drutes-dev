@@ -55,6 +55,7 @@ module fem_tools
     integer(kind=ikind) :: space_dim, space_i
     real(kind=rkind), dimension(3,3) :: d
     real(kind=rkind) :: tmp   
+    real(kind=rkind), dimension(3) :: tmpdata
    
 
     if (.not. allocated(bc)) then	
@@ -80,21 +81,21 @@ module fem_tools
       end do
     end do
     
-    
+
     do iproc = 0,ubound(pde,1)-1
       do i=1, ubound(elements%data, 2)
         j = elements%data(el_id,i)
         n_row(i+iproc*limits) = pde(iproc+1)%permut(j)
         if (nodes%edge(j) > 100) then
           m = nodes%edge(j)
-!           call pde(iproc+1)%bc(m)%value_fnc(pde(iproc+1), el_id,i,bcval(i+iproc*limits),bc(i+iproc*limits))
           call pde(iproc+1)%bc(m)%value_fnc(pde(iproc+1), el_id,i,code=bc(i+iproc*limits))
         else
           bc(i) = 0
         end if
       end do
     end do
-    
+
+
     do iproc = 0,ubound(pde,1)-1
       do i=1, ubound(elements%data, 2)
         select case(bc(i+iproc*limits))
@@ -103,9 +104,10 @@ module fem_tools
           case(3)
             bcval(i+iproc*limits,1) = 0
           case(1,2,4)
-            call pde(iproc+1)%bc(m)%value_fnc(pde(iproc+1), el_id,i,bcval(i+iproc*limits,1))
-          case(5)
-            call pde(iproc+1)%bc(m)%value_fnc(pde(iproc+1), el_id,i,valarray=bcval(i+iproc*limits,:))
+            m = nodes%edge(elements%data(el_id, i))
+            call pde(iproc+1)%bc(m)%value_fnc(pde(iproc+1), element=el_id,node=i,value=bcval(i+iproc*limits,1))
+!          case(5)
+!            call pde(iproc+1)%bc(m)%value_fnc(pde(iproc+1), el_id,i,valarray=bcval(i+iproc*limits,:))
         end select
       end do
     end do

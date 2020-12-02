@@ -104,6 +104,8 @@ module solver_interfaces
       
       integer(kind=ikind), dimension(:), allocatable, save :: p1, p2
       real(kind=rkind), dimension(:), allocatable, save :: bpermut, bbalanced
+      integer, save :: pivtype = -1
+      integer(kind=ikind) :: i
       
   !! pivtype -- method of pivoting
   !! 0 ... no pivoting (not recommended)
@@ -112,6 +114,18 @@ module solver_interfaces
   !! 3 ... row pivoting (requires perm2 only)
   !! 4 ... diagonal pivoting (symmetric matrix only)
   !! 5 ... diagonal pivoting with minimal degree (symmetric matrix only)
+  
+      if (pivtype == -1) then
+        do i=1, ubound(pde,1)
+          if (.not. pde(i)%symmetric) then
+            pivtype = 1
+            EXIT
+          else
+            pivtype = 5
+          end if
+        end do
+      end if
+      
       
       if (.not. allocated(p1)) then
         allocate(p1(ubound(b,1)))
@@ -128,7 +142,7 @@ module solver_interfaces
       
       if (ubound(pde,1) < 2 .or. cut(solver_name) == "LDUdefault") then  
           
-        call LDUd(A, pivtype=0, ilev=0, perm1=p1, perm2=p2)
+        call LDUd(A, pivtype=pivtype, ilev=0, perm1=p1, perm2=p2)
         
         if ( cut(solver_name) == "LDUbalanced") then
           call LDUback(A, bbalanced, x, p1=p1, p2=p2)

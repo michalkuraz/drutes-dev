@@ -95,6 +95,7 @@ module RE_pointers
       
       pde_loc%flux => darcy4totH
       pde_loc%initcond => retot_initcond
+      pde_loc%symmetric = .true.
     
     end subroutine REstdH
     
@@ -184,7 +185,8 @@ module RE_pointers
               print *, "atmospheric boundary only allowed for REevap model"
               ERROR STOP
             end if
-          case(6,7)
+          case(6)
+            pde_loc%bc(i)%value_fnc => retot_well
           case default
           print *, "ERROR! You have specified an unsupported boundary type definition for the Richards equation"
           print *, "the incorrect boundary code specified is:", pde_loc%bc(i)%code
@@ -216,6 +218,12 @@ module RE_pointers
         read = .true.
       end if
       
+      
+      deallocate(pde_loc%mass)
+      deallocate(pde_loc%mass_name)
+      
+      allocate(pde_loc%mass(2))
+      allocate(pde_loc%mass_name(2,2))
 
       pde_common%nonlinear = .true.
       if (drutes_config%fnc_method == 0) then
@@ -228,6 +236,8 @@ module RE_pointers
         pde_loc%pde_fnc(pde_loc%order)%elasticity => vangen_elast_tab
         pde_loc%mass(1)%val => vangen_tab
       end if
+      
+      pde_loc%mass(2)%val => undergroundwater
       
 
       do i=1, ubound(vgset,1)

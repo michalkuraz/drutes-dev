@@ -58,10 +58,18 @@ module re_reader
       pde_loc%flux_name(1) = "flux"  
       pde_loc%flux_name(2) = "Darcian flow [L.T^{-1}]"
       
-      allocate(pde_loc%mass_name(1,2))
+      deallocate(pde_loc%mass)
+!      deallocate(pde_loc%mass_name)
+      
+      allocate(pde_loc%mass(2))
+      allocate(pde_loc%mass_name(2,2))
+
 
       pde_loc%mass_name(1,1) = "theta"
       pde_loc%mass_name(1,2) = "theta [-]"
+      
+      pde_loc%mass_name(2,1) = "gwt"
+      pde_loc%mass_name(1,2) = "gwt [y/n]"
       
       pde_loc%print_mass = .true.
 
@@ -120,6 +128,7 @@ module re_reader
          "   HINT 2 : have you specified all values in the following order: ", new_line("a"), &
          "         alpha   n   m   theta_r   theta_s   S_s "
       allocate(tmpdata(6))
+      
       do i = 1, ubound(vgset,1)
       
         call comment(file_waterm)

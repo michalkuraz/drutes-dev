@@ -33,7 +33,7 @@ module RE_constitutive
   public :: init_zones
   public :: rcza_check
   public :: derKz
-  public :: re_dirichlet_bc, re_neumann_bc, re_null_bc, re_dirichlet_height_bc, re_initcond
+  public :: re_dirichlet_bc, re_neumann_bc, re_null_bc, re_dirichlet_height_bc, re_initcond, undergroundwater
   public :: sinkterm
   public :: logtablesearch
   private :: zone_error_val, secondder_retc,  rcza_check_old, setmatflux, intoverflow
@@ -144,6 +144,57 @@ module RE_constitutive
       end if
 
     end function vangen
+    
+    
+    function undergroundwater(pde_loc, layer, quadpnt, x) result(isbelow)
+      use typy
+      use re_globals
+      use pde_objs
+      use core_tools
+      
+      class(pde_str), intent(in) :: pde_loc
+      integer(kind=ikind), intent(in) :: layer
+      !> pressure head
+      real(kind=rkind), intent(in), dimension(:), optional :: x
+      !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
+      type(integpnt_str), intent(in), optional :: quadpnt
+      real(kind=rkind) :: h
+      !> resulting water content
+      real(kind=rkind) :: isbelow
+      
+      type(integpnt_str) :: quadpnt_loc
+      
+      if (present(quadpnt) .and. present(x)) then
+        print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
+        print *, "exited from re_constitutive::vangen"
+        ERROR stop
+      else if (.not. present(quadpnt) .and. .not. present(x)) then
+        print *, "ERROR: you have not specified either integ point or x value"
+        print *, "exited from re_constitutive::vangen"
+        ERROR stop
+      end if
+      
+      if (present(quadpnt)) then
+        quadpnt_loc=quadpnt
+        quadpnt_loc%preproc=.true.
+        h = pde_loc%getval(quadpnt_loc)
+      else
+        if (ubound(x,1) /=1) then
+          print *, "ERROR: van Genuchten function is a function of a single variable h"
+          print *, "       your input data has:", ubound(x,1), "variables"
+          print *, "exited from re_constitutive::vangen"
+          ERROR STOP
+        end if
+        h = x(1)
+      end if
+      
+      if (h >= 0) then
+        isbelow = 0
+      else
+        isbelow = -1
+      end if
+    
+    end function undergroundwater
     
     
     !> \brief Gardner relation \f[ \theta = f(pressure) \f]

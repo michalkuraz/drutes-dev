@@ -586,7 +586,7 @@ module read_inputs
             
           case(2)
             jtmp = jtmp + 1
-            read(unit=file_mesh, fmt=*) k, l, i,  j, elements%material(jtmp), elements%data(jtmp,:)
+            read(unit=file_mesh, fmt=*) k, l, i,   elements%material(jtmp), j, elements%data(jtmp,:)
             if (i /= 2) then
               call write_log("number of tags for element must be equal 2")
               call write_log("update your GMSH input file!")

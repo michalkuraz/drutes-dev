@@ -28,6 +28,7 @@ module re_total
   public :: retot_initcond
   public :: iconddebouss
   public :: retot_seepage
+  public :: retot_well
   
   contains
   
@@ -259,7 +260,99 @@ module re_total
       
     end subroutine retot_dirichlet_height_bc
     
-    
+    subroutine retot_well(pde_loc, el_id, node_order, value, code, array)
+!      use typy
+!      use globals
+!      use global_objs
+!      use pde_objs
+!      use debug_tools
+!      use re_globals
+!      use geom_tools
+      
+!      class(pde_str), intent(in) :: pde_loc
+!      integer(kind=ikind), intent(in)  :: el_id, node_order
+!      real(kind=rkind), intent(out), optional    :: value
+!      integer(kind=ikind), intent(out), optional :: code
+!      real(kind=rkind), dimension(:), intent(out), optional :: array
+      
+!      real(kind=rkind), dimension(3) :: xyz
+!      integer(kind=ikind) :: edge_id
+!      type(integpnt_str) :: quadpnt
+      
+!      if (.not. allocated(pde_common%xvect) ) then
+!        if (present(value)) value = 0
+!        if (present(code)) code = 2
+!        RETURN
+!      end if
+!      edge_id = nodes%edge(elements%data(el_id, node_order))
+!      quadpnt%type_pnt = "ndpt"
+!      quadpnt%order = elements%data(el_id, node_order)
+      
+
+!        call getcoor(quadpnt, xyz(1:drutes_config%dimen))
+        
+!        print *, edge_id, pde_loc%bc(edge_id)%value ,xyz(2)
+!!        if (xyz(2) <= pde_loc%bc(edge_id)%value) then
+!          if (present(value)) value = xyz(2) !de_loc%bc(edge_id)%value 
+!          if (present(code)) code = 1
+!!        else
+!!          print *, "nana", edge_id
+!!          if (present(value)) value = 0
+!!          if (present(code)) code = 2
+!!        end if
+
+        use typy
+      use globals
+      use global_objs
+      use pde_objs
+      use geom_tools
+      use re_globals
+
+      class(pde_str), intent(in) :: pde_loc
+      integer(kind=ikind), intent(in)  :: el_id, node_order
+      real(kind=rkind), intent(out), optional   :: value
+      integer(kind=ikind), intent(out), optional :: code
+      real(kind=rkind), dimension(:), intent(out), optional :: array
+
+      integer(kind=ikind) :: edge_id, i, j, D
+      type(integpnt_str) :: quadpnt
+      real(kind=rkind), dimension(3) :: xyz
+
+      
+      
+      edge_id = nodes%edge(elements%data(el_id, node_order))
+      
+
+      quadpnt%type_pnt = "ndpt"
+      quadpnt%order = elements%data(el_id, node_order)
+      D = drutes_config%dimen
+      call getcoor(quadpnt, xyz(1:D))
+      
+      
+      if ( xyz(D) <= pde_loc%bc(edge_id)%value ) then
+      
+        if (present(value)) then
+          value = pde_loc%bc(edge_id)%value 
+        end if
+        
+
+        if (present(code)) then
+          code = 1
+        end if
+      
+      else
+        if (present(value)) then
+          value = 0
+        end if
+        
+
+        if (present(code)) then
+          code = 2
+        end if
+      end if
+      
+      
+    end subroutine retot_well
     
     subroutine retot_seepage(pde_loc, el_id, node_order, value, code, array)
       use typy
