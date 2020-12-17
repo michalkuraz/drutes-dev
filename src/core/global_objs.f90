@@ -233,7 +233,10 @@ module global_objs
     type(smartarray_int), dimension(:), allocatable :: el2integ
     !> list of elements of geometrical discretization, where this node belongs
     type(smartarray_int), dimension(:), allocatable :: element
+    !> permutation vector for chaotic nodes IDs, typically from ArcGIS
+    integer(kind=ikind), dimension(:), allocatable :: permut4ArcGIS
   end type node
+  
 
 
   !> mesh array type for elements
@@ -294,6 +297,10 @@ module global_objs
     type(smartarray_int), dimension(:), allocatable :: border
     !> list of elements at domain boundary
     type(smartarray_int) :: bcel
+    !> permutation vector for chaotic element order, when total number of elements differ from the element ID, 
+    !!typical for ArcGIS meshes, by default unallocated, allocate only if needed
+    !<
+    integer(kind=ikind), dimension(:), allocatable :: elpermut
   end type element
 
 

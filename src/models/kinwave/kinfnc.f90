@@ -15,7 +15,8 @@
 
 module kinfnc
 
-  public :: kinconvect, kinbor, kinematixinit, rainfall, kin_elast, getval_kinwave
+  public :: kinconvect, kinbor, kinematixinit, rainfall, kin_elast, getval_kinwave, kinematixinit4cs
+  public :: kinflux
 
   contains 
   
@@ -401,6 +402,25 @@ module kinfnc
      
       
     end subroutine kinematixinit
+    
+    
+   subroutine kinematixinit4cs(pde_loc) 
+      use typy
+      use globals
+      use global_objs
+      use pde_objs
+      use kinglobs
+
+      class(pde_str), intent(in out) :: pde_loc
+      integer(kind=ikind) :: i, el, layer
+
+      do i=1, ubound(pde_loc%solution,1)
+        el = nodes%element(i)%data(1)
+        layer = elements%material(el)
+        pde_loc%solution(i) = kinsols(layer)%csinit
+      end do
+      
+    end subroutine kinematixinit4cs
     
     !> for model Ks
     !! \f[ q_{in} = K_s \f]

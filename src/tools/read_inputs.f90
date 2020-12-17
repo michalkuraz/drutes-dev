@@ -22,6 +22,7 @@ module read_inputs
   public :: read_global
   public :: read_1dmesh_int, read_2dmesh_int, read_2dmesh_t3d, read_2dmesh_gmsh
   public :: read_scilab
+  public :: read_ArcGIS
 
 
 
@@ -101,9 +102,9 @@ module read_inputs
       end select
       
       if (drutes_config%name == "boussi" .and. drutes_config%dimen > 1) then
-        write(msg, fmt=*) 'You have selected Boussinesq equation, Boussinesq equation originates from Dupuit &
-		   approximation, and so it is assumed for 1D only!!! &
-		   '//NEW_LINE('A')//'    But your domain was specified for: ', drutes_config%dimen, "D"
+        write(msg, fmt=*) "You have selected Boussinesq equation, Boussinesq equation originates from Dupuit &
+		   approximation, and so it is assumed for 1D only!!!", new_line("a"), &
+		   "    But your domain was specified for: ", drutes_config%dimen, "D"
         call file_error(file_global, msg)
       end if
       
@@ -112,10 +113,16 @@ module read_inputs
        "the available options are: 1 - internal mesh generator" , new_line("a"), &
        "   (very simple uniform meshes, for debuging only", new_line("a"), &
        "                           2 - t3d mesh generator", new_line("a"), &
-       "                           3 - gmsh mesh generator"
+       "                           3 - gmsh mesh generator", new_line("a"), &
+       "                           4 - ARCgis (use only for kinematic wave)"
 
-
-      call fileread(drutes_config%mesh_type, file_global,msg,ranges=(/1_ikind,3_ikind/))
+      call fileread(drutes_config%mesh_type, file_global,msg,ranges=(/1_ikind,4_ikind/))
+      
+      if (drutes_config%mesh_type == 4 .and. cut(drutes_config%name) /= "kinwave") then
+        write(msg, fmt=*) "Your mesh type is ArcGIS input, which is allowed only for &
+                            kinematic wave equation (name = kinwave)"
+        call file_error(file_global, msg)
+      end if
       
       call fileread(max_itcount, file_global, ranges=(/1_ikind, huge(1_ikind)/), &
       errmsg="maximal number of iterations must be positive, greater than 1, &
@@ -447,6 +454,182 @@ module read_inputs
       close(file_mesh)
 
     end subroutine read_2dmesh_t3d
+    
+    
+    subroutine read_ArcGIS()
+      use typy
+      use globals
+      use readtools
+      use core_tools
+      use debug_tools
+      
+      integer :: file_nodes, file_watershed, file_elements, file_river, ierr
+      
+      integer(kind=ikind) :: tester, counter, i, maxcnt, ibefore, j, l, kk, ll
+      integer(kind=ikind), dimension(:), allocatable :: nd_pmt
+      integer(kind=ikind), dimension(4) :: ndel
+      
+      
+      open(newunit=file_nodes, file="drutes.conf/mesh/nodes.arcgis", status="old", action="read", iostat=ierr)
+      
+      if (ierr /=0 ) then
+        print *, "unable to open file drutes.conf/mesh/nodes.arcgis exiting..."
+        ERROR STOP
+      end if
+      
+      open(newunit=file_watershed, file="drutes.conf/mesh/nodes.watershed", status="old", action="read", iostat=ierr)
+      
+      if (ierr /=0 ) then
+        print *, "unable to open file drutes.conf/mesh/nodes.watershed exiting..."
+        ERROR STOP
+      end if
+    
+      open(newunit=file_elements, file="drutes.conf/mesh/elements.arcgis", status="old", action="read", iostat=ierr)
+      
+      if (ierr /=0 ) then
+        print *, "unable to open file drutes.conf/mesh/elements.arcgis exiting..."
+        ERROR STOP
+      end if
+      
+      open(newunit=file_river, file="drutes.conf/mesh/river.arcgis", status="old", action="read", iostat=ierr)
+      
+      if (ierr /=0 ) then
+        print *, "unable to open file drutes.conf/mesh/river.arcgis exiting..."
+        ERROR STOP
+      end if
+      
+      counter = 0
+      do 
+        call comment(file_nodes)
+        read(file_nodes, fmt=*, iostat=ierr) tester
+        if (ierr == 0) then
+          counter = counter + 1
+        else
+          EXIT
+        end if
+      end do
+      
+      
+      close(file_nodes)
+      open(newunit=file_nodes, file="drutes.conf/mesh/nodes.arcgis", status="old", action="read", iostat=ierr)
+      
+      allocate(nodes4arcgis%data(counter,3))
+      allocate(nodes4arcgis%id(counter))
+      
+      nodes4arcgis%kolik = counter
+      
+      do i=1, nodes4arcgis%kolik
+        call comment(file_nodes)
+        read(unit=file_nodes, fmt=*) nodes4arcgis%id(i), nodes4arcgis%data(i,:)
+      end do
+      
+      counter = 0
+      maxcnt = 0
+      
+      call comment(file_elements)
+      
+      read(file_elements, fmt=*) ibefore
+      
+      backspace file_elements
+      
+      j=1
+      do
+        call comment(file_elements)
+        j=j+1
+        read(file_elements, fmt=*, iostat=ierr) i, kk
+        if (ierr == 0) then
+          if ( i /= ibefore .and. j == 5) then
+             backspace file_elements
+             ibefore = i
+             j = 1
+             counter = counter + 1
+          else if (i /= ibefore .and. j /= 5) then
+            backspace file_elements
+          end if
+          
+          if (maxcnt < i) maxcnt=i
+        else
+          if (j == 5) counter = counter + 1
+          EXIT
+        end if
+      end do
+      
+      
+  
+
+      allocate(elements%elpermut(maxcnt))
+      allocate(nd_pmt(maxval(nodes4arcgis%id)))
+
+      nd_pmt = 0
+
+      do i=1, nodes4arcgis%kolik
+        nd_pmt(nodes4arcgis%id(i)) = i
+      end do
+
+      nodes%kolik = nodes4arcgis%kolik
+      elements%kolik = counter
+
+      call mesh_allocater()
+
+      do i=1, nodes%kolik
+        nodes%id(i) = i
+        nodes%data(i,:) = nodes4arcgis%data(i,1:2)
+      end do
+
+      close(file_elements)
+
+      open(newunit=file_elements, file="drutes.conf/mesh/elements.arcgis", status="old", action="read", iostat=ierr)
+
+
+      call comment(file_elements)
+      
+      read(file_elements, fmt=*) ibefore
+      
+      backspace file_elements
+      
+      j = 1
+      counter = 0
+      i = -1
+      elements%data = -1
+      do 
+        call comment(file_elements)
+        read(file_elements, fmt=*, iostat=ierr) i, ndel(j)
+        j = j+1
+        if (ierr == 0) then
+          if ( i /= ibefore .and. j == 5) then
+!            print *, "v tom", i
+             backspace file_elements
+             j = 1
+             counter = counter + 1
+             do kk=1,3
+               elements%data(counter,kk) = ndel(kk) !nd_pmt(ndel(kk))
+             end do
+             elements%elpermut(ibefore) = counter
+             ibefore = i
+          else if (i /= ibefore .and. j /= 5) then
+            backspace file_elements
+          end if
+          
+        else
+          if (j == 5) then
+            counter = counter + 1
+            do kk=1,3
+              elements%data(counter,kk) = nd_pmt(ndel(kk))
+            end do
+            elements%elpermut(ibefore) = counter
+          end if
+          EXIT
+        end if
+      end do
+      
+      elements%material = 1
+      
+      allocate(nodes%permut4ArcGIS(ubound(nd_pmt,1)))
+      
+      nodes%permut4ArcGIS = nd_pmt
+      
+    
+    end subroutine read_ArcGIS
     
     
     subroutine read_2dmesh_gmsh()

@@ -124,7 +124,10 @@ module drutes_init
                 ERROR STOP
               end if
               call read_2dmesh_gmsh()
+            case(4)
+              call read_ArcGIS()
           end select
+        
         case default
           write(unit=terminal, fmt=*)"ERROR: unsupported problem dimension, the specified dimension was: ", drutes_config%dimen
           write(unit=terminal, fmt=*)"currently only 1D and 2D is supported"
