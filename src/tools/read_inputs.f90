@@ -498,6 +498,16 @@ module read_inputs
         ERROR STOP
       end if
       
+      do 
+        call comment(file_river)
+        read(unit=file_river, fmt=*, iostat=ierr) i
+        if (ierr == 0) then
+          call elements%elinactive%fill(i)
+        else
+          EXIT
+        end if
+      end do
+      
       counter = 0
       do 
         call comment(file_nodes)
@@ -538,7 +548,7 @@ module read_inputs
         j=j+1
         read(file_elements, fmt=*, iostat=ierr) i, kk
         if (ierr == 0) then
-          if ( i /= ibefore .and. j == 5) then
+          if ( i /= ibefore .and. j == 5 ) then
              backspace file_elements
              ibefore = i
              j = 1
@@ -559,6 +569,7 @@ module read_inputs
 
       allocate(elements%elpermut(maxcnt))
       allocate(nd_pmt(maxval(nodes4arcgis%id)))
+      
 
       nd_pmt = 0
 
@@ -567,7 +578,7 @@ module read_inputs
       end do
 
       nodes%kolik = nodes4arcgis%kolik
-      elements%kolik = counter
+      elements%kolik = counter - elements%elinactive%pos 
 
       call mesh_allocater()
 
@@ -580,6 +591,11 @@ module read_inputs
 
       open(newunit=file_elements, file="drutes.conf/mesh/elements.arcgis", status="old", action="read", iostat=ierr)
 
+      elements%elpermut = 0
+      
+      do i=1, elements%elinactive%pos
+        elements%elpermut(elements%elinactive%data(i)) = -1
+      end do
 
       call comment(file_elements)
       
@@ -593,28 +609,39 @@ module read_inputs
       elements%data = -1
       do 
         call comment(file_elements)
-        read(file_elements, fmt=*, iostat=ierr) i, ndel(j)
+        read(file_elements, fmt=*, iostat=ierr) i
+        if (elements%elpermut(i) /= -1) then
+          backspace file_elements
+          read(file_elements, fmt=*, iostat=ierr) i, ndel(j)
+        end if
+        
         j = j+1
+        
         if (ierr == 0) then
           if ( i /= ibefore .and. j == 5) then
-!            print *, "v tom", i
+!            print *, "v tom", i, ibefore ; call wait()
              backspace file_elements
              j = 1
-             counter = counter + 1
-             do kk=1,3
-               elements%data(counter,kk) = ndel(kk) !nd_pmt(ndel(kk))
-             end do
-             elements%elpermut(ibefore) = counter
-             ibefore = i
+             if (elements%elpermut(ibefore) /= -1) then
+               counter = counter + 1
+               do kk=1,3
+                 elements%data(counter,kk) = ndel(kk) !nd_pmt(ndel(kk))
+               end do
+               elements%elpermut(ibefore) = counter
+              end if
+              ibefore = i
           else if (i /= ibefore .and. j /= 5) then
             backspace file_elements
+            call write_log("WARNING!, element", int1=i, text2="is not described by three nodes")
+            j=1
           end if
           
         else
+          print *, "tay"
           if (j == 5) then
             counter = counter + 1
             do kk=1,3
-              elements%data(counter,kk) = nd_pmt(ndel(kk))
+              elements%data(counter,kk) = ndel(kk)!nd_pmt(ndel(kk))
             end do
             elements%elpermut(ibefore) = counter
           end if
@@ -622,6 +649,7 @@ module read_inputs
         end if
       end do
       
+      call printmtx(elements%data) ; stop
       elements%material = 1
       
       allocate(nodes%permut4ArcGIS(ubound(nd_pmt,1)))

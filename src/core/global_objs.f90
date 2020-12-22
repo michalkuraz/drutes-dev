@@ -301,6 +301,8 @@ module global_objs
     !!typical for ArcGIS meshes, by default unallocated, allocate only if needed
     !<
     integer(kind=ikind), dimension(:), allocatable :: elpermut
+    !> list of inactive elements
+    type(smartarray_int) :: elinactive
   end type element
 
 
