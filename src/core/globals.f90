@@ -115,6 +115,7 @@ module globals
   type(node), public :: nodes
   type(element),  public :: elements
   type(node), public :: nodes4arcgis
+  type(element), public :: elements4arcgis
   !> local capacity matrix and local stiffness matrix
   real(kind=rkind), dimension(:,:), allocatable, public :: cap_mat, stiff_mat
   !> local matrix vector

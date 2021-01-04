@@ -466,8 +466,9 @@ module read_inputs
       integer :: file_nodes, file_watershed, file_elements, file_river, ierr
       
       integer(kind=ikind) :: tester, counter, i, maxcnt, ibefore, j, l, kk, ll
-      integer(kind=ikind), dimension(:), allocatable :: nd_pmt
       integer(kind=ikind), dimension(4) :: ndel
+      integer(kind=ikind), dimension(:), allocatable :: nd_pmt
+
       
       
       open(newunit=file_nodes, file="drutes.conf/mesh/nodes.arcgis", status="old", action="read", iostat=ierr)
@@ -502,7 +503,7 @@ module read_inputs
         call comment(file_river)
         read(unit=file_river, fmt=*, iostat=ierr) i
         if (ierr == 0) then
-          call elements%elinactive%fill(i)
+          call elements4arcgis%elinactive%fill(i)
         else
           EXIT
         end if
@@ -567,34 +568,20 @@ module read_inputs
       
   
 
-      allocate(elements%elpermut(maxcnt))
-      allocate(nd_pmt(maxval(nodes4arcgis%id)))
+      allocate(elements4arcgis%elpermut(maxcnt))
       
+      allocate(elements4arcgis%data(maxcnt,3))
 
-      nd_pmt = 0
-
-      do i=1, nodes4arcgis%kolik
-        nd_pmt(nodes4arcgis%id(i)) = i
-      end do
-
-      nodes%kolik = nodes4arcgis%kolik
-      elements%kolik = counter - elements%elinactive%pos 
-
-      call mesh_allocater()
-
-      do i=1, nodes%kolik
-        nodes%id(i) = i
-        nodes%data(i,:) = nodes4arcgis%data(i,1:2)
-      end do
+      elements%kolik = counter - elements4arcgis%elinactive%pos 
 
       close(file_elements)
 
       open(newunit=file_elements, file="drutes.conf/mesh/elements.arcgis", status="old", action="read", iostat=ierr)
 
-      elements%elpermut = 0
+      elements4arcgis%elpermut = 0
       
-      do i=1, elements%elinactive%pos
-        elements%elpermut(elements%elinactive%data(i)) = -1
+      do i=1, elements4arcgis%elinactive%pos
+        elements4arcgis%elpermut(elements4arcgis%elinactive%data(i)) = -1
       end do
 
       call comment(file_elements)
@@ -606,11 +593,11 @@ module read_inputs
       j = 1
       counter = 0
       i = -1
-      elements%data = -1
+      elements4arcgis%data = -1
       do 
         call comment(file_elements)
         read(file_elements, fmt=*, iostat=ierr) i
-        if (elements%elpermut(i) /= -1) then
+        if (elements4arcgis%elpermut(i) /= -1) then
           backspace file_elements
           read(file_elements, fmt=*, iostat=ierr) i, ndel(j)
         end if
@@ -622,12 +609,12 @@ module read_inputs
 !            print *, "v tom", i, ibefore ; call wait()
              backspace file_elements
              j = 1
-             if (elements%elpermut(ibefore) /= -1) then
+             if (elements4arcgis%elpermut(ibefore) /= -1) then
                counter = counter + 1
                do kk=1,3
-                 elements%data(counter,kk) = ndel(kk) !nd_pmt(ndel(kk))
+                 elements4arcgis%data(counter,kk) = ndel(kk)
                end do
-               elements%elpermut(ibefore) = counter
+               elements4arcgis%elpermut(ibefore) = counter
               end if
               ibefore = i
           else if (i /= ibefore .and. j /= 5) then
@@ -637,24 +624,52 @@ module read_inputs
           end if
           
         else
-          print *, "tay"
           if (j == 5) then
             counter = counter + 1
             do kk=1,3
-              elements%data(counter,kk) = ndel(kk)!nd_pmt(ndel(kk))
+              elements4arcgis%data(counter,kk) = ndel(kk)
             end do
-            elements%elpermut(ibefore) = counter
+            elements4arcgis%elpermut(ibefore) = counter
           end if
           EXIT
         end if
       end do
+    
+      allocate(nodes4arcgis%permut4ArcGIS(maxval(nodes4arcgis%id)))
+           
+      allocate(nd_pmt(maxval(nodes4arcgis%id)))
       
-      call printmtx(elements%data) ; stop
-      elements%material = 1
+
+      nd_pmt = 0
+
+      do i=1, nodes4arcgis%kolik
+        nd_pmt(nodes4arcgis%id(i)) = i
+      end do
       
-      allocate(nodes%permut4ArcGIS(ubound(nd_pmt,1)))
+      nodes4arcgis%permut4ArcGIS = 0
       
-      nodes%permut4ArcGIS = nd_pmt
+      counter = 1
+      
+      do i=1, ubound(elements4arcgis%data,1)
+        if (elements4arcgis%data(i,1) > 0) then
+          do j=1,3
+            if (nodes4arcgis%permut4ArcGIS(elements4arcgis%data(i,j)) == 0) then
+              nodes4arcgis%permut4ArcGIS(elements4arcgis%data(i,j)) = counter
+              counter = counter + 1
+            end if
+          end do
+        end if
+      end do
+      
+      nodes%kolik = counter - 1
+      
+      call mesh_allocater()
+      
+!      do i=1, ubound(nodes4arcgis%data,1)
+!        id = nodes4arcgis%id
+        
+      
+      stop
       
     
     end subroutine read_ArcGIS
