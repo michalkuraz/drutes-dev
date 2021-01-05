@@ -464,7 +464,7 @@ module kinfnc
       end if
     
       val = raindata(el2pt(quadpnt%element))%series(position,2)
-      
+
       select case(inf_model(layer)%name)
         case("Ks")
           qin = inf_model(layer)%Ks
@@ -482,7 +482,7 @@ module kinfnc
       
       val = max(0.0_rkind, val - qin)
           
-        
+      
 
     
     end function rainfall

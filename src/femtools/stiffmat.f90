@@ -40,6 +40,7 @@ module stiffmat
       use feminittools
       use linAlg
       use debug_tools
+      use geom_tools
 
       integer(kind=ikind), intent(in) :: el_id
       !> time step
@@ -172,6 +173,8 @@ module stiffmat
      
      stiff_mat = stiff_mat/gauss_points%area*elements%areas(el_id)
      
+
+     
     end subroutine build_stiff_np
     
   
@@ -231,7 +234,7 @@ module stiffmat
             ii = i + (iproc-1)*limits
             
             bside(ii) = suma*dt*elements%areas(el_id)/gauss_points%area
-            
+
           end do
         else
           layer = elements%material(el_id)

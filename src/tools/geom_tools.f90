@@ -250,7 +250,7 @@ module geom_tools
   end subroutine interpolate
 
   !> specify the x and y derivates of a plane defined by three points
-  subroutine plane_derivative(a,b,c,xder,yder)
+  subroutine plane_derivative(a,b,c,xder,yder, element)
     use typy
     !> 1st point of the plane
     real(kind=rkind), dimension(:), intent(in) :: a
@@ -262,6 +262,9 @@ module geom_tools
     real(kind=rkind), intent(out) :: xder
     !> resulting y derivate
     real(kind=rkind), intent(out) :: yder
+    
+    !> element id
+    integer(kind=ikind), intent(in), optional :: element
     !-------local variables--------------
     real(kind=rkind), dimension(3) :: u
     real(kind=rkind), dimension(3) :: v
@@ -300,6 +303,7 @@ module geom_tools
     if (abs(n(3)) < 1e2*reps) then
       print *, "the mesh is wrong, base function can't be vertical"
       print *, abs(n(3))
+      print *, element
       ERROR STOP
     end if 
     xder = -n(1)/n(3)

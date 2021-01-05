@@ -465,9 +465,10 @@ module read_inputs
       
       integer :: file_nodes, file_watershed, file_elements, file_river, ierr
       
-      integer(kind=ikind) :: tester, counter, i, maxcnt, ibefore, j, l, kk, ll
+      integer(kind=ikind) :: tester, counter, i, maxcnt, ibefore, j, l, kk, ll, nd, nloc
       integer(kind=ikind), dimension(4) :: ndel
       integer(kind=ikind), dimension(:), allocatable :: nd_pmt
+      type(smartarray_int) :: nd_watershed
 
       
       
@@ -661,17 +662,53 @@ module read_inputs
         end if
       end do
       
+
+      
       nodes%kolik = counter - 1
       
       call mesh_allocater()
       
-!      do i=1, ubound(nodes4arcgis%data,1)
-!        id = nodes4arcgis%id
+      do i=1, elements%kolik
+        do j=1,3
+          elements%data(i,j) = nodes4arcgis%permut4ArcGIS(elements4arcgis%data(i,j))
+        end do
+      end do
+      
+      nodes%data = huge(nodes%data(1,1))
+      
+      
+      do i=1, ubound(nodes4arcgis%data,1)
+        nloc = nodes4arcgis%id(i)
+        if (nodes4arcgis%permut4ArcGIS(nloc) /= 0) then
+          nd = nodes4arcgis%permut4ArcGIS(nloc) 
+          nodes%data(nd,1) = nodes4arcgis%data(i,1)
+          nodes%data(nd,2) = nodes4arcgis%data(i,2)
+        end if
+      end do
+      
+      elements%material = 1
+      
+      do 
+        call comment(file_watershed)
+        read(file_watershed, fmt=*, iostat=ierr) i
+        if (ierr == 0) then
+          call nd_watershed%fill(i)
+        else
+          EXIT
+        end if
+      end do
+      
+      nodes%edge = 0
+      
+      do i=1, nd_watershed%pos
+        nd = nodes4arcgis%permut4ArcGIS(nd_watershed%data(i))
         
+        if (nd /=0) then
+          nodes%edge(nd) = 101
+        end if
+      end do
       
-      stop
-      
-    
+
     end subroutine read_ArcGIS
     
     

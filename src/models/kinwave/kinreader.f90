@@ -17,13 +17,57 @@
 
 module kinreader
 
-  private :: read_catchment, gen_catchment
+  private ::  gen_catchment, read_catchment_old, get_slopes
   public :: kininit
 
   contains
   
   
-    subroutine read_catchment()
+    subroutine get_slopes()
+      use typy
+      use kinglobs
+      use globals
+      use geom_tools
+      use debug_tools
+      
+      real(kind=rkind), dimension(3) :: a,b,c
+      integer(kind=ikind) :: i, j, el
+      integer(kind=ikind), dimension(3) :: nd
+      integer(kind=ikind), dimension(:), allocatable :: ndpmt
+      
+      allocate(ndpmt(maxval(nodes4arcgis%id)))
+      
+      ndpmt = 0
+      
+      do i=1, ubound(nodes4arcgis%id,1)
+        ndpmt(nodes4arcgis%id(i)) = i
+      end do
+    
+      
+            
+      allocate(watershed_el(elements%kolik))
+    
+      do i=1, ubound(elements4arcgis%data,1)
+        if (elements4arcgis%elpermut(i) > 0) then
+          el = elements4arcgis%elpermut(i)
+          do j=1,3
+            nd(j) = ndpmt(elements4arcgis%data(el,j))
+          end do
+            
+          a = nodes4arcgis%data(nd(1),:)
+          b = nodes4arcgis%data(nd(2),:)
+          c = nodes4arcgis%data(nd(3),:)
+          
+          call plane_derivative(a,b,c, watershed_el(el)%sx, watershed_el(el)%sy)
+        end if
+      end do
+      
+          
+      
+    end subroutine get_slopes
+    
+    
+    subroutine read_catchment_old()
       use typy
       use kinglobs
       use readtools
@@ -73,7 +117,7 @@ module kinreader
       end do
       stop
     
-    end subroutine read_catchment
+    end subroutine read_catchment_old
     
     
     subroutine gen_catchment()
@@ -148,7 +192,7 @@ module kinreader
             call gen_catchment()
             
           case(4)
-            call read_catchment()
+            call get_slopes()
             
           case default
             print *, "for kinematic wave equation use Arc GIS data option only"
@@ -347,6 +391,8 @@ module kinreader
           raindata(j)%series(i,2) = tmp_array(1+j)
         end do
       end do
+      
+
       
 
     end subroutine kininit

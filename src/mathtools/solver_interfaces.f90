@@ -383,14 +383,16 @@ module solver_interfaces
       proc = ubound(pde,1)
       fin = maxval(pde(proc)%permut(:))
       
+      
       select case(cut(solver_name))
         case("PCGdiag")
           call diag_precond(a=spmatrix, x=pde_common%xvect(1:fin,3), mode=1)
           call CGnormal(A=A, b=b,x=x,ilev1=ilevel,itmax1=itmax1,reps1=reps1, itfin1=itfin1, repsfin1=repsfin1)
           call diag_precond(a=spmatrix, x=pde_common%xvect(1:fin,3), mode=-1)
         case("PCGbalanced")
+  
           call unify_rows(spmatrix, pde_common%bvect(1:fin))
-          call CGnormal(A=A, b=b,x=x,ilev1=ilevel,itmax1=itmax1,reps1=reps1, itfin1=itfin1, repsfin1=repsfin1)
+          call CG(A=A, b=b,x=x,ilev1=ilevel,itmax1=itmax1,reps1=reps1, itfin1=itfin1, repsfin1=repsfin1)
       end select
 
       write(unit=file_itcg, fmt = *) time, itfin1, repsfin1

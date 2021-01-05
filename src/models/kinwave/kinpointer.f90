@@ -80,7 +80,7 @@ module kinpointer
       
       pde(1)%flux => kinflux
       
-!      pde(1)%symmetric = .true.
+      pde(1)%symmetric = .true.
 
 !      pde(2)
       

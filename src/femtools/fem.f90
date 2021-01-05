@@ -90,7 +90,8 @@ module fem
 
 
      call write_log("go 4 solving")
-      
+            
+
       do
 
         if (minimal_dt > time_step) then

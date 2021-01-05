@@ -94,7 +94,7 @@ module feminittools
            
             
             call plane_derivative(a_s(1,:), a_s(2,:), a_s(3,:) , &
-                  elements%ders(i,1,1), elements%ders(i,1,2))
+                  elements%ders(i,1,1), elements%ders(i,1,2), i)
 
             a_s(:,3) = (/0.0_rkind, 1.0_rkind, 0.0_rkind/)
 
