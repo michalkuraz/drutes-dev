@@ -70,6 +70,10 @@ module evapbc4heat
       integer(kind=ikind) :: pos
       integer(kind=ikind) :: i
       
+      if (time >= meteo4evap( ubound(meteo4evap,1))%time) then
+        pos = ubound(meteo4evap,1)
+        RETURN
+      end if
       
       do i=meteo4evap(1)%datapos, ubound(meteo4evap,1) - 1
         if (time >= meteo4evap(i)%time .and. time <  meteo4evap(i+1)%time ) then
@@ -86,6 +90,7 @@ module evapbc4heat
         
       end do
         
+
     
     end function getmeteopos
     
