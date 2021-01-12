@@ -217,6 +217,33 @@ module kinreader
       pde(1)%mass_name(1,1) = "runoff_height"
       pde(1)%mass_name(1,2) = "runoff elevation [m a.m.s.l]"
       
+      if (ubound(pde,1) == 3) then
+        pde(2)%problem_name(1) = "debris_flow"
+        pde(2)%problem_name(2) = "Transport of solutes for kinematic wave equation"
+
+        pde(2)%solution_name(1) = "debris_concentration" !nazev vystupnich souboru
+        pde(2)%solution_name(2) = "[M.L-3] " !popisek grafu
+
+        pde(2)%flux_name(1) = "conc_flux"  
+        pde(2)%flux_name(2) = "conc flux [M.L3.T-1.L-2]"
+        
+        allocate(pde(2)%mass_name(1,2))
+        
+        pde(2)%mass_name(1,1) = "solute_mass"
+        pde(2)%mass_name(1,2) = "solute mass [M]"
+      
+        pde(3)%problem_name(1) = "concentration_soil"
+        pde(3)%problem_name(2) = "Soil contamination"
+
+        pde(3)%solution_name(1) = "soil_concentration" !nazev vystupnich souboru
+        pde(3)%solution_name(2) = "[M.M-3] " !popisek grafu
+
+        pde(3)%flux_name(1) = "na"  
+        pde(3)%flux_name(2) = "na"
+      end if
+        
+        
+      
       open(newunit=file_kinematix, file="drutes.conf/kinwave/kinwave.conf", action="read", status="old", iostat = ierr)
       
       n = maxval(elements%material)

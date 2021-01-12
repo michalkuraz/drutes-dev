@@ -16,7 +16,7 @@
 module kinfnc
 
   public :: kinconvect, kinbor, kinematixinit, rainfall, kin_elast, getval_kinwave, kinematixinit4cs
-  public :: kinflux
+  public :: kinflux, kinfluxcl
 
   contains 
   
@@ -133,7 +133,93 @@ module kinfnc
     
     end subroutine kinflux
   
-  
+      subroutine kinfluxcl(pde_loc, layer, quadpnt, x, grad,  flux, flux_length)
+      use typy
+      use pde_objs
+      use global_objs
+      use debug_tools
+      use kinglobs
+       
+      class(pde_str), intent(in) :: pde_loc
+      integer(kind=ikind), intent(in)                          :: layer
+      type(integpnt_str), intent(in), optional :: quadpnt    
+      real(kind=rkind), intent(in), dimension(:), optional                   :: x
+      !> this value is optional, because it is required by the vector_fnc procedure pointer global definition
+      real(kind=rkind), dimension(:), intent(in), optional     :: grad
+      real(kind=rkind), dimension(:), intent(out), optional    :: flux
+      real(kind=rkind), intent(out), optional                  :: flux_length
+    
+
+      real(kind=rkind) :: h, m, cl
+      integer(kind=ikind) :: el
+
+      
+      
+      if (present(quadpnt) .and. present(x)) then
+        print *, "ERROR: the function can be called either with integ point or x value definition and gradient, not both of them"
+        print *, "exited from kinfnc::kinflux"
+        ERROR stop
+      else if (.not. present(x) .and. .not. present(quadpnt)) then
+        print *, "ERROR: you have not specified either integ point or x value"
+        print *, "exited from kinfnc::kinflux"
+        ERROR stop
+      end if   
+
+      
+      if (present(quadpnt)) then
+        h = pde(1)%getval(quadpnt)
+        cl = pde(2)%getval(quadpnt)
+        if (quadpnt%preproc) then
+          h=h*1e-3
+        end if
+      else
+        h = x(1)
+        cl = x(2)
+      end if
+      
+      
+      select case(quadpnt%type_pnt)
+        case("gqnd", "obpt")
+          el = quadpnt%element
+        case("ndpt")
+          el = nodes%element(quadpnt%order)%data(1)
+      end select
+      
+      m = 5.0_rkind/3
+
+      
+      
+      if (present(flux)) then
+        select case(drutes_config%dimen)
+          case(1)
+            flux(1) = -1.49_rkind * cl * sign(1.0_rkind, watershed_el(el)%sx) * & 
+                            sqrt(abs( watershed_el(el)%sx))/manning(layer)*h**m
+          case(2)
+            flux(1) = -1.49_rkind * cl * sign(1.0_rkind, watershed_el(el)%sx) * & 
+                            sqrt(abs( watershed_el(el)%sx))/manning(layer)*h**m
+            flux(2) = -1.49_rkind * cl * sign(1.0_rkind, watershed_el(el)%sy) * & 
+                            sqrt(abs( watershed_el(el)%sx))/manning(layer)*h**m
+        end select
+      end if
+          
+      
+      
+      if (present(flux_length)) then
+        select case(drutes_config%dimen)
+          case(1)     
+            flux_length = 1.49_rkind * cl * sign(1.0_rkind, watershed_el(el)%sx) * & 
+                            sqrt(abs( watershed_el(el)%sx))/manning(layer)*h**m
+          case(2)
+            flux_length = norm2((/cl*1.49_rkind * sign(1.0_rkind, watershed_el(el)%sx) * & 
+                            sqrt(abs( watershed_el(el)%sx))/manning(layer)*h**m, &
+                            cl*1.49_rkind * sign(1.0_rkind, watershed_el(el)%sy) * & 
+                            sqrt(abs( watershed_el(el)%sy))/manning(layer)*h**m/))
+        end select          
+       end if
+       
+       
+    
+    end subroutine kinfluxcl
   
     subroutine kinconvect(pde_loc, layer, quadpnt, x, vector_in, vector_out, scalar)
       use typy
@@ -281,7 +367,7 @@ module kinfnc
       
       el = quadpnt%element
       
-      hsurf = max(0.0_rkind, pde_loc%getval(quadpnt))
+      hsurf = max(0.0_rkind, pde(1)%getval(quadpnt))
       
       m = 5.0_rkind/3
       
@@ -297,7 +383,7 @@ module kinfnc
         
         do i=1, ubound(ndvals,1)
           quadpnt_loc%order = elements%data(el,i)
-          ndvals(i) = pde_loc%getval(quadpnt_loc)
+          ndvals(i) = pde(1)%getval(quadpnt_loc)
         end do
         
         select case(D)
@@ -389,6 +475,35 @@ module kinfnc
       end if
   
     end subroutine kinbor
+    
+    
+   subroutine kinborcs(pde_loc, el_id, node_order, value, code, array) 
+      use typy
+      use globals
+      use global_objs
+      use pde_objs
+      use debug_tools
+      
+      class(pde_str), intent(in) :: pde_loc
+      integer(kind=ikind), intent(in)  :: el_id, node_order
+      real(kind=rkind), intent(out), optional    :: value
+      integer(kind=ikind), intent(out), optional :: code
+      !> unused for this model (implementation for Robin boundary)
+      real(kind=rkind), dimension(:), intent(out), optional :: array
+
+      
+      
+
+      if (present(value)) then
+        value = 0.0_rkind
+      end if
+
+      
+      if (present(code)) then
+        code = 0
+      end if
+  
+    end subroutine kinborcs
       
     subroutine kinematixinit(pde_loc) 
       use typy
@@ -600,10 +715,50 @@ module kinfnc
       end if
 
 
-      E = pde(1)%getval(quadpnt)
+      E = max(0.0_rkind, pde(1)%getval(quadpnt))
       
 
     end function kin_clelast
+    
+    function solmass(pde_loc,layer, quadpnt, x) result(M)
+      use typy
+      use heat_globals
+      use pde_objs
+      use core_tools
+
+      class(pde_str), intent(in) :: pde_loc 
+      integer(kind=ikind), intent(in) :: layer
+      !> pressure head
+      real(kind=rkind), intent(in), dimension(:),  optional :: x
+      !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
+      type(integpnt_str), intent(in), optional :: quadpnt
+      !> resulting system elasticity
+      real(kind=rkind) :: M
+      
+      real(kind=rkind) :: h, cl
+
+       
+      
+      if (present(quadpnt) .and. present(x)) then
+        print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
+        print *, "exited from heat_fnc::heat_elast"
+        ERROR stop
+      else if (.not. present(quadpnt) .and. .not. present(x)) then
+        print *, "ERROR: you have not specified either integ point or x value"
+        print *, "exited from heat_fnc::heat_elast"
+        ERROR stop
+      end if
+      
+      h = max(0.0_rkind, pde(1)%getval(quadpnt))
+      
+      cl = max(0.0_rkind, pde(2)%getval(quadpnt))
+      
+      if (quadpnt%preproc) h = h*1e-3
+
+      M = h*cl
+      
+
+    end function solmass
     
     
     function kin_cselast(pde_loc,layer, quadpnt, x) result(E)
@@ -636,6 +791,7 @@ module kinfnc
 
 
       E = kinsols(layer)%horb*kinsols(layer)%rhos
+      
       
 
     end function kin_cselast

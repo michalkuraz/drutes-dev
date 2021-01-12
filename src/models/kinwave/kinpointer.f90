@@ -74,14 +74,55 @@ module kinpointer
       
       pde(1)%pde_fnc(1)%elasticity => kin_elast
       
-      pde(1)%diffusion = .false.
+!      pde(1)%diffusion = .false.
       
       pde(1)%getval => getval_kinwave
       
       pde(1)%flux => kinflux
       
       pde(1)%symmetric = .true.
-
+      
+      if (ubound(pde,1) == 3) then
+      
+        allocate(pde(2)%bc(101:101))
+        
+        allocate(pde(3)%bc(101:101))
+      
+        pde(2)%pde_fnc(2)%convection => kinconvectcl
+        
+        pde(2)%initcond =>  kinematixinit
+        
+        pde(2)%pde_fnc(2)%reaction => kincl_source
+        
+        pde(2)%pde_fnc(3)%reaction => kincs_source
+        
+        pde(2)%pde_fnc(2)%elasticity => kin_clelast
+        
+        pde(2)%print_mass = .true.
+        
+        pde(2)%mass(1)%val => solmass
+        
+!        pde(2)%diffusion = .false.
+        
+        pde(2)%flux => kinfluxcl
+        
+        pde(2)%symmetric = .true.
+        
+        pde(2)%bc(101)%value_fnc => kinbor
+        
+        !--- soil
+        pde(3)%initcond =>  kinematixinit4cs
+        
+        pde(3)%pde_fnc(2)%elasticity => kin_clelast
+        
+        pde(3)%pde_fnc(3)%elasticity => kin_cselast
+        
+        pde(3)%bc(101)%value_fnc => kinborcs
+        
+      end if
+        
+        
+        
 !      pde(2)
       
     end subroutine kinwavelinker
