@@ -355,7 +355,8 @@ module re_reader
       end do
         
     
-    
+      close(fileid)
+
     end subroutine read_roots
     
     
@@ -381,7 +382,8 @@ module re_reader
       call fileread(evap_name, fileid, options=evapnames)
     
       
-      
+      close(fileid)
+
     
     end subroutine REevapbc_read
     

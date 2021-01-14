@@ -89,6 +89,11 @@ module freeze_fnc
       !> relative scalar value of the nonlinear function 
       real(kind=rkind), intent(out), optional                 :: scalar
       
+      real(kind=rkind):: temp, u_temp
+      
+      temp = pde(heat_proc)%getval(quadpnt)+273.15_rkind
+      u_temp=exp(ul_a+ul_b/(ul_c+temp))/1000_rkind
+      
       if (present(tensor)) then
         if(present(quadpnt)) then 
           if(fr_rate) then
@@ -101,7 +106,7 @@ module freeze_fnc
            print*, "Q reduction", Q_reduction(layer, quadpnt)
            call wait()
           end if
-          tensor = 10**(-Omega*Q_reduction(layer, quadpnt))*tensor
+          tensor = 10**(-Omega*Q_reduction(layer, quadpnt))*tensor*ul_20/u_temp
         end if
         if (present(x)) then
           print*, "quadpnt required"
@@ -136,11 +141,13 @@ module freeze_fnc
       
       real(kind=rkind), dimension(3,3) :: Klh, Klt, E
       integer(kind=ikind) :: D, i,j
-      real(kind=rkind) :: temp, fac
+      real(kind=rkind) :: temp, fac, u_temp
       
+      temp = pde(heat_proc)%getval(quadpnt)+273.15_rkind
+      u_temp=exp(ul_a+ul_b/(ul_c+temp))/1000_rkind
+  
       D = drutes_config%dimen
 
-      temp = pde(heat_proc)%getval(quadpnt)+273.15_rkind
       if (present(tensor)) then
         if (present(quadpnt)) then
           call Kliquid_temp(pde_loc, layer, quadpnt, tensor = Klt(1:D, 1:D))
@@ -149,16 +156,16 @@ module freeze_fnc
           else
             call mualem_fr(pde_loc, layer, x=(/hl(pde(wat), layer, quadpnt)/), tensor = Klh(1:D, 1:D))
           end if
-          Klh(1:D,1:D) = 10**(-Omega*Q_reduction(layer, quadpnt))*Klh(1:D, 1:D)
+          Klh(1:D,1:D) = 10**(-Omega*Q_reduction(layer, quadpnt))*Klh(1:D, 1:D)*ul_20/u_temp
           if(iceswitch(quadpnt)) then
             if(.not. fr_rate) then
               fac = icefac(quadpnt)
-              tensor = (Klt(1:D, 1:D) + fac*Lf/temp/grav*Klh(1:D,1:D))
+              tensor = (Klt(1:D, 1:D)*ul_20/u_temp + fac*Lf/temp/grav*Klh(1:D,1:D))
             else
-              tensor = Klt(1:D, 1:D)
+              tensor = Klt(1:D, 1:D)*ul_20/u_temp
             end if
           else
-            tensor = Klt(1:D, 1:D)
+            tensor = Klt(1:D, 1:D)*ul_20/u_temp
           end if
         end if
       else
@@ -421,7 +428,10 @@ module freeze_fnc
       real(kind=rkind) :: h, fac
       real(kind=rkind), dimension(:), allocatable :: gradient, gradientT
       type(integpnt_str) :: quadpnt_loc
+      real(kind=rkind) :: temp, u_temp
       
+      temp = pde(heat_proc)%getval(quadpnt)+273.15_rkind
+      u_temp=exp(ul_a+ul_b/(ul_c+temp))/1000_rkind
 
       
       if (present(quadpnt) .and. (present(grad) .or. present(x))) then
@@ -469,7 +479,7 @@ module freeze_fnc
         call pde(wat)%pde_fnc(heat_proc)%dispersion(pde_loc, layer, quadpnt, tensor = Klt(1:D, 1:D))
       end if
       
-      vct(1:D) = matmul(-Klh(1:D,1:D), gradH(1:D))+matmul(-Klt(1:D,1:D), gradientT(1:D))
+      vct(1:D) = matmul(-Klh(1:D,1:D)*ul_20/u_temp, gradH(1:D))+matmul(-Klt(1:D,1:D)*ul_20/u_temp, gradientT(1:D))
 
       if (present(flux_length)) then
         flux_length = norm2(vct(1:D))

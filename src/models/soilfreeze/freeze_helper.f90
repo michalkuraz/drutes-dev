@@ -96,6 +96,54 @@ module freeze_helper
       end if
           
     end function icefac
+
+    function gaussianint(hw, end, start) result(val)
+      use typy
+      use global_objs
+      
+      real(kind=rkind), intent(in) :: end, start, hw
+      real(kind=rkind), dimension(3) :: a, H, hh, aa, w
+      real(kind=rkind) :: val
+      integer(kind = ikind) :: i
+
+      a = (/-(5.0_rkind/9.0_rkind)**0.5, 0.0_rkind, (3.0/5.0_rkind)**0.5/)
+      H = (/5.0/9.0_rkind, 8_rkind/9.0_rkind, 5_rkind/9.0_rkind/)
+      hh = (end-start)/2.0_rkind*H
+      aa = (end - start)/2.0_rkind*a+(end + start)/2.0_rkind
+      do  i = 1, 3
+        w(i) = dhldT(hw = hw, T = aa(i))
+      end do
+      val = sum(hh*w)
+
+    end function gaussianint
+    
+    function dhldT(hw, T) result(val)
+      use typy
+      use global_objs
+      
+      real(kind=rkind), intent(in) :: hw, T
+      real(kind=rkind) :: Tf, fac, x, val      
+      
+      if(clap) then
+        Tf = Tref*exp(hw*grav/Lf)
+        Tf = Tf - 273.15_rkind
+      else
+        Tf = 0
+      end if
+      
+
+      if (T > Tf) then
+      !> melting
+        fac = 0
+      else
+      !> freezing sigmoid function
+        x = T-Tf 
+        fac = 1_rkind/(1_rkind+exp(x*fac_scale + fac_add))
+      end if
+      
+      val = fac*Lf/grav/(T+273.15_rkind)
+          
+    end function dhldT
     
     function rho_icewat(quadpnt) result(rho)
 
@@ -153,8 +201,8 @@ module freeze_helper
         thl = vangen_fr(pde(wat), layer, x=(/hl(pde(wat), layer, quadpnt)/))
       end if
       thice = thetai(pde(wat), layer, quadpnt)
-      val = thice/(thice+thl*1.09)
-      
+      !val = thice/(thice+thl*1.09)
+      val = thice/(thice+thl-freeze_par(layer)%Thr)      
        
     end function Q_reduction
     
@@ -176,6 +224,11 @@ module freeze_helper
       real(kind=rkind), dimension(3,3) :: Klh, Klt
       integer(kind=ikind) :: D
       real(kind = rkind) :: h_l
+      real(kind=rkind) :: temp, u_temp
+      
+      temp = pde(heat_proc)%getval(quadpnt)+273.15_rkind
+      u_temp=exp(ul_a+ul_b/(ul_c+temp))/1000_rkind
+
       D = drutes_config%dimen
 
       
@@ -186,7 +239,7 @@ module freeze_helper
           call mualem_fr(pde_loc, layer, x=(/hl(pde_loc, layer, quadpnt)/), tensor = Klt(1:D, 1:D))
         end if
         if(qlt_log) then
-          Klt(1:D, 1:D) = 10**(-Omega*Q_reduction(layer, quadpnt))*Klt(1:D, 1:D)
+          Klt(1:D, 1:D) = 10**(-Omega*Q_reduction(layer, quadpnt))*Klt(1:D, 1:D)*ul_20/u_temp
         else
           Klt(1:D,1:D)= 0_rkind*Klt(1:D, 1:D)
         end if 
@@ -243,8 +296,10 @@ module freeze_helper
       integer(kind=ikind), intent(in) :: layer
       type(integpnt_str), intent(in), optional :: quadpnt
       real(kind=rkind), dimension(:), intent(in), optional    :: x
-      real(kind=rkind) :: val, T_f, fac
-      real(kind=rkind) :: hw, temp
+      real(kind=rkind) :: val, T_f, fac, dif, T1K, T2K, T_threshK
+      real(kind=rkind) :: hw, temp, tempK, midtemp
+      real(kind=rkind) :: integ, integ2, integ3, integ4
+      real(kind=rkind) :: T_threshK99, T_threshK75, T_threshK50, T_threshK25
       type(integpnt_str) :: quadpnt_loc
       
       quadpnt_loc = quadpnt
@@ -253,13 +308,50 @@ module freeze_helper
       hw = pde(wat)%getval(quadpnt_loc)
       temp = pde(heat_proc)%getval(quadpnt)
       T_f = Tref*exp(hw*grav/Lf)
-      
       if(iceswitch(quadpnt)) then
         if(fr_rate) then
           val = hw
         else
-          fac = icefac(quadpnt)
-          val = hw+fac*Lf/grav*log((temp+273.15_rkind)/T_f) !units       
+          tempK = temp+273.15_rkind
+          dif = tempK-T_f 
+          fac = 1_rkind/(1_rkind+exp(dif*fac_scale + fac_add))
+          T_threshK99 = (log(1_rkind/0.99_rkind-1)-fac_add)/fac_scale + T_f
+          T_threshK75 = (log(1_rkind/0.75_rkind-1)-fac_add)/fac_scale + T_f
+          T_threshK50 = (log(1_rkind/0.50_rkind-1)-fac_add)/fac_scale + T_f
+          T_threshK25 = (log(1_rkind/0.25_rkind-1)-fac_add)/fac_scale + T_f
+          if(fac > 0.99_rkind) then
+           integ = gaussianint(hw = hw, start = T_f-273.15, end = T_threshK25-273.15)
+           integ2 = gaussianint(hw = hw, start = T_threshK25-273.15, end = T_threshK50-273.15)
+           integ3 = gaussianint(hw = hw, start = T_threshK50-273.15, end = T_threshK75-273.15)
+           integ4 = gaussianint(hw = hw, start = T_threshK75-273.15, end = T_threshK99-273.15)
+           val = hw+Lf/grav*log(tempK/T_threshK99)+integ+integ2+integ3+integ4 !units       
+          else
+           if(fac > 0.75_rkind) then
+             integ = gaussianint(hw = hw, start = T_f-273.15, end = T_threshK25-273.15)
+             integ2 = gaussianint(hw = hw, start = T_threshK25-273.15, end = T_threshK50-273.15)
+             integ3 = gaussianint(hw = hw, start = T_threshK50-273.15, end = T_threshK75-273.15)
+             integ4 = gaussianint(hw = hw, start = T_threshK75-273.15, end = temp)
+             val = hw+integ+integ2+integ3+integ4 !units       
+           else
+             if(fac > 0.5_rkind) then
+               integ = gaussianint(hw = hw, start = T_f-273.15, end = T_threshK25-273.15)
+               integ2 = gaussianint(hw = hw, start = T_threshK25-273.15, end = T_threshK50-273.15)
+               integ3 = gaussianint(hw = hw, start = T_threshK50-273.15, end = temp)
+               val = hw+integ+integ2+integ3!units       
+             else
+               if(fac > 0.25_rkind) then
+                 integ = gaussianint(hw = hw, start = T_f-273.15, end = T_threshK25-273.15)
+                 integ2 = gaussianint(hw = hw, start = T_threshK25-273.15, end = temp)
+                 val = hw+Lf/grav*log(tempK/T_threshK25)+integ+integ2!units       
+               else
+                midtemp = T_f-273.15 - (temp - (T_f-273.15))/2
+                integ = gaussianint(hw = hw, start = T_f-273.15, end = midtemp) 
+                integ2 = gaussianint(hw = hw, start = midtemp, end = temp)
+                val = hw+integ +integ2!units       
+               end if
+             end if
+           end if
+          end if
         end if        
       else
         val = hw
@@ -674,10 +766,11 @@ module freeze_helper
               case("H_tot")
                 pde_loc%solution(k) = freeze_par(layer)%initcond !+ nodes%data(k,1)
               case("hpres")
-                pde_loc%solution(k) = freeze_par(layer)%initcond + nodes%data(k,D)
+                pde_loc%solution(k) = freeze_par(layer)%initcond + &
+                nodes%data(k,D)*cos(4*atan(1.0_rkind)/180*freeze_par(layer)%anisoangle(1))
               case("theta")
                 value = inverse_vangen_fr(pde_loc, layer, x=(/freeze_par(layer)%initcond/))
-                pde_loc%solution(k) = value + nodes%data(k,D)
+                pde_loc%solution(k) = value + nodes%data(k,D)*cos(4*atan(1.0_rkind)/180*freeze_par(layer)%anisoangle(1))
             end select
           end if
         end do   
