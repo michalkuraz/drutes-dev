@@ -304,6 +304,7 @@ module simplelinalg
       end if      
       
       no_blocks = ubound(blindex,1)
+      
 
       
       if (.not. allocated(blockmat)) then

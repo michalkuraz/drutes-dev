@@ -227,7 +227,7 @@ module solver_interfaces
       integer, intent(out), optional :: errcode1
       integer :: ilevel
       integer(kind=ikind), dimension(:,:), allocatable, save :: blindex
-      integer(kind=ikind) :: i, start, iters, itmax
+      integer(kind=ikind) :: i, start, iters, itmax, j
       character(len=4096) :: msg
 
       if (.not. present(ilev1) ) then
@@ -240,10 +240,21 @@ module solver_interfaces
       if (.not. allocated(blindex)) then
         allocate(blindex(ubound(pde,1),2))
         do i=1, ubound(pde,1)
-          blindex(i,1) = minval(pde(i)%permut)
           blindex(i,2) = maxval(pde(i)%permut)
-        end do  
+        end do 
+        
+        do i=1, ubound(pde,1)
+          blindex(i,1) = huge(blindex(1,1))
+          do j=1, ubound(pde(i)%permut,1)
+            if (pde(i)%permut(j) /=0 ) then
+              if (pde(i)%permut(j) < blindex(i,1)) blindex(i,1) = pde(i)%permut(j)
+            end if
+          end do
+        end do
       end if
+      
+
+      
       
 !      itmax =  int(itfin1/10.0)+1
       itmax = itmax1

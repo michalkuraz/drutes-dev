@@ -203,7 +203,7 @@ module debug_tools
       use globals
       use core_tools
       
-      integer(kind=ikind), dimension(:,:), intent(in out) :: a
+      integer(kind=ikind), dimension(:,:), intent(in) :: a
       integer, intent(in), optional :: filunit   
       character(len=*), intent(in), optional :: name
 
