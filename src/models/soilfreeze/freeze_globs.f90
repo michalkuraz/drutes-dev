@@ -67,6 +67,15 @@ module freeze_globs
   
   !> dynamic viscosities of ice [Pa s]
   real(kind=rkind), parameter, public :: ui = 10e12
+
+  !> dynamic viscosities of liquid water [Pa s] at 20 deg C
+  real(kind=rkind), parameter, public :: ul_20 = 0.89e-3
+ 
+  !> dynamic visosity parameter, Jones equation
+  real(kind=rkind), parameter, public :: ul_a = -3.7188 
+  real(kind=rkind), parameter, public :: ul_b =  578.919 	
+  real(kind=rkind), parameter, public :: ul_c =  -137.546
+
   integer, public :: file_freeze
 
   integer, public :: frz_pnt
