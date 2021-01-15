@@ -1174,7 +1174,7 @@ module RE_constitutive
       
       if (h < roots(layer)%h_wet .and. h >= roots(layer)%h_start) then
         if (abs(roots(layer)%h_start - roots(layer)%h_wet) > 100*epsilon(h)) then
-          val = roots(layer)%Smax * abs(h - roots(layer)%h_wet)/abs(roots(layer)%h_start - roots(layer)%h_wet)
+          val = -roots(layer)%Smax * abs(h - roots(layer)%h_wet)/abs(roots(layer)%h_start - roots(layer)%h_wet)
         else
           val = 0
         end if
@@ -1182,15 +1182,15 @@ module RE_constitutive
       end if
       
       if (h < roots(layer)%h_start .and. h >= roots(layer)%h_end) then
-        val = roots(layer)%Smax
+        val = -roots(layer)%Smax
         RETURN
       end if
       
       if (h < roots(layer)%h_end .and. h >= roots(layer)%h_dry) then
         if (abs(roots(layer)%h_end - roots(layer)%h_dry) > 100*epsilon(h)) then
-          val = roots(layer)%Smax * abs(h - roots(layer)%h_dry)/abs(roots(layer)%h_end - roots(layer)%h_dry)
+          val = -roots(layer)%Smax * abs(h - roots(layer)%h_dry)/abs(roots(layer)%h_end - roots(layer)%h_dry)
         else
-          val = roots(layer)%Smax
+          val = -roots(layer)%Smax
         end if
         RETURN
       end if
