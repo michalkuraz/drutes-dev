@@ -621,7 +621,7 @@ module kinfnc
       real(kind=rkind)                :: val 
       
       
-      val = -kinsols(layer)%lambda
+      val = kinsols(layer)%lambda
       
       
     end function kincl_source
@@ -643,7 +643,7 @@ module kinfnc
       real(kind=rkind)                :: val 
       
       
-      val = kinsols(layer)%lambda*kinsols(layer)%rhos
+      val = -kinsols(layer)%rhos
       
       
     end function kincs_source

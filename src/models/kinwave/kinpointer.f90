@@ -92,11 +92,13 @@ module kinpointer
         
         pde(2)%initcond =>  kinematixinit
         
-        pde(2)%pde_fnc(2)%reaction => kincl_source
+!        pde(2)%pde_fnc(2)%reaction => kincl_source
         
-        pde(2)%pde_fnc(3)%reaction => kincs_source
+!        pde(2)%pde_fnc(3)%reaction => kincs_source
         
         pde(2)%pde_fnc(2)%elasticity => kin_clelast
+        
+        pde(2)%pde_fnc(3)%elasticity => kin_cselast
         
         pde(2)%print_mass = .true.
         
@@ -115,7 +117,11 @@ module kinpointer
         
         pde(3)%pde_fnc(2)%elasticity => kin_clelast
         
-        pde(3)%pde_fnc(3)%elasticity => kin_cselast
+        pde(3)%pde_fnc(3)%elasticity => kin_elast
+        
+        pde(3)%pde_fnc(2)%reaction => kincl_source
+        
+        pde(3)%pde_fnc(3)%reaction => kincs_source
         
         pde(3)%bc(101)%value_fnc => kinborcs
         
