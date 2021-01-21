@@ -621,7 +621,7 @@ module kinfnc
       real(kind=rkind)                :: val 
       
       
-      val = kinsols(layer)%lambda
+      val = kinsols(layer)%lambda_a
       
       
     end function kincl_source
@@ -643,7 +643,7 @@ module kinfnc
       real(kind=rkind)                :: val 
       
       
-      val = -kinsols(layer)%rhos
+      val = -kinsols(layer)%lambda_d
       
       
     end function kincs_source
@@ -797,39 +797,39 @@ module kinfnc
     end function kin_cselast
     
         
-    function kin_csclelast(pde_loc,layer, quadpnt, x) result(E)
-      use typy
-      use heat_globals
-      use pde_objs
-      use core_tools
+!    function kin_csclelast(pde_loc,layer, quadpnt, x) result(E)
+!      use typy
+!      use heat_globals
+!      use pde_objs
+!      use core_tools
 
-      class(pde_str), intent(in) :: pde_loc 
-      integer(kind=ikind), intent(in) :: layer
-      !> pressure head
-      real(kind=rkind), intent(in), dimension(:),  optional :: x
-      !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
-      type(integpnt_str), intent(in), optional :: quadpnt
-      real(kind=rkind) :: h
-      !> resulting system elasticity
-      real(kind=rkind) :: E
+!      class(pde_str), intent(in) :: pde_loc 
+!      integer(kind=ikind), intent(in) :: layer
+!      !> pressure head
+!      real(kind=rkind), intent(in), dimension(:),  optional :: x
+!      !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
+!      type(integpnt_str), intent(in), optional :: quadpnt
+!      real(kind=rkind) :: h
+!      !> resulting system elasticity
+!      real(kind=rkind) :: E
 
        
       
-      if (present(quadpnt) .and. present(x)) then
-        print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
-        print *, "exited from heat_fnc::heat_elast"
-        ERROR stop
-      else if (.not. present(quadpnt) .and. .not. present(x)) then
-        print *, "ERROR: you have not specified either integ point or x value"
-        print *, "exited from heat_fnc::heat_elast"
-        ERROR stop
-      end if
+!      if (present(quadpnt) .and. present(x)) then
+!        print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
+!        print *, "exited from heat_fnc::heat_elast"
+!        ERROR stop
+!      else if (.not. present(quadpnt) .and. .not. present(x)) then
+!        print *, "ERROR: you have not specified either integ point or x value"
+!        print *, "exited from heat_fnc::heat_elast"
+!        ERROR stop
+!      end if
 
 
-      E = pde(1)%getval(quadpnt)
+!      E = pde(1)%getval(quadpnt)
       
 
-    end function kin_csclelast
+!    end function kin_csclelast
 
 
 end module kinfnc
