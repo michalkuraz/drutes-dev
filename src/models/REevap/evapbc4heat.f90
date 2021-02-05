@@ -25,6 +25,7 @@ module evapbc4heat
       use evapglob
       use pde_objs
       use re_constitutive
+      use debug_tools
       
       
       type(integpnt_str), intent(in) :: quadpnt
@@ -41,8 +42,10 @@ module evapbc4heat
       T_a_K = T2kelv(T_a)
       c = meteo4evap(pos)%cloudiness
       
+      
       Rns = (1-albedo_fnc(quadpnt, layer))*meteo4evap(pos)%inradiation
       
+  
 
       eps_s = min(0.9 + 0.18*vangen(pde(re_ord),  layer, quadpnt), 1.0_rkind)
       
@@ -77,7 +80,8 @@ module evapbc4heat
         pos = ubound(meteo4evap,1)
         RETURN
       end if
-  
+      
+
       
       do i=meteo4evap(1)%datapos, ubound(meteo4evap,1) - 1
         if (time >= meteo4evap(i)%time .and. time <  meteo4evap(i+1)%time ) then
@@ -162,7 +166,9 @@ module evapbc4heat
       quad4atm%type_pnt = "numb"
       quad4atm%this_is_the_value = meteo4evap(pos)%T_air
       
-      E = min((dens_satvap(quad4atm)*meteo4evap(pos)%relhum - dens_satvap(quadpnt)*relhumid(quadpnt))/(resH() + rs), 0.0_rkind)
+ 
+      
+      E = min((dens_satvap(quad4atm)*meteo4evap(pos)%relhum  - dens_satvap(quadpnt)*relhumid(quadpnt)  )/(resH() + rs), 0.0_rkind)
       
     end function Eterm
     
@@ -281,57 +287,26 @@ module evapbc4heat
       real(kind=rkind):: dens_wat
       integer(kind=ikind) :: layer, nodeid, D
       type(integpnt_str) :: quadpnt_loc
-!      integer, save :: outfile
-!      integer :: ierr
-!      logical, save :: opened=.false.
-!      logical, dimension(:), allocatable, save :: nodesmarker
-!      character(len=1), dimension(3) :: xyz = (/"x", "z", "y"/)
-!      integer(kind=ikind), save :: bc_nds = 0
-!      real(kind=rkind), dimension(:), allocatable, save :: ebalance_vals
+
       
       
       layer = elements%material(el_id)
-!      D = drutes_config%dimen
-      
-!      if (.not. allocated(nodesmarker)) then
-!        allocate(nodesmarker(nodes%kolik))
-!        nodesmarker = .false.
-!      end if
+
 
       if (present(code)) then
         code = 2
-!        if (.not. opened) then
-!          open(newunit=outfile, file="out/ebalance.out", status="replace", action="write", iostat=ierr)
-!          if (ierr /=0) then
-!            print *, "error opening file out/ebalance.out"
-!            ERROR STOP
-!          end if
-!          call print_logo(outfile)
-!          write(unit=outfile, fmt=*) "#----------------------------------------------------------------------------"
-!          write(unit=outfile, fmt=*) "#----------------------------------------------------------------------------"
-!          write(unit=outfile, fmt=*) "# node id                  | coordinates: ", xyz(1:D)
-!           write(unit=outfile, fmt=*) "#- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - "
-!          opened = .true.
-!        end if
-!        nodeid = elements%data(el_id, node_order)
-!        if (.not. nodesmarker(nodeid)) then
-!          write(unit=outfile, fmt=*) "#", nodeid, nodes%data(nodeid,:)
-!          nodesmarker(nodeid) = .true.
-!          bc_nds = bc_nds + 1
-!        end if
       end if
         
         
           
       
       if (present(value)) then
-!        if (.not. allocated(ebalance_vals)) allocate(ebalance
         quadpnt_loc%column = 2
         quadpnt_loc%type_pnt = "ndpt"
         quadpnt_loc%order = elements%data(el_id, node_order)
-        call pde_loc%pde_fnc(pde_loc%order)%dispersion(pde_loc, elements%material(el_id), quadpnt_loc, &
+        call pde(RE_ord)%pde_fnc(RE_ord)%dispersion(pde(RE_ord), elements%material(el_id), quadpnt_loc, &
                   tensor=K(1:drutes_config%dimen, 1:drutes_config%dimen))
-        gravflux(1:drutes_config%dimen) = K(drutes_config%dimen, 1:drutes_config%dimen)*elements%nvect_z(el_id, node_order)
+        gravflux(1:drutes_config%dimen) = -K(drutes_config%dimen, 1:drutes_config%dimen)*elements%nvect_z(el_id, node_order)
         
         dens_wat = dens_liquid(quadpnt_loc)
         value = Eterm(quadpnt_loc, layer)/dens_wat

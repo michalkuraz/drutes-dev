@@ -184,16 +184,18 @@ module evapreader
           EXIT
         end if
       end do
-            
+
       call write_log(text="detected", int1=counter, text2="records in drutes.conf/evaporation/ebalance.in")
       allocate(meteo4evap(counter))
       
       close(ebalancein)
+      
       open(newunit=ebalancein, file="drutes.conf/evaporation/ebalance.in", status="old", action="read", iostat = ierr)
       
       
       do i=1, counter
         call fileread(tmpdata, ebalancein, checklen=.true., noexit=.true., eof=success)
+
         meteo4evap(i)%time = tmpdata(1)
         meteo4evap(i)%inradiation = tmpdata(2)
         meteo4evap(i)%extraterrad = tmpdata(3)
@@ -203,6 +205,7 @@ module evapreader
         meteo4evap(i)%relhum = tmpdata(7)
       end do
       
+
     
     end subroutine evapread
 
