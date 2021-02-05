@@ -106,7 +106,7 @@ module evap_heat_constitutive
       theta = vangen(pde(re_ord), layer, quadpnt)
       theta_v = thetav(pde(re_ord), layer, quadpnt) 
       
-      val = heatpar(layer)%C*(1-ths) + water_cap(quadpnt)*theta + vapour_cap(quadpnt)*theta_v + &
+      val = heatpar(layer)%C*(1-ths) + water_cap(quadpnt)*theta + vapour_cap(quadpnt)*(ths-theta) + &
             dens_liquid(quadpnt)*latentheat(quadpnt)*dthetav_dtemp(pde(re_ord), layer, quadpnt)
       
     end function heatcap_TT
@@ -302,7 +302,7 @@ module evap_heat_constitutive
       type(integpnt_str), intent(in) :: quadpnt
       real(kind=rkind) :: val
       
-      val = pde(heat_ord)%getval(quadpnt) * dens_liquid(quadpnt)
+      val = C_liq * dens_liquid(quadpnt)
     
     end function water_cap
     
