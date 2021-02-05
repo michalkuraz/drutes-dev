@@ -374,8 +374,12 @@ module readtools
               EXIT
             end if
             
+            
             if (i1 == i2) then
               arraybound = arraybound + 1
+
+                
+              
               if (ubound(tmpdata,1) < arraybound) then
                 deallocate(tmpdata)
                 allocate(tmpdata(2*arraybound))
@@ -412,12 +416,13 @@ module readtools
       
       call comment(fileid)
       read(unit=fileid, fmt=*, iostat=ierr) r
+      if (present(eof)) then
+        eof = .false.
+      end if
     
-            
       
       if (ierr /= 0) then
          terminate = .true.
-          print *, ierr
       end if
       
       

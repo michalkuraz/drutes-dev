@@ -184,6 +184,7 @@ module evapreader
           EXIT
         end if
       end do
+      
 
       call write_log(text="detected", int1=counter, text2="records in drutes.conf/evaporation/ebalance.in")
       allocate(meteo4evap(counter))
