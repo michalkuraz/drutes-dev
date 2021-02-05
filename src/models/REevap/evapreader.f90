@@ -24,6 +24,7 @@ module evapreader
       use global_objs
       use readtools
       use evapglob
+      use core_tools
       
       integer(kind=ikind) :: layers, i, counter, low, high
       integer :: evapconf, ierr, ebalancein, albedodat
@@ -174,40 +175,32 @@ module evapreader
       
       counter = 0
       
-      do
-        call comment(ebalancein)
-        read(unit=ebalancein, fmt = *, iostat=ierr) tmpdata
-        
-        if (ierr /= 0) then
-          EXIT
-        else
+      do      
+        call fileread(tmpdata, ebalancein, checklen=.true., noexit=.true., eof=success)
+                
+        if (.not. success) then
           counter = counter + 1
+        else
+          EXIT
         end if
-   
-        do i=1, 7
-          call datafiller%fill(tmpdata(i))
-        end do
-        
-
       end do
-      
-      
+            
+      call write_log(text="detected", int1=counter, text2="records in drutes.conf/evaporation/ebalance.in")
       allocate(meteo4evap(counter))
       
-      if (datafiller%pos /= counter*7) then
-        call file_error(ebalancein, "You have defined incorrect number of columns for energy balance time dependent parameters...")
-      end if
+      close(ebalancein)
+      open(newunit=ebalancein, file="drutes.conf/evaporation/ebalance.in", status="old", action="read", iostat = ierr)
+      
       
       do i=1, counter
-        low = (i-1)*7
-        high = i*7
-        meteo4evap%time = datafiller%data(low+1)
-        meteo4evap(i)%inradiation = datafiller%data(low+2)
-        meteo4evap(i)%extraterrad = datafiller%data(low+3)
-        meteo4evap(i)%T_air = datafiller%data(low+4)
-        meteo4evap(i)%wind_speed = datafiller%data(low+5)
-        meteo4evap(i)%cloudiness = datafiller%data(low+6)
-        meteo4evap(i)%relhum = datafiller%data(low+7)
+        call fileread(tmpdata, ebalancein, checklen=.true., noexit=.true., eof=success)
+        meteo4evap(i)%time = tmpdata(1)
+        meteo4evap(i)%inradiation = tmpdata(2)
+        meteo4evap(i)%extraterrad = tmpdata(3)
+        meteo4evap(i)%T_air = tmpdata(4)
+        meteo4evap(i)%wind_speed = tmpdata(5)
+        meteo4evap(i)%cloudiness = tmpdata(6)
+        meteo4evap(i)%relhum = tmpdata(7)
       end do
       
     

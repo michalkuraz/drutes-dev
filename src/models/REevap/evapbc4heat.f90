@@ -35,12 +35,14 @@ module evapbc4heat
       integer(kind=ikind) :: pos
       
       pos = getmeteopos()
+      
       ! T_a for Boltzman law in kelvin
       T_a = meteo4evap(pos)%T_air
       T_a_K = T2kelv(T_a)
       c = meteo4evap(pos)%cloudiness
       
       Rns = (1-albedo_fnc(quadpnt, layer))*meteo4evap(pos)%inradiation
+      
 
       eps_s = min(0.9 + 0.18*vangen(pde(re_ord),  layer, quadpnt), 1.0_rkind)
       
@@ -65,6 +67,7 @@ module evapbc4heat
       use typy
       use globals
       use evapglob
+      use debug_tools
       
       
       integer(kind=ikind) :: pos
@@ -74,6 +77,7 @@ module evapbc4heat
         pos = ubound(meteo4evap,1)
         RETURN
       end if
+  
       
       do i=meteo4evap(1)%datapos, ubound(meteo4evap,1) - 1
         if (time >= meteo4evap(i)%time .and. time <  meteo4evap(i+1)%time ) then

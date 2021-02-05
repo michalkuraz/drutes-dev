@@ -401,6 +401,9 @@ module readtools
                  incorrect number of values, check your inputs" //achar(27)//'[0m'
               call file_error(fileid, errmsg)
             else
+              if (present(eof)) then
+                eof = .true.
+              end if
               RETURN
             end if
          end if
@@ -430,7 +433,11 @@ module readtools
         do i=1, ubound(r,1)
           if (r(i) < ranges(1) .or. r(i) > ranges(2)) then
             write(unit=terminal, fmt=*) " " //achar(27)//'[91m', "incorrect ranges of input parameter(s)" //achar(27)//'[0m'
-            if (.not. noexit_local) call file_error(fileid, errmsg)
+            if (.not. noexit_local) then
+              call file_error(fileid, errmsg)
+            else
+              if (present(eof)) eof = .true.
+            end if
           end if
         end do
       end if
