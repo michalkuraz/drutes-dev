@@ -109,14 +109,21 @@ module evapbc4heat
       real(kind=rkind) :: val
       real(kind=rkind) :: Ustar
       integer(kind=ikind) :: pos
+      ! crop height
+      real(kind = rkind) :: h
+      ! displacement height
+      real(kind = rkind) :: d
+      ! roughness length for momentum transfer and of heat and vapour
+      real(kind = rkind) :: zom, zoh
       
-      
+      h = 0.5
+      d = 0.666*h
+      zom = 0.123*h
+      zoh = 0.1*zom
       pos = getmeteopos()
-      
-      Ustar = meteo4evap(pos)%wind_speed * karman / (log((zref + 1e-3)/1e-3))
-      
-      val = 1/(karman * Ustar)*(log((zref+1e-3)/1e-3))
-      
+      Ustar = meteo4evap(pos)%wind_speed * karman / log((zref-d)/zom)      
+      val = 1/(karman * Ustar)*log((zref-d)/zoh)
+    
     end function resH
     
         
@@ -153,14 +160,25 @@ module evapbc4heat
       real(kind=rkind) :: E
       
       real(kind=rkind) :: rs, theta, ths
+      !> stomatal resistance
+      real(kind = rkind) :: rl
+      !> Leaf area index and active LAI (interacting with momentum transfers)
+      real(kind = rkind) :: LAI, LAI_active
       integer(kind=ikind) :: pos
       type(integpnt_str) :: quad4atm
       
       theta = vangen(pde(re_ord), layer, quadpnt)
       ths = vgset(layer)%ths
       
-      rs = max(-805 + 4140*(ths-theta), 0.0_rkind)
-!      rs = 0
+      !> Bare soil
+      !rs = max(-805 + 4140*(ths-theta), 0.0_rkind)
+      !rs = 10*exp(0.3563*(0.15-theta))
+      !rs = 0
+      !> Plants
+      rl = 100
+      LAI = 1.0
+      LAI_active = LAI*0.3
+      rs = rl/LAI_active
       
       pos = getmeteopos()
       quad4atm%type_pnt = "numb"
