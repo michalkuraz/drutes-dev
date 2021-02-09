@@ -13,17 +13,9 @@ module freeze_pointers
       call read_frrate()
       select case (drutes_config%name)
         case ("freeze")
-          if(fr_rate) then
-            processes = 3
-          else
             processes = 2
-          end if
         case ("LTNE")
-          if(fr_rate) then
-            processes = 4
-          else 
             processes = 3
-          end if
         case default
           print *, "procedure called when unexpected problem name"
           print *, "exited from freeze_pointers::freeze_processes"
@@ -105,12 +97,6 @@ module freeze_pointers
 
       select case (drutes_config%name)
         case ("freeze")
-          if(fr_rate) then
-            allocate(pde(wat)%mass_name(3,2))
-            allocate(pde(wat)%mass(3))
-            pde(heat_proc)%pde_fnc(heat_proc)%zerord => latent_heat
-            !pde(ice)%pde_fnc(heat_proc)%reaction => mf_react
-          else
             allocate(pde(wat)%mass_name(5,2))
             allocate(pde(wat)%mass(5))
             
@@ -122,23 +108,8 @@ module freeze_pointers
             
             pde(wat)%mass(4)%val => thetai
             pde(wat)%mass(5)%val => thetai_wat_eq
-          end if
-
-         
+      
         case ("LTNE")
-          if(fr_rate) then
-            allocate(pde(wat)%mass_name(4,2))
-            allocate(pde(wat)%mass(4))
-
-            pde(wat)%mass_name(4,1) = "T_m"
-            pde(wat)%mass_name(4,2) = "T_m [deg C]"
-            
-            pde(wat)%mass(4)%val => T_m        
-            pde(heat_solid)%pde_fnc(heat_solid)%zerord => latent_heat_mf
-            pde(heat_proc)%pde_fnc(heat_proc)%zerord => latent_heat_vf
-            pde(ice)%pde_fnc(heat_solid)%reaction => mf_react
-
-          else
             allocate(pde(wat)%mass_name(5,2))
             allocate(pde(wat)%mass(5))
 
@@ -151,8 +122,6 @@ module freeze_pointers
             pde(wat)%mass(4)%val => T_m        
 
             pde(wat)%mass(5)%val => thetai
-          end if
-
         case default
           print *, "procedure called when unexpected problem name"
           print *, "exited from freeze_pointers::frz_pointers"
@@ -174,31 +143,6 @@ module freeze_pointers
       
       pde(wat)%mass(3)%val => hl
 
-      if(fr_rate) then
-        !pde(ice)%diffusion = .false.
-        allocate(pde(ice)%mass_name(0,2))
-        pde(ice)%print_mass = .false.
-        pde(ice)%problem_name(1) = "ice"
-        pde(ice)%problem_name(2) = "Ice with freezing rate"
-            
-        pde(ice)%solution_name(1) = "ice_content" 
-        pde(ice)%solution_name(2) = "theta_i " 
-
-        pde(ice)%pde_fnc(ice)%zerord => phase_ice
-        pde(wat)%pde_fnc(wat)%zerord => phase_wat
-
-        do i=lbound(pde(ice)%bc,1), ubound(pde(ice)%bc,1)
-          select case(pde(ice)%bc(i)%code)
-            case(1)
-                pde(ice)%bc(i)%value_fnc => heat_dirichlet
-            case(2)
-                pde(ice)%bc(i)%value_fnc => heat_neumann
-          end select
-        end do
-        pde(ice)%initcond => ice_initcond
-        pde(ice)%pde_fnc(ice)%elasticity => cap_ice
-
-      end if
       
     ! pointers for heat flow model
       pde(heat_proc)%problem_name(1) = "heat"

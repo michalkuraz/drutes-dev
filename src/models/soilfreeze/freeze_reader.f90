@@ -34,46 +34,11 @@ module freeze_read
       use readtools
       use freeze_globs
       
-      integer :: i_err
-      character(len=4096) :: msg
       
-      call find_unit(file_freeze, 200)
-      open(unit = file_freeze, file="drutes.conf/freeze/freeze.conf", action="read", status="old", iostat=i_err)
-      if (i_err /= 0) then
-        print *, "missing drutes.conf/freeze/freeze.conf"
-        ERROR STOP
-      end if
-    
-      
-      
-      write(unit = msg, fmt = *) "Use freezing rate? yes - 1 or no -0"
-      call fileread(frz_pnt, file_freeze, ranges=(/0_ikind,1_ikind/), errmsg = trim(msg))
-      select case(frz_pnt)
-            case(1_ikind,0_ikind)
-              CONTINUE
-            case default
-              print *, "you have specified wrong input for freezing rate"
-              print *, "the allowed options are:"
-              print *, "                        1 = yes (freezing rate)"
-              print *, "                        0 = no (instantaneous freezing)"
-              call file_error(file_freeze)
-      end select
-      
-      if(frz_pnt > 0) then
-       fr_rate = .true.
-          wat = 1
-          heat_proc = 2
-          ice = 3
-          heat_solid = 4
+      wat = 1
+      heat_proc = 2
+      heat_solid = 3
 
-      else
-       fr_rate = .false.
-         wat = 1
-         heat_proc = 2
-         heat_solid = 3
-      end if
-      
-    close(file_freeze)	  
     
     end subroutine read_frrate
 
@@ -117,28 +82,6 @@ module freeze_read
           error stop
       end select
 
-      write(unit = msg, fmt = *) "Use freezing rate? yes - 1 or no -0"
-      call fileread(frz_pnt, file_freeze, ranges=(/0_ikind,1_ikind/), errmsg = trim(msg))
-      select case(frz_pnt)
-            case(1_ikind,0_ikind)
-              CONTINUE
-            case default
-              print *, "you have specified wrong input for freezing rate"
-              print *, "the allowed options are:"
-              print *, "                        1 = yes (freezing rate)"
-              print *, "                        0 = no (instantaneous freezing)"
-              call file_error(file_freeze)
-      end select
-      
-      if(frz_pnt > 0) then
-       fr_rate = .true.
-        write(unit = msg, fmt = *) "beta should be positive"
-        call fileread(beta, file_freeze, ranges=(/0.0_rkind, huge(0.0_rkind)/), errmsg=trim(msg))    
-        call fileread(beta_melt, file_freeze, ranges=(/0.0_rkind, huge(0.0_rkind)/), errmsg=trim(msg))     
-
-      else
-       fr_rate = .false.
-      end if
       
         
       allocate(freeze_par(maxval(elements%material)))

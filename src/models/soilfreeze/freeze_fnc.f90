@@ -96,11 +96,7 @@ module freeze_fnc
       
       if (present(tensor)) then
         if(present(quadpnt)) then 
-          if(fr_rate) then
-            call mualem_fr(pde_loc, layer, quadpnt, tensor = tensor)
-          else
-            call mualem_fr(pde_loc, layer, x = (/hl(pde(wat), layer, quadpnt)/), tensor = tensor)
-          end if
+          call mualem_fr(pde_loc, layer, x = (/hl(pde(wat), layer, quadpnt)/), tensor = tensor)
           if(isnan(tensor(1,1))) then
            print*, hl(pde(wat), layer, quadpnt)
            print*, "Q reduction", Q_reduction(layer, quadpnt)
@@ -151,19 +147,11 @@ module freeze_fnc
       if (present(tensor)) then
         if (present(quadpnt)) then
           call Kliquid_temp(pde_loc, layer, quadpnt, tensor = Klt(1:D, 1:D))
-          if(fr_rate) then
-            call mualem_fr(pde_loc, layer, quadpnt, tensor = Klh(1:D, 1:D))
-          else
-            call mualem_fr(pde_loc, layer, x=(/hl(pde(wat), layer, quadpnt)/), tensor = Klh(1:D, 1:D))
-          end if
+          call mualem_fr(pde_loc, layer, x=(/hl(pde(wat), layer, quadpnt)/), tensor = Klh(1:D, 1:D))
           Klh(1:D,1:D) = 10**(-Omega*Q_reduction(layer, quadpnt))*Klh(1:D, 1:D)*ul_20/u_temp
           if(iceswitch(quadpnt)) then
-            if(.not. fr_rate) then
               fac = icefac(quadpnt)
               tensor = (Klt(1:D, 1:D)*ul_20/u_temp + fac*Lf/temp/grav*Klh(1:D,1:D))
-            else
-              tensor = Klt(1:D, 1:D)*ul_20/u_temp
-            end if
           else
             tensor = Klt(1:D, 1:D)*ul_20/u_temp
           end if
@@ -201,11 +189,8 @@ module freeze_fnc
         val = vangen_elast_fr(pde_loc, layer, quadpnt)
       end if
       
-      if(.not. fr_rate) then
-        val = -val*Lf*rho_ice
-      else
-        val = 0
-      end if
+      val = -val*Lf*rho_ice
+
     end function capacityTh
     
     !> Capacity term due to temperature for heat flow model
@@ -233,16 +218,10 @@ module freeze_fnc
       ths = thetas(pde_loc, layer, quadpnt)
       wat_dens = rho_wat(quadpnt)
       vol_soil = 1_rkind - ths
-      if(fr_rate) then
-        th_air = ths-&
-        vangen_fr(pde_loc, layer, quadpnt)
-        theta = vangen_fr(pde_loc, layer, quadpnt)
-      else
-        th_air = ths-thetai(pde_loc, layer, quadpnt)-&
-        vangen_fr(pde_loc, layer, x = (/hl(pde(wat), layer, quadpnt)/)) 
-        theta = vangen_fr(pde_loc, layer, x = (/hl(pde(wat), layer, quadpnt)/))
-      end if
-
+      th_air = ths-thetai(pde_loc, layer, quadpnt)-&
+      vangen_fr(pde_loc, layer, x = (/hl(pde(wat), layer, quadpnt)/)) 
+      theta = vangen_fr(pde_loc, layer, x = (/hl(pde(wat), layer, quadpnt)/))
+      
       if(th_air < 0) then
         th_air = 0
 !         if(abs(th_air) > epsilon(th_air)) then
@@ -286,13 +265,11 @@ module freeze_fnc
           end select
        end select
 
-       if(.not. fr_rate) then
-         if(iceswitch(quadpnt)) then
-           fac = icefac(quadpnt)
-           val = val + fac*Lf*rho_ice*Lf/temp/grav*&
-           vangen_elast_fr(pde_loc, layer, x = (/hl(pde(wat), layer, quadpnt)/))
-         end if
-       end if
+        if(iceswitch(quadpnt)) then
+          fac = icefac(quadpnt)
+          val = val + fac*Lf*rho_ice*Lf/temp/grav*&
+          vangen_elast_fr(pde_loc, layer, x = (/hl(pde(wat), layer, quadpnt)/))
+        end if
 
 
     end function capacityTT
@@ -382,11 +359,8 @@ module freeze_fnc
       D = drutes_config%dimen
       
       thice = thetai(pde(wat), layer, quadpnt)
-      if(fr_rate) then
-        thl = vangen_fr(pde(wat), layer, quadpnt = quadpnt)
-      else
-        thl = vangen_fr(pde(wat), layer, quadpnt = quadpnt, x=(/hl(pde(wat), layer, quadpnt)/))
-      end if
+      thl = vangen_fr(pde(wat), layer, quadpnt = quadpnt, x=(/hl(pde(wat), layer, quadpnt)/))
+
       select case (freeze_par(layer)%material)
         case ("Soil")
           call all_fluxes(pde_loc, layer, quadpnt, flux = flux)
@@ -464,12 +438,8 @@ module freeze_fnc
       D = drutes_config%dimen
 
       if(iceswitch(quadpnt))then
-       if(fr_rate) then
-         gradH(1:D) = gradient(1:D)
-       else
-         fac = icefac(quadpnt)
-         gradH(1:D) = gradient(1:D) + fac*Lf/grav*gradientT(1:D)/(pde(heat_proc)%getval(quadpnt) + 273.15_rkind)
-       end if
+        fac = icefac(quadpnt)
+        gradH(1:D) = gradient(1:D) + fac*Lf/grav*gradientT(1:D)/(pde(heat_proc)%getval(quadpnt) + 273.15_rkind)
       else
         gradH(1:D) = gradient(1:D)
       end if
@@ -692,11 +662,7 @@ module freeze_fnc
       D = drutes_config%dimen
       ths = thetas(pde_loc, layer, quadpnt)
       thice = thetai(pde(wat), layer, quadpnt)
-      if(fr_rate) then
-        thl = vangen_fr(pde(wat), layer, quadpnt)
-      else
-        thl = vangen_fr(pde(wat), layer, x=(/hl(pde(wat), layer, quadpnt)/))
-      end if
+      thl = vangen_fr(pde(wat), layer, x=(/hl(pde(wat), layer, quadpnt)/))
       if(air) then
         !thice*freeze_par(layer)%Li
         val = thl*freeze_par(layer)%Ll+(ths-thl)*freeze_par(layer)%La/ths
@@ -834,11 +800,8 @@ module freeze_fnc
       D = drutes_config%dimen
       ths = thetas(pde_loc, layer, quadpnt)
       thice = thetai(pde(wat), layer, quadpnt)
-      if(fr_rate) then
-        thl = vangen_fr(pde(wat), layer, quadpnt)
-      else
-        thl = vangen_fr(pde(wat), layer, x=(/hl(pde(wat), layer, quadpnt)/))
-      end if
+      thl = vangen_fr(pde(wat), layer, x=(/hl(pde(wat), layer, quadpnt)/))
+
       thair = ths-thl
       if(air) then
         thtot = thice+thl+thair
