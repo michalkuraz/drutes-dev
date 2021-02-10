@@ -51,7 +51,7 @@ module evapbc4heat
       
       ea = 0.611 * relhumid(quadpnt) * exp(17.27*T_a/(T_a_K - 35.85))
       
-      eps_a = 1! 0.7 + 5.95e-5 * ea *exp (1500/T2kelv(T_a))
+      eps_a =  0.7 + 5.95e-5 * ea *exp (1500/T2kelv(T_a))
       
       Rld = ((1-0.84*c)*eps_a + 0.84*c) * sigm * T_a_K**4
       
@@ -184,7 +184,6 @@ module evapbc4heat
       quad4atm%type_pnt = "numb"
       quad4atm%this_is_the_value = meteo4evap(pos)%T_air
       
- 
       
       E = min((dens_satvap(quad4atm)*meteo4evap(pos)%relhum  - dens_satvap(quadpnt)*relhumid(quadpnt)  )/(resH() + rs), 0.0_rkind)
       
