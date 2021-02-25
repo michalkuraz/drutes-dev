@@ -52,6 +52,9 @@ module freeze_globs
   
    !> Gain factor [-]
   real(kind=rkind), parameter, public :: gwt = 7
+  
+  !> Freezing temperature [-]
+  real(kind=rkind), parameter, public :: Tfk = 273.15
     
   !> Thermal conductivity [ W/m/K]
   real(kind=rkind), parameter, public :: thermal_cond = 0.5

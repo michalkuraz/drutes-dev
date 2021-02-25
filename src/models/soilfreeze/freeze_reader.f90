@@ -488,6 +488,8 @@ module freeze_read
       end do  
         
     end select
+    close(file_freeze)	      
+
     end subroutine freeze_reader
 
 

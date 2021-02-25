@@ -8,7 +8,7 @@ module freeze_helper
   public :: iceswitch,icefac, rho_icewat, Q_reduction, surf_tens_deriv, Kliquid_temp, hl, hcl, thetai, thetal
   public:: vangen_fr, mualem_fr, temp_initcond, temp_s_initcond, wat_initcond, getval_retotfr, ice_initcond, thetas
   public:: rho_wat, thetai_wat_eq
-    
+  private:: linspace
       
   
   contains
@@ -49,8 +49,7 @@ module freeze_helper
       quadpnt_loc%preproc=.true.
       
       if(clap) then
-        Tf = Tref*exp(pde(wat)%getval(quadpnt_loc)*grav/Lf)
-        Tf = Tf - 273.15_rkind
+        Tf = Tfk - 273.15_rkind
       else
         Tf = 0
       end if
@@ -78,7 +77,7 @@ module freeze_helper
       quadpnt_loc%preproc=.true.
       
       if(clap) then
-        Tf = Tref*exp(pde(wat)%getval(quadpnt_loc)*grav/Lf)
+        Tf = Tfk
         Tf = Tf - 273.15_rkind
       else
         Tf = 0
@@ -124,7 +123,7 @@ module freeze_helper
       real(kind=rkind) :: Tf, fac, x, val      
       
       if(clap) then
-        Tf = Tref*exp(hw*grav/Lf)
+        Tf = Tfk
         Tf = Tf - 273.15_rkind
       else
         Tf = 0
@@ -272,6 +271,25 @@ module freeze_helper
       
     end function surf_tens_deriv
     
+    subroutine linspace(from, to, array)
+        real(kind=rkind), intent(in) :: from, to
+        real(kind=rkind), intent(out) :: array(:)
+        real(kind=rkind) :: range
+        integer :: n, i
+        n = size(array)
+        range = to - from
+
+        if (n == 0) return
+
+        if (n == 1) then
+            array(1) = from
+            return
+        end if
+        do i=1, n
+            array(i) = from + range * (i - 1) / (n - 1)
+        end do
+    end subroutine
+    
     function hl(pde_loc, layer, quadpnt, x) result(val)
       use typy
       use global_objs
@@ -283,59 +301,42 @@ module freeze_helper
       type(integpnt_str), intent(in), optional :: quadpnt
       real(kind=rkind), dimension(:), intent(in), optional    :: x
       real(kind=rkind) :: val, T_f, fac, dif, T1K, T2K, T_threshK
-      real(kind=rkind) :: hw, temp, tempK, midtemp
+      real(kind=rkind) :: hw, temp, tempK, midtemp,  Tstart, diffx
       real(kind=rkind) :: integ, integ2, integ3, integ4
-      real(kind=rkind) :: T_threshK99, T_threshK75, T_threshK50, T_threshK25
+      real(kind=rkind) :: T_threshK99, meanKs
       type(integpnt_str) :: quadpnt_loc
-      
+      real(kind=rkind), dimension(:), allocatable :: intpoints
+      integer :: n, i
       quadpnt_loc = quadpnt
       quadpnt_loc%preproc=.true.
 
       hw = pde(wat)%getval(quadpnt_loc)
       temp = pde(heat_proc)%getval(quadpnt)
-      T_f = Tref*exp(hw*grav/Lf)
+      T_f = Tfk
       if(iceswitch(quadpnt)) then
           tempK = temp+273.15_rkind
-          dif = tempK-T_f 
           fac = 1_rkind/(1_rkind+exp(dif*fac_scale + fac_add))
           T_threshK99 = (log(1_rkind/0.99_rkind-1)-fac_add)/fac_scale + T_f
-          T_threshK75 = (log(1_rkind/0.75_rkind-1)-fac_add)/fac_scale + T_f
-          T_threshK50 = (log(1_rkind/0.50_rkind-1)-fac_add)/fac_scale + T_f
-          T_threshK25 = (log(1_rkind/0.25_rkind-1)-fac_add)/fac_scale + T_f
           if(fac > 0.99_rkind) then
-           integ = gaussianint(hw = hw, start = T_f-273.15, end = T_threshK25-273.15)
-           integ2 = gaussianint(hw = hw, start = T_threshK25-273.15, end = T_threshK50-273.15)
-           integ3 = gaussianint(hw = hw, start = T_threshK50-273.15, end = T_threshK75-273.15)
-           integ4 = gaussianint(hw = hw, start = T_threshK75-273.15, end = T_threshK99-273.15)
-           val = hw+Lf/grav*log(tempK/T_threshK99)+integ+integ2+integ3+integ4 !units       
+            dif = T_f-T_threshK99
+            Tstart = T_threshK99
           else
-           if(fac > 0.75_rkind) then
-             integ = gaussianint(hw = hw, start = T_f-273.15, end = T_threshK25-273.15)
-             integ2 = gaussianint(hw = hw, start = T_threshK25-273.15, end = T_threshK50-273.15)
-             integ3 = gaussianint(hw = hw, start = T_threshK50-273.15, end = T_threshK75-273.15)
-             integ4 = gaussianint(hw = hw, start = T_threshK75-273.15, end = temp)
-             val = hw+integ+integ2+integ3+integ4 !units       
-           else
-             if(fac > 0.5_rkind) then
-               integ = gaussianint(hw = hw, start = T_f-273.15, end = T_threshK25-273.15)
-               integ2 = gaussianint(hw = hw, start = T_threshK25-273.15, end = T_threshK50-273.15)
-               integ3 = gaussianint(hw = hw, start = T_threshK50-273.15, end = temp)
-               val = hw+integ+integ2+integ3!units       
-             else
-               if(fac > 0.25_rkind) then
-                 integ = gaussianint(hw = hw, start = T_f-273.15, end = T_threshK25-273.15)
-                 integ2 = gaussianint(hw = hw, start = T_threshK25-273.15, end = temp)
-                 val = hw+Lf/grav*log(tempK/T_threshK25)+integ+integ2!units       
-               else
-                midtemp = T_f-273.15 - (temp - (T_f-273.15))/2
-                integ = gaussianint(hw = hw, start = T_f-273.15, end = midtemp) 
-                integ2 = gaussianint(hw = hw, start = midtemp, end = temp)
-                val = hw+integ +integ2!units       
-               end if
-             end if
-           end if
+            dif = T_f-TempK   
+            Tstart = TempK
           end if
-      else
+          meanKs = sum(freeze_par(layer)%Ks)/max(1,size(freeze_par(layer)%Ks))*8.46e+6
+          diffx = (T_f-T_threshK99)/(meanKs*0.75)
+          n = nint(dif/diffx)
+          allocate(intpoints(n))
+          call linspace(from=Tstart, to=T_f, array=intpoints)
+          val = hw
+          do i=1,n-1
+           val = val + gaussianint(hw = hw, start = intpoints(i+1)-273.15, end = intpoints(i)-273.15)
+          end do
+          if(fac > 0.99_rkind) then
+            val = val + Lf/grav*log(tempK/T_threshK99)
+          end if
+       else
         val = hw
       end if
       

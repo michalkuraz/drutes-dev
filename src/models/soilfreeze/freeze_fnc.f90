@@ -30,9 +30,9 @@ module freeze_fnc
       integer(kind=ikind), intent(in) :: layer
       !> return value
       real(kind=rkind)                :: val
-    
       if (iceswitch(quadpnt)) then
-        val = rho_ice/rho_wat(quadpnt)*vangen_elast_fr(pde_loc, layer, quadpnt)
+        val = rho_ice/rho_wat(quadpnt)*vangen_elast_fr(pde_loc, layer, quadpnt)-&
+        (rho_ice/rho_wat(quadpnt)-1)*vangen_elast_fr(pde_loc, layer, x=(/hl(pde_loc, layer, quadpnt)/))
       else
         val = vangen_elast_fr(pde_loc, layer, quadpnt)
       end if
@@ -180,13 +180,14 @@ module freeze_fnc
       !> material ID
       integer(kind=ikind), intent(in) :: layer
       !> return value
-      real(kind=rkind)                :: val
+      real(kind=rkind)                :: val, h_l
       
       if(.not.iceswitch(quadpnt)) then
         val = 0
       end if
       if(iceswitch(quadpnt)) then
-        val = vangen_elast_fr(pde_loc, layer, quadpnt)
+        val = vangen_elast_fr(pde_loc, layer, quadpnt)-&
+        vangen_elast_fr(pde_loc, layer, x=(/hl(pde_loc, layer, quadpnt)/))
       end if
       
       val = -val*Lf*rho_ice
