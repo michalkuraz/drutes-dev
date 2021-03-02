@@ -324,9 +324,15 @@ module freeze_helper
             dif = T_f-TempK   
             Tstart = TempK
           end if
-          meanKs = sum(freeze_par(layer)%Ks)/max(1,size(freeze_par(layer)%Ks))*8.46e+6
+          meanKs = sum(freeze_par(layer)%Ks)/max(1,size(freeze_par(layer)%Ks))*8.64e+6
+          if(meanKS < 10) then
+            meanKS = 10
+          end if
+          if(meanKS > 40) then
+            meanKs = 40
+          end if
           diffx = (T_f-T_threshK99)/(meanKs*0.75)
-          n = nint(dif/diffx)
+          n = nint(dif/diffx)+1
           allocate(intpoints(n))
           call linspace(from=Tstart, to=T_f, array=intpoints)
           val = hw
