@@ -87,6 +87,7 @@ module RE_pointers
       call allREpointers(pde_loc)
       call RE_totheadbc(pde_loc)
       
+      
       if (drutes_config%rotsym) then
         pde_loc%pde_fnc(pde_loc%order)%convection => convection_rerot
       end if
@@ -135,7 +136,7 @@ module RE_pointers
               CONTINUE
               ! to be linked in vapour_pointers
             else
-              print *, "if you want to use atmospheric bc, set problem type to RE"
+              print *, "if you want to use atmospheric bc, set problem type to REevap"
               ERROR stop
             end if
           case default
@@ -218,12 +219,6 @@ module RE_pointers
         read = .true.
       end if
       
-      
-      deallocate(pde_loc%mass)
-      deallocate(pde_loc%mass_name)
-      
-      allocate(pde_loc%mass(2))
-      allocate(pde_loc%mass_name(2,2))
 
       pde_common%nonlinear = .true.
       if (drutes_config%fnc_method == 0) then

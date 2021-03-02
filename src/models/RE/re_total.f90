@@ -261,47 +261,7 @@ module re_total
     end subroutine retot_dirichlet_height_bc
     
     subroutine retot_well(pde_loc, el_id, node_order, value, code, array)
-!      use typy
-!      use globals
-!      use global_objs
-!      use pde_objs
-!      use debug_tools
-!      use re_globals
-!      use geom_tools
-      
-!      class(pde_str), intent(in) :: pde_loc
-!      integer(kind=ikind), intent(in)  :: el_id, node_order
-!      real(kind=rkind), intent(out), optional    :: value
-!      integer(kind=ikind), intent(out), optional :: code
-!      real(kind=rkind), dimension(:), intent(out), optional :: array
-      
-!      real(kind=rkind), dimension(3) :: xyz
-!      integer(kind=ikind) :: edge_id
-!      type(integpnt_str) :: quadpnt
-      
-!      if (.not. allocated(pde_common%xvect) ) then
-!        if (present(value)) value = 0
-!        if (present(code)) code = 2
-!        RETURN
-!      end if
-!      edge_id = nodes%edge(elements%data(el_id, node_order))
-!      quadpnt%type_pnt = "ndpt"
-!      quadpnt%order = elements%data(el_id, node_order)
-      
-
-!        call getcoor(quadpnt, xyz(1:drutes_config%dimen))
-        
-!        print *, edge_id, pde_loc%bc(edge_id)%value ,xyz(2)
-!!        if (xyz(2) <= pde_loc%bc(edge_id)%value) then
-!          if (present(value)) value = xyz(2) !de_loc%bc(edge_id)%value 
-!          if (present(code)) code = 1
-!!        else
-!!          print *, "nana", edge_id
-!!          if (present(value)) value = 0
-!!          if (present(code)) code = 2
-!!        end if
-
-        use typy
+      use typy
       use globals
       use global_objs
       use pde_objs

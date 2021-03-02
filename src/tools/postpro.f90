@@ -170,7 +170,7 @@ module postpro
           allocate(filenames(i)%names(2+ubound(pde(i)%mass_name,1)+ubound(pde(i)%fluxes,1)))
         end if
       end do
- 
+
 
       if (anime) then
         prefix = "out/anime/"
@@ -213,6 +213,7 @@ module postpro
                       run,  trim(extension)
           end do
         end if
+        
       
          
         if ( (.not. anime .and. mode == 0)  .or. &
@@ -220,18 +221,10 @@ module postpro
          ( .not. anime .and. (mode == -1 .and. postpro_run == 0 ) ) ) then
 
          
-!          do i=1, 3+ubound(pde(proc)%mass_name,1)
           do i=1, ubound(filenames(proc)%names,1)
-            ! if gsmh don't print element average value 
-            if (i == 2 .and. observe_info%fmt == "gmsh" .and. drutes_config%dimen > 1) then
-              CONTINUE
-            else
               open(newunit=ids(proc, i), file=trim(filenames(proc)%names(i)), action="write", status="replace", iostat=ierr)
-            end if
-
-
           end do
-            
+          
         end if
 
 
@@ -496,16 +489,17 @@ module postpro
       integer(kind=ikind) :: i, j, layer, ii
       real(kind=rkind) :: tmp, totflux
       real(kind=rkind), dimension(3) :: flux
-      real(kind=rkind), dimension(:,:), allocatable :: body
+      real(kind=rkind), dimension(:,:), allocatable, save :: body
       real(kind=rkind), dimension(2) :: vct1, vct2
-      real(kind=rkind), dimension(8) :: vct_tmp
+      real(kind=rkind), dimension(:), allocatable, save :: vct_tmp
       integer(kind=ikind) :: time_dec
       real(kind=rkind) :: curtime
       type(integpnt_str) :: qpntloc
       type(integpnt_str) :: quadpnt_loc
 
-
-      allocate(body(3, 7+ubound(pde(proc)%mass,1)))
+      if (.not. allocated(body)) allocate(body(3, 7+ubound(pde(proc)%mass,1)))
+      
+      if (.not. allocated(vct_tmp)) allocate(vct_tmp(7+ubound(pde(proc)%mass,1)))
       
       quadpnt_loc = quadpnt
       if (.not. quadpnt%globtime) then
