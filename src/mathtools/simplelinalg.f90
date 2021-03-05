@@ -238,8 +238,10 @@ module simplelinalg
       
     end function factorial
     
-    
-    subroutine block_jacobi(A,xvect,bvect,blindex, itcnt, repsexit, maxitcount, details)
+
+
+
+   subroutine block_jacobi(A,xvect,bvect,blindex, itcnt, repsexit, maxitcount, details)
       use typy
       use sparsematrix
       use pde_objs
@@ -438,12 +440,151 @@ module simplelinalg
         
       end do
       
-
+	end subroutine block_jacobi
                   
+    
+    subroutine block_jacobi4ADE(A,xvect,bvect,blindex, itcnt, repsexit, maxitcount, details)
+      use typy
+      use sparsematrix
+      use pde_objs
+      use solvers
+      use debug_tools
+      use globals
+      use printtools
+      use core_tools
+      
+      !> input global matrix
+      class(smtx), intent(in out) :: A
+      !> global vector with solution
+      real(kind=rkind), dimension(:), intent(in out) :: xvect
+      !> global b-vector
+      real(kind=rkind), dimension(:), intent(in) :: bvect
+      !> indeces of matrix diagonal blocks, 1st column start indices, 2nd column end indices
+      integer(kind=ikind), dimension(:,:), intent(in) :: blindex
+      !> iteration count 
+      integer(kind=ikind), intent(out) :: itcnt
+      !> required minimal residual
+      real(kind=rkind) :: repsexit
+      !> maximal iteration count
+      integer(kind=ikind), intent(in) :: maxitcount
+      !> if present and true prints Frobenius norms of submatrices
+      logical, intent(in), optional :: details
+      
+      class(extsmtx), dimension(:,:), allocatable, save :: blockmat
+      integer(kind=ikind) :: no_blocks
+      integer(kind=ikind) :: finbig
+      integer(kind=ikind), dimension(:), allocatable, save :: indices
+      real(kind=rkind), dimension(:), allocatable, save :: values, xold, biter
+      integer(kind=ikind) :: nelem, i, j, iblock, jblock, ilocal, jlocal, xlow, xhigh, blow, bhigh, pcg_it
+      integer(kind=ikind) :: i_prev, j_prev, k
+      real(kind=rkind) :: repstot, repslocal
+      integer, save :: itfile
+      real(kind=rkind), dimension(:,:), allocatable, save :: frobnorms
+      character(len=4096) :: text
+      
+      integer(kind=ikind), dimension(:), allocatable, save :: p1, p2
+      logical, save :: not_solved = .false.
+    
+      
+      finbig = A%getn()
+
+      
+      if (finbig /= A%getm()) then
+        print *, "runtime error, matrix is not square matrix"
+        print *, "exited from simplelinalg::block_jacobi"
+        ERROR STOP
+      end if
+      
+      
+      if (ubound(xvect,1) /= finbig) then
+        print *, "x vector has incorrect dimension"
+        print *, "x vector has:", ubound(xvect,1), "components, matrix A has dimension:", finbig
+        print *, "exited from simplelinalg::blockjacobi"
+        ERROR STOP
+      end if
+      
+      if (ubound(bvect,1) /= finbig) then
+        print *, "b vector has incorrect dimension"
+        print *, "b vector has:", ubound(bvect,1), "components, matrix A has dimension:", finbig
+        print *, "exited from simplelinalg::blockjacobi"
+        ERROR STOP
+      end if      
+      
+      no_blocks = ubound(blindex,1)
+      
+
+      
+      if (.not. allocated(blockmat)) then
+        allocate(blockmat(no_blocks, no_blocks))
+        do iblock=1, no_blocks
+          do jblock=1, no_blocks
+            call blockmat(iblock,jblock)%init(blindex(iblock,2)-blindex(iblock,1)+1, blindex(iblock,2)-blindex(iblock,1)+1)
+          end do
+        end do
+        allocate(xold(ubound(xvect,1)))
+        allocate(biter(ubound(xvect,1)))
+      end if
+      
+      
+      do i=1, finbig
+        call a%getrow(i=i, v=values, jj=indices, nelem=nelem)
+        do j=1, nelem
+          do k=1, no_blocks
+            if (i >= blindex(k,1) .and. i <= blindex(k,2) ) then
+              iblock = k
+            end if
+            
+            if (indices(j) >= blindex(k,1) .and. indices(j) <= blindex(k,2) ) then
+              jblock = k
+            end if
+          end do
+        
+          
+          if (iblock > 1) then
+            i_prev = blindex(iblock-1,2)
+          else
+            i_prev = 0
+          end if
+          
+          if (jblock > 1) then
+            j_prev = blindex(jblock-1,2)
+          else
+            j_prev = 0
+          end if
+            
+          
+          ilocal = i - i_prev
+          jlocal = indices(j) - j_prev
+          
+
+          call blockmat(iblock,jblock)%set(values(j), ilocal, jlocal)
+
+
+        end do
+      end do
+          
+
+      itcnt = 0
+      
+      if (not_solved) then
+		if (.not. allocated(p1)) then
+		  allocate(p1(blindex(1,2)))
+          allocate(p2(blindex(1,2)))
+		end if
+      
+		call LDUd(blockmat(1,1), pivtype=5, ilev=0, perm1=p1, perm2=p2)
+		call LDUback(blockmat(1,1), bvect(blindex(1,1):blindex(1,2)), xvect(blindex(1,1):blindex(1,2)), p1=p1, p2=p2)
+		not_solved = .true.
+	  end if
+	  
+	  call diag_precond(a=blockmat(2,2), x=xvect(blindex(2,1):blindex(2,2)), mode=1)
+      call CGnormal(A=blockmat(2,2), b=bvect(blindex(2,1):blindex(2,2)),x=xvect(blindex(2,1):blindex(2,2)),ilev1=0, &
+					itmax1=blockmat(2,2)%getn(), reps1=1e-10)
+      call diag_precond(a=blockmat(2,2), x=xvect(blindex(2,1):blindex(2,2)), mode=-1)
 
     
-    end subroutine block_jacobi
-
+    end subroutine block_jacobi4ADE
+    
  
 
 end module simplelinalg

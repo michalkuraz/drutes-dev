@@ -191,7 +191,7 @@ module RE_constitutive
       if (h >= 0) then
         isbelow = 0
       else
-        isbelow = -1
+        isbelow = 1
       end if
     
     end function undergroundwater

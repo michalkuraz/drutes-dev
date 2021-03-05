@@ -69,7 +69,6 @@ module feminittools
 
       call init_integ()
 
-
       select case(drutes_config%dimen)
         case(1)
           do i=1, elements%kolik
@@ -128,6 +127,7 @@ module feminittools
       allocate(pde_common%bvect(maxval(pde(i)%permut(:)))) 
       allocate(pde_common%xvect(maxval(pde(i)%permut(:)),4))
       
+
 
       ! fill nodes%el2integ
       !--------------
@@ -493,6 +493,7 @@ module feminittools
                 EXIT
               end if
             end do
+            
             call pde(proc)%bc(nodes%edge(i))%value_fnc(pde(proc), el_id,nd_id, code=bc)
           else
             bc = 0

@@ -158,6 +158,7 @@ module manage_pointers
       end select
       
       
+      
       select case(cut(solver_name))
         case("LDU","LDUbalanced","LDUdefault")
           solve_matrix => LDU_face
@@ -203,7 +204,6 @@ module manage_pointers
       select case(pde_common%timeint_method)
         case(0)
           pde_common%time_integ => steady_state_int
-          solve_matrix => LDU_face
         case(1)
           pde_common%time_integ => impl_euler_np_diag
         case(2)

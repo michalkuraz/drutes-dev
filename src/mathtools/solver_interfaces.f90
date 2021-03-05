@@ -125,8 +125,7 @@ module solver_interfaces
           end if
         end do
       end if
-      
-      
+
       if (.not. allocated(p1)) then
         allocate(p1(ubound(b,1)))
         allocate(p2(ubound(b,1)))
@@ -393,8 +392,8 @@ module solver_interfaces
       
       proc = ubound(pde,1)
       fin = maxval(pde(proc)%permut(:))
-      
-      
+
+
       select case(cut(solver_name))
         case("PCGdiag")
           call diag_precond(a=spmatrix, x=pde_common%xvect(1:fin,3), mode=1)
