@@ -567,12 +567,14 @@ module readtools
       
     end subroutine read_char_array
     
-    subroutine read_logical(l, fileid, errmsg, noexit)
+    subroutine read_logical(l, fileid, errmsg, noexit, defaultval, success)
       use globals
       logical, intent(out) :: l
       integer, intent(in) :: fileid
       character(len=*), intent(in), optional :: errmsg
       logical, intent(in), optional :: noexit
+      logical, intent(in), optional :: defaultval
+      logical, intent(out), optional :: success
 
       integer :: ierr
       character(len=1) :: ch
@@ -583,6 +585,7 @@ module readtools
       read(unit=fileid, fmt=*, iostat=ierr) ch
 
       if (ierr == 0) then 
+        if (present(success)) success = .true.
         select case(ch)
           case("y")
             l = .true.
@@ -605,17 +608,22 @@ module readtools
             terminate = .true.
           end if
         end if
-      end if
+
        
-      
-      if (terminate) then
-        if (present(errmsg)) then
-          call file_error(fileid,errmsg)
+        
+        if (.not. present(defaultval)) then
+          if (terminate) then
+            if (present(errmsg)) then
+              call file_error(fileid,errmsg)
+            else
+              call file_error(fileid)
+            end if
+          end if
         else
-          call file_error(fileid)
+          l = defaultval
+          if (present(success)) success = .false.
         end if
       end if
-      
       
     end subroutine read_logical
     

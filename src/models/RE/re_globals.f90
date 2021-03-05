@@ -75,6 +75,8 @@ module re_globals
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !!!!!!!!!!!!!--material parameters and methods for matrix--!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  
+  logical, public :: re_transient = .true.
 
   !> formula of the retention curve
   integer(kind=ikind), public :: retc_method
@@ -95,5 +97,6 @@ module re_globals
   integer(kind=ikind), public :: day_in_month, month_in_year,  init_year
   
   character(len=256) :: evap_name
+  
    
 end module re_globals

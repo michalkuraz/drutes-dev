@@ -48,6 +48,7 @@ module re_reader
       real(kind=rkind), dimension(:), allocatable :: tmpdata
 
       real(kind=rkind) :: nan
+      logical :: success
 
       pde_loc%problem_name(1) = "RE_matrix"
       pde_loc%problem_name(2) = "Richards' equation"
@@ -86,13 +87,20 @@ module re_reader
         ERROR STOP
       end if
       
+      call fileread(re_transient, file_waterm, defaultval=.true., success=success)
+      
+      if (.not. success) then
+        backspace file_waterm
+        backspace file_waterm
+      end if
+      
       write(msg, *) "define method of evaluation of constitutive functions for the Richards equation", new_line("a"), &
         "   0 - direct evaluation (not recommended, extremely resources consuming due to complicated exponential functions)", &
         new_line("a"), &
         "   1 - function values are precalculated in program initialization and values between are linearly approximated"
       
       call fileread(drutes_config%fnc_method, file_waterm, ranges=(/0_ikind,1_ikind/),errmsg=msg)
-      
+
       call fileread(maxpress, file_waterm, ranges=(/-huge(0.0_rkind), huge(0.0_rkind)/), &
         errmsg="set some positive nonzero limit for maximal suction pressure (think in absolute values) ")
         maxpress = abs(maxpress)

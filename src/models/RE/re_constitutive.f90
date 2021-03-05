@@ -463,22 +463,26 @@ module RE_constitutive
         h = x(1)
       end if
 
-      if (vgset(layer)%method == "vgfnc") then
-        if (h < 0) then
-          a = vgset(layer)%alpha
-          n = vgset(layer)%n
-          m = vgset(layer)%m
-          tr = vgset(layer)%Thr
-          ts = vgset(layer)%Ths
-          C = a*m*n*(-tr + ts)*(-(a*h))**(-1 + n)*(1 + (-(a*h))**n)**(-1 - m)
-        else
-          E = vgset(layer)%Ss
-          RETURN
-        end if
+      if (re_transient) then
+        if (vgset(layer)%method == "vgfnc") then
+          if (h < 0) then
+            a = vgset(layer)%alpha
+            n = vgset(layer)%n
+            m = vgset(layer)%m
+            tr = vgset(layer)%Thr
+            ts = vgset(layer)%Ths
+            C = a*m*n*(-tr + ts)*(-(a*h))**(-1 + n)*(1 + (-(a*h))**n)**(-1 - m)
+          else
+            E = vgset(layer)%Ss
+            RETURN
+          end if
 
-        E = C + vangen(pde_loc, layer, x=(/h/))/vgset(layer)%Ths*vgset(layer)%Ss
+          E = C + vangen(pde_loc, layer, x=(/h/))/vgset(layer)%Ths*vgset(layer)%Ss
+        else
+          E = logtablesearch(h, vgset(layer)%logh, vgset(layer)%C, vgset(layer)%step4fnc)
+        end if
       else
-        E = logtablesearch(h, vgset(layer)%logh, vgset(layer)%C, vgset(layer)%step4fnc)
+        E = 0
       end if
       
 
