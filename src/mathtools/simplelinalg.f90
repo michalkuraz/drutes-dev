@@ -579,7 +579,7 @@ module simplelinalg
 	  
 	  call diag_precond(a=blockmat(2,2), x=xvect(blindex(2,1):blindex(2,2)), mode=1)
       call CGnormal(A=blockmat(2,2), b=bvect(blindex(2,1):blindex(2,2)),x=xvect(blindex(2,1):blindex(2,2)),ilev1=0, &
-					itmax1=blockmat(2,2)%getn(), reps1=1e-10)
+					itmax1=blockmat(2,2)%getn(), reps1=1e-10, itfin1=itcnt)
       call diag_precond(a=blockmat(2,2), x=xvect(blindex(2,1):blindex(2,2)), mode=-1)
 
     

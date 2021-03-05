@@ -364,6 +364,7 @@ module solver_interfaces
       end if
       
       call block_jacobi4ADE(A, x, b, blindex, iters, reps1, itmax, .true.)
+      if (present(itfin1)) itfin1 = iters
     
       
     end subroutine LDUPCG_face
