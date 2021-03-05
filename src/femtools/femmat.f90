@@ -92,7 +92,7 @@ module femmat
           call flush(solver_time_file)
         end if
           
-            print *, pcg_it, fin
+  
         if (pcg_it > 0.55*fin) then 
           ierr=-1
         else
