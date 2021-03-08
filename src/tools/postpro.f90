@@ -693,7 +693,7 @@ module postpro
           if (.not. allocated(fluxes)) allocate(fluxes(ubound(pde(proc)%fluxes,1),D))
         end if
 
-        
+     
         ! 3 is for mass
         if (pde(proc)%print_mass) then
           do j=3, ubound(pde(proc)%mass,1) + 2

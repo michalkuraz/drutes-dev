@@ -119,7 +119,6 @@ module ADE_pointers
 
       pde(adepos)%pde_fnc(adepos)%reaction => ADE_reaction
             
-            
       pde(adepos)%pde_fnc(adepos)%zerord => ADE_zerorder
 
 	  

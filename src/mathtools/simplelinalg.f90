@@ -483,9 +483,8 @@ module simplelinalg
       character(len=4096) :: text
       
       integer(kind=ikind), dimension(:), allocatable, save :: p1, p2
-      logical, save :: not_solved = .false.
+      logical, save :: solved = .false.
     
-      
       finbig = A%getn()
 
       
@@ -566,7 +565,7 @@ module simplelinalg
 
       itcnt = 0
       
-      if (not_solved) then
+      if (.not. solved) then
 		if (.not. allocated(p1)) then
 		  allocate(p1(blindex(1,2)))
           allocate(p2(blindex(1,2)))
@@ -574,7 +573,7 @@ module simplelinalg
       
 		call LDUd(blockmat(1,1), pivtype=5, ilev=0, perm1=p1, perm2=p2)
 		call LDUback(blockmat(1,1), bvect(blindex(1,1):blindex(1,2)), xvect(blindex(1,1):blindex(1,2)), p1=p1, p2=p2)
-		not_solved = .true.
+		solved = .true.
 	  end if
 	  
 	  call diag_precond(a=blockmat(2,2), x=xvect(blindex(2,1):blindex(2,2)), mode=1)

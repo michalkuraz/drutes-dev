@@ -332,7 +332,7 @@ module solver_interfaces
       else
         ilevel = ilev1
       end if
-  
+
 
       if (.not. allocated(blindex)) then
         allocate(blindex(ubound(pde,1),2))
@@ -362,6 +362,8 @@ module solver_interfaces
                            "correct solver is either PCG or LDU"
         call file_error(file_solver, msg)
       end if
+      
+
       
       call block_jacobi4ADE(A, x, b, blindex, iters, reps1, itmax, .true.)
       if (present(itfin1)) itfin1 = iters

@@ -58,7 +58,7 @@ module ADE_reader
       pde_loc%mass_name(1,1) = "conc_in_porous_medium"
       pde_loc%mass_name(1,2) = "concetration [M/L^3]"
       
-      
+      pde_loc%print_mass = .true.
 
       open(newunit = file_contaminant, file="drutes.conf/ADE/contaminant.conf", action="read", status="old", iostat=i_err)
       if (i_err /= 0) then

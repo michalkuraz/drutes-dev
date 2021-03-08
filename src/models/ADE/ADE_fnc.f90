@@ -281,6 +281,7 @@ module ADE_fnc
       use global_objs
       use pde_objs
       use ADE_globals
+      use debug_tools
       
       class(pde_str), intent(in) :: pde_loc
       !> value of the nonlinear function
@@ -304,6 +305,7 @@ module ADE_fnc
       else
         val = theta * x(1)
       end if
+    
       
     end function ADE_mass
     

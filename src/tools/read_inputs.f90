@@ -989,8 +989,9 @@ module read_inputs
       options(5) = "BJLDU"
       options(6) = "LDUdefault"
       options(7) = "LDUPCG"
-      
+
       call fileread(solver_name, file_solver, options=options)
+
       
       
       call fileread(record_solver_time, file_solver)
