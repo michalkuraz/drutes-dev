@@ -293,30 +293,31 @@ module fem
           write(unit=terminal, fmt=*)" " //achar(27)//'[93m',  "-----------------------------------------------------------" &
                                                 //achar(27)//'[0m'
         case(1)
-          write(unit=terminal, fmt=*)" " //achar(27)//'[91m',  "--------------------WARNING!-------------------------------" &
+          write(unit=terminal, fmt=*)" " //achar(27)//'[43m',  "--------------------WARNING!-------------------------------" &
             //achar(27)//'[0m'
-          write(unit=terminal, fmt=*) " " //achar(27)//'[91m', &
+          write(unit=terminal, fmt=*) " " //achar(27)//'[43m', &
            "slow convergence of the Picard method, time step decreased: " &
               //achar(27)//'[0m', time_step
 
           write(unit=terminal, fmt=*) "current simulation time:", time
            write(unit=terminal, fmt=*) "total iteration count:", itcum
-          write(unit=terminal, fmt=*)" " //achar(27)//'[91m', &
+          write(unit=terminal, fmt=*)" " //achar(27)//'[43m', &
            "------------------------------------------------------------" &
             //achar(27)//'[0m'
         case(2)
-          write(unit=terminal, fmt=*)" " //achar(27)//'[91m',  "--------------------INFO!-------------------------------" &
+          write(unit=terminal, fmt=*)" " //achar(27)//'[43m',  "--------------------INFO!-------------------------------" &
                   //achar(27)//'[0m'
-          write(unit=terminal, fmt=*) " " //achar(27)//'[91m', "RCZA method forced time step decrease: " &
+          write(unit=terminal, fmt=*) " " //achar(27)//'[43m', "RCZA method forced time step decrease: " &
                     //achar(27)//'[0m', time_step
 
           write(unit=terminal, fmt=*) "current simulation time:", time
           write(unit=terminal, fmt=*) "total iteration count:", itcum
-          write(unit=terminal, fmt=*)" " //achar(27)//'[91m', &
+          write(unit=terminal, fmt=*)" " //achar(27)//'[43m', &
            "------------------------------------------------------------" &
                   //achar(27)//'[0m'
       end select
     end subroutine terminal_info
+    
     
     subroutine exitme()
       use typy

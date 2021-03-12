@@ -85,7 +85,7 @@ module printtools
         case (2592001:31536000)	
           write(unit=terminal, fmt="(a, F10.2, a)") trim(message), t/2592000, " months"
         case default
-          write(unit=terminal, fmt=* ) trim(message), t/31536000, " " //achar(27)//'[91m',  " YEARS !!!!...:)" &
+          write(unit=terminal, fmt=* ) trim(message), t/31536000, " " //achar(27)//'[43m',  " YEARS !!!!...:)" &
                   //achar(27)//'[0m'		    
       end select
       
@@ -130,7 +130,7 @@ module printtools
         case (2592001:31536000)	
           write(unit=terminal, fmt="(a, F10.2, a)") " #time to finish =", tmp/2592000, " months"
         case default
-          write(unit=terminal, fmt=* ) " #time to finish =", tmp/31536000, " " //achar(27)//'[91m',  " YEARS !!!!...:)" &
+          write(unit=terminal, fmt=* ) " #time to finish =", tmp/31536000, " " //achar(27)//'[43m',  " YEARS !!!!...:)" &
                   //achar(27)//'[0m'		    
       end select
       write(unit=terminal, fmt="(F10.2, a)") tmp1, "% done"
@@ -151,7 +151,7 @@ module printtools
           case (2592001:31536000)	
             write(unit=fileid, fmt="(a, F10.2, a)") " #time to finish =", tmp/2592000, " months"
           case default
-            write(unit=fileid, fmt=* ) " #time to finish =", tmp/31536000, " " //achar(27)//'[91m',  " YEARS !!!!...:)" &
+            write(unit=fileid, fmt=* ) " #time to finish =", tmp/31536000, " " //achar(27)//'[43m',  " YEARS !!!!...:)" &
                     //achar(27)//'[0m'		    
         end select
         close(fileid)
