@@ -7,7 +7,7 @@ module freeze_helper
 
   public :: iceswitch,icefac, rho_icewat, Q_reduction, surf_tens_deriv, Kliquid_temp, hl, hcl, thetai, thetal
   public:: vangen_fr, mualem_fr, temp_initcond, temp_s_initcond, wat_initcond, getval_retotfr, ice_initcond, thetas
-  public:: rho_wat, thetai_wat_eq
+  public:: rho_wat, thetai_wat_eq, dhldT
   private:: linspace
       
   
@@ -95,11 +95,11 @@ module freeze_helper
           
     end function icefac
 
-    function gaussianint(hw, end, start) result(val)
+    function gaussianint(end, start) result(val)
       use typy
       use global_objs
       
-      real(kind=rkind), intent(in) :: end, start, hw
+      real(kind=rkind), intent(in) :: end, start
       real(kind=rkind), dimension(3) :: a, H, hh, aa, w
       real(kind=rkind) :: val
       integer(kind = ikind) :: i
@@ -109,17 +109,17 @@ module freeze_helper
       hh = (end-start)/2.0_rkind*H
       aa = (end - start)/2.0_rkind*a+(end + start)/2.0_rkind
       do  i = 1, 3
-        w(i) = dhldT(hw = hw, T = aa(i))
+        w(i) = dhldT(T = aa(i))
       end do
       val = sum(hh*w)
 
     end function gaussianint
     
-    function dhldT(hw, T) result(val)
+    function dhldT(T) result(val)
       use typy
       use global_objs
       
-      real(kind=rkind), intent(in) :: hw, T
+      real(kind=rkind), intent(in) :: T
       real(kind=rkind) :: Tf, fac, x, val      
       
       if(clap) then
@@ -328,16 +328,19 @@ module freeze_helper
           if(meanKS < 10) then
             meanKS = 10
           end if
-          if(meanKS > 40) then
-            meanKs = 40
+          if(meanKS > 25) then
+            meanKs = 25
           end if
           diffx = (T_f-T_threshK99)/(meanKs*0.75)
+          if((T_f-T_threshK99) < 1.0) then
+            diffx = 0.15
+          end if
           n = nint(dif/diffx)+1
           allocate(intpoints(n))
           call linspace(from=Tstart, to=T_f, array=intpoints)
           val = hw
           do i=1,n-1
-           val = val + gaussianint(hw = hw, start = intpoints(i+1)-273.15, end = intpoints(i)-273.15)
+           val = val + gaussianint(start = intpoints(i+1)-273.15, end = intpoints(i)-273.15)
           end do
           if(fac > 0.99_rkind) then
             val = val + Lf/grav*log(tempK/T_threshK99)
@@ -462,10 +465,6 @@ module freeze_helper
     
       val = freeze_par(layer)%ths
 
-      
-      if(val > 1.0) then
-        val = 1.0
-      end if
     end function thetas
     
     

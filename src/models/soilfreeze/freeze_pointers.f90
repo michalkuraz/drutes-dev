@@ -163,6 +163,8 @@ module freeze_pointers
       
       pde(heat_proc)%pde_fnc(heat_proc)%dispersion => diffTT
       
+      pde(heat_proc)%pde_fnc(wat)%dispersion => diffTh
+      
       pde(heat_proc)%pde_fnc(heat_proc)%convection => convectTT
       
       pde(heat_proc)%flux => heat_flux_freeze
