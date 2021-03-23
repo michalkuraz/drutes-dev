@@ -70,7 +70,7 @@ module readtools
 
       if (present(ranges)) then
         if (i<ranges(1) .or. i> ranges(2)) then
-          write(unit=terminal, fmt=*) " " //achar(27)//'[91m', "incorrect ranges of input parameter(s)" //achar(27)//'[0m'
+          write(unit=terminal, fmt=*) " " //achar(27)//'[43m', "incorrect ranges of input parameter(s)" //achar(27)//'[0m'
           if (.not. present(noexit)) then
             go4exit = .true.
           else 
@@ -124,7 +124,7 @@ module readtools
       
        if (present(ranges)) then
         if (i<ranges(1) .or. i> ranges(2)) then
-          write(unit=terminal, fmt=*) " " //achar(27)//'[91m', "incorrect ranges of input parameter(s)" //achar(27)//'[0m'
+          write(unit=terminal, fmt=*) " " //achar(27)//'[43m', "incorrect ranges of input parameter(s)" //achar(27)//'[0m'
           if (.not. present(noexit)) then
             if (present(errmsg)) then
               call file_error(fileid,errmsg)
@@ -211,7 +211,7 @@ module readtools
           end do
   
           if (arraybound /= ubound(r,1)) then
-            write(unit=terminal, fmt=*) " " //achar(27)//'[91m', "the line in your input file has &
+            write(unit=terminal, fmt=*) " " //achar(27)//'[43m', "the line in your input file has &
                incorrect number of values, check your inputs" //achar(27)//'[0m'
             call file_error(fileid, errmsg)
          end if
@@ -252,7 +252,7 @@ module readtools
       if (present(ranges)) then
         do i=1, ubound(r,1)
           if (r(i) < ranges(1) .or. r(i) > ranges(2)) then
-            write(unit=terminal, fmt=*) " " //achar(27)//'[91m', "incorrect ranges of input parameter(s)" //achar(27)//'[0m'
+            write(unit=terminal, fmt=*) " " //achar(27)//'[43m', "incorrect ranges of input parameter(s)" //achar(27)//'[0m'
             call file_error(fileid, errmsg)
           end if
         end do
@@ -282,7 +282,7 @@ module readtools
       
       if (present(ranges)) then
         if (r < ranges(1) .or. r > ranges(2)) then
-          write(unit=terminal, fmt=*) " " //achar(27)//'[91m', "incorrect ranges of input parameter(s)" //achar(27)//'[0m'
+          write(unit=terminal, fmt=*) " " //achar(27)//'[43m', "incorrect ranges of input parameter(s)" //achar(27)//'[0m'
           ierr = -1
         end if
       end if
@@ -401,7 +401,7 @@ module readtools
   
           if (arraybound /= ubound(r,1) ) then
             if (.not. noexit_local) then
-              write(unit=terminal, fmt=*) " " //achar(27)//'[91m', "the line in your input file has &
+              write(unit=terminal, fmt=*) " " //achar(27)//'[43m', "the line in your input file has &
                  incorrect number of values, check your inputs" //achar(27)//'[0m'
               call file_error(fileid, errmsg)
             else
@@ -437,7 +437,7 @@ module readtools
       if (present(ranges)) then
         do i=1, ubound(r,1)
           if (r(i) < ranges(1) .or. r(i) > ranges(2)) then
-            write(unit=terminal, fmt=*) " " //achar(27)//'[91m', "incorrect ranges of input parameter(s)" //achar(27)//'[0m'
+            write(unit=terminal, fmt=*) " " //achar(27)//'[43m', "incorrect ranges of input parameter(s)" //achar(27)//'[0m'
             if (.not. noexit_local) then
               call file_error(fileid, errmsg)
             else
@@ -593,7 +593,7 @@ module readtools
             l = .false.
           case default
             ierr = -1
-            write(unit=terminal, fmt=*) " " //achar(27)//'[91m', "You have defined incorrect value for logical parameter)" &
+            write(unit=terminal, fmt=*) " " //achar(27)//'[43m', "You have defined incorrect value for logical parameter" &
              //achar(27)//'[0m'
          end select
        end if
@@ -727,18 +727,18 @@ module readtools
       print *, "-------------------------------------------------------------------"
 
       print *, "  "
-      print *, " " //achar(27)//'[91m', "!!ERROR!!" //achar(27)//'[0m', &
+      print *, " " //achar(27)//'[43m', "!!ERROR!!" //achar(27)//'[0m', &
                   "  in reading from file: ", trim(filename), " near line: ", line-1, &
                       " opened with status: ", trim(iaction),  " -> exiting DRUtES"
       print *, "  "
-      
+
 
       if (err_read == 0) write(unit=terminal, fmt=*) "the value you have typed is: ", trim(string)
 	    write(unit=terminal, fmt=*) "--------------------------------"
 
       
       if (present(message)) then
-        write(unit=terminal, fmt=*) " " //achar(27)//'[91m', cut(message) //achar(27)//'[0m'
+        write(unit=terminal, fmt=*) " " //achar(27)//'[43m', cut(message) //achar(27)//'[0m'
       end if
 	
       

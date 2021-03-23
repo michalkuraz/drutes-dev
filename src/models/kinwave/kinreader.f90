@@ -29,38 +29,75 @@ module kinreader
       use globals
       use geom_tools
       use debug_tools
+      use readtools
       
       real(kind=rkind), dimension(3) :: a,b,c
       integer(kind=ikind) :: i, j, el
       integer(kind=ikind), dimension(3) :: nd
       integer(kind=ikind), dimension(:), allocatable :: ndpmt
+      integer :: file_nodes, ierr
       
-      allocate(ndpmt(maxval(nodes4arcgis%id)))
-      
-      ndpmt = 0
-      
-      do i=1, ubound(nodes4arcgis%id,1)
-        ndpmt(nodes4arcgis%id(i)) = i
-      end do
-    
-      
-            
+
+
       allocate(watershed_el(elements%kolik))
-    
-      do i=1, ubound(elements4arcgis%data,1)
-        if (elements4arcgis%elpermut(i) > 0) then
-          el = elements4arcgis%elpermut(i)
+      
+      if (drutes_config%mesh_type /= 4) then
+        open(newunit=file_nodes, file="drutes.conf/kinwave/nodes.in", action="read", status="old", iostat=ierr)
+        
+        if (ierr /= 0) then
+          print *, "unable to open file drutes.conf/kinwave/nodes.in , check your inputs"
+          ERROR STOP
+        end if
+        allocate(watershed_nd(nodes%kolik))
+        
+        do i=1, nodes%kolik
+          call comment(file_nodes)
+          read(unit=file_nodes, fmt=*, iostat=ierr) j, watershed_nd(i)%xyz
+          if (abs(watershed_nd(i)%xyz(1)-nodes%data(i,1)) > 1e-3 .or. &
+              abs(watershed_nd(i)%xyz(2)-nodes%data(i,2)) > 1e-3) then
+            call file_error(file_nodes, "There is a mismatch between drutes.conf/kinwave/nodes.in and mesh file data!")
+          end if
+        end do
+        
+        do el=1, elements%kolik
           do j=1,3
-            nd(j) = ndpmt(elements4arcgis%data(el,j))
+            nd(j) = elements%data(el,j)
           end do
-            
-          a = nodes4arcgis%data(nd(1),:)
-          b = nodes4arcgis%data(nd(2),:)
-          c = nodes4arcgis%data(nd(3),:)
+          
+          a = watershed_nd(nd(1))%xyz
+          b = watershed_nd(nd(2))%xyz
+          c = watershed_nd(nd(3))%xyz
           
           call plane_derivative(a,b,c, watershed_el(el)%sx, watershed_el(el)%sy)
-        end if
-      end do
+        end do
+        
+
+      else
+      
+        allocate(ndpmt(maxval(nodes4arcgis%id)))
+        
+        ndpmt = 0
+        
+        do i=1, ubound(nodes4arcgis%id,1)
+          ndpmt(nodes4arcgis%id(i)) = i
+        end do
+      
+      
+        do i=1, ubound(elements4arcgis%data,1)
+          if (elements4arcgis%elpermut(i) > 0) then
+            el = elements4arcgis%elpermut(i)
+            do j=1,3
+              nd(j) = ndpmt(elements4arcgis%data(el,j))
+            end do
+              
+            a = nodes4arcgis%data(nd(1),:)
+            b = nodes4arcgis%data(nd(2),:)
+            c = nodes4arcgis%data(nd(3),:)
+            
+            call plane_derivative(a,b,c, watershed_el(el)%sx, watershed_el(el)%sy)
+          end if
+        end do
+      end if
       
           
       
@@ -187,20 +224,12 @@ module kinreader
       character(len=7), dimension(2) :: infnames
       
       if (drutes_config%dimen == 2) then
-        select case(drutes_config%mesh_type)
-          case(1) 
-            call gen_catchment()
+        if (drutes_config%mesh_type == 1) then
+          call gen_catchment()
             
-          case(4)
-            call get_slopes()
-            
-          case default
-            print *, "for kinematic wave equation use Arc GIS data option only"
-            print *, "  this is option number 4"
-            print *, "exiting..."
-            ERROR STOP
-            
-        end select
+        else
+          call get_slopes()
+        end if
       end if
       
       pde(1)%problem_name(1) = "runoff"

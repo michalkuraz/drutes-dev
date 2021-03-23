@@ -104,7 +104,7 @@ module kinpointer
         
         pde(2)%mass(1)%val => solmass
         
-!        pde(2)%diffusion = .false.
+        pde(2)%diffusion = .false.
         
         pde(2)%flux => kinfluxcl
         
