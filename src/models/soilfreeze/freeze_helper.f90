@@ -5,7 +5,7 @@ module freeze_helper
   use debug_tools
   use RE_constitutive
 
-  public :: iceswitch,icefac, rho_icewat, Q_reduction, surf_tens_deriv, Kliquid_temp, hl, hcl, thetai, thetal
+  public :: iceswitch,icefac, rho_icewat, Q_reduction, surf_tens_deriv, Kliquid_temp, hl, thetai, thetal
   public:: vangen_fr, mualem_fr, temp_initcond, temp_s_initcond, wat_initcond, getval_retotfr, ice_initcond, thetas
   public:: rho_wat, thetai_wat_eq, dhldT
   private:: linspace
@@ -21,7 +21,7 @@ module freeze_helper
       !> return value:Liquid water density  rho_l [kg/m^3]
       real(kind=rkind):: val
       !>  Temperature T in ºC 
-      real(kind=rkind):: T
+      real(kind=rkind):: Temp_C
       
        if (.not. present(quadpnt)) then
         print *, "ERROR: you have not specified integ point "
@@ -29,8 +29,8 @@ module freeze_helper
         ERROR stop
       end if
     
-      T = pde(heat_proc)%getval(quadpnt)
-      val = 1000.0_rkind - 7.37e-3*(T - 4.0_rkind)**2 + 3.79e-5*(T -4.0_rkind)**3
+      Temp_C = pde(heat_proc)%getval(quadpnt)-273.15
+      val = 1000.0_rkind - 7.37e-3*(Temp_C - 4.0_rkind)**2 + 3.79e-5*(Temp_C -4.0_rkind)**3
 
     end function rho_wat
 
@@ -48,11 +48,8 @@ module freeze_helper
       quadpnt_loc = quadpnt
       quadpnt_loc%preproc=.true.
       
-      if(clap) then
-        Tf = Tfk - 273.15_rkind
-      else
-        Tf = 0
-      end if
+      Tf = Tfk
+   
       
 
       if (pde(heat_proc)%getval(quadpnt_loc) > Tf) then
@@ -76,12 +73,7 @@ module freeze_helper
       quadpnt_loc = quadpnt
       quadpnt_loc%preproc=.true.
       
-      if(clap) then
-        Tf = Tfk
-        Tf = Tf - 273.15_rkind
-      else
-        Tf = 0
-      end if
+      Tf = Tfk
       
 
       if (pde(heat_proc)%getval(quadpnt_loc) > Tf) then
@@ -122,12 +114,7 @@ module freeze_helper
       real(kind=rkind), intent(in) :: T
       real(kind=rkind) :: Tf, fac, x, val      
       
-      if(clap) then
-        Tf = Tfk
-        Tf = Tf - 273.15_rkind
-      else
-        Tf = 0
-      end if
+      Tf = Tfk
       
 
       if (T > Tf) then
@@ -139,7 +126,7 @@ module freeze_helper
         fac = 1_rkind/(1_rkind+exp(x*fac_scale + fac_add))
       end if
       
-      val = fac*Lf/grav/(T+273.15_rkind)
+      val = fac*Lf/grav/T
           
     end function dhldT
     
@@ -213,24 +200,20 @@ module freeze_helper
       real(kind=rkind), dimension(3,3) :: Klh, Klt
       integer(kind=ikind) :: D
       real(kind = rkind) :: h_l
-      real(kind=rkind) :: temp, u_temp
       
-      temp = pde(heat_proc)%getval(quadpnt)+273.15_rkind
-      u_temp=exp(ul_a+ul_b/(ul_c+temp))/1000_rkind
-
       D = drutes_config%dimen
 
       
       if (present(tensor)) then
-        call mualem_fr(pde_loc, layer, x=(/hl(pde_loc, layer, quadpnt)/), tensor = Klt(1:D, 1:D))
+        call mualem_fr(pde(wat), layer, x=(/hl(pde(wat), layer, quadpnt)/), tensor = Klt(1:D, 1:D))
         if(qlt_log) then
-          Klt(1:D, 1:D) = 10**(-Omega*Q_reduction(layer, quadpnt))*Klt(1:D, 1:D)*ul_20/u_temp
+          Klt(1:D, 1:D) = 10**(-Omega*Q_reduction(layer, quadpnt))*Klt(1:D, 1:D)
         else
           Klt(1:D,1:D)= 0_rkind*Klt(1:D, 1:D)
         end if 
         if (present(quadpnt)) then
-          h_l = hl(pde_loc, layer, quadpnt)
-          tensor = Klt(1:D, 1:D)*gwt*h_l*surf_tens_deriv(pde_loc, layer, quadpnt)/surf_tens_ref
+          h_l = hl(pde(wat), layer, quadpnt)
+          tensor = Klt(1:D, 1:D)*gwt*h_l*surf_tens_deriv(pde(heat_proc), layer, quadpnt)/surf_tens_ref
         else
           print *, "runtime error"
           print *, "exited from Kliquid_temp::freeze_helper"
@@ -260,14 +243,14 @@ module freeze_helper
       !> return value
       real(kind=rkind)                :: val
     
-      real(kind=rkind) :: temp
+      real(kind=rkind) :: temp_C
     
-      temp = pde(heat_proc)%getval(quadpnt)
+      temp_C = pde(heat_proc)%getval(quadpnt)-273.15
       if (present(T)) then
-        temp = T
+        temp_C = T
       end if
       
-      val = -0.1425-4.76e-4*temp
+      val = -0.1425-4.76e-4*temp_C
       
     end function surf_tens_deriv
     
@@ -314,7 +297,7 @@ module freeze_helper
       temp = pde(heat_proc)%getval(quadpnt)
       T_f = Tfk
       if(iceswitch(quadpnt)) then
-          tempK = temp+273.15_rkind
+          tempK = temp
           fac = 1_rkind/(1_rkind+exp(dif*fac_scale + fac_add))
           T_threshK99 = (log(1_rkind/0.99_rkind-1)-fac_add)/fac_scale + T_f
           if(fac > 0.99_rkind) then
@@ -333,14 +316,14 @@ module freeze_helper
           end if
           diffx = (T_f-T_threshK99)/(meanKs*0.75)
           if((T_f-T_threshK99) < 1.0) then
-            diffx = 0.15
+            diffx = 0.1
           end if
           n = nint(dif/diffx)+1
           allocate(intpoints(n))
           call linspace(from=Tstart, to=T_f, array=intpoints)
           val = hw
           do i=1,n-1
-           val = val + gaussianint(start = intpoints(i+1)-273.15, end = intpoints(i)-273.15)
+           val = val + gaussianint(start = intpoints(i+1), end = intpoints(i))
           end do
           if(fac > 0.99_rkind) then
             val = val + Lf/grav*log(tempK/T_threshK99)
@@ -356,35 +339,6 @@ module freeze_helper
       end if
     end function hl
     
-    function hcl(pde_loc, layer, quadpnt, x) result(val)
-      use typy
-      use global_objs
-      use freeze_globs
-      use pde_objs
-      
-      class(pde_str), intent(in) :: pde_loc
-      integer(kind=ikind), intent(in) :: layer
-      type(integpnt_str), intent(in), optional :: quadpnt
-      real(kind=rkind), dimension(:), intent(in), optional    :: x
-      real(kind=rkind) :: val, T_f
-      real(kind=rkind) :: hw, temp
-      type(integpnt_str) :: quadpnt_loc
-      
-      quadpnt_loc = quadpnt
-      quadpnt_loc%preproc=.true.
-
-      hw = pde(wat)%getval(quadpnt_loc)
-      
-      temp = pde(heat_proc)%getval(quadpnt)
-      T_f = Tref*exp(hw*grav/Lf)
-      
-      if(iceswitch(quadpnt)) then
-        val = hw+Lf/grav*log((temp+273.15_rkind)/T_f) !units       
-      else
-        val = hw
-      end if
-      
-    end function hcl
     
     function thetai(pde_loc, layer, quadpnt, x) result(val)
       use typy
@@ -433,7 +387,7 @@ module freeze_helper
         print *, "exited from freeze_helper::thetai"
         ERROR STOP
       end if
-       thi = thetai(pde_loc, layer, quadpnt)
+       thi = thetai(pde(wat), layer, quadpnt)
        val = thi*rho_ice/rho_wat(quadpnt)
 
     end function thetai_wat_eq
@@ -510,16 +464,16 @@ module freeze_helper
         end if
         h = x(1)
         if (present(quadpnt)) then
-          ths = thetas(pde_loc, layer, quadpnt)
+          ths = thetas(pde(wat), layer, quadpnt)
         else 
-          ths = thetas(pde_loc, layer, x = x)
+          ths = thetas(pde(wat), layer, x = x)
         end if
       else
         if (present(quadpnt)) then
           quadpnt_loc=quadpnt
           quadpnt_loc%preproc=.true.
-          h = pde_loc%getval(quadpnt_loc)
-          ths = thetas(pde_loc, layer, quadpnt)
+          h = pde(wat)%getval(quadpnt_loc)
+          ths = thetas(pde(wat), layer, quadpnt)
         else
           print *, "ERROR: van Genuchten function is a function of a single variable h"
           print *, "       your input data has:", ubound(x,1), "variables"
@@ -593,16 +547,16 @@ module freeze_helper
         end if
         h = x(1)
         if (present(quadpnt)) then
-          ts = thetas(pde_loc, layer, quadpnt)
+          ts = thetas(pde(wat), layer, quadpnt)
         else 
-          ts = thetas(pde_loc, layer, x = x)
+          ts = thetas(pde(wat), layer, x = x)
         end if
       else
         if (present(quadpnt)) then
           quadpnt_loc=quadpnt
           quadpnt_loc%preproc=.true.
-          h = pde_loc%getval(quadpnt_loc)
-          ts = thetas(pde_loc, layer, quadpnt)
+          h = pde(wat)%getval(quadpnt_loc)
+          ts = thetas(pde(wat), layer, quadpnt)
         else
           print *, "ERROR: van Genuchten function is a function of a single variable h"
           print *, "       your input data has:", ubound(x,1), "variables"
@@ -667,7 +621,7 @@ module freeze_helper
       if (present(quadpnt)) then
         quadpnt_loc=quadpnt
         quadpnt_loc%preproc=.true.
-        h = pde_loc%getval(quadpnt_loc)
+        h = pde(wat)%getval(quadpnt_loc)
       else
       	if (ubound(x,1) /=1) then
           print *, "ERROR: van Genuchten function is a function of a single variable h"
