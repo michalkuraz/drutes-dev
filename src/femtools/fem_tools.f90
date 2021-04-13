@@ -159,6 +159,8 @@ module fem_tools
               if (drutes_config%it_method == 2 .or. drutes_config%it_method == 1) then
                 call locmatrix%rowsfilled%nrfill(n_row(i))
               end if
+            else
+              call locmatrix%add(stiff_mat(i,m), n_row(i), m_col(m))
             end if
           case(5)
             tmp = 0
