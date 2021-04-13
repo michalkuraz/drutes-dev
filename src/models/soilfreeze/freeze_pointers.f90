@@ -76,10 +76,12 @@ module freeze_pointers
       pde(wat)%flux => all_fluxes
       do i=lbound(pde(wat)%bc,1), ubound(pde(wat)%bc,1)
         select case(pde(wat)%bc(i)%code)
-          case(6)
-            pde(wat)%bc(i)%value_fnc => Dirichlet_mass_bc
           case(7)
+            pde(wat)%bc(i)%value_fnc => Dirichlet_mass_bc
+          case(8)
             pde(wat)%bc(i)%value_fnc => Dirichlet_Neumann_switch_bc
+          case(9)
+            pde(wat)%bc(i)%value_fnc => Infiltration_bc
         end select
       end do
       pde(wat)%initcond => wat_initcond

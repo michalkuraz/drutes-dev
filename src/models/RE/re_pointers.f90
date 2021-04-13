@@ -188,6 +188,9 @@ module RE_pointers
             end if
           case(6)
             pde_loc%bc(i)%value_fnc => retot_well
+          case(7, 8, 9)
+              CONTINUE
+              ! Linked in freeze_pointers
           case default
           print *, "ERROR! You have specified an unsupported boundary type definition for the Richards equation"
           print *, "the incorrect boundary code specified is:", pde_loc%bc(i)%code

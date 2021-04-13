@@ -336,6 +336,7 @@ module freeze_helper
         print*, "hw is not a number! from freeze_helper::hl"
         print*, "hw", hw
         print*, "temp", temp
+        print*, pde(wat)%getval(quadpnt)
       end if
     end function hl
     

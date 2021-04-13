@@ -6,7 +6,8 @@ module freeze_fnc
   use freeze_helper
   
   public :: capacityhh,  diffhh, diffhT, Dirichlet_mass_bc
-  public :: capacityTT, capacityTh, diffTT, convectTT, thermal_k, heat_flux_freeze, Dirichlet_Neumann_switch_bc
+  public :: capacityTT, capacityTh, diffTT, convectTT, thermal_k, heat_flux_freeze
+  public :: Dirichlet_Neumann_switch_bc, infiltration_bc
   public :: capacityTsTs, thermal_p, diffTsTs, heat_flux_s_LTNE
   public :: T_m, qsl_neg, qsl_pos
   public :: diffTh, dCpdhw, dCpdT
@@ -216,6 +217,7 @@ module freeze_fnc
       use global_objs
       use freeze_globs
       use pde_objs
+      use debug_tools
 
       class(pde_str), intent(in) :: pde_loc
       !> value of the nonlinear function
@@ -436,7 +438,7 @@ module freeze_fnc
           end if
       end select 
       call pde(wat)%pde_fnc(heat_proc)%dispersion(pde(wat), layer, quadpnt, tensor = Klt(1:D, 1:D))
-      tensor(1:D,1:D) = tensor(1:D,1:D)+ Klt(1:D,1:D)*freeze_par(layer)%Cl*rho_wat(quadpnt)*temp_K
+      tensor(1:D,1:D) = tensor(1:D,1:D) + Klt(1:D,1:D)*freeze_par(layer)%Cl*rho_wat(quadpnt)*temp_K
 
     end subroutine diffTT
     
@@ -663,7 +665,77 @@ module freeze_fnc
         flux_length = norm2(flux(1:D))
       end if
     end subroutine heat_flux_freeze
-    
+  
+    subroutine infiltration_bc(pde_loc, el_id, node_order, value, code, array) 
+      use typy
+      use globals
+      use global_objs
+      use pde_objs
+      use re_globals
+      use debug_tools
+
+      class(pde_str), intent(in) :: pde_loc
+      integer(kind=ikind), intent(in)  :: el_id, node_order
+      real(kind=rkind), intent(out), optional    :: value
+      integer(kind=ikind), intent(out), optional :: code
+      !> unused for this model (implementation for Robin boundary)
+      real(kind=rkind), dimension(:), intent(out), optional :: array
+     
+      real(kind=rkind), dimension(3,3)  :: Klh
+      integer(kind=ikind) :: i, edge_id, j
+      real(kind=rkind), dimension(3) :: gravflux, bcflux
+      real(kind=rkind) :: bcval, h
+      real(kind = rkind), save :: cumfilt
+      integer :: i1, D
+      type(integpnt_str) :: quadpnt
+      integer(kind=ikind) :: layer
+      
+      D = drutes_config%dimen
+
+      if (present(value)) then
+        edge_id = nodes%edge(elements%data(el_id, node_order))
+        if (pde_loc%bc(edge_id)%file) then
+          do i=1, ubound(pde_loc%bc(edge_id)%series,1)
+            if (pde_loc%bc(edge_id)%series(i,1) > time) then
+              if (i > 1) then
+                j = i-1
+              else
+                j = i
+              end if
+              bcval = pde_loc%bc(edge_id)%series(j,2)
+              value = bcval
+              EXIT
+            end if
+          end do
+        else
+          quadpnt%type_pnt = "ndpt"
+          quadpnt%column = 1 ! otherwise column is random integer number
+          quadpnt%order = elements%data(el_id,node_order)
+          h = pde(wat)%getval(quadpnt)
+          if(h .GE. epsilon(h)) then
+            !layer = elements%material(el_id)
+            !call  diffhh(pde_loc, layer, quadpnt, tensor = Klh(1:D,1:D))
+            !if(Klh(1,1) >   pde_loc%bc(edge_id)%value) then
+            !  bcval = pde_loc%bc(edge_id)%value
+            !else
+              bcval = 0
+            !end if
+            !print*, bcval, Klh(1,1), h
+          else
+            bcval = pde_loc%bc(edge_id)%value
+          end if
+          value = bcval
+        end if
+      end if
+      if (present(code)) then
+        if(bcval == 0) then
+          code = 4
+        else
+          code = 2
+        end if
+      end if
+
+    end subroutine infiltration_bc
     
     subroutine Dirichlet_mass_bc(pde_loc, el_id, node_order, value, code, array) 
       use typy
@@ -683,6 +755,7 @@ module freeze_fnc
       integer(kind=ikind) :: i, edge_id, j
       real(kind=rkind), dimension(3) :: gravflux, bcflux
       real(kind=rkind) :: bcval, gfluxval, flux_length, infilt
+      real(kind = rkind), save :: cumfilt
       integer :: i1
       type(integpnt_str) :: quadpnt
       integer(kind=ikind) :: layer
@@ -707,6 +780,7 @@ module freeze_fnc
           quadpnt%column = 1 ! otherwise column is random integer number
           quadpnt%order = elements%data(el_id,node_order)
           if(time_step > 0_rkind) then
+            layer = elements%material(el_id)
             call  all_fluxes(pde_loc, layer, quadpnt, flux_length = flux_length)
             !flux_length = 1e-3_rkind
           else
@@ -796,6 +870,7 @@ module freeze_fnc
       end if
     end subroutine Dirichlet_Neumann_switch_bc
     
+
     ! Thermal properties LTNE
     function thermal_p(pde_loc, layer, quadpnt, x) result(val)
       use typy
