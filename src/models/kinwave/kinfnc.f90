@@ -359,7 +359,7 @@ module kinfnc
       real(kind=rkind), intent(out), optional :: scalar
       
       integer(kind=ikind) :: el, D, i
-      real(kind=rkind) :: hsurf, m
+      real(kind=rkind) :: hsurf, m, cl
       type(integpnt_str) :: quadpnt_loc
       real(kind=rkind), dimension(:), allocatable, save :: ndvals, slopes
       real(kind=rkind), dimension(:,:), allocatable, save :: abc
@@ -368,6 +368,7 @@ module kinfnc
       el = quadpnt%element
       
       hsurf = max(0.0_rkind, pde(1)%getval(quadpnt))
+      cl = max(0.0_rkind, pde(2)%getval(quadpnt))
       
       m = 5.0_rkind/3
       
@@ -422,7 +423,7 @@ module kinfnc
           end select
         end if
         
-        vector_out(1:D) = -1.49_rkind * sign(1.0_rkind, slopes(1:D)) * & 
+        vector_out(1:D) = cl*(-1.49_rkind) * sign(1.0_rkind, slopes(1:D)) * & 
                             sqrt(abs( slopes(1:D)))/manning(layer)*hsurf**m
   
 !         select case (drutes_config%dimen)

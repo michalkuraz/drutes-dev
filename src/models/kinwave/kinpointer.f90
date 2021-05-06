@@ -80,7 +80,7 @@ module kinpointer
       
       pde(1)%flux => kinflux
       
-      pde(1)%symmetric = .true.
+      pde(1)%symmetric = .false.
       
       if (ubound(pde,1) == 3) then
       
@@ -104,7 +104,7 @@ module kinpointer
         
         pde(2)%mass(1)%val => solmass
         
-        pde(2)%diffusion = .false.
+!        pde(2)%diffusion = .false.
         
         pde(2)%flux => kinfluxcl
         
