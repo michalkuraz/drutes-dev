@@ -34,7 +34,7 @@ module kinglobs
   end type inf_model_str
   
   type, public :: solute_str
-    real(kind=rkind) :: horb, csinit, rhos, lambda_a, lambda_d
+    real(kind=rkind) :: horb, csinit, rhos, lambda_a, lambda_d, lost_me
   end type solute_str
 
   type(surfacend_str), dimension(:), allocatable, public :: watershed_nd

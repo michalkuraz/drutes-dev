@@ -68,6 +68,8 @@ module feminittools
       allocate(a_s(drutes_config%dimen+1, drutes_config%dimen+1))
 
       call init_integ()
+      
+  
 
       select case(drutes_config%dimen)
         case(1)
@@ -115,7 +117,7 @@ module feminittools
           call nodes%element(nd)%fill(i)
         end do
       end do
-      
+
       call reorder()
 
       i = ubound(pde,1)
@@ -493,7 +495,6 @@ module feminittools
                 EXIT
               end if
             end do
-            
             call pde(proc)%bc(nodes%edge(i))%value_fnc(pde(proc), el_id,nd_id, code=bc)
           else
             bc = 0
