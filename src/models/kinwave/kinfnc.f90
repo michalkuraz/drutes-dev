@@ -256,6 +256,8 @@ module kinfnc
       
       hsurf = max(0.0_rkind, pde_loc%getval(quadpnt))
       
+      hsurf = min(5e-3_rkind, hsurf)
+      
       m = 5.0_rkind/3
       
       D = drutes_config%dimen
@@ -376,6 +378,8 @@ module kinfnc
       
       hsurf = max(0.0_rkind, pde(1)%getval(quadpnt))
 !      cl = max(0.0_rkind, pde(2)%getval(quadpnt))
+
+!      hsurf = min(5e-3_rkind, hsurf)
       
       m = 5.0_rkind/3
       
@@ -465,10 +469,39 @@ module kinfnc
 
       
       if (present(code)) then
-        code = 1
+        code = 0
       end if
   
     end subroutine kinbor
+    
+    
+   subroutine kinborO(pde_loc, el_id, node_order, value, code, array) 
+      use typy
+      use globals
+      use global_objs
+      use pde_objs
+      use debug_tools
+      
+      class(pde_str), intent(in) :: pde_loc
+      integer(kind=ikind), intent(in)  :: el_id, node_order
+      real(kind=rkind), intent(out), optional    :: value
+      integer(kind=ikind), intent(out), optional :: code
+      !> unused for this model (implementation for Robin boundary)
+      real(kind=rkind), dimension(:), intent(out), optional :: array
+
+      
+      
+
+      if (present(value)) then
+        value = 0.0_rkind
+      end if
+
+      
+      if (present(code)) then
+        code = 1
+      end if
+  
+    end subroutine kinborO
     
     
    subroutine kinborcs(pde_loc, el_id, node_order, value, code, array) 
@@ -519,15 +552,42 @@ module kinfnc
       use global_objs
       use pde_objs
       use kinglobs
+      use debug_tools
+      use readtools
 
       class(pde_str), intent(in out) :: pde_loc
       integer(kind=ikind) :: i, el, layer
+      integer :: file_id, ierr
+      real(kind=rkind) :: tmp
 
-      do i=1, ubound(pde_loc%solution,1)
-        el = nodes%element(i)%data(1)
-        layer = elements%material(el)
-        pde_loc%solution(i) = kinsols(layer)%csinit
-      end do
+      if (.not. icond_file) then
+        do i=1, ubound(pde_loc%solution,1)
+          el = nodes%element(i)%data(1)
+          layer = elements%material(el)
+          pde_loc%solution(i) = kinsols(layer)%csinit
+        end do
+      else
+        open(newunit=file_id, file="drutes.conf/kinwave/initcond", action="read", status="old", iostat=ierr)
+        if (ierr /= 0) then
+          print *, "in file drutes.conf/kinwave/kinwave.conf you have defined to use node-wise data for initial c_s, and so"
+          print *, "file drutes.conf/kinwave/initcond must be provided"
+          print *, "ERROR: unable to open file drutes.conf/kinwave/initcond"
+          ERROR STOP
+        end if
+        do i=1, nodes%kolik
+          call fileread(pde_loc%solution(i), file_id, ranges=(/0.0_rkind, huge(0.0_rkind)/), &
+                errmsg="Are your data in drutes.conf/kinwave/initcond consistent with your mesh data?" )
+        end do
+        read(unit=file_id, fmt=*, iostat=ierr) tmp
+        if (ierr == 0) then
+          call file_error(file_id, errmsg="you have more values in drutes.conf/kinwave/initcond than the umber of nodes, & 
+                Are your data in drutes.conf/kinwave/initcond consistent with your mesh data?")
+        end if
+      end if
+      
+      call printmtx(pde_loc%solution)
+          
+        
       
     end subroutine kinematixinit4cs
     
@@ -777,6 +837,46 @@ module kinfnc
       
 
     end function solmass
+    
+    
+    function csmass(pde_loc,layer, quadpnt, x) result(M)
+      use typy
+      use heat_globals
+      use pde_objs
+      use core_tools
+      use kinglobs
+
+      class(pde_str), intent(in) :: pde_loc 
+      integer(kind=ikind), intent(in) :: layer
+      !> pressure head
+      real(kind=rkind), intent(in), dimension(:),  optional :: x
+      !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
+      type(integpnt_str), intent(in), optional :: quadpnt
+      !> resulting system elasticity
+      real(kind=rkind) :: M
+      
+      real(kind=rkind) :: h, cs
+
+       
+      
+      if (present(quadpnt) .and. present(x)) then
+        print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
+        print *, "exited from heat_fnc::heat_elast"
+        ERROR stop
+      else if (.not. present(quadpnt) .and. .not. present(x)) then
+        print *, "ERROR: you have not specified either integ point or x value"
+        print *, "exited from heat_fnc::heat_elast"
+        ERROR stop
+      end if
+      
+      h = kinsols(layer)%horb
+      
+      cs = max(0.0_rkind, pde(3)%getval(quadpnt))
+
+      M = h*cs
+      
+
+    end function csmass
     
     
     function kin_cselast(pde_loc,layer, quadpnt, x) result(E)

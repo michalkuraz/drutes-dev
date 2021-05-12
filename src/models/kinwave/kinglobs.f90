@@ -59,6 +59,8 @@ module kinglobs
   
   logical, public :: with_solutes
   
+  logical, public :: icond_file
+  
   type(solute_str), dimension(:), allocatable, public :: kinsols
   
   

@@ -140,7 +140,7 @@ module decomposer
           ddcoarse_mesh(i)%elements = elcounter(1:counter)
           ddcoarse_mesh(i)%el_count = counter
         else
-          call file_error(file_conf, message="The coarse mesh contains elements that does not cover the &
+          call file_error(file_conf, errmsg="The coarse mesh contains elements that does not cover the &
           fine mesh elements, the COARSE mesh has INCORRECT geometry.")
         end if
       end do
