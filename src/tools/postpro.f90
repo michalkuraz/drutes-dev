@@ -419,9 +419,11 @@ module postpro
         cumflux = 0
       end if
       
+
+      
       do bc = lbound(bcfluxes,1), ubound(bcfluxes,1)
         integflux(bc,:) = 0
-        do i = i, bcfluxes(bc)%elements%pos
+        do i = 1, bcfluxes(bc)%elements%pos
           el = bcfluxes(bc)%elements%data(i)
           quadpnt%element = el
           do j=1, ubound(elements%data,2)
@@ -459,9 +461,9 @@ module postpro
             way_in = -1
           end if
 
-          
           do proc=1, ubound(pde,1)
             call pde(proc)%flux(elements%material(el), quadpnt, vector_out=flux(proc,:))
+            
             flux(proc,:) = flux(proc,:)*norm_vct
             if (aboveline(bcpt(1,:), bcpt(2,:), quadpnt%xy + flux(proc,:) )) then
               flow_in = 1

@@ -130,7 +130,6 @@ program main
 
   
   call write_log("DRUtES solves ", text2=adjustl(trim(drutes_config%fullname)))
-  
 
   call solve_pde(success)    
 

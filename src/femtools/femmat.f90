@@ -101,7 +101,7 @@ module femmat
     
 
         error = norm2(pde_common%xvect(1:fin,2)-pde_common%xvect(1:fin,3))/ubound(pde_common%xvect,1)
- print *, error
+        print *, error
          
         if (itcount == 1 .or. error <= iter_criterion) then
           do proc=1, ubound(pde,1)
