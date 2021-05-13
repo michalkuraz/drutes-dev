@@ -115,8 +115,9 @@ program main
     
     call init_observe()
 
-
     call feminit()
+    
+    if (solve_bcfluxes) call init_bcfluxes()
     
     
     if (drutes_config%it_method == 1 .or. drutes_config%it_method == 2) then

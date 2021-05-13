@@ -19,7 +19,7 @@ module postpro
   use typy
   
   public :: make_print
-  public :: write_obs
+  public :: write_obs, write_bcfluxes
   public :: get_RAM_use
   private :: print_scilab, print_pure, print_gmsh
   
@@ -386,6 +386,102 @@ module postpro
       end do
       
     end subroutine write_obs
+    
+    
+    
+    subroutine write_bcfluxes()
+      use typy
+      use globals
+      use geom_tools
+      use pde_objs
+      use global_objs
+      use debug_tools
+      
+      integer(kind=ikind) :: bc, el, D, nd1, nd2, nd3, i, j, proc, flow_in, way_in
+      real(kind=rkind), dimension(:,:), allocatable, save :: flux
+      real(kind=rkind), dimension(:), allocatable, save :: norm_vct 
+      real(kind=rkind), dimension(2,2) :: bcpt
+      type(integpnt_str) :: quadpnt
+      real(kind=rkind) :: length
+      real(kind=rkind), dimension(:,:), allocatable, save :: integflux, cumflux
+      
+      D = drutes_config%dimen
+      
+      quadpnt%type_pnt="xypt"
+      quadpnt%order=1
+      quadpnt%column=2
+      
+      if (.not. allocated(flux)) allocate(flux(ubound(pde,1), D))
+      
+      if (.not. allocated(integflux)) then
+        allocate(integflux(lbound(bcfluxes,1) : ubound(bcfluxes,1) , ubound(pde,1)))
+        allocate(cumflux(lbound(bcfluxes,1) : ubound(bcfluxes,1) , ubound(pde,1)))
+        cumflux = 0
+      end if
+      
+      do bc = lbound(bcfluxes,1), ubound(bcfluxes,1)
+        integflux(bc,:) = 0
+        do i = i, bcfluxes(bc)%elements%pos
+          el = bcfluxes(bc)%elements%data(i)
+          quadpnt%element = el
+          do j=1, ubound(elements%data,2)
+            nd1 = elements%data(el, j)
+            if (j<ubound(elements%data,2)) then
+              nd2 = elements%data(el, j+1)
+            else
+              nd1 = elements%data(el, 1)
+            end if
+            if (nodes%edge(nd1) == nodes%edge(nd2) .and. nodes%edge(nd1) > 0) EXIT
+          end do
+          
+          do j=1, ubound(elements%data,2)
+            if (elements%data(el,j) /= nd1 .and. elements%data(el,j) /= nd2) then
+              nd3 = elements%data(el,j)
+              EXIT
+            end if
+          end do
+
+            
+            
+          length = dist(nodes%data(nd1,:), nodes%data(nd2,:))
+          quadpnt%xy = (nodes%data(nd1,:) + nodes%data(nd2,:))/2.0_rkind
+          quadpnt%element = el
+          
+          bcpt(1,:) = nodes%data(nd1,:)
+          bcpt(2,:) = nodes%data(nd2,:)
+          call getnormal(bcpt, nodes%data(nd3,:), norm_vct)
+          
+
+          
+          if (aboveline(bcpt(1,:), bcpt(2,:), nodes%data(nd3,:))) then
+            way_in = 1
+          else
+            way_in = -1
+          end if
+
+          
+          do proc=1, ubound(pde,1)
+            call pde(proc)%flux(elements%material(el), quadpnt, vector_out=flux(proc,:))
+            flux(proc,:) = flux(proc,:)*norm_vct
+            if (aboveline(bcpt(1,:), bcpt(2,:), quadpnt%xy + flux(proc,:) )) then
+              flow_in = 1
+            else
+              flow_in = -1
+            end if
+            integflux(bc,proc) = integflux(bc,proc) + norm2(flux(proc,:))*length*flow_in*way_in
+          end do
+          
+        end do
+      end do
+      
+      cumflux = cumflux + integflux*time_step          
+      
+      do bc = lbound(bcfluxes,1), ubound(bcfluxes,1)
+        write(unit=bcfluxes(bc)%fileid, fmt=*) time, integflux(bc, :), cumflux(bc,:)
+        call flush(bcfluxes(bc)%fileid)
+      end do
+    
+    end subroutine write_bcfluxes
  
 
     !> this subroutine parses /proc/[PID]/status file in order to get RAM consumption statistics, it works Linux only

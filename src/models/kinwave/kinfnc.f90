@@ -91,7 +91,7 @@ module kinfnc
       
       
       select case(quadpnt%type_pnt)
-        case("gqnd", "obpt")
+        case("gqnd", "obpt", "xypt")
           el = quadpnt%element
         case("ndpt")
           el = nodes%element(quadpnt%order)%data(1)
@@ -179,7 +179,7 @@ module kinfnc
       
       
       select case(quadpnt%type_pnt)
-        case("gqnd", "obpt")
+        case("gqnd", "obpt", "xypt")
           el = quadpnt%element
         case("ndpt")
           el = nodes%element(quadpnt%order)%data(1)
@@ -585,7 +585,6 @@ module kinfnc
         end if
       end if
       
-      call printmtx(pde_loc%solution)
           
         
       

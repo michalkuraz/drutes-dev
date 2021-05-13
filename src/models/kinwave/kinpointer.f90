@@ -85,7 +85,7 @@ module kinpointer
       
       pde(1)%flux => kinflux
       
-      pde(1)%symmetric = .false.
+!      pde(1)%symmetric = .true.
       
       if (ubound(pde,1) == 3) then
       

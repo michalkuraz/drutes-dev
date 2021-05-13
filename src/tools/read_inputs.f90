@@ -232,6 +232,8 @@ module read_inputs
 	       call fileread(measured_pts(i)%xyz(:), file_global, errmsg="HINT: check coordinates of the points with measurement data")
       end do  
       
+      call fileread(solve_bcfluxes, file_global, errmsg="Set [y/n] to specify if you want to compute boundary fluxes")
+      
       write(msg, *) "set correct value for the terminal outputs", new_line("a"), "     0 - standard output", &
     	new_line("a"),  "     1 - everything goes to out/screen.log", new_line("a"), &
   	"    -1 - everything goes to /dev/null (use only on Linux based systems (I have no idea what will happen in MAC OS X))"

@@ -29,7 +29,7 @@ module geom_tools
   public :: angle
   public :: inline
   public :: solve_bisect
-  private :: aboveline
+  public :: aboveline
   public :: najdi_bod
   public :: max_height
   public :: interpolate
@@ -778,7 +778,7 @@ module geom_tools
   end subroutine solve_bisect
 
 
- !> function to determine if the point C lies above or below the line defined by points A and B
+  !> function to determine if the point C lies above or below the line defined by points A and B
   !! result is logical value nad, if true point lies above if false it lies below
   !! if the line is vertical, then if true the point lies on the left hand side from the line, if false the point lies on the right hand side from the line.
   !<
