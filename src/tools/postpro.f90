@@ -470,7 +470,8 @@ module postpro
             else
               flow_in = -1
             end if
-            integflux(bc,proc) = integflux(bc,proc) + norm2(flux(proc,:))*length*flow_in*way_in
+            ! if flux positive, then it is positive with respect to outer normal -> factor -1
+            integflux(bc,proc) = integflux(bc,proc) + norm2(flux(proc,:))*length*flow_in*way_in*(-1)
           end do
           
         end do

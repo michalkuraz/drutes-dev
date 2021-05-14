@@ -60,8 +60,8 @@ module kinpointer
       
       pde(1)%bc(101)%value_fnc => kinbor
       pde(1)%bc(102)%value_fnc => kinbor
-      pde(1)%bc(103)%value_fnc => kinborO
-      pde(1)%bc(104)%value_fnc => kinborO
+      pde(1)%bc(103)%value_fnc => kinbor
+      pde(1)%bc(104)%value_fnc => kinbor
       
 !       pde_loc%bc(102)%value_fnc => kinbor
 
@@ -77,7 +77,7 @@ module kinpointer
       
       pde(1)%pde_fnc(1)%elasticity => kin_elast
       
-!      pde(1)%diffusion = .false.
+      pde(1)%diffusion = .false.
 
       pde(1)%pde_fnc(1)%dispersion => disp4kinwave
       
