@@ -361,7 +361,7 @@ module kinreader
       if (with_solutes) then
         allocate(kinsols(n))
         deallocate(tmp_array)
-        allocate(tmp_array(6))
+        allocate(tmp_array(7))
         do i=1,n
           call fileread(tmp_array, fileid=file_kinematix, checklen=.true.)
           kinsols(i)%horb = tmp_array(1)
@@ -378,6 +378,7 @@ module kinreader
           kinsols(i)%lambda_a = tmp_array(4)
           kinsols(i)%lambda_d = tmp_array(5)
           kinsols(i)%lost_me = tmp_array(6)
+          kinsols(i)%ncs = tmp_array(7)
         end do
       end if
             

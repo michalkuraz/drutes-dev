@@ -707,6 +707,7 @@ module kinfnc
       use global_objs
       use pde_objs
       use kinglobs
+      use debug_tools
       
       class(pde_str), intent(in) :: pde_loc
       !> value of the nonlinear function
@@ -716,11 +717,17 @@ module kinfnc
       !> material ID
       integer(kind=ikind), intent(in) :: layer
       !> return value
-      real(kind=rkind)                :: val 
+      real(kind=rkind)                :: val
+      
+      real(kind=rkind) :: cs 
       
       
-      val = -kinsols(layer)%lambda_d
+      cs = max(0.0_rkind, pde(3)%getval(quadpnt))
       
+      
+      val = -kinsols(layer)%lambda_d *cs**(kinsols(layer)%ncs-1)
+      
+
       
     end function kincs_source
     
