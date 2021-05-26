@@ -111,7 +111,7 @@ module kinpointer
         
         pde(2)%flux => kinfluxcl
         
-        pde(3)%pde_fnc(3)%zerord => kincl_lostfactor
+        pde(2)%pde_fnc(2)%reaction => kincl_lostfactor
         
         pde(2)%symmetric = .false.
         

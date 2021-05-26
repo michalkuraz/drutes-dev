@@ -544,7 +544,7 @@ module kinfnc
 
       class(pde_str), intent(in out) :: pde_loc
 
-      pde_loc%solution(:) = 1e-3!0.0_rkind
+      pde_loc%solution(:) = 0.0_rkind
      
       
     end subroutine kinematixinit
@@ -707,7 +707,7 @@ module kinfnc
       
       cs = max(.0_rkind,pde(3)%getval(quadpnt))
       
-      val = kinsols(layer)%lost_me*cs
+      val = kinsols(layer)%lost_me
       
       
     end function kincl_lostfactor
