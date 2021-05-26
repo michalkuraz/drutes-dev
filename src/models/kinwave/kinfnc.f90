@@ -809,7 +809,7 @@ module kinfnc
       end if
 
 
-      E = max(0.0_rkind, pde(1)%getval(quadpnt))
+      E = max(1e-7_rkind, pde(1)%getval(quadpnt))
 !E = 1e-3
       
 
