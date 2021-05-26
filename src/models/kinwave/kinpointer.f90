@@ -77,9 +77,9 @@ module kinpointer
       
       pde(1)%pde_fnc(1)%elasticity => kin_elast
       
-      pde(1)%diffusion = .false.
+!      pde(1)%diffusion = .false.
 
-      pde(1)%pde_fnc(1)%dispersion => disp4kinwave
+!      pde(1)%pde_fnc(1)%dispersion => disp4kinwave
       
       pde(1)%getval => getval_kinwave
       
@@ -95,7 +95,7 @@ module kinpointer
       
         pde(2)%pde_fnc(2)%convection => kinconvectcl
         
-        pde(2)%pde_fnc(2)%dispersion => disp4kinwavecl
+!        pde(2)%pde_fnc(2)%dispersion => disp4kinwavecl
         
         pde(2)%initcond =>  kinematixinit
         
@@ -111,7 +111,7 @@ module kinpointer
         
         pde(2)%flux => kinfluxcl
         
-        pde(2)%pde_fnc(2)%reaction => kincl_lostfactor
+        pde(3)%pde_fnc(3)%zerord => kincl_lostfactor
         
         pde(2)%symmetric = .false.
         
@@ -123,9 +123,7 @@ module kinpointer
         !--- soil
         pde(3)%initcond =>  kinematixinit4cs
         
-        pde(3)%pde_fnc(2)%elasticity => kin_clelast
-        
-        pde(3)%pde_fnc(3)%elasticity => kin_elast
+        pde(3)%pde_fnc(3)%elasticity => kin_cselast
         
         pde(3)%pde_fnc(2)%reaction => kincl_source
         

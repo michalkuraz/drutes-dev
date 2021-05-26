@@ -220,6 +220,8 @@ module kinfnc
        
     
     end subroutine kinfluxcl
+    
+    
   
     subroutine kinconvect(pde_loc, layer, quadpnt, x, vector_in, vector_out, scalar)
       use typy
@@ -438,6 +440,8 @@ module kinfnc
         outflux = (-1.49_rkind) * sign(1.0_rkind, slopes(1:D)) * & 
                             sqrt(abs( slopes(1:D)))/manning(layer)*hsurf**m
                             
+!        call printmtx(outflux) !; call wait()
+                            
         if (present(vector_out)) vector_out(1:D) = outflux
                             
         if (present(scalar)) scalar = norm2(outflux)
@@ -469,7 +473,7 @@ module kinfnc
 
       
       if (present(code)) then
-        code = 0
+        code = 1
       end if
   
     end subroutine kinbor
@@ -498,7 +502,7 @@ module kinfnc
 
       
       if (present(code)) then
-        code = 1
+        code = 0
       end if
   
     end subroutine kinborO
@@ -540,7 +544,7 @@ module kinfnc
 
       class(pde_str), intent(in out) :: pde_loc
 
-      pde_loc%solution(:) = 0.0_rkind
+      pde_loc%solution(:) = 1e-3!0.0_rkind
      
       
     end subroutine kinematixinit
@@ -673,8 +677,11 @@ module kinfnc
       !> return value
       real(kind=rkind)                :: val 
       
+      real(kind=rkind) :: h
       
-      val = kinsols(layer)%lambda_a
+      h = pde(1)%getval(quadpnt)
+      
+      val = h*kinsols(layer)%lambda_a
       
       
     end function kincl_source
@@ -696,8 +703,11 @@ module kinfnc
       !> return value
       real(kind=rkind)                :: val 
       
+      real(kind=rkind) :: cs
       
-      val = kinsols(layer)%lost_me
+      cs = max(.0_rkind,pde(3)%getval(quadpnt))
+      
+      val = kinsols(layer)%lost_me*cs
       
       
     end function kincl_lostfactor
@@ -725,7 +735,8 @@ module kinfnc
       cs = max(0.0_rkind, pde(3)%getval(quadpnt))
       
       
-      val = -kinsols(layer)%lambda_d *cs**(kinsols(layer)%ncs-1)
+      val = -kinsols(layer)%horb*kinsols(layer)%rhos*kinsols(layer)%lambda_d * &
+              (cs*kinsols(layer)%horb*kinsols(layer)%rhos)**(kinsols(layer)%ncs-1)
       
 
       
