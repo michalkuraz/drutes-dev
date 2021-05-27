@@ -379,7 +379,7 @@ module kinfnc
       el = quadpnt%element
       
       hsurf = max(0.0_rkind, pde(1)%getval(quadpnt))
-!      cl = max(0.0_rkind, pde(2)%getval(quadpnt))
+      cl = max(0.0_rkind, pde(2)%getval(quadpnt))
 
 !      hsurf = min(5e-3_rkind, hsurf)
       
@@ -437,7 +437,7 @@ module kinfnc
           end select
         end if
         
-        outflux = (-1.49_rkind) * sign(1.0_rkind, slopes(1:D)) * & 
+        outflux = cl*(-1.49_rkind) * sign(1.0_rkind, slopes(1:D)) * & 
                             sqrt(abs( slopes(1:D)))/manning(layer)*hsurf**m
                             
 !        call printmtx(outflux) !; call wait()
