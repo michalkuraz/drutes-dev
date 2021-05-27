@@ -437,7 +437,7 @@ module kinfnc
           end select
         end if
         
-        outflux = cl*(-1.49_rkind) * sign(1.0_rkind, slopes(1:D)) * & 
+        outflux = (-1.49_rkind) * sign(1.0_rkind, slopes(1:D)) * & 
                             sqrt(abs( slopes(1:D)))/manning(layer)*hsurf**m
                             
 !        call printmtx(outflux) !; call wait()
