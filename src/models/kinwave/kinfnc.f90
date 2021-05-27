@@ -379,9 +379,8 @@ module kinfnc
       el = quadpnt%element
       
       hsurf = max(0.0_rkind, pde(1)%getval(quadpnt))
-      cl = max(0.0_rkind, pde(2)%getval(quadpnt))
+!      cl = max(0.0_rkind, pde(2)%getval(quadpnt))
 
-!      hsurf = min(5e-3_rkind, hsurf)
       
       m = 5.0_rkind/3
       
@@ -1020,12 +1019,13 @@ module kinfnc
     
     
     subroutine disp4kinwavecl(pde_loc, layer, quadpnt, x, tensor, scalar)
-           use typy
+      use typy
       use global_objs
       use pde_objs
       use globals
       use geom_tools
       use debug_tools
+      use kinglobs
       
       
       class(pde_str), intent(in) :: pde_loc
@@ -1064,7 +1064,10 @@ module kinfnc
       call kinconvectcl(pde(2), layer, quadpnt, scalar=convect)
       
       if (present(tensor)) then
-        tensor =  convect*height
+        tensor = 0
+        do i=1, drutes_config%dimen
+          tensor(i,i) = convect*kinsols(layer)%diff
+        end do
       end if
     end subroutine disp4kinwavecl
 

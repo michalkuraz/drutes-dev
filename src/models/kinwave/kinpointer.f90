@@ -77,7 +77,7 @@ module kinpointer
       
       pde(1)%pde_fnc(1)%elasticity => kin_elast
       
-!      pde(1)%diffusion = .false.
+      pde(1)%diffusion = .false.
 
 !      pde(1)%pde_fnc(1)%dispersion => disp4kinwave
       
@@ -95,7 +95,7 @@ module kinpointer
       
         pde(2)%pde_fnc(2)%convection => kinconvectcl
         
-!        pde(2)%pde_fnc(2)%dispersion => disp4kinwavecl
+        pde(2)%pde_fnc(2)%dispersion => disp4kinwavecl
         
         pde(2)%initcond =>  kinematixinit
         
@@ -106,8 +106,6 @@ module kinpointer
         pde(2)%print_mass = .true.
         
         pde(2)%mass(1)%val => solmass
-        
-!        pde(2)%diffusion = .false.
         
         pde(2)%flux => kinfluxcl
         
@@ -141,8 +139,7 @@ module kinpointer
       end if
         
         
-        
-!      pde(2)
+
       
     end subroutine kinwavelinker
     
