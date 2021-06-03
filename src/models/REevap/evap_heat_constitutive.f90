@@ -15,7 +15,7 @@
 
 module evap_heat_constitutive
 
-  public :: heatcap_TT, heat_cond, convection4heat, heatdiffTh,  heatsrc_w_roots, latentheat, heat_flux4evap
+  public :: heatcap_TT, heatcap_Th, heat_cond, convection4heat, heatdiffTh,  heatsrc_w_roots, latentheat, heat_flux4evap
 
   private :: water_cap, vapour_cap
   
@@ -112,6 +112,33 @@ module evap_heat_constitutive
     end function heatcap_TT
     
     
+    function heatcap_Th(pde_loc, layer, quadpnt, x) result(val)
+      use typy
+      use global_objs
+      use pde_objs
+      use evapglob
+      use evap_RE_constitutive
+      
+      class(pde_str), intent(in) :: pde_loc
+      !> value of the nonlinear function
+      real(kind=rkind), dimension(:), intent(in), optional    :: x
+      !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
+      type(integpnt_str), intent(in), optional :: quadpnt
+      !> material ID
+      integer(kind=ikind), intent(in) :: layer
+      !> return value
+      real(kind=rkind)                :: val
+      
+      real(kind=rkind) :: ths, theta, theta_v
+      
+      if (.not. present(quadpnt)) then
+        print *, "runtime error evap_heat_constitutive::heatcap_Th"
+        ERROR STOP
+      end if
+      
+      val = dens_liquid(quadpnt)*latentheat(quadpnt)*dthetav_dh(pde(re_ord), layer, quadpnt)
+      
+    end function heatcap_Th
      
     subroutine heat_flux4evap(pde_loc, layer, quadpnt, x, grad,  flux, flux_length)
       use typy

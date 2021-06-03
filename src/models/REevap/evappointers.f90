@@ -56,6 +56,8 @@ module evappointers
 
       pde(re_ord)%flux  =>  totalflux
       
+      pde(heat_ord)%pde_fnc(re_ord)%elasticity => heatcap_Th
+      
       pde(heat_ord)%pde_fnc(heat_ord)%elasticity => heatcap_TT
 
       pde(heat_ord)%pde_fnc(heat_ord)%dispersion => heat_cond
