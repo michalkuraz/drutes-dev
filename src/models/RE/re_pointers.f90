@@ -181,10 +181,9 @@ module RE_pointers
           case(5)
             if (cut(drutes_config%name) == "REevap") then
               CONTINUE
-              ! to be linked in vapour_pointers
+              ! to be linked in evappointers
             else
-              print *, "atmospheric boundary only allowed for REevap model"
-              ERROR STOP
+              pde_loc%bc(i)%value_fnc => retot_atmospheric
             end if
           case(6)
             pde_loc%bc(i)%value_fnc => retot_well

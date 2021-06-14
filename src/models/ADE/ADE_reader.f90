@@ -258,6 +258,7 @@ module ADE_reader
         pde(i)%mass_name(1,2) = "concetration [M/M]"
       end do
       
+      
       if (no_solids > 0) then
         allocate(sorption(ubound(adepar,1), no_solids))
       else
@@ -324,7 +325,7 @@ module ADE_reader
        call fileread(sorption(i,:)%name, filesorp, errmsg=msg, options=(/"freund", "langmu"/))
       end do
   
-
+       call read_sep(filesorp)
       
       allocate(tmp_array(3))  
       

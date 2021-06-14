@@ -36,6 +36,7 @@ module kinreader
       integer(kind=ikind), dimension(3) :: nd
       integer(kind=ikind), dimension(:), allocatable :: ndpmt
       integer :: file_nodes, ierr
+      real(kind=rkind) :: tmp, big
       
 
 
@@ -99,6 +100,16 @@ module kinreader
         end do
       end if
       
+      
+      tmp = 0
+      big = 0
+      do i=1, elements%kolik
+        tmp = tmp + sqrt(watershed_el(i)%sx**2 + watershed_el(i)%sy**2)
+        if (sqrt(watershed_el(i)%sx**2 + watershed_el(i)%sy**2) > big) big = sqrt(watershed_el(i)%sx**2 + watershed_el(i)%sy**2)
+      end do 
+      
+      print *, tmp/elements%kolik, big ; stop
+        
           
       
     end subroutine get_slopes
