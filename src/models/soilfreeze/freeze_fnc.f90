@@ -109,7 +109,6 @@ module freeze_fnc
       else
         val = 0
       end if
-
     end function capacityhT
 
     !> diffusion due to pressure head for flow model
@@ -205,7 +204,7 @@ module freeze_fnc
       else
          print *, "ERROR! output tensor undefined, exited from freeze_fnc::diffhT"
       end if   
-
+      
     end subroutine diffhT
     
     
@@ -439,7 +438,6 @@ module freeze_fnc
       end select 
       call pde(wat)%pde_fnc(heat_proc)%dispersion(pde(wat), layer, quadpnt, tensor = Klt(1:D, 1:D))
       tensor(1:D,1:D) = tensor(1:D,1:D) + Klt(1:D,1:D)*freeze_par(layer)%Cl*rho_wat(quadpnt)*temp_K
-
     end subroutine diffTT
     
     subroutine diffTh(pde_loc, layer, quadpnt, x, tensor, scalar)
@@ -689,6 +687,9 @@ module freeze_fnc
       integer :: i1, D
       type(integpnt_str) :: quadpnt
       integer(kind=ikind) :: layer
+      integer(kind = ikind) :: code_tmp = 2
+      logical, save:: switch = .false.
+      
       
       D = drutes_config%dimen
 
@@ -709,30 +710,33 @@ module freeze_fnc
           end do
         else
           quadpnt%type_pnt = "ndpt"
-          quadpnt%column = 1 ! otherwise column is random integer number
+          quadpnt%column = 2 ! otherwise column is random integer number
           quadpnt%order = elements%data(el_id,node_order)
           h = pde(wat)%getval(quadpnt)
-          if(h .GE. epsilon(h)) then
-            !layer = elements%material(el_id)
-            !call  diffhh(pde_loc, layer, quadpnt, tensor = Klh(1:D,1:D))
-            !if(Klh(1,1) >   pde_loc%bc(edge_id)%value) then
-            !  bcval = pde_loc%bc(edge_id)%value
-            !else
+          if(h .GE. -1e-1 .and. .not. switch) then
+            switch = .true.
+          end if
+          if(switch) then
+            layer = elements%material(el_id)
+            call  diffhh(pde_loc, layer, quadpnt, tensor = Klh(1:D,1:D))
+            if(Klh(1,1) >   pde_loc%bc(edge_id)%value) then
+              bcval = pde_loc%bc(edge_id)%value
+              switch = .false.
+              code_tmp = 2
+            else
               bcval = 0
-            !end if
-            !print*, bcval, Klh(1,1), h
+              code_tmp = 4
+            end if
           else
             bcval = pde_loc%bc(edge_id)%value
+            code_tmp = 2
           end if
           value = bcval
         end if
       end if
+      
       if (present(code)) then
-        if(bcval == 0) then
-          code = 4
-        else
-          code = 2
-        end if
+        code = code_tmp
       end if
 
     end subroutine infiltration_bc
@@ -914,7 +918,7 @@ module freeze_fnc
       real(kind=rkind)                :: val
       
       real(kind=rkind) :: temp, vol_soil, th_air, ths
-      ths = thetas(pde_loc, layer, quadpnt)
+      ths = thetas(pde(wat), layer, quadpnt)
 
       val = (1-ths)*freeze_par(layer)%Cs
 
@@ -940,7 +944,7 @@ module freeze_fnc
       
      
       D = drutes_config%dimen
-      ths = thetas(pde_loc, layer, quadpnt)
+      ths = thetas(pde(wat), layer, quadpnt)
       if (present(tensor)) then
         do i= 1, D
           select case (freeze_par(layer)%material)
@@ -997,7 +1001,7 @@ module freeze_fnc
       
       D = drutes_config%dimen
       
-      call diffTsTs(pde_loc, layer, quadpnt, tensor = thermal_diff)
+      call diffTsTs(pde(heat_solid), layer, quadpnt, tensor = thermal_diff)
             
       if (present(flux)) then
         flux = -matmul(thermal_diff(1:D, 1:D), gradT) 
@@ -1023,7 +1027,7 @@ module freeze_fnc
       integer(kind=ikind) :: D
 
       D = drutes_config%dimen
-      ths = thetas(pde_loc, layer, quadpnt)
+      ths = thetas(pde(wat), layer, quadpnt)
       thice = thetai(pde(wat), layer, quadpnt)
       thl = vangen_fr(pde(wat), layer, x=(/hl(pde(wat), layer, quadpnt)/))
 
@@ -1042,12 +1046,13 @@ module freeze_fnc
       end if 
       
       A = 6*(1-ths)/freeze_par(layer)%diameter
-      tp = thermal_p(pde_loc, layer, quadpnt)
+      tp = thermal_p(pde(heat_proc), layer, quadpnt)
       Pr = Cp*up/tp
-      call all_fluxes(pde_loc, layer, quadpnt, flux_length = flux_tmp)
+      call all_fluxes(pde(wat), layer, quadpnt, flux_length = flux_tmp)
       Re = densp*abs(flux_tmp)*freeze_par(layer)%diameter/up
       h = tp/freeze_par(layer)%diameter*(2.4e-5+(285.6*Pr**2.7*Re**(0.33333333_rkind)))
       val = h * A
+
     end function qsl_pos
     
     function qsl_neg(pde_loc, layer, quadpnt, x) result(val)

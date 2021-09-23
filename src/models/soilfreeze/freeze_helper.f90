@@ -31,7 +31,10 @@ module freeze_helper
     
       Temp_C = pde(heat_proc)%getval(quadpnt)-273.15
       val = 1000.0_rkind - 7.37e-3*(Temp_C - 4.0_rkind)**2 + 3.79e-5*(Temp_C -4.0_rkind)**3
-
+      
+      if( val < 990) then
+        val = 990
+      end if
     end function rho_wat
 
       !> switch for freezing condition based on Clapeyron equation 
