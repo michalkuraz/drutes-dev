@@ -190,15 +190,13 @@ module ADE_fnc
               if (abs(1-sorption(layer,i)%third) < 10*epsilon(1.0_rkind)) then
                 kd = sorption(layer,i)%adsorb
                 bd = sorption(layer,i)%bd
-                Rd = Rd + kd*sorption(layer,i)%bd/theta
-                Rd = Rd * (1-thetas) * sorption(layer,i)%ratio
+                Rd = Rd + ((1-thetas)*kd)*sorption(layer,i)%ratio
               else
                 cl = pde_loc%getval(quadpnt)
                 n = sorption(layer,i)%third
                 kd = sorption(layer,i)%adsorb
                 bd = sorption(layer,i)%bd
-                Rd = Rd + kd*sorption(layer,i)%bd/theta*n*cl**(n-1)
-                Rd = Rd * (1-thetas) * sorption(layer,i)%ratio             
+                Rd = Rd + ((1-thetas)*kd*n*cl**(n-1))*sorption(layer,i)%ratio    
               end if
                 
             case("langmu")
@@ -206,8 +204,8 @@ module ADE_fnc
               csmax = sorption(layer,i)%third
               kd = sorption(layer,i)%adsorb
               bd = sorption(layer,i)%bd
-              Rd = Rd + kd*csmax*bd/theta/(kd*bd/theta*cl + 1)*(kd*bd/theta*cl + 1)
-              Rd = Rd * (1-theta) * sorption(layer,i)%ratio
+              Rd = Rd + (kd*csmax/(kd*cl+1)**2)*sorption(layer,i)%ratio
+             
           end select
         end if
       end do

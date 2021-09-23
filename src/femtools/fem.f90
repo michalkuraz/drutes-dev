@@ -87,7 +87,7 @@ module fem
      call make_print("separately")
 
      call write_obs()
-
+  
 
      call write_log("go 4 solving")
             
@@ -112,6 +112,7 @@ module fem
           time = time + time_step
 
           call write_obs()
+          if (solve_bcfluxes) call write_bcfluxes()
           if (printtime) then
             do i=1, nptimes
                       

@@ -101,7 +101,7 @@ module femmat
     
 
         error = norm2(pde_common%xvect(1:fin,2)-pde_common%xvect(1:fin,3))/ubound(pde_common%xvect,1)
- 
+        print *, error
          
         if (itcount == 1 .or. error <= iter_criterion) then
           do proc=1, ubound(pde,1)
@@ -200,6 +200,8 @@ module femmat
 
        call pde_common%time_integ(i)
        stiff_mat = stiff_mat + cap_mat  
+       
+!       call printmtx(stiff_mat) !; call wait()
        call in2global(i,spmatrix, pde_common%bvect)
 
       end do

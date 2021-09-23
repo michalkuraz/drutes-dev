@@ -171,7 +171,7 @@ module evapreader
       
       call datafiller%clear
       deallocate(tmpdata)
-      allocate(tmpdata(7))
+      allocate(tmpdata(6))
       
       counter = 0
       
@@ -199,11 +199,10 @@ module evapreader
 
         meteo4evap(i)%time = tmpdata(1)
         meteo4evap(i)%inradiation = tmpdata(2)
-        meteo4evap(i)%extraterrad = tmpdata(3)
-        meteo4evap(i)%T_air = tmpdata(4)
-        meteo4evap(i)%wind_speed = tmpdata(5)
-        meteo4evap(i)%cloudiness = tmpdata(6)
-        meteo4evap(i)%relhum = tmpdata(7)
+        meteo4evap(i)%T_air = tmpdata(3)
+        meteo4evap(i)%wind_speed = tmpdata(4)
+        meteo4evap(i)%cloudiness = tmpdata(5)
+        meteo4evap(i)%relhum = tmpdata(6)
       end do
       
 

@@ -117,6 +117,9 @@ program main
 
     call feminit()
     
+    if (solve_bcfluxes) call init_bcfluxes()
+    
+    
     if (drutes_config%it_method == 1 .or. drutes_config%it_method == 2) then
       call init_decomp()
     end if
@@ -127,7 +130,6 @@ program main
 
   
   call write_log("DRUtES solves ", text2=adjustl(trim(drutes_config%fullname)))
-  
 
   call solve_pde(success)    
 

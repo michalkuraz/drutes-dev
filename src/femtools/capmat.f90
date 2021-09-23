@@ -200,9 +200,6 @@ module capmat
               end do
             end do
           else
-!            ll = l + limits*(iproc-1)
-!            jj = j + limits*(jproc-1)
-!            print *, ll, jj, limits
             cap_mat = 0
           end if
         end do

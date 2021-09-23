@@ -92,6 +92,8 @@ module debug_tools
       
       write(unit=filloc, fmt=*) "column:", quadpnt%column
       
+      write(unit=filloc, fmt=*) "element:", quadpnt%element
+      
       if (quadpnt%ddlocal) then
         write(unit=filloc, fmt=*) "using subdomain local data"
         write(unit=filloc, fmt=*) "subdomain id", quadpnt%subdom

@@ -659,7 +659,7 @@ module readtools
             if (present(errmsg)) then
               call file_error(fileid, errmsg)
             else
-              call file_error(fileid, message="Incorrect inputs, have you set all required [y/n] values?")
+              call file_error(fileid, errmsg="Incorrect inputs, have you set all required [y/n] values?")
             end if
           end if
         else
@@ -684,12 +684,12 @@ module readtools
       
       
 
-    subroutine file_error(iunit, message)
+    subroutine file_error(iunit, errmsg)
       use core_tools
       use globals
 
       integer, intent(in) :: iunit
-      character(len=*), intent(in), optional :: message
+      character(len=*), intent(in), optional :: errmsg
 
       character(len=512) :: filename
       character(len=256) :: iaction, numero
@@ -737,8 +737,8 @@ module readtools
 	    write(unit=terminal, fmt=*) "--------------------------------"
 
       
-      if (present(message)) then
-        write(unit=terminal, fmt=*) " " //achar(27)//'[43m', cut(message) //achar(27)//'[0m'
+      if (present(errmsg)) then
+        write(unit=terminal, fmt=*) " " //achar(27)//'[43m', cut(errmsg) //achar(27)//'[0m'
       end if
 	
       

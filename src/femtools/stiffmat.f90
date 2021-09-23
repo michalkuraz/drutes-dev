@@ -64,6 +64,7 @@ module stiffmat
       real(kind=rkind), dimension(3) :: conv
       real(kind=rkind), dimension(3,3) :: disp
       type(integpnt_str) :: quadpnt
+      real(kind=rkind) :: capacity, react
 
       stiff_mat = 0
 
@@ -146,7 +147,7 @@ module stiffmat
         
         !use least-square FEM (for convection only problems)
         else
-          do i=1, ubound(stiff_mat,1)/ ubound(pde,1)
+           do i=1, ubound(stiff_mat,1)/ ubound(pde,1)
             do j=1, ubound(stiff_mat,1)/ubound(pde,1)
                 csum = 0
                 v(1:top,1) = elements%ders(el_id,i,1:top)
@@ -173,6 +174,8 @@ module stiffmat
      
      stiff_mat = stiff_mat/gauss_points%area*elements%areas(el_id)
      
+!     call printmtx(stiff_mat) ; stop
+     
 
      
     end subroutine build_stiff_np
@@ -196,10 +199,11 @@ module stiffmat
       type(integpnt_str) , intent(in), optional :: quadpnt_in
       
       integer(kind=ikind) :: iproc, limits, ii, i, l, top, layer
-      real(kind=rkind) :: suma, hp, source
+      real(kind=rkind) :: suma, hp, source, cl, cs
       type(integpnt_str) :: quadpnt
       real(kind=rkind), dimension(3) :: conv
       real(kind=rkind), dimension(3,1) :: v
+      real(kind=rkind) :: capacity, react
       
       bside = 0
       
@@ -237,6 +241,7 @@ module stiffmat
 
           end do
         else
+        
           layer = elements%material(el_id)
           
           do i=1, ubound(stiff_mat,1)/ ubound(pde,1)
@@ -258,8 +263,6 @@ module stiffmat
             ii = i + (iproc-1)*limits
             bside(ii) = suma*elements%areas(el_id)/gauss_points%area
           end do
-      
-          
         end if
       end do
     

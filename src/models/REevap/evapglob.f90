@@ -61,7 +61,6 @@ module evapglob
   type, public :: meteo4evap_str
     real(kind=rkind) :: time
     real(kind=rkind) :: inradiation
-    real(kind=rkind) :: extraterrad
     real(kind=rkind) :: T_air
     real(kind=rkind) :: wind_speed
     real(kind=rkind) :: cloudiness

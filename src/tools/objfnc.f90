@@ -289,7 +289,7 @@ module objfnc
             "max. run time  |  unit (s , min, hrs, day) | action (E=exit the code, P=update & 
               Picard criterion)", new_line("a"), "See this example:", new_line("a"), &
               "100             min                      P"
-          call file_error(fileid, message=msg)
+          call file_error(fileid, errmsg=msg)
         end if
              
         
@@ -305,7 +305,7 @@ module objfnc
           case default
             write(msg, *) "You have defined unsupported units for CPU time limit. the supported units are: s, min, hrs, day", &
               new_line("a"), "You have specified: ", cut(units), " , correct it!!"
-            call file_error(fileid, message=msg)
+            call file_error(fileid, errmsg=msg)
         end select
         
         if (objval%CPUlim_method=="P") then

@@ -49,6 +49,7 @@ module evapbc4heat
 
       eps_s = min(0.9 + 0.18*vangen(pde(re_ord),  layer, quadpnt), 1.0_rkind)
       
+      !atmospheric vapour pressure 
       ea = 0.611 * relhumid(quadpnt) * exp(17.27*T_a/(T_a_K - 35.85))
       
       eps_a =  0.7 + 5.95e-5 * ea *exp (1500/T2kelv(T_a))
@@ -116,8 +117,8 @@ module evapbc4heat
       ! roughness length for momentum transfer and of heat and vapour
       real(kind = rkind) :: zom, zoh
       
-      h = 0.5
-      d = 0.666*h
+      h = 0.5 !refers plant height, should be provided in configs
+      d = 0.666*h ! also should be provided in configs, for bare soil d=0
       zom = 0.123*h
       zoh = 0.1*zom
       pos = getmeteopos()

@@ -56,9 +56,12 @@ module kinpointer
       
       pde(1)%pde_fnc(1)%convection => kinconvect
       
-      allocate(pde(1)%bc(101:101))
+      allocate(pde(1)%bc(101:104))
       
       pde(1)%bc(101)%value_fnc => kinbor
+      pde(1)%bc(102)%value_fnc => kinbor
+      pde(1)%bc(103)%value_fnc => kinbor
+      pde(1)%bc(104)%value_fnc => kinbor
       
 !       pde_loc%bc(102)%value_fnc => kinbor
 
@@ -74,27 +77,27 @@ module kinpointer
       
       pde(1)%pde_fnc(1)%elasticity => kin_elast
       
-!      pde(1)%diffusion = .false.
+      pde(1)%diffusion = .false.
+
+!      pde(1)%pde_fnc(1)%dispersion => disp4kinwave
       
       pde(1)%getval => getval_kinwave
       
       pde(1)%flux => kinflux
       
-      pde(1)%symmetric = .true.
+!      pde(1)%symmetric = .true.
       
       if (ubound(pde,1) == 3) then
       
-        allocate(pde(2)%bc(101:101))
+        allocate(pde(2)%bc(101:104))
         
-        allocate(pde(3)%bc(101:101))
+        allocate(pde(3)%bc(101:104))
       
         pde(2)%pde_fnc(2)%convection => kinconvectcl
         
+        pde(2)%pde_fnc(2)%dispersion => disp4kinwavecl
+        
         pde(2)%initcond =>  kinematixinit
-        
-!        pde(2)%pde_fnc(2)%reaction => kincl_source
-        
-!        pde(2)%pde_fnc(3)%reaction => kincs_source
         
         pde(2)%pde_fnc(2)%elasticity => kin_clelast
         
@@ -104,32 +107,39 @@ module kinpointer
         
         pde(2)%mass(1)%val => solmass
         
-        pde(2)%diffusion = .false.
-        
         pde(2)%flux => kinfluxcl
         
-        pde(2)%symmetric = .true.
+        pde(2)%pde_fnc(2)%reaction => kincl_lostfactor
+        
+        pde(2)%symmetric = .false.
         
         pde(2)%bc(101)%value_fnc => kinbor
+        pde(2)%bc(102)%value_fnc => kinbor
+        pde(2)%bc(103)%value_fnc => kinbor
+        pde(2)%bc(104)%value_fnc => kinbor
         
         !--- soil
         pde(3)%initcond =>  kinematixinit4cs
         
-        pde(3)%pde_fnc(2)%elasticity => kin_clelast
-        
-        pde(3)%pde_fnc(3)%elasticity => kin_elast
+        pde(3)%pde_fnc(3)%elasticity => kin_cselast
         
         pde(3)%pde_fnc(2)%reaction => kincl_source
         
         pde(3)%pde_fnc(3)%reaction => kincs_source
         
+        pde(3)%print_mass = .true.
+        
+        pde(3)%mass(1)%val => csmass
+        
         pde(3)%bc(101)%value_fnc => kinborcs
+        pde(3)%bc(102)%value_fnc => kinbor
+        pde(3)%bc(103)%value_fnc => kinbor
+        pde(3)%bc(104)%value_fnc => kinbor
         
       end if
         
         
-        
-!      pde(2)
+
       
     end subroutine kinwavelinker
     

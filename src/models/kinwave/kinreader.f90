@@ -36,6 +36,7 @@ module kinreader
       integer(kind=ikind), dimension(3) :: nd
       integer(kind=ikind), dimension(:), allocatable :: ndpmt
       integer :: file_nodes, ierr
+      real(kind=rkind) :: tmp, big
       
 
 
@@ -99,6 +100,16 @@ module kinreader
         end do
       end if
       
+      
+      tmp = 0
+      big = 0
+      do i=1, elements%kolik
+        tmp = tmp + sqrt(watershed_el(i)%sx**2 + watershed_el(i)%sy**2)
+        if (sqrt(watershed_el(i)%sx**2 + watershed_el(i)%sy**2) > big) big = sqrt(watershed_el(i)%sx**2 + watershed_el(i)%sy**2)
+      end do 
+      
+      print *, tmp/elements%kolik, big ; stop
+        
           
       
     end subroutine get_slopes
@@ -222,6 +233,7 @@ module kinreader
       real(kind=rkind), dimension(:), allocatable :: tmp_array
       real(kind=rkind), dimension(:), allocatable :: pts, distance
       character(len=7), dimension(2) :: infnames
+      character(len=4) :: usefile
       
       if (drutes_config%dimen == 2) then
         if (drutes_config%mesh_type == 1) then
@@ -269,6 +281,15 @@ module kinreader
 
         pde(3)%flux_name(1) = "na"  
         pde(3)%flux_name(2) = "na"
+        
+        allocate(pde(3)%mass_name(1,2))
+        
+        pde(3)%mass_name(1,1) = "solid_mass"
+        pde(3)%mass_name(1,2) = "solid mass [M]"
+      
+        pde(3)%problem_name(1) = "concentration_soil"
+        pde(3)%problem_name(2) = "Soil contamination"
+        
       end if
         
         
@@ -343,19 +364,33 @@ module kinreader
         end select
       end do
       
+      call fileread(icond_file, errmsg="set y/n for your initial condition input method  &
+                  (n=use separate file with node wise defined values (drutes.conf/kinwave/initcond, y=define it for each material &
+                  in drutes.conf/kinwave/kinwave.conf)", fileid=file_kinematix)
+                
 
-      
       if (with_solutes) then
         allocate(kinsols(n))
         deallocate(tmp_array)
-        allocate(tmp_array(5))
+        allocate(tmp_array(8))
         do i=1,n
           call fileread(tmp_array, fileid=file_kinematix, checklen=.true.)
           kinsols(i)%horb = tmp_array(1)
+          if (icond_file) then
+            if (tmp_array(2) /= -99) then
+              call file_error(file_kinematix, errmsg="on line above you speficified initial condition to be supplied node-wise in &
+                  drutes.conf/kinwave/initcond, if this is really what you want to do, then set of cs_init on material description &
+                  value -99")
+            end if
+          end if
+                  
           kinsols(i)%csinit = tmp_array(2)
           kinsols(i)%rhos = tmp_array(3)
           kinsols(i)%lambda_a = tmp_array(4)
           kinsols(i)%lambda_d = tmp_array(5)
+          kinsols(i)%lost_me = tmp_array(6)
+          kinsols(i)%ncs = tmp_array(7)
+          kinsols(i)%diff =  tmp_array(8)
         end do
       end if
             
@@ -441,6 +476,7 @@ module kinreader
       
       open(newunit=filerain, file="drutes.conf/kinwave/rain.in", status="old", action="read", iostat=ierr)
       
+   
       do i=1, ubound(raindata(1)%series,1)
         call fileread(tmp_array, filerain, checklen=.true.)
         do j=1, ubound(raindata,1)
