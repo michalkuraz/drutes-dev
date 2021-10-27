@@ -112,7 +112,6 @@ module postpro
         end if
         anime_run = anime_run + 1
       end if
-
       
       if (.not. anime) then
         do 
@@ -123,7 +122,7 @@ module postpro
           end if
         end do
       end if
-  
+
       i=1
       
       masscnt=0
@@ -132,13 +131,12 @@ module postpro
         if (allocated(pde(i)%mass_name) ) then
           masscnt = max(masscnt, 1_ikind*ubound(pde(i)%mass_name,1))
         end if
-        
+
         if (allocated(pde(i)%fluxes)) then
           fluxcnt = max(fluxcnt , 1_ikind*ubound(pde(i)%fluxes,1))
         end if
       end do
         
-      
       if (fluxcnt == 0) then
         no_files = masscnt + 3
       else
@@ -153,7 +151,7 @@ module postpro
         ids_obs = 0
         ids_anime = 0
       end if
-      
+
       
       if (anime) then
         ids => ids_anime

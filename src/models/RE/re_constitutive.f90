@@ -197,6 +197,72 @@ module RE_constitutive
     end function undergroundwater
     
     
+    function satdegree(pde_loc, layer, quadpnt, x) result(satdg)
+      use typy
+      use re_globals
+      use pde_objs
+      use core_tools
+      
+      class(pde_str), intent(in) :: pde_loc
+      integer(kind=ikind), intent(in) :: layer
+      !> pressure head
+      real(kind=rkind), intent(in), dimension(:), optional :: x
+      !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
+      type(integpnt_str), intent(in), optional :: quadpnt
+      real(kind=rkind) :: h
+      !> resulting saturation degree in [%]
+      real(kind=rkind) :: satdg
+      
+      type(integpnt_str) :: quadpnt_loc
+      
+      real(kind=rkind) :: a, n, m, theta
+      
+      if (present(quadpnt) .and. present(x)) then
+        print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
+        print *, "exited from re_constitutive::vangen"
+        ERROR stop
+      else if (.not. present(quadpnt) .and. .not. present(x)) then
+        print *, "ERROR: you have not specified either integ point or x value"
+        print *, "exited from re_constitutive::vangen"
+        ERROR stop
+      end if
+      
+      if (present(quadpnt)) then
+        quadpnt_loc=quadpnt
+        quadpnt_loc%preproc=.true.
+        h = pde_loc%getval(quadpnt_loc)
+      else
+        if (ubound(x,1) /=1) then
+          print *, "ERROR: van Genuchten function is a function of a single variable h"
+          print *, "       your input data has:", ubound(x,1), "variables"
+          print *, "exited from re_constitutive::vangen"
+          ERROR STOP
+        end if
+        h = x(1)
+      end if
+      
+      
+      
+      a = vgset(layer)%alpha
+      n = vgset(layer)%n
+      m = vgset(layer)%m
+      
+
+      if (h >=0.0_rkind) then
+        theta = vgset(layer)%Ths
+        RETURN
+      else
+        if (vgset(layer)%method == "vgfnc") then
+          satdg = 1/(1+(a*(abs(h)))**n)**m * 100.0
+        else
+          theta = logtablesearch(h,vgset(layer)%logh, vgset(layer)%theta, vgset(layer)%step4fnc)
+          satdg = theta/(vgset(layer)%Ths-vgset(layer)%Thr) * 100
+        end if
+      end if
+    
+    
+    end function satdegree
+    
     !> \brief Gardner relation \f[ \theta = f(pressure) \f]
     !!  \f[ \theta = \frac{1}{(1+(\alpha*h)^n)^m} \f]
     !!
