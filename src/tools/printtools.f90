@@ -22,6 +22,8 @@ module printtools
   public :: progressbar
   public :: time2finish
   public :: printtime
+  public :: print_logo
+  public :: print_logo_small
 
   contains
   !> if default output is stdout, then this procedure prints nice progress bar
@@ -182,6 +184,27 @@ module printtools
       write(unit=iunit, fmt=*) " "
       
   end subroutine print_logo
+  
+  subroutine print_logo_small(fileid)
+      use globals
+      
+      integer, intent(in), optional :: fileid
+      
+      integer :: iunit
+      
+      if (present(fileid)) then
+        iunit = fileid
+      else
+        iunit=terminal
+      end if
+
+      
+      
+      write(unit=iunit, fmt=*) "#              +-++-++-++-++-++-+                                         #"
+      write(unit=iunit, fmt=*) "#              |D||R||U||t||E||S|                                         #"
+      write(unit=iunit, fmt=*) "#              +-++-++-++-++-++-+                                         #"
+      
+  end subroutine print_logo_small
       
 
 end module printtools
