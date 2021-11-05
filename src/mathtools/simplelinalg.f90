@@ -590,11 +590,11 @@ module simplelinalg
 	!					itmax1=blockmat(2,2)%getn(), reps1=1e-14_rkind, itfin1=itcnt)
 	!      call diag_precond(a=blockmat(2,2), x=xvect(blindex(2,1):blindex(2,2)), mode=-1)
 
-		call printmtx(blockmat(2,2), name="matice")
-		allocate(blocal(blindex(2,2)-blindex(2,1)))
-		blocal = bvect(blindex(2,1):blindex(2,2))
-		call printmtx(blocal, name="bstrana")
-		stop
+!		call printmtx(blockmat(2,2), name="matice")
+!		allocate(blocal(blindex(2,2)-blindex(2,1)))
+!		blocal = bvect(blindex(2,1):blindex(2,2))
+!		call printmtx(blocal, name="bstrana")
+!		stop
 		call sparse_gem_pig(blockmat(2,2), bvect(blindex(2,1):blindex(2,2)), xvect(blindex(2,1):blindex(2,2)))
 	 end if
 	 
