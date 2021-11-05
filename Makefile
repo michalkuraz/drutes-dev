@@ -72,7 +72,7 @@ linalg.o: $(CORE_obj) src/mathtools/linalg.f90
 	$c -c src/mathtools/linalg.f90
 integral.o: $(CORE_obj) linalg.o src/mathtools/integral.f90
 	$c -c src/mathtools/integral.f90
-simplelinalg.o:  $(CORE_obj) $(PMAoo_obj) src/mathtools/simplelinalg.f90
+simplelinalg.o:  $(CORE_obj) $(PMAoo_obj) linalg.o src/mathtools/simplelinalg.f90
 	$c -c src/mathtools/simplelinalg.f90
 solver_interfaces.o:  $(CORE_obj) $(PMAoo_obj) readtools.o simplelinalg.o src/mathtools/solver_interfaces.f90
 	$c -c src/mathtools/solver_interfaces.f90
