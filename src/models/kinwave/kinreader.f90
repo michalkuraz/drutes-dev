@@ -108,7 +108,6 @@ module kinreader
         if (sqrt(watershed_el(i)%sx**2 + watershed_el(i)%sy**2) > big) big = sqrt(watershed_el(i)%sx**2 + watershed_el(i)%sy**2)
       end do 
       
-      print *, tmp/elements%kolik, big ; stop
         
           
       
