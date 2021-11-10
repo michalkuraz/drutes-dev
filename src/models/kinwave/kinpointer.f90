@@ -51,23 +51,24 @@ module kinpointer
       use pde_objs
       use debug_tools
       
+      integer(kind=ikind) :: nobcs, i
       
       call kininit()
       
       pde(1)%pde_fnc(1)%convection => kinconvect
       
-      allocate(pde(1)%bc(101:104))
+      nobcs = maxval(nodes%edge)
       
-      pde(1)%bc(101)%value_fnc => kinbor
-      pde(1)%bc(102)%value_fnc => kinbor
-      pde(1)%bc(103)%value_fnc => kinbor
-      pde(1)%bc(104)%value_fnc => kinbor
+      allocate(pde(1)%bc(101:nobcs))
+      
+      do i=101, nobcs
+		  pde(1)%bc(i)%value_fnc => kinborO
+	  end do
       
 !       pde_loc%bc(102)%value_fnc => kinbor
 
       if (drutes_config%dimen == 1) then
         nodes%edge(ubound(nodes%data)) = 101
-        
         nodes%edge(1) = 0
       end if
     
@@ -113,10 +114,10 @@ module kinpointer
         
         pde(2)%symmetric = .false.
         
-        pde(2)%bc(101)%value_fnc => kinbor
-        pde(2)%bc(102)%value_fnc => kinbor
-        pde(2)%bc(103)%value_fnc => kinbor
-        pde(2)%bc(104)%value_fnc => kinbor
+      	do i=101, nobcs
+		  pde(2)%bc(i)%value_fnc => kinbor
+	  	end do
+      
         
         !--- soil
         pde(3)%initcond =>  kinematixinit4cs
@@ -131,10 +132,9 @@ module kinpointer
         
         pde(3)%mass(1)%val => csmass
         
-        pde(3)%bc(101)%value_fnc => kinborcs
-        pde(3)%bc(102)%value_fnc => kinbor
-        pde(3)%bc(103)%value_fnc => kinbor
-        pde(3)%bc(104)%value_fnc => kinbor
+      	do i=101, nobcs
+		  pde(3)%bc(i)%value_fnc => kinborO
+	  	end do
         
       end if
         
