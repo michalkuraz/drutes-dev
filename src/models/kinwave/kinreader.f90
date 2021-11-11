@@ -485,7 +485,6 @@ module kinreader
       end do
       
 
-      
 
     end subroutine kininit
 

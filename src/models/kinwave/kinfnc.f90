@@ -104,12 +104,12 @@ module kinfnc
       if (present(flux)) then
         select case(drutes_config%dimen)
           case(1)
-            flux(1) = -1.49_rkind * sign(1.0_rkind, watershed_el(el)%sx) * & 
+            flux(1) = -1.0_rkind * sign(1.0_rkind, watershed_el(el)%sx) * & 
                             sqrt(abs( watershed_el(el)%sx))/manning(layer)*h**m
           case(2)
-            flux(1) = -1.49_rkind * sign(1.0_rkind, watershed_el(el)%sx) * & 
+            flux(1) = -1.0_rkind * sign(1.0_rkind, watershed_el(el)%sx) * & 
                             sqrt(abs( watershed_el(el)%sx))/manning(layer)*h**m
-            flux(2) = -1.49_rkind * sign(1.0_rkind, watershed_el(el)%sy) * & 
+            flux(2) = -1.0_rkind * sign(1.0_rkind, watershed_el(el)%sy) * & 
                             sqrt(abs( watershed_el(el)%sx))/manning(layer)*h**m
         end select
       end if
@@ -119,12 +119,12 @@ module kinfnc
       if (present(flux_length)) then
         select case(drutes_config%dimen)
           case(1)     
-            flux_length = 1.49_rkind * sign(1.0_rkind, watershed_el(el)%sx) * & 
+            flux_length = 1.0_rkind * sign(1.0_rkind, watershed_el(el)%sx) * & 
                             sqrt(abs( watershed_el(el)%sx))/manning(layer)*h**m
           case(2)
-            flux_length = norm2((/1.49_rkind * sign(1.0_rkind, watershed_el(el)%sx) * & 
+            flux_length = norm2((/1.0_rkind * sign(1.0_rkind, watershed_el(el)%sx) * & 
                             sqrt(abs( watershed_el(el)%sx))/manning(layer)*h**m, &
-                            1.49_rkind * sign(1.0_rkind, watershed_el(el)%sy) * & 
+                            1.0_rkind * sign(1.0_rkind, watershed_el(el)%sy) * & 
                             sqrt(abs( watershed_el(el)%sy))/manning(layer)*h**m/))
         end select          
        end if
@@ -192,12 +192,12 @@ module kinfnc
       if (present(flux)) then
         select case(drutes_config%dimen)
           case(1)
-            flux(1) = -1.49_rkind * cl * sign(1.0_rkind, watershed_el(el)%sx) * & 
+            flux(1) = -1.0_rkind * cl * sign(1.0_rkind, watershed_el(el)%sx) * & 
                             sqrt(abs( watershed_el(el)%sx))/manning(layer)*h**m
           case(2)
-            flux(1) = -1.49_rkind * cl * sign(1.0_rkind, watershed_el(el)%sx) * & 
+            flux(1) = -1.0_rkind * cl * sign(1.0_rkind, watershed_el(el)%sx) * & 
                             sqrt(abs( watershed_el(el)%sx))/manning(layer)*h**m
-            flux(2) = -1.49_rkind * cl * sign(1.0_rkind, watershed_el(el)%sy) * & 
+            flux(2) = -1.0_rkind * cl * sign(1.0_rkind, watershed_el(el)%sy) * & 
                             sqrt(abs( watershed_el(el)%sx))/manning(layer)*h**m
         end select
       end if
@@ -207,12 +207,12 @@ module kinfnc
       if (present(flux_length)) then
         select case(drutes_config%dimen)
           case(1)     
-            flux_length = 1.49_rkind * cl * sign(1.0_rkind, watershed_el(el)%sx) * & 
+            flux_length = 1.0_rkind * cl * sign(1.0_rkind, watershed_el(el)%sx) * & 
                             sqrt(abs( watershed_el(el)%sx))/manning(layer)*h**m
           case(2)
-            flux_length = norm2((/cl*1.49_rkind * sign(1.0_rkind, watershed_el(el)%sx) * & 
+            flux_length = norm2((/cl*1.0_rkind * sign(1.0_rkind, watershed_el(el)%sx) * & 
                             sqrt(abs( watershed_el(el)%sx))/manning(layer)*h**m, &
-                            cl*1.49_rkind * sign(1.0_rkind, watershed_el(el)%sy) * & 
+                            cl*1.0_rkind * sign(1.0_rkind, watershed_el(el)%sy) * & 
                             sqrt(abs( watershed_el(el)%sy))/manning(layer)*h**m/))
         end select          
        end if
@@ -316,31 +316,14 @@ module kinfnc
         
         
         
-        outflux = -1.49_rkind * sign(1.0_rkind, slopes(1:D)) * & 
+        outflux = -1* sign(1.0_rkind, slopes(1:D)) * & 
                             sqrt(abs( slopes(1:D)))/manning(layer)*m*hsurf**(m-1)
                             
         if (present(vector_out)) vector_out(1:D) = outflux
                             
         if (present(scalar)) scalar = norm2(outflux)
   
-!         select case (drutes_config%dimen)
-!         
-!           case(1)
-!             vector_out(1) = -1.49_rkind * sign(1.0_rkind, watershed_el(el)%sx) * & 
-!                             sqrt(abs( watershed_el(el)%sx))/manning(layer)*m*hsurf**(m-1)
-!         
-!           case(2)
-!         
-!             vector_out(1) = -1.49_rkind * sign(1.0_rkind, watershed_el(el)%sx) * & 
-!                             sqrt(abs( watershed_el(el)%sx))/manning(layer)*m*hsurf**(m-1)
-!             
-!             vector_out(2) = -1.49_rkind * sign(1.0_rkind, watershed_el(el)%sy) * & 
-!                             sqrt(abs( watershed_el(el)%sy))/manning(layer)*m*hsurf**(m-1)
-!                             
-!             
-! 
-!             
-!         end select
+
         
     end subroutine kinconvect
     
@@ -436,11 +419,10 @@ module kinfnc
           end select
         end if
         
-        outflux = (-1.49_rkind) * sign(1.0_rkind, slopes(1:D)) * & 
+        outflux = (1.0_rkind) * sign(1.0_rkind, slopes(1:D)) * & 
                             sqrt(abs( slopes(1:D)))/manning(layer)*hsurf**m
                             
-!        call printmtx(outflux) !; call wait()
-                            
+
         if (present(vector_out)) vector_out(1:D) = outflux
                             
         if (present(scalar)) scalar = norm2(outflux)
