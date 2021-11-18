@@ -72,7 +72,7 @@ linalg.o: $(CORE_obj) src/mathtools/linalg.f90
 	$c -c src/mathtools/linalg.f90
 integral.o: $(CORE_obj) linalg.o src/mathtools/integral.f90
 	$c -c src/mathtools/integral.f90
-simplelinalg.o:  $(CORE_obj) $(PMAoo_obj) linalg.o src/mathtools/simplelinalg.f90
+simplelinalg.o:  $(CORE_obj) $(PMAoo_obj) re_globals.o linalg.o src/mathtools/simplelinalg.f90
 	$c -c src/mathtools/simplelinalg.f90
 solver_interfaces.o:  $(CORE_obj) $(PMAoo_obj) readtools.o simplelinalg.o src/mathtools/solver_interfaces.f90
 	$c -c src/mathtools/solver_interfaces.f90
@@ -99,7 +99,9 @@ solvers.o: typy.o mtx.o src/pma++/solvers.f90
 	$c -c src/pma++/solvers.f90
 matmod.o: typy.o mtx.o src/pma++/matmod.f90
 	$c -c  src/pma++/matmod.f90
-reorder.o: typy.o mtx.o solvers.o src/pma++/reorder.f90
+datasetup.o: typy.o mtx.o src/pma++/datasetup.f90
+	$c -c src/pma++/datasetup.f90
+reorder.o: typy.o mtx.o datasetup.o solvers.o src/pma++/reorder.f90
 	$c -c  src/pma++/reorder.f90
 #-------end PMA++_obj---------------------------
 
@@ -123,7 +125,7 @@ objfnc.o: $(CORE_obj) readtools.o src/tools/objfnc.f90
 #-------end TOOLS_obj------------------------------------
 
 #-------begin RE_obj--------------------------------
-re_globals.o: $(CORE_obj) $(TOOLS_obj) src/models/RE/re_globals.f90
+re_globals.o: $(CORE_obj) src/models/RE/re_globals.f90
 	$c -c  src/models/RE/re_globals.f90
 re_constitutive.o: $(CORE_obj) $(TOOLS_obj) re_globals.o src/models/RE/re_constitutive.f90
 	$c -c src/models/RE/re_constitutive.f90

@@ -229,71 +229,58 @@ module re_reader
       if (roots(1)%use) then
         call read_roots()
       end if
-      
-      if (.not. www) then
-        do i=1, ubound(vgset,1)
-          call comment(file_waterm)
-          read(unit=file_waterm, fmt= *, iostat=ierr) vgset(i)%initcond, vgset(i)%icondtype, &
-                    yn, vgset(i)%rcza_set%val
-          select case(yn)
-            case("y")
-              vgset(i)%rcza_set%use = .true.
-            case("n")
-              vgset(i)%rcza_set%use = .false.
-            case default
-              write(msg, fmt=*) "type [y/n] value for using the retention curve zone approach at layer:", i
-              call file_error(file_waterm, msg)
-          end select
-          select case(vgset(i)%icondtype)
-            case("H_tot", "hpres", "theta","input")
-              CONTINUE
-            case default
-              print *, "you have specified wrong initial condition type keyword"
-              print *, "the allowed options are:"
-              print *, "                        H_tot = total hydraulic head"
-              print *, "                        hpres = pressure head"
-              print *, "                        theta = water content"
-              print *, "                        input = read from input file (drutes output file)"
-              call file_error(file_waterm)
-          end select
-          if (ierr /= 0) then
-            print *, "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-            print *, "HINT: check number of line records of initial conditions in water.conf/matrix.conf!"
-            print *, "----------------------------------------"
+ 
+      do i=1, ubound(vgset,1)
+        call comment(file_waterm)
+        read(unit=file_waterm, fmt= *, iostat=ierr) vgset(i)%initcond, vgset(i)%icondtype, &
+                  yn, vgset(i)%rcza_set%val
+        select case(yn)
+          case("y")
+            vgset(i)%rcza_set%use = .true.
+          case("n")
+            vgset(i)%rcza_set%use = .false.
+          case default
+            write(msg, fmt=*) "type [y/n] value for using the retention curve zone approach at layer:", i
+            call file_error(file_waterm, msg)
+        end select
+        select case(cut(vgset(i)%icondtype))
+          case("H_tot", "hpres", "theta")
+            CONTINUE
+          case("file")
+            if (i /= 1) then
+              call file_error(file_waterm, errmsg="if you are using input file for RE initial condition speciofy this value &
+                                            in a first line for initial conditions only, &
+                                            -----no other lines are allowed!-----")
+            end if                  
+            EXIT
+          case default
+            print *, "you have specified wrong initial condition type keyword"
+            print *, "the allowed options are:"
+            print *, "                        H_tot = total hydraulic head"
+            print *, "                        hpres = pressure head"
+            print *, "                        theta = water content"
+            print *, "                        file = read from input file (drutes output file)"
             call file_error(file_waterm)
-          end if
-        end do
-            else
-        do i=1, ubound(vgset,1)
-          call comment(file_waterm)
-          read(unit=file_waterm, fmt= *, iostat=ierr) vgset(i)%initcond, vgset(i)%icondtype
-                vgset(i)%rcza_set%use = .false.
-          select case(vgset(i)%icondtype)
-            case("H_tot", "hpres", "theta","input")
-              CONTINUE
-            case default
-              print *, "you have specified wrong initial condition type keyword"
-              print *, "the allowed options are:"
-              print *, "                        H_tot = total hydraulic head"
-              print *, "                        hpres = pressure head"
-              print *, "                        theta = water content"
-              print *, "                        input = read from input file (drutes output file)"
-              call file_error(file_waterm)
-          end select
-          if (ierr /= 0) then
-            print *, "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-            print *, "HINT: check number of line records of initial conditions in water.conf/matrix.conf!"
-            print *, "----------------------------------------"
-            call file_error(file_waterm)
-          end if
-        end do
-      end if
+        end select
+        if (ierr /= 0) then
+          print *, "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+          print *, "HINT: check number of line records of initial conditions in water.conf/matrix.conf!"
+          print *, "----------------------------------------"
+          call file_error(file_waterm)
+        end if
+      end do
 
+      
+      if (cut(vgset(1)%icondtype) == "file") then
+        msg = "HINT: your input for intial condition is set for file, then only a single line record is allowed for the intial & 
+              condition setup. Don't try to enter more values for different materials."
+      else
+        msg = "at least one boundary must be specified (and no negative values here)"
+      end if
    
 	
 	
-      call fileread(n, file_waterm, ranges=(/1_ikind, huge(1_ikind)/), &
-      errmsg="at least one boundary must be specified (and no negative values here)")
+      call fileread(n, file_waterm, ranges=(/1_ikind, huge(1_ikind)/), errmsg=msg)
       
 
       call readbcvals(unitW=file_waterm, struct=pde_loc%bc, dimen=n, &

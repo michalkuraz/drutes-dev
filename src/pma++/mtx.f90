@@ -236,6 +236,7 @@ module mtx
 
         ! dvoufazove
         ! spocitat kolik jich bude
+        !print *, "GetRowMatrix: zacatek"
         nelem = 0
         if (present(mask)) then
             do j = 1,a%m
@@ -288,6 +289,7 @@ module mtx
                 end if
             end do
         end if
+        !print *," GetRowMatrix : konec"
     end subroutine getrowmatrix
 
     !> ziska sloupec z matice  - kandidat reimplementace v potomkovi
@@ -571,7 +573,9 @@ module mtx
 
         call A%init(B%getn(),B%getm())
         do i=1,B%getn()
+            !print *,"copymatrix: i=",i
             call B%getrow(i,v,ii,nelem)
+            !print *, "copymatrix : po get row"
             do j=1,nelem
                 call A%set(v(j),i,ii(j))
             end do
@@ -998,7 +1002,7 @@ module mtx
             v3 = v3/sqrt(w1)
             lmin1 = lmin
             lmin = lmax-w/w1
-            if ( cnt == 100) then
+            if ( cnt == 1000) then
                 print *, it, lmin,lmax, rc
                 cnt  = 0
             end if
@@ -1014,7 +1018,7 @@ module mtx
                     rc = rc + 1
                 end if
             end if
-            if (rc==20000) exit
+            if (rc==20000+10*A%getn()*A%getn()) exit
         end do
     end subroutine estimeigvalues
 

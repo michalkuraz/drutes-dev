@@ -2094,16 +2094,22 @@ module RE_constitutive
         use pde_objs
         use re_globals
         use geom_tools
+        use read_inputs
         
         class(pde_str), intent(in out) :: pde_loc
         integer(kind=ikind) :: i, j, k,l, m, layer, D
         real(kind=rkind) :: value
         
         D = drutes_config%dimen
-        select case (vgset(1_ikind)%icondtype)
-          case("input")
-            call map1d2dJ(pde_loc,"drutes.conf/water.conf/hini.in", correct_h = .false.)
-        end select
+        if (cut(vgset(1_ikind)%icondtype) == "input") then
+          call map1d2dJ(pde_loc,"drutes.conf/water.conf/hini.in", correct_h = .false.)
+          RETURN  
+        end if
+        
+        if (cut(vgset(1_ikind)%icondtype) == "input") then
+          call read_icond(pde_loc, "drutes.conf/water.conf/RE_init.in")
+          RETURN  
+        end if
         
         do i=1, elements%kolik
           layer = elements%material(i)

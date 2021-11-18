@@ -18,7 +18,7 @@ module reorder
 
     public :: CM
     public :: RCM
-!    public :: testreord
+!     public :: testreord
 
     contains
     subroutine  CM(A,perm)
@@ -32,16 +32,16 @@ module reorder
         allocate(mapa(1:A%getn()))
         mapa = .true.
         call levset%order(A,first,mapa)
-!        print *, levset%nlev
+        print *, levset%nlev
         last = levset%levlist(levset%levstart(levset%nlev+1)-1)
         mapa = .true.
         call levset%order(A,last,mapa)
-!        print *, levset%nlev
+        print *, levset%nlev
         first = levset%levlist(levset%levstart(levset%nlev+1)-1)
 
         ! order by levels
         mapa = .true.
-!        print *, levset%nlev
+        print *, levset%nlev
         call levset%order(A,first,mapa)
         if ( allocated(perm)) deallocate(perm)
         allocate(perm(1:A%getn()))
@@ -112,66 +112,71 @@ module reorder
         do
             call ls%addlevel(A,mapa)
             nord = ls%levstart(ls%nlev+1) - 1
-!            print *, "ocislovano = ",nord
+            print *, "ocislovano = ",nord
             if ( nord == A%getn()) exit
         end do
 
     end subroutine order
 
-!    subroutine testreord
-!        use sparsematrix
-!        use datasetup
-!        use solvers
+  !  subroutine testreord
+  !      use sparsematrix
+  !      use datasetup
+  !      use solvers
+  !      use matplot
+  !      use zobraz
 
-!        type(smtx) :: A, LDU1, LDU2, B1, B2, LDU3, LDU4
-!        integer(ikind), dimension(:),allocatable :: perm
-!        integer(ikind), dimension(:),allocatable :: perm1
-!        real(rkind), dimension(:), allocatable :: x,xr,b, bb1, bb2
-!        type(tcount) :: inf1,inf2
-!        integer(ikind) :: i
-!        print *, "test preusporadani"
-!        call Laplace2D(A,15_ikind,15_ikind)
-!        allocate(perm(1:A%getn()))
-!        call A%spy
-!        call CM(A,perm)
-!        print *, perm
-!        call RCM(A,perm1)
-!        print *, perm1
-!        call copyperm(source=A, dest=B1,permi=perm, permj=perm)
-!        call B1%spy
-!        call LDU(B1,LDU3,inf1,0)
-!        call LDU3%spy
-!        call copyperm(source=A, dest=B2,permi=perm1, permj=perm1)
-!        call B2%spy
-!        call LDU(B2,LDU4,inf2,0)
-!        call LDU4%spy
-!        ! ted reseni soustavy
-!        allocate(x(1:a%getn()));
-!        allocate(xr(1:a%getn()));
-!        allocate(b(1:a%getn()));
-!        allocate(bb1(1:a%getn()));
-!        allocate(bb2(1:a%getn()));
-!        x = 0
-!        !> construct of test solution
-!        do i=1,A%getn()
-!            xr(i) = i
-!        end do
-!        !> compute test rhs
-!        b = A%mul(xr)
-!        !> permute rhs according to founded  permutation
-!        bb1 = b(perm)
-!        !> back substitution
-!        call LDUback(LDU3,bb1,x)
-!        !> back permutation of solution
-!        x(perm) = x
-!        print *, bb1
-!        print *, ""
-!        print *, x
-!!        call LDU(A,LDU1,inf1,6,perm1=perm,ilev=100)
-! !       call LDU(A,LDU2,inf2,6,perm1=perm1,ilev=100)
-!        print *, inf1
-!        print *, inf2
-!    end subroutine testreord
+   !     type(smtx) :: A, LDU1, LDU2, B1, B2, LDU3, LDU4
+    !    integer(ikind), dimension(:),allocatable :: perm
+    !    integer(ikind), dimension(:),allocatable :: perm1
+    !    real(rkind), dimension(:), allocatable :: x,xr,b, bb1, bb2
+    !    type(tcount) :: inf1,inf2
+    !    integer(ikind) :: i
+    !    print *, "test preusporadani"
+    !    call Laplace2D(A,15_ikind,15_ikind)
+    !    call A%read("C:\Users\pm1a\Dropbox\OneDrive\wrk\matice\mkuraz\prezentace\matice\fine.mat")
+    !    allocate(perm(1:A%getn()))
+        !call A%spy
+     !   call mplot(A)
+     !   call CM(A,perm)
+     !   call mplot(A,15.0_rpl,15.0_rpl,Caption="Prvni pokus")
+     !   print *, perm
+!         call RCM(A,perm1)
+!         print *, perm1
+!         call copyperm(source=A, dest=B1,permi=perm, permj=perm)
+!         !call B1%spy
+!         call LDU(B1,LDU3,inf1,0)
+!         !call LDU3%spy
+!         call copyperm(source=A, dest=B2,permi=perm1, permj=perm1)
+!         !call B2%spy
+!         call LDU(B2,LDU4,inf2,0)
+!         !call LDU4%spy
+!         ! ted reseni soustavy
+!         allocate(x(1:a%getn()));
+!         allocate(xr(1:a%getn()));
+!         allocate(b(1:a%getn()));
+!         allocate(bb1(1:a%getn()));
+!         allocate(bb2(1:a%getn()));
+!         x = 0
+!         !> construct of test solution
+!         do i=1,A%getn()
+!             xr(i) = i
+!         end do
+!         !> compute test rhs
+!         b = A%mul(xr)
+!         !> permute rhs according to founded  permutation
+!         bb1 = b(perm)
+!         !> back substitution
+!         call LDUback(LDU3,bb1,x)
+!         !> back permutation of solution
+!         x(perm) = x
+!         print *, bb1
+!         print *, ""
+!         print *, x
+! !        call LDU(A,LDU1,inf1,6,perm1=perm,ilev=100)
+!  !       call LDU(A,LDU2,inf2,6,perm1=perm1,ilev=100)
+!         print *, inf1
+!         print *, inf2
+!     end subroutine testreord
 
 
 

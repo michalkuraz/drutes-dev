@@ -365,8 +365,11 @@ module solver_interfaces
       
 
       
-      call block_jacobi4ADE(A, x, b, blindex, iters, reps1, itmax, .true.)
+      call block_jacobi4ADE(A, x, b, blindex, iters, reps1, itmax, .true., repsfin1)
       if (present(itfin1)) itfin1 = iters
+      write(unit=file_itcg, fmt = *) time, itfin1, repsfin1
+      call flush(file_itcg)
+
     
       
     end subroutine LDUPCG_face
@@ -377,6 +380,7 @@ module solver_interfaces
       use typy
       use sparsematrix
       use solvers
+      use globals
       implicit none
       !> matice soustavy\n
       !! musi poskytovat getn, getm, mul (nasobeni vektorem)
@@ -424,7 +428,9 @@ module solver_interfaces
       end if
 
 
-      call CG(A=A, b=b,x=x,ilev1=ilevel,itmax1=itmax1,reps1=reps1)
+      call CG(A=A, b=b,x=x,ilev1=ilevel,itmax1=itmax1,reps1=reps1, itfin1=itfin1, repsfin1=repsfin1)
+      write(unit=file_itcg, fmt = *) time, itfin1, repsfin1
+      call flush(file_itcg)
 
 
     end subroutine CG_face

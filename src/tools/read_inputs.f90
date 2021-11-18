@@ -23,10 +23,15 @@ module read_inputs
   public :: read_1dmesh_int, read_2dmesh_int, read_2dmesh_t3d, read_2dmesh_gmsh
   public :: read_scilab
   public :: read_ArcGIS
+  public :: read_icond
 
 
 
   contains
+  
+    subroutine read_icond(pde, filename)
+    
+    end subroutine read_iconc
 
     subroutine read_global()
       use globals
