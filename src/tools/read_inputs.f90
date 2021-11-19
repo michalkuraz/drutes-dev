@@ -24,14 +24,48 @@ module read_inputs
   public :: read_scilab
   public :: read_ArcGIS
   public :: read_icond
-
-
+  
 
   contains
   
-    subroutine read_icond(pde, filename)
+    subroutine read_icond(pde_loc, filename)
+      use typy
+      use pde_objs
+      use core_tools
+      use global_objs
+      use readtools
+      
+      class(pde_str), intent(in out) :: pde_loc
+      character(len=*), intent(in) :: filename
+      real(kind=rkind), dimension(:), allocatable :: line
+      
+      integer :: fileid, ierr
+      character(len=4096) :: msg
+      integer(kind=ikind) :: i,j
+      
+      open(newunit=fileid, file=cut(filename), status="old", action="read", iostat=ierr)
+            
+      if (ierr /= 0) then
+        write(msg,*) "Unable to open file:", filename, new_line("a"), "File does not EXIST!!!"
+        call file_error(fileid, msg)
+      end if
+      
+      allocate(line(drutes_config%dimen+2))
+      
+      do i=1, nodes%kolik 
+        call fileread(line, fileid, checklen=.true.)
+        do j=1, drutes_config%dimen
+          if (line(j+1) /= nodes%data(i,j)) then
+            call file_error(fileid, "Your file with initial data doesn't match with your mesh file, exiting...")
+          end if
+        end do
+        
+        pde_loc%solution(i) = line(2+drutes_config%dimen)
+      end do
+      
     
-    end subroutine read_iconc
+    end subroutine read_icond
+    
 
     subroutine read_global()
       use globals

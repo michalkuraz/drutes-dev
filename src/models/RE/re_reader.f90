@@ -246,12 +246,16 @@ module re_reader
         select case(cut(vgset(i)%icondtype))
           case("H_tot", "hpres", "theta")
             CONTINUE
-          case("file")
+          case("ifile")
             if (i /= 1) then
-              call file_error(file_waterm, errmsg="if you are using input file for RE initial condition speciofy this value &
-                                            in a first line for initial conditions only, &
-                                            -----no other lines are allowed!-----")
-            end if                  
+              write(msg, *) "If you are using input file for RE initial condition specify this value in a first line for initial", &
+                             " conditions only. ", new_line("a"), "-----no other lines are allowed!-----", new_line("a"), &
+                             "HINT: your input for initial condition is set for file, then only a single line record is allowed & 
+                              for the initial condition setup. Don't try to enter more values for different materials."
+                                            
+              call file_error(file_waterm, errmsg=msg)
+            end if     
+            if (ubound(vgset,1) > 1)  vgset(2:)%rcza_set%use = vgset(1)%rcza_set%use
             EXIT
           case default
             print *, "you have specified wrong initial condition type keyword"
@@ -260,7 +264,9 @@ module re_reader
             print *, "                        hpres = pressure head"
             print *, "                        theta = water content"
             print *, "                        file = read from input file (drutes output file)"
+
             call file_error(file_waterm)
+            
         end select
         if (ierr /= 0) then
           print *, "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
@@ -271,8 +277,8 @@ module re_reader
       end do
 
       
-      if (cut(vgset(1)%icondtype) == "file") then
-        msg = "HINT: your input for intial condition is set for file, then only a single line record is allowed for the intial & 
+      if (cut(vgset(1)%icondtype) == "ifile") then
+        msg = "HINT: your input for initial condition is set for file, then only a single line record is allowed for the initial & 
               condition setup. Don't try to enter more values for different materials."
       else
         msg = "at least one boundary must be specified (and no negative values here)"

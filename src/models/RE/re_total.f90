@@ -961,16 +961,27 @@ module re_total
       use re_globals
       use re_constitutive
       use geom_tools
+      use core_tools
+      use read_inputs
 
       
       class(pde_str), intent(in out) :: pde_loc
       integer(kind=ikind) :: i, j, k,l, m, layer, D
       real(kind=rkind) :: value
-              D = drutes_config%dimen
-      select case (vgset(1_ikind)%icondtype)
-        case("input")
-          call map1d2dJ(pde_loc,"drutes.conf/water.conf/hini.in", correct_h = .true.)
-      end select
+
+
+      D = drutes_config%dimen
+      if (cut(vgset(1_ikind)%icondtype) == "input") then
+        call map1d2dJ(pde_loc,"drutes.conf/water.conf/hini.in", correct_h = .false.)
+        RETURN  
+      end if
+      
+      if (cut(vgset(1_ikind)%icondtype) == "ifile") then
+        call read_icond(pde_loc, "drutes.conf/water.conf/RE_init.in")
+        stop
+        RETURN  
+      end if
+        
       
       D = drutes_config%dimen
       do i=1, elements%kolik
