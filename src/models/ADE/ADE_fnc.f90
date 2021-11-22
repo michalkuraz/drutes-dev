@@ -574,7 +574,7 @@ module ADE_fnc
       end select
       
       select case(adepar(layer)%icondtype)
-        case("ca")
+        case("ca", "if")
           cmax = 1.0_rkind
          case("cr")
           cmax = adepar(layer)%cmax
@@ -599,11 +599,19 @@ module ADE_fnc
       use global_objs
       use pde_objs
       use ADE_globals
+      use core_tools
+      use read_inputs
 
       
       class(pde_str), intent(in out) :: pde_loc
       integer(kind=ikind) :: i, j, k,l, m, layer, D
       real(kind=rkind) :: value
+      
+      
+      if (cut(adepar(1)%icondtype) == "if") then
+        call read_icond(pde_loc, "drutes.conf/ADE/ADE_init.in")
+        RETURN  
+      end if
       
    
       D = drutes_config%dimen

@@ -454,6 +454,8 @@ module readtools
     
     subroutine read_char(ch, fileid, errmsg, options, noexit)
       use debug_tools
+      use core_tools
+      
       character(len=*), intent(out) :: ch
       integer, intent(in) :: fileid
       character(len=*), intent(in), optional :: errmsg
@@ -471,7 +473,7 @@ module readtools
       if (present(options)) then
         ok = .false.
         do i=1, ubound(options, 1)
-          if (adjustl(trim(ch)) == adjustl(trim(options(i)))) then
+          if (cut(ch) == cut(options(i))) then
             ok = .true.
             EXIT
           end if
@@ -496,7 +498,7 @@ module readtools
           print *, "the value in your input file was: ", trim(ch)
           print *, "however the allowed options for this field are:"
           do i=1, ubound(options,1)
-            print *, "-  ", adjustl(trim(options(i)))
+            print *, "-  ", cut(options(i))
           end do
         end if
         if (present(errmsg)) then

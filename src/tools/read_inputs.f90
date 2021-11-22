@@ -34,6 +34,7 @@ module read_inputs
       use core_tools
       use global_objs
       use readtools
+      use debug_tools
       
       class(pde_str), intent(in out) :: pde_loc
       character(len=*), intent(in) :: filename
@@ -55,7 +56,7 @@ module read_inputs
       do i=1, nodes%kolik 
         call fileread(line, fileid, checklen=.true.)
         do j=1, drutes_config%dimen
-          if (line(j+1) /= nodes%data(i,j)) then
+          if (abs(line(j+1) - nodes%data(i,j)) > 100*epsilon(line(1)) ) then
             call file_error(fileid, "Your file with initial data doesn't match with your mesh file, exiting...")
           end if
         end do

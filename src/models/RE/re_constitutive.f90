@@ -2107,7 +2107,8 @@ module RE_constitutive
           RETURN  
         end if
         
-        if (cut(vgset(1_ikind)%icondtype) == "file") then
+        
+        if (cut(vgset(1_ikind)%icondtype) == "ifile") then
           call read_icond(pde_loc, "drutes.conf/water.conf/RE_init.in")
           RETURN  
         end if

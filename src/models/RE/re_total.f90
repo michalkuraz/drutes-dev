@@ -978,7 +978,9 @@ module re_total
       
       if (cut(vgset(1_ikind)%icondtype) == "ifile") then
         call read_icond(pde_loc, "drutes.conf/water.conf/RE_init.in")
-        stop
+        do i=1, nodes%kolik
+          pde_loc%solution(i) = pde_loc%solution(i) + nodes%data(i,D)
+        end do
         RETURN  
       end if
         

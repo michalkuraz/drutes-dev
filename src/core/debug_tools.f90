@@ -98,8 +98,8 @@ module debug_tools
         if (quadpnt%extended) then
           write(unit=filloc, fmt=*) "node from extended subdomain (see subcycling man)"
         else
-	  write(unit=filloc, fmt=*) "node inside the subdomain"
-	end if
+        write(unit=filloc, fmt=*) "node inside the subdomain"
+        end if
       else
         write(unit=filloc, fmt=*) "using global data"
       end if
@@ -135,9 +135,9 @@ module debug_tools
       logical :: op
     
       if (present(name)) then
-  		print *, "cdswav"
+        print *, "cdswav"
         call a%write(name)
-		return
+        return
       end if
       
 
