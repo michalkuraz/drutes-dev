@@ -199,7 +199,7 @@ module femmat
        call pde_common%time_integ(i)
        stiff_mat = stiff_mat + cap_mat  
        
-!       call printmtx(stiff_mat) !; call wait()
+!       call printmtx(stiff_mat) ; call wait()
        call in2global(i,spmatrix, pde_common%bvect)
 
       end do

@@ -54,7 +54,8 @@ module ADE_pointers
       if (.not. use_richards) then
          allocate(tmp_array(2))
          do i=1, maxval(elements%material)
-           call fileread(tmp_array, adeconf, errmsg="Convection has to be defined for each layer.", checklen=.true.)
+           call fileread(tmp_array, adeconf, errmsg="Convection and water content has to be defined for each layer.", &
+                        checklen=.true.)
            adepar(i)%convection = tmp_array(1)
            adepar(i)%water_cont = tmp_array(2)
          end do

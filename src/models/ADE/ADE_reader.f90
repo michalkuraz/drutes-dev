@@ -69,7 +69,7 @@ module ADE_reader
      
       
       write(msg, fmt=*) "ERROR!! incorrect number of materials in drutes.conf/ADE/contaminant.conf  &
-        the mesh defines", maxval(elements%material)  , "materials, and your input file defines", n, "material(s)."
+        the mesh defines", maxval(elements%material)  , "materials, and your input file defines different number of material(s)."
 	
      
       call fileread(n, file_contaminant, ranges=(/1_ikind*maxval(elements%material),1_ikind*maxval(elements%material)/),&
