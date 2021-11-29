@@ -14,7 +14,9 @@ module freeze_pointers
       select case (drutes_config%name)
         case ("freeze")
             processes = 2
-        case ("LTNE")
+         case ("LTNE")
+            processes = 3
+         case ("ICENE")
             processes = 3
         case default
           print *, "procedure called when unexpected problem name"
@@ -45,7 +47,6 @@ module freeze_pointers
       use heat_reader
       use heat_fnc
       use debug_tools
-      use freeze_linalg
       
       integer(kind=ikind) :: i
       
@@ -53,6 +54,8 @@ module freeze_pointers
         case ("freeze")
           call freeze_reader(pde(wat))
         case ("LTNE")
+          call freeze_reader(pde(wat))
+        case ("ICENE")
           call freeze_reader(pde(wat))
         case default
           print *, "procedure called when unexpected problem name"
@@ -66,13 +69,23 @@ module freeze_pointers
       
     ! pointers for water flow model
       pde(wat)%pde_fnc(wat)%elasticity => capacityhh
-      
-      pde(wat)%pde_fnc(heat_proc)%elasticity => capacityhT
-      
+      select case (drutes_config%name)
+        case ("freeze")
+          pde(wat)%pde_fnc(heat_proc)%elasticity => capacityhT
+        case ("LTNE")
+          pde(wat)%pde_fnc(heat_proc)%elasticity => capacityhT
+        case ("ICENE")
+          !pde(wat)%pde_fnc(ice)%elasticity => capacityhice
+           pde(wat)%pde_fnc(wat)%zerord => zerordyhice
+
+        case default
+          print *, "procedure called when unexpected problem name"
+          print *, "exited from freeze_pointers::frz_pointers"
+          error stop 
+      end select
+
       pde(wat)%pde_fnc(wat)%dispersion => diffhh
-      
       pde(wat)%pde_fnc(heat_proc)%dispersion => diffhT
-      
       pde(wat)%flux => all_fluxes
       do i=lbound(pde(wat)%bc,1), ubound(pde(wat)%bc,1)
         select case(pde(wat)%bc(i)%code)
@@ -110,6 +123,20 @@ module freeze_pointers
             
             pde(wat)%mass(4)%val => thetai
             pde(wat)%mass(5)%val => thetai_wat_eq
+            pde(wat)%mass_name(1,1) = "theta_tot"
+            pde(wat)%mass_name(1,2) = "theta_tot [-]"
+      
+            pde(wat)%mass_name(2,1) = "theta_l"
+            pde(wat)%mass_name(2,2) = "theta_l [-]"
+      
+            pde(wat)%mass_name(3,1) = "h_l"
+            pde(wat)%mass_name(3,2) = "h_l [L]"
+      
+            pde(wat)%mass(1)%val => vangen_fr
+            
+            pde(wat)%mass(2)%val => thetal
+      
+            pde(wat)%mass(3)%val => hl
       
         case ("LTNE")
             allocate(pde(wat)%mass_name(5,2))
@@ -124,26 +151,55 @@ module freeze_pointers
             pde(wat)%mass(4)%val => T_m        
 
             pde(wat)%mass(5)%val => thetai
+            pde(wat)%mass_name(1,1) = "theta_tot"
+            pde(wat)%mass_name(1,2) = "theta_tot [-]"
+      
+            pde(wat)%mass_name(2,1) = "theta_l"
+            pde(wat)%mass_name(2,2) = "theta_l [-]"
+      
+            pde(wat)%mass_name(3,1) = "h_l"
+            pde(wat)%mass_name(3,2) = "h_l [L]"
+      
+            pde(wat)%mass(1)%val => vangen_fr
+            
+            pde(wat)%mass(2)%val => thetal
+      
+           pde(wat)%mass(3)%val => hl
+        case ("ICENE")
+            allocate(pde(wat)%mass_name(5,2))
+            allocate(pde(wat)%mass(5))
+            
+                  
+            pde(wat)%mass_name(1,1) = "theta_l"
+            pde(wat)%mass_name(1,2) = "theta_l [-]"
+
+            pde(wat)%mass_name(2,1) = "theta_cl"
+            pde(wat)%mass_name(2,2) = "theta_cl [-]"
+      
+            pde(wat)%mass_name(3,1) = "theta_i"
+            pde(wat)%mass_name(3,2) = "theta_i [-]"
+            
+            pde(wat)%mass_name(4,1) = "theta_i_eqwat"
+            pde(wat)%mass_name(4,2) = "thi eq. wat [-]"
+
+            pde(wat)%mass_name(5,1) = "theta_i_eqwat"
+            pde(wat)%mass_name(5,2) = "thi eq. wat [-]"
+            
+            pde(wat)%mass(1)%val => vangen_fr
+                  
+            pde(wat)%mass(2)%val => theta_cl
+            
+            pde(wat)%mass(3)%val => thetai
+            pde(wat)%mass(4)%val => thetai_wat_eq
+            
+            pde(wat)%mass(5)%val => icerate
         case default
           print *, "procedure called when unexpected problem name"
           print *, "exited from freeze_pointers::frz_pointers"
           error stop
       end select
       
-      pde(wat)%mass_name(1,1) = "theta_tot"
-      pde(wat)%mass_name(1,2) = "theta_tot [-]"
-      
-      pde(wat)%mass_name(2,1) = "theta_l"
-      pde(wat)%mass_name(2,2) = "theta_l [-]"
-      
-      pde(wat)%mass_name(3,1) = "h_l"
-      pde(wat)%mass_name(3,2) = "h_l [L]"
-      
-      pde(wat)%mass(1)%val => vangen_fr
-            
-      pde(wat)%mass(2)%val => thetal
-      
-      pde(wat)%mass(3)%val => hl
+
 
       
     ! pointers for heat flow model
@@ -173,6 +229,21 @@ module freeze_pointers
       
       pde(heat_proc)%initcond => temp_initcond 
       
+      select case (drutes_config%name)
+        case ("freeze")
+          CONTINUE
+        case ("LTNE")
+          CONTINUE
+        case ("ICENE")
+          !pde(heat_proc)%pde_fnc(ice)%elasticity => capacityTice
+          pde(heat_proc)%pde_fnc(heat_proc)%zerord => zerordTice
+
+        case default
+          print *, "procedure called when unexpected problem name"
+          print *, "exited from freeze_pointers::frz_pointers"
+          error stop 
+      end select
+      
       do i=lbound(pde(heat_proc)%bc,1), ubound(pde(heat_proc)%bc,1)
         select case(pde(heat_proc)%bc(i)%code)
           case(1)
@@ -192,7 +263,7 @@ module freeze_pointers
           !pointers for solid heat flow model
 
       select case (drutes_config%name)
-        case ("freeze")
+        case ("freeze", "ICENE")
          CONTINUE
         case ("LTNE")
           pde(heat_solid)%problem_name(1) = "heat_solid"
@@ -247,7 +318,43 @@ module freeze_pointers
           error stop
       end select
       
-     ! solve_matrix => freeze_solver_face
+      select case (drutes_config%name)
+        case ("freeze")
+          CONTINUE
+        case ("LTNE")
+          CONTINUE
+        case ("ICENE")
+          pde(ice)%problem_name(1) = "ice"
+          pde(ice)%problem_name(2) = "vol. ice"
+
+          pde(ice)%solution_name(1) = "content" 
+          pde(ice)%solution_name(2) = "i" 
+
+          pde(ice)%flux_name(1) = "flux"  
+          pde(ice)%flux_name(2) = "ice flux [L.T^{-1}]"
+
+          allocate(pde(ice)%mass_name(0,2))
+          pde(ice)%print_mass = .false.
+          pde(ice)%pde_fnc(ice)%elasticity => capacityiceice
+          pde(ice)%pde_fnc(ice)%zerord => icerate
+          do i=lbound(pde(ice)%bc,1), ubound(pde(ice)%bc,1)
+            select case(pde(ice)%bc(i)%code)
+              case(1)
+                pde(ice)%bc(i)%value_fnc => heat_dirichlet
+              case(2)
+                pde(ice)%bc(i)%value_fnc => heat_neumann
+              case(0)
+                pde(ice)%bc(i)%value_fnc => re_null_bc
+            end select
+        end do 
+        pde(ice)%initcond => ice_initcond 
+        pde(ice)%print_mass = .false.
+
+        case default
+          print *, "procedure called when unexpected problem name"
+          print *, "exited from freeze_pointers::frz_pointers"
+          error stop 
+      end select
 
     end subroutine frz_pointers
   
