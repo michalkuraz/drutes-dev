@@ -585,6 +585,7 @@ module ADE_fnc
       if (present(flux)) then
         flux = cmax*matmul(Dhm, gradC)*ths + cmax*q_w*c
       end if
+
       
       if (present(flux_length)) then
         flux_length = dot_product(cmax*matmul(Dhm, gradC)*ths + cmax*q_w*c, cmax*matmul(Dhm, gradC)*ths + cmax*q_w*c)

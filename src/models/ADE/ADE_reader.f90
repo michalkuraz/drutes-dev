@@ -116,7 +116,7 @@ module ADE_reader
                         " single line only (similarly as we had just a single material)"
            call file_error(file_contaminant, msg)
          else
-           adepar(1)%icondtype = "if"
+           adepar(1:)%icondtype = "if"
            from_ifile = .true.
            EXIT
          end if
