@@ -73,17 +73,22 @@ module evappointers
       deallocate(pde(re_ord)%mass)
       deallocate(pde(re_ord)%mass_name)
       
-      allocate(pde(re_ord)%mass(2))
-      allocate(pde(re_ord)%mass_name(2,2))
+      allocate(pde(re_ord)%mass(3))
+      allocate(pde(re_ord)%mass_name(3,2))
       
       pde(re_ord)%mass(1)%val => vangen
       pde(re_ord)%mass(2)%val => thetav
+      pde(re_ord)%mass(3)%val => satdegree
       
       pde(re_ord)%mass_name(1,1) = "theta_l"
-      pde(re_ord)%mass_name(1,2) = "theta_l [-]"
+      pde(re_ord)%mass_name(1,2) = "theta_l [-]        "
       
       pde(re_ord)%mass_name(2,1) = "theta_v"
-      pde(re_ord)%mass_name(2,2) = " theta_v [-]"
+      pde(re_ord)%mass_name(2,2) = " theta_v [-]       "
+      
+      pde(re_ord)%mass_name(3,1) = "satdgree"
+      pde(re_ord)%mass_name(3,2) = "sat degree [%]     "
+      
       
       allocate(pde(re_ord)%fluxes(3))
       pde(re_ord)%fluxes(1)%name(1) = "liq_flux"

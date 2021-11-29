@@ -134,7 +134,7 @@ module RE_pointers
           case(5)
             if (cut(drutes_config%name) == "REevap") then
               CONTINUE
-              ! to be linked in vapour_pointers
+              ! to be linked in evappointers
             else
               print *, "if you want to use atmospheric bc, set problem type to REevap"
               ERROR stop
@@ -234,7 +234,7 @@ module RE_pointers
         pde_loc%mass(1)%val => vangen_tab
       end if
       
-      pde_loc%mass(2)%val => undergroundwater
+      pde_loc%mass(2)%val => satdegree
       
 
       do i=1, ubound(vgset,1)
