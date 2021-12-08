@@ -88,6 +88,8 @@ module kinpointer
       
       pde(1)%symmetric = .true.
       
+      pde(1)%print_mass = .false.
+      
       if (ubound(pde,1) == 3) then
       
         allocate(pde(2)%bc(101:104))
