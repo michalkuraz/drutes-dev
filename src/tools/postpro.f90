@@ -320,7 +320,7 @@ module postpro
             massval(j) = pde(proc)%mass(j)%val(pde(proc),layer, quadpnt)
           end do
           
-          observation_array(i)%cumflux(proc) = observation_array(i)%cumflux(proc) + norm2(advectval(1:D))
+          observation_array(i)%cumflux(proc) = observation_array(i)%cumflux(proc) + norm2(advectval(1:D))*dtprev
   
           write(unit=pde(proc)%obspt_unit(i), fmt=*) time, val, massval(1:printdim), advectval(1:D), &
                   observation_array(i)%cumflux(proc)
