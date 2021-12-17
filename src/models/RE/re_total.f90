@@ -942,11 +942,11 @@ module re_total
       edge_id = nodes%edge(elements%data(el_id, node_order))
       
       if (solval < pde_loc%bc(edge_id)%value .or. gradn > 0) then
-        code = 2
-        value = 0
+        if (present(code)) code = 2
+        if (present(value)) value = 0
       else 
-        code = 4
-        value = nodes%data(nd,drutes_config%dimen)
+        if (present(code)) code = 4
+        if (present(value)) value = nodes%data(nd,drutes_config%dimen)
       end if
        
 
