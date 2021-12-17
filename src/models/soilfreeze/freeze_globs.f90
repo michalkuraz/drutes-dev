@@ -34,7 +34,8 @@ module freeze_globs
   
   !>latent heat of fusion [J.kg^-1]
   real(kind=rkind), parameter, public :: Lf = 333.7e3
-  
+  !real(kind=rkind), parameter, public :: Lf = 0
+
   !> reference temperature for Clapeyron [K] (defined in RE globals now)
 !   real(kind=rkind), parameter, public :: Tref = 273.15
 

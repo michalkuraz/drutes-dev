@@ -34,11 +34,19 @@ module freeze_read
       use readtools
       use freeze_globs
       
-      
-      wat = 1
-      heat_proc = 2
-      heat_solid = 3
-      ice = 3
+      select case (drutes_config%name)
+        case ("freeze")
+          wat = 1
+          heat_proc = 2
+        case ("LTNE")     
+         wat = 3
+         heat_proc = 1
+         heat_solid = 2
+        case ("ICENE")  
+          ice = 1
+          wat = 3
+          heat_proc = 2
+      end select
 
     
     end subroutine read_frrate

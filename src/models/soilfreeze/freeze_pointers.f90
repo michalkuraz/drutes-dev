@@ -76,7 +76,7 @@ module freeze_pointers
           pde(wat)%pde_fnc(heat_proc)%elasticity => capacityhT
         case ("ICENE")
           !pde(wat)%pde_fnc(ice)%elasticity => capacityhice
-           pde(wat)%pde_fnc(wat)%zerord => zerordyhice
+           pde(wat)%pde_fnc(wat)%zerord => zerordhice
 
         case default
           print *, "procedure called when unexpected problem name"
@@ -95,6 +95,8 @@ module freeze_pointers
             pde(wat)%bc(i)%value_fnc => Dirichlet_Neumann_switch_bc
           case(9)
             pde(wat)%bc(i)%value_fnc => Infiltration_bc
+          case(10)
+            pde(wat)%bc(i)%value_fnc => Infiltration_bc2
         end select
       end do
       pde(wat)%initcond => wat_initcond
@@ -220,9 +222,9 @@ module freeze_pointers
       pde(heat_proc)%pde_fnc(heat_proc)%elasticity => capacityTT
       
       pde(heat_proc)%pde_fnc(heat_proc)%dispersion => diffTT
-      
+
       pde(heat_proc)%pde_fnc(wat)%dispersion => diffTh
-      
+
       pde(heat_proc)%pde_fnc(heat_proc)%convection => convectTT
       
       pde(heat_proc)%flux => heat_flux_freeze

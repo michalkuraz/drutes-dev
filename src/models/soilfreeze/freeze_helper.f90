@@ -218,7 +218,7 @@ module freeze_helper
       if (present(tensor)) then
         call mualem_fr(pde(wat), layer, x=(/hl(pde(wat), layer, quadpnt)/), tensor = Klt(1:D, 1:D))
         if(qlt_log) then
-          Klt(1:D, 1:D) = 10**(-Omega*Q_reduction(layer, quadpnt))*Klt(1:D, 1:D)
+          Klt(1:D, 1:D) = Klt(1:D, 1:D)!*10**(-Omega*Q_reduction(layer, quadpnt))
         else
           Klt(1:D,1:D)= 0_rkind*Klt(1:D, 1:D)
         end if 
@@ -310,17 +310,20 @@ module freeze_helper
           val = pde(wat)%getval(quadpnt_loc)
         case ("freeze", "LTNE")
         hw = pde(wat)%getval(quadpnt_loc)
+        if(hw > 0) then
+          hw = 0
+        end if
         temp = pde(heat_proc)%getval(quadpnt)
         T_f = Tfk
         if(iceswitch(quadpnt)) then
             if(temp  < Tr) then
-            fac = 1 
+              fac = 1 
             else
             !> freezing sign function
-            pi = 4*atan(1.0_rkind)
-            sin_T = (Tr -temp)/(Tr-T_f)
-            sin_out = sin(sin_T*pi+pi/2)
-            fac = sin_out/2_rkind+0.5_rkind
+              pi = 4*atan(1.0_rkind)
+              sin_T = (Tr -temp)/(Tr-T_f)
+              sin_out = sin(sin_T*pi+pi/2)
+              fac = sin_out/2_rkind+0.5_rkind
             end if
             tempK = temp
             T_threshK99 = Tr
@@ -347,7 +350,7 @@ module freeze_helper
             call linspace(from=Tstart, to=T_f, array=intpoints)
             val = hw
             do i=1,n-1
-            val = val + gaussianint(start = intpoints(i+1), end = intpoints(i))
+              val = val + gaussianint(start = intpoints(i+1), end = intpoints(i))
             end do
             if(fac > 0.99_rkind) then
                 val = val + Lf/grav*log(tempK/T_threshK99)
@@ -487,21 +490,16 @@ module freeze_helper
       type(integpnt_str), intent(in), optional :: quadpnt
       real(kind=rkind), dimension(:), intent(in), optional    :: x
       real(kind=rkind) :: val
-      real(kind=rkind) :: theta_l
-      real(kind=rkind) :: theta_ice
       real(kind=rkind) :: T
-      real(kind=rkind) :: theta_tot, hcl
-      real(kind = rkind) :: ths
-      real(kind = rkind) :: minice
+      real(kind=rkind) :: hcl
 
-      minice = 0_rkind
-      theta_l = vangen_fr(pde(wat), layer, quadpnt)
+
       T = pde(heat_proc)%getval(quadpnt)
       if(T < Tfk) then
         hcl = hw_cl(pde(wat), layer, quadpnt) + Lf/grav*log(T/Tfk) 
         val = vangen_fr(pde(wat), layer, x = (/hcl/))
       else 
-        val = theta_l
+        val = vangen_fr(pde(wat), layer, quadpnt)
       end if
       
     end function theta_cl
@@ -523,7 +521,12 @@ module freeze_helper
           case ("Soil")
             val = freeze_par(layer)%ths
           case ("Snow")
-            val = freeze_par(layer)%ths
+            select case (drutes_config%name)
+              case ("freeze", "LTNE")
+               val = freeze_par(layer)%ths
+              case("ICENE")
+               val = 1-pde(ice)%getval(quadpnt)
+           end select
       end select
     end function thetas
     
