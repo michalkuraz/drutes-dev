@@ -168,8 +168,8 @@ module freeze_pointers
       
            pde(wat)%mass(3)%val => hl
         case ("ICENE")
-            allocate(pde(wat)%mass_name(5,2))
-            allocate(pde(wat)%mass(5))
+            allocate(pde(wat)%mass_name(6,2))
+            allocate(pde(wat)%mass(6))
             
                   
             pde(wat)%mass_name(1,1) = "theta_l"
@@ -184,8 +184,11 @@ module freeze_pointers
             pde(wat)%mass_name(4,1) = "theta_i_eqwat"
             pde(wat)%mass_name(4,2) = "thi eq. wat [-]"
 
-            pde(wat)%mass_name(5,1) = "theta_i_eqwat"
-            pde(wat)%mass_name(5,2) = "thi eq. wat [-]"
+            pde(wat)%mass_name(5,1) = "icerate"
+            pde(wat)%mass_name(5,2) = "vf [1/T]"
+            
+            pde(wat)%mass_name(6,1) = "theta_i_eq"
+            pde(wat)%mass_name(6,2) = "ice_eq"
             
             pde(wat)%mass(1)%val => vangen_fr
                   
@@ -195,6 +198,8 @@ module freeze_pointers
             pde(wat)%mass(4)%val => thetai_wat_eq
             
             pde(wat)%mass(5)%val => icerate
+            
+            pde(wat)%mass(6)%val => thetai_eq
         case default
           print *, "procedure called when unexpected problem name"
           print *, "exited from freeze_pointers::frz_pointers"
@@ -239,6 +244,7 @@ module freeze_pointers
         case ("ICENE")
           !pde(heat_proc)%pde_fnc(ice)%elasticity => capacityTice
           pde(heat_proc)%pde_fnc(heat_proc)%zerord => zerordTice
+          pde(heat_proc)%pde_fnc(heat_proc)%reaction => reactTice
 
         case default
           print *, "procedure called when unexpected problem name"

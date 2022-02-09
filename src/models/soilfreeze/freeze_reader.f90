@@ -44,8 +44,8 @@ module freeze_read
          heat_solid = 2
         case ("ICENE")  
           ice = 1
-          wat = 3
-          heat_proc = 2
+          wat = 2
+          heat_proc = 3
       end select
 
     
@@ -297,6 +297,13 @@ module freeze_read
       call readbcvals(unitW=file_freeze, struct=pde(wat)%bc, dimen=n, &
 		      dirname="drutes.conf/freeze/")
 
+      do i=lbound(pde(wat)%bc,1), ubound(pde(wat)%bc,1)
+        select case(pde(wat)%bc(i)%code)
+          case(10)
+            call fileread(hc, file_freeze)
+        end select
+      end do 
+      
       select case (drutes_config%name)
         case ("freeze", "LTNE")
           continue
@@ -306,7 +313,7 @@ module freeze_read
             read(unit = file_freeze, fmt= *, iostat=ierr) freeze_par(i)%iceini, freeze_par(i)%icondtypeIce
 
             select case(freeze_par(i)%icondtypeIce)
-                case("theta")
+                case("theta", "input")
                 CONTINUE
                 case default
                 print *, "you have specified wrong initial condition type keyword"

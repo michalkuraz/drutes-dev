@@ -6,12 +6,43 @@ module freeze_helper
   use RE_constitutive
 
   public :: iceswitch,icefac, rho_icewat, Q_reduction, surf_tens_deriv, Kliquid_temp, hl, thetai, thetal
-  public:: vangen_fr, mualem_fr, temp_initcond, temp_s_initcond, wat_initcond, getval_retotfr, ice_initcond, thetas
-  public:: rho_wat, thetai_wat_eq, dhldT, hw_cl, theta_cl
+  public:: vangen_fr, mualem_fr, inverse_vangen_fr, temp_initcond, temp_s_initcond, wat_initcond, getval_retotfr
+  public:: rho_wat, thetai_wat_eq, dhldT, hw_cl, theta_cl, thetai_eq, ice_initcond, thetas
   private:: linspace
       
   
   contains
+    
+     function T_fr(pde_loc, layer, quadpnt, x) result(val)
+      use typy
+      use global_objs
+      use freeze_globs
+      use pde_objs
+      
+      class(pde_str), intent(in) :: pde_loc
+      integer(kind=ikind), intent(in) :: layer
+      type(integpnt_str), intent(in), optional :: quadpnt
+      real(kind=rkind), dimension(:), intent(in), optional    :: x
+      !> return value:Liquid water density  rho_l [kg/m^3]
+      real(kind=rkind):: val
+
+      
+       if (.not. present(quadpnt)) then
+        print *, "ERROR: you have not specified integ point "
+        print *, "exited from freeze_helper::T_f"
+        ERROR stop
+      end if
+    
+      
+      select case (freeze_par(layer)%material)
+        case ("Soil")
+          val = Tfk!*exp(hw_cl(pde(wat), layer, quadpnt)*grav/Lf)
+        case ("Snow")
+          val = Tfk
+      end select
+
+    end function T_fr
+  
      function rho_wat(quadpnt) result(val)
       use typy
       use global_objs
@@ -25,7 +56,7 @@ module freeze_helper
       
        if (.not. present(quadpnt)) then
         print *, "ERROR: you have not specified integ point "
-        print *, "exited from evap_auxfnc::rho_l"
+        print *, "exited from freeze_helper::rho_l"
         ERROR stop
       end if
     
@@ -62,18 +93,19 @@ module freeze_helper
           
     end function iceswitch
 
-    function icefac(quadpnt) result(fac)
+    function icefac(quadpnt, Tf) result(fac)
       use typy
       use global_objs
       
       type(integpnt_str), intent(in) :: quadpnt
-      real(kind=rkind) :: Tf, fac, pi, sin_T, sin_out
+      real(kind=rkind), intent(in) :: Tf
+      real(kind=rkind) :: fac, pi, sin_T, sin_out
       type(integpnt_str) :: quadpnt_loc
       
       quadpnt_loc = quadpnt
       quadpnt_loc%preproc=.true.
       
-      Tf = Tfk
+ !     Tf = Tfk
       
 
       if (pde(heat_proc)%getval(quadpnt_loc) > Tf) then
@@ -92,11 +124,11 @@ module freeze_helper
       end if
     end function icefac
 
-    function gaussianint(end, start) result(val)
+    function gaussianint(end, start, Tf) result(val)
       use typy
       use global_objs
       
-      real(kind=rkind), intent(in) :: end, start
+      real(kind=rkind), intent(in) :: end, start, Tf
       real(kind=rkind), dimension(3) :: a, H, hh, aa, w
       real(kind=rkind) :: val
       integer(kind = ikind) :: i
@@ -106,21 +138,21 @@ module freeze_helper
       hh = (end-start)/2.0_rkind*H
       aa = (end - start)/2.0_rkind*a+(end + start)/2.0_rkind
       do  i = 1, 3
-        w(i) = dhldT(T = aa(i))
+        w(i) = dhldT(T = aa(i), Tf = Tf)
       end do
       val = sum(hh*w)
 
     end function gaussianint
     
-    function dhldT(T) result(val)
+    function dhldT(T, Tf) result(val)
       use typy
       use global_objs
       
-      real(kind=rkind), intent(in) :: T
-      real(kind=rkind) :: Tf, fac, val    
+      real(kind=rkind), intent(in) :: T, Tf
+      real(kind=rkind) :: fac, val    
       real(kind=rkind) :: pi, sin_T, sin_out
       
-      Tf = Tfk
+      !Tf = Tfk
       
 
       if (T > Tf) then
@@ -185,8 +217,12 @@ module freeze_helper
         print *, "exited from freeze_helper::Q_reduction"
         ERROR STOP
       end if
-
-      thl = vangen_fr(pde(wat), layer, x=(/hl(pde(wat), layer, quadpnt)/))
+      select case (drutes_config%name)
+        case ("freeze", "LTNE")
+          thl = vangen_fr(pde(wat), layer, x=(/hl(pde(wat), layer, quadpnt)/))
+       case("ICENE")
+          thl = vangen_fr(pde(wat), layer, quadpnt)
+       end select 
       thice = thetai(pde(wat), layer, quadpnt)
       !val = thice/(thice+thl*1.09)
       val = thice/(thice+thl-freeze_par(layer)%Thr)      
@@ -216,7 +252,12 @@ module freeze_helper
 
       
       if (present(tensor)) then
-        call mualem_fr(pde(wat), layer, x=(/hl(pde(wat), layer, quadpnt)/), tensor = Klt(1:D, 1:D))
+        select case (drutes_config%name)
+          case ("freeze", "LTNE")
+            call mualem_fr(pde(wat), layer, x=(/hl(pde(wat), layer, quadpnt)/), tensor = Klt(1:D, 1:D))
+          case("ICENE")
+            call mualem_fr(pde(wat), layer, quadpnt, tensor = Klt(1:D, 1:D))
+        end select 
         if(qlt_log) then
           Klt(1:D, 1:D) = Klt(1:D, 1:D)!*10**(-Omega*Q_reduction(layer, quadpnt))
         else
@@ -314,8 +355,8 @@ module freeze_helper
           hw = 0
         end if
         temp = pde(heat_proc)%getval(quadpnt)
-        T_f = Tfk
-        if(iceswitch(quadpnt)) then
+        T_f = T_fr(pde(wat), layer, quadpnt)
+        if(temp < T_f) then
             if(temp  < Tr) then
               fac = 1 
             else
@@ -350,7 +391,7 @@ module freeze_helper
             call linspace(from=Tstart, to=T_f, array=intpoints)
             val = hw
             do i=1,n-1
-              val = val + gaussianint(start = intpoints(i+1), end = intpoints(i))
+              val = val + gaussianint(start = intpoints(i+1), end = intpoints(i), Tf = T_f)
             end do
             if(fac > 0.99_rkind) then
                 val = val + Lf/grav*log(tempK/T_threshK99)
@@ -407,7 +448,67 @@ module freeze_helper
 
     end function thetai
     
+    
+    function thetai_eq(pde_loc, layer, quadpnt, x) result(val)
+      use typy
+      use global_objs
+      use pde_objs
+      use debug_tools
+      class(pde_str), intent(in) :: pde_loc
+      integer(kind=ikind), intent(in) :: layer
+      type(integpnt_str), intent(in), optional :: quadpnt
+      real(kind=rkind), dimension(:), intent(in), optional    :: x
+      real(kind=rkind) :: val
+      type(integpnt_str) :: quadpnt_loc
+      real(kind=rkind) :: T, theta_tot, theta_ice, Tf, minice
+      real(kind=rkind) :: theta_l,theta_f, cp, th_air
 
+      if(.not. present(quadpnt)) then
+        print*, x
+        print*, "Quadpnt needed"
+        print *, "exited from freeze_helper::thetai"
+        ERROR STOP
+      end if
+      
+
+      
+      select case (freeze_par(layer)%material)
+        case ("Soil")
+          Tf = T_fr(pde(wat), layer, quadpnt)
+          T = pde(heat_proc)%getval(quadpnt)
+          theta_ice = pde(ice)%getval(quadpnt)
+          if(T .LE. Tf) then
+            theta_ice = pde(ice)%getval(quadpnt)
+            theta_tot = vangen_fr(pde_loc, layer, quadpnt) + theta_ice
+            if(theta_tot > thetas(pde_loc, layer, quadpnt)) then
+              theta_tot = thetas(pde_loc, layer, quadpnt)
+            end if
+            val = theta_tot - theta_cl(pde_loc, layer, quadpnt) 
+          else 
+            val = 0
+          end if        
+        case ("Snow")
+          Tf = T_fr(pde(wat), layer, quadpnt)
+          T = pde(heat_proc)%getval(quadpnt)
+          theta_ice = pde(ice)%getval(quadpnt)
+          theta_l = vangen_fr(pde(wat), layer, quadpnt)
+          th_air = thetas(pde_loc, layer, quadpnt)-theta_l
+          cp = freeze_par(layer)%Ca*th_air*rho_air 
+          cp = cp+ rho_ice*freeze_par(layer)%Ci*theta_ice
+          cp = cp+theta_l*freeze_par(layer)%Cl*rho_wat(quadpnt)
+          if(T .LE. Tf) then
+            !freezing
+            theta_f = min(theta_l, cp*(Tf-T)/Lf/rho_wat(quadpnt))
+            val = theta_ice + theta_f
+          else 
+          !melting
+            minice = 0_rkind
+            val = theta_ice - cp*(T-Tf)/Lf/rho_ice
+            val = max(minice, val)      
+          end if
+       end select
+    end function thetai_eq
+    
     function thetai_wat_eq(pde_loc, layer, quadpnt, x) result(val)
       use typy
       use global_objs
@@ -464,21 +565,26 @@ module freeze_helper
       
       quadpnt_loc = quadpnt
       quadpnt_loc%preproc=.true.
-      
-      minice = 0_rkind
-      theta_l = vangen_fr(pde(wat), layer, quadpnt)
-      if(T < Tfk) then
-        theta_ice = max(pde(ice)%getval(quadpnt),minice)
-        theta_tot = theta_l + theta_ice
-        ths = thetas(pde(wat), layer, quadpnt)
-        if(theta_tot > ths)then
-          theta_tot = ths
-        end if
-        hw = inverse_vangen_fr(pde(wat), layer, x = (/theta_tot/))
-      else 
-        val = pde(wat)%getval(quadpnt_loc)
-      end if
-      
+      select case (drutes_config%name)
+        case ("freeze", "LTNE")
+          val = pde(wat)%getval(quadpnt_loc)
+        case("ICENE")
+		  minice = 0_rkind
+		  theta_l = vangen_fr(pde(wat), layer, quadpnt)
+		  
+		 !if(T < T_fr(pde(wat), layer, quadpnt)) then
+			theta_ice = max(pde(ice)%getval(quadpnt),minice)
+			theta_tot = theta_l + theta_ice
+			ths = thetas(pde(wat), layer, quadpnt)
+			if(theta_tot > ths)then
+			  theta_tot = ths
+			end if
+			hw = inverse_vangen_fr(pde(wat), layer, x = (/theta_tot/))
+			val =  hw
+		!  else 
+		!	val = pde(wat)%getval(quadpnt_loc)
+		!  end if
+      end select 
     end function hw_cl
     
     function theta_cl(pde_loc, layer, quadpnt, x) result(val)
@@ -490,18 +596,24 @@ module freeze_helper
       type(integpnt_str), intent(in), optional :: quadpnt
       real(kind=rkind), dimension(:), intent(in), optional    :: x
       real(kind=rkind) :: val
-      real(kind=rkind) :: T
+      real(kind=rkind) :: T, T_f
       real(kind=rkind) :: hcl
-
-
-      T = pde(heat_proc)%getval(quadpnt)
-      if(T < Tfk) then
-        hcl = hw_cl(pde(wat), layer, quadpnt) + Lf/grav*log(T/Tfk) 
-        val = vangen_fr(pde(wat), layer, x = (/hcl/))
-      else 
-        val = vangen_fr(pde(wat), layer, quadpnt)
-      end if
       
+      
+      select case (freeze_par(layer)%material)
+        case ("Soil")
+		  T = pde(heat_proc)%getval(quadpnt)
+		  T_f = T_fr(pde(wat), layer, quadpnt)
+		  if(T < T_f) then
+			hcl = hw_cl(pde(wat), layer, quadpnt) + Lf/grav*log(T/T_f) 
+			val = vangen_fr(pde(wat), layer, x = (/hcl/))
+		  else 
+			val = vangen_fr(pde(wat), layer, quadpnt)
+		  end if
+         case ("Snow")
+        val = vangen_fr(pde(wat), layer, quadpnt)
+      end select
+
     end function theta_cl
     
     
@@ -526,6 +638,10 @@ module freeze_helper
                val = freeze_par(layer)%ths
               case("ICENE")
                val = 1-pde(ice)%getval(quadpnt)
+               if(val < freeze_par(layer)%Thr) then
+                 print*, val
+                 val = freeze_par(layer)%Thr
+               end if
            end select
       end select
     end function thetas
@@ -593,6 +709,7 @@ module freeze_helper
       
 
       
+      a = freeze_par(layer)%alpha
       a = freeze_par(layer)%alpha
       n = freeze_par(layer)%n
       m = freeze_par(layer)%m
@@ -828,7 +945,7 @@ module freeze_helper
       D = drutes_config%dimen
       select case (freeze_par(1_ikind)%icondtypeIce)
         case("input")
-          call map1d2dJ(pde_loc,"drutes.conf/freeze/iceini.in", correct_h = .true.)
+          call map1d2dJ(pde_loc,"drutes.conf/freeze/iceini.in", correct_h = .false.)
       end select
       
       D = drutes_config%dimen
