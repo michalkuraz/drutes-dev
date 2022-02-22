@@ -32,16 +32,16 @@ module reorder
         allocate(mapa(1:A%getn()))
         mapa = .true.
         call levset%order(A,first,mapa)
-        print *, levset%nlev
+!        print *, levset%nlev
         last = levset%levlist(levset%levstart(levset%nlev+1)-1)
         mapa = .true.
         call levset%order(A,last,mapa)
-        print *, levset%nlev
+!        print *, levset%nlev
         first = levset%levlist(levset%levstart(levset%nlev+1)-1)
 
         ! order by levels
         mapa = .true.
-        print *, levset%nlev
+!        print *, levset%nlev
         call levset%order(A,first,mapa)
         if ( allocated(perm)) deallocate(perm)
         allocate(perm(1:A%getn()))
@@ -112,7 +112,7 @@ module reorder
         do
             call ls%addlevel(A,mapa)
             nord = ls%levstart(ls%nlev+1) - 1
-            print *, "ocislovano = ",nord
+!            print *, "ocislovano = ",nord
             if ( nord == A%getn()) exit
         end do
 
