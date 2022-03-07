@@ -256,7 +256,7 @@ module RE_constitutive
           satdg = 1/(1+(a*(abs(h)))**n)**m * 100.0
         else
           theta = logtablesearch(h,vgset(layer)%logh, vgset(layer)%theta, vgset(layer)%step4fnc)
-          satdg = theta/(vgset(layer)%Ths-vgset(layer)%Thr) * 100
+          satdg = (theta-vgset(layer)%Thr)/(vgset(layer)%Ths-vgset(layer)%Thr) * 100
         end if
       end if
     
