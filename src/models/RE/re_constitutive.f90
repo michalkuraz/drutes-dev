@@ -248,6 +248,11 @@ module RE_constitutive
       m = vgset(layer)%m
       
 
+      a = vgset(layer)%alpha
+      n = vgset(layer)%n
+      m = vgset(layer)%m
+      
+
       if (h >=0.0_rkind) then
         satdg = 100.0_rkind
         RETURN
