@@ -35,7 +35,7 @@ ADE_obj := ADE_fnc.o ADE_reader.o ADE_globals.o ADE_pointers.o
 REDUAL_obj := Re_dual_totH.o Re_dual_globals.o Re_dual_pointers.o Re_dual_reader.o Re_dual_tab.o Re_dual_coupling.o Re_dual_bc.o
 HEAT_obj := heat_fnc.o heat_pointers.o heat_globals.o heat_reader.o
 KINWAVE_obj := kinreader.o kinglobs.o kinfnc.o kinpointer.o
-FROZEN_obj := freeze_globs.o freeze_helper.o freeze_fnc.o freeze_reader.o freeze_pointers.o freeze_linalg.o
+FROZEN_obj := freeze_globs.o freeze_helper.o freeze_fnc.o freeze_reader.o freeze_pointers.o 
 REevap_obj :=  evapglob.o evappointers.o evap_RE_constitutive.o evap_heat_constitutive.o evapreader.o evapbc4heat.o
 
 MODEL_objs := $(RE_obj)  $(BOUSSINESQ_obj) $(ADE_obj) $(REDUAL_obj)  $(HEAT_obj) $(LTNE_obj) $(FROZEN_obj) $(KINWAVE_obj) $(REevap_obj)
@@ -162,10 +162,8 @@ freeze_fnc.o: $(CORE_obj) freeze_helper.o freeze_globs.o src/models/soilfreeze/f
 	$c -c src/models/soilfreeze/freeze_fnc.f90
 freeze_reader.o: $(CORE_obj) freeze_globs.o src/models/soilfreeze/freeze_reader.f90
 	$c -c src/models/soilfreeze/freeze_reader.f90	
-freeze_pointers.o: $(CORE_obj) $(RE_obj) $(HEAT_obj) freeze_globs.o freeze_reader.o freeze_linalg.o src/models/soilfreeze/freeze_pointers.f90
+freeze_pointers.o: $(CORE_obj) $(RE_obj) $(HEAT_obj) freeze_globs.o freeze_reader.o src/models/soilfreeze/freeze_pointers.f90
 	$c -c src/models/soilfreeze/freeze_pointers.f90
-freeze_linalg.o: $(CORE_obj) freeze_globs.o src/models/soilfreeze/freeze_linalg.f90
-	$c -c src/models/soilfreeze/freeze_linalg.f90
 #------end frozen_obj -----------------------------------
 
 #-------begin ADE_obj-------------------------------

@@ -139,7 +139,12 @@ module manage_pointers
           write(unit = drutes_config%fullname, fmt=*) "local thermal non equilibrium"
           call frz_pointers()
           
+       case("ICENE")
         
+          call freeze_processes(pde_common%processes)
+          call pde_constructor(pde_common%processes)
+          write(unit = drutes_config%fullname, fmt=*) "ice phase non equilibrium"
+          call frz_pointers()
            
         case("REevap")
         

@@ -34,7 +34,8 @@ module freeze_globs
   
   !>latent heat of fusion [J.kg^-1]
   real(kind=rkind), parameter, public :: Lf = 333.7e3
-  
+  !real(kind=rkind), parameter, public :: Lf = 0
+
   !> reference temperature for Clapeyron [K] (defined in RE globals now)
 !   real(kind=rkind), parameter, public :: Tref = 273.15
 
@@ -91,10 +92,11 @@ module freeze_globs
  !> Impedance factor [-] (see Lundin 1990, tested 2,4,6,8,10)
   real(kind=rkind), public :: Omega
 
-  real(kind=rkind), public :: beta, beta_melt
+  real(kind=rkind), public :: beta_freeze, beta_melt
   
   real(kind=rkind), public :: fac_scale, fac_add
-
+  
+  real(kind=rkind), public :: Tr
   integer(kind = ikind), public :: wat, heat_proc, ice, heat_solid
 
 end module freeze_globs

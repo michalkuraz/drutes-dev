@@ -82,7 +82,7 @@ module read_inputs
       real(kind=rkind), dimension(3) :: tmp
       character(len=4096) :: filename
       character(len=8192) :: msg
-      character(len=256), dimension(11) :: probnames
+      character(len=256), dimension(12) :: probnames
       character(len=2) :: dimensions
       
 
@@ -101,9 +101,11 @@ module read_inputs
         new_line("a"),  new_line("a"), &
         "   heat = Heat conduction equation (Sophoclea, 1979)", &
         new_line("a"),  new_line("a"), &
-        "   LTNE = Local Thermal Non-Equilibrium heat transport model (unfinished yet)", &
+        "   LTNE = Local Thermal Non-Equilibrium heat transport model (in development)", &
         new_line("a"),  new_line("a"), &
-        "   freeze = Richards equation with freezing/thawing processes (unfinished yet)", &
+        "   freeze = Richards equation with freezing/thawing processes (in development)", &
+        new_line("a"),  new_line("a"), &
+        "   ICENE = Richards equation with non-equilibirum ice phase (in development)", &
         new_line("a"),  new_line("a"), &
         "   kinwave = Kinematic wave equation for 2D catchments", &
                 new_line("a"),  new_line("a"), &
@@ -124,6 +126,7 @@ module read_inputs
       probnames(9) = "freeze"
       probnames(10) = "kinwave"
       probnames(11) = "REevap"
+      probnames(12) = "ICENE"
       
 	
       call fileread(drutes_config%name, file_global, trim(msg), options=probnames)
