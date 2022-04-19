@@ -162,8 +162,7 @@ module RE_pointers
       
       class(pde_str), intent(in out) :: pde_loc
       integer(kind=ikind) :: i
-      
-      
+
       do i=lbound(pde_loc%bc,1), ubound(pde_loc%bc,1)
         select case(pde_loc%bc(i)%code)
           case(-1)

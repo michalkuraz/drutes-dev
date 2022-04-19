@@ -210,7 +210,7 @@ module heat_fnc
 
       
       if (present(code)) then
-        code = 4
+        code = 1
       end if
       
 

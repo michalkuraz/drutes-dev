@@ -27,6 +27,7 @@ module globals
   use global_objs
   use sparsematrix
 
+logical :: printedk
 
   !> version id variable
   type(version), public :: version_id   

@@ -966,6 +966,7 @@ module freeze_helper
           end if
         end do   
       end do
+     
 
     end subroutine ice_initcond
     

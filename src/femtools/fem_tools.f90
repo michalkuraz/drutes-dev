@@ -52,7 +52,7 @@ module fem_tools
     real(kind=rkind), dimension(:,:), allocatable, save :: bcval
     real(kind=rkind), dimension(:), allocatable, save :: surface
     integer(kind=ikind), dimension(:), allocatable, save :: fin
-    integer(kind=ikind) :: space_dim, space_i
+    integer(kind=ikind) :: space_dim, space_i, kk, kkk
     real(kind=rkind), dimension(3,3) :: d
     real(kind=rkind) :: tmp   
     real(kind=rkind), dimension(3) :: tmpdata
@@ -73,8 +73,8 @@ module fem_tools
     m_col = 0
     bcval = 0
     limits = ubound(stiff_mat,1)/ubound(pde,1)
+    
         
-
     do iproc=0, ubound(pde,1)-1
       do i=1, ubound(elements%data, 2) 	
         surface(i+iproc*limits) = elements%length(el_id,i)
