@@ -62,7 +62,7 @@ module kinpointer
       allocate(pde(1)%bc(101:nobcs))
       
       do i=101, nobcs
-		  pde(1)%bc(i)%value_fnc => kinborO
+		  pde(1)%bc(i)%value_fnc => kinbor
 	  end do
       
 !       pde_loc%bc(102)%value_fnc => kinbor
