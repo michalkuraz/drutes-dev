@@ -636,7 +636,6 @@ module re_total
         edge_id = nodes%edge(elements%data(el_id, node_order))
 
         i = pde_loc%permut(elements%data(el_id, node_order))
-	
 
         if (pde_loc%bc(edge_id)%file) then
           do i=1, ubound(pde_loc%bc(edge_id)%series,1)
@@ -662,9 +661,8 @@ module re_total
         quadpnt%column = 3
         layer = elements%material(el_id)
         theta =  pde_loc%mass(1)%val(pde_loc,layer, quadpnt)
-        value = rain - evap*theta**(2.0_rkind/3.0_rkind)
-
-
+        value = rain + evap*theta
+print *, "value",  value
       end if
       
       
