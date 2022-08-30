@@ -22,10 +22,10 @@
 module solver_interfaces
   use mtx
   public :: LDU_face
+  public :: LDU_uncoupled_face
   public :: CG_face
   public :: CG_normal_face
   public :: jacobi_face
-  public :: LDUPCG_face
   public :: null_problem
 
   
@@ -272,7 +272,7 @@ module solver_interfaces
     end subroutine blockjacobi_face
     
     
-     subroutine LDUPCG_face(A,b,x,itmax1,reps1,ilev1,itfin1,repsfin1,&
+     subroutine LDU_uncoupled_face(A,b,x,itmax1,reps1,ilev1,itfin1,repsfin1,&
                 ll1,ll2,cond1,opcnt1,errcode1)
       use mtx
       use sparsematrix
@@ -352,10 +352,6 @@ module solver_interfaces
       
 
       
-      
-!      itmax =  int(itfin1/10.0)+1
-      itmax = itmax1
-      
       if (ubound(pde,1) == 1) then
         write(msg, fmt=*) "incorrect solver setup from drutes.conf/solver.conf", new_line("a"), &
                            "this is not a coupled problem, don't use Block-Jacobi", new_line("a"), &
@@ -363,16 +359,15 @@ module solver_interfaces
         call file_error(file_solver, msg)
       end if
       
+      itmax = int(A%getn()/ubound(pde,1))
+      
+      call block_jacobi_uncoupled(A, x, b, blindex, itcnt=itfin1, repsexit=repsfin1, maxitcount=itmax)
 
       
-      call block_jacobi4ADE(A, x, b, blindex, iters, reps1, itmax, .true., repsfin1)
-      if (present(itfin1)) itfin1 = iters
-      write(unit=file_itcg, fmt = *) time, itfin1, repsfin1
-      call flush(file_itcg)
-
+    end subroutine LDU_uncoupled_face
     
-      
-    end subroutine LDUPCG_face
+    
+   
 
     subroutine CG_face(A,b,x,itmax1,reps1,ilev1,itfin1,repsfin1,&
                 ll1,ll2,cond1,opcnt1,errcode1)

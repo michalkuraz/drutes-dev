@@ -30,6 +30,7 @@ module simplelinalg
   public :: factorial
   public :: unify_rows
   private :: sparse_gem_pig
+  public :: block_jacobi_uncoupled
 !  public :: sparse_gem_pig_AtA
 
 
@@ -445,13 +446,14 @@ module simplelinalg
 	end subroutine block_jacobi
                   
     
-    subroutine block_jacobi4ADE_steady(A,xvect,bvect,blindex, itcnt, repsexit, maxitcount, details)
+    subroutine block_jacobi_uncoupled(A,xvect,bvect,blindex, itcnt, repsexit, maxitcount)
       use typy
       use sparsematrix
       use pde_objs
       use solvers
       use debug_tools
       use globals
+      use global4solver
       use printtools
       use core_tools
       
@@ -463,20 +465,20 @@ module simplelinalg
       real(kind=rkind), dimension(:), intent(in) :: bvect
       !> indeces of matrix diagonal blocks, 1st column start indices, 2nd column end indices
       integer(kind=ikind), dimension(:,:), intent(in) :: blindex
-      !> iteration count 
+      !> iteration count for PCG applied on submatrix (2,2)
       integer(kind=ikind), intent(out) :: itcnt
-      !> required minimal residual
+      !> required minimal residual for PCG applied on submatrix (2,2)
       real(kind=rkind) :: repsexit
-      !> maximal iteration count
+      !> maximal iteration count for PCG applied on submatrix (2,2)
       integer(kind=ikind), intent(in) :: maxitcount
-      !> if present and true prints Frobenius norms of submatrices
-      logical, intent(in), optional :: details
+
+     
       
       class(extsmtx), dimension(:,:), allocatable, save :: blockmat
       integer(kind=ikind) :: no_blocks
       integer(kind=ikind) :: finbig
       integer(kind=ikind), dimension(:), allocatable, save :: indices
-      real(kind=rkind), dimension(:), allocatable, save :: values, xold, biter
+      real(kind=rkind), dimension(:), allocatable, save :: values
       integer(kind=ikind) :: nelem, i, j, iblock, jblock, ilocal, jlocal, xlow, xhigh, blow, bhigh, pcg_it
       integer(kind=ikind) :: i_prev, j_prev, k
       real(kind=rkind) :: repstot, repslocal
@@ -514,7 +516,6 @@ module simplelinalg
       
       no_blocks = ubound(blindex,1)
       
-
       
       if (.not. allocated(blockmat)) then
         allocate(blockmat(no_blocks, no_blocks))
@@ -523,8 +524,6 @@ module simplelinalg
             call blockmat(iblock,jblock)%init(blindex(iblock,2)-blindex(iblock,1)+1, blindex(iblock,2)-blindex(iblock,1)+1)
           end do
         end do
-        allocate(xold(ubound(xvect,1)))
-        allocate(biter(ubound(xvect,1)))
       end if
       
       
@@ -566,179 +565,41 @@ module simplelinalg
       end do
           
       
-      if (.not. solved) then
-		if (.not. allocated(p1)) then
-		  allocate(p1(blindex(1,2)))
-          allocate(p2(blindex(1,2)))
-		end if
-      
-		call LDUd(blockmat(1,1), pivtype=5, ilev=0, perm1=p1, perm2=p2)
-		call LDUback(blockmat(1,1), bvect(blindex(1,1):blindex(1,2)), xvect(blindex(1,1):blindex(1,2)), p1=p1, p2=p2)
 
+	  if (.not. allocated(p1)) then
+		allocate(p1(blindex(1,2)))
+		allocate(p2(blindex(1,2)))
 	  end if
+
+	  call LDUd(blockmat(1,1), pivtype=5, ilev=0, perm1=p1, perm2=p2)
+	  call LDUback(blockmat(1,1), bvect(blindex(1,1):blindex(1,2)), xvect(blindex(1,1):blindex(1,2)), p1=p1, p2=p2)
+	  
+	  if (.not. solved) itcnt = 0
+
 	 
-	 if (solved) then 
-		call sparse_gem_pig(blockmat(2,2), bvect(blindex(2,1):blindex(2,2)), xvect(blindex(2,1):blindex(2,2)))
+	  if (solved) then 
+		if (solver_name == "LDUPCG") then
+          call diag_precond(a=blockmat(2,2), x=xvect(blindex(2,1):blindex(2,2)), mode=1)
+          call CGnormal(A=blockmat(2,2), b=bvect(blindex(2,1):blindex(2,2)),x=xvect(blindex(2,1):blindex(2,2)), &
+						ilev1=0,itmax1=maxitcount,reps1=repsexit, itfin1=itcnt)
+          call diag_precond(a=blockmat(2,2), x=xvect(blindex(2,1):blindex(2,2)), mode=-1)
+         else if (solver_name == "LDULDU") then
+			call LDUd(blockmat(2,2),  pivtype=5, perm1=p1, perm2=p2)
+			call LDUback(blockmat(2,2), bvect(blindex(2,1):blindex(2,2)), xvect(blindex(2,1):blindex(2,2)), p1=p1, p2=p2) 
+			itcnt = 0
+		 else
+			STOP "exited from simplelingalg::block_jacobi_uncoupled"
+		 end if
 	 end if
 	 
 	 solved = .true.
 
     
-    end subroutine block_jacobi4ADE_steady
+    end subroutine block_jacobi_uncoupled
     
     
     
-    subroutine block_jacobi4ADE(A,xvect,bvect,blindex, itcnt, reps1, maxitcount, details, repsfin1)
-      use typy
-      use sparsematrix
-      use pde_objs
-      use solvers
-      use debug_tools
-      use globals
-      use printtools
-      use core_tools
-      use re_globals
-      
-      !> input global matrix
-      class(smtx), intent(in out) :: A
-      !> global vector with solution
-      real(kind=rkind), dimension(:), intent(in out) :: xvect
-      !> global b-vector
-      real(kind=rkind), dimension(:), intent(in) :: bvect
-      !> indeces of matrix diagonal blocks, 1st column start indices, 2nd column end indices
-      integer(kind=ikind), dimension(:,:), intent(in) :: blindex
-      !> iteration count 
-      integer(kind=ikind), intent(out) :: itcnt
-      !> required minimal residual
-      real(kind=rkind) :: reps1
-      !> maximal iteration count
-      integer(kind=ikind), intent(in) :: maxitcount
-      !> if present and true prints Frobenius norms of submatrices
-      logical, intent(in), optional :: details
-      real(kind=rkind), intent(out) :: repsfin1
-      
-      
-      
-      class(extsmtx), dimension(:,:), allocatable, save :: blockmat
-      integer(kind=ikind) :: no_blocks
-      integer(kind=ikind) :: finbig
-      integer(kind=ikind), dimension(:), allocatable, save :: indices
-      real(kind=rkind), dimension(:), allocatable, save :: values, xold, biter
-      integer(kind=ikind) :: nelem, i, j, iblock, jblock, ilocal, jlocal, xlow, xhigh, blow, bhigh, pcg_it
-      integer(kind=ikind) :: i_prev, j_prev, k
-      real(kind=rkind) :: repstot, repslocal
-      integer, save :: itfile
-      real(kind=rkind), dimension(:,:), allocatable, save :: frobnorms
-      character(len=4096) :: text
-      
-      integer(kind=ikind), dimension(:), allocatable, save :: p1, p2
-      logical, save :: solved = .false.
-      real(kind=rkind), dimension(:), allocatable :: blocal
-    
-      finbig = A%getn()
-
-      
-      if (finbig /= A%getm()) then
-        print *, "runtime error, matrix is not square matrix"
-        print *, "exited from simplelinalg::block_jacobi"
-        ERROR STOP
-      end if
-      
-      
-      if (ubound(xvect,1) /= finbig) then
-        print *, "x vector has incorrect dimension"
-        print *, "x vector has:", ubound(xvect,1), "components, matrix A has dimension:", finbig
-        print *, "exited from simplelinalg::blockjacobi"
-        ERROR STOP
-      end if
-      
-      if (ubound(bvect,1) /= finbig) then
-        print *, "b vector has incorrect dimension"
-        print *, "b vector has:", ubound(bvect,1), "components, matrix A has dimension:", finbig
-        print *, "exited from simplelinalg::blockjacobi"
-        ERROR STOP
-      end if      
-      
-      no_blocks = ubound(blindex,1)
-      
-
-      
-      if (.not. allocated(blockmat)) then
-        allocate(blockmat(no_blocks, no_blocks))
-        do iblock=1, no_blocks
-          do jblock=1, no_blocks
-            call blockmat(iblock,jblock)%init(blindex(iblock,2)-blindex(iblock,1)+1, blindex(iblock,2)-blindex(iblock,1)+1)
-          end do
-        end do
-        allocate(xold(ubound(xvect,1)))
-        allocate(biter(ubound(xvect,1)))
-      end if
-      
-      
-      do i=1, finbig
-        call a%getrow(i=i, v=values, jj=indices, nelem=nelem)
-        do j=1, nelem
-          do k=1, no_blocks
-            if (i >= blindex(k,1) .and. i <= blindex(k,2) ) then
-              iblock = k
-            end if
-            
-            if (indices(j) >= blindex(k,1) .and. indices(j) <= blindex(k,2) ) then
-              jblock = k
-            end if
-          end do
-        
-          
-          if (iblock > 1) then
-            i_prev = blindex(iblock-1,2)
-          else
-            i_prev = 0
-          end if
-          
-          if (jblock > 1) then
-            j_prev = blindex(jblock-1,2)
-          else
-            j_prev = 0
-          end if
-            
-          
-          ilocal = i - i_prev
-          jlocal = indices(j) - j_prev
-          
-
-          call blockmat(iblock,jblock)%set(values(j), ilocal, jlocal)
-
-
-        end do
-      end do
-          
-
-      itcnt = 0
-      
-      
-	  if (re_transient .or. .not. solved) then		
-		  if (.not. allocated(p1)) then
-			  allocate(p1(blindex(1,2)))
-			  allocate(p2(blindex(1,2)))
-		  end if
-		  
-		  call LDUd(blockmat(1,1), pivtype=5, ilev=0, perm1=p1, perm2=p2)
-		  call LDUback(blockmat(1,1), bvect(blindex(1,1):blindex(1,2)), xvect(blindex(1,1):blindex(1,2)), p1=p1, p2=p2)
-		  
-		  solved = .true.
-	  end if
-
-
-	 
-	  call diag_precond(a=blockmat(2,2), x=xvect(blindex(2,1):blindex(2,2)), mode=1)
-	  call CGnormal(A=blockmat(2,2), b=bvect(blindex(2,1):blindex(2,2)),x=xvect(blindex(2,1):blindex(2,2)),ilev1=0, &
-	  			itmax1=blockmat(2,2)%getn(), reps1=reps1, itfin1=itcnt, repsfin1=repsfin1)
-      call diag_precond(a=blockmat(2,2), x=xvect(blindex(2,1):blindex(2,2)), mode=-1)
-
-	 
-
-    
-    end subroutine block_jacobi4ADE
+   
     
     
       !> this procedure bears a codename sparse_gem_pig because it creates full matrix out of sparse matrix and solves it on using full Gauss elimination, only for debugging

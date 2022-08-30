@@ -252,7 +252,7 @@ module debug_tools
       use core_tools
       
       !parametry
-      real(kind=rkind), dimension(:), intent(in out) :: V  !<vektor k tisknuti
+      real(kind=rkind), dimension(:), intent(in) :: V  !<vektor k tisknuti
       integer, intent(in), optional :: filunit   
       character(len=*), intent(in), optional :: name
 
@@ -281,7 +281,7 @@ module debug_tools
      
 
       do i=lbound(V,1),ubound(V,1)
-       write(unit=filloc, fmt=*) "row:", i, "value:", V(i)
+       write(unit=filloc, fmt=*)  i,  V(i)
       end do
 
       if (terminal /= filloc) then
@@ -300,7 +300,7 @@ module debug_tools
       use core_tools
       
       !parametry
-      real(4), dimension(:), intent(in out) :: V  !<vektor k tisknuti
+      real(4), dimension(:), intent(in) :: V  !<vektor k tisknuti
       integer, intent(in), optional :: filunit   
       character(len=*), intent(in), optional :: name
 

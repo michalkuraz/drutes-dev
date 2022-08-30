@@ -53,11 +53,11 @@ module postpro
       character(len=5)                                      :: extension
       character(len=15)                                     :: prefix
       real(kind=rkind)                                      :: distance, avgval, val1, val2, val3, tmp, flux
-      logical, save                                         :: first_run=.true., first_anime=.true.
+      logical, save                                         :: first_run=.true., first_anime=.true., openedq
       type(integpnt_str)                                    :: quadpnt
       integer(kind=ikind), save                             :: anime_run, anime_dec
       integer                                               :: ierr
-      integer(kind=ikind)                                   :: no_files, masscnt, fluxcnt
+      integer(kind=ikind), dimension(:), allocatable, save  :: masscnt, fluxcnt, no_files
       character(len=256) :: name_of_file
 
       if (present(name)) then
@@ -125,33 +125,38 @@ module postpro
 
       i=1
       
-      masscnt=0
-      fluxcnt=0
-      do i=1, ubound(pde,1)
-        if (allocated(pde(i)%mass_name) ) then
-          masscnt = max(masscnt, 1_ikind*ubound(pde(i)%mass_name,1))
-        end if
+      if (.not. allocated(masscnt)) then
+        allocate(masscnt(ubound(pde,1)))
+        allocate(fluxcnt(ubound(pde,1)))
+        allocate(no_files(ubound(pde,1)))
+        masscnt = 0
+        fluxcnt = 0
+    
+        do proc=1, ubound(pde,1)
+          if (allocated(pde(proc)%mass_name) ) then
+            masscnt(proc) = ubound(pde(proc)%mass_name,1)
+          end if
 
-        if (allocated(pde(i)%fluxes)) then
-          fluxcnt = max(fluxcnt , 1_ikind*ubound(pde(i)%fluxes,1))
-        end if
-      end do
-        
-      if (fluxcnt == 0) then
-        no_files = masscnt + 3
-      else
-        no_files = masscnt + fluxcnt + 2
-      end if
+          if (allocated(pde(proc)%fluxes)) then
+            fluxcnt(proc) = ubound(pde(proc)%fluxes,1)
+          end if
+
       
+          if (fluxcnt(proc) == 0) then
+            no_files(proc) = masscnt(proc) + 3
+          else
+            no_files(proc) = masscnt(proc) + fluxcnt(proc) + 2
+          end if
+        end do
+        
 
-      if (.not. allocated(ids_obs)) then
-        allocate(ids(ubound(pde,1), no_files))
-        allocate(ids_obs(ubound(pde,1), no_files))
-        allocate(ids_anime(ubound(pde,1), no_files))
+     
+        allocate(ids(ubound(pde,1), maxval(no_files)))
+        allocate(ids_obs(ubound(pde,1), maxval(no_files)))
+        allocate(ids_anime(ubound(pde,1), maxval(no_files)))
         ids_obs = 0
         ids_anime = 0
       end if
-
       
       if (anime) then
         ids => ids_anime
@@ -168,7 +173,7 @@ module postpro
           allocate(filenames(i)%names(2+ubound(pde(i)%mass_name,1)+ubound(pde(i)%fluxes,1)))
         end if
       end do
-
+      
 
       if (anime) then
         prefix = "out/anime/"
@@ -213,7 +218,8 @@ module postpro
         end if
         
       
-         
+        
+        
         if ( (.not. anime .and. mode == 0)  .or. &
           (anime_run == 1 .and. anime) .or. & 
          ( .not. anime .and. (mode == -1 .and. postpro_run == 0 ) ) ) then
@@ -247,15 +253,17 @@ module postpro
         else
           select case(cut(observe_info%fmt))
             case("pure", "csv")
-              call print_pure(ids(proc,:), proc, quadpnt)
+              call print_pure(ids(proc,1:no_files(proc)), proc, quadpnt)
             case("scil")
-              call print_scilab(ids(proc,:), proc, quadpnt)
+              call print_scilab(ids(proc,1:no_files(proc)), proc, quadpnt)
             case("gmsh")
-              call print_gmsh(ids(proc,:), proc, quadpnt)
+              call print_gmsh(ids(proc,1:no_files(proc)), proc, quadpnt)
           end select
         end if
       end do
 
+
+           
       if (.not. anime) then
         do proc=1, ubound(pde,1)
           do i=1,ubound(ids,2)
@@ -594,6 +602,7 @@ module postpro
       type(integpnt_str) :: qpntloc
       type(integpnt_str) :: quadpnt_loc
 
+
       if (.not. allocated(body)) allocate(body(3, 7+ubound(pde(proc)%mass,1)))
       
       if (.not. allocated(vct_tmp)) allocate(vct_tmp(7+ubound(pde(proc)%mass,1)))
@@ -612,6 +621,8 @@ module postpro
         write(unit=ids(i), fmt=*) "y=zeros(nt,3);"
         write(unit=ids(i), fmt=*) "z=zeros(nt,3);"
       end do
+      
+       call wait()
 
 
       quadpnt_loc%preproc=.true.
@@ -872,6 +883,7 @@ module postpro
       else
         curtime = time
       end if
+      
       
       if (.not. printed(proc)) then
        do i=1, ubound(ids,1)

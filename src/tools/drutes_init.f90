@@ -61,6 +61,8 @@ module drutes_init
 
       open(newunit=file_itcg, file="out/cgit.count", action="write", status="replace", iostat=i_err)
       
+      open(newunit=file_picard, file="out/picard_it.count", action="write", status="replace", iostat=i_err)
+      
       call write_log(text="total number of parallel images is:", int1=1_ikind*NUM_IMAGES())
 
       call write_log("reading input files and allocating...")

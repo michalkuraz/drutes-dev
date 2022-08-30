@@ -17,6 +17,7 @@
 
 module solvers
     use typy
+    !$ use omp_lib
     !!use reorder
     implicit none
 
@@ -117,6 +118,7 @@ module solvers
 
         !print *,"jacobi zacina"
         call cpu_time(t1)
+        !$ t1 = omp_get_wtime()
         !! vyresime nepovinne parametry
         n = a%getn()
         if (present(maxit1)) then
@@ -167,6 +169,7 @@ module solvers
         end do
         deallocate(r,diag)
         call cpu_time(t2)
+        !$ t2 = omp_get_wtime()
         !print *,"jacobi konci"
         ! vyresime navratove hodnoty
         if (present(countop)) then
@@ -225,6 +228,7 @@ module solvers
         real(kind=rkind) :: t1, t2
 
         call cpu_time(t1)
+        !$ t1 = omp_get_wtime()
         allocate(r(1:a%getn()))
         allocate(diag(1:a%getn()))
         r=b-a%mul(x,countop1)
@@ -260,6 +264,7 @@ module solvers
         end do
         deallocate(r,diag)
         call cpu_time(t2)
+        !$ t2 = omp_get_wtime()
         if (present(countop)) then
             countop%ad  = countop%ad  + countop1%ad
             countop%mul = countop%mul + countop1%mul
@@ -427,6 +432,7 @@ module solvers
         integer(kind=ikind) :: ip1,ip2,ip3,ip4, degsmin, lastmin
 
         call cpu_time(t1)
+        !$ t1=omp_get_wtime()
         lastmin = 0
         allocate(p1(1:A%getn()))
         allocate(p2(1:A%getm()))
@@ -541,7 +547,6 @@ module solvers
         dprev  = -1
         dstartnext = -1
         degsmin = 0
-!         print *,"step2.1"
         do i=1, A%getn()
             !print *,"i=",i
             call A%getrow(i,r1,ri1,sr1,mp1)
@@ -633,6 +638,7 @@ module solvers
         end do
 
         call cpu_time(t2)
+        !$ t2 = omp_get_wtime()
         if (present(info)) then
             info%ad   = info%ad  + inf1%ad
             info%mul  = info%mul + inf1%mul
@@ -906,8 +912,8 @@ module solvers
         m = LDU%getm()
         ! vyresit optionaly
         if (present(p1)) then
-            allocate(perm1(1:n))
-        perm1 = p1
+          allocate(perm1(1:n))
+          perm1 = p1
         else
             allocate(perm1(1:n))
             do i=1,n
@@ -916,7 +922,7 @@ module solvers
         end if
         if (present(p2)) then
             allocate(perm2(1:m))
-        perm2 = p2
+            perm2 = p2
         else
             allocate(perm2(1:m))
             do i=1,m
@@ -934,16 +940,16 @@ module solvers
 
         if (ubound(b,1) /= n) then
             if ( present(errcode) ) then
-            else
                 errcode = 2
+            else
                 stop "LDUback: Pocet radku matice a prave strany se lisi"
             end if
         end if
 
         if (ubound(x,1) /= n) then
             if ( present(errcode) ) then
-            else
                 errcode = 3
+            else
                 stop "LDUback: Pocet sloupcu matice a neznamych se lisi"
             end if
         end if
@@ -1102,6 +1108,7 @@ module solvers
         type(tcount) :: opcnt
 
         call cpu_time(t1)
+        !$ t1=omp_get_wtime()
         errcode = 0
         n = A%getn()
         rcount = 0
@@ -1215,6 +1222,7 @@ module solvers
         end do
 
         call cpu_time(t2)
+        !$ t2 = omp_get_wtime()
         opcnt%time = t2-t1
         ! vyridit konec
         if (present(opcnt1)) call update_info(opcnt1,opcnt)
@@ -1310,6 +1318,7 @@ module solvers
         type(tcount) :: opcnt
 
         call cpu_time(t1)
+        !$ t1 = omp_get_wtime()
         errcode = 0
         n = A%getn()
         rcount = 0
@@ -1409,9 +1418,9 @@ module solvers
             opcnt%div = opcnt%div + 1
 
             !! odhadnout vlastni cisla
-!            call esteig(l1,l2,cnt,alfa,beta)
-!            print *, "odhad vl. cisel:",l1,l2
-!            !! hotovo
+            call esteig(l1,l2,cnt,alfa,beta)
+            print *, "odhad vl. cisel:",l1,l2
+            !! hotovo
 
             cnt = cnt + 1
             if (cnt==1) then
@@ -1448,6 +1457,7 @@ module solvers
         end do
 
         call cpu_time(t2)
+        !$ t2 = omp_get_wtime()
         opcnt%time = t2-t1
         ! vyridit konec
         if (present(opcnt1)) opcnt1 = opcnt
@@ -1542,6 +1552,7 @@ module solvers
         type(tcount) :: opcnt
 
         call cpu_time(t1)
+        !$ t1 = omp_get_wtime()
         if ( present(errcode1)) errcode1 = 0
         errcode = 0
         n = A%getn()
@@ -1611,7 +1622,16 @@ module solvers
             !! Step 3
             Ap =A%mul(p,opcnt)
             r1 = dot_product(Ap,Ap)
-            wrk = r2/r1
+!            block
+!               real(rkind) :: w1
+!               integer(ikind) :: ilok
+!               w1 = 0
+!               do ilok=1,n
+!                 w1 = w1 + Ap(ilok)*Ap(ilok)
+!               end do
+!               if (abs(w1-r1) > 0) Stop "potize v cgnormal"
+!            end block
+!            wrk = r2/r1
             if (ilev>0) print *,"alfa=",wrk
             alfa(cnt) = wrk
             ! tenhle usek je jen kvuli vypoctu energie
@@ -1620,7 +1640,10 @@ module solvers
             !! Step 4
             x = x + wrk*p
             !! Step 5
-            res = res - wrk*A%mult(Ap,opcnt)
+            !!!!!!!!   Nutno zkontrolovat
+            !res = res - wrk*A%mult(Ap,opcnt)
+            res = b - A%mul(x)
+            res = A%mult(res)
             !! Step 6
             r3 = r2
             r2 = dot_product(res,res)
@@ -1633,9 +1656,9 @@ module solvers
             opcnt%mul = opcnt%mul + 4*n   + n
             opcnt%div = opcnt%div + 1
 
-!            !! odhadnout vlastni cisla
-!            call esteig(l1,l2,cnt,alfa,beta)
-!            print *, "odhad vl. cisel:",l1,l2
+            !! odhadnout vlastni cisla
+            call esteig(l1,l2,cnt,alfa,beta)
+            print *, "odhad vl. cisel:",l1,l2
             !! hotovo
 
             cnt = cnt + 1
@@ -1673,6 +1696,7 @@ module solvers
         end do
 
         call cpu_time(t2)
+        !$ t2 = omp_get_wtime()
         opcnt%time = t2-t1
         ! vyridit konec
         if (present(opcnt1)) opcnt1 = opcnt
@@ -1772,6 +1796,7 @@ module solvers
         type(tcount) :: opcnt
 
         call cpu_time(t1)
+        !$ t1 = omp_get_wtime()
         errcode = 0
         if ( present(errcode1)) errcode1 = 0
         n = A%getn()
@@ -1881,9 +1906,9 @@ module solvers
             opcnt%mul = opcnt%mul + 4*n   + n
             opcnt%div = opcnt%div + 1
 
-!            !! odhadnout vlastni cisla
-!            call esteig(l1,l2,cnt,alfa,beta)
-!            print *, "odhad vl. cisel:",l1,l2
+            !! odhadnout vlastni cisla
+            call esteig(l1,l2,cnt,alfa,beta)
+            print *, "odhad vl. cisel:",l1,l2
             !! hotovo
 
             cnt = cnt + 1
@@ -1921,6 +1946,7 @@ module solvers
         end do
 
         call cpu_time(t2)
+        !$ t2 = omp_get_wtime()
         opcnt%time = t2-t1
         ! vyridit konec
         if (present(opcnt1)) opcnt1 = opcnt

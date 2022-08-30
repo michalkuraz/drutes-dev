@@ -90,6 +90,10 @@ module femmat
           write(unit=solver_time_file, fmt=*) time, solver_end - solver_start
           call flush(solver_time_file)
         end if
+        
+        where (pde_common%xvect(1:fin,3) < -100.0) 
+          pde_common%xvect(1:fin,3) = -100.0
+        end where
           
   
         if (pcg_it > 0.55*fin) then 
@@ -102,6 +106,8 @@ module femmat
         error = norm2(pde_common%xvect(1:fin,2)-pde_common%xvect(1:fin,3))/ubound(pde_common%xvect,1)
         
         write(unit=terminal, fmt=*) "Nonlinear solver convergence criterion:", error
+        
+        write(unit=file_picard, fmt=*) time, error
          
         if (itcount == 1 .or. error <= iter_criterion) then
           do proc=1, ubound(pde,1)
@@ -202,7 +208,7 @@ module femmat
 !        call printmtx(stiff_mat)
 !        call printmtx(cap_mat)
 
-       stiff_mat = stiff_mat + cap_mat  
+       stiff_mat = stiff_mat + cap_mat 
 
        call in2global(i,spmatrix, pde_common%bvect)
 

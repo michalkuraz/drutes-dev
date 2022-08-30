@@ -32,7 +32,7 @@ logical :: printedk
   !> version id variable
   type(version), public :: version_id   
   !> file units ----------------------------------------------------------------------
-  integer, public :: file_global,  file_mesh, file_itcg, file_solver
+  integer, public :: file_global,  file_mesh, file_itcg, file_solver, file_picard
   !> log file unit
   integer, public :: logfile
   !> debug file unit (put there whatever you like)

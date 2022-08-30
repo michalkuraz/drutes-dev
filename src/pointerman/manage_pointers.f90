@@ -171,8 +171,8 @@ module manage_pointers
           solve_matrix => blockjacobi_face
         case("PCGdiag","PCGbalanced")
           solve_matrix => CG_normal_face
-        case("LDUPCG")
-          solve_matrix => LDUPCG_face
+        case("LDUPCG", "LDULDU")
+          solve_matrix => LDU_uncoupled_face
       end select
 !      select case(drutes_config%dimen)
 !        case(1)

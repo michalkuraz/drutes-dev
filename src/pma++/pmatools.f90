@@ -3,7 +3,7 @@
 
 !> nektere nastroje
 module pmatools
-    character, private :: dirsep=""
+    character, private :: dirsep="\"
 
     public :: getyesno
     public :: pockej
@@ -13,6 +13,8 @@ module pmatools
     public :: read_line
     public :: FileToStr
     public :: FindSubstr
+    public :: ReadDir
+    public :: FileSelector
 
     interface ReadInt
         procedure ReadIntI, ReadIntL
@@ -304,14 +306,16 @@ contains
 
 
     !> precte adresar
-    !> Prefix - jmeno adresare
-    !> StrList - nalezene soubory
-    !> Files - cist jen soubory
     subroutine ReadDir(StrList,Prefix,Files)
         use typy
         implicit none
+        !> nalezene soubory
         type(StringList), intent(out) :: StrList
+        !> cteny adresar
         character(len=*), intent(in), optional :: Prefix
+        !> cist jen soubory
+        !> - .true.  .... cist vse
+        !> - .false. .... cist jen adresare 
         logical, optional, intent(in) :: Files
         integer :: fil, i, ierr, cnt, delka, status
         character(len=:), allocatable :: nm,pr1
@@ -363,23 +367,24 @@ contains
                 cnt = 0
                 do
                     nm = read_line(fil,ierr)
+                    print *, nm
                     if (ierr==1) exit
                     if (nm(len(nm):len(nm))/="/") then
                         if (fl) then
                             cnt = cnt + 1
-                            !print *,cnt, nm
+                            print *,cnt, nm
                         end if
                     else
                         if (.not. fl) then
                             cnt = cnt + 1
-                            !print *,cnt, nm
+                            print *,cnt, nm
                         end if
                     end if
 
                 end do
                 rewind(fil)
                 StrList%pocet = cnt
-                !print *, "pocet radku=",cnt
+                print *, "pocet radku=",cnt
                 allocate(StrList%name(1:cnt))
                 allocate(StrList%delka(1:cnt))
                 i = 0
@@ -387,7 +392,7 @@ contains
                     nm = read_line(fil,ierr)
                     delka = len(nm)
 
-                    !print *,i,delka, nm
+                    print *,i,delka, nm
                     if(nm(delka:delka)/="/") then
                         if (fl) then
                             i = i+1
@@ -404,7 +409,7 @@ contains
                     if (i==cnt) exit
                 end do
                 close(fil)
-
+                print *, "nacteno"
             else
                 stop "neuspech pri cteni adresare"
             end if
@@ -412,6 +417,8 @@ contains
     end subroutine ReadDir
 
 
+
+    !>  Postupne vybere soubory, vybrane soubory vrati ve StrList
     subroutine FileSelector(StrList)
         use typy
         implicit none
@@ -500,7 +507,7 @@ contains
     end subroutine ReadIntL
 
 
-    function dot_product(x,y) result(r)
+    function dot_product_old(x,y) result(r)
         use typy
         implicit none
         real(kind=rkind), dimension(:), intent(in) :: x,y
@@ -510,7 +517,7 @@ contains
         do i = LBOUND(x,1), UBOUND(x,1)
             r = r + x(i)*y(i)
         end do
-    end function dot_product
+    end function dot_product_old
 
 
 
