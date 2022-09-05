@@ -92,6 +92,11 @@ module re_reader
       if (.not. success) then
         backspace file_waterm
         backspace file_waterm
+        write(msg, fmt=*) "Seems like you are using outdated drutes.conf/water.conf, no problem with that, in order to avoid this &
+                        message add logical value", new_line("a"), "[y/n] on top of this file specifying", new_line("a"), & 
+                        "transient flow = y", new_line("a"), "steady state regime = n", new_line("a"), &
+                        "by default transient flow regime is activated"
+        call write_log(msg)
       end if
       
       write(msg, *) "define method of evaluation of constitutive functions for the Richards equation", new_line("a"), &

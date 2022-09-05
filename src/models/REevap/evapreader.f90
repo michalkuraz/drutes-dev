@@ -181,6 +181,9 @@ module evapreader
         if (.not. success) then
           counter = counter + 1
         else
+          if (counter == 0) then
+            call file_error(ebalancein, errmsg="no data detected in drutes.conf/evaporation/ebalance.in, exiting...")
+          end if
           EXIT
         end if
       end do

@@ -328,7 +328,7 @@ module readtools
       logical, intent(out), optional :: eof
       
             !logical vars
-      integer :: ierr, ierr2
+      integer :: ierr, ierr2, ierr3
       integer(kind=ikind) :: i, i1, i2, arraybound, current_pos, chpos
       real(kind=rkind), dimension(:), allocatable :: tmpdata
       logical :: terminate = .false.
@@ -356,7 +356,7 @@ module readtools
             i1=ftell(fileid)
             backspace fileid
             call comment(fileid)
-            read(unit=fileid, fmt=*, iostat=ierr) tmpdata(1:arraybound)
+            read(unit=fileid, fmt=*, iostat=ierr3) tmpdata(1:arraybound)
             i2 = ftell(fileid)
             backspace fileid
            

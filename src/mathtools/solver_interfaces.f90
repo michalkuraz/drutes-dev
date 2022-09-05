@@ -21,7 +21,7 @@
 
 module solver_interfaces
   use mtx
-  public :: LDU_face
+  public :: LDU_face, LDU_face_mindg
   public :: LDU_uncoupled_face
   public :: CG_face
   public :: CG_normal_face
@@ -114,18 +114,11 @@ module solver_interfaces
   !! 2 ... column pivoting (requires perm1 only)
   !! 3 ... row pivoting (requires perm2 only)
   !! 4 ... diagonal pivoting (symmetric matrix only)
-  !! 5 ... diagonal pivoting with minimal degree (symmetric matrix only)
+  !! 5 ... diagonal pivoting with minimal degree 
   
-      if (pivtype == -1) then
-        do i=1, ubound(pde,1)
-          if (.not. pde(i)%symmetric) then
-            pivtype = 1
-            EXIT
-          else
-            pivtype = 5
-          end if
-        end do
-      end if
+
+      pivtype = 5
+
 
       if (.not. allocated(p1)) then
         allocate(p1(ubound(b,1)))
@@ -140,39 +133,111 @@ module solver_interfaces
       end if
                 
       
-      if (ubound(pde,1) < 2 .or. cut(solver_name) == "LDUdefault") then  
-          
-        call LDUd(A, pivtype=pivtype, ilev=0, perm1=p1, perm2=p2)
-        
-        if ( cut(solver_name) == "LDUbalanced") then
-          call LDUback(A, bbalanced, x, p1=p1, p2=p2)
-        else
-          call LDUback(A, b, x, p1=p1, p2=p2)
-        end if
-        
-        if (present(itfin1)) then 
-          itfin1 = 1
-        end if
-      else
-        call RCM(A,p1)
-        call copyperm(source=A, dest=mtx2,permi=p1, permj=p1)
-        call LDUd(mtx2)
-        if (.not. allocated(bpermut)) allocate(bpermut(ubound(b,1)))
-        
-        if (cut(solver_name) == "LDUbalanced") then
-          bpermut = bbalanced(p1)
-        else
-          bpermut = b(p1)
-        end if
-        
-        call LDUback(mtx2,bpermut,x)
-        x(p1) = x
-      end if
+  
+
+      call LDUd(A, pivtype=pivtype, ilev=0, perm1=p1, perm2=p2)
       
-      if (present(itfin1)) itfin1 = 1
+      if ( cut(solver_name) == "LDUbalanced") then
+        call LDUback(A, bbalanced, x, p1=p1, p2=p2)
+      else
+        call LDUback(A, b, x, p1=p1, p2=p2)
+      end if
+        
+      if (present(itfin1)) then 
+        itfin1 = 1
+      end if
+!      else
+!!        call RCM(A,p1)
+!!        call copyperm(source=A, dest=mtx2,permi=p1, permj=p1)
+!!        call LDUd(mtx2)
+!        call LDUd(A, pivtype=5, ilev=0, perm1=p1, perm2=p2)
+!        if (.not. allocated(bpermut)) allocate(bpermut(ubound(b,1)))
+        
+!        if (cut(solver_name) == "LDUbalanced") then
+!          bpermut = bbalanced(p1)
+!        else
+!          bpermut = b(p1)
+!        end if
+        
+!        call LDUback(mtx2,bpermut,x)
+!        x(p1) = x
+!      end if
+      
+!      if (present(itfin1)) itfin1 = 1
         
 
     end subroutine LDU_face
+    
+    
+    subroutine LDU_face_mindg(A,b,x,itmax1,reps1,ilev1,itfin1,repsfin1,&
+                ll1,ll2,cond1,opcnt1,errcode1)
+      use mtx
+      use typy
+      use sparsematrix
+      use solvers
+      use pde_objs
+      use reorder
+      use core_tools
+      use global4solver
+      use simplelinalg
+      
+      
+      !> matice soustavy\n
+      !! musi poskytovat getn, getm, mul (nasobeni vektorem)
+      class(smtx), intent(in out) :: A
+      !> vektor prave strany
+      real(kind=rkind), dimension(:), intent(in) :: b
+      !> aproximace reseni, postupne menena
+      real(kind=rkind), dimension(:), intent(in out) :: x
+      !> maximalni povoleny pocet iteraci, default = n ( Rozmer matice)
+      integer(kind=ikind), intent(in), optional :: itmax1
+      !> pozadovana relativni zmena rezidua, default = 1e-6
+      real(kind=rkind), intent(in), optional :: reps1
+      !> informacni podrobnost\n
+      !> - 0 ... pracuj tise
+      !! - 1 ... minimalni informace
+      !! - 10 ... maximalni ukecanost
+      integer, intent(in), optional :: ilev1
+      !> skutecne provedeny pocet iteraci
+      integer(kind=ikind), intent(out), optional :: itfin1
+      !> skutecne dosazena relativni zmena residua
+      real(kind=rkind), intent(out), optional :: repsfin1
+      !> odhad nejvetsiho vlastniho cisla
+      real(kind=rkind), intent(out), optional :: ll1
+      !> odhad nejmensiho vlastniho cisla
+      real(kind=rkind), intent(out), optional :: ll2
+      !> odhad cisla podminenosti : cond1 = ll1/ll2
+      real(kind=rkind), intent(out), optional :: cond1
+      !> celkovy pocet provedenych operaci a cas behu
+      type(tcount), intent(out), optional :: opcnt1
+      !> kod pripadnr chyby
+      !! - 0 ... OK
+      !! - 1 ... matice neni ctvercova
+      !! - 2 ... nesouhlasi b
+      !! - 3 ... nesouhasi x
+      !! - 4 ... ani jeden z vektoru nesouhlasi
+      !! - 5 ... vycerpan povoleny pocet iteraci
+      !! - 6 ... prestalo klesat residuum i energie
+      integer, intent(out), optional :: errcode1
+      
+      
+      integer(kind=ikind), dimension(:), allocatable, save :: p1, p2
+      integer(kind=ikind) :: n
+      
+      
+      n=A%getn()
+      
+      if (.not. allocated(p1)) then
+        allocate(p1(n))
+        allocate(p2(n))
+      end if
+
+      call LDUd(A, pivtype=5, ilev=0, perm1=p1, perm2=p2)
+      call LDUback(A, b, x, p1=p1, p2=p2)
+      
+      
+      
+    end subroutine LDU_face_mindg
     
     
     subroutine blockjacobi_face(A,b,x,itmax1,reps1,ilev1,itfin1,repsfin1,&
