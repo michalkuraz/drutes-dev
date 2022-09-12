@@ -648,6 +648,30 @@ module simplelinalg
      call gem(matice, b, x)
  
    end subroutine sparse_gem_pig
+   
+   
+   subroutine Ax4gmres(b,x,nsize)
+	 use typy
+	 use globals
+	 
+	 integer(kind=ikind), intent (in):: nsize
+	 real(kind=rkind), dimension(1:nsize), intent(in) :: x
+	 real(kind=rkind), dimension(1:nsize), intent(inout) :: b
+	 
+	 b = spmatrix%mul(x)
+	 
+   end subroutine Ax4gmres
+         
+         
+   subroutine dummycond4gmres(b,x,nsize)
+	use typy
+    integer(kind=ikind), intent (in):: nsize
+    real(kind=rkind), dimension(1:nsize), intent(in) :: x
+    real(kind=rkind), dimension(1:nsize), intent(inout) :: b
+    
+    b=x
+    
+   end subroutine dummycond4gmres       
 ! 
 !   
 !     !> this procedure bears a codename sparse_gem_pig because it creates full matrix out of sparse matrix and solves it on using full Gauss elimination, only for debugging
