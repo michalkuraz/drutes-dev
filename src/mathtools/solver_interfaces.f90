@@ -176,6 +176,12 @@ module solver_interfaces
       use mtx
       use typy
       use sparsematrix
+      use globals
+      use global_objs
+      use pde_objs
+      use simplelinalg
+      use gmres_solver
+      use debug_tools
        !> matice soustavy\n
       !! musi poskytovat getn, getm, mul (nasobeni vektorem)
       class(smtx), intent(in out) :: A
@@ -213,6 +219,40 @@ module solver_interfaces
       !! - 5 ... vycerpan povoleny pocet iteraci
       !! - 6 ... prestalo klesat residuum i energie
       integer, intent(out), optional :: errcode1
+      
+      
+      integer(kind=ikind) :: nrestart, nit, itfin
+      real(kind=rkind) :: gmres_reps, gmres_reps_abs, repsfin
+      integer(kind=ikind) :: converge, fin
+      
+!      A => gmressmtx
+      
+      print *, A%getn()
+      
+      nrestart = 45 
+      
+      nit = nrestart * 10
+      
+      fin = spmatrix%getn()
+      
+!      print *, norm2(b-A%mul(x)) ; call wait()
+      
+      call diag_precond(a=spmatrix, x=pde_common%xvect(1:fin,3), mode=1)
+!    call unify_rows(spmatrix, pde_common%bvect(1:fin))
+
+      gmres_reps_abs=reps1
+      
+!      print *, reps1
+      
+      call gmres(fin, x, b, nit, reps1, Ax4gmres, dummycond4gmres, nrestart, gmres_reps_abs, 1_ikind, itfin1, repsfin1, &
+                  converge)
+                  
+      call diag_precond(a=spmatrix, x=pde_common%xvect(1:fin,3), mode=-1)     
+      
+      itfin1 = 0        
+      
+      
+!      print *, norm2(b-A%mul(x)) ; call wait()
       
       
     end subroutine gmres_face

@@ -25,7 +25,7 @@ servers="miguel@neptun01.fsv.cvut.cz:~  miguel@matsrv-lin01.fsv.cvut.cz:~ miguel
 CORE_obj := typy.o global_objs.o globals.o globals1D.o globals2D.o  debug_tools.o core_tools.o pde_objs.o dummy_procs.o global4solver.o
 POINTERMAN_obj := manage_pointers.o
 RE_obj := re_constitutive.o re_reader.o re_globals.o re_total.o re_pointers.o re_analytical.o re_evap_methods.o
-MATHTOOLS_obj :=  linalg.o integral.o solver_interfaces.o simplelinalg.o gmres.o
+MATHTOOLS_obj :=  linalg.o integral.o solver_interfaces.o simplelinalg.o gmres_solver.o
 TOOLS_obj := printtools.o simegen.o read_inputs.o drutes_init.o geom_tools.o postpro.o readtools.o objfnc.o
 FEMTOOLS_obj := feminittools.o capmat.o stiffmat.o fem.o fem_tools.o femmat.o
 DECOMPO_obj :=  decomp_tools.o schwarz_dd.o  decomp_vars.o decomposer.o schwarz_dd2subcyc.o
@@ -70,8 +70,8 @@ debug_tools.o: typy.o core_tools.o src/core/debug_tools.f90
 #------begin MATHTOOLS_obj-----------------------------
 linalg.o: $(CORE_obj) src/mathtools/linalg.f90
 	$c -c src/mathtools/linalg.f90
-gmres.o: $(CORE_obj) src/mathtools/gmres.f90
-	$c -c src/mathtools/gmres.f90
+gmres_solver.o: $(CORE_obj) src/mathtools/gmres_solver.f90
+	$c -c src/mathtools/gmres_solver.f90
 integral.o: $(CORE_obj) linalg.o src/mathtools/integral.f90
 	$c -c src/mathtools/integral.f90
 simplelinalg.o:  $(CORE_obj) $(PMAoo_obj) re_globals.o linalg.o src/mathtools/simplelinalg.f90

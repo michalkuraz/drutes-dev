@@ -166,6 +166,8 @@ logical :: printedk
   type(extsmtx), public, save :: spmatrix
   !> sparse matrix
   type(extsmtx), public, save :: spmatrix2
+  
+  type(extsmtx), public, target :: gmressmtx
 
   !> current position in the global stiffness matrix
   integer(kind=ikind), public :: global_row_id
