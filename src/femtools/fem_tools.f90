@@ -77,7 +77,7 @@ module fem_tools
         
     do iproc=0, ubound(pde,1)-1
       do i=1, ubound(elements%data, 2) 	
-        surface(i+iproc*limits) = elements%length(el_id,i)
+        surface(i+iproc*limits) = elements%length(el_id,i)/drutes_config%dimen
       end do
     end do
     
