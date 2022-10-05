@@ -102,7 +102,7 @@ module typy
 
     public :: print_info
     public :: update_info
-    public :: norm2 ! casem zrusit, duvodem je chyba v 16b implementaci
+!    public :: norm2 ! casem zrusit, duvodem je chyba v 16b implementaci
     contains
     !> vytiskne udaje o pocitani
     subroutine print_info(info)
@@ -162,19 +162,19 @@ module typy
     end function derevalc
 
 
-    !> spocte L2 normu vektoru
-    function norm2(v) result(y)
-        implicit none
-        real(kind=rkind), dimension(:), intent(in) :: v
-        real(kind=rkind) :: y
-        integer :: i
+!    !> spocte L2 normu vektoru
+!    function norm2(v) result(y)
+!        implicit none
+!        real(kind=rkind), dimension(:), intent(in) :: v
+!        real(kind=rkind) :: y
+!        integer :: i
 
-        y=0
-        do i = lbound(v,1), ubound(v,1)
-            y = y + v(i)*v(i)
-        end do
-        y = sqrt(y)
-    end function norm2
+!        y=0
+!        do i = lbound(v,1), ubound(v,1)
+!            y = y + v(i)*v(i)
+!        end do
+!        y = sqrt(y)
+!    end function norm2
 
 end module typy
 
