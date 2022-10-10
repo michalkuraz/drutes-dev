@@ -93,10 +93,10 @@ module drutes_init
       call init_obstimes()
 
        !read mesh data
-      call find_unit(file_mesh, 200)
+
       select case(drutes_config%dimen)
         case(1)
-          open(unit=file_mesh, file="drutes.conf/mesh/drumesh1d.conf", action="read", status="old", iostat=i_err)
+          open(newunit=file_mesh, file="drutes.conf/mesh/drumesh1d.conf", action="read", status="old", iostat=i_err)
           if (i_err /= 0) then
             print *, "missing drutes.conf/mesh/drumesh1d.conf file"
             ERROR STOP
@@ -106,21 +106,21 @@ module drutes_init
         case(2)
           select case(drutes_config%mesh_type)
             case(1)
-              open(unit=file_mesh, file="drutes.conf/mesh/drumesh2d.conf", action="read", status="old", iostat=i_err)
+              open(newunit=file_mesh, file="drutes.conf/mesh/drumesh2d.conf", action="read", status="old", iostat=i_err)
               if (i_err /= 0) then
                 print *, "missing drutes.conf/mesh/drumesh2d.conf file"
                 ERROR STOP
               end if
               call read_2dmesh_int()
             case(2)
-              open(unit=file_mesh, file="drutes.conf/mesh/mesh.t3d", action="read", status="old", iostat=i_err)
+              open(newunit=file_mesh, file="drutes.conf/mesh/mesh.t3d", action="read", status="old", iostat=i_err)
               if (i_err /= 0) then
                 print *, "missing drutes.conf/mesh/mesh.t3d file"
                 ERROR STOP
               end if
               call read_2dmesh_t3d()
             case(3)
-              open(unit=file_mesh, file="drutes.conf/mesh/mesh.msh", action="read", status="old", iostat=i_err)
+              open(newunit=file_mesh, file="drutes.conf/mesh/mesh.msh", action="read", status="old", iostat=i_err)
               if (i_err /= 0) then
                 print *, "missing drutes.conf/mesh/mesh.msh file"
                 ERROR STOP
@@ -128,8 +128,16 @@ module drutes_init
               call read_2dmesh_gmsh()
             case(4)
               call read_ArcGIS()
-          end select
+            end select
         
+          case(3)
+              open(newunit=file_mesh, file="drutes.conf/mesh/mesh3D.msh", action="read", status="old", iostat=i_err)
+              if (i_err /= 0) then
+                print *, "missing drutes.conf/mesh/mesh3D.msh file"
+                ERROR STOP
+              end if
+              call read_3dmesh_gmsh()         
+            
         case default
           write(unit=terminal, fmt=*)"ERROR: unsupported problem dimension, the specified dimension was: ", drutes_config%dimen
           write(unit=terminal, fmt=*)"currently only 1D and 2D is supported"

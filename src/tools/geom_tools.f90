@@ -575,6 +575,39 @@ module geom_tools
 
   end function inside
   
+  
+  function inside3D(volume, bod) result(true)
+    use typy
+    real(kind=rkind), dimension(:,:,:), intent(in) :: volume
+    real(kind=rkind), dimension(:), intent(in) :: bod
+    logical :: true
+    
+    real(kind=rkind), dimension(3,3) :: matrix
+    real(kind=rkind), dimension(3) :: x,b
+    
+    integer(kind=ikind) :: i
+    
+    if (ubound(volume,2) /= 3 ) then
+      print *, "the volume must be surrounded by triangles, typicaly Delauney triangulation"
+      print *, "exited from geom_tools::inside3D"
+      ERROR STOP
+    end if
+    
+    if (ubound(volume,3) /= 3 ) then
+      print *, "points in 3D must have three coordinates"
+      print *, "exited from geom_tools::inside3D"
+      ERROR STOP
+    end if
+    
+!    do i=1, ubound(volume,1)
+      
+    
+      
+    
+    
+  
+  end function inside3D
+  
   subroutine shoot(bod, k, domain, inter, valid)
     use typy
     real(kind=rkind), dimension(:), intent(in) :: bod
@@ -666,6 +699,8 @@ module geom_tools
         l = abs(A(1) - B(1))
       case(2)
         l = sqrt((A(1)-B(1))*(A(1)-B(1)) + (A(2)-B(2))*(A(2)-B(2)))
+      case(3)
+        l = sqrt( (A(1)-B(1))*(A(1)-B(1)) + (A(2)-B(2))*(A(2)-B(2)) - (A(3)-B(3))*(A(3)-B(3)) )
     end select
   
   end function dist
