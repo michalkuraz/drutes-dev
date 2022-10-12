@@ -378,9 +378,15 @@ module drutes_init
 
       integer(kind=ikind) :: i, j, k, point, dec
       real(kind=rkind), dimension(:,:), allocatable :: domain
-      logical :: error_stop = .false.
+      real(kind=rkind), dimension(:,:,:), allocatable :: domain3D
+      logical :: error_stop = .false., foundel
+      integer(kind=ikind) :: ord1, ord2, ord3
 
-      allocate(domain(ubound(elements%data,2), drutes_config%dimen))
+      if (drutes_config%dimen < 3) then 
+        allocate(domain(ubound(elements%data,2), drutes_config%dimen))
+      else
+        allocate(domain3D(4, 3, 3))
+      end if
 
       observation_array(:)%element = 0
       
@@ -392,10 +398,43 @@ module drutes_init
 
       do i = 1, ubound(observation_array,1)
         do j=1, elements%kolik
-          do k=1, ubound(elements%data,2)
-            domain(k,:) = nodes%data(elements%data(j,k),:)
-          end do
-          if (inside(domain, observation_array(i)%xyz)) then
+
+          if (drutes_config%dimen < 3) then
+            do k=1, ubound(elements%data,2)
+              domain(k,:) = nodes%data(elements%data(j,k),:)
+            end do
+            foundel = inside(domain, observation_array(i)%xyz)
+          else
+            do k=1, ubound(elements%data,2)
+              select case(k)
+                case(1)
+                  ord1 = 1
+                  ord2 = 2
+                  ord3 = 3
+                 case(2)
+                  ord1 = 2
+                  ord2 = 3
+                  ord3 = 4
+                 case(3)
+                  ord1 = 1
+                  ord2 = 3
+                  ord3 = 4
+                 case(4)
+                  ord1 = 1
+                  ord2 = 2
+                  ord3 = 4
+                end select
+              
+                domain3D(k, 1, :) = nodes%data(elements%data(j, ord1),:)
+                domain3D(k, 2, :) = nodes%data(elements%data(j, ord2),:)
+                domain3D(k, 3, :) = nodes%data(elements%data(j, ord3),:)
+              end do
+              foundel = inside3D(domain3D, observation_array(i)%xyz)
+              call wait()
+            end if
+          
+            
+          if (foundel) then
             observation_array(i)%element = j
               EXIT
           else

@@ -823,7 +823,8 @@ module readtools
       use globals
       use global_objs
       use globals1D
-!       use debug_tools
+      use debug_tools
+      use core_tools
 
       !>local anisothoropy values with respect to local x, local y and local z
       real(kind=rkind), dimension(:), intent(in) :: values
@@ -851,8 +852,11 @@ module readtools
           T(2,2) = cos(4.0_dprec*atan(1.0_dprec)/180.0_rkind*(angle(1)))
 
         case(3)
-          print *, "tensors not implemented in 3D"
-          ERROR STOP
+          call write_log("tensors not implemented in 3D, using isotropic setup")
+          T = 0
+          do i=1,3
+            T(i,i) = 1
+          end do
       end select            
 
       tensor = 0

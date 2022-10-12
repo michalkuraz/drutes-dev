@@ -462,7 +462,7 @@ module geom_tools
 
   end function get_nx
 
- function inside(domain,bod, atboundary) result(true)
+ function inside(domain,bod, atboundary, dimen_input) result(true)
     use typy
     use globals
     use global_objs
@@ -478,11 +478,19 @@ module geom_tools
     logical, dimension(:), allocatable :: valid
     logical :: true
     logical, intent(out), optional :: atboundary
+    integer(kind=ikind), intent(in), optional :: dimen_input
     real(kind=rkind), dimension(:), allocatable :: smer
+    integer(kind=ikind) :: dimen_loc
     
     
     
-    select case(drutes_config%dimen)
+    if (present(dimen_input)) then
+      dimen_loc = dimen_input
+    else
+      dimen_loc = drutes_config%dimen
+    end if
+    
+    select case(dimen_loc)
       case(1)
         if ((domain(1,1) <= bod(1) .and. domain(2,1) >= bod(1)) .or. &
             (domain(1,1) >= bod(1) .and. domain(2,1) <= bod(1)) ) then
@@ -534,7 +542,8 @@ module geom_tools
             zasah = 0
             do k=1, ubound(domain,1)
               if (valid(k)) then
-                if (dist(a,inter(j,k,:)) > 10*epsilon(smer(1)) .and. dist(b,inter(j,k,:)) > 10*epsilon(smer(1))) then
+                if (dist(a,inter(j,k,:), dimen_loc) > 10*epsilon(smer(1)) .and. dist(b,inter(j,k,:), dimen_loc) & 
+                                                                                                      > 10*epsilon(smer(1))) then
                   zasah = zasah + 1
                 else
                   checked(j) = -1
@@ -578,12 +587,21 @@ module geom_tools
   
   function inside3D(volume, bod) result(true)
     use typy
+    use linalg
+    use debug_tools
+    use core_tools
+    
     real(kind=rkind), dimension(:,:,:), intent(in) :: volume
     real(kind=rkind), dimension(:), intent(in) :: bod
     logical :: true
     
     real(kind=rkind), dimension(3,3) :: matrix
-    real(kind=rkind), dimension(3) :: x,b
+    real(kind=rkind), dimension(3) :: x,b, coeff, inter
+    real(kind=rkind), dimension(3,2) :: domain2D
+    logical :: fail, hit
+    integer(kind=ikind) :: pt, surf, bang
+    real(kind=rkind) :: t
+    real(kind=rkind), dimension(2) :: A, BB, C
     
     integer(kind=ikind) :: i
     
@@ -599,11 +617,84 @@ module geom_tools
       ERROR STOP
     end if
     
-!    do i=1, ubound(volume,1)
-      
     
+    bang = 0
+    do surf=1, ubound(volume,1)
+      do pt=1,3
+        matrix(pt,1:3) = volume(surf, pt, 1:3)
+        b(pt) = 1
+      end do
+        
+      print *, "surface", surf
+       print *,    volume(surf,:,:); call wait()  
+        
+      call printmtx(matrix)
+      call printmtx(b)  
+      call gem(matrix, b, coeff, fail=fail)
       
+      call printmtx(coeff) 
+      print *, "----------------"
+       call wait()
+        
+      if (.not. fail ) then
+        inter(1) = bod(1)
+        inter(3) = bod(3)
+        if (abs(coeff(2)) > 1e3*epsilon(coeff(2))) then
+          t = (1- coeff(1)*bod(1) - coeff(3)*bod(3) - coeff(2)*bod(2) )/coeff(2)
+          inter(2) = bod(2) + t
+          
+          if (inter(2) >= bod(2)) then
+         
+            do pt=1,3
+              domain2D(pt,:) = [volume(surf, pt, 1), volume(surf, pt, 3)]
+            end do
+        
+            if (inside(domain2D, [inter(1), inter(3)], dimen_input = 2_ikind)) bang = bang + 1
+          end if
+        else
+          if (abs(inter(3)-volume(surf, 1, 3)) < 1e3*epsilon(t) .and. &
+              abs(inter(3)-volume(surf, 2, 3)) < 1e3*epsilon(t) .and. &
+              abs(inter(3)-volume(surf, 3, 3)) < 1e3*epsilon(t) ) then
+              
+                if (inline(volume(surf, 1, 1:2), volume(surf, 2, 1:2), inter(1:2)) .or. &
+                    inline(volume(surf, 1, 1:2), volume(surf, 3, 1:2), inter(1:2)) .or. &
+                    inline(volume(surf, 2, 1:2), volume(surf, 3, 1:2), inter(1:2)) ) bang = bang + 1 
+           
+           end if       
+        end if
+      else
+        A = [volume(surf, 1, 1), volume(surf, 1, 2)]
+        BB = [volume(surf, 2, 2), volume(surf, 2, 2)]
+        C = [volume(surf, 3, 1), volume(surf, 3, 2)]
+        inter(1) = bod(1)
+        inter(3) = bod(3)
+          
+        if (abs(A(1) - BB(1)) > 1e3*epsilon(t)) then
+          inter(2) = (BB(2) - A(2))/(BB(1) - A(1))*inter(1)
+          if (inter(2) > bod(2)) then
+            do pt=1,3
+              domain2D(pt,:) = [volume(surf, pt, 1), volume(surf, pt, 3)]
+            end do
+            if (inside(domain2D, [inter(1), inter(3)], dimen_input = 2_ikind)) bang = bang + 1
+          end if
+        else
+            if (abs(inter(1) - A(1)) < 1e3*epsilon(t)) then
+              A(2) = volume(surf, 1, 3)
+              BB(2) = volume(surf, 2, 3)
+              C(2) = volume(surf, 3, 3)
+              inter(2) = inter(3)
+              if (inline(A,BB,inter(1:2)) .or. inline(A,C,inter(1:2)) .or. inline(BB,C,inter(1:2))) bang = bang + 1
+            end if
+          end if
+        end if
+ 
+    end do   
     
+    if (modulo(bang, 2_ikind) /= 0) then
+      true = .true.
+    else
+      true = .false.
+    end if
     
   
   end function inside3D
@@ -687,14 +778,22 @@ module geom_tools
   end function triarea
 
   
-  function dist(A,B) result(l)
+  function dist(A,B, dimen_input) result(l)
     use typy
     use globals
     
     real(kind=rkind), dimension(:), intent(in) :: A,B
+    integer(kind=ikind), intent(in), optional :: dimen_input
     real(kind=rkind) :: l
+    integer(kind=ikind) :: dimen_loc
     
-    select case(drutes_config%dimen)
+    if (present(dimen_input)) then
+      dimen_loc = dimen_input
+    else
+      dimen_loc = drutes_config%dimen
+    end if
+    
+    select case(dimen_loc)
       case(1)
         l = abs(A(1) - B(1))
       case(2)
@@ -737,7 +836,7 @@ module geom_tools
     precision = 1000*epsilon(precision)
 
 
-    if (abs(dist(a,b) - dist(a,bod) - dist(b,bod)) < precision) then
+    if (abs(dist(a,b, 2_ikind) - dist(a,bod, 2_ikind) - dist(b,bod, 2_ikind)) < precision) then
       true = .true.
     else
       true = .false.

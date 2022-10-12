@@ -144,12 +144,13 @@ contains
   !! Gaussova eliminace
   !!
   !<
-  subroutine gem(a,b,x)
+  subroutine gem(a,b,x, fail)
     use typy
     real(kind=rkind), dimension(:,:), intent(in) :: a !> matice soustavy
     !realny 2rozmer pole je to parametr a vstupni parametr
     real(kind=rkind), dimension(:), intent(in) :: b !> prava strana
     real(kind=rkind), dimension(:), intent(out) :: x !> reseni
+    logical, intent(out), optional :: fail
     real(kind=rkind), dimension(:), allocatable :: aradek
     !matice a pochazi z main, nemuzu ji tedy menit,
     !proto si definuju matici aa, do ktery zapisu matici a
@@ -168,6 +169,10 @@ contains
     !priradi rozmer vertikalni 
     bsize=ubound(b,1)
     xsize=ubound(x,1)
+    
+    if (present(fail)) fail = .false.
+    
+    
     !print *, asizeH , asizeV , bsize , xsize
     if (asizeH==xsize .AND. asizeV==bsize) then
       !    print *, "zatim ok"
@@ -210,6 +215,9 @@ contains
           !(ktery sme predtim umistili na diagonalu)
           wrk=aa(i,i)
           aa(i,i:)=aa(i,i:)/wrk
+          if (present(fail)) then
+            if (abs(wrk) < 1e3*epsilon(wrk)) fail = .true.
+          end if
           do j= i+1,n
             !vezmu j-ty radek i-ty sloupec
             wrk=aa(j,i)
@@ -219,9 +227,15 @@ contains
           !call printmatrix(aa)
         enddo
         aa(n,n+1)=aa(n,n+1)/aa(n,n)
+        if (present(fail)) then
+           if (abs(a(n,n)) < 1e3*epsilon(a(n,n)) ) fail = .true.
+        end if
         do i=n-1, 1, -1
           !dotproduct - funkce provedejici skalarni soucin
           aa(i,n+1)=(aa(i,n+1)- dot_product( aa(i,i+1:n),aa(i+1:n,n+1)))/aa(i,i)
+          if (present(fail)) then
+            if (abs(a(i,i)) < 1e3*epsilon(a(i,i)) ) fail = .true.
+          end if
         end do
         !aa(:,n+1) je vektor reseni soustavy
         x=aa(:,n+1)
