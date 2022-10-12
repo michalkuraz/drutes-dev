@@ -625,16 +625,22 @@ module geom_tools
         b(pt) = 1
       end do
         
-      print *, "surface", surf
-       print *,    volume(surf,:,:); call wait()  
+!      print *, "surface", surf
+!       print *,    volume(surf,:,:); call wait()  
         
-      call printmtx(matrix)
-      call printmtx(b)  
+      
+!      call printmtx(b)  
       call gem(matrix, b, coeff, fail=fail)
       
-      call printmtx(coeff) 
-      print *, "----------------"
-       call wait()
+      if (fail) then
+        call printmtx(matrix)
+             stop
+      end if
+ 
+      
+!      call printmtx(coeff) 
+!      print *, "----------------"
+!       call wait()
         
       if (.not. fail ) then
         inter(1) = bod(1)
@@ -648,7 +654,7 @@ module geom_tools
             do pt=1,3
               domain2D(pt,:) = [volume(surf, pt, 1), volume(surf, pt, 3)]
             end do
-        
+!            print *, inter ; stop
             if (inside(domain2D, [inter(1), inter(3)], dimen_input = 2_ikind)) bang = bang + 1
           end if
         else
@@ -1476,5 +1482,20 @@ module geom_tools
       close(fileid)
       
     end subroutine map1d2dJ
+    
+    subroutine plane_coeff(point, coeff)
+      use typy
+      
+      real(kind=rkind), dimension(:,:), intent(in) :: point
+      real(kind=rkind), dimension(:), intent(out) :: coeff
+      
+      coeff(1) = (point(2,2)-point(1,2)) * (point(3,3)-point(1,3)) - (point(3,2) - point(1,2))*(point(2,3) - point(1,3)) 
+      coeff(2) = (point(2,3)-point(1,3)) * (point(3,1)-point(1,1)) - (point(3,3) - point(1,3))*(point(2,1) - point(1,1)) 
+      coeff(3) = (point(2,1)-point(1,1)) * (point(3,2)-point(1,2)) - (point(3,1) - point(1,1))*(point(2,2) - point(1,2))
+      coeff(4) = -(coeff(1)*point(1,1) + coeff(2)*point(1,2) + coeff(3)*point(1,3))
+      
+      
+    end subroutine plane_coeff
+    
 
 end module geom_tools

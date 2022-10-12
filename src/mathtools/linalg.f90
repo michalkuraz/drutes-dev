@@ -208,16 +208,23 @@ contains
             aa(maxindex,:)=aradek
             if (aa(i,i) == 0) then
               !print *,"matice je singularni..."
+              if (present(fail)) fail = .true.
               return
             endif
           endif
           !vydelim reseny radek hodnotu nejvetsiho prvku 
           !(ktery sme predtim umistili na diagonalu)
           wrk=aa(i,i)
-          aa(i,i:)=aa(i,i:)/wrk
+          
           if (present(fail)) then
-            if (abs(wrk) < 1e3*epsilon(wrk)) fail = .true.
+            if (abs(wrk) < 1e3*epsilon(wrk))  then
+              fail = .true.
+              RETURN
+            end if
           end if
+          
+          aa(i,i:)=aa(i,i:)/wrk
+  
           do j= i+1,n
             !vezmu j-ty radek i-ty sloupec
             wrk=aa(j,i)
@@ -226,16 +233,28 @@ contains
           end do
           !call printmatrix(aa)
         enddo
-        aa(n,n+1)=aa(n,n+1)/aa(n,n)
+
         if (present(fail)) then
-           if (abs(a(n,n)) < 1e3*epsilon(a(n,n)) ) fail = .true.
+          if (abs(aa(n,n)) < 1e3*epsilon(wrk))  then
+            fail = .true.
+            RETURN
+          end if
         end if
+
+        aa(n,n+1)=aa(n,n+1)/aa(n,n)
+
         do i=n-1, 1, -1
           !dotproduct - funkce provedejici skalarni soucin
-          aa(i,n+1)=(aa(i,n+1)- dot_product( aa(i,i+1:n),aa(i+1:n,n+1)))/aa(i,i)
+          
           if (present(fail)) then
-            if (abs(a(i,i)) < 1e3*epsilon(a(i,i)) ) fail = .true.
+            if (abs(a(i,i)) < 1e3*epsilon(wrk))  then
+              fail = .true.
+              RETURN
+            end if
           end if
+          
+          aa(i,n+1)=(aa(i,n+1)- dot_product( aa(i,i+1:n),aa(i+1:n,n+1)))/aa(i,i)
+
         end do
         !aa(:,n+1) je vektor reseni soustavy
         x=aa(:,n+1)

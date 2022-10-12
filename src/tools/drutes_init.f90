@@ -380,7 +380,7 @@ module drutes_init
       real(kind=rkind), dimension(:,:), allocatable :: domain
       real(kind=rkind), dimension(:,:,:), allocatable :: domain3D
       logical :: error_stop = .false., foundel
-      integer(kind=ikind) :: ord1, ord2, ord3
+      integer(kind=ikind) :: ord1, ord2, ord3, ii
 
       if (drutes_config%dimen < 3) then 
         allocate(domain(ubound(elements%data,2), drutes_config%dimen))
@@ -429,19 +429,27 @@ module drutes_init
                 domain3D(k, 2, :) = nodes%data(elements%data(j, ord2),:)
                 domain3D(k, 3, :) = nodes%data(elements%data(j, ord3),:)
               end do
+              
+
+              
+              
+              
               foundel = inside3D(domain3D, observation_array(i)%xyz)
-              call wait()
+              if (foundel) print *, j
+
             end if
           
             
           if (foundel) then
             observation_array(i)%element = j
-              EXIT
+            EXIT
           else
             CONTINUE
           end if
         end do
       end do
+
+print *, "tady"
 
       do i=1, ubound(observation_array,1)
         if (observation_array(i)%element == 0) then
