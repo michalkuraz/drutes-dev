@@ -658,7 +658,7 @@ module feminittools
                       A = nodes%data(elements%data(j,1),:)
                       B = nodes%data(elements%data(j,2),:)
               end select
-              ang = ang + angle(A,B,C)*180.0_rkind/(4*datan(1.0d0))
+              ang = ang + angle(A,B,C)*180.0_rkind/(4*atan(1.0_rkind))
             end if
           end do
           if (ang >= 360 - 100*epsilon(ang) ) then
