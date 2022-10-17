@@ -435,7 +435,15 @@ module drutes_init
               
               
               foundel = inside3D(domain3D, observation_array(i)%xyz)
-              if (foundel) print *, j
+              if (foundel) then
+               print *, j, "point:", i
+              
+                do ii=1,4
+                  print *, nodes%data(elements%data(j,ii), :)
+                end do
+              end if
+              
+              
 
             end if
           
@@ -484,6 +492,7 @@ print *, "tady"
 
       deallocate(domain)
       
+      stop
 
     end subroutine init_observe
     
