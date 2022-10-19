@@ -116,6 +116,16 @@ module feminittools
             call progressbar(int(100*i/elements%kolik))
             elements%areas(i) = tetravol(nodes%data(elements%data(i,1),:), nodes%data(elements%data(i,2),:), &
                                         nodes%data(elements%data(i,3),:), nodes%data(elements%data(i,4),:))
+                                        
+            do j=1,4
+              a_s(j,1:3) = nodes%data(elements%data(i,j),:)
+            end do 
+            
+            a_s(:,4) = [1.0_rkind, 0.0_rkind, 0.0_rkind, 0.0_rkind ]
+            
+            call hyper_planeder(a_s(1,:), a_s(2,:), a_s(3,:) , a_s(4,:), &
+                  elements%ders(i,1,1), elements%ders(i,1,2), elements%ders(i,1,3))
+                                       
           end do
           
 

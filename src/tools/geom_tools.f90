@@ -381,7 +381,7 @@ module geom_tools
     coeffs(3) = detXYF
     coeffs(4) = detXYZ
     
-    coeffs(5) = -A(1)*detYZF - A(2)*detXZF - A(3)*detXYZ
+    coeffs(5) = -A(1)*detYZF - A(2)*detXZF - A(3)*detXYF - A(4)*detXYZ
     
   end subroutine hyperplane_coeff
   
@@ -395,6 +395,13 @@ module geom_tools
     real(kind=rkind), dimension(5) :: cfs
     
     call hyperplane_coeff(A,B,C,D, cfs)
+    
+    print *, A
+    print *, B
+    print *, C
+    print *, D
+    print *, "----"
+    print *, cfs ; stop
     
     if (abs(cfs(4)) < 1e3*epsilon(cfs(4))) then
       print *, "base function can't be vertical, mesh is wrong"
