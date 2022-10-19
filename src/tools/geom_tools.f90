@@ -377,11 +377,11 @@ module geom_tools
     detXYZ = determinant(XYZ)
     
     coeffs(1) = detYZF
-    coeffs(2) = detXZF
+    coeffs(2) = -detXZF
     coeffs(3) = detXYF
-    coeffs(4) = detXYZ
+    coeffs(4) = -detXYZ
     
-    coeffs(5) = -A(1)*detYZF - A(2)*detXZF - A(3)*detXYF - A(4)*detXYZ
+    coeffs(5) = -A(1)*detYZF + A(2)*detXZF - A(3)*detXYF + A(4)*detXYZ
     
   end subroutine hyperplane_coeff
   
