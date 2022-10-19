@@ -49,10 +49,12 @@ module feminittools
       use printtools
       use core_tools
       use read_inputs
+      use simplelinalg
 
       integer(kind=ikind) :: i,j,k,l, locmatdim, process, limits,  el, nd
       real(kind=rkind), dimension(:,:), allocatable :: a_s
       integer(kind=ikind), dimension(:), allocatable :: itmp_vct
+
       
       
       locmatdim = (ubound(elements%data,2))*ubound(pde,1)
@@ -108,6 +110,16 @@ module feminittools
                   elements%ders(i,3,1), elements%ders(i,3,2))
 
           end do
+        case(3)
+          call write_log("calculating elements geometrical properties...")
+          do i=1, elements%kolik
+            call progressbar(int(100*i/elements%kolik))
+            elements%areas(i) = tetravol(nodes%data(elements%data(i,1),:), nodes%data(elements%data(i,2),:), &
+                                        nodes%data(elements%data(i,3),:), nodes%data(elements%data(i,4),:))
+          end do
+          
+
+
       end select
 
       ! create for each node list of elements where the node belongs     

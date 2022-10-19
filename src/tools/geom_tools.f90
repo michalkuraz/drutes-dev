@@ -24,7 +24,9 @@ module geom_tools
   public :: plane_derivative
   public :: init_transform
   public :: inside
+  public :: inside3D
   public :: triarea
+  public :: tetravol
   public :: dist
   public :: angle
   public :: inline
@@ -311,6 +313,107 @@ module geom_tools
 
     
    end subroutine plane_derivative 
+   
+  !> points have coordinates eg. \f \[A_x, A_y, A_z, A_f \] \f
+  !!  vectors \f \vec{v}_1, \vec{v}_2, \vec{v}_3 \f
+  !! are computed as 
+  !! \f \vec{v}_1 = \vec{B} - \vec{A} \f
+  !! \f \vec{v}_2 = \vec{C} - \vec{A} \f
+  !! \f \vec{v}_3 = \vec{D} - \vec{A} \f
+  !! plane coefficients computed from
+  !! \f \mbox{det} \left( \begin{matrix} x - A_x & y - A_y & z - A_z \\ v_{1_x} &  v_{1_y} & v_{1_z} \\ v_{2_x} &  v_{2_y} & v_{2_z} \\ v_{3_x} &  v_{3_y} & v_{3_z} \end{matrix} \right) \f
+  !<
+  subroutine hyperplane_coeff(a,b,c,d,coeffs)
+    use typy
+    use simplelinalg
+    
+    !> 1st point of the hyperplane
+    real(kind=rkind), dimension(:), intent(in) :: a
+    !> 2nd point of the hyperplane
+    real(kind=rkind), dimension(:), intent(in) :: b
+    !> 3rd point of the hyperplane
+    real(kind=rkind), dimension(:), intent(in) :: c
+    !> 4rd point of the hyperplane
+    real(kind=rkind), dimension(:), intent(in) :: d
+    
+    !> hyperplane coefficients
+    real(kind=rkind), dimension(:), intent(out) :: coeffs
+    
+    
+    
+    real(kind=rkind), dimension(3,3) :: YZF, XZF, XYF, XYZ
+    real(kind=rkind), dimension(3,4) :: v
+    real(kind=rkind) :: detYZF, detXZF, detXYF, detXYZ 
+    integer(kind=ikind) :: i
+    
+
+    if (ubound(coeffs,1) /= 5) then
+      print *, "hyperplane coefficients vector must have dimension 5"
+      print *, "exited from geom_tools::hyperplane_coeff"
+      ERROR STOP
+    end if
+
+    
+    if (ubound(A,1) /= 4 .or. ubound(B,1) /= 4 .or. ubound(C,1) /= 4 .or. ubound(D,1) /= 4) then
+      print *, "points for hyperplane must have 4 components"
+      print *, "exited from geom_tools::hyperplane_coeff"
+      ERROR STOP
+    end if
+    
+    v(1,:) = B - A
+    v(2,:) = C - A
+    v(3,:) = D - A
+    
+    do i=1,3
+      YZF(i,:) = [v(i,2), v(i,3), v(i,4)]
+      XZF(i,:) = [v(i,1), v(i,3), v(i,4)] 
+      XYF(i,:) = [v(i,1), v(i,2), v(i,4)]
+      XYZ(i,:) = [v(i,1), v(i,2), v(i,3)]
+    end do
+    
+    detYZF = determinant(YZF)
+    detXZF = determinant(XZF)
+    detXYF = determinant(XYF)
+    detXYZ = determinant(XYZ)
+    
+    coeffs(1) = detYZF
+    coeffs(2) = detXZF
+    coeffs(3) = detXYF
+    coeffs(4) = detXYZ
+    
+    coeffs(5) = -A(1)*detYZF - A(2)*detXZF - A(3)*detXYZ
+    
+  end subroutine hyperplane_coeff
+  
+  
+  subroutine hyper_planeder(A, B, C, D, dgdx, dgdy, dgdz)
+    use typy
+    
+    real(kind=rkind), dimension(:), intent(in) :: A, B, C, D
+    real(kind=rkind), intent(out) :: dgdx, dgdy, dgdz
+    
+    real(kind=rkind), dimension(5) :: cfs
+    
+    call hyperplane_coeff(A,B,C,D, cfs)
+    
+    if (abs(cfs(4)) < 1e3*epsilon(cfs(4))) then
+      print *, "base function can't be vertical, mesh is wrong"
+      print *, "exited from geom_tools::hyper_planeder"
+      ERROR STOP
+    end if
+    
+    dgdx = cfs(1)/cfs(4)
+    dgdy = cfs(2)/cfs(4)
+    dgdz = cfs(3)/cfs(4)
+  
+  
+  end subroutine hyper_planeder
+  
+  
+  
+    
+    
+    
 
   !> procedure to create transformation matrix 
   !! \f[  \left( \begin{array}{c}  e \\ f \end{array} \right) + \left( \begin{array}{cc}   a & b \\ c & d  \end{array}\right) \left( \begin{array}{c}  x \\ y  \end{array} \right)  = \left( \begin{array}{c}  x^T \\ y^T \end{array} \right) \f]
@@ -747,6 +850,26 @@ module geom_tools
     area = 0.25*sqrt((la+lb+lc)*(lb + lc - la)*(lc + la - lb)*(la + lb - lc))
   
   end function triarea
+  
+  function tetravol(a,b,c,d) result(vol)
+    use typy
+    use simplelinalg
+    
+    real(kind=rkind), dimension(:), intent(in) :: a,b,c,d
+    real(kind=rkind) :: vol
+    
+    real(kind=rkind), dimension(4,4) :: mtx
+    integer(kind=ikind) :: i
+    
+  
+    mtx(1,:) = [a, 1.0_rkind]
+    mtx(2,:) = [b, 1.0_rkind]
+    mtx(3,:) = [c, 1.0_rkind]
+    mtx(4,:) = [d, 1.0_rkind]
+    
+    vol = 1.0_rkind/6.0_rkind*abs(determinant(mtx))
+    
+  end function tetravol
 
   
   function dist(A,B, dimen_input) result(l)

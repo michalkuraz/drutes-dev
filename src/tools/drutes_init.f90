@@ -430,20 +430,7 @@ module drutes_init
                 domain3D(k, 3, :) = nodes%data(elements%data(j, ord3),:)
               end do
               
-
-              
-              
-              
               foundel = inside3D(domain3D, observation_array(i)%xyz)
-              if (foundel) then
-               print *, j, "point:", i
-              
-                do ii=1,4
-                  print *, nodes%data(elements%data(j,ii), :)
-                end do
-              end if
-              
-              
 
             end if
           
@@ -457,7 +444,7 @@ module drutes_init
         end do
       end do
 
-print *, "tady"
+
 
       do i=1, ubound(observation_array,1)
         if (observation_array(i)%element == 0) then
@@ -478,7 +465,6 @@ print *, "tady"
 
       do point=1, ubound(observation_array,1)
         do i=1, ubound(pde,1)
-          call find_unit(pde(i)%obspt_unit(point),5000)
           dec = 0
           do 
             dec = dec+1
@@ -490,9 +476,6 @@ print *, "tady"
         end do
       end do
 
-      deallocate(domain)
-      
-      stop
 
     end subroutine init_observe
     
@@ -597,7 +580,11 @@ print *, "tady"
 
       xyz(1) = "x"
       xyz(2) = "z"
-      xyz(3) = "y"
+      
+      if (drutes_config%dimen == 3) then
+        xyz(2) = "y"
+        xyz(3) = "z"
+      end if
       
       write(unit=forma, fmt="(a, I16, a)") "(a, a, a, I", decimals, ", a)"
       write(unit=pde_loc%obspt_filename(name), fmt=forma) "out/obspt_", adjustl(trim(pde_loc%problem_name(1))), "-", name, ".out"
@@ -613,7 +600,7 @@ print *, "tady"
      
       if (.not. drutes_config%run_from_backup) then
         if (ubound(pde_loc%mass_name,1) > 0) then
-          open(unit=pde_loc%obspt_unit(name), file=adjustl(trim(pde_loc%obspt_filename(name))), action="write", status="replace")
+          open(newunit=pde_loc%obspt_unit(name), file=adjustl(trim(pde_loc%obspt_filename(name))), action="write", status="replace")
           
           if (cut(observe_info%fmt) == "pure") call print_logo(pde_loc%obspt_unit(name))
           
@@ -639,7 +626,7 @@ print *, "tady"
             end if
             
         else
-          open(unit=pde_loc%obspt_unit(name), file=adjustl(trim(pde_loc%obspt_filename(name))), action="write", status="replace")
+          open(newunit=pde_loc%obspt_unit(name), file=adjustl(trim(pde_loc%obspt_filename(name))), action="write", status="replace")
           
           if (cut(observe_info%fmt) == "pure") call print_logo(pde_loc%obspt_unit(name))
           
@@ -663,7 +650,7 @@ print *, "tady"
 
 
       else
-        open(unit=pde_loc%obspt_unit(name), file=adjustl(trim(pde_loc%obspt_filename(name))), &
+        open(newunit=pde_loc%obspt_unit(name), file=adjustl(trim(pde_loc%obspt_filename(name))), &
                     action="write", access="append", status="old")
       end if
 
