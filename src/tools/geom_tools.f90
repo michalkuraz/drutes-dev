@@ -396,12 +396,6 @@ module geom_tools
     
     call hyperplane_coeff(A,B,C,D, cfs)
     
-    print *, A
-    print *, B
-    print *, C
-    print *, D
-    print *, "----"
-    print *, cfs ; stop
     
     if (abs(cfs(4)) < 1e3*epsilon(cfs(4))) then
       print *, "base function can't be vertical, mesh is wrong"
@@ -848,11 +842,11 @@ module geom_tools
     real(kind=rkind) :: area
     real(kind=rkind) :: la,lb,lc
     
-    lc = sqrt((a(1) - b(1))**2 + (a(2) - b(2))**2)
+	lc = dist(a,b)
+
+	lb = dist(a,c)
     
-    lb = sqrt((a(1) - c(1))**2 + (a(2) - c(2))**2)
-    
-    la = sqrt((b(1) - c(1))**2 + (b(2) - c(2))**2)
+	la = dist(b,c)
     
     area = 0.25*sqrt((la+lb+lc)*(lb + lc - la)*(lc + la - lb)*(la + lb - lc))
   
@@ -1299,7 +1293,7 @@ module geom_tools
            end do
            el%neighbours(elements%kolik,1) = elements%kolik - 1
            el%neighbours(elements%kolik,2) = 0
-        case(2)
+        case(2:3)
             !set neighbours
             do i=1, el%kolik
               pos = 0
@@ -1318,7 +1312,7 @@ module geom_tools
                   nasel1: do m=1,ubound(el%data,2)
                     if (el%data(i,l) == el%data(j,m) .and. i/=j) then
                       upward = upward + 1
-                      if (upward == 2) then 
+                      if (upward == drutes_config%dimen) then 
                   pos = pos + 1
                   el%neighbours(i,pos) = j
                   EXIT nasel1
@@ -1334,7 +1328,7 @@ module geom_tools
                 nasel2: do m=1,ubound(el%data,2)
                     if (el%data(i,l) == el%data(k,m) .and. i /= k) then
                       downward = downward + 1
-                      if (downward == 2) then 
+                      if (downward == drutes_config%dimen) then 
                   pos = pos + 1
                   el%neighbours(i,pos) = k
                   EXIT nasel2

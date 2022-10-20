@@ -141,7 +141,7 @@ module feminittools
       end do
 
       call reorder()
-
+      
       i = ubound(pde,1)
       
       if (drutes_config%it_method /= 1) then
@@ -165,7 +165,7 @@ module feminittools
       end do
       !-----------------
       
-       call surface_integ()
+      call surface_integ()
       
       if (.not. drutes_config%run_from_backup) then   
         do process=1, ubound(pde,1)
@@ -200,6 +200,7 @@ module feminittools
       use globals
       use geom_tools
       use pde_objs
+      use core_tools
       
       real(kind=rkind), dimension(:), allocatable :: uzly
       real(kind=rkind), dimension(:), allocatable :: vahy
@@ -213,8 +214,31 @@ module feminittools
       real(kind=rkind) :: tmp, tmp2
       
       !number of integration nodes, depends on integration method
-      no_points = int(integ_method/10_ikind)
-
+      if (drutes_config%dimen < 3) then
+      	no_points = int(integ_method/10_ikind)
+      else
+      	!for 3D only 1 , 4, 5 and 12 nodes formula is available!
+      	select case(integ_method)
+      	  case(10)
+      	  	no_points = 1
+      	  	call write_log("Using 1 point integration formula")
+      	  case(11:40)
+      	  	no_points = 4
+      	  	call write_log("Using 4 points integration formula")
+		  case(41:50)
+		  	no_points = 5
+		  	call write_log("Using 5 points integration formula")
+		  case(51:120)
+		  	no_points = 12
+		  	call write_log("Using 12 points integration formula")
+		  case default
+		  	print *, "incorrect integration method definition"
+		  	print *, "exited from feminittools::init_integ"
+		  	ERROR STOP
+		 end select
+	   end if	
+		  
+		  	
       allocate(gauss_points%point(no_points, drutes_config%dimen))
 
       allocate(gauss_points%weight(no_points))
@@ -472,10 +496,49 @@ module feminittools
           end do
 
 	      case(3)
+          	gauss_points%area = 1.0_rkind/6.0_rkind
 
-          !to be implemented
+          	select case(no_points)
+            	case(1)
+              		gauss_points%point(1,:) = [0.25_rkind, 0.25_rkind]
 
-	 
+              		gauss_points%weight(1) = 1.0_rkind/6.0_rkind
+         		case(4)
+         			gauss_points%point(1,:) = 	[0.585410196624969_rkind ,	0.138196601125011_rkind ,	0.138196601125011_rkind ]
+					gauss_points%point(2,:) = 	[0.138196601125011_rkind ,	0.585410196624969_rkind ,	0.138196601125011_rkind ]
+					gauss_points%point(3,:) = 	[0.138196601125011_rkind ,	0.138196601125011_rkind ,	0.585410196624969_rkind ]
+					gauss_points%point(4,:) = 	[0.138196601125011_rkind ,	0.138196601125011_rkind ,	0.138196601125011_rkind ]
+					
+					gauss_points%weight(1:4) = 0.041666666666667_rkind
+         		case(5)
+         			gauss_points%point(1,:)	= [	0.25_rkind ,	0.25_rkind ,	0.25_rkind ]
+					gauss_points%point(2,:)	= [	0.5_rkind ,	0.166666666666667_rkind ,	0.166666666666667_rkind ]
+					gauss_points%point(3,:)	= [	0.166666666666667_rkind ,	0.5_rkind ,	0.166666666666667_rkind ]
+					gauss_points%point(4,:)	= [	0.166666666666667_rkind ,	0.166666666666667_rkind ,	0.5_rkind ]
+					gauss_points%point(5,:)	= [	0.166666666666667_rkind ,	0.166666666666667_rkind ,	0.166666666666667_rkind ]
+					
+					gauss_points%weight(1) = -0.133333333333333_rkind
+					gauss_points%weight(2:5) = 0.075_rkind
+
+         			
+         		case(12)
+         		
+         			gauss_points%point(1,:) = [	0.094847264914513_rkind ,	0.094847264914513_rkind ,	0.241276996823274_rkind ]
+					gauss_points%point(2,:) = [	0.094847264914513_rkind ,	0.094847264914513_rkind ,	0.569028473347700_rkind ]
+					gauss_points%point(3,:) = [	0.094847264914513_rkind ,	0.241276996823274_rkind ,	0.094847264914513_rkind ]
+					gauss_points%point(4,:) = [	0.094847264914513_rkind ,	0.241276996823274_rkind ,	0.569028473347700_rkind ]
+					gauss_points%point(5,:) = [	0.094847264914513_rkind ,	0.569028473347700_rkind ,	0.094847264914513_rkind ]
+					gauss_points%point(6,:) = [	0.094847264914513_rkind ,	0.569028473347700_rkind ,	0.241276996823274_rkind ]
+					gauss_points%point(7,:) = [	0.241276996823274_rkind ,	0.094847264914513_rkind ,	0.094847264914513_rkind ]
+					gauss_points%point(8,:) = [	0.241276996823274_rkind ,	0.094847264914513_rkind ,	0.569028473347700_rkind ]
+					gauss_points%point(9,:) = [	0.241276996823274_rkind ,	0.569028473347700_rkind ,	0.094847264914513_rkind ]
+					gauss_points%point(10,:) = [	0.569028473347700_rkind ,	0.094847264914513_rkind , 0.094847264914513_rkind]
+					gauss_points%point(11,:) = [	0.569028473347700_rkind ,	0.094847264914513_rkind , 0.241276996823274_rkind]
+					gauss_points%point(12,:) = [	0.569028473347700_rkind ,	0.241276996823274_rkind , 0.094847264914513_rkind]
+	
+         		    gauss_points%weight(1:12) = 0.013888888888889_rkind
+
+	 		end select
 	    end select
 
       if (allocated(uzly)) then
@@ -637,12 +700,17 @@ module feminittools
                 end if
               end do
             end do
-          case default
-            print *, "not implemented, called from feminittools::surface_integ"
-            ERROR STOP
+            
+          case(3)
+           call write_log("creating graph of the discretization mesh, and searching for boundary nodes...")
+           
+           call find_neighbours(elements, nodes)
+           
+		  	
+           		
         end select
             
-            
+
 
 	
       end subroutine surface_integ
