@@ -43,6 +43,7 @@ module geom_tools
   public :: getnormal
   public :: get_layer
   public :: isboundary
+  public :: get_nz3D
 
   
   contains
@@ -490,9 +491,9 @@ module geom_tools
     bod1 = nodes%data(elements%data(el_id,order1),:)
     bod2 = nodes%data(elements%data(el_id,order2),:)
 
-    if (abs(bod1(1)-bod2(1)) > epsilon(tg)) then
+    if (abs(bod1(1)-bod2(1)) > 100*epsilon(tg)) then
       tg = (abs(bod2(2)-bod1(2))/abs(bod1(1)-bod2(1)))
-      zcoord = 1/sqrt(1+tg*tg)
+      zcoord = 1.0_rkind/sqrt(1+tg*tg)
     else
       zcoord = 0
     end if
@@ -511,6 +512,70 @@ module geom_tools
     end if
 
   end function get_nz
+  
+  !>
+  !! plane defined by given tetrahedron element wall is defined by
+  !! \f[ ax +by +cz + d = 0 \f]
+  !! function plane_coeff returns vector 
+  !! \f[ coeffs = (a,b,c,d)^T \f]
+  !! line perpendicular to the surface passing through the 4th tetrahedron point with coordinates \f[ (x_4, y_4, z_4)^T \f]
+  !! is given by
+  !! \f[ \begin{split} x &= x_4 + at \\ y &= y_4 + bt \\ z &= z_4 + ct \end{split} \f]
+  !! \f[ t \f] is obtained from
+  !! \f[ a(x_4 + at) + b(y_4 + bt) + c(z_4 + ct) + d = 0 \f]
+  !! perpendicular surface projection of point 4 to surface has z coordinate
+  !! \f[ z_i = z_4 + ct \f]
+  !! resulting sin of z-coordinate is obtained from
+  !! \f sinz = \sin \left( \tan^{-1} \left( \frac{||c||}{\sqrt{a^2 + b^2 + c^2}} \right) \right)
+  !! if \f[ z_4 > z_i \f] inner vector points upwards else \f[ sinz = -sinz \f]
+  !>
+  function get_nz3D(a,b,c, exter) result(sinz)
+    use typy
+    use debug_tools
+    real(kind=rkind), dimension(:), intent(in) :: a,b,c, exter
+    real(kind=rkind) :: sinz
+    
+    real(kind=rkind), dimension(4) :: coeffs
+    real(kind=rkind), dimension(3,3) :: pts
+    real(kind=rkind) :: length, t, zinter
+    integer(kind=ikind) :: i
+    
+    pts(1,:) = a
+    pts(2,:) = b
+    pts(3,:) = c
+    
+    call plane_coeff(pts, coeffs)
+    
+    length = 0
+    
+    do i=1,3
+      length = length + coeffs(i)*coeffs(i)
+    end do
+    
+    if ( length > 100*epsilon(length)) then
+      t = (-coeffs(4) - coeffs(1)*exter(1) - coeffs(2)*exter(2) - coeffs(3)*exter(3))/length
+      zinter = exter(3) + coeffs(3)*t
+      sinz = sin(atan(abs(coeffs(3))/length))
+      if (exter(3) < zinter) then
+        sinz = -sinz
+      end if
+    else
+      sinz = 0
+    end if
+      
+    call printmtx(pts)
+    
+    print *, exter
+    
+    print *, exter(1) + coeffs(1)*t, exter(2) + coeffs(2)*t,  zinter
+    
+    print *, coeffs
+    
+    print *, "exited from geom_tools::get_nz3D"
+    
+    stop
+  
+  end function get_nz3D
 
   !> function that provides x coordinate of inner boundary normal vector, the boundary is defined by two points: bod1, bod2
   function get_nx(el_id, order1, order2) result(xcoord)
@@ -1576,7 +1641,7 @@ module geom_tools
       use typy
       
       real(kind=rkind), dimension(:,:), intent(in) :: point
-      real(kind=rkind), dimension(:), intent(out) :: coeff
+      real(kind=rkind), dimension(:), intent(out) :: coeff      
       
       coeff(1) = (point(2,2)-point(1,2)) * (point(3,3)-point(1,3)) - (point(3,2) - point(1,2))*(point(2,3) - point(1,3)) 
       coeff(2) = (point(2,3)-point(1,3)) * (point(3,1)-point(1,1)) - (point(3,3) - point(1,3))*(point(2,1) - point(1,1)) 

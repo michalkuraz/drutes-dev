@@ -505,40 +505,40 @@ module feminittools
               		gauss_points%weight(1) = 1.0_rkind/6.0_rkind
          		case(4)
          			gauss_points%point(1,:) = 	[0.585410196624969_rkind ,	0.138196601125011_rkind ,	0.138196601125011_rkind ]
-					gauss_points%point(2,:) = 	[0.138196601125011_rkind ,	0.585410196624969_rkind ,	0.138196601125011_rkind ]
-					gauss_points%point(3,:) = 	[0.138196601125011_rkind ,	0.138196601125011_rkind ,	0.585410196624969_rkind ]
-					gauss_points%point(4,:) = 	[0.138196601125011_rkind ,	0.138196601125011_rkind ,	0.138196601125011_rkind ]
-					
-					gauss_points%weight(1:4) = 0.041666666666667_rkind
+              gauss_points%point(2,:) = 	[0.138196601125011_rkind ,	0.585410196624969_rkind ,	0.138196601125011_rkind ]
+              gauss_points%point(3,:) = 	[0.138196601125011_rkind ,	0.138196601125011_rkind ,	0.585410196624969_rkind ]
+              gauss_points%point(4,:) = 	[0.138196601125011_rkind ,	0.138196601125011_rkind ,	0.138196601125011_rkind ]
+              
+              gauss_points%weight(1:4) = 0.041666666666667_rkind
          		case(5)
          			gauss_points%point(1,:)	= [	0.25_rkind ,	0.25_rkind ,	0.25_rkind ]
-					gauss_points%point(2,:)	= [	0.5_rkind ,	0.166666666666667_rkind ,	0.166666666666667_rkind ]
-					gauss_points%point(3,:)	= [	0.166666666666667_rkind ,	0.5_rkind ,	0.166666666666667_rkind ]
-					gauss_points%point(4,:)	= [	0.166666666666667_rkind ,	0.166666666666667_rkind ,	0.5_rkind ]
-					gauss_points%point(5,:)	= [	0.166666666666667_rkind ,	0.166666666666667_rkind ,	0.166666666666667_rkind ]
-					
-					gauss_points%weight(1) = -0.133333333333333_rkind
-					gauss_points%weight(2:5) = 0.075_rkind
+              gauss_points%point(2,:)	= [	0.5_rkind ,	0.166666666666667_rkind ,	0.166666666666667_rkind ]
+              gauss_points%point(3,:)	= [	0.166666666666667_rkind ,	0.5_rkind ,	0.166666666666667_rkind ]
+              gauss_points%point(4,:)	= [	0.166666666666667_rkind ,	0.166666666666667_rkind ,	0.5_rkind ]
+              gauss_points%point(5,:)	= [	0.166666666666667_rkind ,	0.166666666666667_rkind ,	0.166666666666667_rkind ]
+              
+              gauss_points%weight(1) = -0.133333333333333_rkind
+              gauss_points%weight(2:5) = 0.075_rkind
 
          			
          		case(12)
          		
          			gauss_points%point(1,:) = [	0.094847264914513_rkind ,	0.094847264914513_rkind ,	0.241276996823274_rkind ]
-					gauss_points%point(2,:) = [	0.094847264914513_rkind ,	0.094847264914513_rkind ,	0.569028473347700_rkind ]
-					gauss_points%point(3,:) = [	0.094847264914513_rkind ,	0.241276996823274_rkind ,	0.094847264914513_rkind ]
-					gauss_points%point(4,:) = [	0.094847264914513_rkind ,	0.241276996823274_rkind ,	0.569028473347700_rkind ]
-					gauss_points%point(5,:) = [	0.094847264914513_rkind ,	0.569028473347700_rkind ,	0.094847264914513_rkind ]
-					gauss_points%point(6,:) = [	0.094847264914513_rkind ,	0.569028473347700_rkind ,	0.241276996823274_rkind ]
-					gauss_points%point(7,:) = [	0.241276996823274_rkind ,	0.094847264914513_rkind ,	0.094847264914513_rkind ]
-					gauss_points%point(8,:) = [	0.241276996823274_rkind ,	0.094847264914513_rkind ,	0.569028473347700_rkind ]
-					gauss_points%point(9,:) = [	0.241276996823274_rkind ,	0.569028473347700_rkind ,	0.094847264914513_rkind ]
-					gauss_points%point(10,:) = [	0.569028473347700_rkind ,	0.094847264914513_rkind , 0.094847264914513_rkind]
-					gauss_points%point(11,:) = [	0.569028473347700_rkind ,	0.094847264914513_rkind , 0.241276996823274_rkind]
-					gauss_points%point(12,:) = [	0.569028473347700_rkind ,	0.241276996823274_rkind , 0.094847264914513_rkind]
+              gauss_points%point(2,:) = [	0.094847264914513_rkind ,	0.094847264914513_rkind ,	0.569028473347700_rkind ]
+              gauss_points%point(3,:) = [	0.094847264914513_rkind ,	0.241276996823274_rkind ,	0.094847264914513_rkind ]
+              gauss_points%point(4,:) = [	0.094847264914513_rkind ,	0.241276996823274_rkind ,	0.569028473347700_rkind ]
+              gauss_points%point(5,:) = [	0.094847264914513_rkind ,	0.569028473347700_rkind ,	0.094847264914513_rkind ]
+              gauss_points%point(6,:) = [	0.094847264914513_rkind ,	0.569028473347700_rkind ,	0.241276996823274_rkind ]
+              gauss_points%point(7,:) = [	0.241276996823274_rkind ,	0.094847264914513_rkind ,	0.094847264914513_rkind ]
+              gauss_points%point(8,:) = [	0.241276996823274_rkind ,	0.094847264914513_rkind ,	0.569028473347700_rkind ]
+              gauss_points%point(9,:) = [	0.241276996823274_rkind ,	0.569028473347700_rkind ,	0.094847264914513_rkind ]
+              gauss_points%point(10,:) = [	0.569028473347700_rkind ,	0.094847264914513_rkind , 0.094847264914513_rkind]
+              gauss_points%point(11,:) = [	0.569028473347700_rkind ,	0.094847264914513_rkind , 0.241276996823274_rkind]
+              gauss_points%point(12,:) = [	0.569028473347700_rkind ,	0.241276996823274_rkind , 0.094847264914513_rkind]
 	
-         		    gauss_points%weight(1:12) = 0.013888888888889_rkind
+              gauss_points%weight(1:12) = 0.013888888888889_rkind
 
-	 		end select
+        end select
 	    end select
 
       if (allocated(uzly)) then
@@ -638,7 +638,7 @@ module feminittools
         use core_tools
         use debug_tools
 
-        integer(kind=ikind) :: i,j,k,l, found
+        integer(kind=ikind) :: i,j,k,l, found, ord1, ord2, ord3, ord4, el
 
 
         select case(drutes_config%dimen)
@@ -705,6 +705,41 @@ module feminittools
            call write_log("creating graph of the discretization mesh, and searching for boundary nodes...")
            
            call find_neighbours(elements, nodes)
+           
+           call write_log("for 3D automatic boundary nodes search is not yet implemented, takes some time...:/")
+           
+           do el=1, elements%kolik
+             do k=1,4
+               select case(k)
+                 case(1) 
+                   ord1 = 1
+                   ord2 = 2
+                   ord3 = 3
+                   ord4 = 4
+                 case(2)
+                   ord1 = 2
+                   ord2 = 3
+                   ord3 = 4
+                   ord4 = 1
+                 case(3)
+                   ord1 = 3
+                   ord2 = 4
+                   ord3 = 1
+                   ord4 = 2
+                 case(4)
+                   ord1 = 4
+                   ord2 = 1
+                   ord3 = 2
+                   ord4 = 3
+               end select
+              
+               elements%nvect_z(el,k) = get_nz3D(nodes%data(elements%data(el, ord1),:),  nodes%data(elements%data(el, ord2),:), &
+                                              nodes%data(elements%data(el, ord3),:),  nodes%data(elements%data(el, ord4),:))
+            end do
+          end do
+                  
+           
+           
            
 		  	
            		
