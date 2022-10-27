@@ -702,6 +702,11 @@ print *, "value",  value
           case(2)
             gravflux(1) = K(2,1) * elements%nvect_x(el_id, node_order)*(-1)
             gravflux(2) = K(2,2) * elements%nvect_z(el_id, node_order) * (-1)
+          case(3)
+            gravflux(1) = K(3,1) * elements%nvect_x(el_id, node_order)*(-1)
+            gravflux(2) = K(3,2) * elements%nvect_y(el_id, node_order) * (-1)
+            gravflux(3) = K(3,3) * elements%nvect_z(el_id, node_order)*(-1)
+
         end select
     
         value = norm2(gravflux(1:D))

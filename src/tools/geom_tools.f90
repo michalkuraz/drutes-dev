@@ -513,7 +513,7 @@ module geom_tools
 
   end function get_nz
   
-  !>
+  !> returns z-coordinate of an inner normal boundary vector to tetrahedron surface
   !! plane defined by given tetrahedron element wall is defined by
   !! \f[ ax +by +cz + d = 0 \f]
   !! function plane_coeff returns vector 
@@ -526,7 +526,7 @@ module geom_tools
   !! perpendicular surface projection of point 4 to surface has z coordinate
   !! \f[ z_i = z_4 + ct \f]
   !! resulting sin of z-coordinate is obtained from
-  !! \f sinz = \sin \left( \tan^{-1} \left( \frac{||c||}{\sqrt{a^2 + b^2 + c^2}} \right) \right)
+  !! \f sinz =  \frac{||c||}{\sqrt{a^2 + b^2 + c^2}}
   !! if \f[ z_4 > z_i \f] inner vector points upwards else \f[ sinz = -sinz \f]
   !>
   function get_nz3D(a,b,c, exter) result(sinz)
@@ -544,6 +544,10 @@ module geom_tools
     pts(2,:) = b
     pts(3,:) = c
     
+    pts(:,3) = 10.0
+    
+    call printmtx(pts) 
+    
     call plane_coeff(pts, coeffs)
     
     length = 0
@@ -551,11 +555,12 @@ module geom_tools
     do i=1,3
       length = length + coeffs(i)*coeffs(i)
     end do
+    length = sqrt(length)
     
     if ( length > 100*epsilon(length)) then
       t = (-coeffs(4) - coeffs(1)*exter(1) - coeffs(2)*exter(2) - coeffs(3)*exter(3))/length
       zinter = exter(3) + coeffs(3)*t
-      sinz = sin(atan(abs(coeffs(3))/length))
+      sinz = abs(coeffs(3))/length
       if (exter(3) < zinter) then
         sinz = -sinz
       end if
@@ -570,6 +575,8 @@ module geom_tools
     print *, exter(1) + coeffs(1)*t, exter(2) + coeffs(2)*t,  zinter
     
     print *, coeffs
+    
+    print *, sinz
     
     print *, "exited from geom_tools::get_nz3D"
     
