@@ -43,7 +43,7 @@ module geom_tools
   public :: getnormal
   public :: get_layer
   public :: isboundary
-  public :: get_nz3D
+  public :: get_normals3D
 
   
   contains
@@ -513,7 +513,7 @@ module geom_tools
 
   end function get_nz
   
-  !> returns z-coordinate of an inner normal boundary vector to tetrahedron surface
+  !> returns normal vector coordinates of an inner normal boundary vector to tetrahedron surface
   !! plane defined by given tetrahedron element wall is defined by
   !! \f[ ax +by +cz + d = 0 \f]
   !! function plane_coeff returns vector 
@@ -529,22 +529,23 @@ module geom_tools
   !! \f sinz =  \frac{||c||}{\sqrt{a^2 + b^2 + c^2}}
   !! if \f[ z_4 > z_i \f] inner vector points upwards else \f[ sinz = -sinz \f]
   !>
-  function get_nz3D(a,b,c, exter) result(sinz)
+  function get_normals3D(a,b,c, exter) result(sins)
     use typy
     use debug_tools
     real(kind=rkind), dimension(:), intent(in) :: a,b,c, exter
-    real(kind=rkind) :: sinz
+    real(kind=rkind), dimension(3) :: sins
     
     real(kind=rkind), dimension(4) :: coeffs
     real(kind=rkind), dimension(3,3) :: pts
-    real(kind=rkind) :: length, t, zinter
+    real(kind=rkind) :: length, t
+    real(kind=rkind), dimension(3) :: inters
     integer(kind=ikind) :: i
     
     pts(1,:) = a
     pts(2,:) = b
     pts(3,:) = c
     
-    pts(:,3) = 10.0
+!    pts(:,3) = 10.0
     
     call printmtx(pts) 
     
@@ -558,31 +559,27 @@ module geom_tools
     length = sqrt(length)
     
     if ( length > 100*epsilon(length)) then
-      t = (-coeffs(4) - coeffs(1)*exter(1) - coeffs(2)*exter(2) - coeffs(3)*exter(3))/length
-      zinter = exter(3) + coeffs(3)*t
-      sinz = abs(coeffs(3))/length
-      if (exter(3) < zinter) then
-        sinz = -sinz
+      t = (-coeffs(4) - coeffs(1)*exter(1) - coeffs(2)*exter(2) - coeffs(3)*exter(3))/(length*length)
+      inters = exter + coeffs(1:3)*t
+      sins = abs(coeffs(1:3))/length
+      if (exter(3) < inters(3)) then
+        sins(3) = -sins(3)
+      end if
+      if (exter(2) < inters(2) ) then
+        sins(2) = -sins(2)
+      end if
+      if (exter(1) < inters(1)) then
+        sins(1) = -sins(1)
       end if
     else
-      sinz = 0
+      sins = 0
     end if
       
-    call printmtx(pts)
     
-    print *, exter
     
-    print *, exter(1) + coeffs(1)*t, exter(2) + coeffs(2)*t,  zinter
-    
-    print *, coeffs
-    
-    print *, sinz
-    
-    print *, "exited from geom_tools::get_nz3D"
-    
-    stop
+
   
-  end function get_nz3D
+  end function get_normals3D
 
   !> function that provides x coordinate of inner boundary normal vector, the boundary is defined by two points: bod1, bod2
   function get_nx(el_id, order1, order2) result(xcoord)

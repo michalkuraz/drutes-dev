@@ -639,6 +639,7 @@ module feminittools
         use debug_tools
 
         integer(kind=ikind) :: i,j,k,l, found, ord1, ord2, ord3, ord4, el
+        real(kind=rkind), dimension(3) :: tmpvals
 
 
         select case(drutes_config%dimen)
@@ -733,8 +734,12 @@ module feminittools
                    ord4 = 3
                end select
               
-               elements%nvect_z(el,k) = get_nz3D(nodes%data(elements%data(el, ord1),:),  nodes%data(elements%data(el, ord2),:), &
-                                              nodes%data(elements%data(el, ord3),:),  nodes%data(elements%data(el, ord4),:))
+               tmpvals = get_normals3D(nodes%data(elements%data(el, ord1),:),  nodes%data(elements%data(el, ord2),:), &
+                                       nodes%data(elements%data(el, ord3),:),  nodes%data(elements%data(el, ord4),:))
+                                              
+               elements%nvect_x(el,k) = tmpvals(1)
+               elements%nvect_y(el,k) = tmpvals(2) 
+               elements%nvect_z(el,k) = tmpvals(3)
             end do
           end do
                   
