@@ -56,7 +56,7 @@ module global_objs
     logical :: debugstop=.false.
     !> use preprocessed values (some PDE problems e.g. Richards equation in total hydraulic head form distiguish between pressure head h and total hydraulic head H, where H is the solution, but e.g. the function for the water content (retention curve) requires h. In this case for evaluating the water content we need to use preprocessed values. The preprocessor could be created as a part of model setup by changing the default pointer pde%getval to your own routine. Because pde%getval is called both from your constitutive functions and from the FEM solver, you should be able to tell your own getval function, which value you want to get H or h? By default it is false.
     logical :: preproc=.false.
-    real(kind=rkind), dimension(2) :: xy
+    real(kind=rkind), dimension(3) :: xy
     !> returns this value if type_pnt specified as "numb"
     real(kind=rkind) :: this_is_the_value
   end type integpnt_str

@@ -188,6 +188,8 @@ module feminittools
 
 
       deallocate(a_s)
+      
+
 
     end subroutine feminit
 
@@ -212,6 +214,7 @@ module feminittools
       real(kind=rkind), dimension(3,2) :: ders
       integer(kind=ikind) :: l,j,i, no_points
       real(kind=rkind) :: tmp, tmp2
+      real(kind=rkind), dimension(5) :: coeffs
       
       !number of integration nodes, depends on integration method
       if (drutes_config%dimen < 3) then
@@ -503,42 +506,87 @@ module feminittools
               		gauss_points%point(1,:) = [0.25_rkind, 0.25_rkind]
 
               		gauss_points%weight(1) = 1.0_rkind/6.0_rkind
-         		case(4)
-         			gauss_points%point(1,:) = 	[0.585410196624969_rkind ,	0.138196601125011_rkind ,	0.138196601125011_rkind ]
-              gauss_points%point(2,:) = 	[0.138196601125011_rkind ,	0.585410196624969_rkind ,	0.138196601125011_rkind ]
-              gauss_points%point(3,:) = 	[0.138196601125011_rkind ,	0.138196601125011_rkind ,	0.585410196624969_rkind ]
-              gauss_points%point(4,:) = 	[0.138196601125011_rkind ,	0.138196601125011_rkind ,	0.138196601125011_rkind ]
-              
-              gauss_points%weight(1:4) = 0.041666666666667_rkind
-         		case(5)
-         			gauss_points%point(1,:)	= [	0.25_rkind ,	0.25_rkind ,	0.25_rkind ]
-              gauss_points%point(2,:)	= [	0.5_rkind ,	0.166666666666667_rkind ,	0.166666666666667_rkind ]
-              gauss_points%point(3,:)	= [	0.166666666666667_rkind ,	0.5_rkind ,	0.166666666666667_rkind ]
-              gauss_points%point(4,:)	= [	0.166666666666667_rkind ,	0.166666666666667_rkind ,	0.5_rkind ]
-              gauss_points%point(5,:)	= [	0.166666666666667_rkind ,	0.166666666666667_rkind ,	0.166666666666667_rkind ]
-              
-              gauss_points%weight(1) = -0.133333333333333_rkind
-              gauss_points%weight(2:5) = 0.075_rkind
+              case(4)
+                gauss_points%point(1,:) = 	[0.585410196624969_rkind ,	0.138196601125011_rkind ,	0.138196601125011_rkind ]
+                gauss_points%point(2,:) = 	[0.138196601125011_rkind ,	0.585410196624969_rkind ,	0.138196601125011_rkind ]
+                gauss_points%point(3,:) = 	[0.138196601125011_rkind ,	0.138196601125011_rkind ,	0.585410196624969_rkind ]
+                gauss_points%point(4,:) = 	[0.138196601125011_rkind ,	0.138196601125011_rkind ,	0.138196601125011_rkind ]
+                
+                gauss_points%weight(1:4) = 0.041666666666667_rkind
+              case(5)
+                gauss_points%point(1,:)	= [	0.25_rkind ,	0.25_rkind ,	0.25_rkind ]
+                gauss_points%point(2,:)	= [	0.5_rkind ,	0.166666666666667_rkind ,	0.166666666666667_rkind ]
+                gauss_points%point(3,:)	= [	0.166666666666667_rkind ,	0.5_rkind ,	0.166666666666667_rkind ]
+                gauss_points%point(4,:)	= [	0.166666666666667_rkind ,	0.166666666666667_rkind ,	0.5_rkind ]
+                gauss_points%point(5,:)	= [	0.166666666666667_rkind ,	0.166666666666667_rkind ,	0.166666666666667_rkind ]
+                
+                gauss_points%weight(1) = -0.133333333333333_rkind
+                gauss_points%weight(2:5) = 0.075_rkind
 
          			
-         		case(12)
-         		
-         			gauss_points%point(1,:) = [	0.094847264914513_rkind ,	0.094847264914513_rkind ,	0.241276996823274_rkind ]
-              gauss_points%point(2,:) = [	0.094847264914513_rkind ,	0.094847264914513_rkind ,	0.569028473347700_rkind ]
-              gauss_points%point(3,:) = [	0.094847264914513_rkind ,	0.241276996823274_rkind ,	0.094847264914513_rkind ]
-              gauss_points%point(4,:) = [	0.094847264914513_rkind ,	0.241276996823274_rkind ,	0.569028473347700_rkind ]
-              gauss_points%point(5,:) = [	0.094847264914513_rkind ,	0.569028473347700_rkind ,	0.094847264914513_rkind ]
-              gauss_points%point(6,:) = [	0.094847264914513_rkind ,	0.569028473347700_rkind ,	0.241276996823274_rkind ]
-              gauss_points%point(7,:) = [	0.241276996823274_rkind ,	0.094847264914513_rkind ,	0.094847264914513_rkind ]
-              gauss_points%point(8,:) = [	0.241276996823274_rkind ,	0.094847264914513_rkind ,	0.569028473347700_rkind ]
-              gauss_points%point(9,:) = [	0.241276996823274_rkind ,	0.569028473347700_rkind ,	0.094847264914513_rkind ]
-              gauss_points%point(10,:) = [	0.569028473347700_rkind ,	0.094847264914513_rkind , 0.094847264914513_rkind]
-              gauss_points%point(11,:) = [	0.569028473347700_rkind ,	0.094847264914513_rkind , 0.241276996823274_rkind]
-              gauss_points%point(12,:) = [	0.569028473347700_rkind ,	0.241276996823274_rkind , 0.094847264914513_rkind]
-	
-              gauss_points%weight(1:12) = 0.013888888888889_rkind
+              case(12)
+              
+                gauss_points%point(1,:) = [	0.094847264914513_rkind ,	0.094847264914513_rkind ,	0.241276996823274_rkind ]
+                gauss_points%point(2,:) = [	0.094847264914513_rkind ,	0.094847264914513_rkind ,	0.569028473347700_rkind ]
+                gauss_points%point(3,:) = [	0.094847264914513_rkind ,	0.241276996823274_rkind ,	0.094847264914513_rkind ]
+                gauss_points%point(4,:) = [	0.094847264914513_rkind ,	0.241276996823274_rkind ,	0.569028473347700_rkind ]
+                gauss_points%point(5,:) = [	0.094847264914513_rkind ,	0.569028473347700_rkind ,	0.094847264914513_rkind ]
+                gauss_points%point(6,:) = [	0.094847264914513_rkind ,	0.569028473347700_rkind ,	0.241276996823274_rkind ]
+                gauss_points%point(7,:) = [	0.241276996823274_rkind ,	0.094847264914513_rkind ,	0.094847264914513_rkind ]
+                gauss_points%point(8,:) = [	0.241276996823274_rkind ,	0.094847264914513_rkind ,	0.569028473347700_rkind ]
+                gauss_points%point(9,:) = [	0.241276996823274_rkind ,	0.569028473347700_rkind ,	0.094847264914513_rkind ]
+                gauss_points%point(10,:) = [	0.569028473347700_rkind ,	0.094847264914513_rkind , 0.094847264914513_rkind]
+                gauss_points%point(11,:) = [	0.569028473347700_rkind ,	0.094847264914513_rkind , 0.241276996823274_rkind]
+                gauss_points%point(12,:) = [	0.569028473347700_rkind ,	0.241276996823274_rkind , 0.094847264914513_rkind]
+    
+                gauss_points%weight(1:12) = 0.013888888888889_rkind
 
         end select
+        
+        ! 1st base function
+        call hyperplane_coeff([0.0_rkind, 0.0_rkind, 0.0_rkind, 1.0_rkind], [1.0_rkind, 0.0_rkind, 0.0_rkind, 0.0_rkind],&
+                              [0.0_rkind, 1.0_rkind, 0.0_rkind, 0.0_rkind],  [0.0_rkind, 0.0_rkind, 1.0_rkind, 0.0_rkind], &
+                              coeffs)
+                              
+        do j=1, ubound(gauss_points%point,1)
+          base_fnc(1,j) = (coeffs(1)*gauss_points%point(j,1) + coeffs(2)*gauss_points%point(j,2) &
+                       + coeffs(3)*gauss_points%point(j,3) + coeffs(5))/(-coeffs(4))
+        end do
+        
+        !2nd base function
+        call hyperplane_coeff([0.0_rkind, 0.0_rkind, 0.0_rkind, 0.0_rkind], [1.0_rkind, 0.0_rkind, 0.0_rkind, 1.0_rkind],&
+                              [0.0_rkind, 1.0_rkind, 0.0_rkind, 0.0_rkind],  [0.0_rkind, 0.0_rkind, 1.0_rkind, 0.0_rkind], &
+                              coeffs)
+                              
+        do j=1, ubound(gauss_points%point,1)
+          base_fnc(2,j) = (coeffs(1)*gauss_points%point(j,1) + coeffs(2)*gauss_points%point(j,2) &
+                       + coeffs(3)*gauss_points%point(j,3) + coeffs(5))/(-coeffs(4))
+        end do
+        
+        !3rd base function
+        call hyperplane_coeff([0.0_rkind, 0.0_rkind, 0.0_rkind, 0.0_rkind], [1.0_rkind, 0.0_rkind, 0.0_rkind, 0.0_rkind],&
+                              [0.0_rkind, 1.0_rkind, 0.0_rkind, 1.0_rkind],  [0.0_rkind, 0.0_rkind, 1.0_rkind, 0.0_rkind], &
+                              coeffs)
+                              
+        do j=1, ubound(gauss_points%point,1)
+          base_fnc(3,j) = (coeffs(1)*gauss_points%point(j,1) + coeffs(2)*gauss_points%point(j,2) &
+                       + coeffs(3)*gauss_points%point(j,3) + coeffs(5))/(-coeffs(4))
+        end do
+        
+        
+        !4th base function
+        call hyperplane_coeff([0.0_rkind, 0.0_rkind, 0.0_rkind, 0.0_rkind], [1.0_rkind, 0.0_rkind, 0.0_rkind, 0.0_rkind],&
+                              [0.0_rkind, 1.0_rkind, 0.0_rkind, 0.0_rkind],  [0.0_rkind, 0.0_rkind, 1.0_rkind, 1.0_rkind], &
+                              coeffs)
+                              
+        do j=1, ubound(gauss_points%point,1)
+          base_fnc(4,j) = (coeffs(1)*gauss_points%point(j,1) + coeffs(2)*gauss_points%point(j,2) &
+                       + coeffs(3)*gauss_points%point(j,3) + coeffs(5))/(-coeffs(4))
+        end do
+                                      
+
+
+        
 	    end select
 
       if (allocated(uzly)) then
@@ -740,6 +788,8 @@ module feminittools
                elements%nvect_x(el,k) = tmpvals(1)
                elements%nvect_y(el,k) = tmpvals(2) 
                elements%nvect_z(el,k) = tmpvals(3)
+               elements%length(el,k) = triarea(nodes%data(elements%data(el, ord1),:),  nodes%data(elements%data(el, ord2),:), &
+                                       nodes%data(elements%data(el, ord3),:))
             end do
           end do
                   
@@ -749,8 +799,7 @@ module feminittools
 		  	
            		
         end select
-            
-
+        
 
 	
       end subroutine surface_integ

@@ -232,6 +232,7 @@ module kinfnc
       use geom_tools
       use debug_tools
       use kinglobs
+      use core_tools
 
       class(pde_str), intent(in) :: pde_loc
       integer(kind=ikind), intent(in) :: layer
@@ -337,6 +338,7 @@ module kinfnc
       use geom_tools
       use debug_tools
       use kinglobs
+      use core_tools
 
       class(pde_str), intent(in) :: pde_loc
       integer(kind=ikind), intent(in) :: layer

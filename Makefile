@@ -58,7 +58,7 @@ globals1D.o: typy.o global_objs.o src/core/globals1D.f90
 	$c -c src/core/globals1D.f90
 globals2D.o: typy.o global_objs.o src/core/globals2D.f90
 	$c -c src/core/globals2D.f90
-core_tools.o: typy.o global_objs.o globals.o pde_objs.o  src/core/core_tools.f90
+core_tools.o: typy.o global_objs.o globals.o   src/core/core_tools.f90
 	$c -c src/core/core_tools.f90
 dummy_procs.o: typy.o global_objs.o globals.o pde_objs.o src/core/dummy_procs.f90
 	$c -c src/core/dummy_procs.f90
