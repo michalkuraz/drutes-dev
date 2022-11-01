@@ -369,11 +369,12 @@ module pde_objs
       real(kind=rkind), dimension(:), allocatable, intent(out) :: grad
       real(kind=rkind), dimension(3) :: gradloc
       integer(kind=ikind), dimension(:), allocatable, save :: pts
-      real(kind=rkind), dimension(3)    :: a,b,c
+      real(kind=rkind), dimension(:), allocatable, save    :: a,b,c, d
       real(kind=rkind) :: dx
       integer(kind=ikind) :: i, el, top, j, k
       real(kind=rkind), dimension(:,:), allocatable, save :: domain
 
+      
       
       if (.not. allocated(grad)) then
         allocate(grad(drutes_config%dimen))
@@ -385,6 +386,12 @@ module pde_objs
       if (.not. allocated(pts)) then
         allocate(pts(ubound(elements%data,2)))
         allocate(quadpntloc(ubound(elements%data,2)))
+        if (drutes_config%dimen > 1) then
+          allocate(a(drutes_config%dimen+1))
+          allocate(b(drutes_config%dimen+1))
+          allocate(c(drutes_config%dimen+1))
+          if (drutes_config%dimen > 2) allocate(d(drutes_config%dimen + 1))
+        end if
       end if
       
       
@@ -399,8 +406,14 @@ module pde_objs
           print *, "the value specified in code was:", quadpnt%type_pnt
           print *, "exited from pde_objs::getgradp1"
           ERROR STOP
-          
       end select
+      
+      if (top == 0) then
+        print *, "something is wrong, exited from pde_objs::getgrad"
+        print *, "contact developer michalkuraz@gmail.com"
+        ERROR STOP
+      end if
+      
       
       gradloc = 0
       do i=1, top  
@@ -421,36 +434,50 @@ module pde_objs
             el = nodes%element(quadpnt%order)%data(i)
         end select
       
-      pts = elements%data(el,:)
+        pts = elements%data(el,:)
       
-      quadpntloc(:) = quadpnt
-      quadpntloc(:)%type_pnt = "ndpt"
-      select case(drutes_config%dimen)
-        case(1)
-          dx = nodes%data(pts(2),1) - nodes%data(pts(1),1)
-          quadpntloc(1)%order = pts(1)
-          quadpntloc(2)%order = pts(2)
-          gradloc(1) = gradloc(1) + (getvalp1(pde_loc,quadpntloc(2)) - getvalp1(pde_loc, quadpntloc(1)))/dx
-        case(2)
-          a(1:2) = nodes%data(pts(1),:)
-          b(1:2) = nodes%data(pts(2),:)
-          c(1:2) = nodes%data(pts(3),:)
+        quadpntloc(:) = quadpnt
+        quadpntloc(:)%type_pnt = "ndpt"
+        select case(drutes_config%dimen)
+          case(1)
+            dx = nodes%data(pts(2),1) - nodes%data(pts(1),1)
+            quadpntloc(1)%order = pts(1)
+            quadpntloc(2)%order = pts(2)
+            gradloc(1) = gradloc(1) + (getvalp1(pde_loc,quadpntloc(2)) - getvalp1(pde_loc, quadpntloc(1)))/dx
+          case(2)
+            a(1:drutes_config%dimen) = nodes%data(pts(1),:)
+            b(1:drutes_config%dimen) = nodes%data(pts(2),:)
+            c(1:drutes_config%dimen) = nodes%data(pts(3),:)
+            
           
-          
-          quadpntloc(1)%order = pts(1)
-          quadpntloc(2)%order = pts(2)
-          quadpntloc(3)%order = pts(3)
+            quadpntloc(1)%order = pts(1)
+            quadpntloc(2)%order = pts(2)
+            quadpntloc(3)%order = pts(3)
         
           
           
-          a(3) = getvalp1(pde_loc, quadpntloc(1))
-          b(3) = getvalp1(pde_loc, quadpntloc(2))
-          c(3) = getvalp1(pde_loc, quadpntloc(3))
-          call plane_derivative(a,b,c,grad(1), grad(2))
+            a(3) = getvalp1(pde_loc, quadpntloc(1))
+            b(3) = getvalp1(pde_loc, quadpntloc(2))
+            c(3) = getvalp1(pde_loc, quadpntloc(3))
+            call plane_derivative(a,b,c,grad(1), grad(2))
 
-          gradloc(1:2) = gradloc(1:2) + grad
-        case(3)
-      end select
+            gradloc(1:2) = gradloc(1:2) + grad
+          case(3)
+            a(1:drutes_config%dimen) = nodes%data(pts(1),:)
+            b(1:drutes_config%dimen) = nodes%data(pts(2),:)
+            c(1:drutes_config%dimen) = nodes%data(pts(3),:)
+            d(1:drutes_config%dimen) = nodes%data(pts(4),:)
+            
+            quadpntloc(:)%order = pts(:)
+            
+            a(4) = getvalp1(pde_loc, quadpntloc(1))
+            b(4) = getvalp1(pde_loc, quadpntloc(2))
+            c(4) = getvalp1(pde_loc, quadpntloc(3))
+            d(4) = getvalp1(pde_loc, quadpntloc(4))
+            
+            call hyper_planeder(a,b,c,d, grad(1), grad(2), grad(3))
+          
+        end select
       end do
       
       grad = gradloc(1:drutes_config%dimen)/top
