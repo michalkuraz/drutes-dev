@@ -125,6 +125,23 @@ module feminittools
             
             call hyper_planeder(a_s(1,:), a_s(2,:), a_s(3,:) , a_s(4,:), &
                   elements%ders(i,1,1), elements%ders(i,1,2), elements%ders(i,1,3))
+                  
+            a_s(:,4) = [0.0_rkind, 1.0_rkind, 0.0_rkind, 0.0_rkind ]
+            
+            call hyper_planeder(a_s(1,:), a_s(2,:), a_s(3,:) , a_s(4,:), &
+                  elements%ders(i,2,1), elements%ders(i,2,2), elements%ders(i,2,3))
+            
+                  
+            a_s(:,4) = [0.0_rkind, 0.0_rkind, 1.0_rkind, 0.0_rkind ]
+            
+            call hyper_planeder(a_s(1,:), a_s(2,:), a_s(3,:) , a_s(4,:), &
+                  elements%ders(i,3,1), elements%ders(i,3,2), elements%ders(i,3,3))
+                  
+                  
+            a_s(:,4) = [0.0_rkind, 0.0_rkind, 0.0_rkind, 1.0_rkind ]
+            
+            call hyper_planeder(a_s(1,:), a_s(2,:), a_s(3,:) , a_s(4,:), &
+                  elements%ders(i,4,1), elements%ders(i,4,2), elements%ders(i,4,3))
                                        
           end do
           
