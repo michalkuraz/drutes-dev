@@ -21,10 +21,11 @@
 
 module geom_tools
 
-  public :: plane_derivative
   public :: init_transform
   public :: inside
+  public :: inside3D
   public :: triarea
+  public :: tetravol
   public :: dist
   public :: angle
   public :: inline
@@ -41,6 +42,7 @@ module geom_tools
   public :: getnormal
   public :: get_layer
   public :: isboundary
+  public :: get_normals3D
 
   
   contains
@@ -226,6 +228,7 @@ module geom_tools
     use globals
     use global_objs
     use globals2D
+    use core_tools
 
     real(kind=rkind), dimension(:), intent(in) :: vals
     real(kind=rkind), dimension(:), intent(out) :: points
@@ -249,68 +252,18 @@ module geom_tools
 
   end subroutine interpolate
 
-  !> specify the x and y derivates of a plane defined by three points
-  subroutine plane_derivative(a,b,c,xder,yder, element)
-    use typy
-    !> 1st point of the plane
-    real(kind=rkind), dimension(:), intent(in) :: a
-    !> 2nd point of the plane
-    real(kind=rkind), dimension(:), intent(in) :: b
-    !> 3rd point of the plane
-    real(kind=rkind), dimension(:), intent(in) :: c
-    !> resulting x derivate
-    real(kind=rkind), intent(out) :: xder
-    !> resulting y derivate
-    real(kind=rkind), intent(out) :: yder
+ 
+   
+
+  
+  
+
+  
+  
+  
     
-    !> element id
-    integer(kind=ikind), intent(in), optional :: element
-    !-------local variables--------------
-    real(kind=rkind), dimension(3) :: u
-    real(kind=rkind), dimension(3) :: v
-    real(kind=rkind), dimension(3) :: n
-    integer(kind=ikind) :: i
-    real(kind=rkind) :: reps
-
-
-    reps = epsilon(reps)
-
-
-    !check if the plane is not horizontal
-    if (abs(a(3) - b(3)) < reps*(abs(a(3))-abs(b(3)))  .and.  &
-        abs(a(3) - c(3)) < reps*(abs(a(3))-abs(c(3)))  .and.  &
-        abs(b(3) - c(3)) < reps*(abs(b(3))-abs(c(3)))) then
-      xder = 0.0_rkind
-      yder = 0.0_rkind
-      RETURN
-    else
-      CONTINUE
-    end if
-
-    !creates the plane vectors 
-    do i=1,3
-      u(i) = a(i) - b(i)
-      v(i) = a(i) - c(i)
-    end do
-
-    ! the normal plane vector is defined as
-    n(1) = u(2)*v(3) - v(2)*u(3)
-    n(2) = u(3)*v(1) - v(3)*u(1)
-    n(3) = u(1)*v(2) - v(1)*u(2)
-
-    ! finally the derivate is as follows, the horizontality has been already checked
-    ! the verticality check
-    if (abs(n(3)) < 1e2*reps) then
-      print *, "the mesh is wrong, base function can't be vertical"
-      print *, abs(n(3))
-      print *, element
-      ERROR STOP
-    end if 
-    xder = -n(1)/n(3)
-    yder = -n(2)/n(3)
-
     
-   end subroutine plane_derivative 
+    
 
   !> procedure to create transformation matrix 
   !! \f[  \left( \begin{array}{c}  e \\ f \end{array} \right) + \left( \begin{array}{cc}   a & b \\ c & d  \end{array}\right) \left( \begin{array}{c}  x \\ y  \end{array} \right)  = \left( \begin{array}{c}  x^T \\ y^T \end{array} \right) \f]
@@ -386,9 +339,9 @@ module geom_tools
     bod1 = nodes%data(elements%data(el_id,order1),:)
     bod2 = nodes%data(elements%data(el_id,order2),:)
 
-    if (abs(bod1(1)-bod2(1)) > epsilon(tg)) then
+    if (abs(bod1(1)-bod2(1)) > 100*epsilon(tg)) then
       tg = (abs(bod2(2)-bod1(2))/abs(bod1(1)-bod2(1)))
-      zcoord = 1/sqrt(1+tg*tg)
+      zcoord = 1.0_rkind/sqrt(1+tg*tg)
     else
       zcoord = 0
     end if
@@ -407,6 +360,74 @@ module geom_tools
     end if
 
   end function get_nz
+  
+  !> returns normal vector coordinates of an inner normal boundary vector to tetrahedron surface
+  !! plane defined by given tetrahedron element wall is defined by
+  !! \f[ ax +by +cz + d = 0 \f]
+  !! function plane_coeff returns vector 
+  !! \f[ coeffs = (a,b,c,d)^T \f]
+  !! line perpendicular to the surface passing through the 4th tetrahedron point with coordinates \f[ (x_4, y_4, z_4)^T \f]
+  !! is given by
+  !! \f[ \begin{split} x &= x_4 + at \\ y &= y_4 + bt \\ z &= z_4 + ct \end{split} \f]
+  !! \f[ t \f] is obtained from
+  !! \f[ a(x_4 + at) + b(y_4 + bt) + c(z_4 + ct) + d = 0 \f]
+  !! perpendicular surface projection of point 4 to surface has z coordinate
+  !! \f[ z_i = z_4 + ct \f]
+  !! resulting sin of z-coordinate is obtained from
+  !! \f sinz =  \frac{||c||}{\sqrt{a^2 + b^2 + c^2}}
+  !! if \f[ z_4 > z_i \f] inner vector points upwards else \f[ sinz = -sinz \f]
+  !>
+  function get_normals3D(a,b,c, exter) result(sins)
+    use typy
+    use debug_tools
+    use core_tools
+    
+    
+    real(kind=rkind), dimension(:), intent(in) :: a,b,c, exter
+    real(kind=rkind), dimension(3) :: sins
+    
+    real(kind=rkind), dimension(4) :: coeffs
+    real(kind=rkind), dimension(3,3) :: pts
+    real(kind=rkind) :: length, t
+    real(kind=rkind), dimension(3) :: inters
+    integer(kind=ikind) :: i
+    
+    pts(1,:) = a
+    pts(2,:) = b
+    pts(3,:) = c
+     
+    
+    call plane_coeff(pts, coeffs)
+    
+    length = 0
+    
+    do i=1,3
+      length = length + coeffs(i)*coeffs(i)
+    end do
+    length = sqrt(length)
+    
+    if ( length > 100*epsilon(length)) then
+      t = (-coeffs(4) - coeffs(1)*exter(1) - coeffs(2)*exter(2) - coeffs(3)*exter(3))/(length*length)
+      inters = exter + coeffs(1:3)*t
+      sins = abs(coeffs(1:3))/length
+      if (exter(3) < inters(3)) then
+        sins(3) = -sins(3)
+      end if
+      if (exter(2) < inters(2) ) then
+        sins(2) = -sins(2)
+      end if
+      if (exter(1) < inters(1)) then
+        sins(1) = -sins(1)
+      end if
+    else
+      sins = 0
+    end if
+      
+    
+    
+
+  
+  end function get_normals3D
 
   !> function that provides x coordinate of inner boundary normal vector, the boundary is defined by two points: bod1, bod2
   function get_nx(el_id, order1, order2) result(xcoord)
@@ -462,7 +483,7 @@ module geom_tools
 
   end function get_nx
 
- function inside(domain,bod, atboundary) result(true)
+ function inside(domain,bod, atboundary, dimen_input) result(true)
     use typy
     use globals
     use global_objs
@@ -478,11 +499,19 @@ module geom_tools
     logical, dimension(:), allocatable :: valid
     logical :: true
     logical, intent(out), optional :: atboundary
+    integer(kind=ikind), intent(in), optional :: dimen_input
     real(kind=rkind), dimension(:), allocatable :: smer
+    integer(kind=ikind) :: dimen_loc
     
     
     
-    select case(drutes_config%dimen)
+    if (present(dimen_input)) then
+      dimen_loc = dimen_input
+    else
+      dimen_loc = drutes_config%dimen
+    end if
+    
+    select case(dimen_loc)
       case(1)
         if ((domain(1,1) <= bod(1) .and. domain(2,1) >= bod(1)) .or. &
             (domain(1,1) >= bod(1) .and. domain(2,1) <= bod(1)) ) then
@@ -534,7 +563,8 @@ module geom_tools
             zasah = 0
             do k=1, ubound(domain,1)
               if (valid(k)) then
-                if (dist(a,inter(j,k,:)) > 10*epsilon(smer(1)) .and. dist(b,inter(j,k,:)) > 10*epsilon(smer(1))) then
+                if (dist(a,inter(j,k,:), dimen_loc) > 10*epsilon(smer(1)) .and. dist(b,inter(j,k,:), dimen_loc) & 
+                                                                                                      > 10*epsilon(smer(1))) then
                   zasah = zasah + 1
                 else
                   checked(j) = -1
@@ -574,6 +604,93 @@ module geom_tools
     end select
 
   end function inside
+  
+  
+  function inside3D(volume, bod) result(true)
+    use typy
+    use linalg
+    use debug_tools
+    use core_tools
+    
+    real(kind=rkind), dimension(:,:,:), intent(in) :: volume
+    real(kind=rkind), dimension(:), intent(in) :: bod
+    logical :: true
+
+    real(kind=rkind), dimension(3) :: inter
+    real(kind=rkind), dimension(4) :: coeff
+    real(kind=rkind), dimension(3,2) :: domain2D
+    logical :: fail, hit
+    integer(kind=ikind) :: pt, surf, bang
+    real(kind=rkind) :: t, xder, yder
+    real(kind=rkind), dimension(2) :: A, B, C
+    
+    integer(kind=ikind) :: i
+    
+    if (ubound(volume,2) /= 3 ) then
+      print *, "the volume must be surrounded by triangles, typicaly Delauney triangulation"
+      print *, "exited from geom_tools::inside3D"
+      ERROR STOP
+    end if
+    
+    if (ubound(volume,3) /= 3 ) then
+      print *, "points in 3D must have three coordinates"
+      print *, "exited from geom_tools::inside3D"
+      ERROR STOP
+    end if
+    
+
+    bang = 0
+    do surf=1, ubound(volume,1)
+
+      call plane_coeff(volume(surf, :, :), coeff)
+      
+      
+  
+      inter(1) = bod(1)
+      inter(3) = bod(3)
+      if (abs(coeff(2)) > 1e3*epsilon(coeff(2))) then
+        t = (coeff(1)*bod(1) + coeff(2)*bod(2) + coeff(3)*bod(3)  + coeff(4))/coeff(2)
+        inter(2) = bod(2) + t
+          
+          if (inter(2) >= bod(2)) then
+         
+            do pt=1,3
+              domain2D(pt,:) = [volume(surf, pt, 1), volume(surf, pt, 3)]
+            end do
+            if (inside(domain2D, [inter(1), inter(3)], dimen_input = 2_ikind)) bang = bang + 1
+          end if
+        else
+          if (abs(inter(1) - volume(surf, 1, 1)) < epsilon(t) .and. abs(inter(1) - volume(surf, 2, 1)) < epsilon(t) .and. &
+              abs(inter(1) - volume(surf, 3, 1)) < epsilon(t)) then
+           
+            do pt=1,3
+              domain2D(pt,:) = [volume(surf, pt, 2), volume(surf, pt, 3)]
+            end do 
+         
+            if (inside(domain2D, [inter(2), inter(3)], dimen_input = 2_ikind)) then
+              true = .true.
+              RETURN
+            end if
+          end if
+        end if
+      end do
+            
+        
+        
+        
+        
+        
+        
+          
+    
+    if (modulo(bang, 2_ikind) /= 0) then
+      true = .true.
+    else
+      true = .false.
+    end if
+    
+  
+  end function inside3D
   
   subroutine shoot(bod, k, domain, inter, valid)
     use typy
@@ -643,30 +760,63 @@ module geom_tools
     real(kind=rkind) :: area
     real(kind=rkind) :: la,lb,lc
     
-    lc = sqrt((a(1) - b(1))**2 + (a(2) - b(2))**2)
+    lc = dist(a,b)
+
+    lb = dist(a,c)
     
-    lb = sqrt((a(1) - c(1))**2 + (a(2) - c(2))**2)
-    
-    la = sqrt((b(1) - c(1))**2 + (b(2) - c(2))**2)
+    la = dist(b,c)
     
     area = 0.25*sqrt((la+lb+lc)*(lb + lc - la)*(lc + la - lb)*(la + lb - lc))
   
   end function triarea
+  
+  function tetravol(a,b,c,d) result(vol)
+    use typy
+    use simplelinalg
+    use core_tools
+    
+    real(kind=rkind), dimension(:), intent(in) :: a,b,c,d
+    real(kind=rkind) :: vol
+    
+    real(kind=rkind), dimension(4,4) :: mtx
+    integer(kind=ikind) :: i
+    
+  
+    mtx(1,:) = [a, 1.0_rkind]
+    mtx(2,:) = [b, 1.0_rkind]
+    mtx(3,:) = [c, 1.0_rkind]
+    mtx(4,:) = [d, 1.0_rkind]
+    
+    vol = 1.0_rkind/6.0_rkind*abs(determinant(mtx))
+    
+  end function tetravol
 
   
-  function dist(A,B) result(l)
+  function dist(A,B, dimen_input) result(l)
     use typy
     use globals
     
     real(kind=rkind), dimension(:), intent(in) :: A,B
+    integer(kind=ikind), intent(in), optional :: dimen_input
     real(kind=rkind) :: l
+    integer(kind=ikind) :: dimen_loc
     
-    select case(drutes_config%dimen)
+    if (present(dimen_input)) then
+      dimen_loc = dimen_input
+    else
+      dimen_loc = drutes_config%dimen
+    end if
+    
+    select case(dimen_loc)
       case(1)
         l = abs(A(1) - B(1))
       case(2)
         l = sqrt((A(1)-B(1))*(A(1)-B(1)) + (A(2)-B(2))*(A(2)-B(2)))
+      case(3)
+        l = sqrt( (A(1)-B(1))*(A(1)-B(1)) + (A(2)-B(2))*(A(2)-B(2)) + (A(3)-B(3))*(A(3)-B(3)) )
     end select
+    
+  
   
   end function dist
 
@@ -702,7 +852,7 @@ module geom_tools
     precision = 1000*epsilon(precision)
 
 
-    if (abs(dist(a,b) - dist(a,bod) - dist(b,bod)) < precision) then
+    if (abs(dist(a,b, 2_ikind) - dist(a,bod, 2_ikind) - dist(b,bod, 2_ikind)) < precision) then
       true = .true.
     else
       true = .false.
@@ -1064,7 +1214,7 @@ module geom_tools
            end do
            el%neighbours(elements%kolik,1) = elements%kolik - 1
            el%neighbours(elements%kolik,2) = 0
-        case(2)
+        case(2:3)
             !set neighbours
             do i=1, el%kolik
               pos = 0
@@ -1083,7 +1233,7 @@ module geom_tools
                   nasel1: do m=1,ubound(el%data,2)
                     if (el%data(i,l) == el%data(j,m) .and. i/=j) then
                       upward = upward + 1
-                      if (upward == 2) then 
+                      if (upward == drutes_config%dimen) then 
                   pos = pos + 1
                   el%neighbours(i,pos) = j
                   EXIT nasel1
@@ -1099,7 +1249,7 @@ module geom_tools
                 nasel2: do m=1,ubound(el%data,2)
                     if (el%data(i,l) == el%data(k,m) .and. i /= k) then
                       downward = downward + 1
-                      if (downward == 2) then 
+                      if (downward == drutes_config%dimen) then 
                   pos = pos + 1
                   el%neighbours(i,pos) = k
                   EXIT nasel2
@@ -1342,5 +1492,8 @@ module geom_tools
       close(fileid)
       
     end subroutine map1d2dJ
+    
+
+    
 
 end module geom_tools

@@ -93,10 +93,10 @@ module drutes_init
       call init_obstimes()
 
        !read mesh data
-      call find_unit(file_mesh, 200)
+
       select case(drutes_config%dimen)
         case(1)
-          open(unit=file_mesh, file="drutes.conf/mesh/drumesh1d.conf", action="read", status="old", iostat=i_err)
+          open(newunit=file_mesh, file="drutes.conf/mesh/drumesh1d.conf", action="read", status="old", iostat=i_err)
           if (i_err /= 0) then
             print *, "missing drutes.conf/mesh/drumesh1d.conf file"
             ERROR STOP
@@ -106,21 +106,21 @@ module drutes_init
         case(2)
           select case(drutes_config%mesh_type)
             case(1)
-              open(unit=file_mesh, file="drutes.conf/mesh/drumesh2d.conf", action="read", status="old", iostat=i_err)
+              open(newunit=file_mesh, file="drutes.conf/mesh/drumesh2d.conf", action="read", status="old", iostat=i_err)
               if (i_err /= 0) then
                 print *, "missing drutes.conf/mesh/drumesh2d.conf file"
                 ERROR STOP
               end if
               call read_2dmesh_int()
             case(2)
-              open(unit=file_mesh, file="drutes.conf/mesh/mesh.t3d", action="read", status="old", iostat=i_err)
+              open(newunit=file_mesh, file="drutes.conf/mesh/mesh.t3d", action="read", status="old", iostat=i_err)
               if (i_err /= 0) then
                 print *, "missing drutes.conf/mesh/mesh.t3d file"
                 ERROR STOP
               end if
               call read_2dmesh_t3d()
             case(3)
-              open(unit=file_mesh, file="drutes.conf/mesh/mesh.msh", action="read", status="old", iostat=i_err)
+              open(newunit=file_mesh, file="drutes.conf/mesh/mesh.msh", action="read", status="old", iostat=i_err)
               if (i_err /= 0) then
                 print *, "missing drutes.conf/mesh/mesh.msh file"
                 ERROR STOP
@@ -128,8 +128,16 @@ module drutes_init
               call read_2dmesh_gmsh()
             case(4)
               call read_ArcGIS()
-          end select
+            end select
         
+          case(3)
+              open(newunit=file_mesh, file="drutes.conf/mesh/mesh3D.msh", action="read", status="old", iostat=i_err)
+              if (i_err /= 0) then
+                print *, "missing drutes.conf/mesh/mesh3D.msh file"
+                ERROR STOP
+              end if
+              call read_3dmesh_gmsh()         
+            
         case default
           write(unit=terminal, fmt=*)"ERROR: unsupported problem dimension, the specified dimension was: ", drutes_config%dimen
           write(unit=terminal, fmt=*)"currently only 1D and 2D is supported"
@@ -370,9 +378,15 @@ module drutes_init
 
       integer(kind=ikind) :: i, j, k, point, dec
       real(kind=rkind), dimension(:,:), allocatable :: domain
-      logical :: error_stop = .false.
+      real(kind=rkind), dimension(:,:,:), allocatable :: domain3D
+      logical :: error_stop = .false., foundel
+      integer(kind=ikind) :: ord1, ord2, ord3, ii
 
-      allocate(domain(ubound(elements%data,2), drutes_config%dimen))
+      if (drutes_config%dimen < 3) then 
+        allocate(domain(ubound(elements%data,2), drutes_config%dimen))
+      else
+        allocate(domain3D(4, 3, 3))
+      end if
 
       observation_array(:)%element = 0
       
@@ -384,17 +398,53 @@ module drutes_init
 
       do i = 1, ubound(observation_array,1)
         do j=1, elements%kolik
-          do k=1, ubound(elements%data,2)
-            domain(k,:) = nodes%data(elements%data(j,k),:)
-          end do
-          if (inside(domain, observation_array(i)%xyz)) then
+
+          if (drutes_config%dimen < 3) then
+            do k=1, ubound(elements%data,2)
+              domain(k,:) = nodes%data(elements%data(j,k),:)
+            end do
+            foundel = inside(domain, observation_array(i)%xyz)
+          else
+            do k=1, ubound(elements%data,2)
+              select case(k)
+                case(1)
+                  ord1 = 1
+                  ord2 = 2
+                  ord3 = 3
+                 case(2)
+                  ord1 = 2
+                  ord2 = 3
+                  ord3 = 4
+                 case(3)
+                  ord1 = 1
+                  ord2 = 3
+                  ord3 = 4
+                 case(4)
+                  ord1 = 1
+                  ord2 = 2
+                  ord3 = 4
+                end select
+              
+                domain3D(k, 1, :) = nodes%data(elements%data(j, ord1),:)
+                domain3D(k, 2, :) = nodes%data(elements%data(j, ord2),:)
+                domain3D(k, 3, :) = nodes%data(elements%data(j, ord3),:)
+              end do
+              
+              foundel = inside3D(domain3D, observation_array(i)%xyz)
+
+            end if
+          
+            
+          if (foundel) then
             observation_array(i)%element = j
-              EXIT
+            EXIT
           else
             CONTINUE
           end if
         end do
       end do
+
+
 
       do i=1, ubound(observation_array,1)
         if (observation_array(i)%element == 0) then
@@ -415,7 +465,6 @@ module drutes_init
 
       do point=1, ubound(observation_array,1)
         do i=1, ubound(pde,1)
-          call find_unit(pde(i)%obspt_unit(point),5000)
           dec = 0
           do 
             dec = dec+1
@@ -427,8 +476,6 @@ module drutes_init
         end do
       end do
 
-      deallocate(domain)
-      
 
     end subroutine init_observe
     
@@ -533,7 +580,11 @@ module drutes_init
 
       xyz(1) = "x"
       xyz(2) = "z"
-      xyz(3) = "y"
+      
+      if (drutes_config%dimen == 3) then
+        xyz(2) = "y"
+        xyz(3) = "z"
+      end if
       
       write(unit=forma, fmt="(a, I16, a)") "(a, a, a, I", decimals, ", a)"
       write(unit=pde_loc%obspt_filename(name), fmt=forma) "out/obspt_", adjustl(trim(pde_loc%problem_name(1))), "-", name, ".out"
@@ -549,7 +600,7 @@ module drutes_init
      
       if (.not. drutes_config%run_from_backup) then
         if (ubound(pde_loc%mass_name,1) > 0) then
-          open(unit=pde_loc%obspt_unit(name), file=adjustl(trim(pde_loc%obspt_filename(name))), action="write", status="replace")
+          open(newunit=pde_loc%obspt_unit(name), file=adjustl(trim(pde_loc%obspt_filename(name))), action="write", status="replace")
           
           if (cut(observe_info%fmt) == "pure") call print_logo(pde_loc%obspt_unit(name))
           
@@ -575,7 +626,7 @@ module drutes_init
             end if
             
         else
-          open(unit=pde_loc%obspt_unit(name), file=adjustl(trim(pde_loc%obspt_filename(name))), action="write", status="replace")
+          open(newunit=pde_loc%obspt_unit(name), file=adjustl(trim(pde_loc%obspt_filename(name))), action="write", status="replace")
           
           if (cut(observe_info%fmt) == "pure") call print_logo(pde_loc%obspt_unit(name))
           
@@ -599,7 +650,7 @@ module drutes_init
 
 
       else
-        open(unit=pde_loc%obspt_unit(name), file=adjustl(trim(pde_loc%obspt_filename(name))), &
+        open(newunit=pde_loc%obspt_unit(name), file=adjustl(trim(pde_loc%obspt_filename(name))), &
                     action="write", access="append", status="old")
       end if
 

@@ -167,38 +167,16 @@ module manage_pointers
       select case(cut(solver_name))
         case("LDU","LDUbalanced","LDUdefault")
           solve_matrix => LDU_face
-!          solve_matrix => gmres_face
         case("BJLDU")
           solve_matrix => blockjacobi_face
         case("PCGdiag","PCGbalanced")
           solve_matrix => CG_normal_face
         case("LDUPCG", "LDULDU")
           solve_matrix => LDU_uncoupled_face
+        case("GMRES")
+          solve_matrix => gmres_face
       end select
-!      select case(drutes_config%dimen)
-!        case(1)
-!          print *, cut(solver_name) ; stop
-!!            solve_matrix => LDU_face
-!            solve_matrix => blockjacobi_face
-!            !solve_matrix => Minres_face
-!!             solve_matrix => CG_normal_face
-!        case(2)
-!          symetric = .true.
-!          do i=1, ubound(pde,1)
-!            if (.not. pde(i)%symmetric) then
-!              symetric = .false.
-!              EXIT 
-!            end if
-!          end do
-          
-!          if (.not. symetric) then
-!            solve_matrix => CG_normal_face
-!          else
-!            solve_matrix => cg_face
-!          end if
 
-
-!      end select
       
       select case (drutes_config%it_method)
         case(0) 

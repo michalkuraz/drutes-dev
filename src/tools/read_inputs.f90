@@ -134,14 +134,11 @@ module read_inputs
       call fileread(dimensions, file_global, options=(/"1 ","2 ","2r","3 "/))
       
       select case(cut(dimensions))
-        case("1","2")
+        case("1","2", "3")
           read(dimensions,'(I10)') drutes_config%dimen
         case("2r")
           drutes_config%dimen=2
           drutes_config%rotsym=.true.
-        case("3")
-          msg="3D no yet implemented, you can use only 1D, 2D and 2D for rotational symmetric flow (pseudo 3D)."
-          call file_error(file_global, msg)
       end select
       
       if (drutes_config%name == "boussi" .and. drutes_config%dimen > 1) then
@@ -928,6 +925,179 @@ module read_inputs
  
     end subroutine read_2dmesh_gmsh
     
+    
+    
+    subroutine read_3dmesh_gmsh()
+      use typy
+      use globals
+      use globals2D
+      use core_tools
+      use readtools
+      use pde_objs
+      use debug_tools
+      use geom_tools
+      
+      character(len=256) :: ch
+      character(len=11) :: msh
+      real(kind=rkind) :: mshfmt
+      integer(kind=ikind) :: i, itmp, jtmp, itmp2, edge, nd1, nd2, nd3, i_err, k, l, j, n, id, el
+      integer(kind=ikind), dimension(:), allocatable :: tmp_array
+      logical :: use_filemat=.false., update
+      integer :: file_mat
+      real(kind=rkind), dimension(:,:), allocatable :: domain, smalldom
+      real(kind=rkind), dimension(2) :: point
+      integer(kind=ikind), dimension(:), allocatable :: excl_ids
+
+      
+      read(unit=file_mesh, fmt=*, iostat=i_err) msh
+     
+      if (i_err /= 0 .or. msh /= "$MeshFormat") then
+        print *, "ERROR: file drutes.conf/mesh/mesh3D.msh has strange (unsupported) syntax"
+        print *, "exiting from read_inputs::read_2dmesh_gmsh"
+        ERROR STOP
+      end if
+      
+      read(unit=file_mesh, fmt=*, iostat=i_err) mshfmt
+      
+      
+      if (i_err /= 0) then 
+        print *, "ERROR: file drutes.conf/mesh/mesh3D.msh has strange (unsupported) syntax"
+        print *, "exiting from read_inputs::read_2dmesh_gmsh"
+        ERROR STOP
+      end if
+      
+      if (int(mshfmt) /= 2) then
+        print *, "DRUtES supports gmsh version 2 only,"
+        print *,  "launch gmsh with option -format msh2. "
+        ERROR STOP
+      end if
+
+      
+      do
+        read(unit=file_mesh, fmt=*) ch
+        if (trim(ch) == "$Nodes") EXIT
+      end do
+      
+      read(unit=file_mesh, fmt=*) nodes%kolik
+
+      do 
+        read(unit=file_mesh, fmt=*) ch
+        if (trim(ch) == "$Elements") EXIT
+      end do
+
+      read(unit=file_mesh, fmt=*) itmp
+      
+      elements%kolik = 0
+      
+      do i=1, itmp
+        read(unit=file_mesh, fmt=*) ch, itmp2
+        if (itmp2 == 4) then
+          elements%kolik = elements%kolik + 1
+        end if
+      end do
+      
+      call mesh_allocater()
+
+            
+      do 
+        itmp = ftell(file_mesh)
+        backspace(unit=file_mesh, iostat=i_err)
+        jtmp = ftell(file_mesh)
+        if(itmp == jtmp) EXIT
+      end do
+  
+  
+      do
+        read(unit=file_mesh, fmt=*) ch
+        if (trim(ch) == "$Nodes") then
+          read(unit=file_mesh, fmt=*) ch
+          EXIT
+        end if
+      end do
+      
+      do i=1, nodes%kolik
+        read(unit=file_mesh, fmt=*) itmp,  nodes%data(i,:)
+      end do
+      
+      do 
+        read(unit=file_mesh, fmt=*) ch
+        if (trim(ch) == "$Elements") then
+          read(unit=file_mesh, fmt=*) ch
+          EXIT
+        end if
+      end do
+      
+      jtmp = 0
+      
+      nodes%edge = 0
+      
+      do 
+        read(unit=file_mesh, fmt=*, iostat=i_err) ch, itmp
+        if (ch == "$EndElements") then
+          EXIT
+        end if
+        backspace(file_mesh, iostat = i_err)
+        if (i_err /= 0) then
+          print *, "Something wrong with your GMSH input file"
+          print *, "called from read_inputs::read_dmesh_gmsh"
+          STOP
+        end if
+
+        
+        select case(itmp)
+          case(2)
+            read(unit=file_mesh, fmt=*) k, l, i, edge, j,  nd1, nd2, nd3
+            if (i > 2) then
+              call write_log("number of tags for edge must be equal 1, in mesh file it equals", int1=i)
+              call write_log("update your GMSH input file!")
+              allocate(tmp_array(i-1))
+              backspace(file_mesh)
+              read(unit=file_mesh, fmt=*) k, l, i, edge,  tmp_array,  nd1, nd2, nd3
+              edge = tmp_array(1)
+              call write_log(text="tags with positions greater than 1 were ignored")
+              deallocate(tmp_array)
+            end if
+
+            nodes%edge(nd1) = edge 
+            nodes%edge(nd2) = edge 
+            nodes%edge(nd3) = edge
+            
+          case(4)
+            jtmp = jtmp + 1
+            read(unit=file_mesh, fmt=*) k, l, i,   elements%material(jtmp), j, elements%data(jtmp,:)
+            if (i /= 2) then
+              call write_log("number of tags for element must be equal 2")
+              call write_log("update your GMSH input file!")
+              if (i > pde_common%processes + 1) then
+          
+                call write_log("the number of tags is greater than the number of solution components")
+              
+                if (allocated(tmp_array)) deallocate(tmp_array)
+              
+                allocate(tmp_array(i-1))
+                
+                backspace(file_mesh)
+                read(unit=file_mesh, fmt=*) k, l, i, tmp_array, elements%material(jtmp),  elements%data(jtmp,:)
+                elements%material(jtmp) = tmp_array(1)
+                call write_log(text="tags with position greater than 2 were ignored")
+                deallocate(tmp_array)
+              else
+                call write_log("the number of tags is lower than the number of solution components, I don't know what to do :(")
+                      print *, "called from read_inputs::read_2dmesh_gmsh"
+                error STOP
+              end if
+              end if
+                  
+            case default
+              print *, "your GMSH input file contains unsupported element type"
+              print *, "called from read_inputs::read_2dmesh_gmsh"
+              STOP
+         end select
+      end do
+
+ 
+    end subroutine read_3dmesh_gmsh
+    
     subroutine read_scilab(name, proc)
       use typy
       use globals
@@ -1026,7 +1196,7 @@ module read_inputs
       use readtools
       use global4solver
       
-      character(len=256), dimension(8) :: options
+      character(len=256), dimension(9) :: options
       
       options(1) = "LDU"
       options(2) = "LDUbalanced"
@@ -1036,6 +1206,7 @@ module read_inputs
       options(6) = "LDUdefault"
       options(7) = "LDUPCG"
       options(8) = "LDULDU"
+      options(9) = "GMRES"
 
       call fileread(solver_name, file_solver, options=options)
 

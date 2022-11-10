@@ -1039,6 +1039,7 @@ module RE_constitutive
       use pde_objs
       use geom_tools
       use debug_tools
+      use core_tools
 
       class(pde_str), intent(in) :: pde_loc 
       integer(kind=ikind), intent(in) :: layer

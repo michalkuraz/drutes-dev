@@ -30,6 +30,7 @@ module kinreader
       use geom_tools
       use debug_tools
       use readtools
+      use core_tools
       
       real(kind=rkind), dimension(3) :: a,b,c
       integer(kind=ikind) :: i, j, el
@@ -173,6 +174,7 @@ module kinreader
       use globals
       use geom_tools
       use debug_tools
+      use core_tools
       
       integer(kind=ikind) :: i
       real(kind=rkind), dimension(3) :: a,b,c
@@ -224,6 +226,7 @@ module kinreader
       use geom_tools
       use global_objs
       use debug_tools
+      use core_tools
       
       integer :: file_kinematix, ierr, filerain, frainpts
       integer(kind=ikind) :: n, i, counter, j, k

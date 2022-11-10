@@ -26,7 +26,6 @@
 module simplelinalg
   public :: diag_precond
   public :: invert_matrix
-  private ::  determinant
   public :: factorial
   public :: unify_rows
   private :: sparse_gem_pig
@@ -173,6 +172,7 @@ module simplelinalg
     !> subroutine, that evaluates inverse matrix up to dimension 3
     subroutine invert_matrix(A)
       use typy
+      use core_tools
 
 
       real(kind=rkind), dimension(:,:), intent(in out) :: A
@@ -197,34 +197,7 @@ module simplelinalg
 
     end subroutine invert_matrix
 
-    !> the matrix dimension must be exactly (2,2) or (3,3)
-    function determinant(A) result(det)
-      use typy
 
-
-      real(kind=rkind) :: det
-      real(kind=rkind), dimension(:,:), intent(in) :: A
-
-
-      if (ubound(A,1) /= ubound(A,2)) then
-        print *, "ERROR: input matrix is not a square matrix, called from fem_tools::determinant()"
-        ERROR STOP
-      end if
-
-
-      select case(ubound(A,1))
-        case(2)
-              det = A(1,1)*A(2,2) - A(1,2)*A(2,1)
-        case(3)
-              det = A(1,1)*A(2,2)*A(3,3) + A(1,2)*A(2,3)*A(3,1) + A(1,3)*A(2,1)*A(3,2)&
-                  - A(1,3)*A(2,2)*A(3,1) - A(1,2)*A(2,1)*A(3,3) - A(1,1)*A(2,3)*A(3,2)
-        case default
-              print *, "ERROR: incorrect matrix dimension, called from fem_tools::determinant()"
-              ERROR STOP
-      end select
-
-
-    end function determinant
     
     function factorial(in) result(fact)
       use typy

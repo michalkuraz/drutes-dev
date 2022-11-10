@@ -226,8 +226,7 @@ module solver_interfaces
       integer(kind=ikind) :: converge, fin
       
 !      A => gmressmtx
-      
-      print *, A%getn()
+    
       
       nrestart = 45 
       
@@ -244,7 +243,7 @@ module solver_interfaces
       
 !      print *, reps1
       
-      call gmres(fin, x, b, nit, reps1, Ax4gmres, dummycond4gmres, nrestart, gmres_reps_abs, 1_ikind, itfin1, repsfin1, &
+      call gmres(fin, x, b, nit, reps1, Ax4gmres, dummycond4gmres, nrestart, gmres_reps_abs, 0_ikind, itfin1, repsfin1, &
                   converge)
                   
       call diag_precond(a=spmatrix, x=pde_common%xvect(1:fin,3), mode=-1)     
