@@ -59,7 +59,7 @@ module drutes_init
     
       write(unit=logfile, fmt=*, iostat = i_err) "DRUtES is initializing, reading input files"
 
-      open(newunit=file_itcg, file="out/cgit.count", action="write", status="replace", iostat=i_err)
+      open(newunit=file_itcg, file="out/itsolver.count", action="write", status="replace", iostat=i_err)
       
       open(newunit=file_picard, file="out/picard_it.count", action="write", status="replace", iostat=i_err)
       

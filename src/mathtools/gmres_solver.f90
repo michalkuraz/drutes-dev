@@ -22,6 +22,7 @@ module gmres_solver
   subroutine gmres(nsize, x, d, nit,tol, prod, precond, nvec,  &
        tol2,iout,it, sum, not_converge)
     use typy
+
     !    implicit double precision (a-h,o-z)
     !ccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
     !c     preconditioned gmres.                               c
@@ -318,6 +319,8 @@ module gmres_solver
     !     sum,'<?', tol**2*sum0, '|', sum, '<?', tol2**2, '|',sum0,'<?',1E-30
     
     if( (sum.le.tol**2*sum0 .and. sum.le.tol2**2) .or. sum .le. 1.E-30 ) then
+    
+
 
        if(ihist.eq.1) then
           call prod(vk,x,nsize)

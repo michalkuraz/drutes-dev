@@ -1195,18 +1195,18 @@ module read_inputs
       use globals
       use readtools
       use global4solver
+      use core_tools
       
-      character(len=256), dimension(9) :: options
+      character(len=256), dimension(8) :: options
       
       options(1) = "LDU"
       options(2) = "LDUbalanced"
       options(3) = "PCGdiag"
       options(4) = "PCGbalanced"
       options(5) = "BJLDU"
-      options(6) = "LDUdefault"
-      options(7) = "LDUPCG"
-      options(8) = "LDULDU"
-      options(9) = "GMRES"
+      options(6) = "LDUPCG"
+      options(7) = "LDULDU"
+      options(8) = "GMRES"
 
       call fileread(solver_name, file_solver, options=options)
 
@@ -1214,7 +1214,12 @@ module read_inputs
       
       call fileread(record_solver_time, file_solver)
       
-  
+      if (cut(solver_name) == "LDU" .or. cut(solver_name) == "LDUbalanced") then
+        itersolver = .false.
+      else
+        itersolver = .true.
+      end if
+      
     
     end subroutine read_solverconfig
 

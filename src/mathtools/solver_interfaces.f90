@@ -225,9 +225,6 @@ module solver_interfaces
       real(kind=rkind) :: gmres_reps, gmres_reps_abs, repsfin
       integer(kind=ikind) :: converge, fin
       
-!      A => gmressmtx
-      
-      print *, A%getn()
       
       nrestart = 45 
       
@@ -246,14 +243,11 @@ module solver_interfaces
       
       call gmres(fin, x, b, nit, reps1, Ax4gmres, dummycond4gmres, nrestart, gmres_reps_abs, 1_ikind, itfin1, repsfin1, &
                   converge)
+    
+      repsfin1 = sqrt(repsfin1)
                   
       call diag_precond(a=spmatrix, x=pde_common%xvect(1:fin,3), mode=-1)     
-      
-      itfin1 = 0        
-      
-      
-!      print *, norm2(b-A%mul(x)) ; call wait()
-      
+
       
     end subroutine gmres_face
       
@@ -660,7 +654,7 @@ module solver_interfaces
         case("PCGbalanced")
   
           call unify_rows(spmatrix, pde_common%bvect(1:fin))
-          call CGnormal(A=A, b=b,x=x,ilev1=ilevel,itmax1=itmax1,reps1=reps1, itfin1=itfin1, repsfin1=repsfin1)
+          call CG(A=A, b=b,x=x,ilev1=ilevel,itmax1=itmax1,reps1=reps1, itfin1=itfin1, repsfin1=repsfin1)
       end select
 
       write(unit=file_itcg, fmt = *) time, itfin1, repsfin1
