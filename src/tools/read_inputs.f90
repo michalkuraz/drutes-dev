@@ -776,7 +776,6 @@ module read_inputs
       integer(kind=ikind), dimension(:), allocatable :: excl_ids
       
       
-      
       read(unit=file_mesh, fmt=*, iostat=i_err) msh
      
       if (i_err /= 0 .or. msh /= "$MeshFormat") then

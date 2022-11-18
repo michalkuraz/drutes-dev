@@ -83,6 +83,8 @@ module postpro
         mode = 0
       end if
       
+      if (cut(observe_info%fmt) == "gmsh") mode = -1
+      
 
       if (drutes_config%dimen < 2  .or. www) then
         extension = ".dat"
@@ -887,7 +889,6 @@ module postpro
       
       if (.not. printed(proc)) then
        do i=1, ubound(ids,1)
-          if (i/=2) then 
             write(unit=ids(i), fmt="(a)") "$MeshFormat"
             write(unit=ids(i), fmt="(a)") "2.2 0 8"
             write(unit=ids(i), fmt="(a)") "$EndMeshFormat"
@@ -896,18 +897,18 @@ module postpro
             write(unit=ids(i), fmt=*) nodes%kolik
             
             do j=1, nodes%kolik
-              write(unit=ids(i), fmt=*) j,  nodes%data(j,:)
+              write(unit=ids(i), fmt=*) j,  nodes%data(j,:), "1.0"
             end do
             write(unit=ids(i), fmt="(a)") "$EndNodes"
             write(unit=ids(i), fmt="(a)") "$Elements"
             write(unit=ids(i), fmt=*) elements%kolik
             do j=1, elements%kolik
-              write(unit=ids(i), fmt=*) j,  elements%data(j,:)
+              write(unit=ids(i), fmt=*) j, "2 ", "2 ", elements%material(j), "14 ", elements%data(j,:)
             end do
             write(unit=ids(i), fmt="(a)") "$EndElements"
-            write(unit=ids(i), fmt="(a)") "$NodeData"
+!            write(unit=ids(i), fmt="(a)") "$NodeData"
             
-          end if
+
         end do
         printed(proc) = .true.
       end if
@@ -920,14 +921,14 @@ module postpro
           
           !write solution
           if (i==1) then
-            write(unit=ids(i), fmt=*) ' " ', trim(pde(proc)%problem_name(2)), " ", trim(pde(proc)%solution_name(1)) , ' " '
+            write(unit=ids(i), fmt=*) ' " ', "time =  ", time, " ",trim(pde(proc)%solution_name(1)) ,' " '
           
           ! write mass
           else if (i >= 3 .and. i <= ubound(ids,1)-1) then
-            write(unit=ids(i), fmt=*) ' " ', trim(pde(proc)%problem_name(2)), " ", trim(pde(proc)%mass_name(i-2,1)) , ' " '
+            write(unit=ids(i), fmt=*) ' " ', "time =  ", time, " ", trim(pde(proc)%mass_name(i-2,1)), ' " '
           ! write fluxes   
           else if ( i == ubound(ids,1) ) then
-            write(unit=ids(i), fmt=*) ' " ', trim(pde(proc)%problem_name(2)), " ", trim(pde(proc)%flux_name(1)) , ' " '
+            write(unit=ids(i), fmt=*) ' " ',  "time =  ", time, " ", trim(pde(proc)%flux_name(1)) , ' " '
           end if
           
           write(unit=ids(i), fmt=*) "1"
