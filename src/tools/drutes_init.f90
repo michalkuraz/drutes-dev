@@ -476,7 +476,6 @@ module drutes_init
         end do
       end do
 
-
     end subroutine init_observe
     
     

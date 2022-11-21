@@ -37,6 +37,7 @@ module fem_tools
     use pde_objs
     use globals
     use debug_tools
+    use geom_tools
     
     !> number of element
     integer(kind=ikind), intent(in) :: el_id
@@ -48,7 +49,7 @@ module fem_tools
     
     integer(kind=ikind), dimension(:), allocatable, save :: bc
     integer(kind=ikind), dimension(:), allocatable, save :: n_row, m_col
-    integer(kind=ikind) :: i,j,m, iproc, jproc, limits, fnc
+    integer(kind=ikind) :: i,j,m, iproc, jproc, limits, fnc, locneu
     real(kind=rkind), dimension(:,:), allocatable, save :: bcval
     real(kind=rkind), dimension(:), allocatable, save :: surface
     integer(kind=ikind), dimension(:), allocatable, save :: fin
@@ -56,6 +57,7 @@ module fem_tools
     real(kind=rkind), dimension(3,3) :: d
     real(kind=rkind) :: tmp   
     real(kind=rkind), dimension(3) :: tmpdata
+    integer(kind=ikind), dimension(:), allocatable, save :: neumann
    
 
     if (.not. allocated(bc)) then	
@@ -63,8 +65,9 @@ module fem_tools
       allocate(n_row(ubound(stiff_mat,1)))
       allocate(m_col(ubound(stiff_mat,1)))
       allocate(bcval(ubound(stiff_mat,1),3))
-      allocate(surface(ubound(stiff_mat,1)))
+      allocate(surface(ubound(stiff_mat,1)*ubound(pde,1)))
       allocate(fin(ubound(pde,1)))
+      allocate(neumann(drutes_config%dimen))
     end if
     
     surface = 0
@@ -73,14 +76,7 @@ module fem_tools
     m_col = 0
     bcval = 0
     limits = ubound(stiff_mat,1)/ubound(pde,1)
-    
         
-    do iproc=0, ubound(pde,1)-1
-      do i=1, ubound(elements%data, 2) 	
-        surface(i+iproc*limits) = elements%length(el_id,i)/drutes_config%dimen
-      end do
-    end do
-    
 
     do iproc = 0,ubound(pde,1)-1
       do i=1, ubound(elements%data, 2)
@@ -94,6 +90,57 @@ module fem_tools
         end if
       end do
     end do
+
+    select case(drutes_config%dimen)
+      case(1)
+        surface = 1
+      case(2)
+
+        do iproc=0, ubound(pde,1)-1
+          locneu = 1
+          do i=1, ubound(stiff_mat,1)
+            if (bc(i+iproc*limits) == 2) then
+              neumann(locneu) = i
+              locneu = locneu + 1
+            end if
+          end do
+          if (locneu == 3) then
+            do i=1, ubound(stiff_mat,1)
+              if (bc(i+iproc*limits) == 2) then
+                surface(i+iproc*limits) = dist(nodes%data(elements%data(el_id,neumann(1)),:), &
+                                              nodes%data(elements%data(el_id,neumann(2)),:))/drutes_config%dimen
+                                
+              end if
+            end do
+          end if
+        end do
+      case(3)
+        do iproc=0, ubound(pde,1)-1
+          locneu = 1
+          do i=1, ubound(stiff_mat,1)
+            if (bc(i+iproc*limits) == 2) then
+              neumann(locneu) = i
+              locneu = locneu + 1
+            end if
+          end do
+          if (locneu == 4) then
+            do i=1, ubound(stiff_mat,1)
+              if (bc(i+iproc*limits) == 2) then
+                surface(i+iproc*limits) = triarea(nodes%data(elements%data(el_id,neumann(1)),:), &
+                                              nodes%data(elements%data(el_id,neumann(2)),:),  &
+                                              nodes%data(elements%data(el_id,neumann(3)),:))/drutes_config%dimen
+                                
+              end if
+            end do
+          end if
+        end do
+      
+        
+!    do iproc=0, ubound(pde,1)-1
+!      do i=1, ubound(elements%data, 2) 	
+!        surface(i+iproc*limits) = elements%length(el_id,i)
+!      end do
+    end select
 
 
     do iproc = 0,ubound(pde,1)-1

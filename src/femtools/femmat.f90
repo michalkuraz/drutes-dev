@@ -95,10 +95,6 @@ module femmat
           write(unit=solver_time_file, fmt=*) time, solver_end - solver_start
           call flush(solver_time_file)
         end if
-        
-        where (pde_common%xvect(1:fin,3) < -100.0) 
-          pde_common%xvect(1:fin,3) = -100.0
-        end where
           
   
         if (pcg_it > 0.55*fin) then 

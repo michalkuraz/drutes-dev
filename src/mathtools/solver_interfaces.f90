@@ -241,7 +241,7 @@ module solver_interfaces
       
 !      print *, reps1
       
-      call gmres(fin, x, b, nit, reps1, Ax4gmres, dummycond4gmres, nrestart, gmres_reps_abs, 1_ikind, itfin1, repsfin1, &
+      call gmres(fin, x, b, nit, reps1, Ax4gmres, dummycond4gmres, nrestart, gmres_reps_abs, 0_ikind, itfin1, repsfin1, &
                   converge)
     
       repsfin1 = sqrt(repsfin1)

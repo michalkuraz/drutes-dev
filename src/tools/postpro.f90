@@ -870,7 +870,7 @@ module postpro
       integer, dimension(:), intent(in) :: ids
       integer(kind=ikind), intent(in) :: proc
       type(integpnt_str),  intent(in out) :: quadpnt
-      integer(kind=ikind) :: i, j, layer
+      integer(kind=ikind) :: i, j, layer, tag1, tag2
       logical, dimension(:), allocatable, save :: printed 
       real(kind=rkind) :: curtime, totflux
       
@@ -886,6 +886,14 @@ module postpro
         curtime = time
       end if
       
+      select case(drutes_config%dimen)
+        case(2)
+          tag1 = 2
+          tag2 = 14
+        case(3)
+          tag1 = 4
+          tag2 = 36
+      end select
       
       if (.not. printed(proc)) then
        do i=1, ubound(ids,1)
@@ -897,13 +905,18 @@ module postpro
             write(unit=ids(i), fmt=*) nodes%kolik
             
             do j=1, nodes%kolik
-              write(unit=ids(i), fmt=*) j,  nodes%data(j,:), "1.0"
+              if (drutes_config%dimen == 2) then
+                write(unit=ids(i), fmt=*) j,  nodes%data(j,:), "1.0"
+              else
+                write(unit=ids(i), fmt=*) j,  nodes%data(j,:)
+              end if
             end do
             write(unit=ids(i), fmt="(a)") "$EndNodes"
             write(unit=ids(i), fmt="(a)") "$Elements"
             write(unit=ids(i), fmt=*) elements%kolik
+            
             do j=1, elements%kolik
-              write(unit=ids(i), fmt=*) j, "2 ", "2 ", elements%material(j), "14 ", elements%data(j,:)
+              write(unit=ids(i), fmt=*) j, tag1, "2 ", elements%material(j), tag2, elements%data(j,:)
             end do
             write(unit=ids(i), fmt="(a)") "$EndElements"
 !            write(unit=ids(i), fmt="(a)") "$NodeData"
