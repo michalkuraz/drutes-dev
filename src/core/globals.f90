@@ -178,6 +178,9 @@ logical :: printedk
   logical, public :: debugmode
 
   logical, public :: coupled_problem
+  
+  !> set true if using GMRES of PCG solver
+  logical, public :: itersolver
 
 
   !> the amount of postprocess runs

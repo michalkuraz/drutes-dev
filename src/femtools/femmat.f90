@@ -85,15 +85,16 @@ module femmat
         call solve_matrix(spmatrix, pde_common%bvect(1:fin), pde_common%xvect(1:fin,3),  itmax1=fin, &
             reps1=1e-14_rkind, itfin1=pcg_it, repsfin1=reps_err)
             
+        if (itersolver) then
+          write(unit=file_itcg, fmt=*) time, pcg_it, reps_err
+          call flush(file_itcg)
+        end if
+            
         if (record_solver_time) then
           call cpu_time(solver_end)
           write(unit=solver_time_file, fmt=*) time, solver_end - solver_start
           call flush(solver_time_file)
         end if
-        
-        where (pde_common%xvect(1:fin,3) < -100.0) 
-          pde_common%xvect(1:fin,3) = -100.0
-        end where
           
   
         if (pcg_it > 0.55*fin) then 

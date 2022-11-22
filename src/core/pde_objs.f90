@@ -476,6 +476,9 @@ module pde_objs
             d(4) = getvalp1(pde_loc, quadpntloc(4))
             
             call hyper_planeder(a,b,c,d, grad(1), grad(2), grad(3))
+            
+            gradloc = gradloc + grad
+            
           
         end select
       end do
