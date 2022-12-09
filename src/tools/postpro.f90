@@ -47,9 +47,9 @@ module postpro
       type(filenames_str), dimension(:), allocatable        :: filenames
       integer(kind=ikind)                                   :: i, i_err, j, layer, proc, run, ii
       character(len=64)                                     :: forma
-      integer, dimension(:,:), pointer, save                :: ids
-      integer, dimension(:,:), allocatable, target, save    :: ids_obs
-      integer, dimension(:,:), allocatable, target, save    :: ids_anime
+      integer, dimension(:,:), allocatable, save            :: ids
+      integer, dimension(:,:), allocatable,  save           :: ids_obs
+      integer, dimension(:,:), allocatable,  save           :: ids_anime
       character(len=5)                                      :: extension
       character(len=15)                                     :: prefix
       real(kind=rkind)                                      :: distance, avgval, val1, val2, val3, tmp, flux
@@ -161,9 +161,9 @@ module postpro
       end if
       
       if (anime) then
-        ids => ids_anime
+        ids = ids_anime
       else
-        ids => ids_obs
+        ids = ids_obs
       end if
 
       allocate(filenames(ubound(pde,1)))
@@ -760,6 +760,8 @@ module postpro
       else
         csv = " "
       end if
+      
+
  
       if (.not. allocated(pts)) allocate(pts(ubound(nodes%data,2)))
       

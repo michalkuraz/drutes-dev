@@ -336,7 +336,7 @@ module re_reader
         ERROR STOP
       end if
       
-    
+
       do i=1, ubound(roots,1)
         call fileread(tmpdata, fileid, checklen=.true.)
         roots(i)%h_wet = tmpdata(1)

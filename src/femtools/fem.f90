@@ -192,7 +192,7 @@ module fem
         case(-1, 0)
           dtprev = time_step
           if (itcount < 0.25*max_itcount) then
-            time_step = min(dtmax, 1.006*time_step) 
+            time_step = min(dtmax, 1.1*time_step) 
           else
             time_step = time_step
           end if
