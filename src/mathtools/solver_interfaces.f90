@@ -225,6 +225,7 @@ module solver_interfaces
       real(kind=rkind) :: gmres_reps, gmres_reps_abs, repsfin
       integer(kind=ikind) :: converge, fin
       
+
       
       nrestart = 45 
       
@@ -232,14 +233,13 @@ module solver_interfaces
       
       fin = spmatrix%getn()
       
-!      print *, norm2(b-A%mul(x)) ; call wait()
       
       call diag_precond(a=spmatrix, x=pde_common%xvect(1:fin,3), mode=1)
 !    call unify_rows(spmatrix, pde_common%bvect(1:fin))
 
       gmres_reps_abs=reps1
       
-!      print *, reps1
+
       
       call gmres(fin, x, b, nit, reps1, Ax4gmres, dummycond4gmres, nrestart, gmres_reps_abs, 0_ikind, itfin1, repsfin1, &
                   converge)
