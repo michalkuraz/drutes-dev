@@ -926,6 +926,9 @@ module postpro
         printed(proc) = .true.
       end if
       
+
+      
+      
       
       do i=1, ubound(ids,1)
         if (i/=2) then
@@ -937,10 +940,11 @@ module postpro
             write(unit=ids(i), fmt=*) ' " ', "time =  ", time, " ",trim(pde(proc)%solution_name(1)) ,' " '
           
           ! write mass
-          else if (i >= 3 .and. i <= ubound(ids,1)-1) then
+          else if (i >= 3 .and. i <= ubound(pde(proc)%mass_name,1)+2) then
+
             write(unit=ids(i), fmt=*) ' " ', "time =  ", time, " ", trim(pde(proc)%mass_name(i-2,1)), ' " '
           ! write fluxes   
-          else if ( i == ubound(ids,1) ) then
+          else if ( i > ubound(pde(proc)%mass_name,1)+2 ) then
             write(unit=ids(i), fmt=*) ' " ',  "time =  ", time, " ", trim(pde(proc)%flux_name(1)) , ' " '
           end if
           
@@ -963,7 +967,7 @@ module postpro
             end do
             
           ! write mass  
-          else if (i >= 3 .and. i <= ubound(ids,1)-1) then
+          else if (i >= 3 .and. i <= ubound(pde(proc)%mass_name,1)+2) then
             do j=1, nodes%kolik
               quadpnt%order = j
               quadpnt%preproc = .true.
@@ -973,7 +977,7 @@ module postpro
           
           
           ! write fluxes   
-          else if ( i == ubound(ids,1) ) then
+          else if ( i > ubound(pde(proc)%mass_name,1)+2) then
             do j=1, nodes%kolik
               quadpnt%order = j
               quadpnt%preproc = .true.

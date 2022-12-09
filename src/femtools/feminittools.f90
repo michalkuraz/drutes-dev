@@ -110,6 +110,8 @@ module feminittools
                   elements%ders(i,3,1), elements%ders(i,3,2))
 
           end do
+          
+
         case(3)
           call write_log("calculating elements geometrical properties...")
           do i=1, elements%kolik
@@ -158,7 +160,7 @@ module feminittools
       end do
 
       call reorder()
-      
+
       i = ubound(pde,1)
       
       if (drutes_config%it_method /= 1) then
@@ -632,12 +634,16 @@ module feminittools
       counter = 1
       proc_start = 0
   
+
+  
       do proc=1, ubound(pde,1)
         pde(proc)%procbase_fnc(1) = counter
 
         do i=1, nodes%kolik
+
           pde(proc)%permut(i) = i
           if (nodes%edge(i) /= 0) then
+
             el_id = nodes%element(i)%data(1)
             do j=1, ubound(elements%data,2)
               if (i == elements%data(el_id, j)) then

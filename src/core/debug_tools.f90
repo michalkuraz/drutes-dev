@@ -23,7 +23,7 @@
 
 module debug_tools
   private :: print_real_matrix, print_int_matrix, print_real_vector, print_int_vector, print_real_vector4
-  public :: wait
+  public :: wait, print_filename
   private :: print_quadpnt
   
   !> generic procedure, can be overloaded with different vector/matrix types
@@ -44,6 +44,27 @@ module debug_tools
  
 
   contains
+  
+    function print_filename(unt) result(answer)
+      use typy
+
+      integer, intent(in) :: unt
+      integer :: ids
+      character(len=512) :: filename
+      character(:), allocatable :: answer
+      logical :: openedq
+      
+      ids = unt
+      
+      inquire(unit=ids, opened=openedq, name=filename)
+      
+      if (openedq) then
+        answer = trim(filename)
+      else
+        answer = "file not opened"
+      end if
+      
+    end function print_filename
 
     !> prints integpnt_str
     subroutine print_quadpnt(quadpnt, filunit, name)

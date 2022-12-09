@@ -116,6 +116,7 @@ program main
     call init_observe()
 
     call feminit()
+
     
     if (solve_bcfluxes) call init_bcfluxes()
     

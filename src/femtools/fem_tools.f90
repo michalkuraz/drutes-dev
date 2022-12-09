@@ -98,14 +98,14 @@ module fem_tools
 
         do iproc=0, ubound(pde,1)-1
           locneu = 1
-          do i=1, ubound(stiff_mat,1)
+          do i=1, limits
             if (bc(i+iproc*limits) == 2) then
               neumann(locneu) = i
               locneu = locneu + 1
             end if
           end do
           if (locneu == 3) then
-            do i=1, ubound(stiff_mat,1)
+            do i=1, limits
               if (bc(i+iproc*limits) == 2) then
                 surface(i+iproc*limits) = dist(nodes%data(elements%data(el_id,neumann(1)),:), &
                                               nodes%data(elements%data(el_id,neumann(2)),:))/drutes_config%dimen
@@ -117,14 +117,14 @@ module fem_tools
       case(3)
         do iproc=0, ubound(pde,1)-1
           locneu = 1
-          do i=1, ubound(stiff_mat,1)
+          do i=1, limits
             if (bc(i+iproc*limits) == 2) then
               neumann(locneu) = i
               locneu = locneu + 1
             end if
           end do
           if (locneu == 4) then
-            do i=1, ubound(stiff_mat,1)
+            do i=1, limits
               if (bc(i+iproc*limits) == 2) then
                 surface(i+iproc*limits) = triarea(nodes%data(elements%data(el_id,neumann(1)),:), &
                                               nodes%data(elements%data(el_id,neumann(2)),:),  &
@@ -144,7 +144,7 @@ module fem_tools
 
 
     do iproc = 0,ubound(pde,1)-1
-      do i=1, ubound(elements%data, 2)
+      do i=1, limits
         select case(bc(i+iproc*limits))
           case(0)
             CONTINUE
@@ -153,8 +153,8 @@ module fem_tools
           case(1,2,4)
             m = nodes%edge(elements%data(el_id, i))
             call pde(iproc+1)%bc(m)%value_fnc(pde(iproc+1), element=el_id,node=i,value=bcval(i+iproc*limits,1))
-!          case(5)
-!            call pde(iproc+1)%bc(m)%value_fnc(pde(iproc+1), el_id,i,valarray=bcval(i+iproc*limits,:))
+          case(5)
+            call pde(iproc+1)%bc(m)%value_fnc(pde(iproc+1), el_id,i,valarray=bcval(i+iproc*limits,:))
         end select
       end do
     end do
