@@ -332,7 +332,9 @@ module evapbc4heat
         
         select case(drutes_config%dimen)
          case(1)
-           value = value + gravflux(1)
+
+           value = value - gravflux(1)
+
          case(2)
            bcflux(1) = sqrt(1-elements%nvect_z(el_id, node_order)*elements%nvect_z(el_id, node_order))*value
            bcflux(2) = elements%nvect_z(el_id, node_order)*value
