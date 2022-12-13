@@ -389,7 +389,7 @@ module ADE_fnc
       
     end function ADE_zerorder
     
-    subroutine ADE_dirichlet(pde_loc, el_id, node_order, value, code, array) 
+    subroutine ADE_dirichlet(pde_loc, el_id, node_order, value, code, array, nvectin) 
       use typy
       use globals
       use global_objs
@@ -401,6 +401,8 @@ module ADE_fnc
       real(kind=rkind), intent(out), optional    :: value
       integer(kind=ikind), intent(out), optional :: code
       real(kind=rkind), dimension(:), intent(out), optional :: array
+      real(kind=rkind), dimension(:), intent(in), optional :: nvectin
+      
       
       integer(kind=ikind) :: edge_id, i, j, proc
       real(kind=rkind) :: tempval
@@ -436,7 +438,7 @@ module ADE_fnc
     end subroutine ADE_dirichlet
     
     
-    subroutine ADE_neumann(pde_loc, el_id, node_order, value, code, array) 
+    subroutine ADE_neumann(pde_loc, el_id, node_order, value, code, array, nvectin) 
       use typy
       use globals
       use global_objs
@@ -448,6 +450,8 @@ module ADE_fnc
       real(kind=rkind), intent(out), optional    :: value
       integer(kind=ikind), intent(out), optional :: code
       real(kind=rkind), dimension(:), intent(out), optional :: array
+      real(kind=rkind), dimension(:), intent(in), optional :: nvectin
+
       
       integer(kind=ikind) :: edge_id, i, j, proc
       real(kind=rkind) :: tempval
@@ -483,7 +487,7 @@ module ADE_fnc
     end subroutine ADE_neumann
     
     
-    subroutine ADE_null_bc(pde_loc, el_id, node_order, value, code, array) 
+    subroutine ADE_null_bc(pde_loc, el_id, node_order, value, code, array, nvectin) 
       use typy
       use globals
       use global_objs
@@ -494,6 +498,8 @@ module ADE_fnc
       real(kind=rkind), intent(out), optional    :: value
       integer(kind=ikind), intent(out), optional :: code
       real(kind=rkind), dimension(:), intent(out), optional :: array
+      real(kind=rkind), dimension(:), intent(in), optional :: nvectin
+
 
       if (present(value)) then
         value = 0.0_rkind

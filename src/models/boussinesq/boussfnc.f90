@@ -430,7 +430,7 @@ module boussfnc
         
       end subroutine boussicond
       
-      subroutine bouss_bc(pde_loc, el_id, node_order, value, code, array) 
+      subroutine bouss_bc(pde_loc, el_id, node_order, value, code, array, nvectin) 
         use typy
         use globals
         use global_objs
@@ -442,6 +442,8 @@ module boussfnc
         real(kind=rkind), intent(out), optional   :: value
         integer(kind=ikind), intent(out), optional :: code
         real(kind=rkind), dimension(:), intent(out), optional :: array
+        real(kind=rkind), dimension(:), intent(in), optional :: nvectin
+
         
         integer(kind=ikind) :: edge_id, i, j
         

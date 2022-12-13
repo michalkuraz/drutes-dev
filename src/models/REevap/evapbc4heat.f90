@@ -191,7 +191,7 @@ module evapbc4heat
       
     end function Eterm
     
-    subroutine ebalance_flux(pde_loc, el_id, node_order, value, code, array) 
+    subroutine ebalance_flux(pde_loc, el_id, node_order, value, code, array, nvectin) 
       use typy
       use globals
       use global_objs
@@ -206,6 +206,7 @@ module evapbc4heat
       integer(kind=ikind), intent(out), optional :: code
       !> unused for this model (implementation for Robin boundary)
       real(kind=rkind), dimension(:), intent(out), optional :: array
+      real(kind=rkind), dimension(:), intent(in), optional :: nvectin      
       
       integer(kind=ikind) :: layer, nodeid, i
       type(integpnt_str) :: quadpnt_loc
@@ -283,7 +284,7 @@ module evapbc4heat
     
     
     
-    subroutine evaporation_bcflux(pde_loc, el_id, node_order, value, code, array) 
+    subroutine evaporation_bcflux(pde_loc, el_id, node_order, value, code, array, nvectin) 
       use typy
       use globals
       use global_objs
@@ -300,6 +301,9 @@ module evapbc4heat
       integer(kind=ikind), intent(out), optional :: code
       !> unused for this model (implementation for Robin boundary)
       real(kind=rkind), dimension(:), intent(out), optional :: array
+      real(kind=rkind), dimension(:), intent(in), optional :: nvectin     
+      
+      
       real(kind=rkind), dimension(3,3) :: K
       real(kind=rkind), dimension(3) :: gravflux, bcflux
 
@@ -317,29 +321,34 @@ module evapbc4heat
       end if
         
         
-          
+      D = drutes_config%dimen   
       
       if (present(value)) then
         quadpnt_loc%column = 2
         quadpnt_loc%type_pnt = "ndpt"
         quadpnt_loc%order = elements%data(el_id, node_order)
         call pde(RE_ord)%pde_fnc(RE_ord)%dispersion(pde(RE_ord), elements%material(el_id), quadpnt_loc, &
-                  tensor=K(1:drutes_config%dimen, 1:drutes_config%dimen))
-        gravflux(1:drutes_config%dimen) = -K(drutes_config%dimen, 1:drutes_config%dimen)*elements%nvect_z(el_id, node_order)
+                  tensor=K(1:D, 1:D))
+                  
+        if (.not. present(nvectin) ) then	
+          	print *, "contact developer michalkuraz@gmail.com"
+          	print *, "bug in evapbc4heat::evaporation_bcflux"
+       		ERROR STOP
+        end if
+        gravflux(1:D) = -K(D, 1:D)*(-nvectin)
         
         dens_wat = dens_liquid(quadpnt_loc)
         value = Eterm(quadpnt_loc, layer)/dens_wat
+       
+
         
-        select case(drutes_config%dimen)
+        select case(D)
          case(1)
-
-           value = value - gravflux(1)
-
-         case(2)
-           bcflux(1) = sqrt(1-elements%nvect_z(el_id, node_order)*elements%nvect_z(el_id, node_order))*value
-           bcflux(2) = elements%nvect_z(el_id, node_order)*value
-           bcflux = bcflux + gravflux
-           value = sqrt(bcflux(1)*bcflux(1) + bcflux(2)*bcflux(2))
+           value = value + gravflux(1)
+         case(2:3)
+           bcflux = -nvectin*value
+           bcflux(1:D) = bcflux(1:D) + gravflux(1:D)
+           value = -norm2(bcflux(1:D))
        end select 
       end if
       

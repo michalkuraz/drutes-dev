@@ -53,11 +53,12 @@ module fem_tools
     real(kind=rkind), dimension(:,:), allocatable, save :: bcval
     real(kind=rkind), dimension(:), allocatable, save :: surface
     integer(kind=ikind), dimension(:), allocatable, save :: fin
-    integer(kind=ikind) :: space_dim, space_i, kk, kkk
+    integer(kind=ikind) :: space_dim, space_i, kk, kkk, extpt
     real(kind=rkind), dimension(3,3) :: d
     real(kind=rkind) :: tmp   
     real(kind=rkind), dimension(3) :: tmpdata
     integer(kind=ikind), dimension(:), allocatable, save :: neumann
+    real(kind=rkind), dimension(:,:), allocatable, save :: nvectbc
    
 
     if (.not. allocated(bc)) then	
@@ -76,6 +77,8 @@ module fem_tools
     m_col = 0
     bcval = 0
     limits = ubound(stiff_mat,1)/ubound(pde,1)
+    
+    if (.not. allocated(nvectbc)) allocate(nvectbc(ubound(stiff_mat,1), drutes_config%dimen))
         
 
     do iproc = 0,ubound(pde,1)-1
@@ -94,6 +97,8 @@ module fem_tools
     select case(drutes_config%dimen)
       case(1)
         surface = 1
+        nvectbc(1,1) = 1
+        nvectbc(2,1) = -1
       case(2)
 
         do iproc=0, ubound(pde,1)-1
@@ -109,7 +114,19 @@ module fem_tools
               if (bc(i+iproc*limits) == 2) then
                 surface(i+iproc*limits) = dist(nodes%data(elements%data(el_id,neumann(1)),:), &
                                               nodes%data(elements%data(el_id,neumann(2)),:))/drutes_config%dimen
-                                
+                 select case(neumann(1) + neumann(2))
+                 	!1 + 2
+                 	case(3)
+                      extpt = 3
+                    !1 + 3
+                 	case(4)
+                      extpt = 2
+                    case(5)
+                      extpt = 1
+                 end select
+                nvectbc(i+iproc*limits,:) = get_normals2D(nodes%data(elements%data(el_id,neumann(1)),:), &
+                										  nodes%data(elements%data(el_id,neumann(2)),:), &
+                										  nodes%data(elements%data(el_id,extpt),:) )
               end if
             end do
           end if
@@ -127,9 +144,27 @@ module fem_tools
             do i=1, limits
               if (bc(i+iproc*limits) == 2) then
                 surface(i+iproc*limits) = triarea(nodes%data(elements%data(el_id,neumann(1)),:), &
-                                              nodes%data(elements%data(el_id,neumann(2)),:),  &
-                                              nodes%data(elements%data(el_id,neumann(3)),:))/drutes_config%dimen
-                                
+                                                  nodes%data(elements%data(el_id,neumann(2)),:),  &
+                                                  nodes%data(elements%data(el_id,neumann(3)),:))/drutes_config%dimen
+                                              
+                select case(neumann(1) + neumann(2) + neumann(3))
+                  ! 1 + 2 + 3
+                  case(6)
+                  	extpt = 4
+                  ! 1 + 3 + 4	
+                  case(8)
+                    extpt = 2
+                  ! 1 + 2 + 4
+                  case(7)
+                    extpt = 3
+                  !2 + 3 + 4
+                  case(9)
+                  	extpt = 1
+                end select
+                nvectbc(i+iproc*limits,:) = get_normals3D(nodes%data(elements%data(el_id,neumann(1)),:), &
+                							              nodes%data(elements%data(el_id,neumann(2)),:), &
+                							              nodes%data(elements%data(el_id,neumann(3)),:), &
+                							              nodes%data(elements%data(el_id,extpt),:) )             
               end if
             end do
           end if
@@ -150,9 +185,13 @@ module fem_tools
             CONTINUE
           case(3)
             bcval(i+iproc*limits,1) = 0
-          case(1,2,4)
+          case(1,4)
             m = nodes%edge(elements%data(el_id, i))
             call pde(iproc+1)%bc(m)%value_fnc(pde(iproc+1), element=el_id,node=i,value=bcval(i+iproc*limits,1))
+          case(2)
+          	m = nodes%edge(elements%data(el_id, i))
+          	call pde(iproc+1)%bc(m)%value_fnc(pde(iproc+1), element=el_id,node=i,value=bcval(i+iproc*limits,1), &
+          									  nvectin = nvectbc(i+iproc*limits,:))
           case(5)
             call pde(iproc+1)%bc(m)%value_fnc(pde(iproc+1), el_id,i,valarray=bcval(i+iproc*limits,:))
         end select

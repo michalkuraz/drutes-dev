@@ -428,6 +428,30 @@ module geom_tools
 
   
   end function get_normals3D
+  
+  
+  function get_normals2D(a,b,exter) result(nvect)
+  	use typy
+  	real(kind=rkind), dimension(:), intent(in):: a,b,exter
+  	real(kind=rkind), dimension(2) :: nvect
+  	
+  	real(kind=rkind) :: k
+  	
+  	if (abs(a(1)-b(1)) > 100*epsilon(a(1))) then
+  	  k = (a(2)-b(2))/(a(1) - b(1))
+  	  nvect = [k,1.0_rkind]/sqrt(k*k+1)
+  	  if (.not. aboveline(a,b,exter)) then
+  	  	nvect = -nvect
+  	  end if
+    else
+      nvect = [0.0_rkind,1.0_rkind]
+      if (aboveline(a,b,exter)) then
+      	nvect = -nvect
+      end if
+  	end if
+  	
+  
+  end function get_normals2D
 
   !> function that provides x coordinate of inner boundary normal vector, the boundary is defined by two points: bod1, bod2
   function get_nx(el_id, order1, order2) result(xcoord)

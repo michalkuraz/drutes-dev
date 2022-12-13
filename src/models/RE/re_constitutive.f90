@@ -1891,7 +1891,7 @@ module RE_constitutive
       end function rcza_check
 
 
-      subroutine re_dirichlet_bc(pde_loc, el_id, node_order, value, code, array) 
+      subroutine re_dirichlet_bc(pde_loc, el_id, node_order, value, code, array, nvectin) 
         use typy
         use globals
         use global_objs
@@ -1902,6 +1902,8 @@ module RE_constitutive
         real(kind=rkind), intent(out), optional    :: value
         integer(kind=ikind), intent(out), optional :: code
         real(kind=rkind), dimension(:), intent(out), optional :: array
+        real(kind=rkind), dimension(:), intent(in), optional :: nvectin
+
 
         integer(kind=ikind) :: edge_id, i, j
         
@@ -1932,7 +1934,7 @@ module RE_constitutive
       end subroutine re_dirichlet_bc
 
 
-      subroutine re_null_bc(pde_loc, el_id, node_order, value, code, array) 
+      subroutine re_null_bc(pde_loc, el_id, node_order, value, code, array,nvectin )
         use typy
         use globals
         use global_objs
@@ -1943,6 +1945,8 @@ module RE_constitutive
         real(kind=rkind), intent(out), optional    :: value
         integer(kind=ikind), intent(out), optional :: code
         real(kind=rkind), dimension(:), intent(out), optional :: array
+        real(kind=rkind), dimension(:), intent(in), optional :: nvectin
+
 
         if (present(value)) then
           value = 0.0_rkind
@@ -1956,7 +1960,7 @@ module RE_constitutive
 
 
 
-      subroutine re_dirichlet_height_bc(pde_loc, el_id, node_order, value, code, array) 
+      subroutine re_dirichlet_height_bc(pde_loc, el_id, node_order, value, code, array,nvectin) 
         use typy
         use globals
         use global_objs
@@ -1968,6 +1972,8 @@ module RE_constitutive
         real(kind=rkind), intent(out), optional    :: value
         integer(kind=ikind), intent(out), optional :: code
         real(kind=rkind), dimension(:), intent(out), optional :: array
+        real(kind=rkind), dimension(:), intent(in), optional :: nvectin
+
 
         
         integer(kind=ikind) :: edge_id, i, j
@@ -2009,7 +2015,7 @@ module RE_constitutive
 
 
 
-      subroutine re_neumann_bc(pde_loc, el_id, node_order, value, code, array) 
+      subroutine re_neumann_bc(pde_loc, el_id, node_order, value, code, array,nvectin) 
         use typy
         use globals
         use global_objs
@@ -2022,15 +2028,19 @@ module RE_constitutive
         real(kind=rkind), intent(out), optional    :: value
         integer(kind=ikind), intent(out), optional :: code
         real(kind=rkind), dimension(:), intent(out), optional :: array
+        real(kind=rkind), dimension(:), intent(in), optional :: nvectin
+
         
         real(kind=rkind), dimension(3,3) :: K
 
-        integer(kind=ikind) :: i, edge_id, j
+        integer(kind=ikind) :: i, edge_id, j, D
         real(kind=rkind), dimension(3) :: gravflux, bcflux
         real(kind=rkind) :: bcval, gfluxval
         integer :: i1
         type(integpnt_str) :: quadpnt_loc
 
+
+		D = drutes_config%dimen
             
         if (present(value)) then
           edge_id = nodes%edge(elements%data(el_id, node_order))
@@ -2041,16 +2051,18 @@ module RE_constitutive
           quadpnt_loc%type_pnt = "ndpt"
           quadpnt_loc%order = elements%data(el_id, node_order)
 
-          call pde_loc%pde_fnc(pde_loc%order)%dispersion(pde_loc, elements%material(el_id), quadpnt_loc, &
-                  tensor=K(1:drutes_config%dimen, 1:drutes_config%dimen))
+          call pde_loc%pde_fnc(pde_loc%order)%dispersion(pde_loc, elements%material(el_id), quadpnt_loc, & 
+                 tensor=K(1:D, 1:D))
                   
-          select case (drutes_config%dimen)
-            case(1)
-              gravflux(1) = K(1,1) * elements%nvect_z(el_id, node_order)*(-1)
-            case(2)
-              gravflux(1) = K(2,1) * elements%nvect_x(el_id, node_order)*(-1)
-              gravflux(2) = K(2,2) * elements%nvect_z(el_id, node_order) * (-1)
-          end select
+                  
+          if (.not. present(nvectin) ) then	
+          	print *, "contact developer michalkuraz@gmail.com"
+          	print *, "bug in re_constitutive::re_neumann_bc"
+          	ERROR STOP
+          end if        
+          gravflux(1:D) = -K(D, 1:D)*nvectin
+                  
+
           
 
           if (pde_loc%bc(edge_id)%file) then
@@ -2069,18 +2081,15 @@ module RE_constitutive
             bcval = pde_loc%bc(edge_id)%value
           end if
           
-
           
-
+		  bcflux = -nvectin*bcval
 
           select case(drutes_config%dimen)
             case(1)
-              value = bcval - gravflux(1)
-            case(2)
-              bcflux(1) = elements%nvect_x(el_id, node_order)*bcval
-              bcflux(2) = elements%nvect_z(el_id, node_order)*bcval
-              
-              value = norm2(bcflux(1:2) - gravflux(1:2))
+              value = bcval + gravflux(1)
+            case(2:3)
+               
+              value = sign(bcval, 1.0_rkind)*norm2(bcflux(1:D) + gravflux(1:D))
               
           end select
         end if

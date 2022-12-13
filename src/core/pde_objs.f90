@@ -207,7 +207,7 @@ module pde_objs
 
  !> abstract interface for boundary value function
   abstract interface
-    subroutine bc_fnc(pde_loc, element, node, value, code, valarray) 
+    subroutine bc_fnc(pde_loc, element, node, value, code, valarray, nvectin) 
       use typy
       import :: pde_str
       class(pde_str), intent(in) :: pde_loc
@@ -229,6 +229,8 @@ module pde_objs
       !! valarray(3) = c
       !<
       real(kind=rkind), dimension(:), intent(out), optional :: valarray
+      !> normal boundary vector
+      real(kind=rkind), dimension(:), intent(in), optional :: nvectin
     end subroutine bc_fnc
   end interface 
 
