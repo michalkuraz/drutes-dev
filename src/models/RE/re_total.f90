@@ -154,7 +154,7 @@ module re_total
 
     end subroutine darcy4totH
     
-    subroutine retot_dirichlet_bc(pde_loc, el_id, node_order, value, code, array, nvect) 
+    subroutine retot_dirichlet_bc(pde_loc, el_id, node_order, value, code, array, bcpts) 
       use typy
       use globals
       use global_objs
@@ -167,8 +167,8 @@ module re_total
       real(kind=rkind), intent(out), optional   :: value
       integer(kind=ikind), intent(out), optional :: code
       real(kind=rkind), dimension(:), intent(out), optional :: array
-      real(kind=rkind), dimension(:), intent(in), optional :: nvect
-
+      type(bcpts_str), intent(in), optional :: bcpts
+      
       integer(kind=ikind) :: edge_id, i, j, D
       type(integpnt_str) :: quadpnt
       real(kind=rkind), dimension(3) :: xyz
@@ -212,7 +212,7 @@ module re_total
 
 
 
-    subroutine retot_dirichlet_height_bc(pde_loc, el_id, node_order, value, code, array,nvect) 
+    subroutine retot_dirichlet_height_bc(pde_loc, el_id, node_order, value, code, array,bcpts) 
       use typy
       use globals
       use global_objs
@@ -225,8 +225,7 @@ module re_total
       real(kind=rkind), intent(out), optional    :: value
       integer(kind=ikind), intent(out), optional :: code
       real(kind=rkind), dimension(:), intent(out), optional :: array
-      real(kind=rkind), dimension(:), intent(in), optional :: nvect
-
+      type(bcpts_str), intent(in), optional :: bcpts
 
       
       integer(kind=ikind) :: edge_id, i, j
@@ -263,7 +262,7 @@ module re_total
       
     end subroutine retot_dirichlet_height_bc
     
-    subroutine retot_well(pde_loc, el_id, node_order, value, code, array,nvect)
+    subroutine retot_well(pde_loc, el_id, node_order, value, code, array,bcpts)
       use typy
       use globals
       use global_objs
@@ -276,8 +275,7 @@ module re_total
       real(kind=rkind), intent(out), optional   :: value
       integer(kind=ikind), intent(out), optional :: code
       real(kind=rkind), dimension(:), intent(out), optional :: array
-      real(kind=rkind), dimension(:), intent(in), optional :: nvect
-
+      type(bcpts_str), intent(in), optional :: bcpts
 
       integer(kind=ikind) :: edge_id, i, j, D
       type(integpnt_str) :: quadpnt
@@ -319,7 +317,7 @@ module re_total
       
     end subroutine retot_well
     
-    subroutine retot_seepage(pde_loc, el_id, node_order, value, code, array,nvectin)
+    subroutine retot_seepage(pde_loc, el_id, node_order, value, code, array,bcpts)
       use typy
       use globals
       use global_objs
@@ -333,8 +331,8 @@ module re_total
       real(kind=rkind), intent(out), optional    :: value
       integer(kind=ikind), intent(out), optional :: code
       real(kind=rkind), dimension(:), intent(out), optional :: array
-      real(kind=rkind), dimension(:), intent(in), optional :: nvectin
-
+      type(bcpts_str), intent(in), optional :: bcpts
+      
       
       real(kind=rkind) :: solval, gradn
       real(kind=rkind), dimension(:), allocatable, save :: solgrad, nvect
@@ -559,7 +557,7 @@ module re_total
 
 
 
-    subroutine retot_neumann_bc(pde_loc, el_id, node_order, value, code, array,nvect) 
+    subroutine retot_neumann_bc(pde_loc, el_id, node_order, value, code, array,bcpts) 
       use typy
       use globals
       use global_objs
@@ -571,8 +569,7 @@ module re_total
       real(kind=rkind), intent(out), optional    :: value
       integer(kind=ikind), intent(out), optional :: code
       real(kind=rkind), dimension(:), intent(out), optional :: array
-      real(kind=rkind), dimension(:), intent(in), optional :: nvect
-
+      type(bcpts_str), intent(in), optional :: bcpts
      
 
       integer(kind=ikind) :: i, edge_id, j
@@ -615,7 +612,7 @@ module re_total
 
     end subroutine retot_neumann_bc
     
-    subroutine retot_atmospheric(pde_loc, el_id, node_order, value, code, array,nvect) 
+    subroutine retot_atmospheric(pde_loc, el_id, node_order, value, code, array,bcpts) 
       use typy
       use globals
       use global_objs
@@ -627,8 +624,7 @@ module re_total
       real(kind=rkind), intent(out), optional    :: value
       integer(kind=ikind), intent(out), optional :: code
       real(kind=rkind), dimension(:), intent(out), optional :: array
-      real(kind=rkind), dimension(:), intent(in), optional :: nvect
-
+      type(bcpts_str), intent(in), optional :: bcpts
       
       
       
@@ -679,7 +675,7 @@ print *, "value",  value
       
     end subroutine retot_atmospheric
     
-    subroutine retot_freedrainage(pde_loc, el_id, node_order, value, code, array,nvect) 
+    subroutine retot_freedrainage(pde_loc, el_id, node_order, value, code, array,bcpts) 
       use typy
       use globals
       use global_objs
@@ -691,8 +687,7 @@ print *, "value",  value
       real(kind=rkind), intent(out), optional    :: value
       integer(kind=ikind), intent(out), optional :: code
       real(kind=rkind), dimension(:), intent(out), optional :: array
-      real(kind=rkind), dimension(:), intent(in), optional :: nvect
-
+      type(bcpts_str), intent(in), optional :: bcpts
       
       real(kind=rkind), dimension(3,3) :: K
       type(integpnt_str) :: quadpnt

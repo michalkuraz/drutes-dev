@@ -1891,7 +1891,7 @@ module RE_constitutive
       end function rcza_check
 
 
-      subroutine re_dirichlet_bc(pde_loc, el_id, node_order, value, code, array, nvectin) 
+      subroutine re_dirichlet_bc(pde_loc, el_id, node_order, value, code, array, bcpts) 
         use typy
         use globals
         use global_objs
@@ -1902,7 +1902,7 @@ module RE_constitutive
         real(kind=rkind), intent(out), optional    :: value
         integer(kind=ikind), intent(out), optional :: code
         real(kind=rkind), dimension(:), intent(out), optional :: array
-        real(kind=rkind), dimension(:), intent(in), optional :: nvectin
+        type(bcpts_str), intent(in), optional :: bcpts
 
 
         integer(kind=ikind) :: edge_id, i, j
@@ -1960,7 +1960,7 @@ module RE_constitutive
 
 
 
-      subroutine re_dirichlet_height_bc(pde_loc, el_id, node_order, value, code, array,nvectin) 
+      subroutine re_dirichlet_height_bc(pde_loc, el_id, node_order, value, code, array, bcpts) 
         use typy
         use globals
         use global_objs
@@ -1972,7 +1972,7 @@ module RE_constitutive
         real(kind=rkind), intent(out), optional    :: value
         integer(kind=ikind), intent(out), optional :: code
         real(kind=rkind), dimension(:), intent(out), optional :: array
-        real(kind=rkind), dimension(:), intent(in), optional :: nvectin
+        type(bcpts_str), intent(in), optional :: bcpts
 
 
         
@@ -2015,7 +2015,7 @@ module RE_constitutive
 
 
 
-      subroutine re_neumann_bc(pde_loc, el_id, node_order, value, code, array,nvectin) 
+      subroutine re_neumann_bc(pde_loc, el_id, node_order, value, code, array,bcpts) 
         use typy
         use globals
         use global_objs
@@ -2028,7 +2028,9 @@ module RE_constitutive
         real(kind=rkind), intent(out), optional    :: value
         integer(kind=ikind), intent(out), optional :: code
         real(kind=rkind), dimension(:), intent(out), optional :: array
-        real(kind=rkind), dimension(:), intent(in), optional :: nvectin
+        type(bcpts_str), intent(in), optional :: bcpts
+        
+        real(kind=rkind), dimension(3) :: nvectin
 
         
         real(kind=rkind), dimension(3,3) :: K
@@ -2040,7 +2042,7 @@ module RE_constitutive
         type(integpnt_str) :: quadpnt_loc
 
 
-		D = drutes_config%dimen
+	    	D = drutes_config%dimen
             
         if (present(value)) then
           edge_id = nodes%edge(elements%data(el_id, node_order))
@@ -2055,7 +2057,7 @@ module RE_constitutive
                  tensor=K(1:D, 1:D))
                   
                   
-          if (.not. present(nvectin) ) then	
+          if (.not. present(bcpts) ) then	
           	print *, "contact developer michalkuraz@gmail.com"
           	print *, "bug in re_constitutive::re_neumann_bc"
           	ERROR STOP

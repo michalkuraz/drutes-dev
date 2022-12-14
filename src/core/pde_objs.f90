@@ -204,12 +204,18 @@ module pde_objs
   end interface 
 
 
-
+  type, public :: bcpts_str
+    integer(kind=ikind), dimension(:), allocatable:: border
+    integer(kind=ikind) :: extpt
+  end type bcpts_str
+  
+  
  !> abstract interface for boundary value function
   abstract interface
-    subroutine bc_fnc(pde_loc, element, node, value, code, valarray, nvectin) 
+    subroutine bc_fnc(pde_loc, element, node, value, code, valarray, bcpts) 
       use typy
       import :: pde_str
+      import :: bcpts_str
       class(pde_str), intent(in) :: pde_loc
       !> element id
       integer(kind=ikind), intent(in)  :: element
@@ -230,7 +236,7 @@ module pde_objs
       !<
       real(kind=rkind), dimension(:), intent(out), optional :: valarray
       !> normal boundary vector
-      real(kind=rkind), dimension(:), intent(in), optional :: nvectin
+      type(bcpts_str), intent(in), optional :: bcpts
     end subroutine bc_fnc
   end interface 
 

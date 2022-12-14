@@ -452,6 +452,75 @@ module geom_tools
   	
   
   end function get_normals2D
+  
+  subroutine get_normals(el_id, bcpts, nvect) 
+    use typy
+    use pde_objs
+    integer(kind=ikind), intent(in) :: el_id
+    type(bcpts_str), intent(in) :: bcpts
+    real(kind=rkind), dimension(:), allocatable, intent(out) :: nvect
+    
+    integer(kind=ikind) :: D
+    
+    D = drutes_config%dimen
+    
+    if (.not. allocated(nvect)) allocate(nvect(D))
+    
+    if (ubound(nvect,1) /= D) then
+      print *, "runtime error, contact developer michalkuraz@gmail.com"
+      print *, "exited from geom_tools::getnormals"
+      ERROR STOP
+    end if
+    
+    select case(D)
+      case(1)
+        if (nodes%data(elements%data(el_id, bcpts%border(1)),1) > nodes%data(elements%data(el_id, bcpts%extpt),1 ) ) then
+          nvect(1) = -1
+        else
+          nvect(1) = 1
+        end if
+      case(2)
+        nvect = get_normals2D(nodes%data(elements%data(el_id,bcpts%border(1)),:), &
+                										  nodes%data(elements%data(el_id,bcpts%border(2)),:), &
+                										  nodes%data(elements%data(el_id,bcpts%extpt),:) )
+                                      
+      case(3)
+        nvect = get_normals3D(nodes%data(elements%data(el_id,bcpts%border(1)),:), &
+                      nodes%data(elements%data(el_id,bcpts%border(2)),:), &
+                      nodes%data(elements%data(el_id,bcpts%border(3)),:), &
+                      nodes%data(elements%data(el_id,bcpts%extpt),:) )
+    end select
+    
+    
+    
+  end subroutine
+  
+  function get_fluxsgn(el_id, bcpts, flux) result(sgn)
+    use typy
+    use pde_objs
+    use globals
+    integer(kind=ikind), inetent(in) :: el_id
+    type(bcpts_str), intent(in) :: bcpts
+    real(kind=rkind), dimension(:), intent(in) :: flux
+    
+    integer(kind=ikind) :: sgn
+    
+    integer(kind=ikind) :: D
+    
+    D = drutes_config%dimen
+    
+    select case(D)
+      case(1)
+        if (nodes%data(elements%data(el_id, bcpts%border(1)),1) > nodes%data(elements%data(el_id, bcpts%extpt),1 ) ) then
+          
+        
+      case(2)
+      
+      case(3)
+      
+    end select
+  
+  end function get_fluxsgn  
 
   !> function that provides x coordinate of inner boundary normal vector, the boundary is defined by two points: bod1, bod2
   function get_nx(el_id, order1, order2) result(xcoord)
@@ -1248,44 +1317,44 @@ module geom_tools
               call progressbar(int(100*i/el%kolik))
 
               okoli: do 
-            j = min(j+1, el%kolik+1)
-            k = max(k-1, 0_ikind)
+                j = min(j+1, el%kolik+1)
+                k = max(k-1, 0_ikind)
 
-            if (j <= el%kolik) then
-              upward = 0
-              moje1: do l=1,ubound(el%data,2)
-                  nasel1: do m=1,ubound(el%data,2)
-                    if (el%data(i,l) == el%data(j,m) .and. i/=j) then
-                      upward = upward + 1
-                      if (upward == drutes_config%dimen) then 
-                  pos = pos + 1
-                  el%neighbours(i,pos) = j
-                  EXIT nasel1
-                      end if
-                    end if
-                end do nasel1
-              end do moje1
-            end if
+                if (j <= el%kolik) then
+                  upward = 0
+                  moje1: do l=1,ubound(el%data,2)
+                      nasel1: do m=1,ubound(el%data,2)
+                        if (el%data(i,l) == el%data(j,m) .and. i/=j) then
+                          upward = upward + 1
+                          if (upward == drutes_config%dimen) then 
+                      pos = pos + 1
+                      el%neighbours(i,pos) = j
+                      EXIT nasel1
+                          end if
+                        end if
+                    end do nasel1
+                  end do moje1
+                end if
 
-            if (k > 0) then
-              downward = 0
-              moje2: do l=1,ubound(el%data,2)
-                nasel2: do m=1,ubound(el%data,2)
-                    if (el%data(i,l) == el%data(k,m) .and. i /= k) then
-                      downward = downward + 1
-                      if (downward == drutes_config%dimen) then 
-                  pos = pos + 1
-                  el%neighbours(i,pos) = k
-                  EXIT nasel2
-                      end if
-                    end if
-                end do nasel2 
-              end do moje2
-            end if
+                if (k > 0) then
+                  downward = 0
+                  moje2: do l=1,ubound(el%data,2)
+                    nasel2: do m=1,ubound(el%data,2)
+                        if (el%data(i,l) == el%data(k,m) .and. i /= k) then
+                          downward = downward + 1
+                          if (downward == drutes_config%dimen) then 
+                      pos = pos + 1
+                      el%neighbours(i,pos) = k
+                      EXIT nasel2
+                          end if
+                        end if
+                    end do nasel2 
+                  end do moje2
+                end if
 
-            if (pos == ubound(el%data,2) .or. (j == el%kolik+1 .and. k == 0_ikind)) then
-              EXIT okoli
-            end if
+                if (pos == ubound(el%data,2) .or. (j == el%kolik+1 .and. k == 0_ikind)) then
+                  EXIT okoli
+                end if
               end do okoli
             end do
             
