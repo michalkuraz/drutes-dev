@@ -506,16 +506,29 @@ module geom_tools
     integer(kind=ikind) :: sgn
     
     integer(kind=ikind) :: D
+    real(kind=rkind), dimension(3) :: fluxpt
     
     D = drutes_config%dimen
     
     select case(D)
       case(1)
         if (nodes%data(elements%data(el_id, bcpts%border(1)),1) > nodes%data(elements%data(el_id, bcpts%extpt),1 ) ) then
+          if (flux(1) >= 0) then
+            sgn = -1
+          else
+            sgn = 1
+          end if
+        else
+         if (flux(1) < 0) then
+            sgn = -1
+          else
+            sgn = 1
+          end if
+        end if
           
         
       case(2)
-      
+        
       case(3)
       
     end select
