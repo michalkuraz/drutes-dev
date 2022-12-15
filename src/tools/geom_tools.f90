@@ -499,6 +499,8 @@ module geom_tools
     use typy
     use pde_objs
     use globals
+    use core_tools
+    
     integer(kind=ikind), inetent(in) :: el_id
     type(bcpts_str), intent(in) :: bcpts
     real(kind=rkind), dimension(:), intent(in) :: flux
@@ -506,7 +508,7 @@ module geom_tools
     integer(kind=ikind) :: sgn
     
     integer(kind=ikind) :: D
-    real(kind=rkind), dimension(3) :: fluxpt
+    real(kind=rkind), dimension(3) :: fluxshoot
     
     D = drutes_config%dimen
     
@@ -530,7 +532,19 @@ module geom_tools
       case(2)
         
       case(3)
-      
+      	call get_normals(el_id, bcpts, nvect)
+      	fluxshoot = [nodes%data(elements%data(el_id, bcpts%border(1)),1) + nvect(1), &
+      	             nodes%data(elements%data(el_id, bcpts%border(1)),2) + nvect(2), &
+      	             nodes%data(elements%data(el_id, bcpts%border(1)),3) + nvect(3)]
+      	vectpt = [nodes%data(elements%data(el_id, bcpts%extpt),1) - fluxshoot(1) , &
+                  nodes%data(elements%data(el_id, bcpts%extpt),2) - fluxshoot(2) , &
+                  nodes%data(elements%data(el_id, bcpts%extpt),3) - fluxshoot(3) ]
+                  
+        pts(1,:) = nodes%data(elements%data(el_id, bcpts%border(1)),:)
+        pts(2,:) = nodes%data(elements%data(el_id, bcpts%border(2)),:)
+        pts(3,:) = nodes%data(elements%data(el_id, bcpts%border(3)),:)
+                  
+        call plane_coeff(pts, plane)
     end select
   
   end function get_fluxsgn  
