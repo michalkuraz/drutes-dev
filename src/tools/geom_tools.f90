@@ -501,14 +501,18 @@ module geom_tools
     use globals
     use core_tools
     
-    integer(kind=ikind), inetent(in) :: el_id
+    integer(kind=ikind), intent(in) :: el_id
     type(bcpts_str), intent(in) :: bcpts
     real(kind=rkind), dimension(:), intent(in) :: flux
     
     integer(kind=ikind) :: sgn
     
     integer(kind=ikind) :: D
-    real(kind=rkind), dimension(3) :: fluxshoot
+    real(kind=rkind), dimension(3) :: fluxshoot, vectpt, ptinter
+    real(kind=rkind), dimension(3,3) :: pts
+    real(kind=rkind) :: tinter
+    
+    
     
     D = drutes_config%dimen
     
@@ -532,19 +536,32 @@ module geom_tools
       case(2)
         
       case(3)
-      	call get_normals(el_id, bcpts, nvect)
-      	fluxshoot = [nodes%data(elements%data(el_id, bcpts%border(1)),1) + nvect(1), &
-      	             nodes%data(elements%data(el_id, bcpts%border(1)),2) + nvect(2), &
-      	             nodes%data(elements%data(el_id, bcpts%border(1)),3) + nvect(3)]
-      	vectpt = [nodes%data(elements%data(el_id, bcpts%extpt),1) - fluxshoot(1) , &
-                  nodes%data(elements%data(el_id, bcpts%extpt),2) - fluxshoot(2) , &
-                  nodes%data(elements%data(el_id, bcpts%extpt),3) - fluxshoot(3) ]
+      	fluxshoot = [nodes%data(elements%data(el_id, bcpts%border(1)),1) + flux(1), &
+      	             nodes%data(elements%data(el_id, bcpts%border(1)),2) + flux(2), &
+      	             nodes%data(elements%data(el_id, bcpts%border(1)),3) + flux(3)]
+
+          vectpt = [nodes%data(elements%data(el_id, bcpts%extpt),1) - tshoot*fluxshoot(1) , &
+                    nodes%data(elements%data(el_id, bcpts%extpt),2) - tshoot*fluxshoot(2) , &
+                    nodes%data(elements%data(el_id, bcpts%extpt),3) - tshoot*fluxshoot(3) ]
+
                   
         pts(1,:) = nodes%data(elements%data(el_id, bcpts%border(1)),:)
         pts(2,:) = nodes%data(elements%data(el_id, bcpts%border(2)),:)
         pts(3,:) = nodes%data(elements%data(el_id, bcpts%border(3)),:)
                   
         call plane_coeff(pts, plane)
+        
+        tinter = -(plane(1)*fluxshoot(1) + plane(2)*fluxshoot(2) + plane(3)*fluxshoot(3) + plane(4))/&
+                    (vectpt(1) + vectpt(2) + vectpt(3))
+      
+        ptinter = [fluxshoot(1) + tinter*vectpt(1) , fluxshoot(2) + tinter*vectpt(2), fluxshoot(3)*vectpt(3)]
+        
+        if (dist(nodes%data(elements%data(el_id, bcpts%extpt),:), fluxshoot) < & 
+            dist(nodes%data(elements%data(el_id, bcpts%extpt),:), ptinter) ) then
+          sgn = 1
+        else
+          sgn = -1
+        end if
     end select
   
   end function get_fluxsgn  
