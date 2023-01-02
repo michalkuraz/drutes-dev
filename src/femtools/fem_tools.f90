@@ -58,7 +58,7 @@ module fem_tools
     real(kind=rkind) :: tmp   
     real(kind=rkind), dimension(3) :: tmpdata
     integer(kind=ikind), dimension(:), allocatable, save :: neumann
-    real(kind=rkind), dimension(:,:), allocatable, save :: nvectbc
+    type(bcpts_str), save :: bcpts
    
 
     if (.not. allocated(bc)) then	
@@ -69,6 +69,7 @@ module fem_tools
       allocate(surface(ubound(stiff_mat,1)*ubound(pde,1)))
       allocate(fin(ubound(pde,1)))
       allocate(neumann(drutes_config%dimen))
+      allocate(bcpts%border(drutes_config%dimen))
     end if
     
     surface = 0
@@ -78,7 +79,6 @@ module fem_tools
     bcval = 0
     limits = ubound(stiff_mat,1)/ubound(pde,1)
     
-    if (.not. allocated(nvectbc)) allocate(nvectbc(ubound(stiff_mat,1), drutes_config%dimen))
         
 
     do iproc = 0,ubound(pde,1)-1
@@ -97,8 +97,19 @@ module fem_tools
     select case(drutes_config%dimen)
       case(1)
         surface = 1
-        nvectbc(1,1) = 1
-        nvectbc(2,1) = -1
+         do iproc=0, ubound(pde,1)-1
+          do i=1, limits
+            if (bc(i+iproc*limits) == 2) then
+              neumann = i
+              EXIT
+            end if
+          end do
+         end do  
+         if (neumann(1) == 2) then
+           extpt = 1
+         else
+           extpt = 2
+         end if
       case(2)
 
         do iproc=0, ubound(pde,1)-1
@@ -116,17 +127,16 @@ module fem_tools
                                               nodes%data(elements%data(el_id,neumann(2)),:))/drutes_config%dimen
                  select case(neumann(1) + neumann(2))
                  	!1 + 2
-                 	case(3)
+                 	 case(3)
                       extpt = 3
                     !1 + 3
-                 	case(4)
+                 	 case(4)
                       extpt = 2
-                    case(5)
+                   case(5)
                       extpt = 1
                  end select
-                nvectbc(i+iproc*limits,:) = get_normals2D(nodes%data(elements%data(el_id,neumann(1)),:), &
-                										  nodes%data(elements%data(el_id,neumann(2)),:), &
-                										  nodes%data(elements%data(el_id,extpt),:) )
+
+
               end if
             end do
           end if
@@ -160,22 +170,20 @@ module fem_tools
                   !2 + 3 + 4
                   case(9)
                   	extpt = 1
-                end select
-                nvectbc(i+iproc*limits,:) = get_normals3D(nodes%data(elements%data(el_id,neumann(1)),:), &
-                							              nodes%data(elements%data(el_id,neumann(2)),:), &
-                							              nodes%data(elements%data(el_id,neumann(3)),:), &
-                							              nodes%data(elements%data(el_id,extpt),:) )             
+                end select     
               end if
             end do
           end if
         end do
       
-        
-!    do iproc=0, ubound(pde,1)-1
-!      do i=1, ubound(elements%data, 2) 	
-!        surface(i+iproc*limits) = elements%length(el_id,i)
-!      end do
+
     end select
+
+
+   bcpts%border = neumann
+   bcpts%extpt = extpt
+  
+
 
 
     do iproc = 0,ubound(pde,1)-1
@@ -190,8 +198,12 @@ module fem_tools
             call pde(iproc+1)%bc(m)%value_fnc(pde(iproc+1), element=el_id,node=i,value=bcval(i+iproc*limits,1))
           case(2)
           	m = nodes%edge(elements%data(el_id, i))
-          	call pde(iproc+1)%bc(m)%value_fnc(pde(iproc+1), element=el_id,node=i,value=bcval(i+iproc*limits,1), &
-          									  nvectin = nvectbc(i+iproc*limits,:))
+            if (abs(surface(i + iproc*limits)) > 10*epsilon(1.0_rkind)) then
+              call pde(iproc+1)%bc(m)%value_fnc(pde(iproc+1), element=el_id,node=i,value=bcval(i+iproc*limits,1), &
+                                                bcpts=bcpts)
+            else
+              bcval(i+iproc*limits,1) = 0
+            end if
           case(5)
             call pde(iproc+1)%bc(m)%value_fnc(pde(iproc+1), el_id,i,valarray=bcval(i+iproc*limits,:))
         end select

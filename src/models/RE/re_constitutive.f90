@@ -1934,7 +1934,7 @@ module RE_constitutive
       end subroutine re_dirichlet_bc
 
 
-      subroutine re_null_bc(pde_loc, el_id, node_order, value, code, array,nvectin )
+      subroutine re_null_bc(pde_loc, el_id, node_order, value, code, array, bcpts)
         use typy
         use globals
         use global_objs
@@ -1945,7 +1945,7 @@ module RE_constitutive
         real(kind=rkind), intent(out), optional    :: value
         integer(kind=ikind), intent(out), optional :: code
         real(kind=rkind), dimension(:), intent(out), optional :: array
-        real(kind=rkind), dimension(:), intent(in), optional :: nvectin
+        type(bcpts_str), intent(in), optional :: bcpts
 
 
         if (present(value)) then
@@ -2021,6 +2021,7 @@ module RE_constitutive
         use global_objs
         use pde_objs
         use debug_tools
+        use geom_tools
 
         
         class(pde_str), intent(in) :: pde_loc
@@ -2030,7 +2031,7 @@ module RE_constitutive
         real(kind=rkind), dimension(:), intent(out), optional :: array
         type(bcpts_str), intent(in), optional :: bcpts
         
-        real(kind=rkind), dimension(3) :: nvectin
+        real(kind=rkind), dimension(:), allocatable, save :: nvectin
 
         
         real(kind=rkind), dimension(3,3) :: K
@@ -2043,8 +2044,11 @@ module RE_constitutive
 
 
 	    	D = drutes_config%dimen
+        
             
         if (present(value)) then
+          call get_normals(el_id, bcpts, nvectin) 
+          
           edge_id = nodes%edge(elements%data(el_id, node_order))
 
           i = pde_loc%permut(elements%data(el_id, node_order))
@@ -2082,18 +2086,14 @@ module RE_constitutive
           else
             bcval = pde_loc%bc(edge_id)%value
           end if
+       
           
+          bcflux(1:D) = nvectin(1:D)*bcval
           
-		  bcflux = -nvectin*bcval
+          bcflux(1:D) = bcflux(1:D) + gravflux(1:D)
 
-          select case(drutes_config%dimen)
-            case(1)
-              value = bcval + gravflux(1)
-            case(2:3)
-               
-              value = sign(bcval, 1.0_rkind)*norm2(bcflux(1:D) + gravflux(1:D))
-              
-          end select
+          value = get_fluxsgn(el_id, bcpts, bcflux(1:D) ) * norm2(bcflux(1:D))
+
         end if
         
         if (present(code)) then

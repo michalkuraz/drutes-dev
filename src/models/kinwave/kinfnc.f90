@@ -433,7 +433,7 @@ module kinfnc
     
     
     
-    subroutine kinbor(pde_loc, el_id, node_order, value, code, array, nvectin) 
+    subroutine kinbor(pde_loc, el_id, node_order, value, code, array, bcpts) 
       use typy
       use globals
       use global_objs
@@ -446,7 +446,7 @@ module kinfnc
       integer(kind=ikind), intent(out), optional :: code
       !> unused for this model (implementation for Robin boundary)
       real(kind=rkind), dimension(:), intent(out), optional :: array
-      real(kind=rkind), dimension(:), intent(in), optional :: nvectin
+      type(bcpts_str), intent(in), optional :: bcpts
       
       
 
@@ -462,7 +462,7 @@ module kinfnc
     end subroutine kinbor
     
     
-   subroutine kinborO(pde_loc, el_id, node_order, value, code, array, nvectin) 
+   subroutine kinborO(pde_loc, el_id, node_order, value, code, array, bcpts) 
       use typy
       use globals
       use global_objs
@@ -475,7 +475,7 @@ module kinfnc
       integer(kind=ikind), intent(out), optional :: code
       !> unused for this model (implementation for Robin boundary)
       real(kind=rkind), dimension(:), intent(out), optional :: array
-      real(kind=rkind), dimension(:), intent(in), optional :: nvectin
+      type(bcpts_str), intent(in), optional :: bcpts
       
       
 

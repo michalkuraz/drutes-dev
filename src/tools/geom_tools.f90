@@ -493,7 +493,7 @@ module geom_tools
     
     
     
-  end subroutine
+  end subroutine get_normals
   
   function get_fluxsgn(el_id, bcpts, flux) result(sgn)
     use typy
@@ -508,13 +508,19 @@ module geom_tools
     integer(kind=ikind) :: sgn
     
     integer(kind=ikind) :: D
-    real(kind=rkind), dimension(3) :: fluxshoot, vectpt, ptinter
-    real(kind=rkind), dimension(3,3) :: pts
+    real(kind=rkind), dimension(3) :: line
+    real(kind=rkind), dimension(4) :: plane
+    real(kind=rkind), dimension(:,:), allocatable, save :: pts
+    real(kind=rkind), dimension(:), allocatable, save :: ptsext
     real(kind=rkind) :: tinter
     
     
-    
     D = drutes_config%dimen
+    
+    if (D > 1 .and. .not.(allocated(pts))) then
+      allocate(pts(D,D))
+      allocate(ptsext(D))
+    end if
     
     select case(D)
       case(1)
@@ -534,37 +540,82 @@ module geom_tools
           
         
       case(2)
+        if (norm2(flux) > 1e3*epsilon(1.0_rkind)) then
+          pts(1,:) = nodes%data(elements%data(el_id, bcpts%border(1)),:)
+          pts(2,:) = nodes%data(elements%data(el_id, bcpts%border(2)),:)
+          
+          ptsext = nodes%data(elements%data(el_id, bcpts%extpt),:) 
+          
+          call line_coeff(pts(1,:), pts(2,:), line)
+          
+          if ( abs(flux(1)*line(1) + flux(2)*line(2)) > 1e3*epsilon(1.0_rkind)) then
+            tinter = -(line(3) + line(1)*ptsext(1) + line(2)*ptsext(2))/(flux(1)*line(1) + flux(2)*line(2))
+          else
+            sgn = 0
+            return
+          end if
+          if (tinter > 0 ) then
+            sgn = -1
+          else
+            sgn = 1
+          end if
+        else
+          sgn = 0
+        end if
+          
         
       case(3)
-      	fluxshoot = [nodes%data(elements%data(el_id, bcpts%border(1)),1) + flux(1), &
-      	             nodes%data(elements%data(el_id, bcpts%border(1)),2) + flux(2), &
-      	             nodes%data(elements%data(el_id, bcpts%border(1)),3) + flux(3)]
-
-          vectpt = [nodes%data(elements%data(el_id, bcpts%extpt),1) - tshoot*fluxshoot(1) , &
-                    nodes%data(elements%data(el_id, bcpts%extpt),2) - tshoot*fluxshoot(2) , &
-                    nodes%data(elements%data(el_id, bcpts%extpt),3) - tshoot*fluxshoot(3) ]
-
+      	
+        if (norm2(flux) > 1e3*epsilon(1.0_rkind)) then
                   
-        pts(1,:) = nodes%data(elements%data(el_id, bcpts%border(1)),:)
-        pts(2,:) = nodes%data(elements%data(el_id, bcpts%border(2)),:)
-        pts(3,:) = nodes%data(elements%data(el_id, bcpts%border(3)),:)
-                  
-        call plane_coeff(pts, plane)
-        
-        tinter = -(plane(1)*fluxshoot(1) + plane(2)*fluxshoot(2) + plane(3)*fluxshoot(3) + plane(4))/&
-                    (vectpt(1) + vectpt(2) + vectpt(3))
-      
-        ptinter = [fluxshoot(1) + tinter*vectpt(1) , fluxshoot(2) + tinter*vectpt(2), fluxshoot(3)*vectpt(3)]
-        
-        if (dist(nodes%data(elements%data(el_id, bcpts%extpt),:), fluxshoot) < & 
-            dist(nodes%data(elements%data(el_id, bcpts%extpt),:), ptinter) ) then
-          sgn = 1
+          pts(1,:) = nodes%data(elements%data(el_id, bcpts%border(1)),:)
+          pts(2,:) = nodes%data(elements%data(el_id, bcpts%border(2)),:)
+          pts(3,:) = nodes%data(elements%data(el_id, bcpts%border(3)),:)
+          
+          ptsext = nodes%data(elements%data(el_id, bcpts%extpt),:) 
+                    
+          call plane_coeff(pts, plane) 
+          
+          if (abs(plane(1)*flux(1) + plane(2)*flux(2) + plane(3)*flux(3)) > 1e3*epsilon(1.0_rkind)) then
+            tinter = -(plane(1)*ptsext(1) + plane(2)*ptsext(2) + plane(3)*ptsext(3) + plane(4)) / &
+                        (plane(1)*flux(1) + plane(2)*flux(2) + plane(3)*flux(3))
+          else
+            sgn = 0
+            return
+          end if
+    
+          if (tinter > 0 ) then
+            sgn = -1
+          else
+            sgn = 1
+          end if
         else
-          sgn = -1
+          sgn = 0
         end if
     end select
   
   end function get_fluxsgn  
+  
+  subroutine line_coeff(A,B, coeffs)
+    use typy
+    
+    real(kind=rkind), dimension(:), intent(in) :: A,B
+    real(kind=rkind), dimension(:), intent(out) :: coeffs
+    
+    real(kind=rkind) :: k
+    
+    if (abs(A(1) - B(1)) > 1e3*epsilon(k)) then
+      k = (B(2) - A(2))/(B(1) - A(1))
+    else
+      coeffs = [1.0_rkind, 0.0_rkind, A(1)]
+      return
+    end if
+    
+    coeffs(3) = A(2) - k*A(1)
+    coeffs(1) = k
+    coeffs(2) = -1.0_rkind
+    
+  end subroutine line_coeff
 
   !> function that provides x coordinate of inner boundary normal vector, the boundary is defined by two points: bod1, bod2
   function get_nx(el_id, order1, order2) result(xcoord)

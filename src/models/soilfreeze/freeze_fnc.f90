@@ -934,7 +934,7 @@ module freeze_fnc
       end if
     end subroutine heat_flux_freeze
   
-    subroutine infiltration_bc(pde_loc, el_id, node_order, value, code, array, nvectin) 
+    subroutine infiltration_bc(pde_loc, el_id, node_order, value, code, array, bcpts) 
       use typy
       use globals
       use global_objs
@@ -949,7 +949,7 @@ module freeze_fnc
       integer(kind=ikind), intent(out), optional :: code
       !> unused for this model (implementation for Robin boundary)
       real(kind=rkind), dimension(:), intent(out), optional :: array
-      real(kind=rkind), dimension(:), intent(in), optional :: nvectin
+      type(bcpts_str), intent(in), optional :: bcpts
       
      
       real(kind=rkind), dimension(3,3)  :: Klh
@@ -1048,7 +1048,7 @@ module freeze_fnc
 
     end subroutine infiltration_bc
     
-    subroutine infiltration_bc_icerate(pde_loc, el_id, node_order, value, code, array, nvectin) 
+    subroutine infiltration_bc_icerate(pde_loc, el_id, node_order, value, code, array, bcpts) 
       use typy
       use globals
       use global_objs
@@ -1063,7 +1063,7 @@ module freeze_fnc
       integer(kind=ikind), intent(out), optional :: code
       !> unused for this model (implementation for Robin boundary)
       real(kind=rkind), dimension(:), intent(out), optional :: array
-      real(kind=rkind), dimension(:), intent(in), optional :: nvectin
+      type(bcpts_str), intent(in), optional :: bcpts
 
      
       real(kind=rkind), dimension(3,3)  :: Klh
@@ -1149,7 +1149,7 @@ module freeze_fnc
 
     end subroutine infiltration_bc_icerate
     
-    subroutine infiltration_bc2(pde_loc, el_id, node_order, value, code, array, nvectin) 
+    subroutine infiltration_bc2(pde_loc, el_id, node_order, value, code, array, bcpts) 
       use typy
       use globals
       use global_objs
@@ -1164,7 +1164,7 @@ module freeze_fnc
       integer(kind=ikind), intent(out), optional :: code
       !> unused for this model (implementation for Robin boundary)
       real(kind=rkind), dimension(:), intent(out), optional :: array
-      real(kind=rkind), dimension(:), intent(in), optional :: nvectin
+      type(bcpts_str), intent(in), optional :: bcpts
 
      
       real(kind=rkind), dimension(3,3)  :: Klh
@@ -1228,7 +1228,7 @@ module freeze_fnc
 
     end subroutine infiltration_bc2
     
-    subroutine Dirichlet_mass_bc(pde_loc, el_id, node_order, value, code, array, nvectin  )
+    subroutine Dirichlet_mass_bc(pde_loc, el_id, node_order, value, code, array, bcpts  )
       use typy
       use globals
       use global_objs
@@ -1241,7 +1241,7 @@ module freeze_fnc
       integer(kind=ikind), intent(out), optional :: code
       !> unused for this model (implementation for Robin boundary)
       real(kind=rkind), dimension(:), intent(out), optional :: array
-      real(kind=rkind), dimension(:), intent(in), optional :: nvectin
+      type(bcpts_str), intent(in), optional :: bcpts
 
 
       integer(kind=ikind) :: i, edge_id, j, D
@@ -1302,7 +1302,7 @@ module freeze_fnc
 
     end subroutine Dirichlet_mass_bc
     
-    subroutine Dirichlet_Neumann_switch_bc(pde_loc, el_id, node_order, value, code, array, nvectin) 
+    subroutine Dirichlet_Neumann_switch_bc(pde_loc, el_id, node_order, value, code, array, bcpts) 
       use typy
       use globals
       use global_objs
@@ -1315,7 +1315,7 @@ module freeze_fnc
       integer(kind=ikind), intent(out), optional :: code
       !> unused for this model (implementation for Robin boundary)
       real(kind=rkind), dimension(:), intent(out), optional :: array
-      real(kind=rkind), dimension(:), intent(in), optional :: nvectin
+      type(bcpts_str), intent(in), optional :: bcpts
 
 
       integer(kind=ikind) :: i, edge_id, j

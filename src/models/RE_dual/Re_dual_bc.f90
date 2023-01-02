@@ -25,7 +25,7 @@ module Re_dual_bc
   
    !> Defines Neumann (flux) boundary condition for the dual permeability model
    !< The Neumann boundary condition is assigned weighted according to area weights.
-  subroutine dual_neumann_bc(pde_loc, el_id, node_order, value, code, array, nvectin) 
+  subroutine dual_neumann_bc(pde_loc, el_id, node_order, value, code, array, bcpts) 
       use typy
       use globals
       use global_objs
@@ -40,7 +40,7 @@ module Re_dual_bc
       !> optional code output. Different codes for different boundaries. Code = 2 
       integer(kind=ikind), intent(out), optional :: code
       real(kind=rkind), dimension(:), intent(out), optional :: array
-      real(kind=rkind), dimension(:), intent(in), optional :: nvectin
+      type(bcpts_str), intent(in), optional :: bcpts
 
      
 
@@ -99,7 +99,7 @@ module Re_dual_bc
     end subroutine dual_neumann_bc
     
    !> Also defines Neumann type boundary. The weighting for matrix and fracture domains is user defined. 
-  subroutine inf_neumann_bc(pde_loc, el_id, node_order, value, code, array,nvectin) 
+  subroutine inf_neumann_bc(pde_loc, el_id, node_order, value, code, array,bcpts) 
       use typy
       use globals
       use global_objs
@@ -116,7 +116,7 @@ module Re_dual_bc
       integer(kind=ikind), intent(out), optional :: code
       !> unused for this model (implementation for Robin boundary)
       real(kind=rkind), dimension(:), intent(out), optional :: array
-      real(kind=rkind), dimension(:), intent(in), optional :: nvectin
+      type(bcpts_str), intent(in), optional :: bcpts
 
 
       integer(kind=ikind) :: i, edge_id, j,layer
@@ -167,7 +167,7 @@ module Re_dual_bc
     end subroutine inf_neumann_bc
     
   !> Assigns free drainage boundary (unit gradient) for dual permeability model
-  subroutine dual_freedrainage(pde_loc, el_id, node_order, value, code, array, nvectin) 
+  subroutine dual_freedrainage(pde_loc, el_id, node_order, value, code, array, bcpts) 
       use typy
       use globals
       use global_objs
@@ -185,7 +185,7 @@ module Re_dual_bc
       integer(kind=ikind), intent(out), optional :: code
       !> unused for this model (implementation for Robin boundary)
       real(kind=rkind), dimension(:), intent(out), optional :: array
-      real(kind=rkind), dimension(:), intent(in), optional :: nvectin
+      type(bcpts_str), intent(in), optional :: bcpts
       
       
       
@@ -233,7 +233,7 @@ module Re_dual_bc
      
   !> Assigns a simple atmospheric boundary based on water content in the soil and potential evaporation and rain for dual permeability model
   !!  \f$rain - evap*\theta(h)^{\frac{2}{3}}\f$.
-  subroutine dual_atmospheric(pde_loc, el_id, node_order, value, code, array, nvectin) 
+  subroutine dual_atmospheric(pde_loc, el_id, node_order, value, code, array, bcpts) 
       use typy
       use globals
       use global_objs
@@ -250,7 +250,7 @@ module Re_dual_bc
       integer(kind=ikind), intent(out), optional :: code
       !> unused for this model (implementation for Robin boundary)
       real(kind=rkind), dimension(:), intent(out), optional :: array
-      real(kind=rkind), dimension(:), intent(in), optional :: nvectin
+      type(bcpts_str), intent(in), optional :: bcpts
 
       
       

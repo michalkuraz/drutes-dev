@@ -110,7 +110,6 @@ module feminittools
                   elements%ders(i,3,1), elements%ders(i,3,2))
 
           end do
-          
 
         case(3)
           call write_log("calculating elements geometrical properties...")
@@ -651,7 +650,9 @@ module feminittools
                 EXIT
               end if
             end do
+    
             call pde(proc)%bc(nodes%edge(i))%value_fnc(pde(proc), el_id,nd_id, code=bc)
+
           else
             bc = 0
           end if

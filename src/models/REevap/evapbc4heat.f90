@@ -189,9 +189,11 @@ module evapbc4heat
       
       E = min((dens_satvap(quad4atm)*meteo4evap(pos)%relhum  - dens_satvap(quadpnt)*relhumid(quadpnt)  )/(resH() + rs), 0.0_rkind)
       
+
+      
     end function Eterm
     
-    subroutine ebalance_flux(pde_loc, el_id, node_order, value, code, array, nvectin) 
+    subroutine ebalance_flux(pde_loc, el_id, node_order, value, code, array, bcpts) 
       use typy
       use globals
       use global_objs
@@ -206,7 +208,7 @@ module evapbc4heat
       integer(kind=ikind), intent(out), optional :: code
       !> unused for this model (implementation for Robin boundary)
       real(kind=rkind), dimension(:), intent(out), optional :: array
-      real(kind=rkind), dimension(:), intent(in), optional :: nvectin      
+      type(bcpts_str), intent(in), optional :: bcpts
       
       integer(kind=ikind) :: layer, nodeid, i
       type(integpnt_str) :: quadpnt_loc
@@ -284,7 +286,7 @@ module evapbc4heat
     
     
     
-    subroutine evaporation_bcflux(pde_loc, el_id, node_order, value, code, array, nvectin) 
+    subroutine evaporation_bcflux(pde_loc, el_id, node_order, value, code, array, bcpts) 
       use typy
       use globals
       use global_objs
@@ -294,6 +296,7 @@ module evapbc4heat
       use evap_RE_constitutive
       use evapglob
       use printtools
+      use geom_tools
       
       class(pde_str), intent(in) :: pde_loc
       integer(kind=ikind), intent(in)  :: el_id, node_order
@@ -301,17 +304,17 @@ module evapbc4heat
       integer(kind=ikind), intent(out), optional :: code
       !> unused for this model (implementation for Robin boundary)
       real(kind=rkind), dimension(:), intent(out), optional :: array
-      real(kind=rkind), dimension(:), intent(in), optional :: nvectin     
+      type(bcpts_str), intent(in), optional :: bcpts
       
       
       real(kind=rkind), dimension(3,3) :: K
       real(kind=rkind), dimension(3) :: gravflux, bcflux
+      real(kind=rkind), dimension(:), allocatable, save :: nvectin
 
-      real(kind=rkind):: dens_wat
+      real(kind=rkind):: dens_wat, bcval
       integer(kind=ikind) :: layer, nodeid, D
       type(integpnt_str) :: quadpnt_loc
 
-      
       
       layer = elements%material(el_id)
 
@@ -330,26 +333,21 @@ module evapbc4heat
         call pde(RE_ord)%pde_fnc(RE_ord)%dispersion(pde(RE_ord), elements%material(el_id), quadpnt_loc, &
                   tensor=K(1:D, 1:D))
                   
-        if (.not. present(nvectin) ) then	
-          	print *, "contact developer michalkuraz@gmail.com"
-          	print *, "bug in evapbc4heat::evaporation_bcflux"
-       		ERROR STOP
-        end if
-        gravflux(1:D) = -K(D, 1:D)*(-nvectin)
+        call get_normals(el_id, bcpts, nvectin) 
+
+        gravflux(1:D) = -K(D, 1:D)*nvectin
         
         dens_wat = dens_liquid(quadpnt_loc)
-        value = Eterm(quadpnt_loc, layer)/dens_wat
-       
-
         
-        select case(D)
-         case(1)
-           value = value + gravflux(1)
-         case(2:3)
-           bcflux = -nvectin*value
-           bcflux(1:D) = bcflux(1:D) + gravflux(1:D)
-           value = -norm2(bcflux(1:D))
-       end select 
+        bcval = Eterm(quadpnt_loc, layer)/dens_wat
+        
+        bcflux(1:D) = nvectin(1:D)*bcval
+        
+        bcflux(1:D) = bcflux(1:D) + gravflux(1:D)
+
+        value = get_fluxsgn(el_id, bcpts, bcflux(1:D) ) * norm2(bcflux(1:D))
+!print *, value
+        
       end if
       
 

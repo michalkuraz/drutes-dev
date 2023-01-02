@@ -83,7 +83,9 @@ module postpro
         mode = 0
       end if
       
-      if (cut(observe_info%fmt) == "gmsh") mode = -1
+      if (cut(observe_info%fmt) == "gmsh") then 
+        mode = -1
+      end if
       
 
       if (drutes_config%dimen < 2  .or. www) then
@@ -230,7 +232,7 @@ module postpro
           do i=1, ubound(filenames(proc)%names,1)
               open(newunit=ids(proc, i), file=trim(filenames(proc)%names(i)), action="write", status="replace", iostat=ierr)
           end do
-          
+          ids_obs = ids
         end if
 
 

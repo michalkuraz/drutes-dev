@@ -389,7 +389,7 @@ module ADE_fnc
       
     end function ADE_zerorder
     
-    subroutine ADE_dirichlet(pde_loc, el_id, node_order, value, code, array, nvectin) 
+    subroutine ADE_dirichlet(pde_loc, el_id, node_order, value, code, array, bcpts) 
       use typy
       use globals
       use global_objs
@@ -401,7 +401,7 @@ module ADE_fnc
       real(kind=rkind), intent(out), optional    :: value
       integer(kind=ikind), intent(out), optional :: code
       real(kind=rkind), dimension(:), intent(out), optional :: array
-      real(kind=rkind), dimension(:), intent(in), optional :: nvectin
+      type(bcpts_str), intent(in), optional :: bcpts
       
       
       integer(kind=ikind) :: edge_id, i, j, proc
@@ -438,7 +438,7 @@ module ADE_fnc
     end subroutine ADE_dirichlet
     
     
-    subroutine ADE_neumann(pde_loc, el_id, node_order, value, code, array, nvectin) 
+    subroutine ADE_neumann(pde_loc, el_id, node_order, value, code, array, bcpts) 
       use typy
       use globals
       use global_objs
@@ -450,7 +450,8 @@ module ADE_fnc
       real(kind=rkind), intent(out), optional    :: value
       integer(kind=ikind), intent(out), optional :: code
       real(kind=rkind), dimension(:), intent(out), optional :: array
-      real(kind=rkind), dimension(:), intent(in), optional :: nvectin
+      type(bcpts_str), intent(in), optional :: bcpts
+
 
       
       integer(kind=ikind) :: edge_id, i, j, proc
@@ -487,7 +488,7 @@ module ADE_fnc
     end subroutine ADE_neumann
     
     
-    subroutine ADE_null_bc(pde_loc, el_id, node_order, value, code, array, nvectin) 
+    subroutine ADE_null_bc(pde_loc, el_id, node_order, value, code, array, bcpts) 
       use typy
       use globals
       use global_objs
@@ -498,7 +499,7 @@ module ADE_fnc
       real(kind=rkind), intent(out), optional    :: value
       integer(kind=ikind), intent(out), optional :: code
       real(kind=rkind), dimension(:), intent(out), optional :: array
-      real(kind=rkind), dimension(:), intent(in), optional :: nvectin
+      type(bcpts_str), intent(in), optional :: bcpts
 
 
       if (present(value)) then
