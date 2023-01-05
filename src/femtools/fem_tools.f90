@@ -37,6 +37,7 @@ module fem_tools
     use pde_objs
     use globals
     use debug_tools
+    use geom_tools
     
     !> number of element
     integer(kind=ikind), intent(in) :: el_id
@@ -48,13 +49,16 @@ module fem_tools
     
     integer(kind=ikind), dimension(:), allocatable, save :: bc
     integer(kind=ikind), dimension(:), allocatable, save :: n_row, m_col
-    integer(kind=ikind) :: i,j,m, iproc, jproc, limits, fnc
+    integer(kind=ikind) :: i,j,m, iproc, jproc, limits, fnc, locneu
     real(kind=rkind), dimension(:,:), allocatable, save :: bcval
     real(kind=rkind), dimension(:), allocatable, save :: surface
     integer(kind=ikind), dimension(:), allocatable, save :: fin
-    integer(kind=ikind) :: space_dim, space_i
+    integer(kind=ikind) :: space_dim, space_i, kk, kkk, extpt
     real(kind=rkind), dimension(3,3) :: d
     real(kind=rkind) :: tmp   
+    real(kind=rkind), dimension(3) :: tmpdata
+    integer(kind=ikind), dimension(:), allocatable, save :: neumann
+    type(bcpts_str), save :: bcpts
    
 
     if (.not. allocated(bc)) then	
@@ -62,8 +66,10 @@ module fem_tools
       allocate(n_row(ubound(stiff_mat,1)))
       allocate(m_col(ubound(stiff_mat,1)))
       allocate(bcval(ubound(stiff_mat,1),3))
-      allocate(surface(ubound(stiff_mat,1)))
+      allocate(surface(ubound(stiff_mat,1)*ubound(pde,1)))
       allocate(fin(ubound(pde,1)))
+      allocate(neumann(drutes_config%dimen))
+      allocate(bcpts%border(drutes_config%dimen))
     end if
     
     surface = 0
@@ -72,38 +78,132 @@ module fem_tools
     m_col = 0
     bcval = 0
     limits = ubound(stiff_mat,1)/ubound(pde,1)
+    
         
 
-    do iproc=0, ubound(pde,1)-1
-      do i=1, ubound(elements%data, 2) 	
-        surface(i+iproc*limits) = elements%length(el_id,i)
-      end do
-    end do
-    
-    
     do iproc = 0,ubound(pde,1)-1
       do i=1, ubound(elements%data, 2)
         j = elements%data(el_id,i)
         n_row(i+iproc*limits) = pde(iproc+1)%permut(j)
         if (nodes%edge(j) > 100) then
           m = nodes%edge(j)
-!           call pde(iproc+1)%bc(m)%value_fnc(pde(iproc+1), el_id,i,bcval(i+iproc*limits),bc(i+iproc*limits))
           call pde(iproc+1)%bc(m)%value_fnc(pde(iproc+1), el_id,i,code=bc(i+iproc*limits))
         else
           bc(i) = 0
         end if
       end do
     end do
-    
+
+    select case(drutes_config%dimen)
+      case(1)
+        surface = 1
+         do iproc=0, ubound(pde,1)-1
+          do i=1, limits
+            if (bc(i+iproc*limits) == 2) then
+              neumann = i
+              EXIT
+            end if
+          end do
+         end do  
+         if (neumann(1) == 2) then
+           extpt = 1
+         else
+           extpt = 2
+         end if
+      case(2)
+
+        do iproc=0, ubound(pde,1)-1
+          locneu = 1
+          do i=1, limits
+            if (bc(i+iproc*limits) == 2) then
+              neumann(locneu) = i
+              locneu = locneu + 1
+            end if
+          end do
+          if (locneu == 3) then
+            do i=1, limits
+              if (bc(i+iproc*limits) == 2) then
+                surface(i+iproc*limits) = dist(nodes%data(elements%data(el_id,neumann(1)),:), &
+                                              nodes%data(elements%data(el_id,neumann(2)),:))/drutes_config%dimen
+                 select case(neumann(1) + neumann(2))
+                 	!1 + 2
+                 	 case(3)
+                      extpt = 3
+                    !1 + 3
+                 	 case(4)
+                      extpt = 2
+                   case(5)
+                      extpt = 1
+                 end select
+
+
+              end if
+            end do
+          end if
+        end do
+      case(3)
+        do iproc=0, ubound(pde,1)-1
+          locneu = 1
+          do i=1, limits
+            if (bc(i+iproc*limits) == 2) then
+              neumann(locneu) = i
+              locneu = locneu + 1
+            end if
+          end do
+          if (locneu == 4) then
+            do i=1, limits
+              if (bc(i+iproc*limits) == 2) then
+                surface(i+iproc*limits) = triarea(nodes%data(elements%data(el_id,neumann(1)),:), &
+                                                  nodes%data(elements%data(el_id,neumann(2)),:),  &
+                                                  nodes%data(elements%data(el_id,neumann(3)),:))/drutes_config%dimen
+                                              
+                select case(neumann(1) + neumann(2) + neumann(3))
+                  ! 1 + 2 + 3
+                  case(6)
+                  	extpt = 4
+                  ! 1 + 3 + 4	
+                  case(8)
+                    extpt = 2
+                  ! 1 + 2 + 4
+                  case(7)
+                    extpt = 3
+                  !2 + 3 + 4
+                  case(9)
+                  	extpt = 1
+                end select     
+              end if
+            end do
+          end if
+        end do
+      
+
+    end select
+
+
+   bcpts%border = neumann
+   bcpts%extpt = extpt
+  
+
+
+
     do iproc = 0,ubound(pde,1)-1
-      do i=1, ubound(elements%data, 2)
+      do i=1, limits
         select case(bc(i+iproc*limits))
           case(0)
             CONTINUE
           case(3)
             bcval(i+iproc*limits,1) = 0
-          case(1,2,4)
-            call pde(iproc+1)%bc(m)%value_fnc(pde(iproc+1), el_id,i,bcval(i+iproc*limits,1))
+          case(1,4)
+            m = nodes%edge(elements%data(el_id, i))
+            call pde(iproc+1)%bc(m)%value_fnc(pde(iproc+1), element=el_id,node=i,value=bcval(i+iproc*limits,1))
+          case(2)
+          	m = nodes%edge(elements%data(el_id, i))
+            if (abs(surface(i + iproc*limits)) > 10*epsilon(1.0_rkind)) then
+              call pde(iproc+1)%bc(m)%value_fnc(pde(iproc+1), element=el_id,node=i,value=bcval(i+iproc*limits,1), &
+                                                bcpts=bcpts)
+            else
+              bcval(i+iproc*limits,1) = 0
+            end if
           case(5)
             call pde(iproc+1)%bc(m)%value_fnc(pde(iproc+1), el_id,i,valarray=bcval(i+iproc*limits,:))
         end select
@@ -157,6 +257,8 @@ module fem_tools
               if (drutes_config%it_method == 2 .or. drutes_config%it_method == 1) then
                 call locmatrix%rowsfilled%nrfill(n_row(i))
               end if
+            else
+              call locmatrix%add(stiff_mat(i,m), n_row(i), m_col(m))
             end if
           case(5)
             tmp = 0

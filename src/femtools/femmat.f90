@@ -29,7 +29,7 @@ module femmat
 
   contains
   !>solves the problem using Picard method
-    subroutine solve_picard(ierr, itcount, success)
+    subroutine solve_picard(ierr, success)
       use typy
       use globals
       use global_objs
@@ -48,12 +48,12 @@ module femmat
       use mtxiotools
       use core_tools
       use solver_interfaces
+      use global4solver
 
 !       use decomposer
 
 
       integer, intent(out) :: ierr
-      integer(kind=ikind), intent(out) :: itcount
       integer(kind=ikind) ::  fin, pcg_it
       logical, intent(out) :: success
       integer(kind=ikind) :: i, proc,j, m, l, k, top, bot
@@ -61,7 +61,7 @@ module femmat
       logical :: dt_fine
       integer :: ierr_loc, ll
       real(kind=rkind), dimension(:), allocatable :: vcttmp
-      real(kind=rkind) :: lambda_l, lambda_h, tmpxx=0, maxtime=0
+      real(kind=rkind) :: lambda_l, lambda_h, tmpxx=0, maxtime=0, solver_start, solver_end
       
       integer, save :: pocitac=0
       character(len=100) :: soubor
@@ -76,35 +76,39 @@ module femmat
 
         itcount = itcount + 1
 
-        
+    
         call assemble_mat(ierr)
-        
-        if (drutes_config%dimen >  0) then
-          call diag_precond(a=spmatrix, x=pde_common%xvect(1:fin,3), mode=1)
-        end if
 
+        if (record_solver_time) call cpu_time(solver_start)
         
+
         call solve_matrix(spmatrix, pde_common%bvect(1:fin), pde_common%xvect(1:fin,3),  itmax1=fin, &
-            reps1=1e-11_rkind, itfin1=pcg_it, repsfin1=reps_err)
-
+            reps1=1e-14_rkind, itfin1=pcg_it, repsfin1=reps_err)
             
-        if (pcg_it > 0.25*fin) then 
+        if (itersolver) then
+          write(unit=file_itcg, fmt=*) time, pcg_it, reps_err
+          call flush(file_itcg)
+        end if
+            
+        if (record_solver_time) then
+          call cpu_time(solver_end)
+          write(unit=solver_time_file, fmt=*) time, solver_end - solver_start
+          call flush(solver_time_file)
+        end if
+          
+  
+        if (pcg_it > 0.55*fin) then 
           ierr=-1
         else
           ierr=0
         end if
 		  
-
-        if (drutes_config%dimen >  0) then
-          write(unit=file_itcg, fmt = *) time, pcg_it, reps_err
-          call flush(file_itcg)
-          call diag_precond(a=spmatrix, x=pde_common%xvect(1:fin,3), mode=-1)
-        end if
-        
     
-
         error = norm2(pde_common%xvect(1:fin,2)-pde_common%xvect(1:fin,3))/ubound(pde_common%xvect,1)
- 
+        
+        write(unit=terminal, fmt=*) "Nonlinear solver convergence criterion:", error
+        
+        write(unit=file_picard, fmt=*) time, error
          
         if (itcount == 1 .or. error <= iter_criterion) then
           do proc=1, ubound(pde,1)
@@ -138,6 +142,7 @@ module femmat
           call results_extractor()
           
           success = .true.
+          iter_succesfull = .true.
           RETURN
         else
           pde_common%xvect(:,2) = pde_common%xvect(:,3)
@@ -146,6 +151,7 @@ module femmat
         if (itcount >= max_itcount) then
           ierr = 1
           success = .false.
+          iter_succesfull = .false.
           EXIT
         end if
       end do
@@ -200,13 +206,18 @@ module femmat
        call build_stiff_np(i, time_step)
 
        call pde_common%time_integ(i)
+!        call printmtx(stiff_mat)
+!print *, "----"
+!        call printmtx(cap_mat)
+        
+!        call wait()
 
-       stiff_mat = stiff_mat + cap_mat  
-		        
+       stiff_mat = stiff_mat + cap_mat 
+
        call in2global(i,spmatrix, pde_common%bvect)
 
       end do
-
+      printedk=.false.
 
     end subroutine assemble_mat
     

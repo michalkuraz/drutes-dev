@@ -49,10 +49,12 @@ module feminittools
       use printtools
       use core_tools
       use read_inputs
+      use simplelinalg
 
       integer(kind=ikind) :: i,j,k,l, locmatdim, process, limits,  el, nd
       real(kind=rkind), dimension(:,:), allocatable :: a_s
       integer(kind=ikind), dimension(:), allocatable :: itmp_vct
+
       
       
       locmatdim = (ubound(elements%data,2))*ubound(pde,1)
@@ -68,7 +70,8 @@ module feminittools
       allocate(a_s(drutes_config%dimen+1, drutes_config%dimen+1))
 
       call init_integ()
-
+      
+  
 
       select case(drutes_config%dimen)
         case(1)
@@ -94,7 +97,7 @@ module feminittools
            
             
             call plane_derivative(a_s(1,:), a_s(2,:), a_s(3,:) , &
-                  elements%ders(i,1,1), elements%ders(i,1,2))
+                  elements%ders(i,1,1), elements%ders(i,1,2), i)
 
             a_s(:,3) = (/0.0_rkind, 1.0_rkind, 0.0_rkind/)
 
@@ -107,6 +110,44 @@ module feminittools
                   elements%ders(i,3,1), elements%ders(i,3,2))
 
           end do
+
+        case(3)
+          call write_log("calculating elements geometrical properties...")
+          do i=1, elements%kolik
+            call progressbar(int(100*i/elements%kolik))
+            elements%areas(i) = tetravol(nodes%data(elements%data(i,1),:), nodes%data(elements%data(i,2),:), &
+                                        nodes%data(elements%data(i,3),:), nodes%data(elements%data(i,4),:))
+                                        
+            do j=1,4
+              a_s(j,1:3) = nodes%data(elements%data(i,j),:)
+            end do 
+            
+            a_s(:,4) = [1.0_rkind, 0.0_rkind, 0.0_rkind, 0.0_rkind ]
+            
+            call hyper_planeder(a_s(1,:), a_s(2,:), a_s(3,:) , a_s(4,:), &
+                  elements%ders(i,1,1), elements%ders(i,1,2), elements%ders(i,1,3))
+                  
+            a_s(:,4) = [0.0_rkind, 1.0_rkind, 0.0_rkind, 0.0_rkind ]
+            
+            call hyper_planeder(a_s(1,:), a_s(2,:), a_s(3,:) , a_s(4,:), &
+                  elements%ders(i,2,1), elements%ders(i,2,2), elements%ders(i,2,3))
+            
+                  
+            a_s(:,4) = [0.0_rkind, 0.0_rkind, 1.0_rkind, 0.0_rkind ]
+            
+            call hyper_planeder(a_s(1,:), a_s(2,:), a_s(3,:) , a_s(4,:), &
+                  elements%ders(i,3,1), elements%ders(i,3,2), elements%ders(i,3,3))
+                  
+                  
+            a_s(:,4) = [0.0_rkind, 0.0_rkind, 0.0_rkind, 1.0_rkind ]
+            
+            call hyper_planeder(a_s(1,:), a_s(2,:), a_s(3,:) , a_s(4,:), &
+                  elements%ders(i,4,1), elements%ders(i,4,2), elements%ders(i,4,3))
+                                       
+          end do
+          
+
+
       end select
 
       ! create for each node list of elements where the node belongs     
@@ -116,7 +157,7 @@ module feminittools
           call nodes%element(nd)%fill(i)
         end do
       end do
-      
+
       call reorder()
 
       i = ubound(pde,1)
@@ -128,6 +169,7 @@ module feminittools
       allocate(pde_common%bvect(maxval(pde(i)%permut(:)))) 
       allocate(pde_common%xvect(maxval(pde(i)%permut(:)),4))
       
+
 
       ! fill nodes%el2integ
       !--------------
@@ -141,7 +183,7 @@ module feminittools
       end do
       !-----------------
       
-       call surface_integ()
+      call surface_integ()
       
       if (.not. drutes_config%run_from_backup) then   
         do process=1, ubound(pde,1)
@@ -164,6 +206,8 @@ module feminittools
 
 
       deallocate(a_s)
+      
+
 
     end subroutine feminit
 
@@ -176,6 +220,7 @@ module feminittools
       use globals
       use geom_tools
       use pde_objs
+      use core_tools
       
       real(kind=rkind), dimension(:), allocatable :: uzly
       real(kind=rkind), dimension(:), allocatable :: vahy
@@ -187,10 +232,34 @@ module feminittools
       real(kind=rkind), dimension(3,2) :: ders
       integer(kind=ikind) :: l,j,i, no_points
       real(kind=rkind) :: tmp, tmp2
+      real(kind=rkind), dimension(5) :: coeffs
       
       !number of integration nodes, depends on integration method
-      no_points = int(integ_method/10_ikind)
-
+      if (drutes_config%dimen < 3) then
+      	no_points = int(integ_method/10_ikind)
+      else
+      	!for 3D only 1 , 4, 5 and 12 nodes formula is available!
+      	select case(integ_method)
+      	  case(10)
+      	  	no_points = 1
+      	  	call write_log("Using 1 point integration formula")
+      	  case(11:40)
+      	  	no_points = 4
+      	  	call write_log("Using 4 points integration formula")
+		  case(41:50)
+		  	no_points = 5
+		  	call write_log("Using 5 points integration formula")
+		  case(51:120)
+		  	no_points = 12
+		  	call write_log("Using 12 points integration formula")
+		  case default
+		  	print *, "incorrect integration method definition"
+		  	print *, "exited from feminittools::init_integ"
+		  	ERROR STOP
+		 end select
+	   end if	
+		  
+		  	
       allocate(gauss_points%point(no_points, drutes_config%dimen))
 
       allocate(gauss_points%weight(no_points))
@@ -448,10 +517,94 @@ module feminittools
           end do
 
 	      case(3)
+          	gauss_points%area = 1.0_rkind/6.0_rkind
 
-          !to be implemented
+          	select case(no_points)
+            	case(1)
+              		gauss_points%point(1,:) = [0.25_rkind, 0.25_rkind]
 
-	 
+              		gauss_points%weight(1) = 1.0_rkind/6.0_rkind
+              case(4)
+                gauss_points%point(1,:) = 	[0.585410196624969_rkind ,	0.138196601125011_rkind ,	0.138196601125011_rkind ]
+                gauss_points%point(2,:) = 	[0.138196601125011_rkind ,	0.585410196624969_rkind ,	0.138196601125011_rkind ]
+                gauss_points%point(3,:) = 	[0.138196601125011_rkind ,	0.138196601125011_rkind ,	0.585410196624969_rkind ]
+                gauss_points%point(4,:) = 	[0.138196601125011_rkind ,	0.138196601125011_rkind ,	0.138196601125011_rkind ]
+                
+                gauss_points%weight(1:4) = 0.041666666666667_rkind
+              case(5)
+                gauss_points%point(1,:)	= [	0.25_rkind ,	0.25_rkind ,	0.25_rkind ]
+                gauss_points%point(2,:)	= [	0.5_rkind ,	0.166666666666667_rkind ,	0.166666666666667_rkind ]
+                gauss_points%point(3,:)	= [	0.166666666666667_rkind ,	0.5_rkind ,	0.166666666666667_rkind ]
+                gauss_points%point(4,:)	= [	0.166666666666667_rkind ,	0.166666666666667_rkind ,	0.5_rkind ]
+                gauss_points%point(5,:)	= [	0.166666666666667_rkind ,	0.166666666666667_rkind ,	0.166666666666667_rkind ]
+                
+                gauss_points%weight(1) = -0.133333333333333_rkind
+                gauss_points%weight(2:5) = 0.075_rkind
+
+         			
+              case(12)
+              
+                gauss_points%point(1,:) = [	0.094847264914513_rkind ,	0.094847264914513_rkind ,	0.241276996823274_rkind ]
+                gauss_points%point(2,:) = [	0.094847264914513_rkind ,	0.094847264914513_rkind ,	0.569028473347700_rkind ]
+                gauss_points%point(3,:) = [	0.094847264914513_rkind ,	0.241276996823274_rkind ,	0.094847264914513_rkind ]
+                gauss_points%point(4,:) = [	0.094847264914513_rkind ,	0.241276996823274_rkind ,	0.569028473347700_rkind ]
+                gauss_points%point(5,:) = [	0.094847264914513_rkind ,	0.569028473347700_rkind ,	0.094847264914513_rkind ]
+                gauss_points%point(6,:) = [	0.094847264914513_rkind ,	0.569028473347700_rkind ,	0.241276996823274_rkind ]
+                gauss_points%point(7,:) = [	0.241276996823274_rkind ,	0.094847264914513_rkind ,	0.094847264914513_rkind ]
+                gauss_points%point(8,:) = [	0.241276996823274_rkind ,	0.094847264914513_rkind ,	0.569028473347700_rkind ]
+                gauss_points%point(9,:) = [	0.241276996823274_rkind ,	0.569028473347700_rkind ,	0.094847264914513_rkind ]
+                gauss_points%point(10,:) = [	0.569028473347700_rkind ,	0.094847264914513_rkind , 0.094847264914513_rkind]
+                gauss_points%point(11,:) = [	0.569028473347700_rkind ,	0.094847264914513_rkind , 0.241276996823274_rkind]
+                gauss_points%point(12,:) = [	0.569028473347700_rkind ,	0.241276996823274_rkind , 0.094847264914513_rkind]
+    
+                gauss_points%weight(1:12) = 0.013888888888889_rkind
+
+        end select
+        
+        ! 1st base function
+        call hyperplane_coeff([0.0_rkind, 0.0_rkind, 0.0_rkind, 1.0_rkind], [1.0_rkind, 0.0_rkind, 0.0_rkind, 0.0_rkind],&
+                              [0.0_rkind, 1.0_rkind, 0.0_rkind, 0.0_rkind],  [0.0_rkind, 0.0_rkind, 1.0_rkind, 0.0_rkind], &
+                              coeffs)
+                              
+        do j=1, ubound(gauss_points%point,1)
+          base_fnc(1,j) = (coeffs(1)*gauss_points%point(j,1) + coeffs(2)*gauss_points%point(j,2) &
+                       + coeffs(3)*gauss_points%point(j,3) + coeffs(5))/(-coeffs(4))
+        end do
+        
+        !2nd base function
+        call hyperplane_coeff([0.0_rkind, 0.0_rkind, 0.0_rkind, 0.0_rkind], [1.0_rkind, 0.0_rkind, 0.0_rkind, 1.0_rkind],&
+                              [0.0_rkind, 1.0_rkind, 0.0_rkind, 0.0_rkind],  [0.0_rkind, 0.0_rkind, 1.0_rkind, 0.0_rkind], &
+                              coeffs)
+                              
+        do j=1, ubound(gauss_points%point,1)
+          base_fnc(2,j) = (coeffs(1)*gauss_points%point(j,1) + coeffs(2)*gauss_points%point(j,2) &
+                       + coeffs(3)*gauss_points%point(j,3) + coeffs(5))/(-coeffs(4))
+        end do
+        
+        !3rd base function
+        call hyperplane_coeff([0.0_rkind, 0.0_rkind, 0.0_rkind, 0.0_rkind], [1.0_rkind, 0.0_rkind, 0.0_rkind, 0.0_rkind],&
+                              [0.0_rkind, 1.0_rkind, 0.0_rkind, 1.0_rkind],  [0.0_rkind, 0.0_rkind, 1.0_rkind, 0.0_rkind], &
+                              coeffs)
+                              
+        do j=1, ubound(gauss_points%point,1)
+          base_fnc(3,j) = (coeffs(1)*gauss_points%point(j,1) + coeffs(2)*gauss_points%point(j,2) &
+                       + coeffs(3)*gauss_points%point(j,3) + coeffs(5))/(-coeffs(4))
+        end do
+        
+        
+        !4th base function
+        call hyperplane_coeff([0.0_rkind, 0.0_rkind, 0.0_rkind, 0.0_rkind], [1.0_rkind, 0.0_rkind, 0.0_rkind, 0.0_rkind],&
+                              [0.0_rkind, 1.0_rkind, 0.0_rkind, 0.0_rkind],  [0.0_rkind, 0.0_rkind, 1.0_rkind, 1.0_rkind], &
+                              coeffs)
+                              
+        do j=1, ubound(gauss_points%point,1)
+          base_fnc(4,j) = (coeffs(1)*gauss_points%point(j,1) + coeffs(2)*gauss_points%point(j,2) &
+                       + coeffs(3)*gauss_points%point(j,3) + coeffs(5))/(-coeffs(4))
+        end do
+                                      
+
+
+        
 	    end select
 
       if (allocated(uzly)) then
@@ -480,12 +633,16 @@ module feminittools
       counter = 1
       proc_start = 0
   
+
+  
       do proc=1, ubound(pde,1)
         pde(proc)%procbase_fnc(1) = counter
 
         do i=1, nodes%kolik
+
           pde(proc)%permut(i) = i
           if (nodes%edge(i) /= 0) then
+
             el_id = nodes%element(i)%data(1)
             do j=1, ubound(elements%data,2)
               if (i == elements%data(el_id, j)) then
@@ -493,7 +650,9 @@ module feminittools
                 EXIT
               end if
             end do
+    
             call pde(proc)%bc(nodes%edge(i))%value_fnc(pde(proc), el_id,nd_id, code=bc)
+
           else
             bc = 0
           end if
@@ -524,7 +683,6 @@ module feminittools
       end do
 
 
-
     end subroutine reorder 
 
 
@@ -546,12 +704,14 @@ module feminittools
       subroutine surface_integ()
         use typy
         use globals
+        use globals1D
         use global_objs
         use geom_tools
         use core_tools
         use debug_tools
 
-        integer(kind=ikind) :: i,j,k,l, found
+        integer(kind=ikind) :: i,j,k,l, found, ord1, ord2, ord3, ord4, el
+        real(kind=rkind), dimension(3) :: tmpvals
 
 
         select case(drutes_config%dimen)
@@ -567,13 +727,13 @@ module feminittools
 
             elements%nvect_z = 0.0_rkind
 
-            elements%nvect_z(1,1) = -1.0_rkind
+            elements%nvect_z(1,1) = cos(angle_1D)
 
-            elements%nvect_z(elements%kolik,2) = 1.0_rkind
+            elements%nvect_z(elements%kolik,2) = -cos(angle_1D)
 
           case(2)
           
-            if (drutes_config%check4mass) then
+!            if (drutes_config%check4mass) then
             
               call write_log("creating graph of the discretization mesh, and searching for boundary nodes...")
               
@@ -581,11 +741,13 @@ module feminittools
               
               call set_boundary()
               
-            end if
+!            end if
 
             elements%length = 0.0_rkind
 
             elements%nvect_z = 0.0_rkind
+            
+      
 
             do i=1, elements%kolik
               found = -1
@@ -597,6 +759,7 @@ module feminittools
 
                       elements%length(i,j) = elements%length(i,j) + &
                                              dist(nodes%data(elements%data(i,j),:), nodes%data(elements%data(i,k),:))/2.0
+                                             
                       elements%nvect_z(i,j) = get_nz(i,j,k)
 
                       elements%length(i,k) = elements%length(i,k) + &
@@ -610,12 +773,57 @@ module feminittools
                 end if
               end do
             end do
-          case default
-            print *, "not implemented, called from feminittools::surface_integ"
-            ERROR STOP
+            
+          case(3)
+           call write_log("creating graph of the discretization mesh, and searching for boundary nodes...")
+           
+           call find_neighbours(elements, nodes)
+           
+           call write_log("for 3D automatic boundary nodes search is not yet implemented, takes some time...:/")
+           
+           do el=1, elements%kolik
+             do k=1,4
+               select case(k)
+                 case(1) 
+                   ord1 = 1
+                   ord2 = 2
+                   ord3 = 3
+                   ord4 = 4
+                 case(2)
+                   ord1 = 2
+                   ord2 = 3
+                   ord3 = 4
+                   ord4 = 1
+                 case(3)
+                   ord1 = 3
+                   ord2 = 4
+                   ord3 = 1
+                   ord4 = 2
+                 case(4)
+                   ord1 = 4
+                   ord2 = 1
+                   ord3 = 2
+                   ord4 = 3
+               end select
+              
+               tmpvals = get_normals3D(nodes%data(elements%data(el, ord1),:),  nodes%data(elements%data(el, ord2),:), &
+                                       nodes%data(elements%data(el, ord3),:),  nodes%data(elements%data(el, ord4),:))
+                                              
+               elements%nvect_x(el,k) = tmpvals(1)
+               elements%nvect_y(el,k) = tmpvals(2) 
+               elements%nvect_z(el,k) = tmpvals(3)
+               elements%length(el,k) = triarea(nodes%data(elements%data(el, ord1),:),  nodes%data(elements%data(el, ord2),:), &
+                                       nodes%data(elements%data(el, ord3),:))
+            end do
+          end do
+                  
+           
+           
+           
+		  	
+           		
         end select
-            
-            
+        
 
 	
       end subroutine surface_integ
@@ -635,10 +843,9 @@ module feminittools
         real(kind=rkind), dimension(2) :: A,B,C
         real(kind=rkind) :: ang
 
-
-
         ang = 0.0_rkind
         do i=1, nodes%el2integ(id)%pos
+        
           j=nodes%el2integ(id)%data(i)
           do k=1,3
             if (elements%data(j,k) == id) then
@@ -654,7 +861,7 @@ module feminittools
                       A = nodes%data(elements%data(j,1),:)
                       B = nodes%data(elements%data(j,2),:)
               end select
-              ang = ang + angle(A,B,C)*180.0_rkind/(4*datan(1.0d0))
+              ang = ang + angle(A,B,C)*180.0_rkind/(4*atan(1.0_rkind))
             end if
           end do
           if (ang >= 360 - 100*epsilon(ang) ) then
@@ -694,6 +901,7 @@ module feminittools
           allocate(nd_processed(nodes%kolik))
           nd_processed = .false.
         end if
+        
 
         do i=1, elements%kolik
           outer: do j=1, ubound(elements%data,2)

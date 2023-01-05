@@ -17,13 +17,9 @@
 
 module solvers
     use typy
+    !$ use omp_lib
+    !!use reorder
     implicit none
-
-    type :: vrstvy
-        integer(kind=ikind), dimension(:), allocatable, private :: levlist
-        integer(kind=ikind), dimension(:), allocatable, private :: levstart
-        integer(kind=ikind), private :: nlev
-    end type vrstvy
 
 
 
@@ -39,6 +35,8 @@ module solvers
     public :: CGnormal
     public :: PCG
     public :: PCGnormal
+    public :: MinRes
+    public :: GMRES
     private :: vycdet
     private :: esteig
 
@@ -48,12 +46,13 @@ module solvers
 !! obtizne predvidatelny pocet iteraci. Nejcastejsi pouziti je pri reseni
 !! rozsahlych soustav s ridkou matici. Prvni dve jsou stacionarni maticove
 !! metody.
-!! - \subpage Jacobi
-!! - \subpage gs
+!! - \subpage Jacobi "Jacobiova metoda pro soustavy rovnic"
+!! - \subpage gs "Gauss-Seidelova metoda"
 !! - \subpage sd "Metoda nejvetsiho spadu"
 !! - \subpage cg "Metoda sdruzenych gradientu"
 !! - \subpage cgn "Metoda sdruzenych gradientu pro normalni rovnice"
 !! - \subpage pcg "Metoda predpodminenych sdruzenych gradientu"
+!! - \subpage gmres "Metoda zobecnenych minimalnich residui
 !!
 !<
 
@@ -119,6 +118,7 @@ module solvers
 
         !print *,"jacobi zacina"
         call cpu_time(t1)
+        !$ t1 = omp_get_wtime()
         !! vyresime nepovinne parametry
         n = a%getn()
         if (present(maxit1)) then
@@ -169,6 +169,7 @@ module solvers
         end do
         deallocate(r,diag)
         call cpu_time(t2)
+        !$ t2 = omp_get_wtime()
         !print *,"jacobi konci"
         ! vyresime navratove hodnoty
         if (present(countop)) then
@@ -227,6 +228,7 @@ module solvers
         real(kind=rkind) :: t1, t2
 
         call cpu_time(t1)
+        !$ t1 = omp_get_wtime()
         allocate(r(1:a%getn()))
         allocate(diag(1:a%getn()))
         r=b-a%mul(x,countop1)
@@ -262,6 +264,7 @@ module solvers
         end do
         deallocate(r,diag)
         call cpu_time(t2)
+        !$ t2 = omp_get_wtime()
         if (present(countop)) then
             countop%ad  = countop%ad  + countop1%ad
             countop%mul = countop%mul + countop1%mul
@@ -341,6 +344,8 @@ module solvers
                 case (5)
                 case (6)
                     if (present(perm1)) then
+                    p1 = perm1
+                    p2 = perm1
                     else
                     end if
                 case default
@@ -427,6 +432,7 @@ module solvers
         integer(kind=ikind) :: ip1,ip2,ip3,ip4, degsmin, lastmin
 
         call cpu_time(t1)
+        !$ t1=omp_get_wtime()
         lastmin = 0
         allocate(p1(1:A%getn()))
         allocate(p2(1:A%getm()))
@@ -541,7 +547,6 @@ module solvers
         dprev  = -1
         dstartnext = -1
         degsmin = 0
-!         print *,"step2.1"
         do i=1, A%getn()
             !print *,"i=",i
             call A%getrow(i,r1,ri1,sr1,mp1)
@@ -633,6 +638,7 @@ module solvers
         end do
 
         call cpu_time(t2)
+        !$ t2 = omp_get_wtime()
         if (present(info)) then
             info%ad   = info%ad  + inf1%ad
             info%mul  = info%mul + inf1%mul
@@ -906,8 +912,8 @@ module solvers
         m = LDU%getm()
         ! vyresit optionaly
         if (present(p1)) then
-            allocate(perm1(1:n))
-        perm1 = p1
+          allocate(perm1(1:n))
+          perm1 = p1
         else
             allocate(perm1(1:n))
             do i=1,n
@@ -916,7 +922,7 @@ module solvers
         end if
         if (present(p2)) then
             allocate(perm2(1:m))
-        perm2 = p2
+            perm2 = p2
         else
             allocate(perm2(1:m))
             do i=1,m
@@ -934,16 +940,16 @@ module solvers
 
         if (ubound(b,1) /= n) then
             if ( present(errcode) ) then
-            else
                 errcode = 2
+            else
                 stop "LDUback: Pocet radku matice a prave strany se lisi"
             end if
         end if
 
         if (ubound(x,1) /= n) then
             if ( present(errcode) ) then
-            else
                 errcode = 3
+            else
                 stop "LDUback: Pocet sloupcu matice a neznamych se lisi"
             end if
         end if
@@ -1102,6 +1108,7 @@ module solvers
         type(tcount) :: opcnt
 
         call cpu_time(t1)
+        !$ t1=omp_get_wtime()
         errcode = 0
         n = A%getn()
         rcount = 0
@@ -1215,6 +1222,7 @@ module solvers
         end do
 
         call cpu_time(t2)
+        !$ t2 = omp_get_wtime()
         opcnt%time = t2-t1
         ! vyridit konec
         if (present(opcnt1)) call update_info(opcnt1,opcnt)
@@ -1310,6 +1318,7 @@ module solvers
         type(tcount) :: opcnt
 
         call cpu_time(t1)
+        !$ t1 = omp_get_wtime()
         errcode = 0
         n = A%getn()
         rcount = 0
@@ -1409,10 +1418,8 @@ module solvers
             opcnt%div = opcnt%div + 1
 
             !! odhadnout vlastni cisla
-            if (ilev > 0) then
-              call esteig(l1,l2,cnt,alfa,beta)
-              print *, "odhad vl. cisel:",l1,l2
-            end if
+            call esteig(l1,l2,cnt,alfa,beta)
+            print *, "odhad vl. cisel:",l1,l2
             !! hotovo
 
             cnt = cnt + 1
@@ -1450,6 +1457,7 @@ module solvers
         end do
 
         call cpu_time(t2)
+        !$ t2 = omp_get_wtime()
         opcnt%time = t2-t1
         ! vyridit konec
         if (present(opcnt1)) opcnt1 = opcnt
@@ -1544,6 +1552,7 @@ module solvers
         type(tcount) :: opcnt
 
         call cpu_time(t1)
+        !$ t1 = omp_get_wtime()
         if ( present(errcode1)) errcode1 = 0
         errcode = 0
         n = A%getn()
@@ -1613,8 +1622,17 @@ module solvers
             !! Step 3
             Ap =A%mul(p,opcnt)
             r1 = dot_product(Ap,Ap)
-            wrk = r2/r1
-            if (ilev>1) print *,"alfa=",wrk
+!            block
+!               real(rkind) :: w1
+!               integer(ikind) :: ilok
+!               w1 = 0
+!               do ilok=1,n
+!                 w1 = w1 + Ap(ilok)*Ap(ilok)
+!               end do
+!               if (abs(w1-r1) > 0) Stop "potize v cgnormal"
+!            end block
+!            wrk = r2/r1
+            if (ilev>0) print *,"alfa=",wrk
             alfa(cnt) = wrk
             ! tenhle usek je jen kvuli vypoctu energie
             en = -dot_product(x,b1+res) ! je to vychozi energie
@@ -1622,13 +1640,15 @@ module solvers
             !! Step 4
             x = x + wrk*p
             !! Step 5
-            res = res - wrk*A%mult(Ap,opcnt)
+            !!!!!!!!   Nutno zkontrolovat
+            !res = res - wrk*A%mult(Ap,opcnt)
+            res = b - A%mul(x)
+            res = A%mult(res)
             !! Step 6
             r3 = r2
             r2 = dot_product(res,res)
-            if (ilev>0) print *, "residual:", r2 
             wrk = r2/r3
-            if (ilev>1) print *,"beta=",wrk
+            if (ilev>0) print *,"beta=",wrk
             beta(cnt) = wrk
             !! Step 7
             p = res + wrk*p
@@ -1637,13 +1657,8 @@ module solvers
             opcnt%div = opcnt%div + 1
 
             !! odhadnout vlastni cisla
-            if (ilev >0) then
-              call esteig(l1,l2,cnt,alfa,beta)
-              print *, "-----start-------"
-              print *, "eigen values estimate:",l1,l2
-              print *, "conditioning estimate:", l1/l2
-              print *, "------end--------"
-            end if
+            call esteig(l1,l2,cnt,alfa,beta)
+            print *, "odhad vl. cisel:",l1,l2
             !! hotovo
 
             cnt = cnt + 1
@@ -1681,6 +1696,7 @@ module solvers
         end do
 
         call cpu_time(t2)
+        !$ t2 = omp_get_wtime()
         opcnt%time = t2-t1
         ! vyridit konec
         if (present(opcnt1)) opcnt1 = opcnt
@@ -1780,6 +1796,7 @@ module solvers
         type(tcount) :: opcnt
 
         call cpu_time(t1)
+        !$ t1 = omp_get_wtime()
         errcode = 0
         if ( present(errcode1)) errcode1 = 0
         n = A%getn()
@@ -1929,6 +1946,7 @@ module solvers
         end do
 
         call cpu_time(t2)
+        !$ t2 = omp_get_wtime()
         opcnt%time = t2-t1
         ! vyridit konec
         if (present(opcnt1)) opcnt1 = opcnt
@@ -1944,6 +1962,104 @@ module solvers
 
     subroutine PCGnormal
     end subroutine PCGnormal
+
+
+    !> metoda sdruzenych gradientu pro normalni rovnice \ref cgn
+    subroutine MinRes(A,b,x,itmax1,reps1,ilev1,itfin1,repsfin1,&
+        ll1,ll2,cond1,opcnt1,errcode1)
+        use mtx
+        use typy
+        implicit none
+        !> matice soustavy\n
+        !! musi poskytovat getn, getm, mul (nasobeni vektorem)
+        class(matrix), intent(in) :: A
+        !> vektor prave strany
+        real(kind=rkind), dimension(:), intent(in) :: b
+        !> aproximace reseni, postupne menena
+        real(kind=rkind), dimension(:), intent(in out) :: x
+        !> maximalni povoleny pocet iteraci, default = n ( Rozmer matice)
+        integer(kind=ikind), intent(in), optional :: itmax1
+        !> pozadovana relativni zmena rezidua, default = 1e-6
+        real(kind=rkind), intent(in), optional :: reps1
+        !> informacni podrobnost\n
+        !> - 0 ... pracuj tise
+        !! - 1 ... minimalni informace
+        !! - 10 ... maximalni ukecanost
+        integer, intent(in), optional :: ilev1
+        !> skutecne provedeny pocet iteraci
+        integer(kind=ikind), intent(out), optional :: itfin1
+        !> skutecne dosazena relativni zmena residua
+        real(kind=rkind), intent(out), optional :: repsfin1
+        !> odhad nejvetsiho vlastniho cisla
+        real(kind=rkind), intent(out), optional :: ll1
+        !> odhad nejmensiho vlastniho cisla
+        real(kind=rkind), intent(out), optional :: ll2
+        !> odhad cisla podminenosti : cond1 = ll1/ll2
+        real(kind=rkind), intent(out), optional :: cond1
+        !> celkovy pocet provedenych operaci a cas behu
+        type(tcount), intent(out), optional :: opcnt1
+        !> kod pripadne chyby
+        !! - 0 ... OK
+        !! - 1 ... matice neni ctvercova
+        !! - 2 ... nesouhlasi b
+        !! - 3 ... nesouhasi x
+        !! - 4 ... ani jeden z vektoru nesouhlasi
+        !! - 5 ... vycerpan povoleny pocet iteraci
+        !! - 6 ... prestalo klesat residuum i energie
+        integer, intent(out), optional :: errcode1
+        real(rkind) :: mez
+
+        real(rkind), dimension(1:ubound(x,1)) :: y,r,y1
+        integer(ikind) :: itcnt, mzcnt, mzcntmax, printstep, printcount
+        real(rkind) :: r2, alfa, beta, r2old, gamma, bb
+        itcnt = 0
+        mez =  1
+        mzcntmax = 1
+        r2 = 0
+        printstep = 1
+        printcount = 0
+        bb = dot_product(b,b)
+        do
+            itcnt = itcnt + 1
+            printcount = printcount + 1
+            y = A%mul(x)
+            r = b-y
+            y = A%mul(r)
+            mzcnt = 0
+            r2old = r2
+            r2 = sqrt(dot_product(r,r))
+            if (itcnt > 10 .and. r2 >= r2old ) exit
+            do
+              beta = dot_product(r,y)
+              gamma = dot_product(y,y)
+              if (beta < mez*gamma) then
+                y1 = y/sqrt(gamma)
+                y = A%mul(y1)
+                mzcnt = mzcnt+1
+                if ( mzcnt == mzcntmax) then
+                  mzcnt = 0
+                  mez = mez/1.1
+                  mzcntmax = mzcntmax + 1
+                  if ( mez < 1e-35) exit
+                end if
+              else
+                exit
+              end if
+            end do
+            gamma = dot_product(y,y)
+            alfa = beta/gamma
+            x = x + alfa*y1
+            if ( printcount == printstep ) then
+            print "(i9,6es15.5,2i4)", itcnt, r2, alfa,beta,&
+              gamma, bb, mez, mzcnt, mzcntmax
+              printcount = 0
+              printstep = min(printstep+1, 10000)
+            end if
+
+            if ( itcnt > 2000000*A%getn()) exit
+        end do
+
+end subroutine MinRes
 
     function vycdet(x,a,b,n) result(y)
         use typy
@@ -2045,56 +2161,129 @@ module solvers
 
     end subroutine esteig
 
-    !> inicializuje vrstvy
-    subroutine inivrstvy(levelset, A)
+!    !> inicializuje vrstvy
+!    subroutine inivrstvy(levelset, A)
+!        use mtx
+!        implicit none
+!        type(vrstvy), intent(in out) :: levelset
+!        class(matrix), intent(in) :: A
+!        integer(kind=ikind) :: n
+!
+!        n = A%getn()
+!        ! jen pridelim pamet, neinicializuji
+!        allocate(levelset%levlist(1:n))
+!        allocate(levelset%levstart(1:n+1))
+!        ! pocet urovni je nula
+!        levelset%nlev = 0
+!    end subroutine inivrstvy
+!
+!    !> vlozi prvni vrchol, v tomto pripade nepotrebuje matici
+!    subroutine firstpoint(levelset, point)
+!        implicit none
+!        type(vrstvy), intent(in out) :: levelset
+!        integer(kind=ikind) :: point !> vychozi vrchol
+!        levelset%nlev = 1
+!        levelset%levstart(1) = 1
+!        levelset%levstart(2) = 2
+!        levelset%levlist(1) = point
+!    end subroutine firstpoint
+!
+!    !> prida vrstvu, predpoklada se, ze aspon jedna tam uz je
+!    subroutine addlevel(A,mapa,levelset)
+!        use mtx
+!        !> matice definujici graf
+!        class(matrix), intent(in) :: A
+!        !> mapa povolujici jdnotlive vrcholy
+!        integer(kind=ikind),dimension(:),intent(inout) :: mapa
+!        !> aktualni sada vrstev
+!        type(vrstvy), intent(inout) :: levelset
+!
+!        integer(kind=ikind) :: i
+!
+!        if (levelset%nlev == 0) Stop "Chybna pouziti addlevel"
+!        ! posledni vrstva je v od levelset%levstart(nlev) do
+!        ! levelset%lesvstart(nlev+1)-1
+!        do i = levelset%levstart(levelset%nlev),&
+!                levelset%levstart(levelset%nlev+1)
+!
+
+
+
+!        end do
+!
+!
+!
+!    end subroutine addlevel
+!
+!
+
+    !> \page gmres Metoda GMRES
+    !! metoda probiha podle nasledujiciho algoritmu, Saad p. 158 ....
+    !! -# \f$ r_0 = b-Ax_0\f$ , \f$ \beta = || r_0 ||_2 \f$ ,
+    !! \f$ v_1 = r_0/ \beta \f$
+    !! -# Poloz \f$ \tilde{H_m}=0\in R^{m+1\times m} \f$
+    !! -# pro j=1, ... m
+    !! -# \f$ w_j = Av_j \f$
+    !! -# pro i=1, ,,, j
+    !! -# \f$ h_{ij} = (w_j , v_i ) \f$
+    !! -# \f$ w_j = w_j - h_{ij} v_i \f$
+    !! -# konec cyklu i
+    !! -# \f$ h_{j+1,j} = \left\Vert w_j \right\Vert \f$ .
+    !! Pokud \f$ h_{j+1,j} = 0 \f$ poloz m=j a jdi na 12
+    !! -# \f$ v_{j+1} = w_j / h_{j+1,j}  \f$
+    !! -# konec cyklu
+    !! -#  Spocti \f$ y_m \f$ jako minimizer
+    !! \f$\left\Vert \beta e_{1}-\tilde{H}_{m}y_{m}\right\Vert _{2}\f$
+    !! a poloz \f$x_{m}=x_{0}+V_{m}y_{m}\f$
+    !!
+    !<
+
+
+
+    !> \ref gmres
+    subroutine GMRES(A,b,x,itmax1,reps1,ilev1,itfin1,repsfin1,&
+        ll1,ll2,cond1,opcnt1,errcode1)
         use mtx
+        use typy
         implicit none
-        type(vrstvy), intent(in out) :: levelset
+        !> matice soustavy\n
+        !! musi poskytovat getn, getm, mul (nasobeni vektorem)
         class(matrix), intent(in) :: A
-        integer(kind=ikind) :: n
+        !> vektor prave strany
+        real(kind=rkind), dimension(:), intent(in) :: b
+        !> aproximace reseni, postupne menena
+        real(kind=rkind), dimension(:), intent(in out) :: x
+        !> maximalni povoleny pocet iteraci, default = n ( Rozmer matice)
+        integer(kind=ikind), intent(in), optional :: itmax1
+        !> pozadovana relativni zmena rezidua, default = 1e-6
+        real(kind=rkind), intent(in), optional :: reps1
+        !> informacni podrobnost\n
+        !> - 0 ... pracuj tise
+        !! - 1 ... minimalni informace
+        !! - 10 ... maximalni ukecanost
+        integer, intent(in), optional :: ilev1
+        !> skutecne provedeny pocet iteraci
+        integer(kind=ikind), intent(out), optional :: itfin1
+        !> skutecne dosazena relativni zmena residua
+        real(kind=rkind), intent(out), optional :: repsfin1
+        !> odhad nejvetsiho vlastniho cisla
+        real(kind=rkind), intent(out), optional :: ll1
+        !> odhad nejmensiho vlastniho cisla
+        real(kind=rkind), intent(out), optional :: ll2
+        !> odhad cisla podminenosti : cond1 = ll1/ll2
+        real(kind=rkind), intent(out), optional :: cond1
+        !> celkovy pocet provedenych operaci a cas behu
+        type(tcount), intent(out), optional :: opcnt1
+        !> kod pripadne chyby
+        !! - 0 ... OK
+        !! - 1 ... matice neni ctvercova
+        !! - 2 ... nesouhlasi b
+        !! - 3 ... nesouhasi x
+        !! - 4 ... ani jeden z vektoru nesouhlasi
+        !! - 5 ... vycerpan povoleny pocet iteraci
+        !! - 6 ... prestalo klesat residuum i energie
+        integer, intent(out), optional :: errcode1
 
-        n = A%getn()
-        ! jen pridelim pamet, neinicializuji
-        allocate(levelset%levlist(1:n))
-        allocate(levelset%levstart(1:n+1))
-        ! pocet urovni je nula
-        levelset%nlev = 0
-    end subroutine inivrstvy
-
-    !> vlozi prvni vrchol, v tomto pripade nepotrebuje matici
-    subroutine firstpoint(levelset, point)
-        implicit none
-        type(vrstvy), intent(in out) :: levelset
-        integer(kind=ikind) :: point !> vychozi vrchol
-        levelset%nlev = 1
-        levelset%levstart(1) = 1
-        levelset%levstart(2) = 2
-        levelset%levlist(1) = point
-    end subroutine firstpoint
-
-    !> prida vrstvu, predpoklada se, ze aspon jedna tam uz je
-    subroutine addlevel(A,mapa,levelset)
-        use mtx
-        !> matice definujici graf
-        class(matrix), intent(in) :: A
-        !> mapa povolujici jdnotlive vrcholy
-        integer(kind=ikind),dimension(:),intent(inout) :: mapa
-        !> aktualni sada vrstev
-        type(vrstvy), intent(inout) :: levelset
-
-        integer(kind=ikind) :: i
-
-        if (levelset%nlev == 0) Stop "Chybna pouziti addlevel"
-        ! posledni vrstva je v od levelset%levstart(nlev) do
-        ! levelset%lesvstart(nlev+1)-1
-        do i = levelset%levstart(levelset%nlev),&
-                levelset%levstart(levelset%nlev+1)
-
-        end do
-
-
-
-    end subroutine addlevel
-
+    end subroutine GMRES
 
 end module solvers

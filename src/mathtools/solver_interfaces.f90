@@ -21,11 +21,13 @@
 
 module solver_interfaces
   use mtx
-  public :: LDU_face
+  public :: LDU_face, LDU_face_mindg
+  public :: LDU_uncoupled_face
   public :: CG_face
   public :: CG_normal_face
   public :: jacobi_face
   public :: null_problem
+  public :: gmres_face
 
   
  contains
@@ -54,11 +56,135 @@ module solver_interfaces
                 ll1,ll2,cond1,opcnt1,errcode1)
       use mtx
       use typy
+      use sparsematrix
       use solvers
-      implicit none
+      use pde_objs
+      use reorder
+      use core_tools
+      use global4solver
+      use simplelinalg
+      
+      
       !> matice soustavy\n
       !! musi poskytovat getn, getm, mul (nasobeni vektorem)
-      class(matrix), intent(in out) :: A
+      class(smtx), intent(in out) :: A
+      !> vektor prave strany
+      real(kind=rkind), dimension(:), intent(in) :: b
+      !> aproximace reseni, postupne menena
+      real(kind=rkind), dimension(:), intent(in out) :: x
+      !> maximalni povoleny pocet iteraci, default = n ( Rozmer matice)
+      integer(kind=ikind), intent(in), optional :: itmax1
+      !> pozadovana relativni zmena rezidua, default = 1e-6
+      real(kind=rkind), intent(in), optional :: reps1
+      !> informacni podrobnost\n
+      !> - 0 ... pracuj tise
+      !! - 1 ... minimalni informace
+      !! - 10 ... maximalni ukecanost
+      integer, intent(in), optional :: ilev1
+      !> skutecne provedeny pocet iteraci
+      integer(kind=ikind), intent(out), optional :: itfin1
+      !> skutecne dosazena relativni zmena residua
+      real(kind=rkind), intent(out), optional :: repsfin1
+      !> odhad nejvetsiho vlastniho cisla
+      real(kind=rkind), intent(out), optional :: ll1
+      !> odhad nejmensiho vlastniho cisla
+      real(kind=rkind), intent(out), optional :: ll2
+      !> odhad cisla podminenosti : cond1 = ll1/ll2
+      real(kind=rkind), intent(out), optional :: cond1
+      !> celkovy pocet provedenych operaci a cas behu
+      type(tcount), intent(out), optional :: opcnt1
+      !> kod pripadnr chyby
+      !! - 0 ... OK
+      !! - 1 ... matice neni ctvercova
+      !! - 2 ... nesouhlasi b
+      !! - 3 ... nesouhasi x
+      !! - 4 ... ani jeden z vektoru nesouhlasi
+      !! - 5 ... vycerpan povoleny pocet iteraci
+      !! - 6 ... prestalo klesat residuum i energie
+      integer, intent(out), optional :: errcode1
+      type(smtx) :: mtx2
+      
+      integer(kind=ikind), dimension(:), allocatable, save :: p1, p2
+      real(kind=rkind), dimension(:), allocatable, save :: bpermut, bbalanced
+      integer, save :: pivtype = -1
+      integer(kind=ikind) :: i
+      
+  !! pivtype -- method of pivoting
+  !! 0 ... no pivoting (not recommended)
+  !! 1 ... full pivoting (use both permutation vector)
+  !! 2 ... column pivoting (requires perm1 only)
+  !! 3 ... row pivoting (requires perm2 only)
+  !! 4 ... diagonal pivoting (symmetric matrix only)
+  !! 5 ... diagonal pivoting with minimal degree 
+  
+
+      pivtype = 5
+
+
+      if (.not. allocated(p1)) then
+        allocate(p1(ubound(b,1)))
+        allocate(p2(ubound(b,1)))
+      end if
+
+
+      if ( cut(solver_name) == "LDUbalanced") then
+        if (.not. allocated(bbalanced)) allocate(bbalanced(ubound(b,1)))
+        bbalanced = b
+        call unify_rows(A, bbalanced)
+      end if
+                
+      
+  
+
+      call LDUd(A, pivtype=pivtype, ilev=0, perm1=p1, perm2=p2)
+      
+      if ( cut(solver_name) == "LDUbalanced") then
+        call LDUback(A, bbalanced, x, p1=p1, p2=p2)
+      else
+        call LDUback(A, b, x, p1=p1, p2=p2)
+      end if
+        
+      if (present(itfin1)) then 
+        itfin1 = 1
+      end if
+!      else
+!!        call RCM(A,p1)
+!!        call copyperm(source=A, dest=mtx2,permi=p1, permj=p1)
+!!        call LDUd(mtx2)
+!        call LDUd(A, pivtype=5, ilev=0, perm1=p1, perm2=p2)
+!        if (.not. allocated(bpermut)) allocate(bpermut(ubound(b,1)))
+        
+!        if (cut(solver_name) == "LDUbalanced") then
+!          bpermut = bbalanced(p1)
+!        else
+!          bpermut = b(p1)
+!        end if
+        
+!        call LDUback(mtx2,bpermut,x)
+!        x(p1) = x
+!      end if
+      
+!      if (present(itfin1)) itfin1 = 1
+        
+
+    end subroutine LDU_face
+    
+    
+    subroutine gmres_face(A,b,x,itmax1,reps1,ilev1,itfin1,repsfin1,&
+                ll1,ll2,cond1,opcnt1,errcode1)
+                
+      use mtx
+      use typy
+      use sparsematrix
+      use globals
+      use global_objs
+      use pde_objs
+      use simplelinalg
+      use gmres_solver
+      use debug_tools
+       !> matice soustavy\n
+      !! musi poskytovat getn, getm, mul (nasobeni vektorem)
+      class(smtx), intent(in out) :: A
       !> vektor prave strany
       real(kind=rkind), dimension(:), intent(in) :: b
       !> aproximace reseni, postupne menena
@@ -94,34 +220,303 @@ module solver_interfaces
       !! - 6 ... prestalo klesat residuum i energie
       integer, intent(out), optional :: errcode1
       
+      
+      integer(kind=ikind) :: nrestart, nit, itfin
+      real(kind=rkind) :: gmres_reps, gmres_reps_abs, repsfin
+      integer(kind=ikind) :: converge, fin
+      
+
+      
+      nrestart = 45 
+      
+      nit = nrestart * 10
+      
+      fin = spmatrix%getn()
+      
+      
+      call diag_precond(a=spmatrix, x=pde_common%xvect(1:fin,3), mode=1)
+!    call unify_rows(spmatrix, pde_common%bvect(1:fin))
+
+      gmres_reps_abs=reps1
+      
+
+      
+      call gmres(fin, x, b, nit, reps1, Ax4gmres, dummycond4gmres, nrestart, gmres_reps_abs, 0_ikind, itfin1, repsfin1, &
+                  converge)
+    
+      repsfin1 = sqrt(repsfin1)
+                  
+      call diag_precond(a=spmatrix, x=pde_common%xvect(1:fin,3), mode=-1)     
+
+      
+    end subroutine gmres_face
+      
+      
+    
+    subroutine LDU_face_mindg(A,b,x,itmax1,reps1,ilev1,itfin1,repsfin1,&
+                ll1,ll2,cond1,opcnt1,errcode1)
+      use mtx
+      use typy
+      use sparsematrix
+      use solvers
+      use pde_objs
+      use reorder
+      use core_tools
+      use global4solver
+      use simplelinalg
+      
+      
+      !> matice soustavy\n
+      !! musi poskytovat getn, getm, mul (nasobeni vektorem)
+      class(smtx), intent(in out) :: A
+      !> vektor prave strany
+      real(kind=rkind), dimension(:), intent(in) :: b
+      !> aproximace reseni, postupne menena
+      real(kind=rkind), dimension(:), intent(in out) :: x
+      !> maximalni povoleny pocet iteraci, default = n ( Rozmer matice)
+      integer(kind=ikind), intent(in), optional :: itmax1
+      !> pozadovana relativni zmena rezidua, default = 1e-6
+      real(kind=rkind), intent(in), optional :: reps1
+      !> informacni podrobnost\n
+      !> - 0 ... pracuj tise
+      !! - 1 ... minimalni informace
+      !! - 10 ... maximalni ukecanost
+      integer, intent(in), optional :: ilev1
+      !> skutecne provedeny pocet iteraci
+      integer(kind=ikind), intent(out), optional :: itfin1
+      !> skutecne dosazena relativni zmena residua
+      real(kind=rkind), intent(out), optional :: repsfin1
+      !> odhad nejvetsiho vlastniho cisla
+      real(kind=rkind), intent(out), optional :: ll1
+      !> odhad nejmensiho vlastniho cisla
+      real(kind=rkind), intent(out), optional :: ll2
+      !> odhad cisla podminenosti : cond1 = ll1/ll2
+      real(kind=rkind), intent(out), optional :: cond1
+      !> celkovy pocet provedenych operaci a cas behu
+      type(tcount), intent(out), optional :: opcnt1
+      !> kod pripadnr chyby
+      !! - 0 ... OK
+      !! - 1 ... matice neni ctvercova
+      !! - 2 ... nesouhlasi b
+      !! - 3 ... nesouhasi x
+      !! - 4 ... ani jeden z vektoru nesouhlasi
+      !! - 5 ... vycerpan povoleny pocet iteraci
+      !! - 6 ... prestalo klesat residuum i energie
+      integer, intent(out), optional :: errcode1
+      
+      
       integer(kind=ikind), dimension(:), allocatable, save :: p1, p2
-      
-  !! pivtype -- method of pivoting
-  !! 0 ... no pivoting (not recommended)
-  !! 1 ... full pivoting (use both permutation vector)
-  !! 2 ... column pivoting (requires perm1 only)
-  !! 3 ... row pivoting (requires perm2 only)
-  !! 4 ... diagonal pivoting (symmetric matrix only)
-  !! 5 ... diagonal pivoting with minimal degree (symmetric matrix only)
+      integer(kind=ikind) :: n
       
       
-      
+      n=A%getn()
       
       if (.not. allocated(p1)) then
-        allocate(p1(ubound(b,1)))
-        allocate(p2(ubound(b,1)))
+        allocate(p1(n))
+        allocate(p2(n))
+      end if
+
+      call LDUd(A, pivtype=5, ilev=0, perm1=p1, perm2=p2)
+      call LDUback(A, b, x, p1=p1, p2=p2)
+      
+      
+      
+    end subroutine LDU_face_mindg
+    
+    
+    subroutine blockjacobi_face(A,b,x,itmax1,reps1,ilev1,itfin1,repsfin1,&
+                ll1,ll2,cond1,opcnt1,errcode1)
+      use mtx
+      use sparsematrix
+      use typy
+      use sparsematrix
+      use solvers
+      use simplelinalg
+      use pde_objs
+      use debug_tools
+      use readtools
+
+      implicit none
+      !> matice soustavy\n
+      !! musi poskytovat getn, getm, mul (nasobeni vektorem)
+      class(smtx), intent(in out) :: A
+      !> vektor prave strany
+      real(kind=rkind), dimension(:), intent(in) :: b
+      !> aproximace reseni, postupne menena
+      real(kind=rkind), dimension(:), intent(in out) :: x
+      !> maximalni povoleny pocet iteraci, default = n ( Rozmer matice)
+      integer(kind=ikind), intent(in), optional :: itmax1
+      !> pozadovana relativni zmena rezidua, default = 1e-6
+      real(kind=rkind), intent(in), optional :: reps1
+      !> informacni podrobnost\n
+      !> - 0 ... pracuj tise
+      !! - 1 ... minimalni informace
+      !! - 10 ... maximalni ukecanost
+      integer, intent(in), optional :: ilev1
+      !> skutecne provedeny pocet iteraci
+      integer(kind=ikind), intent(out), optional :: itfin1
+      !> skutecne dosazena relativni zmena residua
+      real(kind=rkind), intent(out), optional :: repsfin1
+      !> odhad nejvetsiho vlastniho cisla
+      real(kind=rkind), intent(out), optional :: ll1
+      !> odhad nejmensiho vlastniho cisla
+      real(kind=rkind), intent(out), optional :: ll2
+      !> odhad cisla podminenosti : cond1 = ll1/ll2
+      real(kind=rkind), intent(out), optional :: cond1
+      !> celkovy pocet provedenych operaci a cas behu
+      type(tcount), intent(out), optional :: opcnt1
+      !> kod pripadnr chyby
+      !! - 0 ... OK
+      !! - 1 ... matice neni ctvercova
+      !! - 2 ... nesouhlasi b
+      !! - 3 ... nesouhasi x
+      !! - 4 ... ani jeden z vektoru nesouhlasi
+      !! - 5 ... vycerpan povoleny pocet iteraci
+      !! - 6 ... prestalo klesat residuum i energie
+      integer, intent(out), optional :: errcode1
+      integer :: ilevel
+      integer(kind=ikind), dimension(:,:), allocatable, save :: blindex
+      integer(kind=ikind) :: i, start, iters, itmax, j
+      character(len=4096) :: msg
+
+      if (.not. present(ilev1) ) then
+        ilevel = 0
+      else
+        ilevel = ilev1
       end if
   
-        call LDUd(A, pivtype=0, ilev=0, perm1=p1, perm2=p2)
-        
-        call LDUback(A, b, x, p1=p1, p2=p2)
-        
-        if (present(itfin1)) then 
-          itfin1 = 1
-        end if
 
-    end subroutine LDU_face
+      if (.not. allocated(blindex)) then
+        allocate(blindex(ubound(pde,1),2))
+        do i=1, ubound(pde,1)
+          blindex(i,2) = maxval(pde(i)%permut)
+        end do 
+        
+        do i=1, ubound(pde,1)
+          blindex(i,1) = huge(blindex(1,1))
+          do j=1, ubound(pde(i)%permut,1)
+            if (pde(i)%permut(j) /=0 ) then
+              if (pde(i)%permut(j) < blindex(i,1)) blindex(i,1) = pde(i)%permut(j)
+            end if
+          end do
+        end do
+      end if
+      
 
+      
+      
+!      itmax =  int(itfin1/10.0)+1
+      itmax = itmax1
+      
+      if (ubound(pde,1) == 1) then
+        write(msg, fmt=*) "incorrect solver setup from drutes.conf/solver.conf", new_line("a"), &
+                           "this is not a coupled problem, don't use Block-Jacobi", new_line("a"), &
+                           "correct solver is either PCG or LDU"
+        call file_error(file_solver, msg)
+      end if
+      
+      call block_jacobi(A, x, b, blindex, iters, reps1, itmax, .true.)
+    
+      
+    end subroutine blockjacobi_face
+    
+    
+     subroutine LDU_uncoupled_face(A,b,x,itmax1,reps1,ilev1,itfin1,repsfin1,&
+                ll1,ll2,cond1,opcnt1,errcode1)
+      use mtx
+      use sparsematrix
+      use typy
+      use sparsematrix
+      use solvers
+      use simplelinalg
+      use pde_objs
+      use debug_tools
+      use readtools
+
+      implicit none
+      !> matice soustavy\n
+      !! musi poskytovat getn, getm, mul (nasobeni vektorem)
+      class(smtx), intent(in out) :: A
+      !> vektor prave strany
+      real(kind=rkind), dimension(:), intent(in) :: b
+      !> aproximace reseni, postupne menena
+      real(kind=rkind), dimension(:), intent(in out) :: x
+      !> maximalni povoleny pocet iteraci, default = n ( Rozmer matice)
+      integer(kind=ikind), intent(in), optional :: itmax1
+      !> pozadovana relativni zmena rezidua, default = 1e-6
+      real(kind=rkind), intent(in), optional :: reps1
+      !> informacni podrobnost\n
+      !> - 0 ... pracuj tise
+      !! - 1 ... minimalni informace
+      !! - 10 ... maximalni ukecanost
+      integer, intent(in), optional :: ilev1
+      !> skutecne provedeny pocet iteraci
+      integer(kind=ikind), intent(out), optional :: itfin1
+      !> skutecne dosazena relativni zmena residua
+      real(kind=rkind), intent(out), optional :: repsfin1
+      !> odhad nejvetsiho vlastniho cisla
+      real(kind=rkind), intent(out), optional :: ll1
+      !> odhad nejmensiho vlastniho cisla
+      real(kind=rkind), intent(out), optional :: ll2
+      !> odhad cisla podminenosti : cond1 = ll1/ll2
+      real(kind=rkind), intent(out), optional :: cond1
+      !> celkovy pocet provedenych operaci a cas behu
+      type(tcount), intent(out), optional :: opcnt1
+      !> kod pripadnr chyby
+      !! - 0 ... OK
+      !! - 1 ... matice neni ctvercova
+      !! - 2 ... nesouhlasi b
+      !! - 3 ... nesouhasi x
+      !! - 4 ... ani jeden z vektoru nesouhlasi
+      !! - 5 ... vycerpan povoleny pocet iteraci
+      !! - 6 ... prestalo klesat residuum i energie
+      integer, intent(out), optional :: errcode1
+      integer :: ilevel
+      integer(kind=ikind), dimension(:,:), allocatable, save :: blindex
+      integer(kind=ikind) :: i, start, iters, itmax, j
+      character(len=4096) :: msg
+
+      if (.not. present(ilev1) ) then
+        ilevel = 0
+      else
+        ilevel = ilev1
+      end if
+
+
+      if (.not. allocated(blindex)) then
+        allocate(blindex(ubound(pde,1),2))
+        do i=1, ubound(pde,1)
+          blindex(i,2) = maxval(pde(i)%permut)
+        end do 
+        
+        do i=1, ubound(pde,1)
+          blindex(i,1) = huge(blindex(1,1))
+          do j=1, ubound(pde(i)%permut,1)
+            if (pde(i)%permut(j) /=0 ) then
+              if (pde(i)%permut(j) < blindex(i,1)) blindex(i,1) = pde(i)%permut(j)
+            end if
+          end do
+        end do
+      end if
+      
+
+      
+      if (ubound(pde,1) == 1) then
+        write(msg, fmt=*) "incorrect solver setup from drutes.conf/solver.conf", new_line("a"), &
+                           "this is not a coupled problem, don't use Block-Jacobi", new_line("a"), &
+                           "correct solver is either PCG or LDU"
+        call file_error(file_solver, msg)
+      end if
+      
+      itmax = int(A%getn()/ubound(pde,1))
+      
+      call block_jacobi_uncoupled(A, x, b, blindex, itcnt=itfin1, repsexit=repsfin1, maxitcount=itmax)
+
+      
+    end subroutine LDU_uncoupled_face
+    
+    
+   
 
     subroutine CG_face(A,b,x,itmax1,reps1,ilev1,itfin1,repsfin1,&
                 ll1,ll2,cond1,opcnt1,errcode1)
@@ -129,10 +524,11 @@ module solver_interfaces
       use typy
       use sparsematrix
       use solvers
+      use globals
       implicit none
       !> matice soustavy\n
       !! musi poskytovat getn, getm, mul (nasobeni vektorem)
-      class(matrix), intent(in out) :: A
+      class(smtx), intent(in out) :: A
       !> vektor prave strany
       real(kind=rkind), dimension(:), intent(in) :: b
       !> aproximace reseni, postupne menena
@@ -176,7 +572,9 @@ module solver_interfaces
       end if
 
 
-      call CG(A=A, b=b,x=x,ilev1=ilevel,itmax1=itmax1,reps1=reps1)
+      call CG(A=A, b=b,x=x,ilev1=ilevel,itmax1=itmax1,reps1=reps1, itfin1=itfin1, repsfin1=repsfin1)
+      write(unit=file_itcg, fmt = *) time, itfin1, repsfin1
+      call flush(file_itcg)
 
 
     end subroutine CG_face
@@ -189,10 +587,17 @@ module solver_interfaces
       use typy
       use sparsematrix
       use solvers
-      implicit none
+      use global4solver
+      use globals
+      use core_tools
+      use pde_objs
+      use simplelinalg
+      use debug_tools
+      
+      
       !> matice soustavy\n
       !! musi poskytovat getn, getm, mul (nasobeni vektorem)
-      class(matrix), intent(in out) :: A
+      class(smtx), intent(in out) :: A
       !> vektor prave strany
       real(kind=rkind), dimension(:), intent(in) :: b
       !> aproximace reseni, postupne menena
@@ -228,15 +633,32 @@ module solver_interfaces
       !! - 6 ... prestalo klesat residuum i energie
       integer, intent(out), optional :: errcode1
       integer :: ilevel
+      integer(kind=ikind) :: fin, proc
 
       if (.not. present(ilev1) ) then
-        ilevel = 1
+        ilevel = 0
       else
         ilevel = ilev1
       end if
+      
+      proc = ubound(pde,1)
+      fin = maxval(pde(proc)%permut(:))
 
 
-      call CGnormal(A=A, b=b,x=x,ilev1=ilevel,itmax1=itmax1,reps1=reps1, itfin1=itfin1, repsfin1=repsfin1)
+      select case(cut(solver_name))
+        case("PCGdiag")
+
+          call diag_precond(a=spmatrix, x=pde_common%xvect(1:fin,3), mode=1)
+          call CGnormal(A=A, b=b,x=x,ilev1=ilevel,itmax1=itmax1,reps1=reps1, itfin1=itfin1, repsfin1=repsfin1)
+          call diag_precond(a=spmatrix, x=pde_common%xvect(1:fin,3), mode=-1)
+        case("PCGbalanced")
+  
+          call unify_rows(spmatrix, pde_common%bvect(1:fin))
+          call CG(A=A, b=b,x=x,ilev1=ilevel,itmax1=itmax1,reps1=reps1, itfin1=itfin1, repsfin1=repsfin1)
+      end select
+
+      write(unit=file_itcg, fmt = *) time, itfin1, repsfin1
+      call flush(file_itcg)
 
 
     end subroutine CG_normal_face
@@ -245,12 +667,13 @@ module solver_interfaces
     subroutine jacobi_face(A,b,x,itmax1,reps1,ilev1,itfin1,repsfin1,&
                 ll1,ll2,cond1,opcnt1,errcode1)
       use mtx
+      use sparsematrix
       use typy
       use solvers
       implicit none
       !> matice soustavy\n
       !! musi poskytovat getn, getm, mul (nasobeni vektorem)
-      class(matrix), intent(in out) :: A
+      class(smtx), intent(in out) :: A
       !> vektor prave strany
       real(kind=rkind), dimension(:), intent(in) :: b
       !> aproximace reseni, postupne menena
@@ -312,5 +735,68 @@ module solver_interfaces
     call A%rowsfilled%clear
     
   end subroutine null_problem
+  
+  !(A,b,x,itmax1,reps1,ilev1,itfin1,repsfin1,&
+  !      ll1,ll2,cond1,opcnt1,errcode1)
+  subroutine Minres_face(A,b,x,itmax1,reps1,ilev1,itfin1,repsfin1,&
+                ll1,ll2,cond1,opcnt1,errcode1)
+      use mtx
+      use typy
+      use sparsematrix
+      use solvers
+      use simplelinalg
+      implicit none
+      !> matice soustavy\n
+      !! musi poskytovat getn, getm, mul (nasobeni vektorem)
+      class(smtx), intent(in out) :: A
+      !> vektor prave strany
+      real(kind=rkind), dimension(:), intent(in) :: b
+      !> aproximace reseni, postupne menena
+      real(kind=rkind), dimension(:), intent(in out) :: x
+      !> maximalni povoleny pocet iteraci, default = n ( Rozmer matice)
+      integer(kind=ikind), intent(in), optional :: itmax1
+      !> pozadovana relativni zmena rezidua, default = 1e-6
+      real(kind=rkind), intent(in), optional :: reps1
+      !> informacni podrobnost\n
+      !> - 0 ... pracuj tise
+      !! - 1 ... minimalni informace
+      !! - 10 ... maximalni ukecanost
+      integer, intent(in), optional :: ilev1
+      !> skutecne provedeny pocet iteraci
+      integer(kind=ikind), intent(out), optional :: itfin1
+      !> skutecne dosazena relativni zmena residua
+      real(kind=rkind), intent(out), optional :: repsfin1
+      !> odhad nejvetsiho vlastniho cisla
+      real(kind=rkind), intent(out), optional :: ll1
+      !> odhad nejmensiho vlastniho cisla
+      real(kind=rkind), intent(out), optional :: ll2
+      !> odhad cisla podminenosti : cond1 = ll1/ll2
+      real(kind=rkind), intent(out), optional :: cond1
+      !> celkovy pocet provedenych operaci a cas behu
+      type(tcount), intent(out), optional :: opcnt1
+      !> kod pripadnr chyby
+      !! - 0 ... OK
+      !! - 1 ... matice neni ctvercova
+      !! - 2 ... nesouhlasi b
+      !! - 3 ... nesouhasi x
+      !! - 4 ... ani jeden z vektoru nesouhlasi
+      !! - 5 ... vycerpan povoleny pocet iteraci
+      !! - 6 ... prestalo klesat residuum i energie
+      integer, intent(out), optional :: errcode1
+      integer :: ilevel
+      real(kind = rkind), dimension(:), allocatable:: b_tmp
+      
+      allocate(b_tmp(size(b,1)))
+      if (.not. present(ilev1) ) then
+        ilevel = 0
+      else
+        ilevel = ilev1
+      end if
+      b_tmp = b
+      call unify_rows(a = A, b = b_tmp)
+      call MinRes(A=A, b=b_tmp,x=x,ilev1=ilevel,itmax1=itmax1,reps1=reps1)
+
+
+    end subroutine Minres_face
 
 end module solver_interfaces

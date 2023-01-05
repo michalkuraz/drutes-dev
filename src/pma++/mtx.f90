@@ -45,6 +45,8 @@ module mtx
         procedure(geti), deferred :: get
         !> nastavi prvek matice
         procedure(seti), pass(a), deferred :: set
+        !> vymaze matici
+        procedure :: clear => clearmatrix
         !> pricte cislo k prvku matice
         procedure :: add => addmatrix
         !> vybere radek z matice, vraceny jsou nenulove prvky a jejich
@@ -53,6 +55,8 @@ module mtx
         !> vybere sloupec z matice, vraceny jsou nenulove prvky a jejich
         !! souadnice
         procedure :: getcol => getcolmatrix
+        !> vlozi radek do matice
+        procedure :: setrow => setrowmatrix
         !> vybere submatici z matice
         procedure :: submatrix => smatrix
         !> vytiskne matici
@@ -91,7 +95,7 @@ module mtx
         !> cteni ze souboru
         procedure :: Read
         !> zapis do souboru
-        procedure :: Write => Write
+        procedure :: Write
         !> nasobi jeden radek
         procedure  mulrow
     end type matrix
@@ -131,6 +135,7 @@ module mtx
 
     public :: mtxtest
     public :: estimeigvalues
+    public :: copyperm
 
     contains
 
@@ -231,6 +236,7 @@ module mtx
 
         ! dvoufazove
         ! spocitat kolik jich bude
+        !print *, "GetRowMatrix: zacatek"
         nelem = 0
         if (present(mask)) then
             do j = 1,a%m
@@ -283,6 +289,7 @@ module mtx
                 end if
             end do
         end if
+        !print *," GetRowMatrix : konec"
     end subroutine getrowmatrix
 
     !> ziska sloupec z matice  - kandidat reimplementace v potomkovi
@@ -358,6 +365,24 @@ module mtx
             end do
         end if
     end subroutine getcolmatrix
+
+    subroutine clearmatrix(A)
+        class(matrix), intent(inout) :: A
+        !> hodnoty prvku
+        real(kind=rkind), dimension(:), allocatable :: v
+        !> radkove indexy
+        integer(kind=ikind), dimension(:), allocatable :: ii
+        !> pocet prvku vybraneho sloupce
+        integer(kind=ikind) :: nelem, i, j
+
+        do i=1,A%getn()
+            call A%getrow(i,v,ii, nelem)
+            do j=1,nelem
+                call A%set(0.0_rkind,i,ii(j))
+            end do
+        end do
+    end subroutine clearmatrix
+
 
 
     !> napodoba matlabovske spy
@@ -548,7 +573,9 @@ module mtx
 
         call A%init(B%getn(),B%getm())
         do i=1,B%getn()
+            !print *,"copymatrix: i=",i
             call B%getrow(i,v,ii,nelem)
+            !print *, "copymatrix : po get row"
             do j=1,nelem
                 call A%set(v(j),i,ii(j))
             end do
@@ -801,11 +828,11 @@ module mtx
         call A%getrow(i,vls,jj,nelem)
         y = 0
         do j = 1,nelem
-           y = y + vls(j)*x(jj(j))
+            y = y + vls(j)*x(jj(j))
         end do
         if (present(count)) then
-           count%ad = count%ad + nelem
-           count%mul = count%mul + nelem
+            count%ad = count%ad + nelem
+            count%mul = count%mul + nelem
         end if
     end function mulrow
 
@@ -975,7 +1002,7 @@ module mtx
             v3 = v3/sqrt(w1)
             lmin1 = lmin
             lmin = lmax-w/w1
-            if ( cnt == 100) then
+            if ( cnt == 1000) then
                 print *, it, lmin,lmax, rc
                 cnt  = 0
             end if
@@ -991,8 +1018,54 @@ module mtx
                     rc = rc + 1
                 end if
             end if
-            if (rc==20000) exit
+            if (rc==20000+10*A%getn()*A%getn()) exit
         end do
     end subroutine estimeigvalues
+
+    !> dest = source(permi, permj)
+    subroutine copyperm(source,dest,permi,permj)
+        class(matrix), intent(in) :: source
+        class(matrix), intent(inout) :: dest
+        integer(ikind), dimension(:), intent(in) :: permi
+        integer(ikind), dimension(:), intent(in) :: permj
+        integer(ikind) :: i, nelem
+        real(kind=rkind), dimension(:), allocatable :: v
+        integer(kind=ikind), dimension(:), allocatable :: jj
+        integer(ikind), dimension(:), allocatable :: invpermj
+
+        allocate(invpermj(1:source%getm()))
+        do i=1,source%getm()
+            invpermj(permj(i)) = i
+        end do
+
+        call dest%resize(source%getn(), source%getm())
+        do i=1, source%getn()
+            call source%getrow(permi(i),v,jj,nelem)
+            !! prehazet sloupce
+            jj = invpermj(jj)
+            call dest%setrow(i,v,jj,nelem)
+        end do
+    end subroutine copyperm
+
+    !> na predepsanych mistech vymeni prvky, zbytek necha na pokoji
+    subroutine setrowmatrix(a,i,v,jj,nelem)
+        use typy
+        implicit none
+        !> matice
+        class(matrix), intent(in out) :: a
+        !> pozadovany radek
+        integer(kind=ikind), intent(in) :: i
+        !> nenulove hodnoty z radku
+        real(kind=rkind), dimension(:), allocatable, intent(in) :: v
+        !> sloupcove indexy nenulovych prvku radku
+        integer(kind=ikind), dimension(:), allocatable, intent(in) :: jj
+        !> pocet nenulovych prvku v radku
+        integer(kind=ikind), intent(in) :: nelem
+        integer(ikind) :: j
+        do j=1,nelem
+            call a%set(v(j),i,jj(j))
+        end do
+    end subroutine setrowmatrix
+
 
 end module mtx

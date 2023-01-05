@@ -19,50 +19,129 @@ module kinpointer
   
     subroutine kinwaveprocs(number) 
       use typy
-      integer(kind=ikind), intent(out) :: number
+      use readtools
       
-      number = 1
+      integer(kind=ikind), intent(out) :: number
+      integer :: fileid, ierr
+      logical :: yes
+      
+      open(newunit=fileid, file="drutes.conf/kinwave/kinwave.conf",action="read", status="old", iostat=ierr)
+      
+      if (ierr /= 0) then
+        print *, "unable to open drutes.conf/kinwave/kinwave.conf, exiting..."
+        error stop
+      end if
+      
+      call fileread(yes, fileid, errmsg="set y/n if you want to couple your model with solute transport")
+      
+      close(fileid)
+      
+      if (yes) then
+        number = 3
+      else
+        number = 1
+      end if
       
     end subroutine kinwaveprocs
     
-    subroutine kinwavelinker(pde_loc)
+    subroutine kinwavelinker()
       use typy
       use kinfnc
       use kinreader
       use pde_objs
       use debug_tools
       
-      class(pde_str), intent(in out) :: pde_loc
+      integer(kind=ikind) :: nobcs, i
       
-      call kininit(pde_loc)
+      call kininit()
       
-      pde_loc%pde_fnc(pde_loc%order)%convection => kinconvect
+      pde(1)%pde_fnc(1)%convection => kinconvect
       
-      allocate(pde_loc%bc(101:101))
+      nobcs = maxval(nodes%edge)
       
-      pde_loc%bc(101)%value_fnc => kinbor
+      allocate(pde(1)%bc(101:nobcs))
+      
+      do i=101, nobcs
+		  pde(1)%bc(i)%value_fnc => kinbor
+	  end do
       
 !       pde_loc%bc(102)%value_fnc => kinbor
 
       if (drutes_config%dimen == 1) then
         nodes%edge(ubound(nodes%data)) = 101
-        
         nodes%edge(1) = 0
       end if
     
-      pde_loc%initcond => kinematixinit
+      pde(1)%initcond => kinematixinit
       
-      pde_loc%pde_fnc(pde_loc%order)%zerord => rainfall
+      pde(1)%pde_fnc(1)%zerord => rainfall
       
-      pde_loc%pde_fnc(pde_loc%order)%elasticity => kin_elast
+      pde(1)%pde_fnc(1)%elasticity => kin_elast
       
-      pde_loc%diffusion = .false.
+      pde(1)%diffusion = .false.
+
+!      pde(1)%pde_fnc(1)%dispersion => disp4kinwave
       
-      pde_loc%getval => getval_kinwave
+      pde(1)%getval => getval_kinwave
       
-      pde_loc%flux => kinflux
+      pde(1)%flux => kinflux
       
-      pde_loc%symmetric = .true.
+      pde(1)%symmetric = .true.
+      
+      pde(1)%print_mass = .false.
+      
+      if (ubound(pde,1) == 3) then
+      
+        allocate(pde(2)%bc(101:104))
+        
+        allocate(pde(3)%bc(101:104))
+      
+        pde(2)%pde_fnc(2)%convection => kinconvectcl
+        
+        pde(2)%pde_fnc(2)%dispersion => disp4kinwavecl
+        
+        pde(2)%initcond =>  kinematixinit
+        
+        pde(2)%pde_fnc(2)%elasticity => kin_clelast
+        
+        pde(2)%pde_fnc(3)%elasticity => kin_cselast
+        
+        pde(2)%print_mass = .true.
+        
+        pde(2)%mass(1)%val => solmass
+        
+        pde(2)%flux => kinfluxcl
+        
+        pde(2)%pde_fnc(2)%reaction => kincl_lostfactor
+        
+        pde(2)%symmetric = .false.
+        
+      	do i=101, nobcs
+		  pde(2)%bc(i)%value_fnc => kinbor
+	  	end do
+      
+        
+        !--- soil
+        pde(3)%initcond =>  kinematixinit4cs
+        
+        pde(3)%pde_fnc(3)%elasticity => kin_cselast
+        
+        pde(3)%pde_fnc(2)%reaction => kincl_source
+        
+        pde(3)%pde_fnc(3)%reaction => kincs_source
+        
+        pde(3)%print_mass = .true.
+        
+        pde(3)%mass(1)%val => csmass
+        
+      	do i=101, nobcs
+		  pde(3)%bc(i)%value_fnc => kinborO
+	  	end do
+        
+      end if
+        
+        
+
       
     end subroutine kinwavelinker
     

@@ -144,12 +144,13 @@ contains
   !! Gaussova eliminace
   !!
   !<
-  subroutine gem(a,b,x)
+  subroutine gem(a,b,x, fail)
     use typy
     real(kind=rkind), dimension(:,:), intent(in) :: a !> matice soustavy
     !realny 2rozmer pole je to parametr a vstupni parametr
     real(kind=rkind), dimension(:), intent(in) :: b !> prava strana
     real(kind=rkind), dimension(:), intent(out) :: x !> reseni
+    logical, intent(out), optional :: fail
     real(kind=rkind), dimension(:), allocatable :: aradek
     !matice a pochazi z main, nemuzu ji tedy menit,
     !proto si definuju matici aa, do ktery zapisu matici a
@@ -168,6 +169,10 @@ contains
     !priradi rozmer vertikalni 
     bsize=ubound(b,1)
     xsize=ubound(x,1)
+    
+    if (present(fail)) fail = .false.
+    
+    
     !print *, asizeH , asizeV , bsize , xsize
     if (asizeH==xsize .AND. asizeV==bsize) then
       !    print *, "zatim ok"
@@ -203,13 +208,23 @@ contains
             aa(maxindex,:)=aradek
             if (aa(i,i) == 0) then
               !print *,"matice je singularni..."
+              if (present(fail)) fail = .true.
               return
             endif
           endif
           !vydelim reseny radek hodnotu nejvetsiho prvku 
           !(ktery sme predtim umistili na diagonalu)
           wrk=aa(i,i)
+          
+          if (present(fail)) then
+            if (abs(wrk) < 1e3*epsilon(wrk))  then
+              fail = .true.
+              RETURN
+            end if
+          end if
+          
           aa(i,i:)=aa(i,i:)/wrk
+  
           do j= i+1,n
             !vezmu j-ty radek i-ty sloupec
             wrk=aa(j,i)
@@ -218,10 +233,28 @@ contains
           end do
           !call printmatrix(aa)
         enddo
+
+        if (present(fail)) then
+          if (abs(aa(n,n)) < 1e3*epsilon(wrk))  then
+            fail = .true.
+            RETURN
+          end if
+        end if
+
         aa(n,n+1)=aa(n,n+1)/aa(n,n)
+
         do i=n-1, 1, -1
           !dotproduct - funkce provedejici skalarni soucin
+          
+          if (present(fail)) then
+            if (abs(a(i,i)) < 1e3*epsilon(wrk))  then
+              fail = .true.
+              RETURN
+            end if
+          end if
+          
           aa(i,n+1)=(aa(i,n+1)- dot_product( aa(i,i+1:n),aa(i+1:n,n+1)))/aa(i,i)
+
         end do
         !aa(:,n+1) je vektor reseni soustavy
         x=aa(:,n+1)

@@ -33,6 +33,7 @@ module global_objs
     !! type_pnt = gqnd -- Gauss quadrature node
     !! type_pnt = obpt -- observation point
     !! type_pnt = ndpt -- node from the mesh of geometrical discretization
+    !! type_pnt = numb -- only returns the value specified in component this_is_the_value
     !<
     character(len=4) :: type_pnt
     !> this value must be supplied if type_pnt = obpt, or type_pnt = ndpt
@@ -55,7 +56,9 @@ module global_objs
     logical :: debugstop=.false.
     !> use preprocessed values (some PDE problems e.g. Richards equation in total hydraulic head form distiguish between pressure head h and total hydraulic head H, where H is the solution, but e.g. the function for the water content (retention curve) requires h. In this case for evaluating the water content we need to use preprocessed values. The preprocessor could be created as a part of model setup by changing the default pointer pde%getval to your own routine. Because pde%getval is called both from your constitutive functions and from the FEM solver, you should be able to tell your own getval function, which value you want to get H or h? By default it is false.
     logical :: preproc=.false.
-    real(kind=rkind), dimension(2) :: xy
+    real(kind=rkind), dimension(3) :: xy
+    !> returns this value if type_pnt specified as "numb"
+    real(kind=rkind) :: this_is_the_value
   end type integpnt_str
   
   !> smart array, you don't need to allocate -- usefull if you don't know how many data you will write in, 
@@ -230,7 +233,10 @@ module global_objs
     type(smartarray_int), dimension(:), allocatable :: el2integ
     !> list of elements of geometrical discretization, where this node belongs
     type(smartarray_int), dimension(:), allocatable :: element
+    !> permutation vector for chaotic nodes IDs, typically from ArcGIS
+    integer(kind=ikind), dimension(:), allocatable :: permut4ArcGIS
   end type node
+  
 
 
   !> mesh array type for elements
@@ -281,6 +287,10 @@ module global_objs
     real(kind=rkind), dimension(:,:), allocatable   :: length
     !> vertical component of the inner boundary normal vector
     real(kind=rkind), dimension(:,:), allocatable   :: nvect_z
+    !> horizontal component of the inner boundary normal vector (valid for 2/3D)
+    real(kind=rkind), dimension(:,:), allocatable   :: nvect_x
+    !> horizontal component of the inner boundary normal vector  (valid for 3D)
+    real(kind=rkind), dimension(:,:), allocatable   :: nvect_y
     !> material = id number of material at current element, a constant material properties are required for each element
     integer(kind=ikind), dimension(:), allocatable   :: material
     !> domain id -- array, type smartarray_int, carries id number of subdomain, the subdomain split is of an overlap type
@@ -289,6 +299,12 @@ module global_objs
     type(smartarray_int), dimension(:), allocatable :: border
     !> list of elements at domain boundary
     type(smartarray_int) :: bcel
+    !> permutation vector for chaotic element order, when total number of elements differ from the element ID, 
+    !!typical for ArcGIS meshes, by default unallocated, allocate only if needed
+    !<
+    integer(kind=ikind), dimension(:), allocatable :: elpermut
+    !> list of inactive elements
+    type(smartarray_int) :: elinactive
   end type element
 
 
@@ -298,6 +314,13 @@ module global_objs
     real(kind=rkind), dimension(:), allocatable   :: weight
     real(kind=rkind)                              :: area
   end type integnodes
+  
+  type, public :: bcfluxes_str
+    type(smartarray_int) :: elements
+    type(smartarray_int) :: nodes
+    real(kind=rkind) :: cumflux=0.0_rkind
+    integer :: fileid
+  end type bcfluxes_str
 
   
   private :: ismartfill, ismartclear, ismartfill_norepeat, rsmartfill, rsmartclear, rsmartfill_norepeat, ismartexist

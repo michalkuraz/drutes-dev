@@ -34,46 +34,20 @@ module freeze_read
       use readtools
       use freeze_globs
       
-      integer :: i_err
-      character(len=4096) :: msg
-      
-      call find_unit(file_freeze, 200)
-      open(unit = file_freeze, file="drutes.conf/freeze/freeze.conf", action="read", status="old", iostat=i_err)
-      if (i_err /= 0) then
-        print *, "missing drutes.conf/freeze/freeze.conf"
-        ERROR STOP
-      end if
-    
-      
-      
-      write(unit = msg, fmt = *) "Use freezing rate? yes - 1 or no -0"
-      call fileread(frz_pnt, file_freeze, ranges=(/0_ikind,1_ikind/), errmsg = trim(msg))
-      select case(frz_pnt)
-            case(1_ikind,0_ikind)
-              CONTINUE
-            case default
-              print *, "you have specified wrong input for freezing rate"
-              print *, "the allowed options are:"
-              print *, "                        1 = yes (freezing rate)"
-              print *, "                        0 = no (instantaneous freezing)"
-              call file_error(file_freeze)
-      end select
-      
-      if(frz_pnt > 0) then
-       fr_rate = .true.
+      select case (drutes_config%name)
+        case ("freeze")
           wat = 1
           heat_proc = 2
-          ice = 3
-          heat_solid = 4
+        case ("LTNE")     
+         wat = 3
+         heat_proc = 1
+         heat_solid = 2
+        case ("ICENE")  
+          ice = 1
+          wat = 2
+          heat_proc = 3
+      end select
 
-      else
-       fr_rate = .false.
-         wat = 1
-         heat_proc = 2
-         heat_solid = 3
-      end if
-      
-    close(file_freeze)	  
     
     end subroutine read_frrate
 
@@ -111,34 +85,20 @@ module freeze_read
             print *, "missing drutes.conf/freeze/freeze.conf"
             ERROR STOP
           end if
+        case ("ICENE")
+          call find_unit(file_freeze, 200)
+          open(unit = file_freeze, file="drutes.conf/freeze/freeze_ICENE.conf", action="read", status="old", iostat=i_err)
+          if (i_err /= 0) then
+            print *, "missing drutes.conf/freeze/freeze_ICENE.conf"
+            ERROR STOP
+          end if
+
         case default
           print *, "procedure called because of unexpected problem name"
           print *, "exited from freeze_read::freeze_reader"
           error stop
       end select
 
-      write(unit = msg, fmt = *) "Use freezing rate? yes - 1 or no -0"
-      call fileread(frz_pnt, file_freeze, ranges=(/0_ikind,1_ikind/), errmsg = trim(msg))
-      select case(frz_pnt)
-            case(1_ikind,0_ikind)
-              CONTINUE
-            case default
-              print *, "you have specified wrong input for freezing rate"
-              print *, "the allowed options are:"
-              print *, "                        1 = yes (freezing rate)"
-              print *, "                        0 = no (instantaneous freezing)"
-              call file_error(file_freeze)
-      end select
-      
-      if(frz_pnt > 0) then
-       fr_rate = .true.
-        write(unit = msg, fmt = *) "beta should be positive"
-        call fileread(beta, file_freeze, ranges=(/0.0_rkind, huge(0.0_rkind)/), errmsg=trim(msg))    
-        call fileread(beta_melt, file_freeze, ranges=(/0.0_rkind, huge(0.0_rkind)/), errmsg=trim(msg))     
-
-      else
-       fr_rate = .false.
-      end if
       
         
       allocate(freeze_par(maxval(elements%material)))
@@ -190,10 +150,32 @@ module freeze_read
        clap = .false.
       end if
       
-     write(unit = msg, fmt = *) "Add factor should be real"
-     call fileread(fac_add, file_freeze, ranges=(/-huge(0.0_rkind), huge(0.0_rkind)/), errmsg=trim(msg))
-     write(unit = msg, fmt = *) "Scaling factor should be real"
-     call fileread(fac_scale, file_freeze, ranges=(/-huge(0.0_rkind), huge(0.0_rkind)/), errmsg=trim(msg))
+      
+      select case (drutes_config%name)
+        case ("freeze")
+         write(unit = msg, fmt = *) "Tr should be positive"
+         call fileread(Tr, file_freeze, ranges=(/0.0_rkind, huge(0.0_rkind)/), errmsg=trim(msg))
+     
+        case ("LTNE")
+         write(unit = msg, fmt = *) "Tr should be positive"
+         call fileread(Tr, file_freeze, ranges=(/0.0_rkind, huge(0.0_rkind)/), errmsg=trim(msg))
+        case ("ICENE")
+         write(unit = msg, fmt = *) "Beta_freeze should be positive"
+         call fileread(beta_freeze, file_freeze, ranges=(/0.0_rkind, huge(0.0_rkind)/), errmsg=trim(msg))
+         write(unit = msg, fmt = *) "Beta_melt should be positive"
+         call fileread(beta_melt, file_freeze, ranges=(/0.0_rkind, huge(0.0_rkind)/), errmsg=trim(msg))
+        case default
+          print *, "procedure called because of unexpected problem name"
+          print *, "exited from freeze_read::freeze_reader"
+          error stop
+      end select
+
+
+
+!      write(unit = msg, fmt = *) "Add factor should be real"
+!      call fileread(fac_add, file_freeze, ranges=(/-huge(0.0_rkind), huge(0.0_rkind)/), errmsg=trim(msg))
+!      write(unit = msg, fmt = *) "Scaling factor should be real"
+!      call fileread(fac_scale, file_freeze, ranges=(/-huge(0.0_rkind), huge(0.0_rkind)/), errmsg=trim(msg))
 
      write(unit = msg, fmt = *) "Impedance factor should be positive"
      call fileread(Omega, file_freeze, ranges=(/0.0_rkind, huge(0.0_rkind)/), errmsg=trim(msg))
@@ -315,13 +297,23 @@ module freeze_read
       call readbcvals(unitW=file_freeze, struct=pde(wat)%bc, dimen=n, &
 		      dirname="drutes.conf/freeze/")
 
-      if(fr_rate) then
+      do i=lbound(pde(wat)%bc,1), ubound(pde(wat)%bc,1)
+        select case(pde(wat)%bc(i)%code)
+          case(10)
+            call fileread(hc, file_freeze)
+        end select
+      end do 
+      
+      select case (drutes_config%name)
+        case ("freeze", "LTNE")
+          continue
+        case("ICENE")
         do i=1, ubound(freeze_par,1)
             call comment(file_freeze)
             read(unit = file_freeze, fmt= *, iostat=ierr) freeze_par(i)%iceini, freeze_par(i)%icondtypeIce
 
             select case(freeze_par(i)%icondtypeIce)
-                case("theta")
+                case("theta", "input")
                 CONTINUE
                 case default
                 print *, "you have specified wrong initial condition type keyword"
@@ -331,7 +323,7 @@ module freeze_read
             end select
             if (ierr /= 0) then
                 print *, "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-                print *, "HINT: check number of line records of initial conditions in freeze/freeze.conf!"
+                print *, "HINT: check number of line records of initial conditions in freeze/freeze_ICENE.conf!"
                 print *, "----------------------------------------"
                 call file_error(file_freeze)
             end if
@@ -343,9 +335,7 @@ module freeze_read
 
        call readbcvals(unitW=file_freeze, struct=pde(ice)%bc, dimen=n, &
 		      dirname="drutes.conf/freeze/")
-		      
-      end if
-	
+       end select
 	
 		      
       close(file_freeze)	      
@@ -362,9 +352,16 @@ module freeze_read
           call find_unit(file_freeze, 200)
           open(unit = file_freeze, file="drutes.conf/freeze/freeze_heat_LTNE.conf", action="read", status="old", iostat=i_err)
           if (i_err /= 0) then
-            print *, "missing drutes.conf/freeze/freeze_heat_LTNE.conf.conf"
+            print *, "missing drutes.conf/freeze/freeze_heat_LTNE.conf"
             ERROR STOP
           end if
+        case ("ICENE")
+          call find_unit(file_freeze, 200)
+          open(unit = file_freeze, file="drutes.conf/freeze/freeze_heat_LTE.conf", action="read", status="old", iostat=i_err)
+          if (i_err /= 0) then
+            print *, "missing drutes.conf/freeze/freeze_heat_LTE.conf"
+            ERROR STOP
+          end if  
         case default
           print *, "procedure called because of unexpected problem name"
           print *, "exited from freeze_read::freeze_reader"
@@ -397,7 +394,7 @@ module freeze_read
       deallocate(tmpdata)
       
       select case (drutes_config%name)
-        case ("freeze")
+        case ("freeze", "ICENE")
         
           write(unit = msg, fmt = *) "HINT 1: Is the snow density positive?", new_line("a"),&
           "   HINT 2 : Did you define snow density for each layer?"
@@ -494,12 +491,14 @@ module freeze_read
         select case(pde(heat_proc)%bc(i)%code)
           case(3)
             call fileread(hc, file_freeze)
+          case(42)
+            call fileread(hcbot, file_freeze)
         end select
       end do
       
       
     select case (drutes_config%name)
-      case ("freeze")
+      case ("freeze", "ICENE")
         CONTINUE
       case ("LTNE")
         call comment(file_freeze)
@@ -537,10 +536,14 @@ module freeze_read
         select case(pde(heat_solid)%bc(i)%code)
           case(3)
             call fileread(hc, file_freeze)
+          case(42)
+            call fileread(hcbot, file_freeze)
         end select
       end do  
         
     end select
+    close(file_freeze)	      
+
     end subroutine freeze_reader
 
 

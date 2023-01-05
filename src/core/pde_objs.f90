@@ -52,6 +52,12 @@ module pde_objs
     procedure(scalar_fnc), nopass, pointer  :: val
   end type mass_fnc_str
   
+  type, public :: fluxes_fnc_str
+    character(len=128), dimension(2) :: name
+    procedure(vector_fnc), nopass, pointer  :: val
+    real(kind=rkind) :: cumval = 0
+  end type fluxes_fnc_str
+  
 
   type, public :: pde_common_str
     real(kind=rkind), dimension(:), allocatable :: bvect
@@ -101,10 +107,11 @@ module pde_objs
     character(len=512), dimension(2)                 :: problem_name
     character(len=64), dimension(2)                  :: solution_name
     character(len=64), dimension(2)                  :: flux_name
-    character(len=64), dimension(:,:), allocatable   :: mass_name
+    character(len=128), dimension(:,:), allocatable   :: mass_name
     character(len=1)                                 :: mfswitch          
     type(pde_fnc_str), dimension(:), allocatable     :: pde_fnc
     type(mass_fnc_str), dimension(:), allocatable    :: mass
+    type(fluxes_fnc_str), dimension(:), allocatable  :: fluxes
     procedure(vector_fnc), pass(pde_loc), pointer    :: flux
     procedure(time_check), pass(pde_loc), pointer    :: dt_check
     procedure(icond_fnc), pass(pde_loc), pointer     :: initcond
@@ -153,11 +160,12 @@ module pde_objs
       subroutine matrix_solver(A,b,x,itmax1,reps1,ilev1,itfin1,repsfin1,&
                   ll1,ll2,cond1,opcnt1,errcode1)
         use mtx
+        use sparsematrix
         use typy
         implicit none
         !> matice soustavy\n
         !! musi poskytovat getn, getm, mul (nasobeni vektorem)
-        class(matrix), intent(in out) :: A
+        class(smtx), intent(in out) :: A
         !> vektor prave strany
         real(kind=rkind), dimension(:), intent(in) :: b
         !> aproximace reseni, postupne menena
@@ -196,12 +204,18 @@ module pde_objs
   end interface 
 
 
-
+  type, public :: bcpts_str
+    integer(kind=ikind), dimension(:), allocatable:: border
+    integer(kind=ikind) :: extpt
+  end type bcpts_str
+  
+  
  !> abstract interface for boundary value function
   abstract interface
-    subroutine bc_fnc(pde_loc, element, node, value, code, valarray) 
+    subroutine bc_fnc(pde_loc, element, node, value, code, valarray, bcpts) 
       use typy
       import :: pde_str
+      import :: bcpts_str
       class(pde_str), intent(in) :: pde_loc
       !> element id
       integer(kind=ikind), intent(in)  :: element
@@ -221,6 +235,8 @@ module pde_objs
       !! valarray(3) = c
       !<
       real(kind=rkind), dimension(:), intent(out), optional :: valarray
+      !> normal boundary vector
+      type(bcpts_str), intent(in), optional :: bcpts
     end subroutine bc_fnc
   end interface 
 
@@ -330,10 +346,9 @@ module pde_objs
 
 
   abstract interface
-    subroutine treat_pde_subrt(ierr, itcount, success)
+    subroutine treat_pde_subrt(ierr, success)
       use typy
       integer, intent(out) :: ierr
-      integer(kind=ikind), intent(out) :: itcount
       logical, intent(out) :: success
     end subroutine treat_pde_subrt
   end interface
@@ -353,6 +368,7 @@ module pde_objs
     subroutine getgradp1(pde_loc, quadpnt, grad)
       use typy
       use decomp_vars
+      use core_tools
 
       
       class(pde_str), intent(in) :: pde_loc
@@ -361,11 +377,12 @@ module pde_objs
       real(kind=rkind), dimension(:), allocatable, intent(out) :: grad
       real(kind=rkind), dimension(3) :: gradloc
       integer(kind=ikind), dimension(:), allocatable, save :: pts
-      real(kind=rkind), dimension(3)    :: a,b,c
+      real(kind=rkind), dimension(:), allocatable, save    :: a,b,c, d
       real(kind=rkind) :: dx
       integer(kind=ikind) :: i, el, top, j, k
       real(kind=rkind), dimension(:,:), allocatable, save :: domain
 
+      
       
       if (.not. allocated(grad)) then
         allocate(grad(drutes_config%dimen))
@@ -377,7 +394,14 @@ module pde_objs
       if (.not. allocated(pts)) then
         allocate(pts(ubound(elements%data,2)))
         allocate(quadpntloc(ubound(elements%data,2)))
+        if (drutes_config%dimen > 1) then
+          allocate(a(drutes_config%dimen+1))
+          allocate(b(drutes_config%dimen+1))
+          allocate(c(drutes_config%dimen+1))
+          if (drutes_config%dimen > 2) allocate(d(drutes_config%dimen + 1))
+        end if
       end if
+      
       
       select case(quadpnt%type_pnt)
         case("gqnd", "obpt", "xypt")
@@ -390,8 +414,14 @@ module pde_objs
           print *, "the value specified in code was:", quadpnt%type_pnt
           print *, "exited from pde_objs::getgradp1"
           ERROR STOP
-          
       end select
+      
+      if (top == 0) then
+        print *, "something is wrong, exited from pde_objs::getgrad"
+        print *, "contact developer michalkuraz@gmail.com"
+        ERROR STOP
+      end if
+      
       
       gradloc = 0
       do i=1, top  
@@ -412,36 +442,53 @@ module pde_objs
             el = nodes%element(quadpnt%order)%data(i)
         end select
       
-      pts = elements%data(el,:)
+        pts = elements%data(el,:)
       
-      quadpntloc(:) = quadpnt
-      quadpntloc(:)%type_pnt = "ndpt"
-      select case(drutes_config%dimen)
-        case(1)
-          dx = nodes%data(pts(2),1) - nodes%data(pts(1),1)
-          quadpntloc(1)%order = pts(1)
-          quadpntloc(2)%order = pts(2)
-          gradloc(1) = gradloc(1) + (getvalp1(pde_loc,quadpntloc(2)) - getvalp1(pde_loc, quadpntloc(1)))/dx
-        case(2)
-          a(1:2) = nodes%data(pts(1),:)
-          b(1:2) = nodes%data(pts(2),:)
-          c(1:2) = nodes%data(pts(3),:)
+        quadpntloc(:) = quadpnt
+        quadpntloc(:)%type_pnt = "ndpt"
+        select case(drutes_config%dimen)
+          case(1)
+            dx = nodes%data(pts(2),1) - nodes%data(pts(1),1)
+            quadpntloc(1)%order = pts(1)
+            quadpntloc(2)%order = pts(2)
+            gradloc(1) = gradloc(1) + (getvalp1(pde_loc,quadpntloc(2)) - getvalp1(pde_loc, quadpntloc(1)))/dx
+          case(2)
+            a(1:drutes_config%dimen) = nodes%data(pts(1),:)
+            b(1:drutes_config%dimen) = nodes%data(pts(2),:)
+            c(1:drutes_config%dimen) = nodes%data(pts(3),:)
+            
           
-          
-          quadpntloc(1)%order = pts(1)
-          quadpntloc(2)%order = pts(2)
-          quadpntloc(3)%order = pts(3)
+            quadpntloc(1)%order = pts(1)
+            quadpntloc(2)%order = pts(2)
+            quadpntloc(3)%order = pts(3)
         
           
           
-          a(3) = getvalp1(pde_loc, quadpntloc(1))
-          b(3) = getvalp1(pde_loc, quadpntloc(2))
-          c(3) = getvalp1(pde_loc, quadpntloc(3))
-          call get2dderivative(a,b,c,grad(1), grad(2))
+            a(3) = getvalp1(pde_loc, quadpntloc(1))
+            b(3) = getvalp1(pde_loc, quadpntloc(2))
+            c(3) = getvalp1(pde_loc, quadpntloc(3))
+            call plane_derivative(a,b,c,grad(1), grad(2))
 
-          gradloc(1:2) = gradloc(1:2) + grad
-        case(3)
-      end select
+            gradloc(1:2) = gradloc(1:2) + grad
+          case(3)
+            a(1:drutes_config%dimen) = nodes%data(pts(1),:)
+            b(1:drutes_config%dimen) = nodes%data(pts(2),:)
+            c(1:drutes_config%dimen) = nodes%data(pts(3),:)
+            d(1:drutes_config%dimen) = nodes%data(pts(4),:)
+            
+            quadpntloc(:)%order = pts(:)
+            
+            a(4) = getvalp1(pde_loc, quadpntloc(1))
+            b(4) = getvalp1(pde_loc, quadpntloc(2))
+            c(4) = getvalp1(pde_loc, quadpntloc(3))
+            d(4) = getvalp1(pde_loc, quadpntloc(4))
+            
+            call hyper_planeder(a,b,c,d, grad(1), grad(2), grad(3))
+            
+            gradloc = gradloc + grad
+            
+          
+        end select
       end do
       
       grad = gradloc(1:drutes_config%dimen)/top
@@ -491,6 +538,7 @@ module pde_objs
     function getvalp1loc(pde_loc, quadpnt, stopme) result(val)
       use typy
       use decomp_vars
+      use core_tools
 
       
       class(pde_str), intent(in) :: pde_loc
@@ -502,7 +550,15 @@ module pde_objs
       real(kind=rkind), dimension(:), allocatable, save :: ndvals
       integer(kind=ikind) :: i, edge, el, j, order
       real(kind=rkind) :: xder, yder
-      real(kind=rkind), dimension(3,3) :: a
+      real(kind=rkind), dimension(:,:), allocatable, save :: a
+      real(kind=rkind), dimension(5) :: coeffs
+      
+      if (.not. allocated(a)) allocate(a(drutes_config%dimen+1, drutes_config%dimen+1))
+      
+       if (quadpnt%type_pnt=="numb") then
+         val = quadpnt%this_is_the_value
+         RETURN
+       end if
       
       if (.not. allocated(pde_common%xvect)) then
         print *, "runtime error, you are probably calling getval function too early, vector with solution is not yet allocated"
@@ -575,16 +631,22 @@ module pde_objs
             end if
           end do
 
-       
+
           select case(quadpnt%type_pnt)
             case("gqnd")
               select case(drutes_config%dimen)
                 case(1)
                   val = (ndvals(2) - ndvals(1))*gauss_points%point(quadpnt%order,1) + ndvals(1)
                 case(2)
-                  call get2dderivative((/0.0_rkind, 0.0_rkind, ndvals(1)/), (/1.0_rkind, 0.0_rkind, ndvals(2)/), (/0.0_rkind, &
+                  call plane_derivative((/0.0_rkind, 0.0_rkind, ndvals(1)/), (/1.0_rkind, 0.0_rkind, ndvals(2)/), (/0.0_rkind, &
                      1.0_rkind, ndvals(3)/), xder, yder)
                   val = ndvals(1) + xder*gauss_points%point(quadpnt%order,1) + yder*gauss_points%point(quadpnt%order,2)
+                case(3)
+                  call hyperplane_coeff([0.0_rkind,0.0_rkind, 0.0_rkind,ndvals(1)], [1.0_rkind, 0.0_rkind, 0.0_rkind,ndvals(2)], &
+                                        [0.0_rkind, 1.0_rkind, 0.0_rkind,ndvals(3)], [0.0_rkind, 0.0_rkind, 1.0_rkind,ndvals(4)], &
+                                        coeffs)
+                  val = (coeffs(1)*gauss_points%point(quadpnt%order,1) + coeffs(2)*gauss_points%point(quadpnt%order,2) + &
+                        coeffs(3)*gauss_points%point(quadpnt%order,3) + coeffs(5))/(-coeffs(4))
               end select
             case("obpt")
               select case(drutes_config%dimen)
@@ -594,29 +656,57 @@ module pde_objs
                    nodes%data(pts(1),1)) + ndvals(1)
                 case(2)
                   do i=1,3
+                    a(i,1:2) = nodes%data(pts(i),:)
+                    a(i,3) = ndvals(i)
+                  end do
+        
+                  call plane_derivative(a(1,:), a(2,:), a(3,:), xder, yder)
+                
+                  val = ndvals(1) + xder*(observation_array(quadpnt%order)%xyz(1) - a(1,1)) + &
+                  yder * (observation_array(quadpnt%order)%xyz(2) - a(1,2))
+                case(3)
+                
+                  do i=1,4
+                    a(i,1:3) = nodes%data(pts(i),:)
+                    a(i,4) = ndvals(i)
+                  end do
+                  
+                  call hyperplane_coeff(a(1,:), a(2,:), a(3,:), a(4,:), coeffs)
+                  
+                  val = (coeffs(1)*observation_array(quadpnt%order)%xyz(1) + coeffs(2)*observation_array(quadpnt%order)%xyz(2) + &
+                        coeffs(3)*observation_array(quadpnt%order)%xyz(3) + coeffs(5))/(-coeffs(4))
+                
+                  
+              end select
+            case("xypt")
+              select case(drutes_config%dimen)
+                case(1)
+                  val = (quadpnt%xy(1) - nodes%data(pts(1),1))/(nodes%data(pts(2),1) - nodes%data(pts(1),1))*& 
+                        (ndvals(2) - ndvals(1)) + ndvals(1)
+                case(2)
+                  do i=1,3
                     do j=1,2
                       a(i,j) = nodes%data(pts(i),j)
                     end do
                     a(i,3) = ndvals(i)
                   end do
-        
-                  call get2dderivative(a(1,:), a(2,:), a(3,:), xder, yder)
-                
-                  val = ndvals(1) + xder*(observation_array(quadpnt%order)%xyz(1) - a(1,1)) + &
-                  yder * (observation_array(quadpnt%order)%xyz(2) - a(1,2))
-              end select
-            case("xypt")
-              do i=1,3
-                do j=1,2
-                  a(i,j) = nodes%data(pts(i),j)
-                end do
-                a(i,3) = ndvals(i)
-              end do
 
-              call get2dderivative(a(1,:), a(2,:), a(3,:), xder, yder)
-            
-              val = ndvals(1) + xder*(quadpnt%xy(1) - a(1,1)) + &
-              yder * (quadpnt%xy(2) - a(1,2)) 
+                  call plane_derivative(a(1,:), a(2,:), a(3,:), xder, yder)
+                
+                  val = ndvals(1) + xder*(quadpnt%xy(1) - a(1,1)) + &
+                  yder * (quadpnt%xy(2) - a(1,2)) 
+                case(3)
+                 
+                  do i=1,4
+                    a(i,1:3) = nodes%data(pts(i),:)
+                    a(i,4) = ndvals(i)
+                  end do
+                  
+                  call hyperplane_coeff(a(1,:), a(2,:), a(3,:), a(4,:), coeffs)
+                  
+                  val = (coeffs(1)*quadpnt%xy(1) + coeffs(2)*quadpnt%xy(2) + &
+                        coeffs(3)*quadpnt%xy(3) + coeffs(5))/(-coeffs(4))
+              end select
 
           end select
                   
@@ -663,62 +753,7 @@ module pde_objs
     end function getvalp1loc
     
       
-    subroutine get2dderivative(a,b,c,xder,yder)
-      use typy
-      !> 1st point of the plane
-      real(kind=rkind), dimension(:), intent(in) :: a
-      !> 2nd point of the plane
-      real(kind=rkind), dimension(:), intent(in) :: b
-      !> 3rd point of the plane
-      real(kind=rkind), dimension(:), intent(in) :: c
-      !> resulting x derivate
-      real(kind=rkind), intent(out) :: xder
-      !> resulting y derivate
-      real(kind=rkind), intent(out) :: yder
-      !-------local variables--------------
-      real(kind=rkind), dimension(3) :: u
-      real(kind=rkind), dimension(3) :: v
-      real(kind=rkind), dimension(3) :: n
-      integer(kind=ikind) :: i
-      real(kind=rkind) :: reps
 
-
-      reps = epsilon(reps)
-
-
-      !check if the plane is not horizontal
-      if (abs(a(3) - b(3)) < reps*(abs(a(3))-abs(b(3)))  .and.  &
-          abs(a(3) - c(3)) < reps*(abs(a(3))-abs(c(3)))  .and.  &
-          abs(b(3) - c(3)) < reps*(abs(b(3))-abs(c(3)))) then
-        xder = 0.0_rkind
-        yder = 0.0_rkind
-        RETURN
-      else
-        CONTINUE
-      end if
-
-      !creates the plane vectors 
-      do i=1,3
-        u(i) = a(i) - b(i)
-        v(i) = a(i) - c(i)
-      end do
-
-      ! the normal plane vector is defined as
-      n(1) = u(2)*v(3) - v(2)*u(3)
-      n(2) = u(3)*v(1) - v(3)*u(1)
-      n(3) = u(1)*v(2) - v(1)*u(2)
-
-      ! finally the derivate is as follows, the horizontality has been already checked
-      ! the verticality check
-      if (abs(n(3)) < 1e2*reps) then
-        print *, "the mesh is wrong, base function can't be vertical"
-        ERROR STOP
-      end if 
-      xder = -n(1)/n(3)
-      yder = -n(2)/n(3)
-
-      
-    end subroutine get2dderivative 
     
     subroutine do_nothing()
     

@@ -3,7 +3,7 @@
 
 !> nektere nastroje
 module pmatools
-    character, private :: dirsep=""
+    character, private :: dirsep="\"
 
     public :: getyesno
     public :: pockej
@@ -13,12 +13,14 @@ module pmatools
     public :: read_line
     public :: FileToStr
     public :: FindSubstr
+    public :: ReadDir
+    public :: FileSelector
 
     interface ReadInt
         procedure ReadIntI, ReadIntL
     end interface
 
-    contains
+contains
     !> vytiskne zpravu a ziska odpoved
     subroutine getyesno(message, choice)
         !> zprava
@@ -32,10 +34,10 @@ module pmatools
             read(unit=*,fmt=*) z
             if (z == "y" .or. z == "Y") then
                 choice = .true.
-            exit
+                exit
             else if (z == "n" .or. z == "N") then
                 choice = .false.
-            exit
+                exit
             else
                 print *, "chybna volba"
             end if
@@ -49,7 +51,7 @@ module pmatools
         character(len=*),optional, intent(in) :: message
         logical :: volba
         if (present(message)) then
-        call getyesno(message  // "Preruseni, pokracovat?",volba)
+            call getyesno(message  // "Preruseni, pokracovat?",volba)
         else
             call getyesno("Preruseni, pokracovat?",volba)
         end if
@@ -70,10 +72,10 @@ module pmatools
         do
             inquire(unit=fil,exist=ex,opened=op)
             if ( .not. ex) then
-            fil = fil + 1 !jednotka vubec neexistuje, tak dalsi
+                fil = fil + 1 !jednotka vubec neexistuje, tak dalsi
             else
                 if ( op ) then
-                fil = fil + 1 !existuje, ale je otevrena
+                    fil = fil + 1 !existuje, ale je otevrena
                 else
                     exit  !existuje a neni otevrena
                 end if
@@ -100,7 +102,7 @@ module pmatools
         logical :: ex, choice
 
         if (present(mode)) then
-        mode1 = mode
+            mode1 = mode
         else
             mode1 = 0
         end if
@@ -109,18 +111,18 @@ module pmatools
             inquire(file=name1, exist=ex)
             if ( ex ) then
                 Md: if (mode1==0) then
-                STOP "soubor uz existuje, neprepisuji"
+                    STOP "soubor uz existuje, neprepisuji"
                 else if (mode1==1) then
                     call getyesno(&
-                    " soubor s udanym jmenem existuje. Prepsat?",choice)
+                        " soubor s udanym jmenem existuje. Prepsat?",choice)
                     CHC: if (choice) then
                         !! tohle by byt melo
                         !open(unit=fil, file=name1,status="replace",&
-                        !action="write")
+                            !action="write")
                         !! zatim  nahradime
                         call unlink(name1)
                         open(unit=fil, file=name1,action="write")
-                    exit
+                        exit
                     else
                         print *, "zadej jmeno souboru"
                         read(unit=*,fmt=*) name1
@@ -128,7 +130,7 @@ module pmatools
                 else
                     !print *, " podivne"
                     open(unit=fil, file=name1,status="replace",&
-                    action="write")
+                        action="write")
                     exit
                 end if Md
             else
@@ -157,7 +159,7 @@ module pmatools
         logical :: ex, choice
 
         if (present(mode)) then
-        mode1 = mode
+            mode1 = mode
         else
             mode1 = 0
         end if
@@ -166,12 +168,12 @@ module pmatools
             inquire(file=name1, exist=ex)
             if ( .not. ex ) then
                 Md: if (mode1==0) then
-                STOP "soubor neexistuje - nelze pokracovat"
+                    STOP "soubor neexistuje - nelze pokracovat"
                 else if (mode1==1) then
                     call getyesno(&
-                    "soubor s udanym jmenem neexistuje. Zadat jine jmeno?",choice)
+                        "soubor s udanym jmenem neexistuje. Zadat jine jmeno?",choice)
                     CHC: if (.not. choice) then
-                    Stop "soubor neexistuje - nelze pokracovat"
+                        Stop "soubor neexistuje - nelze pokracovat"
                     else
                         print *, "zadej jmeno souboru"
                         read(unit=*,fmt=*) name1
@@ -217,7 +219,7 @@ module pmatools
         txt = ""
         do
             read(unit=unit,advance='no',fmt="(a2000)",eor=1, err=2,end=3,&
-            size=aln, iostat=chyba, iomsg=msg) wrk
+                size=aln, iostat=chyba, iomsg=msg) wrk
             txt = txt // wrk
             ln = ln + aln
             !print *, txt
@@ -255,7 +257,7 @@ module pmatools
         do
             wrk = read_line(fil,ierr)
             if ( ierr == 2 ) then
-            print *,"chybicka se vloudila"
+                print *,"chybicka se vloudila"
             else if (ierr == 1) then
                 exit ! doslo se na konec souboru
             end if
@@ -284,7 +286,7 @@ module pmatools
         integer :: Pos, md
 
         if (present(mode)) then
-        md = mode
+            md = mode
         else
             md = 0
         end if
@@ -295,36 +297,43 @@ module pmatools
             return
         end if
         if (md == 0 ) then
-        Pos = Pos - 1
+            Pos = Pos - 1
         else
             Pos = Pos + Len(Str)
         end if
     end function FindSubstr
 
 
+
+    !> precte adresar
     subroutine ReadDir(StrList,Prefix,Files)
         use typy
         implicit none
+        !> nalezene soubory
         type(StringList), intent(out) :: StrList
+        !> cteny adresar
         character(len=*), intent(in), optional :: Prefix
+        !> cist jen soubory
+        !> - .true.  .... cist vse
+        !> - .false. .... cist jen adresare 
         logical, optional, intent(in) :: Files
         integer :: fil, i, ierr, cnt, delka, status
         character(len=:), allocatable :: nm,pr1
         logical :: fl
 
         if (present(Prefix)) then
-        pr1 = Prefix
+            pr1 = Prefix
         else
             pr1 = ""
         end if
         if (present(Files)) then
-        fl = Files
+            fl = Files
         else
             fl = .true.
         end if
 
         if (fl) then
-        call system("dir /B " // pr1 // "> lst.txt",status)
+            call system("dir /B " // pr1 // "> lst.txt",status)
         else
             call system("dir /B /AD " // pr1 // "> lst.txt",status)
         end if
@@ -348,7 +357,7 @@ module pmatools
                 StrList%name(i)(1:delka) = nm
                 StrList%delka(i) = delka
             end do
-        close(fil)
+            close(fil)
         else
             print *,"prvni pokus nevysel, zkusim linuxovou variantu"
             dirsep = "/"
@@ -358,23 +367,24 @@ module pmatools
                 cnt = 0
                 do
                     nm = read_line(fil,ierr)
+                    print *, nm
                     if (ierr==1) exit
                     if (nm(len(nm):len(nm))/="/") then
                         if (fl) then
                             cnt = cnt + 1
-                            !print *,cnt, nm
+                            print *,cnt, nm
                         end if
                     else
                         if (.not. fl) then
                             cnt = cnt + 1
-                            !print *,cnt, nm
+                            print *,cnt, nm
                         end if
                     end if
 
                 end do
                 rewind(fil)
                 StrList%pocet = cnt
-                !print *, "pocet radku=",cnt
+                print *, "pocet radku=",cnt
                 allocate(StrList%name(1:cnt))
                 allocate(StrList%delka(1:cnt))
                 i = 0
@@ -382,7 +392,7 @@ module pmatools
                     nm = read_line(fil,ierr)
                     delka = len(nm)
 
-                    !print *,i,delka, nm
+                    print *,i,delka, nm
                     if(nm(delka:delka)/="/") then
                         if (fl) then
                             i = i+1
@@ -399,7 +409,7 @@ module pmatools
                     if (i==cnt) exit
                 end do
                 close(fil)
-
+                print *, "nacteno"
             else
                 stop "neuspech pri cteni adresare"
             end if
@@ -407,6 +417,47 @@ module pmatools
     end subroutine ReadDir
 
 
+
+    !>  Postupne vybere soubory, vybrane soubory vrati ve StrList
+    subroutine FileSelector(StrList)
+        use typy
+        implicit none
+
+        type(StringList), intent(in out) :: StrList
+        type(StringList) :: sl
+        character(len=:),allocatable :: pref
+        integer :: choice
+        logical :: chb
+        integer :: maxselectable
+
+        maxselectable = 1000
+        allocate(StrList%name(maxselectable))
+        allocate(StrList%delka(maxselectable))
+        StrList%pocet = 0
+        print *, "vyber souboru"
+        pref =  "."
+        do
+            print *, "adresar=",pref
+            call ReadDir(sl,Prefix=pref,Files=.true.)
+            print *, "0  ... zmenit adresar"
+            print *, ">0 ... vybrat soubor"
+            read *, choice
+            if (choice == 0) then
+                print *, "vyber adresar"
+                call ReadDir(sl,pref, Files=.false.)
+                read *, choice
+                pref = pref // "\" //sl%name(choice)(1:sl%delka(choice))
+            else
+                StrList%pocet = StrList%pocet + 1
+                StrList%name(StrList%pocet) = pref // "\" // sl%name(choice)
+                StrList%delka(StrList%pocet) = len(pref) + 1 + sl%delka(choice)
+                call getyesno("vybrat dalsi soubor?", chb)
+                if (.not. chb) exit
+            end if
+
+        end do
+
+    end subroutine FileSelector
 
 
     subroutine ReadIntI(I,low1,high1,fil1)
@@ -456,7 +507,7 @@ module pmatools
     end subroutine ReadIntL
 
 
-    function dot_product(x,y) result(r)
+    function dot_product_old(x,y) result(r)
         use typy
         implicit none
         real(kind=rkind), dimension(:), intent(in) :: x,y
@@ -466,7 +517,7 @@ module pmatools
         do i = LBOUND(x,1), UBOUND(x,1)
             r = r + x(i)*y(i)
         end do
-    end function dot_product
+    end function dot_product_old
 
 
 

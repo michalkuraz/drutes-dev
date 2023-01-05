@@ -26,7 +26,7 @@ module fem
   use typy  
   public :: solve_pde
   private :: terminal_info, exitme, close_all_observe
-  integer(kind=ikind), private :: itcount, obs_pos, obs_count, nptimes
+  integer(kind=ikind), private ::  obs_pos, obs_count, nptimes
   logical, private :: go_clusters
   logical, private :: printtime
 
@@ -87,17 +87,18 @@ module fem
      call make_print("separately")
 
      call write_obs()
-
+  
 
      call write_log("go 4 solving")
-      
+            
+
       do
 
         if (minimal_dt > time_step) then
           minimal_dt = time_step
         end if
 
-        call pde_common%treat_pde(ierr, itcount, success)
+        call pde_common%treat_pde(ierr,  success)
         
         itcum = itcum + itcount
 
@@ -111,6 +112,7 @@ module fem
           time = time + time_step
 
           call write_obs()
+          if (solve_bcfluxes) call write_bcfluxes()
           if (printtime) then
             do i=1, nptimes
                       
@@ -129,7 +131,7 @@ module fem
           end if
         end if
 
-        call evol_dt(ierr, itcount)
+        call evol_dt(ierr)
 
         call terminal_info(ierr)
         
@@ -174,7 +176,7 @@ module fem
     end subroutine close_all_observe
         
 
-    subroutine evol_dt(ierr, itcount)
+    subroutine evol_dt(ierr)
       use typy
       use globals
       use feminittools
@@ -183,7 +185,6 @@ module fem
       use pde_objs
       
       integer, intent(in) :: ierr
-      integer(kind=ikind), intent(in) :: itcount
       logical :: success_it
 
 
@@ -191,7 +192,7 @@ module fem
         case(-1, 0)
           dtprev = time_step
           if (itcount < 0.25*max_itcount) then
-            time_step = min(dtmax, 1.06*time_step) 
+            time_step = min(dtmax, 1.1*time_step) 
           else
             time_step = time_step
           end if
@@ -203,7 +204,7 @@ module fem
           success_it = .true.
         case(1,2)
           dtprev = time_step
-          time_step = max(dtmin, 0.8*time_step)
+          time_step = max(dtmin, 0.9*time_step)
           success_it = .false.
           if (abs(time_step - dtmin) < epsilon(dtmin)) then
             call exitme()
@@ -293,30 +294,31 @@ module fem
           write(unit=terminal, fmt=*)" " //achar(27)//'[93m',  "-----------------------------------------------------------" &
                                                 //achar(27)//'[0m'
         case(1)
-          write(unit=terminal, fmt=*)" " //achar(27)//'[91m',  "--------------------WARNING!-------------------------------" &
+          write(unit=terminal, fmt=*)" " //achar(27)//'[43m',  "--------------------WARNING!-------------------------------" &
             //achar(27)//'[0m'
-          write(unit=terminal, fmt=*) " " //achar(27)//'[91m', &
+          write(unit=terminal, fmt=*) " " //achar(27)//'[43m', &
            "slow convergence of the Picard method, time step decreased: " &
               //achar(27)//'[0m', time_step
 
           write(unit=terminal, fmt=*) "current simulation time:", time
            write(unit=terminal, fmt=*) "total iteration count:", itcum
-          write(unit=terminal, fmt=*)" " //achar(27)//'[91m', &
+          write(unit=terminal, fmt=*)" " //achar(27)//'[43m', &
            "------------------------------------------------------------" &
             //achar(27)//'[0m'
         case(2)
-          write(unit=terminal, fmt=*)" " //achar(27)//'[91m',  "--------------------INFO!-------------------------------" &
+          write(unit=terminal, fmt=*)" " //achar(27)//'[43m',  "--------------------INFO!-------------------------------" &
                   //achar(27)//'[0m'
-          write(unit=terminal, fmt=*) " " //achar(27)//'[91m', "RCZA method forced time step decrease: " &
+          write(unit=terminal, fmt=*) " " //achar(27)//'[43m', "RCZA method forced time step decrease: " &
                     //achar(27)//'[0m', time_step
 
           write(unit=terminal, fmt=*) "current simulation time:", time
           write(unit=terminal, fmt=*) "total iteration count:", itcum
-          write(unit=terminal, fmt=*)" " //achar(27)//'[91m', &
+          write(unit=terminal, fmt=*)" " //achar(27)//'[43m', &
            "------------------------------------------------------------" &
                   //achar(27)//'[0m'
       end select
     end subroutine terminal_info
+    
     
     subroutine exitme()
       use typy

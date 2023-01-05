@@ -22,7 +22,7 @@ module readtools
   public :: file_error
   public :: fileread
   private :: read_int, read_int_std, read_int_array, read_real,  read_real_array, read_char, read_char_array
-  public :: comment
+  public :: comment, reverse_comment
   public :: readbcvals
   public :: set_tensor
   public :: read_sep
@@ -70,7 +70,7 @@ module readtools
 
       if (present(ranges)) then
         if (i<ranges(1) .or. i> ranges(2)) then
-          write(unit=terminal, fmt=*) " " //achar(27)//'[91m', "incorrect ranges of input parameter(s)" //achar(27)//'[0m'
+          write(unit=terminal, fmt=*) " " //achar(27)//'[43m', "incorrect ranges of input parameter(s)" //achar(27)//'[0m'
           if (.not. present(noexit)) then
             go4exit = .true.
           else 
@@ -124,7 +124,7 @@ module readtools
       
        if (present(ranges)) then
         if (i<ranges(1) .or. i> ranges(2)) then
-          write(unit=terminal, fmt=*) " " //achar(27)//'[91m', "incorrect ranges of input parameter(s)" //achar(27)//'[0m'
+          write(unit=terminal, fmt=*) " " //achar(27)//'[43m', "incorrect ranges of input parameter(s)" //achar(27)//'[0m'
           if (.not. present(noexit)) then
             if (present(errmsg)) then
               call file_error(fileid,errmsg)
@@ -211,7 +211,7 @@ module readtools
           end do
   
           if (arraybound /= ubound(r,1)) then
-            write(unit=terminal, fmt=*) " " //achar(27)//'[91m', "the line in your input file has &
+            write(unit=terminal, fmt=*) " " //achar(27)//'[43m', "the line in your input file has &
                incorrect number of values, check your inputs" //achar(27)//'[0m'
             call file_error(fileid, errmsg)
          end if
@@ -252,7 +252,7 @@ module readtools
       if (present(ranges)) then
         do i=1, ubound(r,1)
           if (r(i) < ranges(1) .or. r(i) > ranges(2)) then
-            write(unit=terminal, fmt=*) " " //achar(27)//'[91m', "incorrect ranges of input parameter(s)" //achar(27)//'[0m'
+            write(unit=terminal, fmt=*) " " //achar(27)//'[43m', "incorrect ranges of input parameter(s)" //achar(27)//'[0m'
             call file_error(fileid, errmsg)
           end if
         end do
@@ -282,7 +282,7 @@ module readtools
       
       if (present(ranges)) then
         if (r < ranges(1) .or. r > ranges(2)) then
-          write(unit=terminal, fmt=*) " " //achar(27)//'[91m', "incorrect ranges of input parameter(s)" //achar(27)//'[0m'
+          write(unit=terminal, fmt=*) " " //achar(27)//'[43m', "incorrect ranges of input parameter(s)" //achar(27)//'[0m'
           ierr = -1
         end if
       end if
@@ -315,7 +315,7 @@ module readtools
     
     
 
-    subroutine read_real_array(r, fileid, ranges, errmsg, checklen, noexit)
+    subroutine read_real_array(r, fileid, ranges, errmsg, checklen, noexit, eof)
       use typy
       use globals
       real(kind=rkind), dimension(:), intent(out) :: r
@@ -325,14 +325,23 @@ module readtools
       !> checks if the array length is equal to the length of line in file
       logical, intent(in), optional :: checklen
       logical, intent(in), optional :: noexit
+      logical, intent(out), optional :: eof
       
             !logical vars
-      integer :: ierr, ierr2
+      integer :: ierr, ierr2, ierr3
       integer(kind=ikind) :: i, i1, i2, arraybound, current_pos, chpos
       real(kind=rkind), dimension(:), allocatable :: tmpdata
       logical :: terminate = .false.
+      logical :: noexit_local
       
       call comment(fileid)
+      
+      if (present(noexit)) then
+        noexit_local = noexit
+      else
+        noexit_local = .false.
+      end if
+
       
       arraybound=1
       
@@ -347,7 +356,7 @@ module readtools
             i1=ftell(fileid)
             backspace fileid
             call comment(fileid)
-            read(unit=fileid, fmt=*, iostat=ierr) tmpdata(1:arraybound)
+            read(unit=fileid, fmt=*, iostat=ierr3) tmpdata(1:arraybound)
             i2 = ftell(fileid)
             backspace fileid
            
@@ -365,8 +374,12 @@ module readtools
               EXIT
             end if
             
+            
             if (i1 == i2) then
               arraybound = arraybound + 1
+
+                
+              
               if (ubound(tmpdata,1) < arraybound) then
                 deallocate(tmpdata)
                 allocate(tmpdata(2*arraybound))
@@ -386,45 +399,50 @@ module readtools
             end if
           end do
   
-          if (arraybound /= ubound(r,1)) then
-            write(unit=terminal, fmt=*) " " //achar(27)//'[91m', "the line in your input file has &
-               incorrect number of values, check your inputs" //achar(27)//'[0m'
-            call file_error(fileid, errmsg)
+          if (arraybound /= ubound(r,1) ) then
+            if (.not. noexit_local) then
+              write(unit=terminal, fmt=*) " " //achar(27)//'[43m', "the line in your input file has &
+                 incorrect number of values, check your inputs" //achar(27)//'[0m'
+              call file_error(fileid, errmsg)
+            else
+              if (present(eof)) then
+                eof = .true.
+              end if
+              RETURN
+            end if
          end if
         end if
       end if
       
       call comment(fileid)
       read(unit=fileid, fmt=*, iostat=ierr) r
+      if (present(eof)) then
+        eof = .false.
+      end if
     
-            
       
       if (ierr /= 0) then
-        if (.not. present(noexit)) then
-          terminate = .true.
-        else
-          if (noexit) then
-            terminate = .false.
-          else
-            terminate = .true.
-          end if
-        end if
+         terminate = .true.
       end if
       
       
       if (terminate) then
         if (present(errmsg)) then
-          call file_error(fileid,errmsg)
+          if (.not. noexit_local) call file_error(fileid,errmsg)
         else
-            call file_error(fileid)
+           if (.not. noexit_local) call file_error(fileid)
         end if
       end if
       
       if (present(ranges)) then
         do i=1, ubound(r,1)
           if (r(i) < ranges(1) .or. r(i) > ranges(2)) then
-            write(unit=terminal, fmt=*) " " //achar(27)//'[91m', "incorrect ranges of input parameter(s)" //achar(27)//'[0m'
-            call file_error(fileid, errmsg)
+            write(unit=terminal, fmt=*) " " //achar(27)//'[43m', "incorrect ranges of input parameter(s)" //achar(27)//'[0m'
+            if (.not. noexit_local) then
+              call file_error(fileid, errmsg)
+            else
+              if (present(eof)) eof = .true.
+            end if
           end if
         end do
       end if
@@ -436,6 +454,8 @@ module readtools
     
     subroutine read_char(ch, fileid, errmsg, options, noexit)
       use debug_tools
+      use core_tools
+      
       character(len=*), intent(out) :: ch
       integer, intent(in) :: fileid
       character(len=*), intent(in), optional :: errmsg
@@ -453,7 +473,7 @@ module readtools
       if (present(options)) then
         ok = .false.
         do i=1, ubound(options, 1)
-          if (adjustl(trim(ch)) == adjustl(trim(options(i)))) then
+          if (cut(ch) == cut(options(i))) then
             ok = .true.
             EXIT
           end if
@@ -478,7 +498,7 @@ module readtools
           print *, "the value in your input file was: ", trim(ch)
           print *, "however the allowed options for this field are:"
           do i=1, ubound(options,1)
-            print *, "-  ", adjustl(trim(options(i)))
+            print *, "-  ", cut(options(i))
           end do
         end if
         if (present(errmsg)) then
@@ -549,12 +569,14 @@ module readtools
       
     end subroutine read_char_array
     
-    subroutine read_logical(l, fileid, errmsg, noexit)
+    subroutine read_logical(l, fileid, errmsg, noexit, defaultval, success)
       use globals
       logical, intent(out) :: l
       integer, intent(in) :: fileid
       character(len=*), intent(in), optional :: errmsg
       logical, intent(in), optional :: noexit
+      logical, intent(in), optional :: defaultval
+      logical, intent(out), optional :: success
 
       integer :: ierr
       character(len=1) :: ch
@@ -565,6 +587,7 @@ module readtools
       read(unit=fileid, fmt=*, iostat=ierr) ch
 
       if (ierr == 0) then 
+        if (present(success)) success = .true.
         select case(ch)
           case("y")
             l = .true.
@@ -572,7 +595,7 @@ module readtools
             l = .false.
           case default
             ierr = -1
-            write(unit=terminal, fmt=*) " " //achar(27)//'[91m', "You have defined incorrect value for logical parameter)" &
+            write(unit=terminal, fmt=*) " " //achar(27)//'[43m', "You have defined incorrect value for logical parameter" &
              //achar(27)//'[0m'
          end select
        end if
@@ -587,17 +610,22 @@ module readtools
             terminate = .true.
           end if
         end if
-      end if
+
        
-      
-      if (terminate) then
-        if (present(errmsg)) then
-          call file_error(fileid,errmsg)
+        
+        if (.not. present(defaultval)) then
+          if (terminate) then
+            if (present(errmsg)) then
+              call file_error(fileid,errmsg)
+            else
+              call file_error(fileid)
+            end if
+          end if
         else
-          call file_error(fileid)
+          l = defaultval
+          if (present(success)) success = .false.
         end if
       end if
-      
       
     end subroutine read_logical
     
@@ -633,7 +661,7 @@ module readtools
             if (present(errmsg)) then
               call file_error(fileid, errmsg)
             else
-              call file_error(fileid, message="Incorrect inputs, have you set all required [y/n] values?")
+              call file_error(fileid, errmsg="Incorrect inputs, have you set all required [y/n] values?")
             end if
           end if
         else
@@ -658,12 +686,12 @@ module readtools
       
       
 
-    subroutine file_error(iunit, message)
+    subroutine file_error(iunit, errmsg)
       use core_tools
       use globals
 
       integer, intent(in) :: iunit
-      character(len=*), intent(in), optional :: message
+      character(len=*), intent(in), optional :: errmsg
 
       character(len=512) :: filename
       character(len=256) :: iaction, numero
@@ -701,18 +729,18 @@ module readtools
       print *, "-------------------------------------------------------------------"
 
       print *, "  "
-      print *, " " //achar(27)//'[91m', "!!ERROR!!" //achar(27)//'[0m', &
+      print *, " " //achar(27)//'[43m', "!!ERROR!!" //achar(27)//'[0m', &
                   "  in reading from file: ", trim(filename), " near line: ", line-1, &
                       " opened with status: ", trim(iaction),  " -> exiting DRUtES"
       print *, "  "
-      
+
 
       if (err_read == 0) write(unit=terminal, fmt=*) "the value you have typed is: ", trim(string)
 	    write(unit=terminal, fmt=*) "--------------------------------"
 
       
-      if (present(message)) then
-        write(unit=terminal, fmt=*) " " //achar(27)//'[91m', trim(message) //achar(27)//'[0m'
+      if (present(errmsg)) then
+        write(unit=terminal, fmt=*) " " //achar(27)//'[43m', cut(errmsg) //achar(27)//'[0m'
       end if
 	
       
@@ -738,7 +766,7 @@ module readtools
         
       do
         read(unit=Unit,fmt = *, iostat = i_err ) String
-        if (i_err < 0) then
+        if (i_err /= 0) then
           RETURN
         end if
         if (String == symbol) then
@@ -750,6 +778,43 @@ module readtools
       end do
           
     end subroutine comment
+    
+    
+    subroutine reverse_comment(Unit,mark)
+      use debug_tools
+      integer, intent(in) :: Unit
+      character(len=1), intent(in), optional :: mark
+      character(len=1) :: symbol
+      character(len=1) :: String
+      integer :: i_err
+      
+      if (present(mark)) then
+        symbol = mark
+      else
+        symbol = "#"
+      end if
+    
+      do
+        read(unit=Unit,fmt = *, iostat = i_err ) String
+        print *, String , i_err
+        print *, ftell(unit) ; call wait()
+        
+        if (i_err /= 0) then
+          RETURN
+        end if
+        
+        if (String == symbol) then
+          print *, "vifu", String, symbol
+          backspace Unit
+          backspace Unit
+        else
+          backspace Unit
+          RETURN
+        end if
+      end do
+      
+    end subroutine reverse_comment
+      
 
 
     !> this procedure set up an anisothropy tensor, the local anisothrophy values are supllied in values array, angle is the angle between the local and global system, tensor is the resulting secodn order tensor
@@ -757,7 +822,9 @@ module readtools
       use typy
       use globals
       use global_objs
-!       use debug_tools
+      use globals1D
+      use debug_tools
+      use core_tools
 
       !>local anisothoropy values with respect to local x, local y and local z
       real(kind=rkind), dimension(:), intent(in) :: values
@@ -775,17 +842,21 @@ module readtools
       select case(drutes_config%dimen)
         case(1)
           tensor(1,1) = values(1)
+          angle_1D = angle(1)
           RETURN
         case(2)
 
-          T(1,1) = cos(4.0_rkind*atan(1.0_rkind)/180.0_rkind*angle(1))
-          T(1,2) = cos(4.0_rkind*atan(1.0_rkind)/180.0_rkind*(90-angle(1)))
-          T(2,1) = cos(4.0_rkind*atan(1.0_rkind)/180.0_rkind*(90+angle(1)))
-          T(2,2) = cos(4.0_rkind*atan(1.0_rkind)/180.0_rkind*(angle(1)))
+          T(1,1) = cos(4.0_dprec*atan(1.0_dprec)/180.0_rkind*angle(1))
+          T(1,2) = cos(4.0_dprec*atan(1.0_dprec)/180.0_rkind*(90-angle(1)))
+          T(2,1) = cos(4.0_dprec*atan(1.0_dprec)/180.0_rkind*(90+angle(1)))
+          T(2,2) = cos(4.0_dprec*atan(1.0_dprec)/180.0_rkind*(angle(1)))
 
         case(3)
-          print *, "tensors not implemented in 3D"
-          ERROR STOP
+          call write_log("tensors not implemented in 3D, using isotropic setup")
+          T = 0
+          do i=1,3
+            T(i,i) = 1
+          end do
       end select            
 
       tensor = 0

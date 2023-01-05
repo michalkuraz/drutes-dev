@@ -23,9 +23,7 @@
 
 module debug_tools
   private :: print_real_matrix, print_int_matrix, print_real_vector, print_int_vector, print_real_vector4
-!   public :: sparse_gem_pig
-!   public :: sparse_gem_pig_AtA
-  public :: wait
+  public :: wait, print_filename
   private :: print_quadpnt
   
   !> generic procedure, can be overloaded with different vector/matrix types
@@ -46,6 +44,27 @@ module debug_tools
  
 
   contains
+  
+    function print_filename(unt) result(answer)
+      use typy
+
+      integer, intent(in) :: unt
+      integer :: ids
+      character(len=512) :: filename
+      character(:), allocatable :: answer
+      logical :: openedq
+      
+      ids = unt
+      
+      inquire(unit=ids, opened=openedq, name=filename)
+      
+      if (openedq) then
+        answer = trim(filename)
+      else
+        answer = "file not opened"
+      end if
+      
+    end function print_filename
 
     !> prints integpnt_str
     subroutine print_quadpnt(quadpnt, filunit, name)
@@ -92,14 +111,16 @@ module debug_tools
       
       write(unit=filloc, fmt=*) "column:", quadpnt%column
       
+      write(unit=filloc, fmt=*) "element:", quadpnt%element
+      
       if (quadpnt%ddlocal) then
         write(unit=filloc, fmt=*) "using subdomain local data"
         write(unit=filloc, fmt=*) "subdomain id", quadpnt%subdom
         if (quadpnt%extended) then
           write(unit=filloc, fmt=*) "node from extended subdomain (see subcycling man)"
         else
-	  write(unit=filloc, fmt=*) "node inside the subdomain"
-	end if
+        write(unit=filloc, fmt=*) "node inside the subdomain"
+        end if
       else
         write(unit=filloc, fmt=*) "using global data"
       end if
@@ -135,9 +156,9 @@ module debug_tools
       logical :: op
     
       if (present(name)) then
-  		print *, "cdswav"
+        print *, "cdswav"
         call a%write(name)
-		return
+        return
       end if
       
 
@@ -203,7 +224,7 @@ module debug_tools
       use globals
       use core_tools
       
-      integer(kind=ikind), dimension(:,:), intent(in out) :: a
+      integer(kind=ikind), dimension(:,:), intent(in) :: a
       integer, intent(in), optional :: filunit   
       character(len=*), intent(in), optional :: name
 
@@ -252,7 +273,7 @@ module debug_tools
       use core_tools
       
       !parametry
-      real(kind=rkind), dimension(:), intent(in out) :: V  !<vektor k tisknuti
+      real(kind=rkind), dimension(:), intent(in) :: V  !<vektor k tisknuti
       integer, intent(in), optional :: filunit   
       character(len=*), intent(in), optional :: name
 
@@ -281,7 +302,7 @@ module debug_tools
      
 
       do i=lbound(V,1),ubound(V,1)
-       write(unit=filloc, fmt=*) "row:", i, "value:", V(i)
+       write(unit=filloc, fmt=*)  i,  V(i)
       end do
 
       if (terminal /= filloc) then
@@ -300,7 +321,7 @@ module debug_tools
       use core_tools
       
       !parametry
-      real(4), dimension(:), intent(in out) :: V  !<vektor k tisknuti
+      real(4), dimension(:), intent(in) :: V  !<vektor k tisknuti
       integer, intent(in), optional :: filunit   
       character(len=*), intent(in), optional :: name
 
@@ -638,116 +659,7 @@ module debug_tools
 
     end subroutine wait
     
-!      !> this procedure bears a codename sparse_gem_pig because it creates full matrix out of sparse matrix and solves it on using full Gauss elimination, only for debugging
-!   subroutine sparse_gem_pig(A,b,x,ptype,ilev,ierr, itmax, reps_rel, reps_abs, info, it)
-!     use linalg
-!     use typy
-!     use sparsematrix
-!     
-!     type(smtx), intent(in out) :: a
-!     real(kind=rkind), dimension(:), intent(in) :: b
-!     real(kind=rkind), dimension(:), intent(in out) :: x
-!   !> level of information, default = 0
-!       integer, intent(in), optional                  :: ilev
-!       !> kind of preconditioner, default 0
-!       integer, intent(in), optional                  :: ptype
-!       !> error message\n 0 .. OK\n
-!       !>                1 .. after itmax iterions is not founded sufficiently small relative error
-!       integer, intent(out), optional                 :: ierr
-!       !> maximum allowed iterations, default = 500
-!       integer(kind=ikind), intent(in), optional      :: itmax
-!       !> maximal relative error
-!       real(kind=rkind), intent(in), optional         :: reps_rel
-!       !> maximal absolute error
-!       real(kind=rkind), intent(in), optional         :: reps_abs
-!       !> operations count
-!       type(info_type), intent(inout), optional       :: info
-!       !> iteration number
-!       integer(kind=ikind), intent(out), optional     :: it
-!     real(kind=rkind), dimension(:,:), allocatable :: matice
-!     integer(kind=ikind) :: i
-!     
-!     allocate(matice(ubound(b,1), ubound(b,1)))
-! 
-!     matice = 0.0_rkind
-! 
-!     do i=1,ubound(a%vals,1)
-!       if (a%ii(i) /=0 .or. a%jj(i) /= 0) then  public :: copy_mtx
-!         matice(a%ii(i), a%jj(i)) =  matice(a%ii(i), a%jj(i)) + a%vals(i)
-!       end if
-!     end do
-! 
-!     call gem(matice, b, x)
-! 
-!   end subroutine sparse_gem_pig
-! 
-!   
-!     !> this procedure bears a codename sparse_gem_pig because it creates full matrix out of sparse matrix and solves it on using full Gauss elimination, only for debugging
-!     subroutine sparse_gem_pig_AtA(A,b,x,ptype,ilev,ierr, itmax, reps, info,normmul)
-!         use mytypes
-!         use typy
-!         use linAlg
-!         implicit none
-!         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!         ! parametry
-!         !> system matrix - supposed be symmetric positive definite\n
-!         !> inout because of possibility of initalizing of preconditioner
-!         type(smtx), intent(in out)                  :: A
-!         !> right hand side
-!         real(kind=rkind), dimension(:), intent(in) :: b
-!         !> solution, on input initial aproximation
-!         real(kind=rkind), dimension(:), intent(in out) :: x
-!         !> level of information, default = 0
-!         integer, intent(in), optional           :: ilev
-!         !> kind of preconditioner, default 0
-!         integer, intent(in), optional           :: ptype
-!         !> error message\n 0 .. OK\n
-!         !>                1 .. after itmax iterions is not founded sufficiently small relative error
-!         integer, intent(out), optional          :: ierr
-!         !> maximum allowed iterations, default = 500
-!         integer(kind=ikind), intent(in), optional           :: itmax
-!         !> wanted relative error, default=  1e-5
-!         real(kind=rkind), intent(in), optional  :: reps
-!         !> operations count
-!         type(info_type), intent(inout), optional  :: info
-!         !> zda pro normeq=true delat prenasobeni
-!         logical, optional, intent(in) :: normmul
-!     real(kind=rkind), dimension(:,:), allocatable :: matice, matice2
-!     real(kind=rkind), dimension(:), allocatable :: Atb
-!     integer(kind=ikind) :: i
-!     
-!     allocate(matice(ubound(b,1), ubound(x,1)))
-!     allocate(matice2(ubound(x,1), ubound(b,1)))
-!     allocate(Atb(ubound(x,1)))
-!     
-!     matice = 0.0_rkind
-!     matice2 = 0.0_rkind
-! 
-!     do i=1,ubound(a%vals,1)
-!       if (a%ii(i) > 0 .or. a%jj(i) > 0) then
-!         matice(a%ii(i), a%jj(i)) =  matice(a%ii(i), a%jj(i)) + a%vals(i)
-!       end if
-!     end do
-! 
-!     do i=1,ubound(a%vals,1)
-!       if (a%ii(i) > 0 .or. a%jj(i) > 0 .and.  abs(a%vals(i)) > epsilon(a%vals(i))) then
-!         matice2(a%jj(i), a%ii(i)) =  matice2(a%jj(i), a%ii(i)) + a%vals(i)
-!       end if
-!     end do
-!     
-! 
-!     
-!     matice = matmul(matice2,matice)
-! 
-!     
-!     Atb = matmul(matice2,b)
-!     
-! !     call printmtx(matice)
-!     
-! !     call printmtx(Atb)
-!     
-!     call gem(matice, Atb, x)
-!   end subroutine sparse_gem_pig_AtA
+    
 !   
 
 

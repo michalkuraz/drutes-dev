@@ -190,15 +190,13 @@ module ADE_fnc
               if (abs(1-sorption(layer,i)%third) < 10*epsilon(1.0_rkind)) then
                 kd = sorption(layer,i)%adsorb
                 bd = sorption(layer,i)%bd
-                Rd = Rd + kd*sorption(layer,i)%bd/theta
-                Rd = Rd * (1-thetas) * sorption(layer,i)%ratio
+                Rd = Rd + ((1-thetas)*kd)*sorption(layer,i)%ratio
               else
                 cl = pde_loc%getval(quadpnt)
                 n = sorption(layer,i)%third
                 kd = sorption(layer,i)%adsorb
                 bd = sorption(layer,i)%bd
-                Rd = Rd + kd*sorption(layer,i)%bd/theta*n*cl**(n-1)
-                Rd = Rd * (1-thetas) * sorption(layer,i)%ratio             
+                Rd = Rd + ((1-thetas)*kd*n*cl**(n-1))*sorption(layer,i)%ratio    
               end if
                 
             case("langmu")
@@ -206,8 +204,8 @@ module ADE_fnc
               csmax = sorption(layer,i)%third
               kd = sorption(layer,i)%adsorb
               bd = sorption(layer,i)%bd
-              Rd = Rd + kd*csmax*bd/theta/(kd*bd/theta*cl + 1)*(kd*bd/theta*cl + 1)
-              Rd = Rd * (1-theta) * sorption(layer,i)%ratio
+              Rd = Rd + (kd*csmax/(kd*cl+1)**2)*sorption(layer,i)%ratio
+             
           end select
         end if
       end do
@@ -252,6 +250,7 @@ module ADE_fnc
         val = bd*sorption(layer, media_id)%ratio*(1-adepar(layer)%water_cont)
       end if
       
+      
     end function ADE_tder_cscl
     
     
@@ -281,6 +280,7 @@ module ADE_fnc
       use global_objs
       use pde_objs
       use ADE_globals
+      use debug_tools
       
       class(pde_str), intent(in) :: pde_loc
       !> value of the nonlinear function
@@ -304,6 +304,7 @@ module ADE_fnc
       else
         val = theta * x(1)
       end if
+    
       
     end function ADE_mass
     
@@ -388,7 +389,7 @@ module ADE_fnc
       
     end function ADE_zerorder
     
-    subroutine ADE_dirichlet(pde_loc, el_id, node_order, value, code, array) 
+    subroutine ADE_dirichlet(pde_loc, el_id, node_order, value, code, array, bcpts) 
       use typy
       use globals
       use global_objs
@@ -400,6 +401,8 @@ module ADE_fnc
       real(kind=rkind), intent(out), optional    :: value
       integer(kind=ikind), intent(out), optional :: code
       real(kind=rkind), dimension(:), intent(out), optional :: array
+      type(bcpts_str), intent(in), optional :: bcpts
+      
       
       integer(kind=ikind) :: edge_id, i, j, proc
       real(kind=rkind) :: tempval
@@ -435,7 +438,7 @@ module ADE_fnc
     end subroutine ADE_dirichlet
     
     
-    subroutine ADE_neumann(pde_loc, el_id, node_order, value, code, array) 
+    subroutine ADE_neumann(pde_loc, el_id, node_order, value, code, array, bcpts) 
       use typy
       use globals
       use global_objs
@@ -447,6 +450,9 @@ module ADE_fnc
       real(kind=rkind), intent(out), optional    :: value
       integer(kind=ikind), intent(out), optional :: code
       real(kind=rkind), dimension(:), intent(out), optional :: array
+      type(bcpts_str), intent(in), optional :: bcpts
+
+
       
       integer(kind=ikind) :: edge_id, i, j, proc
       real(kind=rkind) :: tempval
@@ -482,7 +488,7 @@ module ADE_fnc
     end subroutine ADE_neumann
     
     
-    subroutine ADE_null_bc(pde_loc, el_id, node_order, value, code, array) 
+    subroutine ADE_null_bc(pde_loc, el_id, node_order, value, code, array, bcpts) 
       use typy
       use globals
       use global_objs
@@ -493,6 +499,8 @@ module ADE_fnc
       real(kind=rkind), intent(out), optional    :: value
       integer(kind=ikind), intent(out), optional :: code
       real(kind=rkind), dimension(:), intent(out), optional :: array
+      type(bcpts_str), intent(in), optional :: bcpts
+
 
       if (present(value)) then
         value = 0.0_rkind
@@ -574,7 +582,7 @@ module ADE_fnc
       end select
       
       select case(adepar(layer)%icondtype)
-        case("ca")
+        case("ca", "if")
           cmax = 1.0_rkind
          case("cr")
           cmax = adepar(layer)%cmax
@@ -584,6 +592,7 @@ module ADE_fnc
       if (present(flux)) then
         flux = cmax*matmul(Dhm, gradC)*ths + cmax*q_w*c
       end if
+
       
       if (present(flux_length)) then
         flux_length = dot_product(cmax*matmul(Dhm, gradC)*ths + cmax*q_w*c, cmax*matmul(Dhm, gradC)*ths + cmax*q_w*c)
@@ -599,11 +608,19 @@ module ADE_fnc
       use global_objs
       use pde_objs
       use ADE_globals
+      use core_tools
+      use read_inputs
 
       
       class(pde_str), intent(in out) :: pde_loc
       integer(kind=ikind) :: i, j, k,l, m, layer, D
       real(kind=rkind) :: value
+      
+      
+      if (cut(adepar(1)%icondtype) == "if") then
+        call read_icond(pde_loc, "drutes.conf/ADE/ADE_init.in")
+        RETURN  
+      end if
       
    
       D = drutes_config%dimen

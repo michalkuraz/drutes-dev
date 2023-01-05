@@ -33,8 +33,9 @@ module RE_constitutive
   public :: init_zones
   public :: rcza_check
   public :: derKz
-  public :: re_dirichlet_bc, re_neumann_bc, re_null_bc, re_dirichlet_height_bc, re_initcond
+  public :: re_dirichlet_bc, re_neumann_bc, re_null_bc, re_dirichlet_height_bc, re_initcond, undergroundwater
   public :: sinkterm
+  public :: logtablesearch
   private :: zone_error_val, secondder_retc,  rcza_check_old, setmatflux, intoverflow
 
  
@@ -84,6 +85,8 @@ module RE_constitutive
       use typy
       use re_globals
       use pde_objs
+      use core_tools
+      
       class(pde_str), intent(in) :: pde_loc
       integer(kind=ikind), intent(in) :: layer
       !> pressure head
@@ -122,8 +125,7 @@ module RE_constitutive
         h = x(1)
       end if
       
-      
-      
+
       a = vgset(layer)%alpha
       n = vgset(layer)%n
       m = vgset(layer)%m
@@ -133,12 +135,138 @@ module RE_constitutive
         theta = vgset(layer)%Ths
         RETURN
       else
-        theta_e = 1/(1+(a*(abs(h)))**n)**m
-        theta = theta_e*(vgset(layer)%Ths-vgset(layer)%Thr)+vgset(layer)%Thr
+        if (vgset(layer)%method == "vgfnc") then
+          theta_e = 1/(1+(a*(abs(h)))**n)**m
+          theta = theta_e*(vgset(layer)%Ths-vgset(layer)%Thr)+vgset(layer)%Thr
+        else
+          theta = logtablesearch(h,vgset(layer)%logh, vgset(layer)%theta, vgset(layer)%step4fnc)
+        end if
       end if
 
     end function vangen
     
+    
+    function undergroundwater(pde_loc, layer, quadpnt, x) result(isbelow)
+      use typy
+      use re_globals
+      use pde_objs
+      use core_tools
+      
+      class(pde_str), intent(in) :: pde_loc
+      integer(kind=ikind), intent(in) :: layer
+      !> pressure head
+      real(kind=rkind), intent(in), dimension(:), optional :: x
+      !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
+      type(integpnt_str), intent(in), optional :: quadpnt
+      real(kind=rkind) :: h
+      !> resulting water content
+      real(kind=rkind) :: isbelow
+      
+      type(integpnt_str) :: quadpnt_loc
+      
+      if (present(quadpnt) .and. present(x)) then
+        print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
+        print *, "exited from re_constitutive::vangen"
+        ERROR stop
+      else if (.not. present(quadpnt) .and. .not. present(x)) then
+        print *, "ERROR: you have not specified either integ point or x value"
+        print *, "exited from re_constitutive::vangen"
+        ERROR stop
+      end if
+      
+      if (present(quadpnt)) then
+        quadpnt_loc=quadpnt
+        quadpnt_loc%preproc=.true.
+        h = pde_loc%getval(quadpnt_loc)
+      else
+        if (ubound(x,1) /=1) then
+          print *, "ERROR: van Genuchten function is a function of a single variable h"
+          print *, "       your input data has:", ubound(x,1), "variables"
+          print *, "exited from re_constitutive::vangen"
+          ERROR STOP
+        end if
+        h = x(1)
+      end if
+      
+      if (h >= 0) then
+        isbelow = 0
+      else
+        isbelow = 1
+      end if
+    
+    end function undergroundwater
+    
+    
+    function satdegree(pde_loc, layer, quadpnt, x) result(satdg)
+      use typy
+      use re_globals
+      use pde_objs
+      use core_tools
+      
+      class(pde_str), intent(in) :: pde_loc
+      integer(kind=ikind), intent(in) :: layer
+      !> pressure head
+      real(kind=rkind), intent(in), dimension(:), optional :: x
+      !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
+      type(integpnt_str), intent(in), optional :: quadpnt
+      real(kind=rkind) :: h
+      !> resulting saturation degree in [%]
+      real(kind=rkind) :: satdg
+      
+      type(integpnt_str) :: quadpnt_loc
+      
+      real(kind=rkind) :: a, n, m, theta
+      
+      if (present(quadpnt) .and. present(x)) then
+        print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
+        print *, "exited from re_constitutive::vangen"
+        ERROR stop
+      else if (.not. present(quadpnt) .and. .not. present(x)) then
+        print *, "ERROR: you have not specified either integ point or x value"
+        print *, "exited from re_constitutive::vangen"
+        ERROR stop
+      end if
+      
+      if (present(quadpnt)) then
+        quadpnt_loc=quadpnt
+        quadpnt_loc%preproc=.true.
+        h = pde_loc%getval(quadpnt_loc)
+      else
+        if (ubound(x,1) /=1) then
+          print *, "ERROR: van Genuchten function is a function of a single variable h"
+          print *, "       your input data has:", ubound(x,1), "variables"
+          print *, "exited from re_constitutive::vangen"
+          ERROR STOP
+        end if
+        h = x(1)
+      end if
+      
+      
+      
+      a = vgset(layer)%alpha
+      n = vgset(layer)%n
+      m = vgset(layer)%m
+      
+
+      a = vgset(layer)%alpha
+      n = vgset(layer)%n
+      m = vgset(layer)%m
+      
+
+      if (h >=0.0_rkind) then
+        satdg = 100.0_rkind
+        RETURN
+      else
+        if (vgset(layer)%method == "vgfnc") then
+          satdg = 1/(1+(a*(abs(h)))**n)**m * 100.0
+        else
+          theta = logtablesearch(h,vgset(layer)%logh, vgset(layer)%theta, vgset(layer)%step4fnc)
+          satdg = (theta-vgset(layer)%Thr)/(vgset(layer)%Ths-vgset(layer)%Thr) * 100
+        end if
+      end if
+    
+    
+    end function satdegree
     
     !> \brief Gardner relation \f[ \theta = f(pressure) \f]
     !!  \f[ \theta = \frac{1}{(1+(\alpha*h)^n)^m} \f]
@@ -223,11 +351,11 @@ module RE_constitutive
 
       if (present(quadpnt) .and. present(x)) then
         print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
-        print *, "exited from re_constitutive::vangen"
+        print *, "exited from re_constitutive::inverse_vangen"
         ERROR stop
       else if (.not. present(quadpnt) .and. .not. present(x)) then
         print *, "ERROR: you have not specified either integ point or x value"
-        print *, "exited from re_constitutive::vangen"
+        print *, "exited from re_constitutive::inverse_vangen"
         ERROR stop
       end if
       
@@ -239,7 +367,7 @@ module RE_constitutive
         if (ubound(x,1) /=1) then
           print *, "ERROR: van Genuchten function is a function of a single variable h"
           print *, "       your input data has:", ubound(x,1), "variables"
-          print *, "exited from re_constitutive::vangen"
+          print *, "exited from re_constitutive::inverse_vangen"
           ERROR STOP
         end if
         theta = x(1)
@@ -406,19 +534,27 @@ module RE_constitutive
         h = x(1)
       end if
 
-      if (h < 0) then
-        a = vgset(layer)%alpha
-        n = vgset(layer)%n
-        m = vgset(layer)%m
-        tr = vgset(layer)%Thr
-        ts = vgset(layer)%Ths
-        C = a*m*n*(-tr + ts)*(-(a*h))**(-1 + n)*(1 + (-(a*h))**n)**(-1 - m)
-      else
-        E = vgset(layer)%Ss
-        RETURN
-      end if
+      if (re_transient) then
+        if (vgset(layer)%method == "vgfnc") then
+          if (h < 0) then
+            a = vgset(layer)%alpha
+            n = vgset(layer)%n
+            m = vgset(layer)%m
+            tr = vgset(layer)%Thr
+            ts = vgset(layer)%Ths
+            C = a*m*n*(-tr + ts)*(-(a*h))**(-1 + n)*(1 + (-(a*h))**n)**(-1 - m)
+          else
+            E = vgset(layer)%Ss
+            RETURN
+          end if
 
-      E = C + vangen(pde_loc, layer, x=(/h/))/vgset(layer)%Ths*vgset(layer)%Ss
+          E = C + vangen(pde_loc, layer, x=(/h/))/vgset(layer)%Ths*vgset(layer)%Ss
+        else
+          E = logtablesearch(h, vgset(layer)%logh, vgset(layer)%C, vgset(layer)%step4fnc)
+        end if
+      else
+        E = 0
+      end if
       
 
     end function vangen_elast
@@ -578,6 +714,7 @@ module RE_constitutive
       use typy
       use re_globals
       use pde_objs
+      use core_tools
 
       class(pde_str), intent(in) :: pde_loc
       integer(kind=ikind), intent(in) :: layer
@@ -620,16 +757,20 @@ module RE_constitutive
       end if
       
       
-      if (h >= 0) then
-        tmp = 1
-      else
-        a = vgset(layer)%alpha
-        n = vgset(layer)%n
-        m = vgset(layer)%m
+      if (vgset(layer)%method == "vgfnc") then
+        if (h >= 0) then
+          tmp = 1
+        else
+          a = vgset(layer)%alpha
+          n = vgset(layer)%n
+          m = vgset(layer)%m
 
-        tmp =  (1 - (-(a*h))**(m*n)/(1 + (-(a*h))**n)**m)**2/(1 + (-(a*h))**n)**(m/2.0_rkind)
+          tmp =  (1 - (-(a*h))**(m*n)/(1 + (-(a*h))**n)**m)**2/(1 + (-(a*h))**n)**(m/2.0_rkind)
+        end if
+      else
+        tmp = logtablesearch(h, vgset(layer)%logh, vgset(layer)%Kr, vgset(layer)%step4fnc)
       end if
-	
+  
       if (present(tensor)) then
         tensor = tmp* vgset(layer)%Ks
       end if
@@ -637,6 +778,8 @@ module RE_constitutive
       if (present(scalar)) then
         scalar = tmp
       end if
+      
+        
     end subroutine mualem
     
     
@@ -813,6 +956,7 @@ module RE_constitutive
       use globals
       use pde_objs
       use re_globals
+      use core_tools
 
       class(pde_str), intent(in) :: pde_loc
       integer(kind=ikind), intent(in) :: layer
@@ -857,20 +1001,26 @@ module RE_constitutive
         h = x(1)
       end if
       
-
-      if (h < 0) then
-        a = vgset(layer)%alpha
-        n = vgset(layer)%n
-        m = vgset(layer)%m
-        Kr = (    (a*(-(a*h))**(-1 + n)*(1 + (-(a*h))**n)**(-1 - m/2.0)* &
-            (1 - (-(a*h))**(m*n)/(1 + (-(a*h))**n)**m)**2*m*n)/2.0 + &
-         (2*(1 - (-(a*h))**(m*n)/(1 + (-(a*h))**n)**m)* &
-            (-(a*(-(a*h))**(-1 + n + m*n)*(1 + (-(a*h))**n)**(-1 - m)*m*n) + &
-              (a*(-(a*h))**(-1 + m*n)*m*n)/(1 + (-(a*h))**n)**m))/ &
-          (1 + (-(a*h))**n)**(m/2.0))
+      
+      if (vgset(layer)%method == "vgfnc") then
+        if (h < 0) then
+          a = vgset(layer)%alpha
+          n = vgset(layer)%n
+          m = vgset(layer)%m
+          Kr = (    (a*(-(a*h))**(-1 + n)*(1 + (-(a*h))**n)**(-1 - m/2.0)* &
+              (1 - (-(a*h))**(m*n)/(1 + (-(a*h))**n)**m)**2*m*n)/2.0 + &
+           (2*(1 - (-(a*h))**(m*n)/(1 + (-(a*h))**n)**m)* &
+              (-(a*(-(a*h))**(-1 + n + m*n)*(1 + (-(a*h))**n)**(-1 - m)*m*n) + &
+                (a*(-(a*h))**(-1 + m*n)*m*n)/(1 + (-(a*h))**n)**m))/ &
+            (1 + (-(a*h))**n)**(m/2.0))
+        else
+          Kr = 0
+        end if
       else
-        Kr = 0
+        Kr = logtablesearch(h, vgset(layer)%logh, vgset(layer)%dKdh, vgset(layer)%step4fnc)
       end if
+      
+      
       if (present(vector_out)) then
         ! must be negative, because the commnon scheme of the CDE problem has negative convection, but RE has positive convection
         vector_out = -vgset(layer)%Ks(drutes_config%dimen,:) * Kr
@@ -889,6 +1039,7 @@ module RE_constitutive
       use pde_objs
       use geom_tools
       use debug_tools
+      use core_tools
 
       class(pde_str), intent(in) :: pde_loc 
       integer(kind=ikind), intent(in) :: layer
@@ -985,7 +1136,7 @@ module RE_constitutive
     !> \brief convection term for the Richards equation for axisymmetric problems
     !! the vertical convection is equal as for the Richards equation in standard coordinates, the horizontal
     !! convection equals
-    !! [\ \frac{1}{r}K(h)
+    !! \f[ \frac{1}{r}K(h) \f]
     !<
     subroutine convection_rerot(pde_loc, layer, quadpnt, x, vector_in, vector_out, scalar)
       use typy
@@ -1082,9 +1233,49 @@ module RE_constitutive
       !> return value
       real(kind=rkind)                :: val
       
+      real(kind=rkind) :: h
       
-      val = vgset(layer)%sinkterm
-     
+      type(integpnt_str) :: quadpnt_loc  
+      
+      quadpnt_loc = quadpnt
+      
+      quadpnt_loc%preproc = .true.
+      
+      h = pde_loc%getval(quadpnt_loc)
+      
+      if (h >= roots(layer)%h_wet) then
+        val = 0
+        RETURN
+      end if
+      
+      if (h < roots(layer)%h_wet .and. h >= roots(layer)%h_start) then
+        if (abs(roots(layer)%h_start - roots(layer)%h_wet) > 100*epsilon(h)) then
+          val = -roots(layer)%Smax * abs(h - roots(layer)%h_wet)/abs(roots(layer)%h_start - roots(layer)%h_wet)
+        else
+          val = 0
+        end if
+        RETURN
+      end if
+      
+      if (h < roots(layer)%h_start .and. h >= roots(layer)%h_end) then
+        val = -roots(layer)%Smax
+        RETURN
+      end if
+      
+      if (h < roots(layer)%h_end .and. h >= roots(layer)%h_dry) then
+        if (abs(roots(layer)%h_end - roots(layer)%h_dry) > 100*epsilon(h)) then
+          val = -roots(layer)%Smax * abs(h - roots(layer)%h_dry)/abs(roots(layer)%h_end - roots(layer)%h_dry)
+        else
+          val = -roots(layer)%Smax
+        end if
+        RETURN
+      end if
+      
+      if (h < roots(layer)%h_dry) then
+        val = 0
+        RETURN
+      end if  
+      
     
     
     end function sinkterm
@@ -1243,6 +1434,7 @@ module RE_constitutive
       
       gradH(1:D) = gradient(1:D) + nablaz(1:D)
 
+  
       call pde_loc%pde_fnc(1)%dispersion(pde_loc, layer, quadpnt, tensor=K(1:D, 1:D))
      
       
@@ -1699,7 +1891,7 @@ module RE_constitutive
       end function rcza_check
 
 
-      subroutine re_dirichlet_bc(pde_loc, el_id, node_order, value, code, array) 
+      subroutine re_dirichlet_bc(pde_loc, el_id, node_order, value, code, array, bcpts) 
         use typy
         use globals
         use global_objs
@@ -1710,6 +1902,8 @@ module RE_constitutive
         real(kind=rkind), intent(out), optional    :: value
         integer(kind=ikind), intent(out), optional :: code
         real(kind=rkind), dimension(:), intent(out), optional :: array
+        type(bcpts_str), intent(in), optional :: bcpts
+
 
         integer(kind=ikind) :: edge_id, i, j
         
@@ -1740,7 +1934,7 @@ module RE_constitutive
       end subroutine re_dirichlet_bc
 
 
-      subroutine re_null_bc(pde_loc, el_id, node_order, value, code, array) 
+      subroutine re_null_bc(pde_loc, el_id, node_order, value, code, array, bcpts)
         use typy
         use globals
         use global_objs
@@ -1751,6 +1945,8 @@ module RE_constitutive
         real(kind=rkind), intent(out), optional    :: value
         integer(kind=ikind), intent(out), optional :: code
         real(kind=rkind), dimension(:), intent(out), optional :: array
+        type(bcpts_str), intent(in), optional :: bcpts
+
 
         if (present(value)) then
           value = 0.0_rkind
@@ -1764,7 +1960,7 @@ module RE_constitutive
 
 
 
-      subroutine re_dirichlet_height_bc(pde_loc, el_id, node_order, value, code, array) 
+      subroutine re_dirichlet_height_bc(pde_loc, el_id, node_order, value, code, array, bcpts) 
         use typy
         use globals
         use global_objs
@@ -1776,6 +1972,8 @@ module RE_constitutive
         real(kind=rkind), intent(out), optional    :: value
         integer(kind=ikind), intent(out), optional :: code
         real(kind=rkind), dimension(:), intent(out), optional :: array
+        type(bcpts_str), intent(in), optional :: bcpts
+
 
         
         integer(kind=ikind) :: edge_id, i, j
@@ -1817,11 +2015,13 @@ module RE_constitutive
 
 
 
-      subroutine re_neumann_bc(pde_loc, el_id, node_order, value, code, array) 
+      subroutine re_neumann_bc(pde_loc, el_id, node_order, value, code, array,bcpts) 
         use typy
         use globals
         use global_objs
         use pde_objs
+        use debug_tools
+        use geom_tools
 
         
         class(pde_str), intent(in) :: pde_loc
@@ -1829,29 +2029,46 @@ module RE_constitutive
         real(kind=rkind), intent(out), optional    :: value
         integer(kind=ikind), intent(out), optional :: code
         real(kind=rkind), dimension(:), intent(out), optional :: array
+        type(bcpts_str), intent(in), optional :: bcpts
+        
+        real(kind=rkind), dimension(:), allocatable, save :: nvectin
+
         
         real(kind=rkind), dimension(3,3) :: K
 
-        integer(kind=ikind) :: i, edge_id, j
+        integer(kind=ikind) :: i, edge_id, j, D
         real(kind=rkind), dimension(3) :: gravflux, bcflux
         real(kind=rkind) :: bcval, gfluxval
         integer :: i1
         type(integpnt_str) :: quadpnt_loc
 
+
+	    	D = drutes_config%dimen
+        
             
         if (present(value)) then
+          call get_normals(el_id, bcpts, nvectin) 
+          
           edge_id = nodes%edge(elements%data(el_id, node_order))
 
           i = pde_loc%permut(elements%data(el_id, node_order))
           
           quadpnt_loc%column = 2
           quadpnt_loc%type_pnt = "ndpt"
-          quadpnt_loc%order = node_order
+          quadpnt_loc%order = elements%data(el_id, node_order)
 
-          call pde_loc%pde_fnc(pde_loc%order)%dispersion(pde_loc, elements%material(el_id), quadpnt_loc, &
-                  tensor=K(1:drutes_config%dimen, 1:drutes_config%dimen))
+          call pde_loc%pde_fnc(pde_loc%order)%dispersion(pde_loc, elements%material(el_id), quadpnt_loc, & 
+                 tensor=K(1:D, 1:D))
+                  
+                  
+          if (.not. present(bcpts) ) then	
+          	print *, "contact developer michalkuraz@gmail.com"
+          	print *, "bug in re_constitutive::re_neumann_bc"
+          	ERROR STOP
+          end if        
+          gravflux(1:D) = -K(D, 1:D)*nvectin
+                  
 
-          gravflux(1:drutes_config%dimen) = K(drutes_config%dimen, 1:drutes_config%dimen)*elements%nvect_z(el_id, node_order)
           
 
           if (pde_loc%bc(edge_id)%file) then
@@ -1869,20 +2086,14 @@ module RE_constitutive
           else
             bcval = pde_loc%bc(edge_id)%value
           end if
+       
           
-
+          bcflux(1:D) = nvectin(1:D)*bcval
           
+          bcflux(1:D) = bcflux(1:D) + gravflux(1:D)
 
+          value = get_fluxsgn(el_id, bcpts, bcflux(1:D) ) * norm2(bcflux(1:D))
 
-          select case(drutes_config%dimen)
-            case(1)
-              value = bcval - gravflux(1)
-            case(2)
-              bcflux(1) = sqrt(1-elements%nvect_z(el_id, node_order)*elements%nvect_z(el_id, node_order))*bcval
-              bcflux(2) = elements%nvect_z(el_id, node_order)*bcval
-              bcflux = bcflux + gravflux
-              value = sign(1.0_rkind, bcval)*sqrt(bcflux(1)*bcflux(1) + bcflux(2)*bcflux(2))
-          end select
         end if
         
         if (present(code)) then
@@ -1892,90 +2103,7 @@ module RE_constitutive
       end subroutine re_neumann_bc
       
       
-    subroutine re_atmospheric(pde_loc, el_id, node_order, value, code) 
-      use typy
-      use globals
-      use global_objs
-      use pde_objs
-
-      class(pde_str), intent(in) :: pde_loc
-      integer(kind=ikind), intent(in)  :: el_id, node_order
-      real(kind=rkind), intent(out), optional    :: value
-      integer(kind=ikind), intent(out), optional :: code
-      
-      real(kind=rkind), dimension(3,3) :: K
-      
-      real(kind=rkind), dimension(3) :: gravflux, bcflux
-      
-      type(integpnt_str) :: quadpnt
-      integer(kind=ikind) :: layer
-      real(kind=rkind) :: theta, bcval
-      integer(kind=ikind) :: i, edge_id, j
-      type(integpnt_str) :: quadpnt_loc
-  
-  
-      if (present(code)) then
-        code = 2
-      end if
-      
-      if (present(value)) then
-        edge_id = nodes%edge(elements%data(el_id, node_order))
-
-        quadpnt_loc%column = 2
-        quadpnt_loc%type_pnt = "ndpt"
-        quadpnt_loc%order = node_order
-
-        
-        call pde_loc%pde_fnc(pde_loc%order)%dispersion(pde_loc, elements%material(el_id), quadpnt_loc, &
-                  tensor=K(1:drutes_config%dimen, 1:drutes_config%dimen))
-
-              gravflux(1:drutes_config%dimen) = K(drutes_config%dimen, 1:drutes_config%dimen)*elements%nvect_z(el_id, node_order)
-        
-
-        if (pde_loc%bc(edge_id)%file) then
-          do i=1, ubound(pde_loc%bc(edge_id)%series,1)
-            if (pde_loc%bc(edge_id)%series(i,1) > time) then
-              if (i > 1) then
-                j = i-1
-              else
-                j = i
-              end if
-              bcval = pde_loc%bc(edge_id)%series(j,2)
-              EXIT
-            end if
-          end do
-        else
-          bcval = pde_loc%bc(edge_id)%value
-        end if
-        
-        if (bcval < 0) then
-          quadpnt%type_pnt = "ndpt"
-          quadpnt%order = elements%data(el_id,node_order)
-          layer = elements%material(el_id)
-          theta =  pde_loc%mass(1)%val(pde_loc, layer, quadpnt)
-          bcval = bcval*(theta*theta)**(1.0_rkind/3.0_rkind)
-        end if
-          
-          
-         select case(drutes_config%dimen)
-            case(1)
-              value = bcval - gravflux(1)
-            case(2)
-              bcflux(1) = sqrt(1-elements%nvect_z(el_id, node_order)*elements%nvect_z(el_id, node_order))*bcval
-              bcflux(2) = elements%nvect_z(el_id, node_order)*bcval
-              bcflux = bcflux + gravflux
-              value = sqrt(bcflux(1)*bcflux(1) + bcflux(2)*bcflux(2))
-        ! 	    print *, value, gravflux, el_id, elements%data(el_id,:) ; stop 
-          end select 
-        
-    
-
-      end if
-      
-      
-    end subroutine re_atmospheric
-
-
+   
       subroutine re_initcond(pde_loc) 
         use typy
         use globals
@@ -1983,16 +2111,24 @@ module RE_constitutive
         use pde_objs
         use re_globals
         use geom_tools
+        use read_inputs
+        use core_tools
         
         class(pde_str), intent(in out) :: pde_loc
         integer(kind=ikind) :: i, j, k,l, m, layer, D
         real(kind=rkind) :: value
         
         D = drutes_config%dimen
-        select case (vgset(1_ikind)%icondtype)
-          case("input")
-            call map1d2dJ(pde_loc,"drutes.conf/water.conf/hini.in", correct_h = .false.)
-        end select
+        if (cut(vgset(1_ikind)%icondtype) == "input") then
+          call map1d2dJ(pde_loc,"drutes.conf/water.conf/hini.in", correct_h = .false.)
+          RETURN  
+        end if
+        
+        
+        if (cut(vgset(1_ikind)%icondtype) == "ifile") then
+          call read_icond(pde_loc, "drutes.conf/water.conf/RE_init.in")
+          RETURN  
+        end if
         
         do i=1, elements%kolik
           layer = elements%material(i)
@@ -2055,6 +2191,39 @@ module RE_constitutive
 
       
       end subroutine setmatflux
+      
+      
+      
+      function logtablesearch(hval, hdat, fncdat, step) result(val)
+        use typy
+        use debug_tools
+        
+        real(kind=rkind), dimension(:), intent(in) :: hdat
+        real(kind=rkind), dimension(0:), intent(in) :: fncdat
+        real(kind=rkind), intent(in out) :: step, hval
+        real(kind=rkind) :: val
+        
+        real(kind=rkind) :: dist
+        integer(kind=ikind) :: pos, i
+        
+
+          
+        if (hval<-10**hdat(1)) then
+            pos = int((log10(-hval)-hdat(1))/step, ikind) + 1
+          
+            if (pos < ubound(fncdat,1)+1 ) then
+              dist = log10(-hval) - ((pos-1)*step + hdat(1))
+              val = (fncdat(pos+1) - fncdat(pos))/step*dist + fncdat(pos)
+            else
+              val = fncdat(ubound(fncdat,1))
+            end if
+
+        else
+          val = fncdat(lbound(fncdat,1))
+        end if
+        
+
+      end function logtablesearch
 
 
 

@@ -15,6 +15,7 @@
 
 
 
+
 !> \file globals.f90
 !! \brief main variables definitions
 !<
@@ -26,11 +27,12 @@ module globals
   use global_objs
   use sparsematrix
 
+logical :: printedk
 
   !> version id variable
   type(version), public :: version_id   
   !> file units ----------------------------------------------------------------------
-  integer, public :: file_global,  file_mesh, file_itcg, file_wwwglob
+  integer, public :: file_global,  file_mesh, file_itcg, file_solver, file_picard
   !> log file unit
   integer, public :: logfile
   !> debug file unit (put there whatever you like)
@@ -47,6 +49,8 @@ module globals
   type(configuration), public :: drutes_config
   !> maximal number of iterations of Picard method for nonlinear problems
   integer(kind=ikind), public :: max_itcount
+  !> current iteration count
+  integer(kind=ikind), public :: itcount
   !> Picard iteration threshold value
   real(kind=rkind), public :: iter_criterion
   !> an intial dt
@@ -112,6 +116,8 @@ module globals
   integer(kind=ikind), public :: solver_call
   type(node), public :: nodes
   type(element),  public :: elements
+  type(node), public :: nodes4arcgis
+  type(element), public :: elements4arcgis
   !> local capacity matrix and local stiffness matrix
   real(kind=rkind), dimension(:,:), allocatable, public :: cap_mat, stiff_mat
   !> local matrix vector
@@ -160,6 +166,8 @@ module globals
   type(extsmtx), public, save :: spmatrix
   !> sparse matrix
   type(extsmtx), public, save :: spmatrix2
+  
+  type(extsmtx), public, target :: gmressmtx
 
   !> current position in the global stiffness matrix
   integer(kind=ikind), public :: global_row_id
@@ -170,6 +178,9 @@ module globals
   logical, public :: debugmode
 
   logical, public :: coupled_problem
+  
+  !> set true if using GMRES of PCG solver
+  logical, public :: itersolver
 
 
   !> the amount of postprocess runs
@@ -178,6 +189,9 @@ module globals
   integer(kind=ikind), public :: postpro_dec
  
   character(len=1024), public :: backup_file
+  
+  !> if true, previous iteration level was succesfull
+  logical, public :: iter_succesfull = .false.
 
   real(kind=rkind), dimension(:,:), allocatable :: integnode_now, integnode_prev
   real(kind=rkind), dimension(:), allocatable :: elnode_prev
@@ -191,6 +205,11 @@ module globals
 
   !> current block column position in local stiffness and capacity matrix during the evalution of the coefficient value, row is simple, this is always pde(i)%order, but column is not detectable
   integer(kind=ikind) :: pde_block_column
+  
+  !> compute boundary fluxes
+  logical, public :: solve_bcfluxes
+  
+  type(bcfluxes_str), dimension(:), allocatable :: bcfluxes
 
 
 

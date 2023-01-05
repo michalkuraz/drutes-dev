@@ -29,6 +29,7 @@ module manage_pointers
       use global_objs
       use pde_objs
       use globals
+      use global4solver
       use core_tools
       use capmat
       use fem_tools
@@ -47,7 +48,7 @@ module manage_pointers
       use drutes_init
       use kinpointer
       use freeze_pointers
-      use vapour_pointers
+      use evappointers
 
       integer(kind=ikind) :: i, processes
       logical :: symetric
@@ -68,10 +69,11 @@ module manage_pointers
           write(unit=drutes_config%fullname, fmt=*) "Richards' equation, in", drutes_config%dimen, &
             "D, in total hydraulic head form."
           call RE_processes(pde_common%processes)
+
           call pde_constructor(pde_common%processes)
 
           call REstdH(pde(1))
-        
+            
               
         case("boussi")   
            write(unit=drutes_config%fullname, fmt=*) " Boussinesq equation for hillslope runoff", &
@@ -120,7 +122,7 @@ module manage_pointers
           call kinwaveprocs(pde_common%processes)
           call pde_constructor(pde_common%processes)
           write(unit=drutes_config%fullname, fmt=*) "kinematic wave equation for real catchments"
-          call kinwavelinker(pde(1))
+          call kinwavelinker()
           
 	  
         case("freeze")
@@ -134,17 +136,23 @@ module manage_pointers
         
           call freeze_processes(pde_common%processes)
           call pde_constructor(pde_common%processes)
-          write(unit = drutes_config%fullname, fmt=*) "DRUtES solves local thermal non equilibrium"
+          write(unit = drutes_config%fullname, fmt=*) "local thermal non equilibrium"
           call frz_pointers()
           
-          
-        case("vapour")
-
-           call vapour_processes(pde_common%processes)
-           call pde_constructor(pde_common%processes)
-           write(unit = drutes_config%fullname, fmt=*) "DRUtES solves Richards equation with vapour flow"
- 
-           call vapour_linker()
+       case("ICENE")
+        
+          call freeze_processes(pde_common%processes)
+          call pde_constructor(pde_common%processes)
+          write(unit = drutes_config%fullname, fmt=*) "ice phase non equilibrium"
+          call frz_pointers()
+           
+        case("REevap")
+        
+            call REevap_proc(pde_common%processes)
+            call pde_constructor(pde_common%processes)
+            write(unit=drutes_config%fullname, fmt=*) "coupled heat and Richards equation with evaporation"
+            call REevap_linker()
+        
 
         case default
           print *, "your new model: ", trim(drutes_config%name), " requires pointer linking"
@@ -153,28 +161,22 @@ module manage_pointers
 
 	  
       end select
-
-      select case(drutes_config%dimen)
-        case(1)
-            solve_matrix => LDU_face
-!             solve_matrix => CG_normal_face
-        case(2)
-          symetric = .true.
-          do i=1, ubound(pde,1)
-            if (.not. pde(i)%symmetric) then
-              symetric = .false.
-              EXIT 
-            end if
-          end do
-          
-          if (.not. symetric) then
-            solve_matrix => CG_normal_face
-          else
-            solve_matrix => cg_face
-          end if
-
-
+      
+      
+      
+      select case(cut(solver_name))
+        case("LDU","LDUbalanced","LDUdefault")
+          solve_matrix => LDU_face
+        case("BJLDU")
+          solve_matrix => blockjacobi_face
+        case("PCGdiag","PCGbalanced")
+          solve_matrix => CG_normal_face
+        case("LDUPCG", "LDULDU")
+          solve_matrix => LDU_uncoupled_face
+        case("GMRES")
+          solve_matrix => gmres_face
       end select
+
       
       select case (drutes_config%it_method)
         case(0) 
@@ -188,7 +190,6 @@ module manage_pointers
       select case(pde_common%timeint_method)
         case(0)
           pde_common%time_integ => steady_state_int
-          solve_matrix => LDU_face
         case(1)
           pde_common%time_integ => impl_euler_np_diag
         case(2)

@@ -19,7 +19,7 @@ module postpro
   use typy
   
   public :: make_print
-  public :: write_obs
+  public :: write_obs, write_bcfluxes
   public :: get_RAM_use
   private :: print_scilab, print_pure, print_gmsh
   
@@ -47,17 +47,17 @@ module postpro
       type(filenames_str), dimension(:), allocatable        :: filenames
       integer(kind=ikind)                                   :: i, i_err, j, layer, proc, run, ii
       character(len=64)                                     :: forma
-      integer, dimension(:,:), pointer, save                :: ids
-      integer, dimension(:,:), allocatable, target, save    :: ids_obs
-      integer, dimension(:,:), allocatable, target, save    :: ids_anime
+      integer, dimension(:,:), allocatable, save            :: ids
+      integer, dimension(:,:), allocatable,  save           :: ids_obs
+      integer, dimension(:,:), allocatable,  save           :: ids_anime
       character(len=5)                                      :: extension
       character(len=15)                                     :: prefix
       real(kind=rkind)                                      :: distance, avgval, val1, val2, val3, tmp, flux
-      logical, save                                         :: first_run=.true., first_anime=.true.
+      logical, save                                         :: first_run=.true., first_anime=.true., openedq
       type(integpnt_str)                                    :: quadpnt
       integer(kind=ikind), save                             :: anime_run, anime_dec
       integer                                               :: ierr
-      integer(kind=ikind)                                   :: no_files
+      integer(kind=ikind), dimension(:), allocatable, save  :: masscnt, fluxcnt, no_files
       character(len=256) :: name_of_file
 
       if (present(name)) then
@@ -81,6 +81,10 @@ module postpro
       else
         anime = .false.
         mode = 0
+      end if
+      
+      if (cut(observe_info%fmt) == "gmsh") then 
+        mode = -1
       end if
       
 
@@ -112,7 +116,6 @@ module postpro
         end if
         anime_run = anime_run + 1
       end if
-
       
       if (.not. anime) then
         do 
@@ -123,29 +126,58 @@ module postpro
           end if
         end do
       end if
-  
+
       i=1
       
-      no_files = maxval( (/ (ubound(pde(i)%mass_name,1), i=1, ubound(pde,1)) /) ) + 3
+      if (.not. allocated(masscnt)) then
+        allocate(masscnt(ubound(pde,1)))
+        allocate(fluxcnt(ubound(pde,1)))
+        allocate(no_files(ubound(pde,1)))
+        masscnt = 0
+        fluxcnt = 0
+    
+        do proc=1, ubound(pde,1)
+          if (allocated(pde(proc)%mass_name) ) then
+            masscnt(proc) = ubound(pde(proc)%mass_name,1)
+          end if
 
-      if (.not. allocated(ids_obs)) then
-        allocate(ids(ubound(pde,1), no_files))
-        allocate(ids_obs(ubound(pde,1), no_files))
-        allocate(ids_anime(ubound(pde,1), no_files))
+          if (allocated(pde(proc)%fluxes)) then
+            fluxcnt(proc) = ubound(pde(proc)%fluxes,1)
+          end if
+
+      
+          if (fluxcnt(proc) == 0) then
+            no_files(proc) = masscnt(proc) + 3
+          else
+            no_files(proc) = masscnt(proc) + fluxcnt(proc) + 2
+          end if
+        end do
+        
+
+     
+        allocate(ids(ubound(pde,1), maxval(no_files)))
+        allocate(ids_obs(ubound(pde,1), maxval(no_files)))
+        allocate(ids_anime(ubound(pde,1), maxval(no_files)))
+        ids_obs = 0
+        ids_anime = 0
       end if
       
       if (anime) then
-        ids => ids_anime
+        ids = ids_anime
       else
-        ids => ids_obs
+        ids = ids_obs
       end if
 
       allocate(filenames(ubound(pde,1)))
       
       do i=1, ubound(filenames,1)
-        allocate(filenames(i)%names(3+ubound(pde(i)%mass_name,1)))
+        if (.not. allocated(pde(i)%fluxes)) then
+          allocate(filenames(i)%names(3+ubound(pde(i)%mass_name,1)))
+        else
+          allocate(filenames(i)%names(2+ubound(pde(i)%mass_name,1)+ubound(pde(i)%fluxes,1)))
+        end if
       end do
- 
+      
 
       if (anime) then
         prefix = "out/anime/"
@@ -170,32 +202,37 @@ module postpro
         if (ubound(pde(proc)%mass_name,1) > 0 ) then
           do i=1, ubound(pde(proc)%mass_name,1)
             write(unit=filenames(proc)%names(2+i), fmt=forma) trim(prefix), trim(pde(proc)%problem_name(1)), "_",  &
-              trim(pde(proc)%mass_name(i,1)), "-", run,  trim(extension)
+              cut(pde(proc)%mass_name(i,1)), "-", run,  trim(extension)
           end do
         end if
 
-        write(unit=filenames(proc)%names(3+ubound(pde(proc)%mass_name,1)), fmt=forma) trim(prefix),&
-                     trim(pde(proc)%problem_name(1)), "_", &
-                     trim(pde(proc)%flux_name(1)), "-", &
-                     run,  trim(extension)
+        if (.not. allocated(pde(proc)%fluxes)) then
+        
+          write(unit=filenames(proc)%names(3+ubound(pde(proc)%mass_name,1)), fmt=forma) trim(prefix),&
+                       trim(pde(proc)%problem_name(1)), "_", &
+                       trim(pde(proc)%flux_name(1)), "-", &
+                      run,  trim(extension)
+        else
+          do i=1, ubound(pde(proc)%fluxes,1)
+             write(unit=filenames(proc)%names(2+i+ubound(pde(proc)%mass_name,1)), fmt=forma) trim(prefix),&
+                       trim(pde(proc)%problem_name(1)), "_", &
+                       trim(pde(proc)%fluxes(i)%name(1)), "-", &
+                      run,  trim(extension)
+          end do
+        end if
+        
       
-         
+        
+        
         if ( (.not. anime .and. mode == 0)  .or. &
           (anime_run == 1 .and. anime) .or. & 
          ( .not. anime .and. (mode == -1 .and. postpro_run == 0 ) ) ) then
 
          
-          do i=1, 3+ubound(pde(proc)%mass_name,1)
-            ! if gsmh don't print element average value 
-            if (i == 2 .and. observe_info%fmt == "gmsh" .and. drutes_config%dimen > 1) then
-              CONTINUE
-            else
+          do i=1, ubound(filenames(proc)%names,1)
               open(newunit=ids(proc, i), file=trim(filenames(proc)%names(i)), action="write", status="replace", iostat=ierr)
-            end if
-
-
           end do
-            
+          ids_obs = ids
         end if
 
 
@@ -218,26 +255,27 @@ module postpro
           call print_pure(ids(proc,:), proc, quadpnt)
 
         else
-          select case(observe_info%fmt)
-            case("pure")
-              call print_pure(ids(proc,:), proc, quadpnt)
+          select case(cut(observe_info%fmt))
+            case("pure", "csv")
+              call print_pure(ids(proc,1:no_files(proc)), proc, quadpnt)
             case("scil")
-              call print_scilab(ids(proc,:), proc, quadpnt)
+              call print_scilab(ids(proc,1:no_files(proc)), proc, quadpnt)
             case("gmsh")
-              call print_gmsh(ids(proc,:), proc, quadpnt)
+              call print_gmsh(ids(proc,1:no_files(proc)), proc, quadpnt)
           end select
         end if
       end do
 
 
+           
       if (.not. anime) then
         do proc=1, ubound(pde,1)
           do i=1,ubound(ids,2)
             if (i /= 3 .or. pde(proc)%print_mass) then
               if (mode == 0) then
-                close(ids(proc,i))
+                if (ids(proc,i) /= 0) close(ids(proc,i))
               else
-                call flush(ids(proc,i))
+                 if (ids(proc,i) /= 0) call flush(ids(proc,i))
               end if
             end if
           end do
@@ -275,16 +313,25 @@ module postpro
       use geom_tools
       use pde_objs
       use debug_tools
+      use core_tools
       
-      integer(kind=ikind) :: i, layer, proc, D, j, massdim, printdim
+      integer(kind=ikind) :: i, layer, proc, D, j, massdim, printdim, fluxid
       real(kind=rkind) :: val
       real(kind=rkind), dimension(:), allocatable, save :: massval
       real(kind=rkind), dimension(3) :: advectval
+      real(kind=rkind), dimension(:,:), allocatable :: extrafluxes
       type(integpnt_str) :: quadpnt
+      character(len=1) :: csv
 
       quadpnt%type_pnt = "obpt"
       quadpnt%column=3
       D = drutes_config%dimen
+      
+      if (cut(observe_info%fmt) == "csv" ) then
+        csv = ","
+      else
+        csv = " "
+      end if
       
       massdim=0
       if (.not. allocated(massval)) then
@@ -305,7 +352,21 @@ module postpro
           
           quadpnt%preproc=.true.
 
-          call pde(proc)%flux(layer=layer, quadpnt=quadpnt,  vector_out=advectval(1:D))
+          if (.not. allocated(pde(proc)%fluxes)) then
+            call pde(proc)%flux(layer=layer, quadpnt=quadpnt,  vector_out=advectval(1:D))
+            observation_array(i)%cumflux(proc) = observation_array(i)%cumflux(proc) + norm2(advectval(1:D))*dtprev
+          else
+            if (.not. allocated(extrafluxes)) allocate(extrafluxes(ubound(pde(proc)%fluxes,1),D+1))
+            do fluxid=1, ubound(pde(proc)%fluxes,1)
+              call pde(proc)%fluxes(fluxid)%val(pde(proc),layer=layer, quadpnt=quadpnt, vector_out=extrafluxes(fluxid,1:D))
+              pde(proc)%fluxes(fluxid)%cumval = pde(proc)%fluxes(fluxid)%cumval + norm2(extrafluxes(fluxid,1:D))*dtprev
+              extrafluxes(fluxid, D+1) = pde(proc)%fluxes(fluxid)%cumval
+            end do
+          end if
+          
+          
+          
+            
           
           if (pde(proc)%print_mass) then
             printdim  = ubound(pde(proc)%mass,1)
@@ -320,16 +381,120 @@ module postpro
             massval(j) = pde(proc)%mass(j)%val(pde(proc),layer, quadpnt)
           end do
           
-          observation_array(i)%cumflux(proc) = observation_array(i)%cumflux(proc) + norm2(advectval(1:D))*dtprev
-  
-          write(unit=pde(proc)%obspt_unit(i), fmt=*) time, val, massval(1:printdim), advectval(1:D), &
-                  observation_array(i)%cumflux(proc)
-          
+          if (.not. allocated(pde(proc)%fluxes)) then
+            write(unit=pde(proc)%obspt_unit(i), fmt=*) time, csv, val, csv,  massval(1:printdim), csv, advectval(1:D), &
+                    csv, observation_array(i)%cumflux(proc)
+          else
+            fluxid = 1
+            write(unit=pde(proc)%obspt_unit(i), fmt=*) time, csv, val, csv,  massval(1:printdim), csv, &
+                (/ ( extrafluxes(fluxid,:), fluxid=1, ubound(extrafluxes,1)) /)
+          end if
 
           call flush(pde(proc)%obspt_unit(i))
         end do
+        if (allocated(extrafluxes)) deallocate(extrafluxes)
       end do
+      
     end subroutine write_obs
+    
+    
+    
+    subroutine write_bcfluxes()
+      use typy
+      use globals
+      use geom_tools
+      use pde_objs
+      use global_objs
+      use debug_tools
+      
+      integer(kind=ikind) :: bc, el, D, nd1, nd2, nd3, i, j, proc, flow_in, way_in
+      real(kind=rkind), dimension(:,:), allocatable, save :: flux
+      real(kind=rkind), dimension(:), allocatable, save :: norm_vct 
+      real(kind=rkind), dimension(2,2) :: bcpt
+      type(integpnt_str) :: quadpnt
+      real(kind=rkind) :: length
+      real(kind=rkind), dimension(:,:), allocatable, save :: integflux, cumflux
+      
+      D = drutes_config%dimen
+      
+      quadpnt%type_pnt="xypt"
+      quadpnt%order=1
+      quadpnt%column=2
+      
+      if (.not. allocated(flux)) allocate(flux(ubound(pde,1), D))
+      
+      if (.not. allocated(integflux)) then
+        allocate(integflux(lbound(bcfluxes,1) : ubound(bcfluxes,1) , ubound(pde,1)))
+        allocate(cumflux(lbound(bcfluxes,1) : ubound(bcfluxes,1) , ubound(pde,1)))
+        cumflux = 0
+      end if
+      
+
+      
+      do bc = lbound(bcfluxes,1), ubound(bcfluxes,1)
+        integflux(bc,:) = 0
+        do i = 1, bcfluxes(bc)%elements%pos
+          el = bcfluxes(bc)%elements%data(i)
+          quadpnt%element = el
+          do j=1, ubound(elements%data,2)
+            nd1 = elements%data(el, j)
+            if (j<ubound(elements%data,2)) then
+              nd2 = elements%data(el, j+1)
+            else
+              nd1 = elements%data(el, 1)
+            end if
+            if (nodes%edge(nd1) == nodes%edge(nd2) .and. nodes%edge(nd1) > 0) EXIT
+          end do
+          
+          do j=1, ubound(elements%data,2)
+            if (elements%data(el,j) /= nd1 .and. elements%data(el,j) /= nd2) then
+              nd3 = elements%data(el,j)
+              EXIT
+            end if
+          end do
+
+            
+            
+          length = dist(nodes%data(nd1,:), nodes%data(nd2,:))
+          quadpnt%xy = (nodes%data(nd1,:) + nodes%data(nd2,:))/2.0_rkind
+          quadpnt%element = el
+          
+          bcpt(1,:) = nodes%data(nd1,:)
+          bcpt(2,:) = nodes%data(nd2,:)
+          call getnormal(bcpt, nodes%data(nd3,:), norm_vct)
+          
+
+          
+          if (aboveline(bcpt(1,:), bcpt(2,:), nodes%data(nd3,:))) then
+            way_in = 1
+          else
+            way_in = -1
+          end if
+
+          do proc=1, ubound(pde,1)
+            call pde(proc)%flux(elements%material(el), quadpnt, vector_out=flux(proc,:))
+            
+            flux(proc,:) = flux(proc,:)*norm_vct
+            if (aboveline(bcpt(1,:), bcpt(2,:), quadpnt%xy + flux(proc,:) )) then
+              flow_in = 1
+            else
+              flow_in = -1
+            end if
+            ! if flux positive, then it is positive with respect to outer normal -> factor -1
+            integflux(bc,proc) = integflux(bc,proc) + norm2(flux(proc,:))*length*flow_in*way_in*(-1)
+          end do
+          
+        end do
+      end do
+      
+      cumflux = cumflux + integflux*time_step          
+      
+      do bc = lbound(bcfluxes,1), ubound(bcfluxes,1)
+        write(unit=bcfluxes(bc)%fileid, fmt=*) time, integflux(bc, :), cumflux(bc,:)
+        call flush(bcfluxes(bc)%fileid)
+      end do
+    
+    end subroutine write_bcfluxes
  
 
     !> this subroutine parses /proc/[PID]/status file in order to get RAM consumption statistics, it works Linux only
@@ -433,16 +598,18 @@ module postpro
       integer(kind=ikind) :: i, j, layer, ii
       real(kind=rkind) :: tmp, totflux
       real(kind=rkind), dimension(3) :: flux
-      real(kind=rkind), dimension(:,:), allocatable :: body
+      real(kind=rkind), dimension(:,:), allocatable, save :: body
       real(kind=rkind), dimension(2) :: vct1, vct2
-      real(kind=rkind), dimension(8) :: vct_tmp
+      real(kind=rkind), dimension(:), allocatable, save :: vct_tmp
       integer(kind=ikind) :: time_dec
       real(kind=rkind) :: curtime
       type(integpnt_str) :: qpntloc
       type(integpnt_str) :: quadpnt_loc
 
 
-      allocate(body(3, 7+ubound(pde(proc)%mass,1)))
+      if (.not. allocated(body)) allocate(body(3, 7+ubound(pde(proc)%mass,1)))
+      
+      if (.not. allocated(vct_tmp)) allocate(vct_tmp(7+ubound(pde(proc)%mass,1)))
       
       quadpnt_loc = quadpnt
       if (.not. quadpnt%globtime) then
@@ -458,6 +625,8 @@ module postpro
         write(unit=ids(i), fmt=*) "y=zeros(nt,3);"
         write(unit=ids(i), fmt=*) "z=zeros(nt,3);"
       end do
+      
+       call wait()
 
 
       quadpnt_loc%preproc=.true.
@@ -573,26 +742,38 @@ module postpro
       use global_objs
       use pde_objs
       use debug_tools
+      use core_tools
       
       integer, dimension(:), intent(in) :: ids
       integer(kind=ikind), intent(in) :: proc
       type(integpnt_str),  intent(in out) :: quadpnt
       real(kind=rkind) :: curtime, tmp
-      integer(kind=ikind) :: i, layer, j, velocity_id, ii, jj
+      integer(kind=ikind) :: i, layer, j, velocity_id, ii, jj, D, iflux
       real(kind=rkind) ::  distance,  avgval
       type(integpnt_str) :: qpntloc
       real(kind=rkind), dimension(3) :: flux, flux_tmp
+      real(kind=rkind), dimension(:,:), allocatable :: fluxes
       real(kind=rkind), dimension(:), allocatable :: massval
       real(kind=rkind), dimension(:), allocatable, save :: pts
+      character(len=1) :: csv
+
+      if (cut(observe_info%fmt) == "csv") then
+        csv = ","
+      else
+        csv = " "
+      end if
+      
 
  
       if (.not. allocated(pts)) allocate(pts(ubound(nodes%data,2)))
+      
+      D = drutes_config%dimen
       
       do i=1, nodes%kolik
         quadpnt%type_pnt = "ndpt"
         quadpnt%order = i
         quadpnt%preproc=.true.
-        write(unit=ids(1), fmt=*) i,  nodes%data(i,:), pde(proc)%getval(quadpnt) 
+        write(unit=ids(1), fmt=*) i, csv,  nodes%data(i,:), csv,  pde(proc)%getval(quadpnt) 
       end do
       
       
@@ -613,7 +794,7 @@ module postpro
         end do
         pts = pts/ubound(elements%data,2)
 
-        write(unit=ids(2), fmt=*)  i, pts, avgval
+        write(unit=ids(2), fmt=*)  i, csv, pts, csv, avgval
 
         quadpnt%element = i
         quadpnt%column = 3
@@ -622,8 +803,11 @@ module postpro
         
         layer = elements%material(i)
         
+        if (allocated(pde(proc)%fluxes)) then
+          if (.not. allocated(fluxes)) allocate(fluxes(ubound(pde(proc)%fluxes,1),D))
+        end if
 
-        
+     
         ! 3 is for mass
         if (pde(proc)%print_mass) then
           do j=3, ubound(pde(proc)%mass,1) + 2
@@ -633,31 +817,49 @@ module postpro
               tmp = tmp + pde(proc)%mass(j-2)%val(pde(proc),layer, quadpnt)*gauss_points%weight(jj)
             end do
             tmp = tmp/gauss_points%area
-            write(unit=ids(j), fmt=*)  i, pts, tmp
+            write(unit=ids(j), fmt=*)  i, csv, pts, csv, tmp
           end do
         end if
       
         
-        flux = 0
-        do jj=1, ubound(gauss_points%weight,1)
-          quadpnt%order = jj
-          call pde(proc)%flux(layer, quadpnt, vector_out=flux_tmp(1:drutes_config%dimen))
-          flux = flux + flux_tmp*gauss_points%weight(jj)
-        end do
-        flux = flux / gauss_points%area
         
+        if (.not. allocated(fluxes)) then 
+          flux = 0
+          do jj=1, ubound(gauss_points%weight,1)
+            quadpnt%order = jj
+            call pde(proc)%flux(layer, quadpnt, vector_out=flux_tmp(1:D))
+            flux = flux + flux_tmp*gauss_points%weight(jj)
+          end do
+          flux = flux / gauss_points%area
+        else
+          do iflux=1, ubound(fluxes,1)
+            fluxes(iflux,:) = 0 
+              do jj=1, ubound(gauss_points%weight,1)
+                quadpnt%order = jj
+                call pde(proc)%fluxes(iflux)%val(pde(proc),layer, quadpnt, vector_out=flux_tmp(1:D))
+                fluxes(iflux,:) = fluxes(iflux,:)  + flux_tmp(1:D)
+              end do
+          end do
+          fluxes = fluxes / gauss_points%area
+        end if
         
         if (.not. pde(proc)%print_mass) then
           velocity_id = 3
         else
           velocity_id = 3 + ubound(pde(proc)%mass,1)
         end if
-
-        write(unit=ids(velocity_id), fmt=*) i,  pts, flux(1:drutes_config%dimen)
+        
+        if (.not. allocated(fluxes)) then
+          write(unit=ids(velocity_id), fmt=*) i, csv,  pts, csv, flux(1:drutes_config%dimen)
+        else
+          do iflux=1, ubound(fluxes,1)
+            write(unit=ids(velocity_id-1+iflux), fmt=*) i, csv, pts, csv, fluxes(iflux,:)
+          end do
+        end if
       end do
 
       do i=1, ubound(ids,1)
-        close(ids(i))
+        if (ids(i) /= 0) close(ids(i))
       end do
 
     end subroutine print_pure
@@ -672,7 +874,7 @@ module postpro
       integer, dimension(:), intent(in) :: ids
       integer(kind=ikind), intent(in) :: proc
       type(integpnt_str),  intent(in out) :: quadpnt
-      integer(kind=ikind) :: i, j, layer
+      integer(kind=ikind) :: i, j, layer, tag1, tag2
       logical, dimension(:), allocatable, save :: printed 
       real(kind=rkind) :: curtime, totflux
       
@@ -688,9 +890,17 @@ module postpro
         curtime = time
       end if
       
+      select case(drutes_config%dimen)
+        case(2)
+          tag1 = 2
+          tag2 = 14
+        case(3)
+          tag1 = 4
+          tag2 = 36
+      end select
+      
       if (.not. printed(proc)) then
        do i=1, ubound(ids,1)
-          if (i/=2) then 
             write(unit=ids(i), fmt="(a)") "$MeshFormat"
             write(unit=ids(i), fmt="(a)") "2.2 0 8"
             write(unit=ids(i), fmt="(a)") "$EndMeshFormat"
@@ -699,21 +909,29 @@ module postpro
             write(unit=ids(i), fmt=*) nodes%kolik
             
             do j=1, nodes%kolik
-              write(unit=ids(i), fmt=*) j,  nodes%data(j,:)
+              if (drutes_config%dimen == 2) then
+                write(unit=ids(i), fmt=*) j,  nodes%data(j,:), "1.0"
+              else
+                write(unit=ids(i), fmt=*) j,  nodes%data(j,:)
+              end if
             end do
             write(unit=ids(i), fmt="(a)") "$EndNodes"
             write(unit=ids(i), fmt="(a)") "$Elements"
             write(unit=ids(i), fmt=*) elements%kolik
+            
             do j=1, elements%kolik
-              write(unit=ids(i), fmt=*) j,  elements%data(j,:)
+              write(unit=ids(i), fmt=*) j, tag1, "2 ", elements%material(j), tag2, elements%data(j,:)
             end do
             write(unit=ids(i), fmt="(a)") "$EndElements"
-            write(unit=ids(i), fmt="(a)") "$NodeData"
+!            write(unit=ids(i), fmt="(a)") "$NodeData"
             
-          end if
+
         end do
         printed(proc) = .true.
       end if
+      
+
+      
       
       
       do i=1, ubound(ids,1)
@@ -723,14 +941,15 @@ module postpro
           
           !write solution
           if (i==1) then
-            write(unit=ids(i), fmt=*) ' " ', trim(pde(proc)%problem_name(2)), " ", trim(pde(proc)%solution_name(1)) , ' " '
+            write(unit=ids(i), fmt=*) ' " ', "time =  ", time, " ",trim(pde(proc)%solution_name(1)) ,' " '
           
           ! write mass
-          else if (i >= 3 .and. i <= ubound(ids,1)-1) then
-            write(unit=ids(i), fmt=*) ' " ', trim(pde(proc)%problem_name(2)), " ", trim(pde(proc)%mass_name(i-2,1)) , ' " '
+          else if (i >= 3 .and. i <= ubound(pde(proc)%mass_name,1)+2) then
+
+            write(unit=ids(i), fmt=*) ' " ', "time =  ", time, " ", trim(pde(proc)%mass_name(i-2,1)), ' " '
           ! write fluxes   
-          else if ( i == ubound(ids,1) ) then
-            write(unit=ids(i), fmt=*) ' " ', trim(pde(proc)%problem_name(2)), " ", trim(pde(proc)%flux_name(1)) , ' " '
+          else if ( i > ubound(pde(proc)%mass_name,1)+2 ) then
+            write(unit=ids(i), fmt=*) ' " ',  "time =  ", time, " ", trim(pde(proc)%flux_name(1)) , ' " '
           end if
           
           write(unit=ids(i), fmt=*) "1"
@@ -752,7 +971,7 @@ module postpro
             end do
             
           ! write mass  
-          else if (i >= 3 .and. i <= ubound(ids,1)-1) then
+          else if (i >= 3 .and. i <= ubound(pde(proc)%mass_name,1)+2) then
             do j=1, nodes%kolik
               quadpnt%order = j
               quadpnt%preproc = .true.
@@ -762,7 +981,7 @@ module postpro
           
           
           ! write fluxes   
-          else if ( i == ubound(ids,1) ) then
+          else if ( i > ubound(pde(proc)%mass_name,1)+2) then
             do j=1, nodes%kolik
               quadpnt%order = j
               quadpnt%preproc = .true.

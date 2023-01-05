@@ -22,23 +22,23 @@ servers="miguel@neptun01.fsv.cvut.cz:~  miguel@matsrv-lin01.fsv.cvut.cz:~ miguel
 
 
 #----------------objects definitions-------------------------------
-CORE_obj := typy.o global_objs.o globals.o globals1D.o globals2D.o  debug_tools.o core_tools.o pde_objs.o dummy_procs.o
+CORE_obj := typy.o global_objs.o globals.o globals1D.o globals2D.o  debug_tools.o core_tools.o pde_objs.o dummy_procs.o global4solver.o
 POINTERMAN_obj := manage_pointers.o
-RE_obj := re_constitutive.o re_reader.o re_globals.o re_total.o re_pointers.o re_analytical.o
-MATHTOOLS_obj :=  linalg.o integral.o solver_interfaces.o simplelinalg.o
+RE_obj := re_constitutive.o re_reader.o re_globals.o re_total.o re_pointers.o re_analytical.o re_evap_methods.o
+MATHTOOLS_obj :=  linalg.o integral.o solver_interfaces.o simplelinalg.o gmres_solver.o
 TOOLS_obj := printtools.o simegen.o read_inputs.o drutes_init.o geom_tools.o postpro.o readtools.o objfnc.o
 FEMTOOLS_obj := feminittools.o capmat.o stiffmat.o fem.o fem_tools.o femmat.o
 DECOMPO_obj :=  decomp_tools.o schwarz_dd.o  decomp_vars.o decomposer.o schwarz_dd2subcyc.o
-PMAoo_obj := fullmatrix.o mtx.o mtx_int.o mtxiotools.o pmatools.o solvers.o sparsematrix.o sparsematrix_int.o matmod.o
+PMAoo_obj := fullmatrix.o mtx.o mtx_int.o mtxiotools.o pmatools.o solvers.o sparsematrix.o sparsematrix_int.o matmod.o reorder.o
 BOUSSINESQ_obj := boussglob.o boussread.o boussfnc.o bousspointers.o
 ADE_obj := ADE_fnc.o ADE_reader.o ADE_globals.o ADE_pointers.o
 REDUAL_obj := Re_dual_totH.o Re_dual_globals.o Re_dual_pointers.o Re_dual_reader.o Re_dual_tab.o Re_dual_coupling.o Re_dual_bc.o
 HEAT_obj := heat_fnc.o heat_pointers.o heat_globals.o heat_reader.o
 KINWAVE_obj := kinreader.o kinglobs.o kinfnc.o kinpointer.o
-FROZEN_obj := freeze_globs.o freeze_helper.o freeze_fnc.o freeze_reader.o freeze_pointers.o freeze_linalg.o
-EVAPORATION_obj := Re_evap_bc.o Re_evap_reader.o evap_globals.o evap_reader.o evap_fnc.o  evap_auxfnc.o   evap_bc.o vapour_pointers.o
+FROZEN_obj := freeze_globs.o freeze_helper.o freeze_fnc.o freeze_reader.o freeze_pointers.o 
+REevap_obj :=  evapglob.o evappointers.o evap_RE_constitutive.o evap_heat_constitutive.o evapreader.o evapbc4heat.o
 
-MODEL_objs := $(RE_obj)  $(BOUSSINESQ_obj) $(ADE_obj) $(REDUAL_obj)  $(HEAT_obj) $(LTNE_obj) $(FROZEN_obj) $(KINWAVE_obj) $(EVAPORATION_obj)
+MODEL_objs := $(RE_obj)  $(BOUSSINESQ_obj) $(ADE_obj) $(REDUAL_obj)  $(HEAT_obj) $(LTNE_obj) $(FROZEN_obj) $(KINWAVE_obj) $(REevap_obj)
 
 ALL_objs := $(CORE_obj) $(TOOLS_obj) $(POINTERMAN_obj) $(MATHTOOLS_obj) $(FEMTOOLS_obj) $(DECOMPO_obj)  $(PMAoo_obj) $(MODEL_objs)
 #-----------------------------------------------------------------
@@ -48,6 +48,8 @@ typy.o: src/core/typy.f90
 	$c -c src/core/typy.f90 
 global_objs.o: typy.o $(PMAoo_obj) src/core/global_objs.f90
 	$c -c src/core/global_objs.f90
+global4solver.o: typy.o src/core/global4solver.f90
+	$c -c src/core/global4solver.f90
 pde_objs.o: typy.o global_objs.o $(PMAoo_obj) globals.o decomp_vars.o  src/core/pde_objs.f90
 	$c -c src/core/pde_objs.f90
 globals.o: typy.o global_objs.o src/core/globals.f90
@@ -56,7 +58,7 @@ globals1D.o: typy.o global_objs.o src/core/globals1D.f90
 	$c -c src/core/globals1D.f90
 globals2D.o: typy.o global_objs.o src/core/globals2D.f90
 	$c -c src/core/globals2D.f90
-core_tools.o: typy.o global_objs.o globals.o pde_objs.o  src/core/core_tools.f90
+core_tools.o: typy.o global_objs.o globals.o   src/core/core_tools.f90
 	$c -c src/core/core_tools.f90
 dummy_procs.o: typy.o global_objs.o globals.o pde_objs.o src/core/dummy_procs.f90
 	$c -c src/core/dummy_procs.f90
@@ -68,12 +70,15 @@ debug_tools.o: typy.o core_tools.o src/core/debug_tools.f90
 #------begin MATHTOOLS_obj-----------------------------
 linalg.o: $(CORE_obj) src/mathtools/linalg.f90
 	$c -c src/mathtools/linalg.f90
+gmres_solver.o: $(CORE_obj) src/mathtools/gmres_solver.f90
+	$c -c src/mathtools/gmres_solver.f90
 integral.o: $(CORE_obj) linalg.o src/mathtools/integral.f90
 	$c -c src/mathtools/integral.f90
-solver_interfaces.o:  $(CORE_obj) $(PMAoo_obj) src/mathtools/solver_interfaces.f90
-	$c -c src/mathtools/solver_interfaces.f90
-simplelinalg.o:  $(CORE_obj) $(PMAoo_obj) src/mathtools/simplelinalg.f90
+simplelinalg.o:  $(CORE_obj) $(PMAoo_obj) re_globals.o linalg.o src/mathtools/simplelinalg.f90
 	$c -c src/mathtools/simplelinalg.f90
+solver_interfaces.o:  $(CORE_obj) $(PMAoo_obj) readtools.o simplelinalg.o gmres_solver.o src/mathtools/solver_interfaces.f90
+	$c -c src/mathtools/solver_interfaces.f90
+
 #------end MATHTOOLS_obj---------------------------------
 
 
@@ -96,6 +101,10 @@ solvers.o: typy.o mtx.o src/pma++/solvers.f90
 	$c -c src/pma++/solvers.f90
 matmod.o: typy.o mtx.o src/pma++/matmod.f90
 	$c -c  src/pma++/matmod.f90
+datasetup.o: typy.o mtx.o src/pma++/datasetup.f90
+	$c -c src/pma++/datasetup.f90
+reorder.o: typy.o mtx.o datasetup.o solvers.o src/pma++/reorder.f90
+	$c -c  src/pma++/reorder.f90
 #-------end PMA++_obj---------------------------
 
 #-------begin TOOLS_obj----------------------------------
@@ -118,7 +127,7 @@ objfnc.o: $(CORE_obj) readtools.o src/tools/objfnc.f90
 #-------end TOOLS_obj------------------------------------
 
 #-------begin RE_obj--------------------------------
-re_globals.o: $(CORE_obj) $(TOOLS_obj) src/models/RE/re_globals.f90
+re_globals.o: $(CORE_obj) src/models/RE/re_globals.f90
 	$c -c  src/models/RE/re_globals.f90
 re_constitutive.o: $(CORE_obj) $(TOOLS_obj) re_globals.o src/models/RE/re_constitutive.f90
 	$c -c src/models/RE/re_constitutive.f90
@@ -126,10 +135,12 @@ re_total.o: $(CORE_obj) $(TOOLS_obj) re_globals.o re_constitutive.o src/models/R
 	$c -c src/models/RE/re_total.f90
 re_reader.o:  $(CORE_obj) $(TOOLS_obj) re_globals.o  src/models/RE/re_reader.f90
 	$c -c src/models/RE/re_reader.f90	
-re_pointers.o:  $(CORE_obj) re_globals.o re_constitutive.o re_total.o re_reader.o Re_evap_bc.o  src/models/RE/re_pointers.f90
+re_pointers.o:  $(CORE_obj) re_globals.o re_constitutive.o re_total.o re_reader.o re_evap_methods.o src/models/RE/re_pointers.f90
 	$c -c src/models/RE/re_pointers.f90
 re_analytical.o:  $(CORE_obj) re_globals.o re_constitutive.o src/models/RE/re_analytical.f90
 	$c -c src/models/RE/re_analytical.f90
+re_evap_methods.o: $(CORE_obj) re_globals.o re_constitutive.o src/models/RE/re_evap_methods.f90
+	$c -c src/models/RE/re_evap_methods.f90
 #-------end CONSTITUTIVE_obj--------------------------------
 
 #------begin HEAT_obj -----------------------------------
@@ -153,10 +164,8 @@ freeze_fnc.o: $(CORE_obj) freeze_helper.o freeze_globs.o src/models/soilfreeze/f
 	$c -c src/models/soilfreeze/freeze_fnc.f90
 freeze_reader.o: $(CORE_obj) freeze_globs.o src/models/soilfreeze/freeze_reader.f90
 	$c -c src/models/soilfreeze/freeze_reader.f90	
-freeze_pointers.o: $(CORE_obj) $(RE_obj) $(HEAT_obj) freeze_globs.o freeze_reader.o freeze_linalg.o src/models/soilfreeze/freeze_pointers.f90
+freeze_pointers.o: $(CORE_obj) $(RE_obj) $(HEAT_obj) freeze_globs.o freeze_reader.o src/models/soilfreeze/freeze_pointers.f90
 	$c -c src/models/soilfreeze/freeze_pointers.f90
-freeze_linalg.o: $(CORE_obj) freeze_globs.o src/models/soilfreeze/freeze_linalg.f90
-	$c -c src/models/soilfreeze/freeze_linalg.f90
 #------end frozen_obj -----------------------------------
 
 #-------begin ADE_obj-------------------------------
@@ -230,24 +239,24 @@ kinpointer.o: $(CORE_obj) $(TOOLS_obj) kinglobs.o kinreader.o src/models/kinwave
 #------end KINWAVE_obj-------------------------------
 
 
+
+
 #------begin evaporation_obj-------------------------
-Re_evap_reader.o: $(CORE_obj) $(TOOLS_obj) re_globals.o src/models/evaporation/Re_evap_reader.f90
-	$c -c src/models/evaporation/Re_evap_reader.f90
-Re_evap_bc.o: $(CORE_obj) $(TOOLS_obj) evap_auxfnc.o Re_evap_reader.o src/models/evaporation/Re_evap_bc.f90
-	$c -c src/models/evaporation/Re_evap_bc.f90
-evap_globals.o: $(CORE_obj) src/models/evaporation/evap_globals.f90
-	$c -c src/models/evaporation/evap_globals.f90
-evap_reader.o: $(CORE_obj) $(TOOLS_obj) evap_globals.o re_globals.o src/models/evaporation/evap_reader.f90
-	$c -c src/models/evaporation/evap_reader.f90
-evap_fnc.o: $(CORE_obj) $(HEAT_obj) evap_globals.o re_globals.o  evap_auxfnc.o  src/models/evaporation/evap_fnc.f90
-	$c -c src/models/evaporation/evap_fnc.f90
-evap_auxfnc.o: $(CORE_obj) re_globals.o evap_globals.o  src/models/evaporation/evap_auxfnc.f90
-	$c -c src/models/evaporation/evap_auxfnc.f90
-evap_bc.o:  $(CORE_obj) $(TOOLS_obj)  re_globals.o evap_globals.o evap_fnc.o  evap_auxfnc.o  Re_evap_bc.o  src/models/evaporation/evap_bc.f90
-	$c -c src/models/evaporation/evap_bc.f90
-vapour_pointers.o: $(CORE_obj) $(RE_obj) evap_bc.o $(HEAT_obj) evap_fnc.o evap_reader.o evap_bc.o src/models/evaporation/vapour_pointers.f90
-	$c -c src/models/evaporation/vapour_pointers.f90
-#------end evaporation_obj---------------------------
+evapglob.o: $(CORE_obj) src/models/REevap/evapglob.f90
+	$c -c src/models/REevap/evapglob.f90
+evapreader.o: $(CORE_obj) $(TOOLS_obj) evapglob.o src/models/REevap/evapreader.f90
+	$c -c src/models/REevap/evapreader.f90
+evap_RE_constitutive.o: $(CORE_obj) $(RE_obj) evapglob.o src/models/REevap/evap_RE_constitutive.f90
+	$c -c src/models/REevap/evap_RE_constitutive.f90
+evap_heat_constitutive.o: $(CORE_obj) $(HEAT_obj) evap_RE_constitutive.o src/models/REevap/evap_heat_constitutive.f90
+	$c -c src/models/REevap/evap_heat_constitutive.f90	
+evappointers.o: $(CORE_obj) $(HEAT_obj) evapbc4heat.o evapreader.o evapglob.o evap_RE_constitutive.o  evap_heat_constitutive.o  src/models/REevap/evappointers.f90
+	$c -c src/models/REevap/evappointers.f90
+evapbc4heat.o: $(CORE_obj) $(RE_obj) evap_RE_constitutive.o evap_heat_constitutive.o src/models/REevap/evapbc4heat.f90
+	$c -c src/models/REevap/evapbc4heat.f90
+#------end evaporation_obj-------------------------
+
+
 
 
 #-------begin POINTERS_obj--------------------------------

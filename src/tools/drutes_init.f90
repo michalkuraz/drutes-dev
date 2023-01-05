@@ -17,7 +17,7 @@
 !<
 
 module drutes_init
-  public  :: parse_globals, init_observe, init_measured, get_cmd_options, pde_constructor
+  public  :: parse_globals, init_observe, init_measured, get_cmd_options, pde_constructor, init_bcfluxes
   private :: set_global_vars,  open_obs_unit, init_obstimes
 
 
@@ -34,6 +34,7 @@ module drutes_init
       use readtools
       use debug_tools
       use printtools
+      use global4solver
 
 
       integer :: i_err, i
@@ -42,9 +43,7 @@ module drutes_init
       real(kind=rkind) :: const
 
 
-      call find_unit(logfile, 2000)
-
-      open(unit=logfile, file="out/DRUtES.log", action="write", status="replace", iostat=i_err)
+      open(newunit=logfile, file="out/DRUtES.log", action="write", status="replace", iostat=i_err)
       
       if (i_err /= 0) then
         i_err=system("mkdir out")
@@ -60,56 +59,44 @@ module drutes_init
     
       write(unit=logfile, fmt=*, iostat = i_err) "DRUtES is initializing, reading input files"
 
-      call find_unit(file_itcg, 2000)
-
-      open(unit=file_itcg, file="out/cgit.count", action="write", status="replace", iostat=i_err)
+      open(newunit=file_itcg, file="out/itsolver.count", action="write", status="replace", iostat=i_err)
+      
+      open(newunit=file_picard, file="out/picard_it.count", action="write", status="replace", iostat=i_err)
       
       call write_log(text="total number of parallel images is:", int1=1_ikind*NUM_IMAGES())
 
       call write_log("reading input files and allocating...")
 
-      !global.conf
-      call find_unit(file_global, 200)
-      
-      open(unit=file_global,file="drutes.conf/global.conf", action="read", status="old", iostat = i_err)
-
+      open(newunit=file_global,file="drutes.conf/global.conf", action="read", status="old", iostat = i_err)
 
       if (i_err /= 0) then
         print *, "missing drutes.conf/global.conf file"
         ERROR STOP
       end if
       
+      open(newunit=file_solver,file="drutes.conf/solver.conf", action="read", status="old", iostat = i_err)
       
-      if (www) then
-        if (.not. dirglob%valid) then
-          print *, "if you have specified option www you MUST specify location with global settings"
-          print *, "specify option --dir-global path/to/your/global/settings"
-          ERROR STOP
-        end if
-        call find_unit(file_wwwglob, 200)
-        write(dirname, fmt=*) trim(dirglob%dir), "drutes_global.conf/global.conf" 
-        open(unit=file_wwwglob,file=trim(adjustl(dirname)), action="read", status="old", iostat = i_err)
-        if (i_err /= 0) then
-          print *, "incorrect definition of global configuration file"
-          print *, "your definition was: ", trim(dirglob%dir)
-          print *, "the constructed path was: ", trim(adjustl(dirname))
-          ERROR stop
-        end if
-
+      
+      if (i_err /= 0) then
+        print *, "missing drutes.conf/solver.conf file"
+        ERROR STOP
       end if
-     
       
       call read_global()
+      
+      call read_solverconfig()
+      
+      if (record_solver_time) open(newunit=solver_time_file,file="out/solver.time", action="write", status="replace")
      
       call set_global_vars()
       
       call init_obstimes()
 
        !read mesh data
-      call find_unit(file_mesh, 200)
+
       select case(drutes_config%dimen)
         case(1)
-          open(unit=file_mesh, file="drutes.conf/mesh/drumesh1d.conf", action="read", status="old", iostat=i_err)
+          open(newunit=file_mesh, file="drutes.conf/mesh/drumesh1d.conf", action="read", status="old", iostat=i_err)
           if (i_err /= 0) then
             print *, "missing drutes.conf/mesh/drumesh1d.conf file"
             ERROR STOP
@@ -119,27 +106,38 @@ module drutes_init
         case(2)
           select case(drutes_config%mesh_type)
             case(1)
-              open(unit=file_mesh, file="drutes.conf/mesh/drumesh2d.conf", action="read", status="old", iostat=i_err)
+              open(newunit=file_mesh, file="drutes.conf/mesh/drumesh2d.conf", action="read", status="old", iostat=i_err)
               if (i_err /= 0) then
                 print *, "missing drutes.conf/mesh/drumesh2d.conf file"
                 ERROR STOP
               end if
               call read_2dmesh_int()
             case(2)
-              open(unit=file_mesh, file="drutes.conf/mesh/mesh.t3d", action="read", status="old", iostat=i_err)
+              open(newunit=file_mesh, file="drutes.conf/mesh/mesh.t3d", action="read", status="old", iostat=i_err)
               if (i_err /= 0) then
                 print *, "missing drutes.conf/mesh/mesh.t3d file"
                 ERROR STOP
               end if
               call read_2dmesh_t3d()
             case(3)
-              open(unit=file_mesh, file="drutes.conf/mesh/mesh.msh", action="read", status="old", iostat=i_err)
+              open(newunit=file_mesh, file="drutes.conf/mesh/mesh.msh", action="read", status="old", iostat=i_err)
               if (i_err /= 0) then
                 print *, "missing drutes.conf/mesh/mesh.msh file"
                 ERROR STOP
               end if
               call read_2dmesh_gmsh()
-          end select
+            case(4)
+              call read_ArcGIS()
+            end select
+        
+          case(3)
+              open(newunit=file_mesh, file="drutes.conf/mesh/mesh3D.msh", action="read", status="old", iostat=i_err)
+              if (i_err /= 0) then
+                print *, "missing drutes.conf/mesh/mesh3D.msh file"
+                ERROR STOP
+              end if
+              call read_3dmesh_gmsh()         
+            
         case default
           write(unit=terminal, fmt=*)"ERROR: unsupported problem dimension, the specified dimension was: ", drutes_config%dimen
           write(unit=terminal, fmt=*)"currently only 1D and 2D is supported"
@@ -225,6 +223,7 @@ module drutes_init
                   optim=.true.
                 case default
                   print *, "unrecognized option after -o , exiting...."
+                  ERROR STOP
               end select
 
               skip = 1
@@ -321,15 +320,7 @@ module drutes_init
               end if
             end if
         end do
-      
-      if (www) then
-        call find_unit(fileid,1000)
-        call system("rm -rf 4www")
-        call system("mkdir 4www")
-        open(unit=fileid, file="4www/mypid", action="write", status="replace")
-        write(unit=fileid, fmt=*) getpid()
-        close(fileid)
-      end if
+    
     
     end subroutine get_cmd_options
 
@@ -387,9 +378,15 @@ module drutes_init
 
       integer(kind=ikind) :: i, j, k, point, dec
       real(kind=rkind), dimension(:,:), allocatable :: domain
-      logical :: error_stop = .false.
+      real(kind=rkind), dimension(:,:,:), allocatable :: domain3D
+      logical :: error_stop = .false., foundel
+      integer(kind=ikind) :: ord1, ord2, ord3, ii
 
-      allocate(domain(ubound(elements%data,2), drutes_config%dimen))
+      if (drutes_config%dimen < 3) then 
+        allocate(domain(ubound(elements%data,2), drutes_config%dimen))
+      else
+        allocate(domain3D(4, 3, 3))
+      end if
 
       observation_array(:)%element = 0
       
@@ -401,17 +398,53 @@ module drutes_init
 
       do i = 1, ubound(observation_array,1)
         do j=1, elements%kolik
-          do k=1, ubound(elements%data,2)
-            domain(k,:) = nodes%data(elements%data(j,k),:)
-          end do
-          if (inside(domain, observation_array(i)%xyz)) then
+
+          if (drutes_config%dimen < 3) then
+            do k=1, ubound(elements%data,2)
+              domain(k,:) = nodes%data(elements%data(j,k),:)
+            end do
+            foundel = inside(domain, observation_array(i)%xyz)
+          else
+            do k=1, ubound(elements%data,2)
+              select case(k)
+                case(1)
+                  ord1 = 1
+                  ord2 = 2
+                  ord3 = 3
+                 case(2)
+                  ord1 = 2
+                  ord2 = 3
+                  ord3 = 4
+                 case(3)
+                  ord1 = 1
+                  ord2 = 3
+                  ord3 = 4
+                 case(4)
+                  ord1 = 1
+                  ord2 = 2
+                  ord3 = 4
+                end select
+              
+                domain3D(k, 1, :) = nodes%data(elements%data(j, ord1),:)
+                domain3D(k, 2, :) = nodes%data(elements%data(j, ord2),:)
+                domain3D(k, 3, :) = nodes%data(elements%data(j, ord3),:)
+              end do
+              
+              foundel = inside3D(domain3D, observation_array(i)%xyz)
+
+            end if
+          
+            
+          if (foundel) then
             observation_array(i)%element = j
-              EXIT
+            EXIT
           else
             CONTINUE
           end if
         end do
       end do
+
+
 
       do i=1, ubound(observation_array,1)
         if (observation_array(i)%element == 0) then
@@ -432,7 +465,6 @@ module drutes_init
 
       do point=1, ubound(observation_array,1)
         do i=1, ubound(pde,1)
-          call find_unit(pde(i)%obspt_unit(point),5000)
           dec = 0
           do 
             dec = dec+1
@@ -444,10 +476,48 @@ module drutes_init
         end do
       end do
 
-      deallocate(domain)
-      
-
     end subroutine init_observe
+    
+    
+    subroutine init_bcfluxes()
+      use typy
+      use globals
+      use global_objs
+      use debug_tools
+      
+      integer(kind=ikind) :: i, j, nd1, nd2, elid, e, bc
+      character(len=12) :: filename
+      
+      allocate(bcfluxes(101:maxval(nodes%edge)))
+      
+      
+      do i=1, nodes%kolik
+        if (nodes%edge(i) > 0) then
+          do e=1, nodes%element(i)%pos
+            elid = nodes%element(i)%data(e)
+            nd1 = i
+            do j=1, ubound(elements%data,2)
+              if (elements%data(elid,j) /= nd1) then
+                nd2 = elements%data(elid,j)
+                if (nodes%edge(nd2) == nodes%edge(nd1)) then
+                  call bcfluxes(nodes%edge(nd1))%elements%nrfill(elid)
+                  call bcfluxes(nodes%edge(nd1))%nodes%nrfill(nd1)
+                  call bcfluxes(nodes%edge(nd1))%nodes%nrfill(nd2)
+                end if
+              end if
+            end do
+          end do
+        end if
+      end do
+      
+      do bc=lbound(bcfluxes,1), ubound(bcfluxes,1)
+        write(filename, fmt="(a,I3, a)") "out/", bc, ".flux"
+        open(newunit=bcfluxes(bc)%fileid, file=filename, action="write", status="replace")
+        write(bcfluxes(bc)%fileid, fmt=*) "# time,        flux,            cumulative flux"
+      end do
+      
+    
+    end subroutine init_bcfluxes
     
     
     subroutine init_measured()
@@ -496,56 +566,90 @@ module drutes_init
       use pde_objs
       use printtools
       use debug_tools
+      use core_tools
 
       class(pde_str), intent(in out) :: pde_loc
       integer(kind=ikind), intent(in) :: name
       integer(kind=ikind), intent(in) :: decimals
       character(len=64) :: forma
       character(len=10), dimension(3) :: xyz
-      integer(kind=ikind) :: i
+      integer(kind=ikind) :: i, j
+      character(len=512), dimension(:), allocatable :: fluxname
 
 
       xyz(1) = "x"
       xyz(2) = "z"
-      xyz(3) = "y"
+      
+      if (drutes_config%dimen == 3) then
+        xyz(2) = "y"
+        xyz(3) = "z"
+      end if
       
       write(unit=forma, fmt="(a, I16, a)") "(a, a, a, I", decimals, ", a)"
       write(unit=pde_loc%obspt_filename(name), fmt=forma) "out/obspt_", adjustl(trim(pde_loc%problem_name(1))), "-", name, ".out"
       
+      if (allocated(pde_loc%fluxes)) then
+        allocate(fluxname(ubound(pde_loc%fluxes,1)))
+        do i=1, ubound(fluxname,1)
+          write(fluxname(i), fmt=*) cut(pde_loc%fluxes(i)%name(2)),  " for: ", xyz(1:drutes_config%dimen), "     directions", &
+            "   cumulative flux", "|----| "
+        end do
+      end if
+      
      
       if (.not. drutes_config%run_from_backup) then
         if (ubound(pde_loc%mass_name,1) > 0) then
-          open(unit=pde_loc%obspt_unit(name), file=adjustl(trim(pde_loc%obspt_filename(name))), action="write", status="replace")
+          open(newunit=pde_loc%obspt_unit(name), file=adjustl(trim(pde_loc%obspt_filename(name))), action="write", status="replace")
           
-          call print_logo(pde_loc%obspt_unit(name))
+          if (cut(observe_info%fmt) == "pure") call print_logo(pde_loc%obspt_unit(name))
           
-           i=1
-            write(unit=pde_loc%obspt_unit(name), fmt=*) "#        time                      ", &
-              trim(pde_loc%solution_name(2)), "            ", &
-             "       ",  (/ (trim(pde_loc%mass_name(i,2)), i=1,ubound(pde_loc%mass_name,1) )   /), "       ",&
-              trim(pde_loc%flux_name(2)), "   in    ", xyz(1:drutes_config%dimen), "     directions", "   cumulative flux"
-            write(unit=pde_loc%obspt_unit(name), fmt=*) &
-              "#-----------------------------------------------------------------------------------------------"
-            write(unit=pde_loc%obspt_unit(name), fmt=*)
+          
+            i=1
+            if (.not. allocated(pde_loc%fluxes)) then
+              write(unit=pde_loc%obspt_unit(name), fmt=*) "#        time                      ", &
+                trim(pde_loc%solution_name(2)), "            ", &
+               "       ",  (/ (trim(pde_loc%mass_name(i,2)), i=1,ubound(pde_loc%mass_name,1) )   /), "       ",&
+                trim(pde_loc%flux_name(2)), "   in    ", xyz(1:drutes_config%dimen), "     directions", "   cumulative flux"
+              write(unit=pde_loc%obspt_unit(name), fmt=*) &
+                "#-----------------------------------------------------------------------------------------------"
+              write(unit=pde_loc%obspt_unit(name), fmt=*)
+            else
+              i = 1
+              write(unit=pde_loc%obspt_unit(name), fmt=*) "#        time                      ", &
+                trim(pde_loc%solution_name(2)), "            ", &
+               "       ",  (/ (trim(pde_loc%mass_name(i,2)), i=1,ubound(pde_loc%mass_name,1) )   /), "       ",&
+                (/ (cut(fluxname(i)),  i=1, ubound(fluxname,1) ) /)
+              write(unit=pde_loc%obspt_unit(name), fmt=*) &
+                "#-----------------------------------------------------------------------------------------------"
+              write(unit=pde_loc%obspt_unit(name), fmt=*)
+            end if
             
         else
-          open(unit=pde_loc%obspt_unit(name), file=adjustl(trim(pde_loc%obspt_filename(name))), action="write", status="replace")
+          open(newunit=pde_loc%obspt_unit(name), file=adjustl(trim(pde_loc%obspt_filename(name))), action="write", status="replace")
           
-          call print_logo(pde_loc%obspt_unit(name))
+          if (cut(observe_info%fmt) == "pure") call print_logo(pde_loc%obspt_unit(name))
           
-
+          if (.not. allocated(pde_loc%fluxes)) then
             write(unit=pde_loc%obspt_unit(name), fmt=*) "#        time                      ", &
               trim(pde_loc%solution_name(2)), "            ", &
               trim(pde_loc%flux_name(2)), "   in    ", xyz(1:drutes_config%dimen), "     directions", "   cumulative flux"
             write(unit=pde_loc%obspt_unit(name), fmt=*) &
               "#-----------------------------------------------------------------------------------------------"
             write(unit=pde_loc%obspt_unit(name), fmt=*)
-          
+          else
+            i=1
+            write(unit=pde_loc%obspt_unit(name), fmt=*) "#        time                      ", &
+              trim(pde_loc%solution_name(2)), "            ", &
+             (/ (cut(fluxname(i)),  i=1, ubound(fluxname,1) ) /)
+            write(unit=pde_loc%obspt_unit(name), fmt=*) &
+              "#-----------------------------------------------------------------------------------------------"
+            write(unit=pde_loc%obspt_unit(name), fmt=*)
+          end if
         end if
 
 
       else
-        open(unit=pde_loc%obspt_unit(name), file=adjustl(trim(pde_loc%obspt_filename(name))), &
+        open(newunit=pde_loc%obspt_unit(name), file=adjustl(trim(pde_loc%obspt_filename(name))), &
                     action="write", access="append", status="old")
       end if
 

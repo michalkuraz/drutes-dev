@@ -17,13 +17,105 @@
 
 module kinreader
 
-  private :: read_catchment, gen_catchment
+  private ::  gen_catchment, read_catchment_old, get_slopes
   public :: kininit
 
   contains
   
   
-    subroutine read_catchment()
+    subroutine get_slopes()
+      use typy
+      use kinglobs
+      use globals
+      use geom_tools
+      use debug_tools
+      use readtools
+      use core_tools
+      
+      real(kind=rkind), dimension(3) :: a,b,c
+      integer(kind=ikind) :: i, j, el
+      integer(kind=ikind), dimension(3) :: nd
+      integer(kind=ikind), dimension(:), allocatable :: ndpmt
+      integer :: file_nodes, ierr
+      real(kind=rkind) :: tmp, big
+      
+
+
+      allocate(watershed_el(elements%kolik))
+      
+      if (drutes_config%mesh_type /= 4) then
+        open(newunit=file_nodes, file="drutes.conf/kinwave/nodes.in", action="read", status="old", iostat=ierr)
+        
+        if (ierr /= 0) then
+          print *, "unable to open file drutes.conf/kinwave/nodes.in , check your inputs"
+          ERROR STOP
+        end if
+        allocate(watershed_nd(nodes%kolik))
+        
+        do i=1, nodes%kolik
+          call comment(file_nodes)
+          read(unit=file_nodes, fmt=*, iostat=ierr) j, watershed_nd(i)%xyz
+          if (abs(watershed_nd(i)%xyz(1)-nodes%data(i,1)) > 1e-3 .or. &
+              abs(watershed_nd(i)%xyz(2)-nodes%data(i,2)) > 1e-3) then
+            call file_error(file_nodes, "There is a mismatch between drutes.conf/kinwave/nodes.in and mesh file data!")
+          end if
+        end do
+        
+        do el=1, elements%kolik
+          do j=1,3
+            nd(j) = elements%data(el,j)
+          end do
+          
+          a = watershed_nd(nd(1))%xyz
+          b = watershed_nd(nd(2))%xyz
+          c = watershed_nd(nd(3))%xyz
+          
+          call plane_derivative(a,b,c, watershed_el(el)%sx, watershed_el(el)%sy)
+        end do
+        
+
+      else
+      
+        allocate(ndpmt(maxval(nodes4arcgis%id)))
+        
+        ndpmt = 0
+        
+        do i=1, ubound(nodes4arcgis%id,1)
+          ndpmt(nodes4arcgis%id(i)) = i
+        end do
+      
+      
+        do i=1, ubound(elements4arcgis%data,1)
+          if (elements4arcgis%elpermut(i) > 0) then
+            el = elements4arcgis%elpermut(i)
+            do j=1,3
+              nd(j) = ndpmt(elements4arcgis%data(el,j))
+            end do
+              
+            a = nodes4arcgis%data(nd(1),:)
+            b = nodes4arcgis%data(nd(2),:)
+            c = nodes4arcgis%data(nd(3),:)
+            
+            call plane_derivative(a,b,c, watershed_el(el)%sx, watershed_el(el)%sy)
+          end if
+        end do
+      end if
+      
+      
+      tmp = 0
+      big = 0
+      do i=1, elements%kolik
+        tmp = tmp + sqrt(watershed_el(i)%sx**2 + watershed_el(i)%sy**2)
+        if (sqrt(watershed_el(i)%sx**2 + watershed_el(i)%sy**2) > big) big = sqrt(watershed_el(i)%sx**2 + watershed_el(i)%sy**2)
+      end do 
+      
+        
+          
+      
+    end subroutine get_slopes
+    
+    
+    subroutine read_catchment_old()
       use typy
       use kinglobs
       use readtools
@@ -73,7 +165,7 @@ module kinreader
       end do
       stop
     
-    end subroutine read_catchment
+    end subroutine read_catchment_old
     
     
     subroutine gen_catchment()
@@ -82,6 +174,7 @@ module kinreader
       use globals
       use geom_tools
       use debug_tools
+      use core_tools
       
       integer(kind=ikind) :: i
       real(kind=rkind), dimension(3) :: a,b,c
@@ -124,7 +217,7 @@ module kinreader
     
 
     
-    subroutine kininit(pde_loc)
+    subroutine kininit()
       use typy
       use pde_objs
       use kinglobs
@@ -133,8 +226,8 @@ module kinreader
       use geom_tools
       use global_objs
       use debug_tools
+      use core_tools
       
-      class(pde_str), intent(in out) :: pde_loc
       integer :: file_kinematix, ierr, filerain, frainpts
       integer(kind=ikind) :: n, i, counter, j, k
       character(len=512) :: msg
@@ -142,37 +235,66 @@ module kinreader
       real(kind=rkind), dimension(:), allocatable :: tmp_array
       real(kind=rkind), dimension(:), allocatable :: pts, distance
       character(len=7), dimension(2) :: infnames
+      character(len=4) :: usefile
       
       if (drutes_config%dimen == 2) then
-        select case(drutes_config%mesh_type)
-          case(1) 
-            call gen_catchment()
+        if (drutes_config%mesh_type == 1) then
+          call gen_catchment()
             
-          case(4)
-            call read_catchment()
-            
-          case default
-            print *, "for kinematic wave equation use Arc GIS data option only"
-            print *, "  this is option number 4"
-            print *, "exiting..."
-            ERROR STOP
-            
-        end select
+        else
+          call get_slopes()
+        end if
       end if
       
-      pde_loc%problem_name(1) = "runoff"
-      pde_loc%problem_name(2) = "Kinematic wave equation for real catchments"
+      pde(1)%problem_name(1) = "runoff"
+      pde(1)%problem_name(2) = "Kinematic wave equation for real catchments"
 
-      pde_loc%solution_name(1) = "runoff_depth" !nazev vystupnich souboru
-      pde_loc%solution_name(2) = "[L] " !popisek grafu
+      pde(1)%solution_name(1) = "runoff_depth" !nazev vystupnich souboru
+      pde(1)%solution_name(2) = "[L] " !popisek grafu
 
-      pde_loc%flux_name(1) = "runoff_flux"  
-      pde_loc%flux_name(2) = "runoff flux [L3.T-1.L-2]"
+      pde(1)%flux_name(1) = "runoff_flux"  
+      pde(1)%flux_name(2) = "runoff flux [L3.T-1.L-2]"
     
-      allocate(pde_loc%mass_name(1,2))
+      allocate(pde(1)%mass_name(1,2))
       
-      pde_loc%mass_name(1,1) = "runoff_height"
-      pde_loc%mass_name(1,2) = "runoff elevation [m a.m.s.l]"
+      pde(1)%mass_name(1,1) = "runoff_height"
+      pde(1)%mass_name(1,2) = "runoff elevation [m a.m.s.l]"
+      
+      if (ubound(pde,1) == 3) then
+        pde(2)%problem_name(1) = "debris_flow"
+        pde(2)%problem_name(2) = "Transport of solutes for kinematic wave equation"
+
+        pde(2)%solution_name(1) = "debris_concentration" !nazev vystupnich souboru
+        pde(2)%solution_name(2) = "[M.L-3] " !popisek grafu
+
+        pde(2)%flux_name(1) = "conc_flux"  
+        pde(2)%flux_name(2) = "conc flux [M.L3.T-1.L-2]"
+        
+        allocate(pde(2)%mass_name(1,2))
+        
+        pde(2)%mass_name(1,1) = "solute_mass"
+        pde(2)%mass_name(1,2) = "solute mass [M]"
+      
+        pde(3)%problem_name(1) = "concentration_soil"
+        pde(3)%problem_name(2) = "Soil contamination"
+
+        pde(3)%solution_name(1) = "soil_concentration" !nazev vystupnich souboru
+        pde(3)%solution_name(2) = "[M.M-3] " !popisek grafu
+
+        pde(3)%flux_name(1) = "na"  
+        pde(3)%flux_name(2) = "na"
+        
+        allocate(pde(3)%mass_name(1,2))
+        
+        pde(3)%mass_name(1,1) = "solid_mass"
+        pde(3)%mass_name(1,2) = "solid mass [M]"
+      
+        pde(3)%problem_name(1) = "concentration_soil"
+        pde(3)%problem_name(2) = "Soil contamination"
+        
+      end if
+        
+        
       
       open(newunit=file_kinematix, file="drutes.conf/kinwave/kinwave.conf", action="read", status="old", iostat = ierr)
       
@@ -181,6 +303,8 @@ module kinreader
       write(msg, fmt=*) "You have specified incorrect number of subregions with different Manning cofficients,", new_line("a"),  &
       "according to mesh definitions, you should define", n, "different Manning values." 
       
+      
+      call fileread(with_solutes, fileid=file_kinematix, errmsg="set y/n if you want to couple your model with solute transport")
       
       allocate(manning(n))
       
@@ -241,6 +365,36 @@ module kinreader
              inf_model(i)%Ks = tmp_array(3)
         end select
       end do
+      
+      call fileread(icond_file, errmsg="set y/n for your initial condition input method  &
+                  (n=use separate file with node wise defined values (drutes.conf/kinwave/initcond, y=define it for each material &
+                  in drutes.conf/kinwave/kinwave.conf)", fileid=file_kinematix)
+                
+
+      if (with_solutes) then
+        allocate(kinsols(n))
+        deallocate(tmp_array)
+        allocate(tmp_array(8))
+        do i=1,n
+          call fileread(tmp_array, fileid=file_kinematix, checklen=.true.)
+          kinsols(i)%horb = tmp_array(1)
+          if (icond_file) then
+            if (tmp_array(2) /= -99) then
+              call file_error(file_kinematix, errmsg="on line above you speficified initial condition to be supplied node-wise in &
+                  drutes.conf/kinwave/initcond, if this is really what you want to do, then set of cs_init on material description &
+                  value -99")
+            end if
+          end if
+                  
+          kinsols(i)%csinit = tmp_array(2)
+          kinsols(i)%rhos = tmp_array(3)
+          kinsols(i)%lambda_a = tmp_array(4)
+          kinsols(i)%lambda_d = tmp_array(5)
+          kinsols(i)%lost_me = tmp_array(6)
+          kinsols(i)%ncs = tmp_array(7)
+          kinsols(i)%diff =  tmp_array(8)
+        end do
+      end if
             
       
       open(newunit=frainpts, file="drutes.conf/kinwave/rain.pts", status="old", action="read", iostat=ierr)
@@ -266,6 +420,7 @@ module kinreader
       close(frainpts)
       
       open(newunit=frainpts, file="drutes.conf/kinwave/rain.pts", status="old", action="read", iostat=ierr)
+
       
       allocate(raindata(counter))
       
@@ -323,6 +478,7 @@ module kinreader
       
       open(newunit=filerain, file="drutes.conf/kinwave/rain.in", status="old", action="read", iostat=ierr)
       
+   
       do i=1, ubound(raindata(1)%series,1)
         call fileread(tmp_array, filerain, checklen=.true.)
         do j=1, ubound(raindata,1)
@@ -331,6 +487,7 @@ module kinreader
         end do
       end do
       
+
 
     end subroutine kininit
 

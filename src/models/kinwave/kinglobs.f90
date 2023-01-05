@@ -32,26 +32,36 @@ module kinglobs
     character(len=7) :: name
     real(kind=rkind) :: Ks, S, A
   end type inf_model_str
+  
+  type, public :: solute_str
+    real(kind=rkind) :: horb, csinit, rhos, lambda_a, lambda_d, lost_me, ncs, diff
+  end type solute_str
 
-  type(surfacend_str), dimension(:), allocatable :: watershed_nd
-  type(surface_el_str), dimension(:), allocatable :: watershed_el
+  type(surfacend_str), dimension(:), allocatable, public :: watershed_nd
+  type(surface_el_str), dimension(:), allocatable, public :: watershed_el
   
-  real(kind=rkind), dimension(:), allocatable :: manning
+  real(kind=rkind), dimension(:), allocatable, public :: manning
   
-  real(kind=rkind), dimension(:), allocatable :: oneDslopes
+  real(kind=rkind), dimension(:), allocatable, public :: oneDslopes
   
   
   type, public :: raindata_str
-    real(kind=rkind), dimension(:), allocatable :: xy
-    real(kind=rkind), dimension(:,:), allocatable :: series
+    real(kind=rkind), dimension(:), allocatable, public :: xy
+    real(kind=rkind), dimension(:,:), allocatable, public :: series
   end type raindata_str
   
-  type(raindata_str), dimension(:), allocatable :: raindata
-  integer(kind=ikind), dimension(:), allocatable :: el2pt
+  type(raindata_str), dimension(:), allocatable, public :: raindata
+  integer(kind=ikind), dimension(:), allocatable, public :: el2pt
   
-  logical :: backwater
+  logical, public :: backwater
   
   type(inf_model_str), dimension(:), allocatable :: inf_model
+  
+  logical, public :: with_solutes
+  
+  logical, public :: icond_file
+  
+  type(solute_str), dimension(:), allocatable, public :: kinsols
   
   
   

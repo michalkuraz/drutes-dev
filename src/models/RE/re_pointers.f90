@@ -87,6 +87,7 @@ module RE_pointers
       call allREpointers(pde_loc)
       call RE_totheadbc(pde_loc)
       
+      
       if (drutes_config%rotsym) then
         pde_loc%pde_fnc(pde_loc%order)%convection => convection_rerot
       end if
@@ -95,6 +96,7 @@ module RE_pointers
       
       pde_loc%flux => darcy4totH
       pde_loc%initcond => retot_initcond
+      pde_loc%symmetric = .true.
     
     end subroutine REstdH
     
@@ -107,7 +109,7 @@ module RE_pointers
       use re_globals
       use re_constitutive
       use core_tools
-!       use evap_bc
+
       
       class(pde_str), intent(in out) :: pde_loc
       
@@ -130,11 +132,11 @@ module RE_pointers
             print *, "seepage face is not created yet for pressure head RE"
             ERROR STOP
           case(5)
-            if (cut(drutes_config%name) == "vapour") then
+            if (cut(drutes_config%name) == "REevap") then
               CONTINUE
-              ! to be linked in vapour_pointers
+              ! to be linked in evappointers
             else
-              print *, "if you want to use atmospheric bc, set problem type to RE"
+              print *, "if you want to use atmospheric bc, set problem type to REevap"
               ERROR stop
             end if
           case default
@@ -155,13 +157,12 @@ module RE_pointers
       use re_globals
       use re_constitutive
       use re_total
-!       use evap_bc
       use core_tools
-      use  Re_evap_bc
+      use re_evap_methods
       
       class(pde_str), intent(in out) :: pde_loc
       integer(kind=ikind) :: i
-      
+
       do i=lbound(pde_loc%bc,1), ubound(pde_loc%bc,1)
         select case(pde_loc%bc(i)%code)
           case(-1)
@@ -177,13 +178,17 @@ module RE_pointers
           case(4)
             pde_loc%bc(i)%value_fnc => retot_seepage	
           case(5)
-            if (cut(drutes_config%name) == "vapour") then
+            if (cut(drutes_config%name) == "REevap") then
               CONTINUE
-              ! to be linked in vapour_pointers
+              ! to be linked in evappointers
             else
-              pde_loc%bc(i)%value_fnc => evap_pm_bc
+              pde_loc%bc(i)%value_fnc => retot_atmospheric
             end if
-          case(6,7)
+          case(6)
+            pde_loc%bc(i)%value_fnc => retot_well
+          case(7, 8, 9)
+              CONTINUE
+              ! Linked in freeze_pointers
           case default
           print *, "ERROR! You have specified an unsupported boundary type definition for the Richards equation"
           print *, "the incorrect boundary code specified is:", pde_loc%bc(i)%code
@@ -228,19 +233,18 @@ module RE_pointers
         pde_loc%mass(1)%val => vangen_tab
       end if
       
+      pde_loc%mass(2)%val => satdegree
+      
 
-      do i=1, ubound(vgmatrix,1)
-        if (vgmatrix(i)%rcza_set%use) then
-          call init_zones(vgmatrix)
+      do i=1, ubound(vgset,1)
+        if (vgset(i)%rcza_set%use) then
+          call init_zones(vgset)
           pde_loc%dt_check => rcza_check
           EXIT
         end if
       end do
       
       pde_loc%pde_fnc(pde_loc%order)%zerord  => sinkterm
-      
-
-      
       
     
     end subroutine allREpointers

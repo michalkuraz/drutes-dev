@@ -27,34 +27,23 @@ module freeze_globs
   real(kind=rkind), dimension(:), allocatable, public :: T_air
 
   !> freeze exchange conductivity
-  real(kind=rkind), public :: hc, cumfilt 
+  real(kind=rkind), public :: hc, cumfilt , hcbot
   
   !> gravity acceleration [m.s^-2]
   real(kind=rkind), parameter, public :: grav = 9.81
   
   !>latent heat of fusion [J.kg^-1]
   real(kind=rkind), parameter, public :: Lf = 333.7e3
-  
-  !> specific heat capacity ice [J/kg/K]
-  real(kind=rkind), parameter, public :: Ci = 2117
-  
-  !> specific heat capacity water [J/kg/K]
-  real(kind=rkind), parameter, public :: Cl = 4188  
-  
-  !> specific heat capacity air[J/kg/K]
-  real(kind=rkind), parameter, public :: Ca = 1006  
-  
-  !> specific heat capacity soil[J/kg/K]
-  real(kind=rkind), parameter, public :: Cs = 800 
-  
+  !real(kind=rkind), parameter, public :: Lf = 0
+
   !> reference temperature for Clapeyron [K] (defined in RE globals now)
 !   real(kind=rkind), parameter, public :: Tref = 273.15
 
   !> density of water [kg.m^-3]
-  real(kind=rkind), parameter, public :: rho_wat = 980
+  !real(kind=rkind), parameter, public :: rho_wat = 980
   
   !> density of ice [kg.m^-3]
-  real(kind=rkind), parameter, public :: rho_ice = 980
+  real(kind=rkind), parameter, public :: rho_ice = 910
   
     !> density of soil [kg.m^-3]
   real(kind=rkind), parameter, public :: rho_soil = 2650
@@ -64,6 +53,9 @@ module freeze_globs
   
    !> Gain factor [-]
   real(kind=rkind), parameter, public :: gwt = 7
+  
+  !> Freezing temperature [-]
+  real(kind=rkind), parameter, public :: Tfk = 273.15
     
   !> Thermal conductivity [ W/m/K]
   real(kind=rkind), parameter, public :: thermal_cond = 0.5
@@ -79,6 +71,15 @@ module freeze_globs
   
   !> dynamic viscosities of ice [Pa s]
   real(kind=rkind), parameter, public :: ui = 10e12
+
+  !> dynamic viscosities of liquid water [Pa s] at 20 deg C
+  real(kind=rkind), parameter, public :: ul_20 = 0.89e-3
+ 
+  !> dynamic visosity parameter, Jones equation
+  real(kind=rkind), parameter, public :: ul_a = -3.7188 
+  real(kind=rkind), parameter, public :: ul_b =  578.919 	
+  real(kind=rkind), parameter, public :: ul_c =  -137.546
+
   integer, public :: file_freeze
 
   integer, public :: frz_pnt
@@ -91,10 +92,11 @@ module freeze_globs
  !> Impedance factor [-] (see Lundin 1990, tested 2,4,6,8,10)
   real(kind=rkind), public :: Omega
 
-  real(kind=rkind), public :: beta, beta_melt
+  real(kind=rkind), public :: beta_freeze, beta_melt
   
   real(kind=rkind), public :: fac_scale, fac_add
-
+  
+  real(kind=rkind), public :: Tr
   integer(kind = ikind), public :: wat, heat_proc, ice, heat_solid
 
 end module freeze_globs

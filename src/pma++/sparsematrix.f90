@@ -371,6 +371,12 @@ contains
 
         !! spocitame delku
         !print *, "jsem v getcol sparse"
+
+        if (a%nz == 0) then
+            nelem = 0
+            return
+        end if
+
         i = a%colstart(j)
         if (i== -1) then
             !! je to prazdny sloupec
@@ -464,6 +470,11 @@ contains
         real(kind=rkind) :: w
 
         !! spocitame delku
+        if (a%nz == 0) then
+            nelem = 0
+            return
+        end if
+
         !!print *, "jsem v getrow sparse"
         j = a%rowstart(i)
         if (j == -1) then

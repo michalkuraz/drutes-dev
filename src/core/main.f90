@@ -73,7 +73,7 @@ program main
       close(fileid)
     end if
 
-    version_id%number = "6.0/2019"
+    version_id%number = "11.0/2022"
     version_id%reliability = "beta "
     
     call get_cmd_options()
@@ -110,13 +110,16 @@ program main
     call init_measured()
   
     call write_log("number of nodes:", int1=nodes%kolik, text2="number of elements:", int2=elements%kolik)
-        
-    call set_pointers()
 
+    call set_pointers()
+    
     call init_observe()
 
     call feminit()
 
+    
+    if (solve_bcfluxes) call init_bcfluxes()
+    
     
     if (drutes_config%it_method == 1 .or. drutes_config%it_method == 2) then
       call init_decomp()
@@ -128,7 +131,6 @@ program main
 
   
   call write_log("DRUtES solves ", text2=adjustl(trim(drutes_config%fullname)))
-  
 
   call solve_pde(success)    
 

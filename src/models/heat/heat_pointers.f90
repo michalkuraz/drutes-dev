@@ -31,6 +31,7 @@ module heat_pointers
       use readtools
       use heat_globals
       use core_tools
+      use globals
       
       integer(kind=ikind) processes
       integer :: heatconf, ierr
@@ -46,7 +47,7 @@ module heat_pointers
       
       close(heatconf)
       
-      if (with_richards) then
+      if (with_richards .or. cut(drutes_config%name) == "REevap" ) then
         processes = 2
       else
         processes = 1
@@ -67,10 +68,14 @@ module heat_pointers
       integer(kind=ikind) :: i, pos
       
       if (ubound(pde,1) == 1) then
-	     call heatlinker(pde_loc(1))
+        call heatlinker(pde(1))
 	    else
-	     call REstdH(pde_loc(1))
-	     call heatlinker(pde_loc(2))
+        if (drutes_config%name == "REevap") then
+          call RE_std(pde(1))
+        else
+          call REstdH(pde(1))
+        end if
+	     call heatlinker(pde(2))
       end if
             
     

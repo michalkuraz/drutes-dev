@@ -38,7 +38,8 @@ module ADE_reader
       real(kind=rkind), dimension(:), allocatable :: tmp_array
       character(len=4096) :: msg
       character(len=256) :: linetext
-      logical :: crelative = .false.
+      character(len=8) :: ifile
+      logical :: crelative = .false., from_ifile=.false.
       logical :: with_richards_def
 
       
@@ -58,7 +59,7 @@ module ADE_reader
       pde_loc%mass_name(1,1) = "conc_in_porous_medium"
       pde_loc%mass_name(1,2) = "concetration [M/L^3]"
       
-      
+      pde_loc%print_mass = .true.
 
       open(newunit = file_contaminant, file="drutes.conf/ADE/contaminant.conf", action="read", status="old", iostat=i_err)
       if (i_err /= 0) then
@@ -68,7 +69,7 @@ module ADE_reader
      
       
       write(msg, fmt=*) "ERROR!! incorrect number of materials in drutes.conf/ADE/contaminant.conf  &
-        the mesh defines", maxval(elements%material)  , "materials, and your input file defines", n, "material(s)."
+        the mesh defines", maxval(elements%material)  , "materials, and your input file defines different number of material(s)."
 	
      
       call fileread(n, file_contaminant, ranges=(/1_ikind*maxval(elements%material),1_ikind*maxval(elements%material)/),&
@@ -108,7 +109,22 @@ module ADE_reader
       call read_sep(file_contaminant)
       
       do i=1, ubound(adepar,1)
-       call comment(file_contaminant)
+       call fileread(ifile, file_contaminant)
+       if (cut(ifile) == "ifile") then
+         if (i /=1) then
+           write(msg, *) "You have selected ifile option in your initial condition setup, this option should be specified on a", &
+                        " single line only (similarly as we had just a single material)"
+           call file_error(file_contaminant, msg)
+         else
+           adepar(1:)%icondtype = "if"
+           from_ifile = .true.
+           EXIT
+         end if
+       else
+         backspace file_contaminant
+       end if
+      
+       
        read(unit=file_contaminant, fmt=*, iostat=i_err) adepar(i)%cinit, adepar(i)%icondtype
        if (i_err /= 0) then
          write(unit=terminal, fmt=*) "The number of lines for initial concentration has to be equal to the number of materials"
@@ -119,7 +135,7 @@ module ADE_reader
          call file_error(file_contaminant)   
        end if
        select case (adepar(i)%icondtype)
-         case("cr", "ca")
+         case("cr", "ca", "if")
            if (adepar(i)%icondtype == "cr") crelative=.true.
            CONTINUE
          case default
@@ -258,6 +274,7 @@ module ADE_reader
         pde(i)%mass_name(1,2) = "concetration [M/M]"
       end do
       
+      
       if (no_solids > 0) then
         allocate(sorption(ubound(adepar,1), no_solids))
       else
@@ -324,7 +341,7 @@ module ADE_reader
        call fileread(sorption(i,:)%name, filesorp, errmsg=msg, options=(/"freund", "langmu"/))
       end do
   
-
+       call read_sep(filesorp)
       
       allocate(tmp_array(3))  
       

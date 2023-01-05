@@ -20,6 +20,7 @@
 
 module re_reader
   public :: res_read
+  private :: read_roots, REevapbc_read, read_shp_tab
 
   contains
 
@@ -34,13 +35,20 @@ module re_reader
       use core_tools
       use readtools
       use debug_tools
+      use, intrinsic :: ieee_arithmetic, only: IEEE_Value, IEEE_QUIET_NAN
+      use, intrinsic :: iso_fortran_env, only: real32
+
       
       class(pde_str), intent(in out) :: pde_loc
-      integer :: ierr, i, j, filewww
+      integer :: ierr,  filewww
+      integer(kind=ikind) :: i, j
       integer(kind=ikind) :: n
       character(len=1) :: yn
       character(len=4096) :: msg
       real(kind=rkind), dimension(:), allocatable :: tmpdata
+
+      real(kind=rkind) :: nan
+      logical :: success
 
       pde_loc%problem_name(1) = "RE_matrix"
       pde_loc%problem_name(2) = "Richards' equation"
@@ -51,12 +59,22 @@ module re_reader
       pde_loc%flux_name(1) = "flux"  
       pde_loc%flux_name(2) = "Darcian flow [L.T^{-1}]"
       
-      allocate(pde_loc%mass_name(1,2))
+      deallocate(pde_loc%mass)
+!      deallocate(pde_loc%mass_name)
+      
+      allocate(pde_loc%mass(2))
+      allocate(pde_loc%mass_name(2,2))
+
 
       pde_loc%mass_name(1,1) = "theta"
       pde_loc%mass_name(1,2) = "theta [-]"
       
+      pde_loc%mass_name(2,1) = "sat-dg"
+      pde_loc%mass_name(2,2) = "sat degree [%]"
+      
       pde_loc%print_mass = .true.
+
+ 
 
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       !water.conf/matrix.conf
@@ -69,13 +87,25 @@ module re_reader
         ERROR STOP
       end if
       
+      call fileread(re_transient, file_waterm, defaultval=.true., success=success)
+      
+      if (.not. success) then
+        backspace file_waterm
+        backspace file_waterm
+        write(msg, fmt=*) "Seems like you are using outdated drutes.conf/water.conf, no problem with that, in order to avoid this &
+                        message add logical value", new_line("a"), "[y/n] on top of this file specifying", new_line("a"), & 
+                        "transient flow = y", new_line("a"), "steady state regime = n", new_line("a"), &
+                        "by default transient flow regime is activated"
+        call write_log(msg)
+      end if
+      
       write(msg, *) "define method of evaluation of constitutive functions for the Richards equation", new_line("a"), &
         "   0 - direct evaluation (not recommended, extremely resources consuming due to complicated exponential functions)", &
         new_line("a"), &
         "   1 - function values are precalculated in program initialization and values between are linearly approximated"
       
       call fileread(drutes_config%fnc_method, file_waterm, ranges=(/0_ikind,1_ikind/),errmsg=msg)
-      
+
       call fileread(maxpress, file_waterm, ranges=(/-huge(0.0_rkind), huge(0.0_rkind)/), &
         errmsg="set some positive nonzero limit for maximal suction pressure (think in absolute values) ")
         maxpress = abs(maxpress)
@@ -113,15 +143,47 @@ module re_reader
          "   HINT 2 : have you specified all values in the following order: ", new_line("a"), &
          "         alpha   n   m   theta_r   theta_s   S_s "
       allocate(tmpdata(6))
+      
       do i = 1, ubound(vgset,1)
-        call fileread(tmpdata, errmsg=msg, fileid=file_waterm, checklen=.true.)
-        vgset(i)%alpha=tmpdata(1)
-        vgset(i)%n=tmpdata(2)
-        vgset(i)%m=tmpdata(3)
-        vgset(i)%thr=tmpdata(4)
-        vgset(i)%ths=tmpdata(5)
-        vgset(i)%Ss=tmpdata(6)
+      
+        call comment(file_waterm)
+        
+        read(file_waterm, fmt = *, iostat=ierr) tmpdata
+        
+        if (ierr == 0) then 
+          backspace file_waterm
+          call fileread(tmpdata, errmsg=msg, fileid=file_waterm, checklen=.true., ranges=(/ 0.0_rkind, huge(0.0_rkind) /))
+          vgset(i)%method = "vgfnc"
+        else
+          backspace file_waterm
+          call fileread(vgset(i)%method, fileid=file_waterm, errmsg="set correct option for soil hydraulic functions", &
+                      options=(/"vgfnc", "table"/))
+          if (cut(vgset(i)%method) == "vgfnc") then
+            backspace file_waterm
+            tmpdata = IEEE_VALUE(nan, IEEE_QUIET_NAN)
+            read(unit=file_waterm, fmt = *) vgset(i)%method, tmpdata
+            do j=1, ubound(tmpdata,1)
+              if (isnan(tmpdata(j))) then
+                write(msg, *) "not enough data for soil hydraulic properties for layer:", i
+                call file_error(file_waterm, cut(msg))
+              end if
+            end do
+          end if
+        end if
+        if (cut(vgset(i)%method) == "vgfnc") then
+          vgset(i)%alpha=tmpdata(1)
+          vgset(i)%n=tmpdata(2)
+          vgset(i)%m=tmpdata(3)
+          vgset(i)%thr=tmpdata(4)
+          vgset(i)%ths=tmpdata(5)
+          vgset(i)%Ss=tmpdata(6)
+!          call check4tables()
+        else
+          call read_shp_tab(i)
+        end if
       end do
+                
+
       
      
 
@@ -165,75 +227,71 @@ module re_reader
         call set_tensor(vgset(i)%Ks_local(:), vgset(i)%anisoangle(:),  vgset(i)%Ks)
       end do
 
+      allocate(roots(ubound(vgset,1)))
       
-      do i=1, ubound(vgset,1)
-        call fileread(vgset(i)%sinkterm, file_waterm,  errmsg="Have you defined sink term for each layer?")
-      end do
+      call fileread(roots(1)%use, file_waterm)
       
-      if (.not. www) then
-        do i=1, ubound(vgset,1)
-          call comment(file_waterm)
-          read(unit=file_waterm, fmt= *, iostat=ierr) vgset(i)%initcond, vgset(i)%icondtype, &
-                    yn, vgset(i)%rcza_set%val
-          select case(yn)
-            case("y")
-              vgset(i)%rcza_set%use = .true.
-            case("n")
-              vgset(i)%rcza_set%use = .false.
-            case default
-              write(msg, fmt=*) "type [y/n] value for using the retention curve zone approach at layer:", i
-              call file_error(file_waterm, msg)
-          end select
-          select case(vgset(i)%icondtype)
-            case("H_tot", "hpres", "theta","input")
-              CONTINUE
-            case default
-              print *, "you have specified wrong initial condition type keyword"
-              print *, "the allowed options are:"
-              print *, "                        H_tot = total hydraulic head"
-              print *, "                        hpres = pressure head"
-              print *, "                        theta = water content"
-                    print *, "                        input = read from input file (drutes output file)"
-              call file_error(file_waterm)
-          end select
-          if (ierr /= 0) then
-            print *, "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-            print *, "HINT: check number of line records of initial conditions in water.conf/matrix.conf!"
-            print *, "----------------------------------------"
-            call file_error(file_waterm)
-          end if
-        end do
-            else
-        do i=1, ubound(vgset,1)
-          call comment(file_waterm)
-          read(unit=file_waterm, fmt= *, iostat=ierr) vgset(i)%initcond, vgset(i)%icondtype
-                vgset(i)%rcza_set%use = .false.
-          select case(vgset(i)%icondtype)
-            case("H_tot", "hpres", "theta","input")
-              CONTINUE
-            case default
-              print *, "you have specified wrong initial condition type keyword"
-              print *, "the allowed options are:"
-              print *, "                        H_tot = total hydraulic head"
-              print *, "                        hpres = pressure head"
-              print *, "                        theta = water content"
-              print *, "                        input = read from input file (drutes output file)"
-              call file_error(file_waterm)
-          end select
-          if (ierr /= 0) then
-            print *, "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-            print *, "HINT: check number of line records of initial conditions in water.conf/matrix.conf!"
-            print *, "----------------------------------------"
-            call file_error(file_waterm)
-          end if
-        end do
+      if (roots(1)%use) then
+        call read_roots()
       end if
+ 
+      do i=1, ubound(vgset,1)
+        call comment(file_waterm)
+        read(unit=file_waterm, fmt= *, iostat=ierr) vgset(i)%initcond, vgset(i)%icondtype, &
+                  yn, vgset(i)%rcza_set%val
+        select case(yn)
+          case("y")
+            vgset(i)%rcza_set%use = .true.
+          case("n")
+            vgset(i)%rcza_set%use = .false.
+          case default
+            write(msg, fmt=*) "type [y/n] value for using the retention curve zone approach at layer:", i
+            call file_error(file_waterm, msg)
+        end select
+        select case(cut(vgset(i)%icondtype))
+          case("H_tot", "hpres", "theta")
+            CONTINUE
+          case("ifile")
+            if (i /= 1) then
+              write(msg, *) "If you are using input file for RE initial condition specify this value in a first line for initial", &
+                             " conditions only. ", new_line("a"), "-----no other lines are allowed!-----", new_line("a"), &
+                             "HINT: your input for initial condition is set for file, then only a single line record is allowed & 
+                              for the initial condition setup. Don't try to enter more values for different materials."
+                                            
+              call file_error(file_waterm, errmsg=msg)
+            end if     
+            if (ubound(vgset,1) > 1)  vgset(2:)%rcza_set%use = vgset(1)%rcza_set%use
+            EXIT
+          case default
+            print *, "you have specified wrong initial condition type keyword"
+            print *, "the allowed options are:"
+            print *, "                        H_tot = total hydraulic head"
+            print *, "                        hpres = pressure head"
+            print *, "                        theta = water content"
+            print *, "                        file = read from input file (drutes output file)"
 
+            call file_error(file_waterm)
+            
+        end select
+        if (ierr /= 0) then
+          print *, "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+          print *, "HINT: check number of line records of initial conditions in water.conf/matrix.conf!"
+          print *, "----------------------------------------"
+          call file_error(file_waterm)
+        end if
+      end do
+
+      
+      if (cut(vgset(1)%icondtype) == "ifile") then
+        msg = "HINT: your input for initial condition is set for file, then only a single line record is allowed for the initial & 
+              condition setup. Don't try to enter more values for different materials."
+      else
+        msg = "at least one boundary must be specified (and no negative values here)"
+      end if
    
 	
 	
-      call fileread(n, file_waterm, ranges=(/1_ikind, huge(1_ikind)/), &
-      errmsg="at least one boundary must be specified (and no negative values here)")
+      call fileread(n, file_waterm, ranges=(/1_ikind, huge(1_ikind)/), errmsg=msg)
       
 
       call readbcvals(unitW=file_waterm, struct=pde_loc%bc, dimen=n, &
@@ -242,15 +300,290 @@ module re_reader
 		      
       close(file_waterm)
       
-!        !> Calle reader if the user select atmospheric boundary
+!      !> Call reader if the user select atmospheric boundary
 !       do i=lbound(pde_loc%bc,1), ubound(pde_loc%bc,1)
 !         if (pde_loc%bc(i)%code == 5) then 
-!           call Re_evap_var()
+!           call REevapbc_read()
+!           exit
 !         end if 
 !       end do
+       
+       if (roots(1)%use) then
+         call read_roots()
+       end if
             
 
     end subroutine res_read
+    
+    
+    subroutine read_roots()
+      use typy
+      use globals
+      use readtools
+      use re_globals
+      
+      integer :: fileid, ierr
+      
+      integer(kind=ikind) :: i
+      real(kind=rkind), dimension(5) :: tmpdata
+      character(len=4096) :: msg
+      
+      
+      open(newunit=fileid, file="drutes.conf/water.conf/root4uptake.conf", status="old", action="read", iostat=ierr)
+      
+      if (ierr /= 0) then
+        print *, "file drutes.conf/water.conf/root4uptake.conf doesn't exist, exiting...."
+        ERROR STOP
+      end if
+      
+
+      do i=1, ubound(roots,1)
+        call fileread(tmpdata, fileid, checklen=.true.)
+        roots(i)%h_wet = tmpdata(1)
+        roots(i)%h_start = tmpdata(2)
+        roots(i)%h_end = tmpdata(3)
+        roots(i)%h_dry = tmpdata(4)
+        roots(i)%Smax = tmpdata(5)
+        
+        if (.not. roots(i)%h_wet >= roots(i)%h_start) then
+          msg = "h_1 has to be greater or equal to h_2 -- see Feddes et al. (1978)"
+          call file_error(fileid, msg)
+        end if
+        
+        if (.not. roots(i)%h_start >= roots(i)%h_end) then
+          msg = "h_2 has to be greater or equal to h_3 -- see Feddes et al. (1978)"
+          call file_error(fileid, msg)
+        end if
+        
+        if (.not. roots(i)%h_end >= roots(i)%h_dry) then
+          msg = "h_3 has to be greater or equal to h_4 -- see Feddes et al. (1978)"
+          call file_error(fileid, msg)
+        end if
+        
+      end do
+        
+    
+      close(fileid)
+
+    end subroutine read_roots
+    
+    
+    
+    subroutine REevapbc_read()
+      use typy
+      use globals
+      use readtools
+      use re_globals
+      
+      integer :: fileid, ierr
+      character(len=256), dimension(1) :: evapnames
+      
+      open(newunit=fileid, file="drutes.conf/water.conf/evap.conf", status="old", action="read", iostat=ierr)
+      
+      if (ierr /= 0) then
+        print *, "file drutes.conf/water.conf/evap.conf doesn't exist, exiting...."
+        ERROR STOP
+      end if
+      
+      evapnames(1) = "thorn"
+      
+      call fileread(evap_name, fileid, options=evapnames)
+    
+      
+      close(fileid)
+
+    
+    end subroutine REevapbc_read
+    
+    
+    subroutine read_shp_tab(layer)
+      use typy
+      use readtools
+      use core_tools
+      use re_globals
+      use debug_tools
+      
+      integer(kind=ikind), intent(in) :: layer
+      
+      character(len=128)              :: filename
+      integer(kind=ikind)             :: decimals=1
+      character(len=64)               :: forma
+      integer                         :: fileid, ierr
+      real(kind=rkind), dimension(4)  :: tmpdata
+      real(kind=rkind) :: tmpreal, step
+      integer(kind=ikind) :: counter, i, tablesize, pos, j
+      character(len=2048) :: msg
+      real(kind=rkind), dimension(:,:), allocatable :: constable
+    
+      
+      do 
+        if (layer/(10**decimals) < 1) then
+          EXIT
+        else
+          decimals = decimals + 1
+        end if
+      end do
+      
+      write(unit=forma, fmt="(a, I16, a)") "(a, I", decimals," a)"
+      
+      write(filename, fmt=forma) "drutes.conf/water.conf/SHP-", layer, ".in"
+      
+      open(newunit=fileid, file=cut(filename), status="old", action="read", iostat=ierr)
+      
+      if (ierr /= 0) then
+        print *, "unable to open the file: ", cut(filename)
+        print *, "check your configuration in: drutes.conf/water.conf where you assign soil hydraulic properties..."
+        call file_error(file_waterm)
+      end if
+      
+      call fileread(tmpdata(1:2), fileid, checklen=.true., ranges=(/0.0_rkind, 1.0_rkind /))
+      
+      if (tmpdata(1) >= tmpdata(2) ) then
+        call file_error(fileid, "residual water content can't be greater or equal to saturated water content")
+      else
+        vgset(layer)%thr = tmpdata(1)
+        vgset(layer)%ths = tmpdata(2)
+      end if
+      
+      counter = 0
+      do 
+        call comment(fileid)
+        read(fileid, fmt=*, iostat=ierr) tmpreal
+        if (ierr == 0) then
+          counter = counter + 1
+        else
+          EXIT
+        end if
+      end do
+      
+      close(fileid)
+      open(newunit=fileid, file=cut(filename), status="old", action="read", iostat=ierr)
+      
+      call fileread(tmpdata(1:2), fileid, checklen=.true., ranges=(/0.0_rkind, 1.0_rkind /))
+      
+      !! constable(1) = h
+      !! constable(2) = theta
+      !! constable(3) = K
+      !! constable(4) = C
+      allocate(constable(counter,4))
+      do i=1, counter
+        call fileread(constable(i,:), fileid, checklen=.true.)
+      end do
+      
+      if ( abs(constable(1,1)) > epsilon(tmpreal) ) then
+        write(msg, fmt=*) "first value must be for h=0, in your data the first value is: ", constable(1,1)
+        call file_error(fileid, cut(msg))
+      end if
+      
+      if (abs(constable(1,2) - vgset(layer)%ths) > epsilon(tmpreal)) then
+        write(msg, fmt = *) "Your saturated water content is:", vgset(layer)%ths, &
+          "but in your data the water content for h=0 is: ", constable(1,2)
+          
+        call file_error(fileid, msg)
+      end if 
+        
+      if (abs(constable(1,3) - 1.0_rkind) > epsilon(tmpreal)) then
+        write(msg, fmt = *) "For h=0 the residual water content is 1.0, but in your data K_r(0)= ", constable(1,3)
+        call file_error(fileid, msg)
+      end if
+      
+      if (abs(constable(1,4)) > epsilon(tmpreal)) then
+        write(msg, fmt = *) "For h=0 the rentention water capacity should be equal 0.0, but in your data C(0)=", constable(1,4)
+        call file_error(fileid, msg)
+      end if
+       
+      
+      step = huge(step)
+      
+      tmpreal = 0
+      
+      do i=3, ubound(constable,1)
+        tmpreal = tmpreal + abs(log10(-constable(i,1)) - log10(-constable(i-1,1)))
+        if (abs(log10(-constable(i,1)) - log10(-constable(i-1,1))) < step) then
+          step  = abs(log10(-constable(i,1)) - log10(-constable(i-1,1)))
+        end if
+      end do
+      
+      tablesize = int((log10(-constable(ubound(constable,1),1))-log10(-constable(2,1)))/step) + 1
+      
+      step = (log10(-constable(ubound(constable,1),1))-log10(-constable(2,1)))/tablesize
+      
+      allocate(vgset(layer)%logh(tablesize+1))
+      allocate(vgset(layer)%Kr(0:tablesize+1))
+      allocate(vgset(layer)%theta(0:tablesize+1))
+      allocate(vgset(layer)%C(0:tablesize+1))
+      allocate(vgset(layer)%dKdh(0:tablesize+1))
+      
+      vgset(layer)%logh(1) = log10(-constable(2,1))
+      
+      do i=2, tablesize+1
+        vgset(layer)%logh(i) = vgset(layer)%logh(i-1) + step
+      end do
+      
+      vgset(layer)%step4fnc = step
+      
+      vgset(layer)%theta(1) = constable(2,2)
+      vgset(layer)%Kr(1) = constable(2,3)
+      vgset(layer)%C(1) = constable(2,4)
+      
+      vgset(layer)%theta(0) = constable(1,2)
+      vgset(layer)%Kr(0) = constable(1,3)
+      vgset(layer)%C(0) = constable(1,4)
+
+      pos = 1
+      do i=2, ubound(vgset(layer)%logh,1)
+        searchme: do j = pos, ubound(constable,1) - 1
+          if (-10**(vgset(layer)%logh(i)) <= constable(j,1) .and. -10**(vgset(layer)%logh(i)) > constable(j+1,1)) then
+            pos = j
+            vgset(layer)%theta(i) = (constable(j+1,2)-constable(j,2))/(constable(j+1,1)- constable(j,1)) * &
+                                     (-10**vgset(layer)%logh(i) - constable(j,1)) + constable(j,2)
+
+            vgset(layer)%Kr(i) = (constable(j+1,3)-constable(j,3))/(constable(j+1,1)- constable(j,1)) * &
+                                     (-10**vgset(layer)%logh(i) - constable(j,1)) + constable(j,3)
+                                     
+            vgset(layer)%C(i) = (constable(j+1,4)-constable(j,4))/(constable(j+1,1)- constable(j,1)) * &
+                                     (-10**vgset(layer)%logh(i) - constable(j,1)) + constable(j,4)
+            EXIT searchme
+          end if
+        end do searchme
+      end do
+      
+      vgset(layer)%dKdh(0) = 0
+      
+      vgset(layer)%dKdh(1) = (vgset(layer)%Kr(0) - vgset(layer)%Kr(1))/10**vgset(layer)%logh(1)
+        
+      do i=2, ubound(vgset(layer)%dKdh,1)
+        vgset(layer)%dKdh(i) = (vgset(layer)%Kr(i-1) - vgset(layer)%Kr(i))/(-10**vgset(layer)%logh(i-1) + 10**vgset(layer)%logh(i))
+      end do
+      
+ 
+      
+    
+    end subroutine read_shp_tab
+    
+    
+    subroutine check4tables()
+      use typy
+      use re_constitutive
+      use global_objs
+      use pde_objs
+      
+      integer(kind=ikind) :: i
+      type(integpnt_str) :: quadpnt
+      real(kind=rkind) :: hinit = -1e-3, logstep, Kr
+      
+      logstep = 0.05
+      quadpnt%type_pnt="numb"
+      do i=1, 200
+        hinit = -10**(log10(-hinit) + logstep)
+        quadpnt%this_is_the_value = hinit
+        call  mualem(pde(1), 1_ikind, quadpnt, scalar=Kr)
+        print *,  hinit, vangen(pde(1), 1_ikind, quadpnt), Kr, vangen_elast(pde(1), 1_ikind, quadpnt)
+      end do
+      
+      stop
+    
+    end subroutine check4tables
 
 
    

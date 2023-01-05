@@ -22,6 +22,8 @@ module printtools
   public :: progressbar
   public :: time2finish
   public :: printtime
+  public :: print_logo
+  public :: print_logo_small
 
   contains
   !> if default output is stdout, then this procedure prints nice progress bar
@@ -85,7 +87,7 @@ module printtools
         case (2592001:31536000)	
           write(unit=terminal, fmt="(a, F10.2, a)") trim(message), t/2592000, " months"
         case default
-          write(unit=terminal, fmt=* ) trim(message), t/31536000, " " //achar(27)//'[91m',  " YEARS !!!!...:)" &
+          write(unit=terminal, fmt=* ) trim(message), t/31536000, " " //achar(27)//'[43m',  " YEARS !!!!...:)" &
                   //achar(27)//'[0m'		    
       end select
       
@@ -130,7 +132,7 @@ module printtools
         case (2592001:31536000)	
           write(unit=terminal, fmt="(a, F10.2, a)") " #time to finish =", tmp/2592000, " months"
         case default
-          write(unit=terminal, fmt=* ) " #time to finish =", tmp/31536000, " " //achar(27)//'[91m',  " YEARS !!!!...:)" &
+          write(unit=terminal, fmt=* ) " #time to finish =", tmp/31536000, " " //achar(27)//'[43m',  " YEARS !!!!...:)" &
                   //achar(27)//'[0m'		    
       end select
       write(unit=terminal, fmt="(F10.2, a)") tmp1, "% done"
@@ -151,7 +153,7 @@ module printtools
           case (2592001:31536000)	
             write(unit=fileid, fmt="(a, F10.2, a)") " #time to finish =", tmp/2592000, " months"
           case default
-            write(unit=fileid, fmt=* ) " #time to finish =", tmp/31536000, " " //achar(27)//'[91m',  " YEARS !!!!...:)" &
+            write(unit=fileid, fmt=* ) " #time to finish =", tmp/31536000, " " //achar(27)//'[43m',  " YEARS !!!!...:)" &
                     //achar(27)//'[0m'		    
         end select
         close(fileid)
@@ -182,6 +184,27 @@ module printtools
       write(unit=iunit, fmt=*) " "
       
   end subroutine print_logo
+  
+  subroutine print_logo_small(fileid)
+      use globals
+      
+      integer, intent(in), optional :: fileid
+      
+      integer :: iunit
+      
+      if (present(fileid)) then
+        iunit = fileid
+      else
+        iunit=terminal
+      end if
+
+      
+      
+      write(unit=iunit, fmt=*) "#              +-++-++-++-++-++-+                                         #"
+      write(unit=iunit, fmt=*) "#              |D||R||U||t||E||S|                                         #"
+      write(unit=iunit, fmt=*) "#              +-++-++-++-++-++-+                                         #"
+      
+  end subroutine print_logo_small
       
 
 end module printtools
