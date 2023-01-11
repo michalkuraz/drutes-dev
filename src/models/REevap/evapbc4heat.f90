@@ -201,6 +201,7 @@ module evapbc4heat
       use debug_tools
       use evap_heat_constitutive
       use printtools
+      use evapglob
       
       class(pde_str), intent(in) :: pde_loc
       integer(kind=ikind), intent(in)  :: el_id, node_order
@@ -208,9 +209,10 @@ module evapbc4heat
       integer(kind=ikind), intent(out), optional :: code
       !> unused for this model (implementation for Robin boundary)
       real(kind=rkind), dimension(:), intent(out), optional :: array
+      real(kind=rkind), save :: time4wright
       type(bcpts_str), intent(in), optional :: bcpts
       
-      integer(kind=ikind) :: layer, nodeid, i
+      integer(kind=ikind) :: layer, nodeid, i, pos
       type(integpnt_str) :: quadpnt_loc
       
       integer, save :: outfile
@@ -220,7 +222,8 @@ module evapbc4heat
       character(len=1), dimension(3) :: xyz = (/"x", "z", "y"/)
       integer(kind=ikind), save :: bc_nds = 0
       real(kind=rkind), dimension(:,:), allocatable, save :: ebalance_vals
-      real(kind=rkind) R, H, LE
+      real(kind=rkind) :: R, H, LE, rain
+      logical :: raining
       
       D = drutes_config%dimen
       
@@ -229,9 +232,40 @@ module evapbc4heat
         nodesmarker = .false.
       end if
 
+      rain = 0
+      if (ubound(evap4rain,1) > 0) then
+        if (ubound(evap4rain,1) > 0) then
+          do i=evap4rain_pos, ubound(evap4rain,1)
+            if (i>1) then
+              if (evap4rain(i-1,1) < time .and. evap4rain(i,1) >= time) then
+                rain=evap4rain(i-1,2)
+                evap4rain_pos = i-1
+                EXIT
+              end if
+            else
+              if (time <= evap4rain(i,1)) then
+                rain = evap4rain(i,2)
+              end if
+            end if
+          end do
+        end if
+      end if
+
+      if (rain > 10*epsilon(rain)) then
+        raining = .true.
+      else
+        raining = .false.
+      end if
+
       
       if (present(code)) then
-        code = 2
+
+        if (raining) then
+          code = 4
+        else
+          code = 2
+        end if
+        
         if (.not. opened) then
           open(newunit=outfile, file="out/ebalance.out", status="replace", action="write", iostat=ierr)
           if (ierr /=0) then
@@ -256,28 +290,36 @@ module evapbc4heat
       
       if (present(value)) then
         if (.not. allocated(ebalance_vals)) allocate(ebalance_vals(bc_nds,3))
-        if (time > epsilon(time) .and. itcount == 1 .and. bc_nds == 1) then
-          if (.not. header_written) then
-            write(unit=outfile, fmt=*) "#-----------------------------------------------------------------------------------------"
-            write(unit=outfile, fmt=*) "#-----------------------------------------------------------------------------------------"
-            write(unit=outfile, fmt=*) "#time                               R                           H                        LE"
-            write(unit=outfile, fmt=*) "#- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -"
-            header_written = .true.
+        
+        if (.not. raining) then
+          if (time > epsilon(time) .and. itcount == 1 .and. bc_nds == 1) then
+            if (.not. header_written) then
+              write(unit=outfile, fmt=*) "#----------------------------------------------------------------------------------------"
+              write(unit=outfile, fmt=*) "#----------------------------------------------------------------------------------------"
+              write(unit=outfile, fmt=*) "#time                               R                           H                      LE"
+              write(unit=outfile, fmt=*) "#- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -"
+              header_written = .true.
+            end if
+            i = 1
+            if (iter_succesfull) write(unit=outfile, fmt=*) time4wright, (/ ( ebalance_vals(i,:), i=1, ubound(ebalance_vals,1) ) /)
           end if
-          i = 1
-          if (iter_succesfull) write(unit=outfile, fmt=*) time-dtprev, (/ ( ebalance_vals(i,:), i=1, ubound(ebalance_vals,1) ) /)
+          
+          quadpnt_loc%column = 2
+          quadpnt_loc%type_pnt = "ndpt"
+          quadpnt_loc%order = elements%data(el_id, node_order)
+          layer = elements%material(el_id)
+          R = Rnterm(quadpnt_loc, layer)
+          H = Hterm(quadpnt_loc)
+          LE = latentheat(quadpnt_loc)*Eterm(quadpnt_loc, layer)
+          ebalance_vals(bc_nds,1) = R
+          ebalance_vals(bc_nds,2) = H
+          ebalance_vals(bc_nds,3) = LE
+          time4wright = time
+          value = R - H + LE
+        else 
+          pos = getmeteopos()
+          value = meteo4evap(pos)%T_air
         end if
-        quadpnt_loc%column = 2
-        quadpnt_loc%type_pnt = "ndpt"
-        quadpnt_loc%order = elements%data(el_id, node_order)
-        layer = elements%material(el_id)
-        R = Rnterm(quadpnt_loc, layer)
-        H = Hterm(quadpnt_loc)
-        LE = latentheat(quadpnt_loc)*Eterm(quadpnt_loc, layer)
-        ebalance_vals(bc_nds,1) = R
-        ebalance_vals(bc_nds,2) = H
-        ebalance_vals(bc_nds,3) = LE
-        value = R - H + LE
       end if
       
     
@@ -311,8 +353,8 @@ module evapbc4heat
       real(kind=rkind), dimension(3) :: gravflux, bcflux
       real(kind=rkind), dimension(:), allocatable, save :: nvectin
 
-      real(kind=rkind):: dens_wat, bcval
-      integer(kind=ikind) :: layer, nodeid, D
+      real(kind=rkind):: dens_wat, bcval, rain
+      integer(kind=ikind) :: layer, nodeid, D, i
       type(integpnt_str) :: quadpnt_loc
 
       
@@ -339,7 +381,29 @@ module evapbc4heat
         
         dens_wat = dens_liquid(quadpnt_loc)
         
-        bcval = Eterm(quadpnt_loc, layer)/dens_wat
+        rain=0
+        if (ubound(evap4rain,1) > 0) then
+          do i=evap4rain_pos, ubound(evap4rain,1)
+            if (i>1) then
+              if (evap4rain(i-1,1) < time .and. evap4rain(i,1) >= time) then
+                rain=evap4rain(i-1,2)
+                evap4rain_pos = i-1
+                EXIT
+              end if
+            else
+              if (time <= evap4rain(i,1)) then
+                rain = evap4rain(i,2)
+              end if
+            end if
+          end do
+        end if
+            
+        if (rain > 10*epsilon(rain)) then
+          bcval = rain
+        else
+          bcval = Eterm(quadpnt_loc, layer)/dens_wat
+        end if
+        
         
         bcflux(1:D) = nvectin(1:D)*bcval
         
