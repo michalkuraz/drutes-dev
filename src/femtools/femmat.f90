@@ -61,7 +61,7 @@ module femmat
       logical :: dt_fine
       integer :: ierr_loc, ll
       real(kind=rkind), dimension(:), allocatable :: vcttmp
-      real(kind=rkind) :: lambda_l, lambda_h, tmpxx=0, maxtime=0, solver_start, solver_end
+      real(kind=rkind) :: lambda_l, lambda_h, tmpxx=0, maxtime=0, solver_start, solver_end, picard_old
       
       integer, save :: pocitac=0
       character(len=100) :: soubor
@@ -71,7 +71,7 @@ module femmat
       itcount = 0
       allocate(vcttmp(ubound(pde_common%bvect,1)))
       
-
+      picard_old = huge(picard_old)
       do
 
         itcount = itcount + 1
@@ -133,6 +133,17 @@ module femmat
           success = .false.
           RETURN
         end if
+        
+        if (itcount == 1) picard_old = error
+        
+        if (itcount >= 3) then
+		  if (error > picard_old) then
+			ierr = 2
+			success = .false.
+			RETURN
+		  end if
+		end if
+				
 
 
 
