@@ -81,10 +81,17 @@ module femmat
 
         if (record_solver_time) call cpu_time(solver_start)
         
-
+        solver_error = .false.
         call solve_matrix(spmatrix, pde_common%bvect(1:fin), pde_common%xvect(1:fin,3),  itmax1=fin, &
             reps1=1e-14_rkind, itfin1=pcg_it, repsfin1=reps_err)
             
+        if (solver_error) then
+          ierr = 1
+          success = .false.
+          EXIT
+        end if
+        
+        
         if (itersolver) then
           write(unit=file_itcg, fmt=*) time, pcg_it, reps_err
           call flush(file_itcg)

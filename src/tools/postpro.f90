@@ -322,6 +322,9 @@ module postpro
       real(kind=rkind), dimension(:,:), allocatable :: extrafluxes
       type(integpnt_str) :: quadpnt
       character(len=1) :: csv
+!      real(kind=rkind), dimension(:), allocatable, save :: volume
+!      integer, dimension(:), allocatable, save :: volumeunits
+      real(kind=rkind) :: tmp
 
       quadpnt%type_pnt = "obpt"
       quadpnt%column=3
@@ -394,6 +397,32 @@ module postpro
         end do
         if (allocated(extrafluxes)) deallocate(extrafluxes)
       end do
+      
+!      if (.not. allocated(volume)) then
+
+!        allocate(volume(1))
+!        allocate(volumeunits(ubound(pde,1)))
+!        open(newunit=volumeunits(1), file="out/volume-re.dat", action="write", status="new")
+          
+!      end if  
+      
+!      volume(1) = 0
+!      quadpnt%type_pnt = "ndpt"
+      
+!      do i=1, elements%kolik
+!        tmp = 0
+!        do j=1,3
+!          quadpnt%order = elements%data(i,j)
+!          tmp = tmp + pde(1)%mass(1)%val(pde(1),layer, quadpnt)
+!        end do
+!        tmp = tmp/3.0
+!        volume(1) = volume(1) + tmp*elements%areas(i)
+!      end do
+      
+      
+!      write(volumeunits(1), fmt=*) time, volume(1)
+      
+!      call flush(volumeunits(1))
       
     end subroutine write_obs
     

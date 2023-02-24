@@ -348,6 +348,10 @@ module heat_fnc
         end do   
       end do
 
+!      do i=1, nodes%kolik
+!        pde_loc%solution(i) = (2-5)/0.15_rkind*nodes%data(i,1) + 5
+!      end do
+
     
     
     end subroutine heat_icond

@@ -210,6 +210,8 @@ logical :: printedk
   logical, public :: solve_bcfluxes
   
   type(bcfluxes_str), dimension(:), allocatable :: bcfluxes
+  
+  logical, public :: solver_error
 
 
 

@@ -409,9 +409,7 @@ module evapbc4heat
         
         bcflux(1:D) = bcflux(1:D) + gravflux(1:D)
 
-        value = get_fluxsgn(el_id, bcpts, bcflux(1:D) ) * norm2(bcflux(1:D))
-!print *, value
-        
+        value = get_fluxsgn(el_id, bcpts, bcflux(1:D) ) * norm2(bcflux(1:D))        
       end if
       
 

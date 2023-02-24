@@ -604,6 +604,7 @@ module evap_RE_constitutive
       use global_objs
       use re_constitutive
       use evapglob
+      use debug_tools
       
        
       class(pde_str), intent(in) :: pde_loc
@@ -641,6 +642,11 @@ module evap_RE_constitutive
       call pde(heat_ord)%getgrad(quadpnt, gradT)
       
       call pde(re_ord)%getgrad(quadpnt, gradH)
+      
+!      if (quadpnt%type_pnt=="obpt") then
+!        print *, gradH
+!        call wait()
+!      end if
 
       D = drutes_config%dimen
       
