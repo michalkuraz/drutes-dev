@@ -97,7 +97,7 @@ sparsematrix.o: typy.o mtx.o src/pma++/sparsematrix.f90
 	$c -c src/pma++/sparsematrix.f90
 sparsematrix_int.o: typy.o mtx.o src/pma++/sparsematrix_int.f90
 	$c -c src/pma++/sparsematrix_int.f90	
-solvers.o: typy.o mtx.o src/pma++/solvers.f90
+solvers.o: global4solver.o  typy.o mtx.o src/pma++/solvers.f90
 	$c -c src/pma++/solvers.f90
 matmod.o: typy.o mtx.o src/pma++/matmod.f90
 	$c -c  src/pma++/matmod.f90
