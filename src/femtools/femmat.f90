@@ -88,7 +88,7 @@ module femmat
         if (solver_error) then
           ierr = 1
           success = .false.
-          call write_log("Looks like a poor conditioning...:/"
+          call write_log("Looks like a poor conditioning...:/")
           EXIT
         end if
         
