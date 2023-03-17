@@ -65,15 +65,21 @@ read_data_plot=function(filedr1,filedr2,ext,col1,col2,xlabs,ylabs,whatisplotted,
     invisible(dev.off())
   }
   return(ln_obs)
-}
-
-ln_obs=read_data_plot('out/obspt_heat-','drutes-dev/out/obspt_heat-','.out',col1=1,col2=2,ylabs=expression(paste("heat",sep=""))
-                      ,xlabs="time [h]",'point_heat',skip=10,k=1,"topright")
+  }
+  
+ln_obs=read_data_plot('out/heat_temperature-','drutes-dev/out/heat_temperature-'
+                 ,'.dat',col1=2,col2=3,ylabs=expression(paste("temperature [",degree*C,"]",sep=""))
+                 ,xlabs="wall depth [m]",'time',idfix=1)
 if(ln_obs>0){
-  print(paste("plot of",ln_obs,"observation points created: heat vs. time"))
+  print(paste("plot of",ln_obs,"observation times created: Temperature vs. wall depth "))
 }
-ln_obs=read_data_plot('out/obspt_heat-','drutes-dev/out/obspt_heat-','.out',col1=1,col2=3,ylabs=expression(paste("heat flux",sep=""))
-                      ,xlabs="time [h]",'point_heat_flux',skip=10,k=1)
+ln_obs=read_data_plot('out/obspt_heat-','drutes-dev/out/obspt_heat-','.out',col1=1,col2=3,ylabs=expression(paste("heat flux [W",~m^2,"]",sep=""))
+                 ,xlabs="time [h]",'point',skip=10,k=1,"topright")
 if(ln_obs>0){
-  print(paste("plot of",ln_obs,"observation points created: heat vs. time"))
+  print(paste("plot of",ln_obs,"observation points created: heat flux vs. time"))
+}
+ln_obs=read_data_plot('out/obspt_heat-','drutes-dev/out/obspt_heat-','.out',col1=1,col2=4,ylabs=expression(paste("cumulative heat flux [W",~m^2,"]",sep=""))
+                 ,xlabs="time [h]",'point_cum',skip=10,k=1)
+if(ln_obs>0){
+  print(paste("plot of",ln_obs,"observation points created: cumulative heat flux vs. time"))
 }

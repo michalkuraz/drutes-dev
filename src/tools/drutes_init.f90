@@ -490,6 +490,7 @@ module drutes_init
       
       allocate(bcfluxes(101:maxval(nodes%edge)))
       
+      print *, "xasca" ; stop
       
       do i=1, nodes%kolik
         if (nodes%edge(i) > 0) then

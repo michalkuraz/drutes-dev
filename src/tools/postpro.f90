@@ -167,6 +167,7 @@ module postpro
       else
         ids = ids_obs
       end if
+     
 
       allocate(filenames(ubound(pde,1)))
       
@@ -188,6 +189,7 @@ module postpro
         write(unit=forma, fmt="(a, I7, a)") "(a, a, a, a, a, I", postpro_dec," a)"
         run = postpro_run
       end if
+
 
       do proc=1, ubound(pde,1)
 
@@ -221,8 +223,7 @@ module postpro
           end do
         end if
         
-      
-        
+
         
         if ( (.not. anime .and. mode == 0)  .or. &
           (anime_run == 1 .and. anime) .or. & 
