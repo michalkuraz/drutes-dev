@@ -485,49 +485,67 @@ module drutes_init
       use global_objs
       use debug_tools
       
-      
-    end subroutine init_bcfluxes  
-    
-    subroutine init_bcfluxes_old()
-      use typy
-      use globals
-      use global_objs
-      use debug_tools
-      
-      integer(kind=ikind) :: i, j, nd1, nd2, elid, e, bc
-      character(len=12) :: filename
-      
+      integer(kind=ikind), dimension(:), allocatable :: edgeid
+      integer(kind=ikind) :: ndwrt
+
       allocate(bcfluxes(101:maxval(nodes%edge)))
       
-      print *, "xasca" ; stop
+      allocate(edgeid(drutes_config%dimen))
       
-      do i=1, nodes%kolik
-        if (nodes%edge(i) > 0) then
-          do e=1, nodes%element(i)%pos
-            elid = nodes%element(i)%data(e)
-            nd1 = i
-            do j=1, ubound(elements%data,2)
-              if (elements%data(elid,j) /= nd1) then
-                nd2 = elements%data(elid,j)
-                if (nodes%edge(nd2) == nodes%edge(nd1)) then
-                  call bcfluxes(nodes%edge(nd1))%elements%nrfill(elid)
-                  call bcfluxes(nodes%edge(nd1))%nodes%nrfill(nd1)
-                  call bcfluxes(nodes%edge(nd1))%nodes%nrfill(nd2)
-                end if
-              end if
-            end do
-          end do
-        end if
-      end do
       
-      do bc=lbound(bcfluxes,1), ubound(bcfluxes,1)
-        write(filename, fmt="(a,I3, a)") "out/", bc, ".flux"
-        open(newunit=bcfluxes(bc)%fileid, file=filename, action="write", status="replace")
-        write(bcfluxes(bc)%fileid, fmt=*) "# time,        flux,            cumulative flux"
+      
+      do el=1, elements%kolik
+        ndwrt = 1
+        do j=1, ubound(elements%data,2)
+          nd = elements%data(el, j)
+          edgeid(ndwrt) = nodes%edge(nd)
+          ndwrt = ndwrt + 1
+          if (ndwrt == drutes_config%dimen) then
+          end if
+        end do
       end do
+    end subroutine init_bcfluxes  
+    
+!    subroutine init_bcfluxes_old()
+!      use typy
+!      use globals
+!      use global_objs
+!      use debug_tools
+      
+!      integer(kind=ikind) :: i, j, nd1, nd2, elid, e, bc
+!      character(len=12) :: filename
+      
+!      allocate(bcfluxes(101:maxval(nodes%edge)))
+      
+!      print *, "xasca" ; stop
+      
+!      do i=1, nodes%kolik
+!        if (nodes%edge(i) > 0) then
+!          do e=1, nodes%element(i)%pos
+!            elid = nodes%element(i)%data(e)
+!            nd1 = i
+!            do j=1, ubound(elements%data,2)
+!              if (elements%data(elid,j) /= nd1) then
+!                nd2 = elements%data(elid,j)
+!                if (nodes%edge(nd2) == nodes%edge(nd1)) then
+!                  call bcfluxes(nodes%edge(nd1))%elements%nrfill(elid)
+!                  call bcfluxes(nodes%edge(nd1))%nodes%nrfill(nd1)
+!                  call bcfluxes(nodes%edge(nd1))%nodes%nrfill(nd2)
+!                end if
+!              end if
+!            end do
+!          end do
+!        end if
+!      end do
+      
+!      do bc=lbound(bcfluxes,1), ubound(bcfluxes,1)
+!        write(filename, fmt="(a,I3, a)") "out/", bc, ".flux"
+!        open(newunit=bcfluxes(bc)%fileid, file=filename, action="write", status="replace")
+!        write(bcfluxes(bc)%fileid, fmt=*) "# time,        flux,            cumulative flux"
+!      end do
       
     
-    end subroutine init_bcfluxes_old
+!    end subroutine init_bcfluxes_old
     
     
     subroutine init_measured()
