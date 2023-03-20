@@ -323,18 +323,12 @@ module global_objs
     real(kind=rkind), dimension(3) :: n_out
   end type bcel_str
   
-  type, public :: bcfluxv2_str
+  type, public :: bcfluxes_str
   	type(bcel_str), dimension(:), allocatable :: bcel
   	real(kind=rkind) :: cumflux=0.0_rkind
     integer :: fileid
-  end type bcfluxv2_str
-  
-  type, public :: bcfluxes_str
-    type(smartarray_int) :: elements
-    type(smartarray_int) :: nodes
-    real(kind=rkind) :: cumflux=0.0_rkind
-    integer :: fileid
   end type bcfluxes_str
+  
 
   
   private :: ismartfill, ismartclear, ismartfill_norepeat, rsmartfill, rsmartclear, rsmartfill_norepeat, ismartexist
