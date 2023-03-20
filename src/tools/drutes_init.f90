@@ -485,6 +485,15 @@ module drutes_init
       use global_objs
       use debug_tools
       
+      
+    end subroutine init_bcfluxes  
+    
+    subroutine init_bcfluxes_old()
+      use typy
+      use globals
+      use global_objs
+      use debug_tools
+      
       integer(kind=ikind) :: i, j, nd1, nd2, elid, e, bc
       character(len=12) :: filename
       
@@ -518,7 +527,7 @@ module drutes_init
       end do
       
     
-    end subroutine init_bcfluxes
+    end subroutine init_bcfluxes_old
     
     
     subroutine init_measured()

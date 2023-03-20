@@ -319,6 +319,8 @@ module global_objs
   type, public :: bcel_str
     integer(kind=ikind), dimension(3) :: surfnode
     integer(kind=ikind) :: extnode	
+    integer(kind=ikind) :: element
+    real(kind=rkind), dimension(3) :: n_out
   end type bcel_str
   
   type, public :: bcfluxv2_str
