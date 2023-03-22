@@ -369,6 +369,7 @@ module pde_objs
       use typy
       use decomp_vars
       use core_tools
+      use debug_tools
 
       
       class(pde_str), intent(in) :: pde_loc
@@ -484,6 +485,10 @@ module pde_objs
             d(4) = getvalp1(pde_loc, quadpntloc(4))
             
             call hyper_planeder(a,b,c,d, grad(1), grad(2), grad(3))
+            
+            grad = -grad
+            
+!            print *, "print grad", grad ; call wait()
             
             gradloc = gradloc + grad
             

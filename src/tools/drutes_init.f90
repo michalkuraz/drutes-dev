@@ -607,16 +607,18 @@ module drutes_init
             case(3)
               bcfluxes(edge2wrt)%bcel(ii)%n_out(1:D) = get_normals3D(nodes%data(nodeid(1),:), nodes%data(nodeid(2),:), &
                                                                       nodes%data(nodeid(3),:), nodes%data(extnd,:))
+!              print *, bcfluxes(edge2wrt)%bcel(ii)%n_out(1:D)
               bcfluxes(edge2wrt)%bcel(ii)%area = triarea(nodes%data(nodeid(1),:), nodes%data(nodeid(2),:), nodes%data(nodeid(3),:))                                                     
           end select
         end if
       end do
-      
+!      stop
 
       do bc=lbound(bcfluxes,1), ubound(bcfluxes,1)
         write(filename, fmt="(a,I3, a)") "out/", bc, ".flux"
         open(newunit=bcfluxes(bc)%fileid, file=filename, action="write", status="replace")
         write(bcfluxes(bc)%fileid, fmt=*) "# time,        flux,            cumulative flux"
+        call flush(bcfluxes(bc)%fileid)
       end do
 
     end subroutine init_bcfluxes  

@@ -308,7 +308,7 @@ module heat_fnc
       else
         gradT = grad
       end if
-      
+  
       
       if (present(flux)) then
         flux = -matmul(heatpar(layer)%lambda, gradT) 

@@ -439,7 +439,6 @@ module postpro
       
       integer(kind=ikind) :: bc, el, D, i, proc, surfel
       real(kind=rkind), dimension(:,:), allocatable, save :: flux, fluxtmp
-      real(kind=rkind), dimension(:,:), allocatable, save :: norm_vct 
       real(kind=rkind), dimension(2,2) :: bcpt
       type(integpnt_str) :: quadpnt
       real(kind=rkind) :: length
@@ -455,14 +454,14 @@ module postpro
       if (.not. allocated(flux)) then
         allocate(flux(ubound(pde,1), D))
         allocate(fluxtmp(ubound(pde,1), D))
-        allocate(norm_vct(1, D))
+    
         allocate(integflux(lbound(bcfluxes,1) : ubound(bcfluxes,1) , ubound(pde,1)))
         allocate(cumflux(lbound(bcfluxes,1) : ubound(bcfluxes,1) , ubound(pde,1)))
         cumflux = 0
       end if
       
 
-      integflux(bc,:) = 0
+      integflux = 0
       do bc = lbound(bcfluxes,1), ubound(bcfluxes,1)
         do surfel = 1, bcfluxes(bc)%pos
           do proc=1, ubound(pde,1)
@@ -473,16 +472,17 @@ module postpro
               flux(proc,:) = flux(proc,:) + fluxtmp(proc,:)
             end do
             flux(proc,:) = flux(proc,:)/D
-            norm_vct(1,:) = bcfluxes(bc)%bcel(surfel)%n_out(1:D)
             integflux(bc, proc) = integflux(bc, proc) + &
-                                  sum(matmul(flux(proc,:), norm_vct))* &
-                                                     bcfluxes(bc)%bcel(surfel)%area
+                                  dot_product(flux(proc,:), bcfluxes(bc)%bcel(surfel)%n_out(1:D))* &
+                                                            bcfluxes(bc)%bcel(surfel)%area
           end do
         end do
       end do
             
 
       cumflux = cumflux + integflux*time_step          
+      
+      
       
       do bc = lbound(bcfluxes,1), ubound(bcfluxes,1)
         write(unit=bcfluxes(bc)%fileid, fmt=*) time, integflux(bc, :), cumflux(bc,:)
