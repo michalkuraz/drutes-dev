@@ -19,7 +19,7 @@ module postpro
   use typy
   
   public :: make_print
-  public :: write_obs, write_bcfluxes
+  public :: write_obs , write_bcfluxes
   public :: get_RAM_use
   private :: print_scilab, print_pure, print_gmsh
   
@@ -437,9 +437,9 @@ module postpro
       use global_objs
       use debug_tools
       
-      integer(kind=ikind) :: bc, el, D, nd1, nd2, nd3, i, j, proc, flow_in, way_in
-      real(kind=rkind), dimension(:,:), allocatable, save :: flux
-      real(kind=rkind), dimension(:), allocatable, save :: norm_vct 
+      integer(kind=ikind) :: bc, el, D, i, proc, surfel
+      real(kind=rkind), dimension(:,:), allocatable, save :: flux, fluxtmp
+      real(kind=rkind), dimension(:,:), allocatable, save :: norm_vct 
       real(kind=rkind), dimension(2,2) :: bcpt
       type(integpnt_str) :: quadpnt
       real(kind=rkind) :: length
@@ -447,76 +447,41 @@ module postpro
       
       D = drutes_config%dimen
       
-      quadpnt%type_pnt="xypt"
-      quadpnt%order=1
+      quadpnt%type_pnt="ndpt"
+
       quadpnt%column=2
       
-      if (.not. allocated(flux)) allocate(flux(ubound(pde,1), D))
       
-      if (.not. allocated(integflux)) then
+      if (.not. allocated(flux)) then
+        allocate(flux(ubound(pde,1), D))
+        allocate(fluxtmp(ubound(pde,1), D))
+        allocate(norm_vct(1, D))
         allocate(integflux(lbound(bcfluxes,1) : ubound(bcfluxes,1) , ubound(pde,1)))
         allocate(cumflux(lbound(bcfluxes,1) : ubound(bcfluxes,1) , ubound(pde,1)))
         cumflux = 0
       end if
       
 
-      
+      integflux(bc,:) = 0
       do bc = lbound(bcfluxes,1), ubound(bcfluxes,1)
-        integflux(bc,:) = 0
-        do i = 1, bcfluxes(bc)%elements%pos
-          el = bcfluxes(bc)%elements%data(i)
-          quadpnt%element = el
-          do j=1, ubound(elements%data,2)
-            nd1 = elements%data(el, j)
-            if (j<ubound(elements%data,2)) then
-              nd2 = elements%data(el, j+1)
-            else
-              nd1 = elements%data(el, 1)
-            end if
-            if (nodes%edge(nd1) == nodes%edge(nd2) .and. nodes%edge(nd1) > 0) EXIT
-          end do
-          
-          do j=1, ubound(elements%data,2)
-            if (elements%data(el,j) /= nd1 .and. elements%data(el,j) /= nd2) then
-              nd3 = elements%data(el,j)
-              EXIT
-            end if
-          end do
-
-            
-            
-          length = dist(nodes%data(nd1,:), nodes%data(nd2,:))
-          quadpnt%xy = (nodes%data(nd1,:) + nodes%data(nd2,:))/2.0_rkind
-          quadpnt%element = el
-          
-          bcpt(1,:) = nodes%data(nd1,:)
-          bcpt(2,:) = nodes%data(nd2,:)
-          call getnormal(bcpt, nodes%data(nd3,:), norm_vct)
-          
-
-          
-          if (aboveline(bcpt(1,:), bcpt(2,:), nodes%data(nd3,:))) then
-            way_in = 1
-          else
-            way_in = -1
-          end if
-
+        do surfel = 1, bcfluxes(bc)%pos
           do proc=1, ubound(pde,1)
-            call pde(proc)%flux(elements%material(el), quadpnt, vector_out=flux(proc,:))
-            
-            flux(proc,:) = flux(proc,:)*norm_vct
-            if (aboveline(bcpt(1,:), bcpt(2,:), quadpnt%xy + flux(proc,:) )) then
-              flow_in = 1
-            else
-              flow_in = -1
-            end if
-            ! if flux positive, then it is positive with respect to outer normal -> factor -1
-            integflux(bc,proc) = integflux(bc,proc) + norm2(flux(proc,:))*length*flow_in*way_in*(-1)
+            flux = 0
+            do i=1, D
+              quadpnt%order=bcfluxes(bc)%bcel(surfel)%surfnode(i)
+              call pde(proc)%flux(elements%material(el), quadpnt, vector_out=fluxtmp(proc,:))
+              flux(proc,:) = flux(proc,:) + fluxtmp(proc,:)
+            end do
+            flux(proc,:) = flux(proc,:)/D
+            norm_vct(1,:) = bcfluxes(bc)%bcel(surfel)%n_out(1:D)
+            integflux(bc, proc) = integflux(bc, proc) + &
+                                  sum(matmul(flux(proc,:), norm_vct))* &
+                                                     bcfluxes(bc)%bcel(surfel)%area
           end do
-          
         end do
       end do
-      
+            
+
       cumflux = cumflux + integflux*time_step          
       
       do bc = lbound(bcfluxes,1), ubound(bcfluxes,1)

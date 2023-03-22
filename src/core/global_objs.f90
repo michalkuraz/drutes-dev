@@ -321,10 +321,12 @@ module global_objs
     integer(kind=ikind) :: extnode	
     integer(kind=ikind) :: element
     real(kind=rkind), dimension(3) :: n_out
+    real(kind=rkind) :: area
   end type bcel_str
   
   type, public :: bcfluxes_str
   	type(bcel_str), dimension(:), allocatable :: bcel
+  	integer(kind=ikind) :: pos = 0
   	real(kind=rkind) :: cumflux=0.0_rkind
     integer :: fileid
   end type bcfluxes_str
