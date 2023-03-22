@@ -486,10 +486,6 @@ module pde_objs
             
             call hyper_planeder(a,b,c,d, grad(1), grad(2), grad(3))
             
-            grad = -grad
-            
-!            print *, "print grad", grad ; call wait()
-            
             gradloc = gradloc + grad
             
           
