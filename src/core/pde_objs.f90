@@ -30,7 +30,7 @@ module pde_objs
   use sparsematrix 
   use global_objs
   use globals
-  use decomp_vars
+!  use decomp_vars
   implicit none
   
   
