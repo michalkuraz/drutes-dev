@@ -562,7 +562,6 @@ module kinfnc
           ERROR STOP
         end if
         do i=1, nodes%kolik
-        print *, i
           call fileread(pde_loc%solution(i), file_id, ranges=(/0.0_rkind, huge(0.0_rkind)/), &
                 errmsg="Are your data in drutes.conf/kinwave/initcond consistent with your mesh data?" )
         end do
@@ -574,7 +573,7 @@ module kinfnc
       end if
       
           
-       call printmtx( pde_loc%solution) ; stop
+   
       
     end subroutine kinematixinit4cs
     
