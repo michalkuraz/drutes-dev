@@ -389,9 +389,9 @@ module core_tools
       ERROR STOP
     end if
     
-    dgdx = cfs(1)/cfs(4)
-    dgdy = cfs(2)/cfs(4)
-    dgdz = cfs(3)/cfs(4)
+    dgdx = -cfs(1)/cfs(4)
+    dgdy = -cfs(2)/cfs(4)
+    dgdz = -cfs(3)/cfs(4)
   
   
   end subroutine hyper_planeder

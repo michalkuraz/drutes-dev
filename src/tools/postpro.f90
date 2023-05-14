@@ -19,7 +19,7 @@ module postpro
   use typy
   
   public :: make_print
-  public :: write_obs, write_bcfluxes
+  public :: write_obs , write_bcfluxes
   public :: get_RAM_use
   private :: print_scilab, print_pure, print_gmsh
   
@@ -167,6 +167,7 @@ module postpro
       else
         ids = ids_obs
       end if
+     
 
       allocate(filenames(ubound(pde,1)))
       
@@ -188,6 +189,7 @@ module postpro
         write(unit=forma, fmt="(a, I7, a)") "(a, a, a, a, a, I", postpro_dec," a)"
         run = postpro_run
       end if
+
 
       do proc=1, ubound(pde,1)
 
@@ -221,8 +223,7 @@ module postpro
           end do
         end if
         
-      
-        
+
         
         if ( (.not. anime .and. mode == 0)  .or. &
           (anime_run == 1 .and. anime) .or. & 
@@ -322,6 +323,9 @@ module postpro
       real(kind=rkind), dimension(:,:), allocatable :: extrafluxes
       type(integpnt_str) :: quadpnt
       character(len=1) :: csv
+!      real(kind=rkind), dimension(:), allocatable, save :: volume
+!      integer, dimension(:), allocatable, save :: volumeunits
+      real(kind=rkind) :: tmp
 
       quadpnt%type_pnt = "obpt"
       quadpnt%column=3
@@ -395,6 +399,32 @@ module postpro
         if (allocated(extrafluxes)) deallocate(extrafluxes)
       end do
       
+!      if (.not. allocated(volume)) then
+
+!        allocate(volume(1))
+!        allocate(volumeunits(ubound(pde,1)))
+!        open(newunit=volumeunits(1), file="out/volume-re.dat", action="write", status="new")
+          
+!      end if  
+      
+!      volume(1) = 0
+!      quadpnt%type_pnt = "ndpt"
+      
+!      do i=1, elements%kolik
+!        tmp = 0
+!        do j=1,3
+!          quadpnt%order = elements%data(i,j)
+!          tmp = tmp + pde(1)%mass(1)%val(pde(1),layer, quadpnt)
+!        end do
+!        tmp = tmp/3.0
+!        volume(1) = volume(1) + tmp*elements%areas(i)
+!      end do
+      
+      
+!      write(volumeunits(1), fmt=*) time, volume(1)
+      
+!      call flush(volumeunits(1))
+      
     end subroutine write_obs
     
     
@@ -407,9 +437,8 @@ module postpro
       use global_objs
       use debug_tools
       
-      integer(kind=ikind) :: bc, el, D, nd1, nd2, nd3, i, j, proc, flow_in, way_in
-      real(kind=rkind), dimension(:,:), allocatable, save :: flux
-      real(kind=rkind), dimension(:), allocatable, save :: norm_vct 
+      integer(kind=ikind) :: bc, el, D, i, proc, surfel
+      real(kind=rkind), dimension(:,:), allocatable, save :: flux, fluxtmp
       real(kind=rkind), dimension(2,2) :: bcpt
       type(integpnt_str) :: quadpnt
       real(kind=rkind) :: length
@@ -417,77 +446,43 @@ module postpro
       
       D = drutes_config%dimen
       
-      quadpnt%type_pnt="xypt"
-      quadpnt%order=1
+      quadpnt%type_pnt="ndpt"
+
       quadpnt%column=2
       
-      if (.not. allocated(flux)) allocate(flux(ubound(pde,1), D))
       
-      if (.not. allocated(integflux)) then
+      if (.not. allocated(flux)) then
+        allocate(flux(ubound(pde,1), D))
+        allocate(fluxtmp(ubound(pde,1), D))
+    
         allocate(integflux(lbound(bcfluxes,1) : ubound(bcfluxes,1) , ubound(pde,1)))
         allocate(cumflux(lbound(bcfluxes,1) : ubound(bcfluxes,1) , ubound(pde,1)))
         cumflux = 0
       end if
       
 
-      
+      integflux = 0
       do bc = lbound(bcfluxes,1), ubound(bcfluxes,1)
-        integflux(bc,:) = 0
-        do i = 1, bcfluxes(bc)%elements%pos
-          el = bcfluxes(bc)%elements%data(i)
-          quadpnt%element = el
-          do j=1, ubound(elements%data,2)
-            nd1 = elements%data(el, j)
-            if (j<ubound(elements%data,2)) then
-              nd2 = elements%data(el, j+1)
-            else
-              nd1 = elements%data(el, 1)
-            end if
-            if (nodes%edge(nd1) == nodes%edge(nd2) .and. nodes%edge(nd1) > 0) EXIT
-          end do
-          
-          do j=1, ubound(elements%data,2)
-            if (elements%data(el,j) /= nd1 .and. elements%data(el,j) /= nd2) then
-              nd3 = elements%data(el,j)
-              EXIT
-            end if
-          end do
-
-            
-            
-          length = dist(nodes%data(nd1,:), nodes%data(nd2,:))
-          quadpnt%xy = (nodes%data(nd1,:) + nodes%data(nd2,:))/2.0_rkind
-          quadpnt%element = el
-          
-          bcpt(1,:) = nodes%data(nd1,:)
-          bcpt(2,:) = nodes%data(nd2,:)
-          call getnormal(bcpt, nodes%data(nd3,:), norm_vct)
-          
-
-          
-          if (aboveline(bcpt(1,:), bcpt(2,:), nodes%data(nd3,:))) then
-            way_in = 1
-          else
-            way_in = -1
-          end if
-
+        do surfel = 1, bcfluxes(bc)%pos
           do proc=1, ubound(pde,1)
-            call pde(proc)%flux(elements%material(el), quadpnt, vector_out=flux(proc,:))
-            
-            flux(proc,:) = flux(proc,:)*norm_vct
-            if (aboveline(bcpt(1,:), bcpt(2,:), quadpnt%xy + flux(proc,:) )) then
-              flow_in = 1
-            else
-              flow_in = -1
-            end if
-            ! if flux positive, then it is positive with respect to outer normal -> factor -1
-            integflux(bc,proc) = integflux(bc,proc) + norm2(flux(proc,:))*length*flow_in*way_in*(-1)
+            flux = 0
+            do i=1, D
+              quadpnt%order=bcfluxes(bc)%bcel(surfel)%surfnode(i)
+              call pde(proc)%flux(elements%material(el), quadpnt, vector_out=fluxtmp(proc,:))
+              flux(proc,:) = flux(proc,:) + fluxtmp(proc,:)
+            end do
+            flux(proc,:) = flux(proc,:)/D
+            integflux(bc, proc) = integflux(bc, proc) + &
+                                  dot_product(flux(proc,:), bcfluxes(bc)%bcel(surfel)%n_out(1:D))* &
+                                                            bcfluxes(bc)%bcel(surfel)%area
           end do
-          
         end do
       end do
-      
+            
+
       cumflux = cumflux + integflux*time_step          
+      
+      
       
       do bc = lbound(bcfluxes,1), ubound(bcfluxes,1)
         write(unit=bcfluxes(bc)%fileid, fmt=*) time, integflux(bc, :), cumflux(bc,:)

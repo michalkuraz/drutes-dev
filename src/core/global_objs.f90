@@ -315,12 +315,22 @@ module global_objs
     real(kind=rkind)                              :: area
   end type integnodes
   
+  
+  type, public :: bcel_str
+    integer(kind=ikind), dimension(3) :: surfnode
+    integer(kind=ikind) :: extnode	
+    integer(kind=ikind) :: element
+    real(kind=rkind), dimension(3) :: n_out
+    real(kind=rkind) :: area
+  end type bcel_str
+  
   type, public :: bcfluxes_str
-    type(smartarray_int) :: elements
-    type(smartarray_int) :: nodes
-    real(kind=rkind) :: cumflux=0.0_rkind
+  	type(bcel_str), dimension(:), allocatable :: bcel
+  	integer(kind=ikind) :: pos = 0
+  	real(kind=rkind) :: cumflux=0.0_rkind
     integer :: fileid
   end type bcfluxes_str
+  
 
   
   private :: ismartfill, ismartclear, ismartfill_norepeat, rsmartfill, rsmartclear, rsmartfill_norepeat, ismartexist

@@ -484,40 +484,185 @@ module drutes_init
       use globals
       use global_objs
       use debug_tools
+      use geom_tools
       
-      integer(kind=ikind) :: i, j, nd1, nd2, elid, e, bc
+      integer(kind=ikind), dimension(:), allocatable :: edgeid
+      integer(kind=ikind), dimension(:), allocatable :: nodeid
+      integer(kind=ikind) :: ndwrt, el, i, j, nd, D, edge2wrt, extnd, ii, bc
+      integer(kind=ikind), dimension(:), allocatable :: sizes, elcounter
       character(len=12) :: filename
+      logical :: found
+      
+      D = drutes_config%dimen
+            
       
       allocate(bcfluxes(101:maxval(nodes%edge)))
+      allocate(sizes(101:maxval(nodes%edge)))
+      allocate(elcounter(101:maxval(nodes%edge))) 
       
+      allocate(edgeid(ubound(elements%data,2)))
+      allocate(nodeid(D))
       
+      sizes = 0
       do i=1, nodes%kolik
-        if (nodes%edge(i) > 0) then
-          do e=1, nodes%element(i)%pos
-            elid = nodes%element(i)%data(e)
-            nd1 = i
-            do j=1, ubound(elements%data,2)
-              if (elements%data(elid,j) /= nd1) then
-                nd2 = elements%data(elid,j)
-                if (nodes%edge(nd2) == nodes%edge(nd1)) then
-                  call bcfluxes(nodes%edge(nd1))%elements%nrfill(elid)
-                  call bcfluxes(nodes%edge(nd1))%nodes%nrfill(nd1)
-                  call bcfluxes(nodes%edge(nd1))%nodes%nrfill(nd2)
-                end if
+		if (nodes%edge(i) >= 101) then
+		  sizes(nodes%edge(i)) = sizes(nodes%edge(i)) + 1
+		end if
+	  end do
+	  
+	  sizes = sizes * D
+
+      do i=101, ubound(bcfluxes,1)
+        allocate(bcfluxes(i)%bcel(sizes(i)))
+	  end do
+      
+      elcounter = 0
+      do i=1, elements%kolik
+        edgeid = 0
+        ndwrt = 0
+        do j=1, ubound(elements%data,2)
+          edgeid(j) = nodes%edge(elements%data(i,j))
+          if (edgeid(j) > 100) then
+            ndwrt = ndwrt + 1
+          end if
+        end do
+        
+        found = .false.
+        if (ndwrt >= D) then
+          select case(D)
+            case(3)
+                ! 1 2 3
+                ! 1 3 4
+                ! 2 3 4
+                ! 1 2 4
+              if (edgeid(1) == edgeid(2) .and. edgeid(1) == edgeid(3)) then
+                found=.true.
+                edge2wrt = edgeid(1)
+                extnd = elements%data(i,4)
+                nodeid(:) =  elements%data(i,1:3)
               end if
-            end do
-          end do
+            
+              if (edgeid(1) == edgeid(3) .and. edgeid(1) == edgeid(4)) then
+                found=.true.
+                edge2wrt = edgeid(1)
+                extnd = elements%data(i,2)
+                nodeid(:) =  elements%data(i,[1,3,4])
+              end if
+              
+              if (edgeid(2) == edgeid(3) .and. edgeid(2) == edgeid(4)) then
+                found=.true.
+                edge2wrt = edgeid(2)
+                extnd = elements%data(i,1)
+                nodeid(:) =  elements%data(i,2:4)
+              end if
+              
+              if (edgeid(1) == edgeid(2) .and. edgeid(1) == edgeid(4)) then
+                found=.true.
+                edge2wrt = edgeid(1)
+                extnd = elements%data(i,3)
+                nodeid(:) =  elements%data(i,[1,2,4])
+              end if
+            case(2)
+              ! 1 2
+              ! 1 3
+              ! 2 3
+              if (edgeid(1) == edgeid(2)) then
+                found = .true.
+                edge2wrt = edgeid(1)
+                extnd = elements%data(i,3)
+                nodeid(:) =  elements%data(i,1:2)
+              end if
+              
+              if (edgeid(1) == edgeid(3)) then
+                found = .true.
+                edge2wrt = edgeid(1)
+                extnd = elements%data(i,2)
+                nodeid(:) =  elements%data(i,[1,3])
+              end if
+              
+              if (edgeid(2) == edgeid(3)) then 
+                found = .true.
+                edge2wrt = edgeid(1)
+                extnd = elements%data(i,1)
+                nodeid(:) =  elements%data(i,[2,3])
+              end if
+          end select
+        end if
+        
+        if (found) then
+          elcounter(edge2wrt) = elcounter(edge2wrt) + 1
+          
+          ii = elcounter(edge2wrt)
+ 
+          bcfluxes(edge2wrt)%pos = ii
+          bcfluxes(edge2wrt)%bcel(ii)%element = i
+          bcfluxes(edge2wrt)%bcel(ii)%surfnode(1:D) = nodeid(1:D)
+          bcfluxes(edge2wrt)%bcel(ii)%extnode = extnd
+          
+          select case(D)
+            case(2)
+              bcfluxes(edge2wrt)%bcel(ii)%n_out(1:D) = get_normals2D(nodes%data(nodeid(1),:), nodes%data(nodeid(2),:), &
+                                                                     nodes%data(extnd,:))
+              bcfluxes(edge2wrt)%bcel(ii)%area = dist(nodes%data(nodeid(1),:), nodes%data(nodeid(2),:))
+            case(3)
+              bcfluxes(edge2wrt)%bcel(ii)%n_out(1:D) = get_normals3D(nodes%data(nodeid(1),:), nodes%data(nodeid(2),:), &
+                                                                      nodes%data(nodeid(3),:), nodes%data(extnd,:))
+!              print *, bcfluxes(edge2wrt)%bcel(ii)%n_out(1:D)
+              bcfluxes(edge2wrt)%bcel(ii)%area = triarea(nodes%data(nodeid(1),:), nodes%data(nodeid(2),:), nodes%data(nodeid(3),:))                                                     
+          end select
         end if
       end do
-      
+!      stop
+
       do bc=lbound(bcfluxes,1), ubound(bcfluxes,1)
         write(filename, fmt="(a,I3, a)") "out/", bc, ".flux"
         open(newunit=bcfluxes(bc)%fileid, file=filename, action="write", status="replace")
         write(bcfluxes(bc)%fileid, fmt=*) "# time,        flux,            cumulative flux"
+        call flush(bcfluxes(bc)%fileid)
       end do
+
+    end subroutine init_bcfluxes  
+    
+!    subroutine init_bcfluxes_old()
+!      use typy
+!      use globals
+!      use global_objs
+!      use debug_tools
+      
+!      integer(kind=ikind) :: i, j, nd1, nd2, elid, e, bc
+!      character(len=12) :: filename
+      
+!      allocate(bcfluxes(101:maxval(nodes%edge)))
+      
+!      print *, "xasca" ; stop
+      
+!      do i=1, nodes%kolik
+!        if (nodes%edge(i) > 0) then
+!          do e=1, nodes%element(i)%pos
+!            elid = nodes%element(i)%data(e)
+!            nd1 = i
+!            do j=1, ubound(elements%data,2)
+!              if (elements%data(elid,j) /= nd1) then
+!                nd2 = elements%data(elid,j)
+!                if (nodes%edge(nd2) == nodes%edge(nd1)) then
+!                  call bcfluxes(nodes%edge(nd1))%elements%nrfill(elid)
+!                  call bcfluxes(nodes%edge(nd1))%nodes%nrfill(nd1)
+!                  call bcfluxes(nodes%edge(nd1))%nodes%nrfill(nd2)
+!                end if
+!              end if
+!            end do
+!          end do
+!        end if
+!      end do
+      
+!      do bc=lbound(bcfluxes,1), ubound(bcfluxes,1)
+!        write(filename, fmt="(a,I3, a)") "out/", bc, ".flux"
+!        open(newunit=bcfluxes(bc)%fileid, file=filename, action="write", status="replace")
+!        write(bcfluxes(bc)%fileid, fmt=*) "# time,        flux,            cumulative flux"
+!      end do
       
     
-    end subroutine init_bcfluxes
+!    end subroutine init_bcfluxes_old
     
     
     subroutine init_measured()

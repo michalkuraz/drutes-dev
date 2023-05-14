@@ -61,7 +61,7 @@ module femmat
       logical :: dt_fine
       integer :: ierr_loc, ll
       real(kind=rkind), dimension(:), allocatable :: vcttmp
-      real(kind=rkind) :: lambda_l, lambda_h, tmpxx=0, maxtime=0, solver_start, solver_end
+      real(kind=rkind) :: lambda_l, lambda_h, tmpxx=0, maxtime=0, solver_start, solver_end, picard_old
       
       integer, save :: pocitac=0
       character(len=100) :: soubor
@@ -71,7 +71,7 @@ module femmat
       itcount = 0
       allocate(vcttmp(ubound(pde_common%bvect,1)))
       
-
+      picard_old = huge(picard_old)
       do
 
         itcount = itcount + 1
@@ -81,10 +81,18 @@ module femmat
 
         if (record_solver_time) call cpu_time(solver_start)
         
-
+        solver_error = .false.
         call solve_matrix(spmatrix, pde_common%bvect(1:fin), pde_common%xvect(1:fin,3),  itmax1=fin, &
             reps1=1e-14_rkind, itfin1=pcg_it, repsfin1=reps_err)
             
+        if (solver_error) then
+          ierr = 1
+          success = .false.
+          call write_log("Looks like a poor conditioning...:/")
+          EXIT
+        end if
+        
+        
         if (itersolver) then
           write(unit=file_itcg, fmt=*) time, pcg_it, reps_err
           call flush(file_itcg)
@@ -126,6 +134,17 @@ module femmat
           success = .false.
           RETURN
         end if
+        
+        if (itcount == 1) picard_old = error
+        
+        if (itcount >= 3) then
+		  if (error > picard_old) then
+			ierr = 2
+			success = .false.
+			RETURN
+		  end if
+		end if
+				
 
 
 

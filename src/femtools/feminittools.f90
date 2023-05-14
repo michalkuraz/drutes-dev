@@ -777,7 +777,7 @@ module feminittools
           case(3)
            call write_log("creating graph of the discretization mesh, and searching for boundary nodes...")
            
-           call find_neighbours(elements, nodes)
+!           call find_neighbours(elements, nodes)
            
            call write_log("for 3D automatic boundary nodes search is not yet implemented, takes some time...:/")
            

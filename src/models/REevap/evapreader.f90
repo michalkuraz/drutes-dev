@@ -27,7 +27,7 @@ module evapreader
       use core_tools
       
       integer(kind=ikind) :: layers, i, counter, low, high
-      integer :: evapconf, ierr, ebalancein, albedodat
+      integer :: evapconf, ierr, ebalancein, albedodat, raindat
       real(kind=rkind), dimension(:), allocatable :: tmpdata
       type(smartarray_real) :: datafiller
       character(len=12) :: ch
@@ -208,8 +208,33 @@ module evapreader
         meteo4evap(i)%relhum = tmpdata(6)
       end do
       
+      open(newunit=raindat, file="drutes.conf/evaporation/rain.in", status="old", action="read", iostat = ierr)
 
-    
+
+      if (ierr /= 0) then
+        allocate(evap4rain(0,0))
+        call write_log("W: unable to open file with rainfall data, assuming evaporation only")
+      else
+        counter = 0
+        deallocate(tmpdata)
+        allocate(tmpdata(2))
+        do
+          call fileread(tmpdata, raindat, checklen=.true., noexit=.true., eof=success)
+          if (.not. success) then
+            counter = counter + 1
+          else
+            call write_log("detected", int1=counter, text2="records in drutes.conf/evaporation/rain.in")
+            allocate(evap4rain(counter,2))
+            close(raindat)
+            open(newunit=raindat, file="drutes.conf/evaporation/rain.in", status="old", action="read", iostat = ierr)
+            do i=1, counter
+              call fileread(evap4rain(i,:), raindat, checklen=.true., noexit=.true., eof=success)
+            end do
+            evap4rain_pos = 1
+            EXIT
+          end if
+        end do
+      end if
     end subroutine evapread
 
 end module evapreader

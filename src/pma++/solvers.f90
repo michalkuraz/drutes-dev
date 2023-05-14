@@ -389,6 +389,7 @@ module solvers
         use mtx
         use typy
         use pmatools
+        use global4solver
         implicit none
         !> rozkladana matice, pote s rozkladem
         class(matrix), intent(inout) :: A
@@ -590,7 +591,10 @@ module solvers
             ! v r2 jsou cisla z piv. sloupce v ri2 jsou radkove indexy
             wrk = a%get(piv1,piv2)
             wrk1 = wrk
-            if (wrk==0) STOP "Problem - nulovy pivot"
+            if (wrk==0) then
+              solver_error = .true.
+              RETURN
+            end if
             if (il1 > 1) print *, "mam data",sr1,sr2,wrk
             do j=1,sr1
                 r1(j) = r1(j)/wrk

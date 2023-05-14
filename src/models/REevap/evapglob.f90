@@ -85,5 +85,9 @@ module evapglob
   type(ebalance_str), dimension(:), allocatable, public :: pars4ebalance
   
   type(albedo_str), public :: albedo_conf
+  
+  real(kind=rkind), dimension(:,:), allocatable :: evap4rain
+  
+  integer(kind=ikind) :: evap4rain_pos
 
 end module evapglob

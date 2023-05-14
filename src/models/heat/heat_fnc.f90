@@ -308,7 +308,7 @@ module heat_fnc
       else
         gradT = grad
       end if
-      
+  
       
       if (present(flux)) then
         flux = -matmul(heatpar(layer)%lambda, gradT) 
@@ -347,6 +347,10 @@ module heat_fnc
           end if
         end do   
       end do
+
+!      do i=1, nodes%kolik
+!        pde_loc%solution(i) = (2-5)/0.15_rkind*nodes%data(i,1) + 5
+!      end do
 
     
     

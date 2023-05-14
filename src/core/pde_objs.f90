@@ -30,7 +30,7 @@ module pde_objs
   use sparsematrix 
   use global_objs
   use globals
-  use decomp_vars
+!  use decomp_vars
   implicit none
   
   
@@ -369,6 +369,7 @@ module pde_objs
       use typy
       use decomp_vars
       use core_tools
+      use debug_tools
 
       
       class(pde_str), intent(in) :: pde_loc

@@ -354,7 +354,7 @@ module objfnc
         
       allocate(tmpdata(expcols+1))
       
-      do i=1, counter     
+      do i=1, counter-1     
         call fileread(tmpdata, expfile, checklen=.TRUE.)
         exp_data(1)%time(i) = tmpdata(1)
         low=2
