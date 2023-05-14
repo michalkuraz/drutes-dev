@@ -186,10 +186,12 @@ module evapbc4heat
       quad4atm%type_pnt = "numb"
       quad4atm%this_is_the_value = meteo4evap(pos)%T_air
       
+      E = (dens_satvap(quad4atm)*meteo4evap(pos)%relhum - dens_satvap(quadpnt)*relhumid(quadpnt)) / & 
+			((resH() + rs)*dens_liquid(quadpnt))
       
-      E = min((dens_satvap(quad4atm)*meteo4evap(pos)%relhum  - dens_satvap(quadpnt)*relhumid(quadpnt)  )/(resH() + rs), 0.0_rkind)
+      E = min(E, 0.0_rkind)
+           
       
-
       
     end function Eterm
     
