@@ -1851,6 +1851,7 @@ module RE_constitutive
         use global_objs
         use re_globals
         use pde_objs
+        use debug_tools
 
         class(pde_str),intent(in) :: pde_loc
         integer(kind=ikind) :: el, pos, mat
@@ -1877,6 +1878,7 @@ module RE_constitutive
               position = int(-hprev/drutes_config%fnc_discr_length)+1
               low = vgset(mat)%rcza_set%tab(position,2)
               high = vgset(mat)%rcza_set%tab(position,3)
+              print *, high, low, h
               if (h < low .or. h > high) then
                 passed = .false.
                 RETURN
@@ -1884,6 +1886,7 @@ module RE_constitutive
               end if
            end if
          end do
+         
 
         passed = .true.
 

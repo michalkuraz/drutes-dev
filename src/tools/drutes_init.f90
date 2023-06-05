@@ -61,7 +61,9 @@ module drutes_init
 
       open(newunit=file_itcg, file="out/itsolver.count", action="write", status="replace", iostat=i_err)
       
-      open(newunit=file_picard, file="out/picard_it.count", action="write", status="replace", iostat=i_err)
+      open(newunit=file_picard, file="out/picard_error.vals", action="write", status="replace", iostat=i_err)
+      
+      write(unit=file_picard, fmt=*) "# time            Picard error     "
       
       call write_log(text="total number of parallel images is:", int1=1_ikind*NUM_IMAGES())
 

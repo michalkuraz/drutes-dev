@@ -573,7 +573,7 @@ module kinfnc
       end if
       
           
-        
+   
       
     end subroutine kinematixinit4cs
     
