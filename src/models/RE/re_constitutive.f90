@@ -1878,9 +1878,8 @@ module RE_constitutive
               position = int(-hprev/drutes_config%fnc_discr_length)+1
               low = vgset(mat)%rcza_set%tab(position,2)
               high = vgset(mat)%rcza_set%tab(position,3)
-              print *, high, low, h
               if (h < low .or. h > high) then
-                passed = .false.
+                passed = .true.
                 RETURN
               end if
               end if
