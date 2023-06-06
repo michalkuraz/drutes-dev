@@ -670,7 +670,6 @@ module re_total
         layer = elements%material(el_id)
         theta =  pde_loc%mass(1)%val(pde_loc,layer, quadpnt)
         value = rain + evap*theta
-		print *, "value",  value
       end if
       
       
