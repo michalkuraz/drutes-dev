@@ -631,8 +631,9 @@ module re_total
       
       type(integpnt_str) :: quadpnt
       integer(kind=ikind) :: layer
-      real(kind=rkind) :: theta, rain, evap
+      real(kind=rkind) :: theta, rain, evap, h
       integer(kind=ikind) :: i, edge_id, j
+      real(kind=rkind), parameter :: hcrit = -1e6
       
       
       
@@ -669,8 +670,12 @@ module re_total
         quadpnt%column = 3
         layer = elements%material(el_id)
         theta =  pde_loc%mass(1)%val(pde_loc,layer, quadpnt)
-        value = rain + evap*theta
-		print *, "value",  value
+        h = pde_loc%getval(quadpnt)
+        if ( h > hcrit ) then
+          value = evap + rain
+        else
+          value = rain
+        end if
       end if
       
       
