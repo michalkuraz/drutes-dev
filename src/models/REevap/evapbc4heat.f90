@@ -26,7 +26,7 @@ module evapbc4heat
       use pde_objs
       use re_constitutive
       use debug_tools
-      
+     
       
       type(integpnt_str), intent(in) :: quadpnt
       integer(kind=ikind) :: layer
@@ -355,7 +355,7 @@ module evapbc4heat
       real(kind=rkind), dimension(3) :: gravflux, bcflux
       real(kind=rkind), dimension(:), allocatable, save :: nvectin
 
-      real(kind=rkind):: dens_wat, bcval, rain
+      real(kind=rkind)::  bcval, rain
       integer(kind=ikind) :: layer, nodeid, D, i
       type(integpnt_str) :: quadpnt_loc
 
@@ -374,14 +374,14 @@ module evapbc4heat
         quadpnt_loc%column = 2
         quadpnt_loc%type_pnt = "ndpt"
         quadpnt_loc%order = elements%data(el_id, node_order)
-        call pde(RE_ord)%pde_fnc(RE_ord)%dispersion(pde(RE_ord), elements%material(el_id), quadpnt_loc, &
-                  tensor=K(1:D, 1:D))
+!        call pde(RE_ord)%pde_fnc(RE_ord)%dispersion(pde(RE_ord), elements%material(el_id), quadpnt_loc, &
+!                  tensor=K(1:D, 1:D))
                   
         call get_normals(el_id, bcpts, nvectin) 
 
-        gravflux(1:D) = -K(D, 1:D)*nvectin
+!        gravflux(1:D) = -K(D, 1:D)*nvectin
         
-        dens_wat = dens_liquid(quadpnt_loc)
+!        dens_wat = dens_liquid(quadpnt_loc)
         
         rain=0
         if (ubound(evap4rain,1) > 0) then
@@ -403,13 +403,13 @@ module evapbc4heat
         if (rain > 10*epsilon(rain)) then
           bcval = rain
         else
-          bcval = Eterm(quadpnt_loc, layer)/dens_wat
+          bcval = Eterm(quadpnt_loc, layer)
         end if
         
         
         bcflux(1:D) = nvectin(1:D)*bcval
         
-        bcflux(1:D) = bcflux(1:D) + gravflux(1:D)
+!        bcflux(1:D) = bcflux(1:D) 
 
         value = get_fluxsgn(el_id, bcpts, bcflux(1:D) ) * norm2(bcflux(1:D))        
       end if

@@ -53,6 +53,8 @@ module evappointers
       pde(re_ord)%pde_fnc(re_ord)%elasticity  =>  REcapacityhh
       
       pde(re_ord)%pde_fnc(heat_ord)%elasticity  =>  REcapacityhT
+      
+      pde(re_ord)%pde_fnc(re_ord)%convection => dKvhdh
 
       pde(re_ord)%flux  =>  totalflux
       

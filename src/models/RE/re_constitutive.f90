@@ -774,6 +774,7 @@ module RE_constitutive
       if (present(tensor)) then
         tensor = tmp* vgset(layer)%Ks
       end if
+      
 
       if (present(scalar)) then
         scalar = tmp
