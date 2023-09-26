@@ -218,18 +218,26 @@ module femmat
             elnode_prev(j) = value
 		      end if
 		    end do
-       end do processes
+        end do processes
 
-       call build_bvect(i, time_step)
+        call build_bvect(i, time_step)
 
-       call build_stiff_np(i, time_step)
+        call build_stiff_np(i, time_step)
 
-       call pde_common%time_integ(i)
+        call pde_common%time_integ(i)
+ 
+!        if (time > 3100) then
+!		 print *, "-----"
+!		 print *, i
+!		 call printmtx(stiff_mat)
+!		 print *, "---"
+!		 call printmtx(cap_mat) 
+!		 call wait()
+!	    end if
 
+        stiff_mat = stiff_mat + cap_mat 
 
-       stiff_mat = stiff_mat + cap_mat 
-
-       call in2global(i,spmatrix, pde_common%bvect)
+        call in2global(i,spmatrix, pde_common%bvect)
 
       end do
       printedk=.false.

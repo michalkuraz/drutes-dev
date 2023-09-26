@@ -30,6 +30,7 @@ module evap_heat_constitutive
       use re_constitutive
       use evapglob
       use evap_RE_constitutive
+      use debug_tools
       
             
       class(pde_str), intent(in) :: pde_loc
@@ -66,6 +67,7 @@ module evap_heat_constitutive
       call cond_vt(layer, quadpnt, Klvt)
       
       val = soil_heat_coef(layer)%b1 + soil_heat_coef(layer)%b2*theta + soil_heat_coef(layer)%b3*sqrt(theta)
+      
       
       if (present(tensor)) then
         tensor = 0

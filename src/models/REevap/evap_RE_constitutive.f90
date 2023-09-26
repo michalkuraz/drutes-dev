@@ -181,6 +181,7 @@ module evap_RE_constitutive
       
       val = dthetav_dtemp(pde(re_ord),layer, quadpnt) 
       
+      
     end function REcapacityhT
   
   
@@ -360,6 +361,7 @@ module evap_RE_constitutive
       use re_globals
       use evapglob
       use re_constitutive
+      use debug_tools
       
       class(pde_str), intent(in) :: pde_loc
       !> value of the nonlinear function
@@ -383,6 +385,7 @@ module evap_RE_constitutive
       val = (ths-theta)*(drelhumiddT(quadpnt)*dens_satvap(quadpnt)/dens_liquid(quadpnt) + &
             relhumid(quadpnt) * drhosv_dT(quadpnt)/dens_liquid(quadpnt) + &
             relhumid(quadpnt)*dens_liquid(quadpnt)*invdrhol_dT(quadpnt))
+            
     
     end function dthetav_dtemp
     
@@ -582,7 +585,12 @@ module evap_RE_constitutive
      
       T = pde(heat_ord)%getval(quadpnt)        
     
-      val = -((317.0*T*T+40000.0*T-240591600.0_rkind)*exp(-(317.0*T)/40000.0-601479.0/(100.0*T)+78429.0/2500.0))/(400000000.0*T*T*T)
+	  if (T > 0) then
+		val = -((317.0*T*T+40000.0*T-240591600.0_rkind)*exp(-(317.0*T)/40000.0-601479.0/(100.0*T)+78429.0/2500.0))& 
+				/(400000000.0*T*T*T)
+	  else
+		val = 0
+	  end if
       
     end function drhosv_dT
     
