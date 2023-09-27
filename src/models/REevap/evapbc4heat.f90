@@ -377,7 +377,7 @@ module evapbc4heat
 !        call pde(RE_ord)%pde_fnc(RE_ord)%dispersion(pde(RE_ord), elements%material(el_id), quadpnt_loc, &
 !                  tensor=K(1:D, 1:D))
                   
-!        call get_normals(el_id, bcpts, nvectin) 
+        call get_normals(el_id, bcpts, nvectin) 
 
 !        gravflux(1:D) = -K(D, 1:D)*nvectin
         
