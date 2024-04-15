@@ -36,6 +36,7 @@ module simegen
       use globals1d
       use core_tools
       use readtools
+      use geom_tools
       use debug_tools
 
 
@@ -45,6 +46,8 @@ module simegen
       integer(kind=ikind) :: i,j, last, n
       logical, dimension(:), allocatable :: testmat
       logical :: err_mat = .false.
+      real(kind=rkind), dimension(:), allocatable :: nd_tmp
+      real(kind=rkind), dimension(2) :: A,B,pt
 
 
       allocate(pocty(ubound(deltax_1d,1)))
@@ -56,9 +59,9 @@ module simegen
       do i = 1, ubound(deltax_1d,1)
         if (abs((int((deltax_1d(i,3) - deltax_1d(i,2))/deltax_1d(i,1)) - &
             ((deltax_1d(i,3) - deltax_1d(i,2))/deltax_1d(i,1)))) > 100*epsilon(dx1)) then
-          n = int((deltax_1d(i,3) - deltax_1d(i,2))/deltax_1d(i,1)) + 1
+          n = abs(int((deltax_1d(i,3) - deltax_1d(i,2))/deltax_1d(i,1))) + 1
         else
-          n = int((deltax_1d(i,3) - deltax_1d(i,2))/deltax_1d(i,1))
+          n = abs(int((deltax_1d(i,3) - deltax_1d(i,2))/deltax_1d(i,1)))
         end if    
 
         deltax_1d(i,1) = (deltax_1d(i,3) - deltax_1d(i,2))/(1.0_rkind*n)
@@ -75,6 +78,7 @@ module simegen
       nodes%kolik=pocet1
       elements%kolik = nodes%kolik - 1
       call mesh_allocater()
+      allocate(nd_tmp(nodes%kolik))
       
       sumy(0) = 0
       deltax_1d(0,:) = 0
@@ -85,12 +89,23 @@ module simegen
       do i=1, ubound(pocty,1)
         do j=1, pocty(i) 
           if (i == 1) then
-            nodes%data(j+sumy(i-1),1) = deltax_1d(i-1,3) + (j-1)*deltax_1d(i,1)
+            nd_tmp(j+sumy(i-1)) =  deltax_1d(i-1,3) + (j-1)*deltax_1d(i,1)
+!            nodes%data(j+sumy(i-1),1) = deltax_1d(i-1,3) + (j-1)*deltax_1d(i,1)
           else
-            nodes%data(j+sumy(i-1),1) = deltax_1d(i-1,3) + j*deltax_1d(i,1)
+!            nodes%data(j+sumy(i-1),1) = deltax_1d(i-1,3) + j*deltax_1d(i,1)
+             nd_tmp(j+sumy(i-1)) = deltax_1d(i-1,3) + j*deltax_1d(i,1)
           end if
         end do
       end do
+      
+      if (nd_tmp(1) < nd_tmp(2)) then
+        nodes%data(:,1) = nd_tmp
+      else
+        do i=1,nodes%kolik
+          nodes%data(i,1) = nd_tmp(nodes%kolik-i+1)
+        end do
+      end if
+      
 	
       elements%data(1,1) = 1 
       elements%data(1,2) = 2
@@ -98,20 +113,23 @@ module simegen
         elements%data(i,1) = elements%data(i-1,2)
         elements%data(i,2) = i+1
       end do
-
-
-
+      
+      A=0
+      B=0
+      pt=0
       do i=1, elements%kolik
         do j=1,ubound(materials_1D,1)
-          if (avg(nodes%data(elements%data(i,1),1), nodes%data(elements%data(i,2),1)) > materials_1D(j,2) .and. &
-              avg(nodes%data(elements%data(i,1),1), nodes%data(elements%data(i,2),1)) <= materials_1D(j,3)) then
-              
+          pt(1) = avg(nodes%data(elements%data(i,1),1), nodes%data(elements%data(i,2),1))
+          A(1) = materials_1D(j,2)
+          B(1) =  materials_1D(j,3)
+          if (inline(A,B,pt)) then
               elements%material(i) =  nint(materials_1D(j,1))
               EXIT
           end if
         end do
       end do
 
+      
       if (minval(elements%material) == 0) then
         print *, "check file drutes.conf/mesh/drumesh1d.conf, seems like the material description does not cover the entire domain"
         ERROR STOP
@@ -133,7 +151,7 @@ module simegen
       end do
       
       if (err_mat) call file_error(file_mesh, "ERROR!! check your material description")
-
+      
 
       nodes%edge = 0
       

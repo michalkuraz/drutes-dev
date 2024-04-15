@@ -252,18 +252,7 @@ module geom_tools
 
   end subroutine interpolate
 
- 
-   
 
-  
-  
-
-  
-  
-  
-    
-    
-    
 
   !> procedure to create transformation matrix 
   !! \f[  \left( \begin{array}{c}  e \\ f \end{array} \right) + \left( \begin{array}{cc}   a & b \\ c & d  \end{array}\right) \left( \begin{array}{c}  x \\ y  \end{array} \right)  = \left( \begin{array}{c}  x^T \\ y^T \end{array} \right) \f]
