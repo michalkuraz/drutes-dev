@@ -671,9 +671,9 @@ module re_total
         quadpnt%preproc = .false.
         quadpnt%column = 1
         h = pde_loc%getval(quadpnt)
-        if ( h< -1e5 ) evap = 0
+        if ( h< -1e7 ) evap = 0
         value = rain + evap
-print *, "value",  value
+!print *, "value",  value
       end if
       
       
