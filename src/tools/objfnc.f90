@@ -544,8 +544,7 @@ module objfnc
       
       call read_model()
 
-!print *, "objfnc::get_objval_standard broken"
-!error stop 
+
       allocate(errors(ubound(model_data,1)))
       
       do i=1, ubound(errors,1)
@@ -574,7 +573,6 @@ module objfnc
                 if (.not. inlast) then
                   slope = (model_data(n)%data(pos+1,l) - model_data(n)%data(pos,l))/ &
                           (model_data(1)%time(pos+1) - model_data(1)%time(pos))
-                  print *, model_data(1)%time(pos+1) - model_data(1)%time(pos)
                   modval = model_data(n)%data(pos+1,l) - slope*dt
                 else
                   modval = model_data(n)%data(pos+1,l)
@@ -582,9 +580,6 @@ module objfnc
                 
                 errors(i)%val(l) = errors(i)%val(l) + (modval - exp_data(n)%data(j,l))*(modval - exp_data(n)%data(j,l))
                 
-                print *, i, l,   errors(i)%val
-                
-
               end do
             end do
            
@@ -597,7 +592,6 @@ module objfnc
         
    
       do i=1, ubound(errors,1)  
-        print *, errors(i)%val ,  pos
         errors(i)%val = sqrt(errors(i)%val/pos)
       end do
       
