@@ -771,7 +771,7 @@ module RE_constitutive
         tmp = logtablesearch(h, vgset(layer)%logh, vgset(layer)%Kr, vgset(layer)%step4fnc)
       end if
       
-      tmp = max(1e-10, tmp)
+      tmp = max(1e-8, tmp)
   
       if (present(tensor)) then
         tensor = tmp* vgset(layer)%Ks
