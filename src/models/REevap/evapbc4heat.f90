@@ -262,7 +262,7 @@ module evapbc4heat
       
       if (present(code)) then
 
-        if (raining) then
+        if (raining .and. rainfall_step == "hrs") then
           code = 4
         else
           code = 2
@@ -374,14 +374,9 @@ module evapbc4heat
         quadpnt_loc%column = 2
         quadpnt_loc%type_pnt = "ndpt"
         quadpnt_loc%order = elements%data(el_id, node_order)
-!        call pde(RE_ord)%pde_fnc(RE_ord)%dispersion(pde(RE_ord), elements%material(el_id), quadpnt_loc, &
-!                  tensor=K(1:D, 1:D))
                   
         call get_normals(el_id, bcpts, nvectin) 
 
-!        gravflux(1:D) = -K(D, 1:D)*nvectin
-        
-!        dens_wat = dens_liquid(quadpnt_loc)
         
         rain=0
         if (ubound(evap4rain,1) > 0) then
@@ -399,17 +394,18 @@ module evapbc4heat
             end if
           end do
         end if
-            
-        if (rain > 10*epsilon(rain)) then
-          bcval = rain
+          
+        if (rainfall_step == "hrs") then
+          if (rain > 10*epsilon(rain)) then
+            bcval = rain
+          else
+            bcval = Eterm(quadpnt_loc, layer)
+          end if
         else
-          bcval = Eterm(quadpnt_loc, layer)
+          bcval = rain + Eterm(quadpnt_loc, layer)
         end if
         
-        
         bcflux(1:D) = nvectin(1:D)*bcval
-        
-!        bcflux(1:D) = bcflux(1:D) 
 
         value = get_fluxsgn(el_id, bcpts, bcflux(1:D) ) * norm2(bcflux(1:D))        
       end if

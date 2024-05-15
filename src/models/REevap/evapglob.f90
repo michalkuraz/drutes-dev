@@ -49,6 +49,13 @@ module evapglob
   !> reference level fot the temperature measurement
   real(kind=rkind), public :: zref
   
+  !> rainfall data step
+  !! two options (1) day and (2) hrs
+  !! if daily time step we sum up together evaporation (negative)  and rainfall intensity (positive)
+  !! if hourly, then we either consider evaporation or rainfall
+  !<
+  character(len=3) :: rainfall_step
+  
   type, public :: ebalance_str
     real(kind=rkind) :: day
     real(kind=rkind) :: latitude, noon, sunsent_angle, solar_decl
