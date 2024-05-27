@@ -110,6 +110,10 @@ program main
     call init_measured()
   
     call write_log("number of nodes:", int1=nodes%kolik, text2="number of elements:", int2=elements%kolik)
+  
+    CALL getcwd(writer)
+  
+    call write_log("current working directory:", text2=cut(writer))
 
     call set_pointers()
     
