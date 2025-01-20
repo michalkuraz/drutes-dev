@@ -99,7 +99,7 @@ module re_globals
   character(len=256) :: evap_name
   
   !> critical values
-  real(kind=rkind), public :: h_crit_low=-1e-7, h_crit_high=0.0, Kr_crit=1e-8
+  real(kind=rkind), public :: h_crit_low=-1e5, h_crit_high=0, Kr_crit=1e-8, theta_crit=1e-4
   
    
 end module re_globals

@@ -117,7 +117,7 @@ module femmat
         write(unit=terminal, fmt=*) "Nonlinear solver convergence criterion:", error
         
         write(unit=file_picard, fmt=*) time, error
-         
+   
         if (itcount == 1 .or. error <= iter_criterion) then
           do proc=1, ubound(pde,1)
             top = pde(proc)%permut(1)
@@ -138,18 +138,18 @@ module femmat
         if (itcount == 1) picard_old = error
         
         if (itcount >= 3) then
-		  if (error > picard_old) then
-			ierr = 2
-			success = .false.
-			RETURN
-		  end if
+          if (error > picard_old) then
+          ierr = 2
+          success = .false.
+          RETURN
+        end if
 		end if
 				
 
 
 
         if (error <= iter_criterion) then
-        
+
           if (ierr /= -1) ierr = 0
           
           if (drutes_config%check4mass) then
@@ -157,9 +157,9 @@ module femmat
             call do_masscheck()
             
           end if
-          
+
           call results_extractor()
-          
+
           success = .true.
           iter_succesfull = .true.
           RETURN

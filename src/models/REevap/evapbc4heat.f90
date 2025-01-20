@@ -341,6 +341,7 @@ module evapbc4heat
       use evapglob
       use printtools
       use geom_tools
+      use re_globals
       
       class(pde_str), intent(in) :: pde_loc
       integer(kind=ikind), intent(in)  :: el_id, node_order
@@ -355,7 +356,7 @@ module evapbc4heat
       real(kind=rkind), dimension(3) :: gravflux, bcflux
       real(kind=rkind), dimension(:), allocatable, save :: nvectin
 
-      real(kind=rkind)::  bcval, rain
+      real(kind=rkind)::  bcval, rain, h, theta
       integer(kind=ikind) :: layer, nodeid, D, i
       type(integpnt_str) :: quadpnt_loc
 
@@ -404,6 +405,16 @@ module evapbc4heat
         else
           bcval = rain + Eterm(quadpnt_loc, layer)
         end if
+
+        quadpnt_loc%preproc = .true.
+        quadpnt_loc%column = 1
+        
+        h = pde_loc%getval(quadpnt_loc)
+        
+        theta =  pde_loc%mass(1)%val(pde_loc,layer, quadpnt_loc)
+        
+        if ( theta <= theta_crit .or. h < h_crit_low) bcval = rain
+        if ( h >= h_crit_high) bcval = 0
         
         bcflux(1:D) = nvectin(1:D)*bcval
 

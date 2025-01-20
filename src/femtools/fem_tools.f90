@@ -68,7 +68,7 @@ module fem_tools
       allocate(bcval(ubound(stiff_mat,1),3))
       allocate(surface(ubound(stiff_mat,1)*ubound(pde,1)))
       allocate(fin(ubound(pde,1)))
-      allocate(neumann(drutes_config%dimen))
+      allocate(neumann(drutes_config%dimen+1))
       allocate(bcpts%border(drutes_config%dimen))
     end if
     

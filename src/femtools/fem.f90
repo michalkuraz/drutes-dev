@@ -100,6 +100,8 @@ module fem
 
         call pde_common%treat_pde(ierr,  success)
         
+        
+        
         itcum = itcum + itcount
 
         if (success) then
