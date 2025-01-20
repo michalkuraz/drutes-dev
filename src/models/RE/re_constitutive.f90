@@ -772,6 +772,7 @@ module RE_constitutive
       end if
       
       tmp = max(Kr_crit, tmp)
+       
   
       if (present(tensor)) then
         tensor = tmp* vgset(layer)%Ks
