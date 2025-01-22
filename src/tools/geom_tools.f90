@@ -1446,6 +1446,33 @@ module geom_tools
       
 
     end subroutine find_neighbours
+    
+    
+    function interpol_init1D(x, polygon) result(y)
+      use typy
+      real(kind=rkind), intent(in) :: x                ! The point where interpolation is performed
+      real(kind=rkind), dimension(:,:), intent(in) :: polygon       ! Array of x-coordinates
+      real(kind=rkind) :: y                            ! Interpolated value
+      integer(kind=ikind) :: j, n
+
+      n = ubound(polygon,1)
+      
+      ! Check bounds
+      if (x < polygon(1,1) .or. x > polygon(n,1)) then
+        print *, "Your initial condition measurement data are not covering the entire computational domain"
+        print *, "exited from geom_tools::interpol_init1D"
+        ERROR STOP
+      end if
+
+      ! Find the interval [x_array(j), x_array(j+1)] where x lies
+      do j = 1, n - 1
+        if (x >= polygon(j,1) .and. x <= polygon(j + 1,1)) then
+          y = polygon(j,2) + (x - polygon(j,1)) * (polygon(j + 1,2) - polygon(j,2)) / (polygon(j + 1,1) - polygon(j,1)) 
+          return
+        end if
+      end do
+
+    end function interpol_init1D
 
   
     subroutine map1d2d(filename)

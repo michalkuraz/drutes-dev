@@ -41,9 +41,16 @@ module heat_globals
   type(heatpars_str), dimension(:), allocatable, public :: heatpar
   
   !> configuration file unit
-  integer, public :: file_heat
+  integer, public :: file_heat, file_heaticond
   
   !> logical, if true, convection is obtained from solving RE
   logical, public :: with_richards
+  
+  logical, public :: Tinitfile = .false.
+  
+  real(kind=rkind), dimension(:,:), allocatable :: Tinitpoints
+  
+  
+  
   
 end module heat_globals

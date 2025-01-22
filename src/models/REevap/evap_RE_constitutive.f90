@@ -441,8 +441,9 @@ module evap_RE_constitutive
       real(kind=rkind) :: T
       
       T = T2kelv(pde(heat_ord)%getval(quadpnt))
-      
+    
       val = 1e-3 *(exp(31.3716 - (6014.79/T) - 7.92495e-3*T))/T
+      
       
     end function dens_satvap
     

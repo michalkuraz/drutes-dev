@@ -246,7 +246,7 @@ module evapreader
           rainfall_step = "day"
         else
           call write_log("detected hourly time step for rainfall data")
-          rainfall_step = "hrs"
+          rainfall_step = "day"
         end if
       end if
     end subroutine evapread
