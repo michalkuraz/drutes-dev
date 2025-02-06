@@ -73,7 +73,7 @@ program main
       close(fileid)
     end if
 
-    version_id%number = "12.0/2022"
+    version_id%number = "2.0/2025"
     version_id%reliability = "beta "
     
     call get_cmd_options()
