@@ -214,6 +214,19 @@ module drutes_init
       
         if (maxval(skip) == 0) then
 	        select case(trim(arg))
+            case("-h")
+              print *, "Available switches are:"
+              print *, "-o optim : if nonlinear solver fails to converge within minimal time step, the setup is changed into"
+              print *, "           semiexplicit method. It means the nonlinearities are computed based on previous time step values"
+              print *, "--print-level 1 : all screen output goes to out/screen.log"
+              print *, "--print-level 2 : all screen output goes to /dev/null (use on Linux only)"
+              print *, "-v prints DRUtES version"
+              print *, "--tmax [value] [unit] : will limit CPU runtime to a given value. Available units are [s, min, hrs, day]"
+              print *, "                        example:"
+              print *, "                                bin/drutes --tmax 30 min"
+              print *, "                        if the computation will not finish in 30 mins the time integration loop will exit"
+              print *, "                        before reaching the end time"
+              STOP
             case("-o")
               call getarg(i+1,oarg)
               select case(trim(oarg))
@@ -223,6 +236,9 @@ module drutes_init
                   optim=.true.
                 case default
                   print *, "unrecognized option after -o , exiting...."
+                  print *, "available options are:"
+                  print *, " -o optim"
+                  print *, "try bin/drutes -h"
                   ERROR STOP
               end select
 
@@ -305,6 +321,7 @@ module drutes_init
                 case default
                   print *, "incorrect command line options, your option was:"
                   print *, trim(arg)
+                  print *, "try bin/drutes -h"
                   ERROR STOP
               end select
             else
