@@ -376,6 +376,7 @@ module kinreader
         deallocate(tmp_array)
         allocate(tmp_array(8))
         do i=1,n
+          print *, i
           call fileread(tmp_array, fileid=file_kinematix, checklen=.true.)
           kinsols(i)%horb = tmp_array(1)
           if (icond_file) then

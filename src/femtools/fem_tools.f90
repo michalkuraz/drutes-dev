@@ -523,10 +523,10 @@ module fem_tools
             flux(1) = flux(1)*nvect(1)
             flux(2) = flux(2)*nvect(2)
             
-            print *, el
-            print *, flux
-            print *, "---"
-            call wait()
+!            print *, el
+!            print *, flux
+!            print *, "---"
+!            call wait()
             
             locval = sqrt(flux(1)*flux(1) + flux(2)*flux(2))*weights(pt)
           end do

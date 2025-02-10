@@ -522,17 +522,17 @@ module drutes_init
       
       sizes = 0
       do i=1, nodes%kolik
-		if (nodes%edge(i) >= 101) then
-		  sizes(nodes%edge(i)) = sizes(nodes%edge(i)) + 1
-		end if
-	  end do
+        if (nodes%edge(i) >= 101) then
+          sizes(nodes%edge(i)) = sizes(nodes%edge(i)) + 1
+        end if
+      end do
 	  
-	  sizes = sizes * D
+      sizes = sizes * D
 
       do i=101, ubound(bcfluxes,1)
         allocate(bcfluxes(i)%bcel(sizes(i)))
-	  end do
-      
+      end do
+
       elcounter = 0
       do i=1, elements%kolik
         edgeid = 0
@@ -599,7 +599,7 @@ module drutes_init
               
               if (edgeid(2) == edgeid(3)) then 
                 found = .true.
-                edge2wrt = edgeid(1)
+                edge2wrt = edgeid(2)
                 extnd = elements%data(i,1)
                 nodeid(:) =  elements%data(i,[2,3])
               end if
@@ -607,6 +607,7 @@ module drutes_init
         end if
         
         if (found) then
+
           elcounter(edge2wrt) = elcounter(edge2wrt) + 1
           
           ii = elcounter(edge2wrt)

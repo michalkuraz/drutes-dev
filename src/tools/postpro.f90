@@ -224,17 +224,24 @@ module postpro
         end if
         
 
-        
+
         if ( (.not. anime .and. mode == 0)  .or. &
           (anime_run == 1 .and. anime) .or. & 
          ( .not. anime .and. (mode == -1 .and. postpro_run == 0 ) ) ) then
 
-         
+
+          
           do i=1, ubound(filenames(proc)%names,1)
               open(newunit=ids(proc, i), file=trim(filenames(proc)%names(i)), action="write", status="replace", iostat=ierr)
           end do
+          
           ids_obs = ids
+          
+          if (anime .and. anime_run == 1) then
+            ids_anime = ids
+          end if
         end if
+        
 
 
         quadpnt%type_pnt = "ndpt"
@@ -586,6 +593,7 @@ module postpro
       use pde_objs
       use geom_tools
       use debug_tools
+      use core_tools
       
       integer, dimension(:), intent(in) :: ids
       integer(kind=ikind), intent(in) :: proc
@@ -600,7 +608,17 @@ module postpro
       real(kind=rkind) :: curtime
       type(integpnt_str) :: qpntloc
       type(integpnt_str) :: quadpnt_loc
-
+      
+!      logical :: opened
+!      character(len=256) :: filename
+      
+      
+!      do i=1, ubound(ids,1)
+!        INQUIRE(UNIT=ids(i), NAME=filename, OPENED=opened)
+!        print *, i, ids(i), cut(filename), opened
+!      end do
+      
+!      call wait()
 
       if (.not. allocated(body)) allocate(body(3, 7+ubound(pde(proc)%mass,1)))
       
@@ -621,7 +639,7 @@ module postpro
         write(unit=ids(i), fmt=*) "z=zeros(nt,3);"
       end do
       
-       call wait()
+
 
 
       quadpnt_loc%preproc=.true.
@@ -685,6 +703,7 @@ module postpro
           write(unit=ids(j), fmt=*) "z(", i, ",1) =", body(1,2+j), ";"
           write(unit=ids(j), fmt=*) "z(", i, ",2) =", body(2,2+j), ";"
           write(unit=ids(j), fmt=*) "z(", i, ",3) =", body(3,2+j), ";"
+
 
             
         end do

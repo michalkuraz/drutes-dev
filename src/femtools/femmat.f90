@@ -226,14 +226,6 @@ module femmat
 
         call pde_common%time_integ(i)
  
-!        if (time > 3100) then
-!		 print *, "-----"
-!		 print *, i
-!		 call printmtx(stiff_mat)
-!		 print *, "---"
-!		 call printmtx(cap_mat) 
-!		 call wait()
-!	    end if
 
         stiff_mat = stiff_mat + cap_mat 
 
