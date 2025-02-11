@@ -351,94 +351,66 @@ module geom_tools
   end function get_nz
   
   !> returns normal vector coordinates of an inner normal boundary vector to tetrahedron surface
-  !! plane defined by given tetrahedron element wall is defined by
-  !! \f[ ax +by +cz + d = 0 \f]
-  !! function plane_coeff returns vector 
-  !! \f[ coeffs = (a,b,c,d)^T \f]
-  !! line perpendicular to the surface passing through the 4th tetrahedron point with coordinates \f[ (x_4, y_4, z_4)^T \f]
-  !! is given by
-  !! \f[ \begin{split} x &= x_4 + at \\ y &= y_4 + bt \\ z &= z_4 + ct \end{split} \f]
-  !! \f[ t \f] is obtained from
-  !! \f[ a(x_4 + at) + b(y_4 + bt) + c(z_4 + ct) + d = 0 \f]
-  !! perpendicular surface projection of point 4 to surface has z coordinate
-  !! \f[ z_i = z_4 + ct \f]
-  !! resulting sin of z-coordinate is obtained from
-  !! \f sinz =  \frac{||c||}{\sqrt{a^2 + b^2 + c^2}}
-  !! if \f[ z_4 > z_i \f] inner vector points upwards else \f[ sinz = -sinz \f]
-  !>
-  function get_normals3D(a,b,c, exter) result(sins)
+  function get_normals3D(a,b,c, d) result(nvect)
     use typy
     use debug_tools
     use core_tools
     
     
-    real(kind=rkind), dimension(:), intent(in) :: a,b,c, exter
-    real(kind=rkind), dimension(3) :: sins
+    real(kind=rkind), dimension(:), intent(in) :: a,b,c, d
+    real(kind=rkind), dimension(3) :: nvect
     
-    real(kind=rkind), dimension(4) :: coeffs
-    real(kind=rkind), dimension(3,3) :: pts
-    real(kind=rkind) :: length, t
-    real(kind=rkind), dimension(3) :: inters
-    integer(kind=ikind) :: i
+    real(kind=rkind), dimension(3) :: T1, T2, AD, n
+    real(kind=rkind) :: dopr
     
-    pts(1,:) = a
-    pts(2,:) = b
-    pts(3,:) = c
-     
+    T1 = B - A
+    T2 = C - A
+    n = [ T1(2)*T2(3) - T1(3)*T2(2), T1(3)*T2(1) - T1(1)*T2(3), T1(1)*T2(2) - T1(2)*T2(1) ]
     
-    call plane_coeff(pts, coeffs)
+    AD = D - A
     
-    length = 0
+    dopr = dot_product(AD, n)
     
-    do i=1,3
-      length = length + coeffs(i)*coeffs(i)
-    end do
-    length = sqrt(length)
-    
-    if ( length > 100*epsilon(length)) then
-      t = (-coeffs(4) - coeffs(1)*exter(1) - coeffs(2)*exter(2) - coeffs(3)*exter(3))/(length*length)
-      inters = exter + coeffs(1:3)*t
-      sins = abs(coeffs(1:3))/length
-      if (exter(3) < inters(3)) then
-        sins(3) = -sins(3)
-      end if
-      if (exter(2) < inters(2) ) then
-        sins(2) = -sins(2)
-      end if
-      if (exter(1) < inters(1)) then
-        sins(1) = -sins(1)
-      end if
+    if (dopr > 0) then
+      n = -n
     else
-      sins = 0
+      CONTINUE
     end if
-      
     
+    nvect = n / (sqrt(n(1)*n(1) + n(2)*n(2) + n(3)*n(3)))
     
-
   
   end function get_normals3D
   
   
-  function get_normals2D(a,b,exter) result(nvect)
+  function get_normals2D(a,b,c) result(nvect)
   	use typy
-  	real(kind=rkind), dimension(:), intent(in):: a,b,exter
+  	real(kind=rkind), dimension(:), intent(in):: a,b,c
   	real(kind=rkind), dimension(2) :: nvect
-  	
-  	real(kind=rkind) :: k
-  	
-  	if (abs(a(1)-b(1)) > 100*epsilon(a(1))) then
-  	  k = (a(2)-b(2))/(a(1) - b(1))
-  	  nvect = [k,1.0_rkind]/sqrt(k*k+1)
-  	  if (.not. aboveline(a,b,exter)) then
-  	  	nvect = -nvect
-  	  end if
+    
+    real(kind=rkind), dimension(2) :: n1, n2, ac
+  	real(kind=rkind) :: nlength, d1, d2
+    
+   
+    !clockwise
+    n1 = [a(2) - b(2), b(1) - a(1) ]
+    !counterclockwise
+    n2 = -n1
+    
+    ac = [c(1)-a(1), c(2)-a(2)] 
+    
+    d1 = dot_product(ac,n1)
+    d2 = dot_product(ac,n2)
+    
+    nlength = sqrt(n1(1)*n1(1) + n1(2)*n1(2))
+    
+    if (d1 < 0) then
+      nvect = n1/nlength
     else
-      nvect = [0.0_rkind,1.0_rkind]
-      if (aboveline(a,b,exter)) then
-      	nvect = -nvect
-      end if
-  	end if
+      nvect = n2/nlength
+    end if
   	
+  
   
   end function get_normals2D
   

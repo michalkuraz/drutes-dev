@@ -622,6 +622,7 @@ module drutes_init
               bcfluxes(edge2wrt)%bcel(ii)%n_out(1:D) = get_normals2D(nodes%data(nodeid(1),:), nodes%data(nodeid(2),:), &
                                                                      nodes%data(extnd,:))
               bcfluxes(edge2wrt)%bcel(ii)%area = dist(nodes%data(nodeid(1),:), nodes%data(nodeid(2),:))
+              
             case(3)
               bcfluxes(edge2wrt)%bcel(ii)%n_out(1:D) = get_normals3D(nodes%data(nodeid(1),:), nodes%data(nodeid(2),:), &
                                                                       nodes%data(nodeid(3),:), nodes%data(extnd,:))
@@ -630,7 +631,7 @@ module drutes_init
           end select
         end if
       end do
-!      stop
+      stop
 
       do bc=lbound(bcfluxes,1), ubound(bcfluxes,1)
         write(filename, fmt="(a,I3, a)") "out/", bc, ".flux"
@@ -638,6 +639,7 @@ module drutes_init
         write(bcfluxes(bc)%fileid, fmt=*) "# time,        flux,            cumulative flux"
         call flush(bcfluxes(bc)%fileid)
       end do
+
 
     end subroutine init_bcfluxes  
     
