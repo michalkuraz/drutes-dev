@@ -123,7 +123,7 @@ program main
 
     
     if (solve_bcfluxes) call init_bcfluxes()
-    
+    print *, "KKK"
     
     if (drutes_config%it_method == 1 .or. drutes_config%it_method == 2) then
       call init_decomp()

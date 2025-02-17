@@ -631,7 +631,7 @@ module drutes_init
           end select
         end if
       end do
-      stop
+
 
       do bc=lbound(bcfluxes,1), ubound(bcfluxes,1)
         write(filename, fmt="(a,I3, a)") "out/", bc, ".flux"

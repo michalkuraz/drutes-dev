@@ -21,7 +21,7 @@ module postpro
   public :: make_print
   public :: write_obs , write_bcfluxes
   public :: get_RAM_use
-  private :: print_scilab, print_pure, print_gmsh
+  private :: print_scilab, print_pure, print_gmsh, write_bcfluxes_old
   
 
 
@@ -434,9 +434,73 @@ module postpro
       
     end subroutine write_obs
     
+
+   subroutine write_bcfluxes()
+      use typy
+      use globals
+      use geom_tools
+      use pde_objs
+      use global_objs
+      use core_tools
+      use debug_tools
+      
+      
+      integer(kind=ikind) :: bc, el, D, i, proc, surfel
+      real(kind=rkind), dimension(:,:), allocatable, save :: flux
+      real(kind=rkind), dimension(2,2) :: bcpt
+      type(integpnt_str) :: quadpnt
+      real(kind=rkind) :: length
+      real(kind=rkind), dimension(:,:), allocatable, save :: integflux, cumflux
+      integer(kind=ikind), dimension(:), allocatable, save :: surfnodes
+      
+      D = drutes_config%dimen
+      
+      quadpnt%type_pnt="xypt"
+
+      quadpnt%column=2
+      
+      
+      if (.not. allocated(flux)) then
+        allocate(flux(ubound(pde,1), D))
+        allocate(surfnodes(D))
+    
+        allocate(integflux(lbound(bcfluxes,1) : ubound(bcfluxes,1) , ubound(pde,1)))
+        allocate(cumflux(lbound(bcfluxes,1) : ubound(bcfluxes,1) , ubound(pde,1)))
+        cumflux = 0
+      end if
+      
+
+      integflux = 0
+      do bc = lbound(bcfluxes,1), ubound(bcfluxes,1)
+        do surfel = 1, bcfluxes(bc)%pos
+          el = bcfluxes(bc)%bcel(surfel)%element
+          quadpnt%element = el
+          surfnodes = bcfluxes(bc)%bcel(surfel)%surfnode(1:D)
+          quadpnt%xy(1:D) = mean(nodes%data(surfnodes,:))
+          
+          do proc=1, ubound(pde,1)
+            call pde(proc)%flux(elements%material(el), quadpnt, vector_out=flux(proc,:))
+            integflux(bc, proc) = integflux(bc, proc) - &
+                                  dot_product(flux(proc,:), bcfluxes(bc)%bcel(surfel)%n_out(1:D))* &
+                                                                   bcfluxes(bc)%bcel(surfel)%area
+          end do
+        end do
+      end do
+            
+
+      cumflux = cumflux + integflux*time_step          
+      
+      
+      
+      do bc = lbound(bcfluxes,1), ubound(bcfluxes,1)
+        write(unit=bcfluxes(bc)%fileid, fmt=*) time, integflux(bc, :), cumflux(bc,:)
+        call flush(bcfluxes(bc)%fileid)
+      end do
+    
+    end subroutine write_bcfluxes
     
     
-    subroutine write_bcfluxes()
+    subroutine write_bcfluxes_old()
       use typy
       use globals
       use geom_tools
@@ -496,7 +560,7 @@ module postpro
         call flush(bcfluxes(bc)%fileid)
       end do
     
-    end subroutine write_bcfluxes
+    end subroutine write_bcfluxes_old
  
 
     !> this subroutine parses /proc/[PID]/status file in order to get RAM consumption statistics, it works Linux only

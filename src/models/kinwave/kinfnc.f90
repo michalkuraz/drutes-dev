@@ -89,6 +89,8 @@ module kinfnc
         h = x(1)
       end if
       
+      h=max(0.0_rkind, h)
+      
       
       select case(quadpnt%type_pnt)
         case("gqnd", "obpt", "xypt")
