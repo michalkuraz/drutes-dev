@@ -114,6 +114,11 @@ module femmat
     
         error = norm2(pde_common%xvect(1:fin,2)-pde_common%xvect(1:fin,3))/ubound(pde_common%xvect,1)
         
+        if (isnan(error)) then
+			call write_log("matrix solution has NaN values, exiting....")
+			ERROR STOP
+		end if
+        
         write(unit=terminal, fmt=*) "Nonlinear solver convergence criterion:", error
         
         write(unit=file_picard, fmt=*) time, error
