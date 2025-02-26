@@ -24,6 +24,7 @@
 module femmat
   public :: solve_picard
   private :: results_extractor
+  private :: results_eraser
   public :: assemble_mat
   
 
@@ -72,6 +73,8 @@ module femmat
       allocate(vcttmp(ubound(pde_common%bvect,1)))
       
       picard_old = huge(picard_old)
+      
+      
       do
 
         itcount = itcount + 1
@@ -114,10 +117,6 @@ module femmat
     
         error = norm2(pde_common%xvect(1:fin,2)-pde_common%xvect(1:fin,3))/ubound(pde_common%xvect,1)
         
-        if (isnan(error)) then
-			call write_log("matrix solution has NaN values, exiting....")
-			ERROR STOP
-		end if
         
         write(unit=terminal, fmt=*) "Nonlinear solver convergence criterion:", error
         
@@ -144,11 +143,19 @@ module femmat
         
         if (itcount >= 3) then
           if (error > picard_old) then
+            ierr = 2
+            success = .false.
+            call results_eraser()
+            RETURN
+          end if
+        end if
+        
+        if (isnan(error)) then
           ierr = 2
           success = .false.
+          call results_eraser()
           RETURN
         end if
-		end if
 				
 
 
@@ -176,6 +183,7 @@ module femmat
           ierr = 1
           success = .false.
           iter_succesfull = .false.
+          call results_eraser()
           EXIT
         end if
       end do
@@ -272,6 +280,14 @@ module femmat
       pde_common%xvect(:,2) = pde_common%xvect(:,3)
 
     end subroutine results_extractor
+    
+    subroutine results_eraser()
+      use pde_objs
+    
+      pde_common%xvect(:,2) = pde_common%xvect(:,1)
+      pde_common%xvect(:,3) = 0
+    
+    end subroutine results_eraser
     
 
 
