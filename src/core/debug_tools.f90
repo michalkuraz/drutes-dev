@@ -109,6 +109,10 @@ module debug_tools
         write(unit=filloc, fmt=*) "order of element:", quadpnt%element
       end if
       
+      if (quadpnt%type_pnt == "xypt") then
+        write(unit=filloc, fmt=*) "coordinates:", quadpnt%xy
+      end if
+      
       write(unit=filloc, fmt=*) "column:", quadpnt%column
       
       write(unit=filloc, fmt=*) "element:", quadpnt%element

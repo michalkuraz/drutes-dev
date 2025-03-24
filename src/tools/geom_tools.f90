@@ -217,6 +217,8 @@ module geom_tools
         end select
       case("obpt")
         array = observation_array(quadpnt%order)%xyz
+      case("xypt")
+        array = quadpnt%xy
       case("ndpt")
         array = nodes%data(quadpnt%order,:)
     end select

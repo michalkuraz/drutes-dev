@@ -554,6 +554,9 @@ module pde_objs
       real(kind=rkind), dimension(:,:), allocatable, save :: a
       real(kind=rkind), dimension(5) :: coeffs
       
+      
+ 
+      
       if (.not. allocated(a)) allocate(a(drutes_config%dimen+1, drutes_config%dimen+1))
       
        if (quadpnt%type_pnt=="numb") then
@@ -682,22 +685,22 @@ module pde_objs
             case("xypt")
               select case(drutes_config%dimen)
                 case(1)
-                  val = (quadpnt%xy(1) - nodes%data(pts(1),1))/(nodes%data(pts(2),1) - nodes%data(pts(1),1))*& 
-                        (ndvals(2) - ndvals(1)) + ndvals(1)
+                   val = (ndvals(2) - ndvals(1))/(nodes%data(pts(2),1) - nodes%data(pts(1),1))* & 
+                   (quadpnt%xy(1) - &
+                   nodes%data(pts(1),1)) + ndvals(1)
                 case(2)
                   do i=1,3
-                    do j=1,2
-                      a(i,j) = nodes%data(pts(i),j)
-                    end do
+                    a(i,1:2) = nodes%data(pts(i),:)
                     a(i,3) = ndvals(i)
                   end do
-
+        
                   call plane_derivative(a(1,:), a(2,:), a(3,:), xder, yder)
                 
                   val = ndvals(1) + xder*(quadpnt%xy(1) - a(1,1)) + &
-                  yder * (quadpnt%xy(2) - a(1,2)) 
+                  yder * (quadpnt%xy(2) - a(1,2))
+                  
                 case(3)
-                 
+                
                   do i=1,4
                     a(i,1:3) = nodes%data(pts(i),:)
                     a(i,4) = ndvals(i)
@@ -707,7 +710,46 @@ module pde_objs
                   
                   val = (coeffs(1)*quadpnt%xy(1) + coeffs(2)*quadpnt%xy(2) + &
                         coeffs(3)*quadpnt%xy(3) + coeffs(5))/(-coeffs(4))
+           
+
               end select
+
+                
+                
+                
+                
+                
+            
+            
+!                              print *, ndvals ; stop
+!              select case(drutes_config%dimen)
+!                case(1)
+!                  val = (quadpnt%xy(1) - nodes%data(pts(1),1))/(nodes%data(pts(2),1) - nodes%data(pts(1),1))*& 
+!                        (ndvals(2) - ndvals(1)) + ndvals(1)
+!                case(2)
+!                  do i=1,3
+!                    do j=1,2
+!                      a(i,j) = nodes%data(pts(i),j)
+!                    end do
+!                    a(i,3) = ndvals(i)
+!                  end do
+
+!                  call plane_derivative(a(1,:), a(2,:), a(3,:), xder, yder)
+                
+!                  val = ndvals(1) + xder*(quadpnt%xy(1) - a(1,1)) + &
+!                  yder * (quadpnt%xy(2) - a(1,2)) 
+!                case(3)
+                 
+!                  do i=1,4
+!                    a(i,1:3) = nodes%data(pts(i),:)
+!                    a(i,4) = ndvals(i)
+!                  end do
+                  
+!                  call hyperplane_coeff(a(1,:), a(2,:), a(3,:), a(4,:), coeffs)
+                  
+!                  val = (coeffs(1)*quadpnt%xy(1) + coeffs(2)*quadpnt%xy(2) + &
+!                        coeffs(3)*quadpnt%xy(3) + coeffs(5))/(-coeffs(4))
+!              end select
 
           end select
                   

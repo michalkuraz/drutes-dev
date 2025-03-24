@@ -46,11 +46,10 @@ module re_total
       
       real(kind=rkind), dimension(3) :: xyz
       integer(kind=ikind) :: D, layer
-      
 
-           
+          
       if (quadpnt%preproc) then
-      
+
         D = drutes_config%dimen
              
         call getcoor(quadpnt, xyz(1:D))
@@ -94,9 +93,10 @@ module re_total
       real(kind=rkind), dimension(:), allocatable, save  :: vct
       real(kind=rkind) :: h
       type(integpnt_str) :: quadpnt_loc
+      logical :: teststop = .false.
       
       D = drutes_config%dimen
-
+      
       if (.not.(allocated(gradH))) then
         allocate(gradH(1:D))
         allocate(vct(1:D))
@@ -115,8 +115,9 @@ module re_total
       if (present(quadpnt)) then
         quadpnt_loc=quadpnt
         quadpnt_loc%preproc=.true.
-        h = pde_loc%getval(quadpnt_loc)
-        call pde_loc%getgrad(quadpnt, gradH)
+        h = getval_retot(pde_loc, quadpnt_loc)
+        call pde_loc%getgrad(quadpnt_loc, gradH)
+
       else
         if (ubound(x,1) /=1) then
           print *, "ERROR: van Genuchten function is a function of a single variable h"
@@ -131,6 +132,10 @@ module re_total
       
       
       call pde_loc%pde_fnc(pde_loc%order)%dispersion(pde_loc, layer, x=(/h/), tensor=K(1:D, 1:D))
+      
+
+      
+      
 
       
       vct(1:D) = matmul(-K(1:D,1:D), gradH(1:D))

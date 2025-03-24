@@ -452,12 +452,16 @@ module postpro
       real(kind=rkind) :: length
       real(kind=rkind), dimension(:,:), allocatable, save :: integflux, cumflux
       integer(kind=ikind), dimension(:), allocatable, save :: surfnodes
+      real(kind=rkind) :: sumarea
+
       
       D = drutes_config%dimen
       
       quadpnt%type_pnt="xypt"
 
       quadpnt%column=2
+      
+      quadpnt%preproc=.true.
       
       
       if (.not. allocated(flux)) then
@@ -472,19 +476,27 @@ module postpro
 
       integflux = 0
       do bc = lbound(bcfluxes,1), ubound(bcfluxes,1)
+        sumarea = 0
         do surfel = 1, bcfluxes(bc)%pos
           el = bcfluxes(bc)%bcel(surfel)%element
           quadpnt%element = el
           surfnodes = bcfluxes(bc)%bcel(surfel)%surfnode(1:D)
           quadpnt%xy(1:D) = mean(nodes%data(surfnodes,:))
           
+
+          
           do proc=1, ubound(pde,1)
+            
+              
             call pde(proc)%flux(elements%material(el), quadpnt, vector_out=flux(proc,:))
+            
+            
             integflux(bc, proc) = integflux(bc, proc) - &
                                   dot_product(flux(proc,:), bcfluxes(bc)%bcel(surfel)%n_out(1:D))* &
                                                                    bcfluxes(bc)%bcel(surfel)%area
           end do
         end do
+
       end do
             
 
