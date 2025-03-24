@@ -115,7 +115,7 @@ module re_total
       if (present(quadpnt)) then
         quadpnt_loc=quadpnt
         quadpnt_loc%preproc=.true.
-        h = getval_retot(pde_loc, quadpnt_loc)
+        h = pde_loc%getval(quadpnt_loc)
         call pde_loc%getgrad(quadpnt_loc, gradH)
 
       else
