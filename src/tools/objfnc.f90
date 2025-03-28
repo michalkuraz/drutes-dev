@@ -55,8 +55,8 @@ module objfnc
   integer, private, save :: exp_file
   
   type, private :: point_str
-    real(kind=rkind), dimension(:), allocatable :: time
-    real(kind=rkind), dimension(:,:), allocatable :: data
+    real(kind=qprec), dimension(:), allocatable :: time
+    real(kind=qprec), dimension(:,:), allocatable :: data
   end type point_str
   
   type, private :: ram_limit_str
@@ -79,8 +79,8 @@ module objfnc
   integer(kind=ikind), private :: n, i, counter, tmpbound, expcols, i1, j, low, top, skipcount, datacount, l
   character(len=4096), private :: msg
   character(len=4), private :: units
-  real(kind=rkind), private :: r
-  real(kind=rkind), dimension(:), allocatable, private :: tmpdata
+  real(kind=qprec), private :: r
+  real(kind=qprec), dimension(:), allocatable, private :: tmpdata
   real(kind=rkind), private, save :: memsize, corr_memsize
   logical, dimension(:), allocatable, private, save :: skipid
   logical, private :: go4skip, processed
@@ -88,13 +88,14 @@ module objfnc
   integer(kind=ikind), private :: pos, k
       
   type, private :: errors_str
-    real(kind=rkind), dimension(:), allocatable :: val
+    real(kind=qprec), dimension(:), allocatable :: val
   end type
       
   type(errors_str), dimension(:), allocatable, private, save :: errors
   logical, private :: inlast 
   integer, private :: outfile
-  real(kind=rkind), private :: dt, slope, modval, suma
+  real(kind=qprec), private :: dt, slope, modval, suma, pos2real
+  
   
   
   
@@ -419,7 +420,7 @@ module objfnc
         end if     
       end do
       
-      memsize = rkind*(ubound(datafiles,1)+1)*counter
+      memsize = qprec*(ubound(datafiles,1)+1)*counter
       
       select case(ram_limit%units)
         case("kB")
@@ -554,6 +555,7 @@ module objfnc
       
       
       pos = 1
+      
       do j=1, ubound(exp_data(1)%time,1) 
         do k=pos, ubound(model_data(1)%time,1)-1
           if (exp_data(1)%time(j) >=  model_data(1)%time(k) .and. exp_data(1)%time(j) < model_data(1)%time(k+1)) then
@@ -567,6 +569,7 @@ module objfnc
             pos = k
             
             n=0
+            pos2real = 1.0_qprec
             do i=1, ubound(errors,1)
               do l=1, ubound(errors(i)%val,1)
                 n=n+1
@@ -579,7 +582,7 @@ module objfnc
                 end if
                 
                 errors(i)%val(l) = errors(i)%val(l) + (modval - exp_data(n)%data(j,l))*(modval - exp_data(n)%data(j,l))
-                
+                pos2real = pos2real + 1
               end do
             end do
            
@@ -592,7 +595,7 @@ module objfnc
         
    
       do i=1, ubound(errors,1)  
-        errors(i)%val = sqrt(errors(i)%val/pos)
+        errors(i)%val = sqrt(errors(i)%val/pos2real)
       end do
       
       open(newunit=outfile, file="out/objfnc.val", status="new", action="write")

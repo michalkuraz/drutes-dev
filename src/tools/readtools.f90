@@ -33,7 +33,9 @@ module readtools
     module procedure read_int_std
     module procedure read_int_array
     module procedure read_real
+    module procedure read_real_quad
     module procedure read_real_array
+    module procedure read_real_quad_array
     module procedure read_char
     module procedure read_logical
     module procedure read_char_array
@@ -314,6 +316,56 @@ module readtools
     end subroutine read_real
     
     
+    subroutine read_real_quad(r, fileid, ranges, errmsg, noexit)
+      use typy
+      use globals
+      real(kind=qprec), intent(out) :: r
+      integer, intent(in) :: fileid
+      real(kind=qprec), dimension(:), optional :: ranges
+      character(len=*), intent(in), optional :: errmsg
+      logical, intent(in), optional :: noexit
+      
+  
+      integer :: ierr
+      logical :: terminate = .false.
+      
+      call comment(fileid)
+      
+      read(unit=fileid, fmt=*, iostat=ierr) r
+      
+      if (present(ranges)) then
+        if (r < ranges(1) .or. r > ranges(2)) then
+          write(unit=terminal, fmt=*) " " //achar(27)//'[43m', "incorrect ranges of input parameter(s)" //achar(27)//'[0m'
+          ierr = -1
+        end if
+      end if
+      
+      
+      if (ierr /= 0) then
+        if (.not. present(noexit)) then
+          terminate = .true.
+        else
+          if (noexit) then
+            terminate = .false.
+          else
+            terminate = .true.
+          end if
+        end if
+      end if
+      
+      
+      
+      if (terminate) then
+        if (present(errmsg)) then
+          call file_error(fileid,errmsg)
+        else
+          call file_error(fileid)
+        end if
+      end if
+      
+
+    end subroutine read_real_quad
+    
 
     subroutine read_real_array(r, fileid, ranges, errmsg, checklen, noexit, eof)
       use typy
@@ -450,7 +502,140 @@ module readtools
       
     end subroutine read_real_array
     
+    subroutine read_real_quad_array(r, fileid, ranges, errmsg, checklen, noexit, eof)
+      use typy
+      use globals
+      real(kind=qprec), dimension(:), intent(out) :: r
+      integer, intent(in) :: fileid
+      real(kind=qprec), dimension(:), optional :: ranges
+      character(len=*), intent(in), optional :: errmsg
+      !> checks if the array length is equal to the length of line in file
+      logical, intent(in), optional :: checklen
+      logical, intent(in), optional :: noexit
+      logical, intent(out), optional :: eof
+      
+            !logical vars
+      integer :: ierr, ierr2, ierr3
+      integer(kind=ikind) :: i, i1, i2, arraybound, current_pos, chpos
+      real(kind=rkind), dimension(:), allocatable :: tmpdata
+      logical :: terminate = .false.
+      logical :: noexit_local
+      
+      call comment(fileid)
+      
+      if (present(noexit)) then
+        noexit_local = noexit
+      else
+        noexit_local = .false.
+      end if
+
+      
+      arraybound=1
+      
+      allocate(tmpdata(arraybound))
+      
+      if (present(checklen)) then
+        if (checklen) then
+          current_pos = ftell(fileid)
+          do 
+            call comment(fileid)
+            read(unit=fileid, fmt=*, iostat=ierr) tmpdata(1:arraybound-1)
+            i1=ftell(fileid)
+            backspace fileid
+            call comment(fileid)
+            read(unit=fileid, fmt=*, iostat=ierr3) tmpdata(1:arraybound)
+            i2 = ftell(fileid)
+            backspace fileid
+           
+            if (ierr /= 0) then
+              arraybound = arraybound - 1
+              do
+                chpos = ftell(fileid)
+                if (chpos == current_pos) then
+                  EXIT
+                else
+                  backspace(unit=fileid, iostat=ierr2)
+                end if
+              end do
+              deallocate(tmpdata)
+              EXIT
+            end if
+            
+            
+            if (i1 == i2) then
+              arraybound = arraybound + 1
+
+                
+              
+              if (ubound(tmpdata,1) < arraybound) then
+                deallocate(tmpdata)
+                allocate(tmpdata(2*arraybound))
+              end if    
+            else 
+              arraybound = arraybound - 1
+              do
+                chpos = ftell(fileid)
+                if (chpos == current_pos) then
+                  EXIT
+                else
+                  backspace(unit=fileid, iostat=ierr2)
+                end if
+              end do
+              deallocate(tmpdata)
+              EXIT
+            end if
+          end do
+  
+          if (arraybound /= ubound(r,1) ) then
+            if (.not. noexit_local) then
+              write(unit=terminal, fmt=*) " " //achar(27)//'[43m', "the line in your input file has &
+                 incorrect number of values, check your inputs" //achar(27)//'[0m'
+              call file_error(fileid, errmsg)
+            else
+              if (present(eof)) then
+                eof = .true.
+              end if
+              RETURN
+            end if
+         end if
+        end if
+      end if
+      
+      call comment(fileid)
+      read(unit=fileid, fmt=*, iostat=ierr) r
+      if (present(eof)) then
+        eof = .false.
+      end if
     
+      
+      if (ierr /= 0) then
+         terminate = .true.
+      end if
+      
+      
+      if (terminate) then
+        if (present(errmsg)) then
+          if (.not. noexit_local) call file_error(fileid,errmsg)
+        else
+           if (.not. noexit_local) call file_error(fileid)
+        end if
+      end if
+      
+      if (present(ranges)) then
+        do i=1, ubound(r,1)
+          if (r(i) < ranges(1) .or. r(i) > ranges(2)) then
+            write(unit=terminal, fmt=*) " " //achar(27)//'[43m', "incorrect ranges of input parameter(s)" //achar(27)//'[0m'
+            if (.not. noexit_local) then
+              call file_error(fileid, errmsg)
+            else
+              if (present(eof)) eof = .true.
+            end if
+          end if
+        end do
+      end if
+      
+      
+    end subroutine read_real_quad_array
     
     subroutine read_char(ch, fileid, errmsg, options, noexit)
       use debug_tools
