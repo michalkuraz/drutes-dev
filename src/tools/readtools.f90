@@ -412,7 +412,7 @@ module readtools
             i2 = ftell(fileid)
             backspace fileid
            
-            if (ierr /= 0) then
+            if (ierr /= 0 .or. ierr3 /=0) then
               arraybound = arraybound - 1
               do
                 chpos = ftell(fileid)
