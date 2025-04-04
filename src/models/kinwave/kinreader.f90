@@ -228,7 +228,7 @@ module kinreader
       use debug_tools
       use core_tools
       
-      integer :: file_kinematix, ierr, filerain, frainpts
+      integer :: file_kinematix, ierr, filerain, frainpts, file_disp
       integer(kind=ikind) :: n, i, counter, j, k
       character(len=512) :: msg
       real(kind=rkind) :: tmp
@@ -307,6 +307,8 @@ module kinreader
       call fileread(with_solutes, fileid=file_kinematix, errmsg="set y/n if you want to couple your model with solute transport")
       
       allocate(manning(n))
+      
+      allocate(kindispers(n))
       
       allocate(oneDslopes(n))
       
@@ -396,6 +398,19 @@ module kinreader
           kinsols(i)%diff =  tmp_array(8)
         end do
       end if
+      
+      open(newunit=file_disp, file="drutes.conf/kinwave/dispersivity.conf", status="old", action="read", iostat=ierr)
+      
+      if (ierr /= 0) then
+		call write_log("missing file: drutes.conf/kinwave/dispersivity.conf, no problem with that, dipersivity for kinematic wave &
+						set 0")
+		 
+        kindispers = 0
+      else
+		do i=1,n
+	      call fileread(kindispers(i), file_disp, ranges=[0.0_rkind, huge(kindispers(1))] )
+	     end do
+	  end if
             
       
       open(newunit=frainpts, file="drutes.conf/kinwave/rain.pts", status="old", action="read", iostat=ierr)
@@ -487,6 +502,7 @@ module kinreader
           raindata(j)%series(i,2) = tmp_array(1+j)
         end do
       end do
+      
       
 
 

@@ -40,7 +40,7 @@ module kinglobs
   type(surfacend_str), dimension(:), allocatable, public :: watershed_nd
   type(surface_el_str), dimension(:), allocatable, public :: watershed_el
   
-  real(kind=rkind), dimension(:), allocatable, public :: manning
+  real(kind=rkind), dimension(:), allocatable, public :: manning, kindispers
   
   real(kind=rkind), dimension(:), allocatable, public :: oneDslopes
   

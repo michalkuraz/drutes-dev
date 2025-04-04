@@ -61,11 +61,12 @@ module kinpointer
       
       allocate(pde(1)%bc(101:nobcs))
       
-      do i=101, nobcs
-		  pde(1)%bc(i)%value_fnc => kinbor
-	  end do
+!      do i=101, nobcs
+!		  pde(1)%bc(i)%value_fnc => kinbor
+!	  end do
       
-!       pde_loc%bc(102)%value_fnc => kinbor
+      pde(1)%bc(101)%value_fnc => kinbor
+      pde(1)%bc(102)%value_fnc => kinborO
 
       if (drutes_config%dimen == 1) then
         nodes%edge(ubound(nodes%data)) = 101
@@ -78,9 +79,9 @@ module kinpointer
       
       pde(1)%pde_fnc(1)%elasticity => kin_elast
       
-      pde(1)%diffusion = .false.
+      pde(1)%diffusion = .true.
 
-!      pde(1)%pde_fnc(1)%dispersion => disp4kinwave
+      pde(1)%pde_fnc(1)%dispersion => disp4kinwave
       
       pde(1)%getval => getval_kinwave
       
