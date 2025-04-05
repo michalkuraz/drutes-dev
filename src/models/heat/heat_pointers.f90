@@ -70,11 +70,11 @@ module heat_pointers
       if (ubound(pde,1) == 1) then
         call heatlinker(pde(1))
 	    else
-        if (drutes_config%name == "REevap") then
-          call RE_std(pde(1))
-        else
+!        if (drutes_config%name == "REevap") then
+!          call RE_std(pde(1))
+!        else
           call REstdH(pde(1))
-        end if
+!        end if
 	     call heatlinker(pde(2))
       end if
             

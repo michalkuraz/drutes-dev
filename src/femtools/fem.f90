@@ -100,6 +100,8 @@ module fem
 
         call pde_common%treat_pde(ierr,  success)
         
+        
+        
         itcum = itcum + itcount
 
         if (success) then
@@ -218,35 +220,35 @@ module fem
           if (time + time_step >= observe_time(obs_pos)%value) then
             select case(observe_info%method)
               case(1)
-          printtime = .true.
-          nptimes = 1
-          if (observe_time(obs_pos)%value - time > dtmin) then
-            time_step = observe_time(obs_pos)%value - time
-          else
-            time_step = dtmin
-            call write_log(text=&
-              "Warning: Observation time adjusted due to print times, but the required time step seems to short:", &
-                real1=time_step)
-          end if
-          call write_log(text="Observation time adjusted due to print times, current time step is:", real1=time_step)
+                printtime = .true.
+                nptimes = 1
+                if (observe_time(obs_pos)%value - time > dtmin) then
+                  time_step = observe_time(obs_pos)%value - time
+                else
+                  time_step = dtmin
+                  call write_log(text=&
+                    "Warning: Observation time adjusted due to print times, but the required time step seems to short:", &
+                      real1=time_step)
+                end if
+                call write_log(text="Observation time adjusted due to print times, current time step is:", real1=time_step)
               case(2)
-          printtime = .true.
-          nptimes = 1
-          do 
-            if (obs_pos+nptimes > ubound(observe_time,1)) then
-              EXIT
-            else
-              if (time + time_step >= observe_time(obs_pos+nptimes)%value) then
-                nptimes = nptimes+1
-              else
-                EXIT
-              end if
+                printtime = .true.
+                nptimes = 1
+                do 
+                  if (obs_pos+nptimes > ubound(observe_time,1)) then
+                    EXIT
+                  else
+                    if (time + time_step >= observe_time(obs_pos+nptimes)%value) then
+                      nptimes = nptimes+1
+                    else
+                      EXIT
+                    end if
+                  end if
+                end do
+              end select
             end if
-          end do
-            end select
           end if
         end if
-      end if
 
     end subroutine evol_dt
 
@@ -308,7 +310,7 @@ module fem
         case(2)
           write(unit=terminal, fmt=*)" " //achar(27)//'[43m',  "--------------------INFO!-------------------------------" &
                   //achar(27)//'[0m'
-          write(unit=terminal, fmt=*) " " //achar(27)//'[43m', "RCZA method forced time step decrease: " &
+          write(unit=terminal, fmt=*) " " //achar(27)//'[43m', "Failed to converge -> forced time step decrease: " &
                     //achar(27)//'[0m', time_step
 
           write(unit=terminal, fmt=*) "current simulation time:", time

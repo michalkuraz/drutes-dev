@@ -189,6 +189,8 @@ module RE_pointers
           case(7, 8, 9)
               CONTINUE
               ! Linked in freeze_pointers
+          case(10)
+            pde_loc%bc(i)%value_fnc => retot_atmosphericv2
           case default
           print *, "ERROR! You have specified an unsupported boundary type definition for the Richards equation"
           print *, "the incorrect boundary code specified is:", pde_loc%bc(i)%code

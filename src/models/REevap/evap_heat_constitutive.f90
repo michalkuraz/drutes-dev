@@ -23,20 +23,21 @@ module evap_heat_constitutive
   
   
   
-    subroutine heat_cond(pde_loc, layer, quadpnt, x, tensor, scalar)
+    subroutine heat_cond(pde_loc, layer, quadpntin, x, tensor, scalar)
       use typy
       use global_objs
       use pde_objs
       use re_constitutive
       use evapglob
       use evap_RE_constitutive
+      use debug_tools
       
             
       class(pde_str), intent(in) :: pde_loc
       !> value of the nonlinear function
       real(kind=rkind), dimension(:), intent(in), optional    :: x
       !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
-      type(integpnt_str), intent(in), optional :: quadpnt
+      type(integpnt_str), intent(in), optional :: quadpntin
       !> material ID
       integer(kind=ikind), intent(in) :: layer
       !> return tensor
@@ -48,19 +49,25 @@ module evap_heat_constitutive
       integer(kind=ikind) :: i, D
       
       real(kind=rkind), dimension(3,3) :: Klvt
+      type(integpnt_str) :: quadpnt
       
       D = drutes_config%dimen
       
-      if (.not. present(quadpnt)) then
+      if (.not. present(quadpntin)) then
         print *, "runtime error evap_heat_constitutive::heat_cond"
         ERROR STOP
       end if
+      
+      quadpnt = quadpntin
+      quadpnt%preproc = .true.
+
       
       theta = vangen(pde(re_ord), layer, quadpnt)
       
       call cond_vt(layer, quadpnt, Klvt)
       
       val = soil_heat_coef(layer)%b1 + soil_heat_coef(layer)%b2*theta + soil_heat_coef(layer)%b3*sqrt(theta)
+      
       
       if (present(tensor)) then
         tensor = 0
@@ -75,7 +82,7 @@ module evap_heat_constitutive
       
     end subroutine heat_cond
   
-    function heatcap_TT(pde_loc, layer, quadpnt, x) result(val)
+    function heatcap_TT(pde_loc, layer, quadpntin, x) result(val)
       use typy
       use global_objs
       use pde_objs
@@ -89,18 +96,22 @@ module evap_heat_constitutive
       !> value of the nonlinear function
       real(kind=rkind), dimension(:), intent(in), optional    :: x
       !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
-      type(integpnt_str), intent(in), optional :: quadpnt
+      type(integpnt_str), intent(in), optional :: quadpntin
       !> material ID
       integer(kind=ikind), intent(in) :: layer
       !> return value
       real(kind=rkind)                :: val
       
       real(kind=rkind) :: ths, theta, theta_v
+      type(integpnt_str) :: quadpnt
       
-      if (.not. present(quadpnt)) then
+      if (.not. present(quadpntin)) then
         print *, "runtime error evap_heat_constitutive::heatcap_TT"
         ERROR STOP
       end if
+      
+      quadpnt = quadpntin
+      quadpnt%preproc = .true.
 
       ths = vgset(layer)%ths
       theta = vangen(pde(re_ord), layer, quadpnt)
@@ -112,7 +123,7 @@ module evap_heat_constitutive
     end function heatcap_TT
     
     
-    function heatcap_Th(pde_loc, layer, quadpnt, x) result(val)
+    function heatcap_Th(pde_loc, layer, quadpntin, x) result(val)
       use typy
       use global_objs
       use pde_objs
@@ -123,24 +134,28 @@ module evap_heat_constitutive
       !> value of the nonlinear function
       real(kind=rkind), dimension(:), intent(in), optional    :: x
       !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
-      type(integpnt_str), intent(in), optional :: quadpnt
+      type(integpnt_str), intent(in), optional :: quadpntin
       !> material ID
       integer(kind=ikind), intent(in) :: layer
       !> return value
       real(kind=rkind)                :: val
       
       real(kind=rkind) :: ths, theta, theta_v
+      type(integpnt_str) :: quadpnt
       
-      if (.not. present(quadpnt)) then
+      if (.not. present(quadpntin)) then
         print *, "runtime error evap_heat_constitutive::heatcap_Th"
         ERROR STOP
       end if
+      
+      quadpnt = quadpntin
+      quadpnt%preproc = .true.
       
       val = dens_liquid(quadpnt)*latentheat(quadpnt)*dthetav_dh(pde(re_ord), layer, quadpnt)
       
     end function heatcap_Th
      
-    subroutine heat_flux4evap(pde_loc, layer, quadpnt, x, grad,  flux, flux_length)
+    subroutine heat_flux4evap(pde_loc, layer, quadpntin, x, grad,  flux, flux_length)
       use typy
       use pde_objs
       use global_objs
@@ -150,7 +165,7 @@ module evap_heat_constitutive
        
       class(pde_str), intent(in) :: pde_loc
       integer(kind=ikind), intent(in)                          :: layer
-      type(integpnt_str), intent(in), optional :: quadpnt    
+      type(integpnt_str), intent(in), optional :: quadpntin    
       real(kind=rkind), intent(in), dimension(:), optional                   :: x
       !> this value is optional, because it is required by the vector_fnc procedure pointer global definition
       real(kind=rkind), dimension(:), intent(in), optional     :: grad
@@ -161,13 +176,16 @@ module evap_heat_constitutive
       real(kind=rkind), dimension(3,3) :: cond, Kvh, Klvt
       real(kind=rkind), dimension(3) :: qconvect, flux_loc
       integer(kind=ikind) :: D
+      type(integpnt_str) :: quadpnt
       
       D = drutes_config%dimen
       
-      if (.not. present(quadpnt)) then
+      if (.not. present(quadpntin)) then
         print *, "runtime error evap_heat_constitutive::heat_flux4evap"
         ERROR STOP
       end if
+      quadpnt = quadpntin
+      quadpnt%preproc = .true.
       
       call pde(heat_ord)%getgrad(quadpnt, gradT)
       
@@ -195,7 +213,7 @@ module evap_heat_constitutive
     
     end subroutine heat_flux4evap
     
-    subroutine convection4heat(pde_loc, layer, quadpnt, x, vector_in, vector_out, scalar)
+    subroutine convection4heat(pde_loc, layer, quadpntin, x, vector_in, vector_out, scalar)
       use typy
       use globals
       use global_objs
@@ -205,7 +223,7 @@ module evap_heat_constitutive
 
       class(pde_str), intent(in) :: pde_loc
       integer(kind=ikind), intent(in) :: layer
-      type(integpnt_str), intent(in), optional :: quadpnt    
+      type(integpnt_str), intent(in), optional :: quadpntin    
       !> pressure head
       real(kind=rkind), dimension(:), intent(in), optional :: x
       !> this argument is required by the global vector_fnc procedure pointer, unused in this procedure
@@ -219,6 +237,7 @@ module evap_heat_constitutive
       
       real(kind=rkind), dimension(:), allocatable, save :: ql, qv
       integer(kind=ikind) :: D
+      type(integpnt_str) :: quadpnt
       
       D = drutes_config%dimen
       
@@ -227,10 +246,13 @@ module evap_heat_constitutive
         allocate(qv(D))
       end if
       
-      if (.not. present(quadpnt)) then
+      if (.not. present(quadpntin)) then
         print *, "runtime error evap_heat_constitutive::convection4heat"
         ERROR STOP
       end if
+      
+      quadpnt = quadpntin
+      quadpnt%preproc = .true.
       
       call darcy4liq(pde(re_ord), layer, quadpnt, flux=ql)
       call darcy4vap(pde(re_ord), layer, quadpnt, flux=qv)
@@ -252,7 +274,7 @@ module evap_heat_constitutive
     
     
     
-    subroutine heatdiffTh(pde_loc, layer, quadpnt, x, tensor, scalar)
+    subroutine heatdiffTh(pde_loc, layer, quadpntin, x, tensor, scalar)
       use typy
       use global_objs
       use pde_objs
@@ -262,7 +284,7 @@ module evap_heat_constitutive
       !> value of the nonlinear function
       real(kind=rkind), dimension(:), intent(in), optional    :: x
       !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
-      type(integpnt_str), intent(in), optional :: quadpnt
+      type(integpnt_str), intent(in), optional :: quadpntin
       !> material ID
       integer(kind=ikind), intent(in) :: layer
       !> return tensor
@@ -272,11 +294,15 @@ module evap_heat_constitutive
       
       integer(kind=ikind) :: D
       real(kind=rkind), dimension(3,3) :: Kvh
+      type(integpnt_str) :: quadpnt
       
-      if (.not. present(quadpnt)) then
+      if (.not. present(quadpntin)) then
         print *, "runtime error evap_heat_constitutive::heatdiffTh"
         ERROR STOP
       end if
+      
+      quadpnt = quadpntin
+      quadpnt%preproc = .true.
       
       D = drutes_config%dimen
       
@@ -293,7 +319,7 @@ module evap_heat_constitutive
     end subroutine heatdiffTh
     
     
-    function heatsrc_w_roots(pde_loc, layer, quadpnt, x) result(val)
+    function heatsrc_w_roots(pde_loc, layer, quadpntin, x) result(val)
       use typy
       use global_objs
       use pde_objs
@@ -306,12 +332,15 @@ module evap_heat_constitutive
       !> value of the nonlinear function
       real(kind=rkind), dimension(:), intent(in), optional    :: x
       !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
-      type(integpnt_str), intent(in), optional :: quadpnt
+      type(integpnt_str), intent(in), optional :: quadpntin
       !> material ID
       integer(kind=ikind), intent(in) :: layer
       !> return value
       real(kind=rkind)                :: val 
+      type(integpnt_str) :: quadpnt
       
+      quadpnt = quadpntin
+      quadpnt%preproc = .true.
       
       val = -C_liq*dens_liquid(quadpnt)*sinkterm(pde(re_ord), layer, quadpnt) +  heatpar(layer)%source
       
@@ -334,15 +363,20 @@ module evap_heat_constitutive
     end function water_cap
     
     
-    function vapour_cap(quadpnt) result(val)
+    function vapour_cap(quadpntin) result(val)
       use typy
       use global_objs
       use evapglob
       use evap_RE_constitutive
       use pde_objs
       
-      type(integpnt_str), intent(in) :: quadpnt
+      type(integpnt_str), intent(in) :: quadpntin
       real(kind=rkind) :: val
+      
+      type(integpnt_str) :: quadpnt
+      
+      quadpnt = quadpntin
+      quadpnt%preproc = .true.
       
       val = C_vap * relhumid(quadpnt) * dens_satvap(quadpnt)
     

@@ -31,9 +31,76 @@ module core_tools
   public :: cut
   public :: pi
   public :: determinant, plane_coeff, plane_derivative, hyperplane_coeff, hyper_planeder
+  
+    !> generic procedure, can be overloaded with different vector/matrix types
+  interface mean
+    module procedure mean_single
+    module procedure mean_array
+    module procedure mean_matrix
+  end interface mean
 
 
   contains
+  
+  
+    function mean_array(input) result(output)
+      use typy
+      real(kind=rkind), dimension(:), intent(in) :: input
+      real(kind=rkind) :: output
+      
+      integer(kind=ikind) :: i
+      real(kind=rkind) :: suma
+      
+      if (ubound(input,1) < 0) then
+        print *, "unallocated array in mean"
+        print *, "exited from core_tools::mean_array"
+        ERROR STOP
+      end if
+      
+      
+      output = sum(input)/ubound(input,1)
+      
+    end function mean_array
+    
+    function mean_single(input) result(output)
+      use typy
+      
+      real(kind=rkind), intent(in) :: input
+      real(kind=rkind) :: output
+      
+      output = input
+      
+    end function mean_single
+    
+    
+    function mean_matrix(input) result(output)
+      use typy
+      real(kind=rkind), dimension(:,:), intent(in) :: input
+      real(kind=rkind), dimension(:), allocatable :: output
+      
+      integer(kind=ikind) :: i
+      
+      if (.not. allocated(output)) allocate(output(ubound(input,2)))
+      
+      if (ubound(output,1) /= ubound(input,2)) then
+        print *, "output array has different length than number of input array columns"
+        print *, "exited from core_tools::mean_matrix"
+        ERROR STOP
+      end if
+      
+      
+      
+      if (ubound(input,1) < 0) then
+        print *, "unallocated array in mean"
+        print *, "exited from core_tools::mean_matrix"
+        ERROR STOP
+      end if
+      
+      do i=1, ubound(input,2)
+        output(i) = sum(input(:,i)) / ubound(input,1)
+      end do
+      
+    end function mean_matrix
 
  !> abreviation for adjustl(TRIM(ch))
   function cut(ch) result(out_ch)
@@ -137,6 +204,8 @@ module core_tools
     call flush(logfile)
 
   end subroutine write_log
+  
+
 
 
    !>simple function, returns arithmetic average out of two reals

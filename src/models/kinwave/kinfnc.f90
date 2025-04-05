@@ -89,6 +89,8 @@ module kinfnc
         h = x(1)
       end if
       
+      h=max(0.0_rkind, h)
+      
       
       select case(quadpnt%type_pnt)
         case("gqnd", "obpt", "xypt")
@@ -956,6 +958,7 @@ module kinfnc
       use globals
       use geom_tools
       use debug_tools
+      use kinglobs
       
       
       class(pde_str), intent(in) :: pde_loc
@@ -977,25 +980,25 @@ module kinfnc
      
       D = drutes_config%dimen
       el = quadpnt%element
-      height = 0
-      do i=1, ubound(elements%data,2)
+!      height = 0
+!      do i=1, ubound(elements%data,2)
           
-        if (i < ubound(elements%data,2)) then
-          nd1 = elements%data(el,i)
-          nd2 = elements%data(el,i+1)
-        else
-          nd1 = elements%data(el,i)
-          nd2 = elements%data(el,1)
-        end if
+!        if (i < ubound(elements%data,2)) then
+!          nd1 = elements%data(el,i)
+!          nd2 = elements%data(el,i+1)
+!        else
+!          nd1 = elements%data(el,i)
+!          nd2 = elements%data(el,1)
+!        end if
         
-        height = max(height, dist(nodes%data(nd1,:), nodes%data(nd2,:)))
+!        height = max(height, dist(nodes%data(nd1,:), nodes%data(nd2,:)))
         
-      end do
+!      end do
       
       call kinconvect(pde(1), layer, quadpnt, scalar=convect)
       
       if (present(tensor)) then
-        tensor =  convect*height
+        tensor =  convect*kindispers(layer)
       end if
       
     

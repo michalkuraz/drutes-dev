@@ -326,6 +326,7 @@ module heat_fnc
       use global_objs
       use pde_objs
       use heat_globals
+      use geom_tools
 
       
       class(pde_str), intent(in out) :: pde_loc
@@ -343,16 +344,17 @@ module heat_fnc
             call pde_loc%bc(l)%value_fnc(pde_loc, i, j, value)
             pde_loc%solution(k) =  value 
           else
-            pde_loc%solution(k) = heatpar(layer)%Tinit
+            if (.not. Tinitfile) then
+              pde_loc%solution(k) = heatpar(layer)%Tinit
+            else
+              pde_loc%solution(k) = interpol_init1D(nodes%data(k,1), Tinitpoints)
+            end if
+              
           end if
         end do   
       end do
 
-!      do i=1, nodes%kolik
-!        pde_loc%solution(i) = (2-5)/0.15_rkind*nodes%data(i,1) + 5
-!      end do
-
-    
+      
     
     end subroutine heat_icond
     

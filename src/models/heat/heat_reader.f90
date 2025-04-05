@@ -37,10 +37,11 @@ module heat_reader
 
       class(pde_str), intent(in out) :: pde_loc
       integer :: i_err
-      integer(kind=ikind) :: i, n
+      integer(kind=ikind) :: i, n, counter
       real(kind=rkind) :: tmp
       real(kind=rkind), dimension(:), allocatable :: tmp_array
       character(len=4096) :: msg
+      character(len=4) :: icondfile
 
       
       
@@ -135,8 +136,53 @@ module heat_reader
         
       write(unit=msg, fmt=*) "Hint: The number of lines for the initial temperature has to be equal to the number of materials."
       do i=1, ubound(heatpar,1)
-       call fileread(r=heatpar(i)%Tinit, fileid=file_heat, errmsg=trim(msg))
+        call fileread(icondfile, fileid=file_heat)
+        if (icondfile /= "file") then
+          backspace file_heat
+          call fileread(r=heatpar(i)%Tinit, fileid=file_heat, errmsg=trim(msg))
+        else
+          Tinitfile = .true.
+          EXIT
+        end if
       end do
+      if (Tinitfile) then
+        open(newunit=file_heaticond, file="drutes.conf/heat/heaticond1D.in", action="read", status="old", iostat=i_err)
+        if (i_err /= 0) then
+          write(unit=msg, fmt=*) "Unable to open file drutes.conf/heat/heaticond1D.in", new_line("a"), &
+                                 "if you don't want to use this file for heat initial condition definition", new_line("a"), &
+                                 "change value in drutes.conf/heat/heat.conf", new_line("a"), &
+                                 "instead of a keyword file for initial condition set some concrete value",  new_line("a"), &
+                                 "DRUtES will then use piece-wise constant distribution of the initial condition."
+          call file_error(file_heat, errmsg = trim(msg))
+        end if
+        counter = 0
+        do 
+          call comment(file_heaticond)
+          read(unit=file_heaticond, fmt=*, iostat=i_err) tmp, tmp
+          if (i_err == 0) then
+            counter = counter + 1
+          else
+            EXIT
+          end if
+        end do
+        if (counter < 2) then
+          write(unit=msg, fmt=*) "You have specified less than two points for interpolation."
+          call file_error(file_heaticond, errmsg=trim(msg))
+        end if
+        
+        close(file_heaticond)
+        
+        open(newunit=file_heaticond, file="drutes.conf/heat/heaticond1D.in", action="read", status="old")
+        
+        allocate(Tinitpoints(counter,2))
+        
+        write(unit=msg, fmt=*) "Have you specified x and T values (two columns)?"
+        
+        do i=1, counter
+          call fileread(Tinitpoints(i,:), file_heaticond, errmsg=trim(msg))
+        end do
+          
+      end if
        
 		    
       

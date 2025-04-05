@@ -21,7 +21,7 @@ module postpro
   public :: make_print
   public :: write_obs , write_bcfluxes
   public :: get_RAM_use
-  private :: print_scilab, print_pure, print_gmsh
+  private :: print_scilab, print_pure, print_gmsh, write_bcfluxes_old
   
 
 
@@ -224,17 +224,24 @@ module postpro
         end if
         
 
-        
+
         if ( (.not. anime .and. mode == 0)  .or. &
           (anime_run == 1 .and. anime) .or. & 
          ( .not. anime .and. (mode == -1 .and. postpro_run == 0 ) ) ) then
 
-         
+
+          
           do i=1, ubound(filenames(proc)%names,1)
               open(newunit=ids(proc, i), file=trim(filenames(proc)%names(i)), action="write", status="replace", iostat=ierr)
           end do
+          
           ids_obs = ids
+          
+          if (anime .and. anime_run == 1) then
+            ids_anime = ids
+          end if
         end if
+        
 
 
         quadpnt%type_pnt = "ndpt"
@@ -427,9 +434,85 @@ module postpro
       
     end subroutine write_obs
     
+
+   subroutine write_bcfluxes()
+      use typy
+      use globals
+      use geom_tools
+      use pde_objs
+      use global_objs
+      use core_tools
+      use debug_tools
+      
+      
+      integer(kind=ikind) :: bc, el, D, i, proc, surfel
+      real(kind=rkind), dimension(:,:), allocatable, save :: flux
+      real(kind=rkind), dimension(2,2) :: bcpt
+      type(integpnt_str) :: quadpnt
+      real(kind=rkind) :: length
+      real(kind=rkind), dimension(:,:), allocatable, save :: integflux, cumflux
+      integer(kind=ikind), dimension(:), allocatable, save :: surfnodes
+      real(kind=rkind) :: sumarea
+
+      
+      D = drutes_config%dimen
+      
+      quadpnt%type_pnt="xypt"
+
+      quadpnt%column=2
+      
+      quadpnt%preproc=.true.
+      
+      
+      if (.not. allocated(flux)) then
+        allocate(flux(ubound(pde,1), D))
+        allocate(surfnodes(D))
+    
+        allocate(integflux(lbound(bcfluxes,1) : ubound(bcfluxes,1) , ubound(pde,1)))
+        allocate(cumflux(lbound(bcfluxes,1) : ubound(bcfluxes,1) , ubound(pde,1)))
+        cumflux = 0
+      end if
+      
+
+      integflux = 0
+      do bc = lbound(bcfluxes,1), ubound(bcfluxes,1)
+        sumarea = 0
+        do surfel = 1, bcfluxes(bc)%pos
+          el = bcfluxes(bc)%bcel(surfel)%element
+          quadpnt%element = el
+          surfnodes = bcfluxes(bc)%bcel(surfel)%surfnode(1:D)
+          quadpnt%xy(1:D) = mean(nodes%data(surfnodes,:))
+          
+
+          
+          do proc=1, ubound(pde,1)
+            
+              
+            call pde(proc)%flux(elements%material(el), quadpnt, vector_out=flux(proc,:))
+            
+            
+            integflux(bc, proc) = integflux(bc, proc) - &
+                                  dot_product(flux(proc,:), (-1)*bcfluxes(bc)%bcel(surfel)%n_out(1:D))* &
+                                                                   bcfluxes(bc)%bcel(surfel)%area
+          end do
+        end do
+
+      end do
+            
+
+      cumflux = cumflux + integflux*time_step          
+      
+      
+      
+      do bc = lbound(bcfluxes,1), ubound(bcfluxes,1)
+        write(unit=bcfluxes(bc)%fileid, fmt=*) time, integflux(bc, :), cumflux(bc,:)
+        call flush(bcfluxes(bc)%fileid)
+      end do
+    
+    end subroutine write_bcfluxes
     
     
-    subroutine write_bcfluxes()
+    subroutine write_bcfluxes_old()
       use typy
       use globals
       use geom_tools
@@ -489,7 +572,7 @@ module postpro
         call flush(bcfluxes(bc)%fileid)
       end do
     
-    end subroutine write_bcfluxes
+    end subroutine write_bcfluxes_old
  
 
     !> this subroutine parses /proc/[PID]/status file in order to get RAM consumption statistics, it works Linux only
@@ -586,6 +669,7 @@ module postpro
       use pde_objs
       use geom_tools
       use debug_tools
+      use core_tools
       
       integer, dimension(:), intent(in) :: ids
       integer(kind=ikind), intent(in) :: proc
@@ -600,7 +684,17 @@ module postpro
       real(kind=rkind) :: curtime
       type(integpnt_str) :: qpntloc
       type(integpnt_str) :: quadpnt_loc
-
+      
+!      logical :: opened
+!      character(len=256) :: filename
+      
+      
+!      do i=1, ubound(ids,1)
+!        INQUIRE(UNIT=ids(i), NAME=filename, OPENED=opened)
+!        print *, i, ids(i), cut(filename), opened
+!      end do
+      
+!      call wait()
 
       if (.not. allocated(body)) allocate(body(3, 7+ubound(pde(proc)%mass,1)))
       
@@ -621,7 +715,7 @@ module postpro
         write(unit=ids(i), fmt=*) "z=zeros(nt,3);"
       end do
       
-       call wait()
+
 
 
       quadpnt_loc%preproc=.true.
@@ -685,6 +779,7 @@ module postpro
           write(unit=ids(j), fmt=*) "z(", i, ",1) =", body(1,2+j), ";"
           write(unit=ids(j), fmt=*) "z(", i, ",2) =", body(2,2+j), ";"
           write(unit=ids(j), fmt=*) "z(", i, ",3) =", body(3,2+j), ";"
+
 
             
         end do

@@ -214,6 +214,7 @@ module evapreader
       if (ierr /= 0) then
         allocate(evap4rain(0,0))
         call write_log("W: unable to open file with rainfall data, assuming evaporation only")
+        rainfall_step = "hrs"
       else
         counter = 0
         deallocate(tmpdata)
@@ -229,11 +230,24 @@ module evapreader
             open(newunit=raindat, file="drutes.conf/evaporation/rain.in", status="old", action="read", iostat = ierr)
             do i=1, counter
               call fileread(evap4rain(i,:), raindat, checklen=.true., noexit=.true., eof=success)
+              if (i>1) then
+                if (evap4rain(i,1) <= evap4rain(i-1,1) ) then
+                  call file_error(raindat, errmsg="you have incorrect data in drutes.conf/evaporation/rain.in, &
+                                  the time values (first column) are not increasing")
+                end if
+              end if
             end do
             evap4rain_pos = 1
             EXIT
           end if
         end do
+        if (evap4rain(counter,1)/counter > 4000) then
+          call write_log("detected daily time step for rainfall data")
+          rainfall_step = "day"
+        else
+          call write_log("detected hourly time step for rainfall data")
+          rainfall_step = "day"
+        end if
       end if
     end subroutine evapread
 

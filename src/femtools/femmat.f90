@@ -24,6 +24,7 @@
 module femmat
   public :: solve_picard
   private :: results_extractor
+  private :: results_eraser
   public :: assemble_mat
   
 
@@ -72,6 +73,8 @@ module femmat
       allocate(vcttmp(ubound(pde_common%bvect,1)))
       
       picard_old = huge(picard_old)
+      
+      
       do
 
         itcount = itcount + 1
@@ -114,10 +117,11 @@ module femmat
     
         error = norm2(pde_common%xvect(1:fin,2)-pde_common%xvect(1:fin,3))/ubound(pde_common%xvect,1)
         
+        
         write(unit=terminal, fmt=*) "Nonlinear solver convergence criterion:", error
         
         write(unit=file_picard, fmt=*) time, error
-         
+   
         if (itcount == 1 .or. error <= iter_criterion) then
           do proc=1, ubound(pde,1)
             top = pde(proc)%permut(1)
@@ -138,18 +142,26 @@ module femmat
         if (itcount == 1) picard_old = error
         
         if (itcount >= 3) then
-		  if (error > picard_old) then
-			ierr = 2
-			success = .false.
-			RETURN
-		  end if
-		end if
+          if (error > picard_old) then
+            ierr = 2
+            success = .false.
+            call results_eraser()
+            RETURN
+          end if
+        end if
+        
+        if (isnan(error)) then
+          ierr = 2
+          success = .false.
+          call results_eraser()
+          RETURN
+        end if
 				
 
 
 
         if (error <= iter_criterion) then
-        
+
           if (ierr /= -1) ierr = 0
           
           if (drutes_config%check4mass) then
@@ -157,9 +169,9 @@ module femmat
             call do_masscheck()
             
           end if
-          
+
           call results_extractor()
-          
+
           success = .true.
           iter_succesfull = .true.
           RETURN
@@ -171,6 +183,7 @@ module femmat
           ierr = 1
           success = .false.
           iter_succesfull = .false.
+          call results_eraser()
           EXIT
         end if
       end do
@@ -218,22 +231,18 @@ module femmat
             elnode_prev(j) = value
 		      end if
 		    end do
-       end do processes
+        end do processes
 
-       call build_bvect(i, time_step)
+        call build_bvect(i, time_step)
 
-       call build_stiff_np(i, time_step)
+        call build_stiff_np(i, time_step)
 
-       call pde_common%time_integ(i)
-!        call printmtx(stiff_mat)
-!print *, "----"
-!        call printmtx(cap_mat)
-        
-!        call wait()
+        call pde_common%time_integ(i)
+ 
 
-       stiff_mat = stiff_mat + cap_mat 
+        stiff_mat = stiff_mat + cap_mat 
 
-       call in2global(i,spmatrix, pde_common%bvect)
+        call in2global(i,spmatrix, pde_common%bvect)
 
       end do
       printedk=.false.
@@ -271,6 +280,14 @@ module femmat
       pde_common%xvect(:,2) = pde_common%xvect(:,3)
 
     end subroutine results_extractor
+    
+    subroutine results_eraser()
+      use pde_objs
+    
+      pde_common%xvect(:,2) = pde_common%xvect(:,1)
+      pde_common%xvect(:,3) = 0
+    
+    end subroutine results_eraser
     
 
 

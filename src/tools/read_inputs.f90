@@ -357,8 +357,9 @@ module read_inputs
       end do
       
       
-     if (abs(length_1D-(deltax_1d(ubound(deltax_1d,1), 3)-deltax_1d(1,2))) > 10*epsilon(deltax_1d(1,2))) then
-
+      
+     if (abs(length_1D-abs(deltax_1d(ubound(deltax_1d,1), 3)-deltax_1d(1,2))) > 10*epsilon(deltax_1d(1,2))) then
+     
         write(unit=msg, fmt=*)"incorrect definition in either:" , new_line("a"),  &
         "                          - domain length definition" ,  new_line("a") ,&
        "    or" , new_line("a"),  &
@@ -397,7 +398,7 @@ module read_inputs
         "2. Check your number of materials, maybe it's wrong"
         call file_error(file_mesh, msg)
       end if
-	
+      	
       call simegen1D()
 
     end subroutine read_1dmesh_int

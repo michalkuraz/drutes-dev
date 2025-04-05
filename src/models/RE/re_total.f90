@@ -46,11 +46,10 @@ module re_total
       
       real(kind=rkind), dimension(3) :: xyz
       integer(kind=ikind) :: D, layer
-      
 
-           
+          
       if (quadpnt%preproc) then
-      
+
         D = drutes_config%dimen
              
         call getcoor(quadpnt, xyz(1:D))
@@ -94,9 +93,10 @@ module re_total
       real(kind=rkind), dimension(:), allocatable, save  :: vct
       real(kind=rkind) :: h
       type(integpnt_str) :: quadpnt_loc
+      logical :: teststop = .false.
       
       D = drutes_config%dimen
-
+      
       if (.not.(allocated(gradH))) then
         allocate(gradH(1:D))
         allocate(vct(1:D))
@@ -116,7 +116,8 @@ module re_total
         quadpnt_loc=quadpnt
         quadpnt_loc%preproc=.true.
         h = pde_loc%getval(quadpnt_loc)
-        call pde_loc%getgrad(quadpnt, gradH)
+        call pde_loc%getgrad(quadpnt_loc, gradH)
+
       else
         if (ubound(x,1) /=1) then
           print *, "ERROR: van Genuchten function is a function of a single variable h"
@@ -131,6 +132,10 @@ module re_total
       
       
       call pde_loc%pde_fnc(pde_loc%order)%dispersion(pde_loc, layer, x=(/h/), tensor=K(1:D, 1:D))
+      
+
+      
+      
 
       
       vct(1:D) = matmul(-K(1:D,1:D), gradH(1:D))
@@ -551,7 +556,6 @@ module re_total
       end if 
 
       
-
     end subroutine retot_seepage
     
 
@@ -564,6 +568,7 @@ module re_total
       use global_objs
       use pde_objs
       use re_globals
+      use debug_tools
 
       class(pde_str), intent(in) :: pde_loc
       integer(kind=ikind), intent(in)  :: el_id, node_order
@@ -581,6 +586,7 @@ module re_total
       
 
       if (present(value)) then
+      
         edge_id = nodes%edge(elements%data(el_id, node_order))
         i = pde_loc%permut(elements%data(el_id, node_order))
         
@@ -600,8 +606,6 @@ module re_total
           bcval = pde_loc%bc(edge_id)%value
         end if
     
-
-
         value = bcval
 
       end if
@@ -631,7 +635,7 @@ module re_total
       
       type(integpnt_str) :: quadpnt
       integer(kind=ikind) :: layer
-      real(kind=rkind) :: theta, rain, evap
+      real(kind=rkind) :: theta, rain, evap, h
       integer(kind=ikind) :: i, edge_id, j
       
       
@@ -669,11 +673,117 @@ module re_total
         quadpnt%column = 3
         layer = elements%material(el_id)
         theta =  pde_loc%mass(1)%val(pde_loc,layer, quadpnt)
-        value = rain + evap*theta
+        quadpnt%preproc = .true.
+        quadpnt%column = 1
+        h = pde_loc%getval(quadpnt)
+        if ( h < h_crit_low .OR. theta < theta_crit ) evap = 0
+        if ( h >= h_crit_high) rain = 0
+        
+        value = rain + evap
+
       end if
       
       
     end subroutine retot_atmospheric
+    
+    
+    !> if h > 0 it becomes Dirichlet condition h=0, similar to seepage face
+    !! solution for VUMOP runoff simulator
+    !! the state when rain finishes and it starts to evaporate again is not implemented here
+    !! use with a caution
+    !<
+    subroutine retot_atmosphericv2(pde_loc, el_id, node_order, value, code, array,bcpts) 
+      use typy
+      use globals
+      use global_objs
+      use pde_objs
+      use re_globals
+      use debug_tools
+      
+      class(pde_str), intent(in) :: pde_loc
+      integer(kind=ikind), intent(in)  :: el_id, node_order
+      real(kind=rkind), intent(out), optional    :: value
+      integer(kind=ikind), intent(out), optional :: code
+      real(kind=rkind), dimension(:), intent(out), optional :: array
+      type(bcpts_str), intent(in), optional :: bcpts
+      logical, save :: turned_on = .true.
+      
+      
+      
+      type(integpnt_str) :: quadpnt
+      integer(kind=ikind) :: layer
+      real(kind=rkind) :: theta, rain, evap, h
+      integer(kind=ikind) :: i, edge_id, j
+      
+      
+      if (present(code)) code = 2
+
+
+
+      if (.not. turned_on) then
+        if (present(value)) value = 0
+        if (present(code)) code = 4
+        
+        RETURN
+      end if
+
+!      print *, present(value)
+
+      if (present(value) .and. turned_on) then
+        quadpnt%preproc = .true.
+        quadpnt%column = 1
+        quadpnt%type_pnt = "ndpt"
+        quadpnt%order = elements%data(el_id,node_order)
+        h = pde_loc%getval(quadpnt)
+
+        if ( h >= h_crit_high) then
+          value = 0
+          if (present(code)) code = 4
+          turned_on = .false.
+          RETURN
+        end if
+
+        if ( h < h_crit_low ) evap = 0
+        
+        
+        edge_id = nodes%edge(elements%data(el_id, node_order))
+
+        i = pde_loc%permut(elements%data(el_id, node_order))
+
+        if (pde_loc%bc(edge_id)%file) then
+          do i=1, ubound(pde_loc%bc(edge_id)%series,1)
+            if (pde_loc%bc(edge_id)%series(i,1) > time) then
+              if (i > 1) then
+                j = i-1
+              else
+                j = i
+              end if
+              rain = pde_loc%bc(edge_id)%series(j,2)
+              evap = pde_loc%bc(edge_id)%series(j,3)
+              EXIT
+            end if
+          end do
+        else
+          print *, "atmospheric boundary must be time dependent, check record for the boundary", edge_id
+          ERROR STOP
+        end if
+	
+	
+        quadpnt%type_pnt = "ndpt"
+        quadpnt%order = elements%data(el_id,node_order)
+        quadpnt%column = 3
+        layer = elements%material(el_id)
+!        theta =  pde_loc%mass(1)%val(pde_loc,layer, quadpnt)
+        quadpnt%preproc = .false.
+        quadpnt%column = 1
+ 
+                
+        value = rain + evap
+
+      end if
+      
+      
+    end subroutine retot_atmosphericv2
     
     subroutine retot_freedrainage(pde_loc, el_id, node_order, value, code, array,bcpts) 
       use typy

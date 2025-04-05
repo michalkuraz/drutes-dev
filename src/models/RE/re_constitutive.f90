@@ -770,10 +770,14 @@ module RE_constitutive
       else
         tmp = logtablesearch(h, vgset(layer)%logh, vgset(layer)%Kr, vgset(layer)%step4fnc)
       end if
+      
+      tmp = max(Kr_crit, tmp)
+       
   
       if (present(tensor)) then
         tensor = tmp* vgset(layer)%Ks
       end if
+      
 
       if (present(scalar)) then
         scalar = tmp
@@ -1851,7 +1855,6 @@ module RE_constitutive
         use global_objs
         use re_globals
         use pde_objs
-        use debug_tools
 
         class(pde_str),intent(in) :: pde_loc
         integer(kind=ikind) :: el, pos, mat
@@ -1879,13 +1882,12 @@ module RE_constitutive
               low = vgset(mat)%rcza_set%tab(position,2)
               high = vgset(mat)%rcza_set%tab(position,3)
               if (h < low .or. h > high) then
-                passed = .true.
+                passed = .false.
                 RETURN
               end if
               end if
            end if
          end do
-         
 
         passed = .true.
 

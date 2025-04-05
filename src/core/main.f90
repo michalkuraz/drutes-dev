@@ -73,7 +73,7 @@ program main
       close(fileid)
     end if
 
-    version_id%number = "12.0/2022"
+    version_id%number = "2.0/2025"
     version_id%reliability = "beta "
     
     call get_cmd_options()
@@ -110,6 +110,10 @@ program main
     call init_measured()
   
     call write_log("number of nodes:", int1=nodes%kolik, text2="number of elements:", int2=elements%kolik)
+  
+    CALL getcwd(writer)
+  
+    call write_log("current working directory:", text2=cut(writer))
 
     call set_pointers()
     
@@ -119,7 +123,7 @@ program main
 
     
     if (solve_bcfluxes) call init_bcfluxes()
-    
+
     
     if (drutes_config%it_method == 1 .or. drutes_config%it_method == 2) then
       call init_decomp()

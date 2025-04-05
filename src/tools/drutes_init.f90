@@ -61,9 +61,7 @@ module drutes_init
 
       open(newunit=file_itcg, file="out/itsolver.count", action="write", status="replace", iostat=i_err)
       
-      open(newunit=file_picard, file="out/picard_error.vals", action="write", status="replace", iostat=i_err)
-      
-      write(unit=file_picard, fmt=*) "# time            Picard error     "
+      open(newunit=file_picard, file="out/picard_it.count", action="write", status="replace", iostat=i_err)
       
       call write_log(text="total number of parallel images is:", int1=1_ikind*NUM_IMAGES())
 
@@ -216,6 +214,19 @@ module drutes_init
       
         if (maxval(skip) == 0) then
 	        select case(trim(arg))
+            case("-h")
+              print *, "Available switches are:"
+              print *, "-o optim : if nonlinear solver fails to converge within minimal time step, the setup is changed into"
+              print *, "           semiexplicit method. It means the nonlinearities are computed based on previous time step values"
+              print *, "--print-level 1 : all screen output goes to out/screen.log"
+              print *, "--print-level 2 : all screen output goes to /dev/null (use on Linux only)"
+              print *, "-v prints DRUtES version"
+              print *, "--tmax [value] [unit] : will limit CPU runtime to a given value. Available units are [s, min, hrs, day]"
+              print *, "                        example:"
+              print *, "                                bin/drutes --tmax 30 min"
+              print *, "                        if the computation will not finish in 30 mins the time integration loop will exit"
+              print *, "                        before reaching the end time"
+              STOP
             case("-o")
               call getarg(i+1,oarg)
               select case(trim(oarg))
@@ -225,6 +236,9 @@ module drutes_init
                   optim=.true.
                 case default
                   print *, "unrecognized option after -o , exiting...."
+                  print *, "available options are:"
+                  print *, " -o optim"
+                  print *, "try bin/drutes -h"
                   ERROR STOP
               end select
 
@@ -307,6 +321,7 @@ module drutes_init
                 case default
                   print *, "incorrect command line options, your option was:"
                   print *, trim(arg)
+                  print *, "try bin/drutes -h"
                   ERROR STOP
               end select
             else
@@ -487,6 +502,7 @@ module drutes_init
       use global_objs
       use debug_tools
       use geom_tools
+      use pde_objs
       
       integer(kind=ikind), dimension(:), allocatable :: edgeid
       integer(kind=ikind), dimension(:), allocatable :: nodeid
@@ -507,17 +523,17 @@ module drutes_init
       
       sizes = 0
       do i=1, nodes%kolik
-		if (nodes%edge(i) >= 101) then
-		  sizes(nodes%edge(i)) = sizes(nodes%edge(i)) + 1
-		end if
-	  end do
+        if (nodes%edge(i) >= 101) then
+          sizes(nodes%edge(i)) = sizes(nodes%edge(i)) + 1
+        end if
+      end do
 	  
-	  sizes = sizes * D
+      sizes = sizes * D
 
       do i=101, ubound(bcfluxes,1)
         allocate(bcfluxes(i)%bcel(sizes(i)))
-	  end do
-      
+      end do
+
       elcounter = 0
       do i=1, elements%kolik
         edgeid = 0
@@ -584,7 +600,7 @@ module drutes_init
               
               if (edgeid(2) == edgeid(3)) then 
                 found = .true.
-                edge2wrt = edgeid(1)
+                edge2wrt = edgeid(2)
                 extnd = elements%data(i,1)
                 nodeid(:) =  elements%data(i,[2,3])
               end if
@@ -592,6 +608,7 @@ module drutes_init
         end if
         
         if (found) then
+
           elcounter(edge2wrt) = elcounter(edge2wrt) + 1
           
           ii = elcounter(edge2wrt)
@@ -606,6 +623,7 @@ module drutes_init
               bcfluxes(edge2wrt)%bcel(ii)%n_out(1:D) = get_normals2D(nodes%data(nodeid(1),:), nodes%data(nodeid(2),:), &
                                                                      nodes%data(extnd,:))
               bcfluxes(edge2wrt)%bcel(ii)%area = dist(nodes%data(nodeid(1),:), nodes%data(nodeid(2),:))
+              
             case(3)
               bcfluxes(edge2wrt)%bcel(ii)%n_out(1:D) = get_normals3D(nodes%data(nodeid(1),:), nodes%data(nodeid(2),:), &
                                                                       nodes%data(nodeid(3),:), nodes%data(extnd,:))
@@ -614,14 +632,22 @@ module drutes_init
           end select
         end if
       end do
-!      stop
+      
+      do i=1, ubound(pde,1)
+        allocate(pde(i)%bcflux_filename(lbound(bcfluxes,1) : ubound(bcfluxes,1)))
+      end do
+
 
       do bc=lbound(bcfluxes,1), ubound(bcfluxes,1)
         write(filename, fmt="(a,I3, a)") "out/", bc, ".flux"
+        do i=1, ubound(pde,1)
+          pde(i)%bcflux_filename(bc) = filename
+        end do
         open(newunit=bcfluxes(bc)%fileid, file=filename, action="write", status="replace")
         write(bcfluxes(bc)%fileid, fmt=*) "# time,        flux,            cumulative flux"
         call flush(bcfluxes(bc)%fileid)
       end do
+
 
     end subroutine init_bcfluxes  
     
