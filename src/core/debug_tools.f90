@@ -31,6 +31,7 @@ module debug_tools
     module procedure print_real_matrix
     module procedure print_int_matrix
     module procedure print_real_vector
+    module procedure print_char_vector
     module procedure print_int_vector
     module procedure print_sparse_matrix
     module procedure print_smartmatrix_i
@@ -267,6 +268,53 @@ module debug_tools
       end if
       
     end subroutine print_int_matrix
+    
+        !> prints vector of characters
+    subroutine print_char_vector(V, filunit, name)
+      use typy
+      use globals
+      use core_tools
+      
+      !parametry
+      character(len=*), dimension(:), intent(in) :: V  !<vektor k tisknuti
+      integer, intent(in), optional :: filunit   
+      character(len=*), intent(in), optional :: name
+
+      integer :: filloc
+      integer :: ierr
+      logical :: op
+      integer(kind=ikind) :: i
+      
+      if (present(name)) then
+        call find_unit(filloc)
+        open(unit=filloc, file=name, action="write", status="replace", iostat=ierr)
+        if (ierr /= 0) then
+          print *, "unable to open dump file, called from debug_tools::printmtx"
+          error stop
+        end if
+      else if (present(filunit)) then
+        filloc = filunit
+        inquire(unit=filloc, opened=op)
+        if (.not. op) then
+          print *, "file not opened, called from debug_tools::printmtx"
+          error stop
+        end if
+      else
+        filloc = terminal
+      end if
+     
+
+      do i=lbound(V,1),ubound(V,1)
+       write(unit=filloc, fmt=*)  i,  V(i)
+      end do
+
+      if (terminal /= filloc) then
+        close(filloc)
+      else
+        call flush(terminal)
+      end if
+  
+    end subroutine print_char_vector
 
 
     !> prints vector of reals

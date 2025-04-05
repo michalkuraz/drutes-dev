@@ -107,7 +107,7 @@ module pde_objs
     character(len=512), dimension(2)                 :: problem_name
     character(len=64), dimension(2)                  :: solution_name
     character(len=64), dimension(2)                  :: flux_name
-    character(len=128), dimension(:,:), allocatable   :: mass_name
+    character(len=128), dimension(:,:), allocatable  :: mass_name
     character(len=1)                                 :: mfswitch          
     type(pde_fnc_str), dimension(:), allocatable     :: pde_fnc
     type(mass_fnc_str), dimension(:), allocatable    :: mass
@@ -126,6 +126,7 @@ module pde_objs
     integer, dimension(:), allocatable               :: obspt_unit
     !>filename of the observation files
     character(len=256), dimension(:), allocatable    :: obspt_filename
+    character(len=256), dimension(:), allocatable    :: bcflux_filename
     !> procnodes(1) = lower id of the process base function
     !! procnodes(2) = upper id of the process base function
     integer, dimension(2) :: procbase_fnc

@@ -492,7 +492,7 @@ module postpro
             
             
             integflux(bc, proc) = integflux(bc, proc) - &
-                                  dot_product(flux(proc,:), bcfluxes(bc)%bcel(surfel)%n_out(1:D))* &
+                                  dot_product(flux(proc,:), (-1)*bcfluxes(bc)%bcel(surfel)%n_out(1:D))* &
                                                                    bcfluxes(bc)%bcel(surfel)%area
           end do
         end do

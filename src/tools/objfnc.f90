@@ -95,6 +95,8 @@ module objfnc
   logical, private :: inlast 
   integer, private :: outfile
   real(kind=qprec), private :: dt, slope, modval, suma, pos2real
+  character(len=10), allocatable, dimension(:) :: pointnames, obs_ids_char
+  logical, allocatable, dimension(:) :: isboundary
   
   
   
@@ -113,6 +115,7 @@ module objfnc
       !> current CPU time, must be real(4) because of old etime function definitions
       real(4) :: cpu_time
       logical :: written=.false.
+
       
       select case(objval%CPUlim_method)
         case("E")
@@ -143,7 +146,10 @@ module objfnc
       use debug_tools
       use pde_objs
       
-
+      integer(kind=ikind) :: numberbc
+      character(len=10) :: p
+      logical :: is_integer
+      character(len=10) :: number_part
       
       open(newunit=fileid, file="drutes.conf/inverse_modeling/objfnc.conf", action="read", status="old", iostat=ierr)
       
@@ -184,22 +190,69 @@ module objfnc
            
       call read_sep(fileid)
       
+      numberbc = maxval(nodes%edge) - 100
+      
+      allocate(pointnames(ubound(observation_array,1) + numberbc))
+      
+
+      
       write(msg, *) "Check the number of your points for constructing objective function, it should be equal or lower than ", &
           "the number of observation points and at least 1.", new_line("a"), &
+!          "or your boundary should be within then ranges from:", lbound(nodes%edge,1), "to:", ubound(nodes%edge,1), new_line("a"), &
+!          "boundary point is described by (eg boundary 101) 101bc, eg. observation point 2 justb by a value 2",  new_line("a"), &
           "   Your number of observation points is: ",   ubound(observation_array,1)
+          
+      
+      do i = 1, ubound(observation_array,1)
+        write(pointnames(i), '(I0)') i
+      end do
+      
+      
+      do i = 1, numberbc 
+        write(pointnames(ubound(observation_array,1)  + i), '(I0,"bc")') 100 + i
+      end do
+      
+      
       
       call fileread(n, fileid, ranges=(/1_ikind, 1_ikind*ubound(observation_array,1)/), errmsg=msg)
       
       call read_sep(fileid)
       
-      
       allocate(obs_ids(n*no_pdes))
       
-      msg="Are the numbers of observation points for evaluating your objective function correct?"
+      msg="Are the names of observation points for evaluating your objective function correct?"
+      
+      allocate(obs_ids_char(n*no_pdes))
+      allocate(isboundary(n*no_pdes))
       
       do i=1, n
-        call fileread(obs_ids(i), fileid, ranges=(/1_ikind, 1_ikind*ubound(observation_array,1)/), errmsg=msg)
+        call fileread(obs_ids_char(i), fileid, options=pointnames, errmsg=msg)
       end do
+      
+      do i = 1, ubound(obs_ids_char,1)
+         p = trim(obs_ids_char(i))
+
+         ! Check if it's all digits (i.e., an integer)
+         is_integer = (verify(p, '0123456789') == 0)
+
+         ! Check if it ends with "bc"
+         if (len_trim(p) >= 2) then
+            isboundary(i) = (p(len_trim(p)-1:len_trim(p)) == 'bc')
+         else
+            isboundary(i) = .false.
+         end if
+      end do
+      
+      do i=1, ubound(obs_ids_char,1)
+        if (isboundary(i)) then
+          p = trim(obs_ids_char(i))
+          number_part = p(1:len_trim(obs_ids_char(i))-2)
+        else
+          number_part = obs_ids_char(i)
+        end if
+        read(number_part, *) obs_ids(i)
+      end do
+      
 
       call read_sep(fileid)
       
@@ -388,16 +441,32 @@ module objfnc
       use pde_objs
     
       integer(kind=ikind) :: massdim
+      integer(kind=ikind) :: nofiles, i, nopts, nobc, pos
+      character(len=256) :: filename
+      
+      nopts=0
+      nobc=0
+      do i=1, ubound(isboundary,1)
+        if (isboundary(i)) then 
+          nobc=nobc + 1
+        else
+          nopts = nopts + 1
+        end if
+      end do
+      
+      nofiles = nopts*no_pdes + nobc
+      
     
-      allocate(model_data(ubound(obs_ids,1)*no_pdes))
+      allocate(model_data(nofiles))
       
-      allocate(datafiles(ubound(obs_ids,1)*no_pdes))
+      allocate(datafiles(nofiles))
       
       
-      do i=1, no_pdes
-        do j=1, ubound(obs_ids,1)
-          open(newunit=datafiles((i-1)*ubound(obs_ids,1)+j), file=pde(pde_comp(i))%obspt_filename(obs_ids(j)), action="read", &
-                 status="old", iostat=ierr)
+      pos=0
+      do i=1, ubound(obs_ids,1)
+        if (isboundary(i)) then
+          pos = pos + 1
+          open(newunit=datafiles(pos), file=pde(1)%bcflux_filename(obs_ids(i)), action="read", status="old", iostat=ierr)
           if (ierr/=0) then
             print *, "error opening files with observation points"
             print *, "this is a bug"
@@ -405,10 +474,20 @@ module objfnc
             print *, "contact Michal -> michalkuraz@gmail.com"
             ERROR STOP
           end if
-        end do
+        else
+          do j=1, no_pdes
+            pos = pos + 1
+            open(newunit=datafiles(pos), file=pde(pde_comp(j))%obspt_filename(obs_ids(i)), action="read", status="old",iostat=ierr)
+          end do
+        end if
       end do
+            
+  
       
       counter = 0
+      
+      inquire(unit=datafiles(1), name=filename)
+      
       
       do 
         counter=counter+1
@@ -419,6 +498,8 @@ module objfnc
           EXIT
         end if     
       end do
+      
+      
       
       memsize = qprec*(ubound(datafiles,1)+1)*counter
       
@@ -461,7 +542,7 @@ module objfnc
       
       close(datafiles(1))
       
-      open(newunit=datafiles(1), file=pde(pde_comp(1))%obspt_filename(obs_ids(1)), action="read", status="old")
+      open(newunit=datafiles(1), file=cut(filename), action="read", status="old")
       
       if (go4skip) then
         
@@ -507,7 +588,13 @@ module objfnc
           massdim = 0
         end if
         
-        allocate(tmpdata(3 + drutes_config%dimen + massdim))
+        
+        if (isboundary(i)) then
+          allocate(tmpdata(1 + 2*ubound(pde,1)))
+        else
+          allocate(tmpdata(3 + drutes_config%dimen + massdim))
+        end if
+        
         n=0
         do l=1, counter
           processed=.false.
@@ -534,7 +621,7 @@ module objfnc
           end if
         end do
       end do  
-
+      
     
     end subroutine read_model
     
@@ -555,10 +642,11 @@ module objfnc
       
       
       pos = 1
-      
+
       do j=1, ubound(exp_data(1)%time,1) 
         do k=pos, ubound(model_data(1)%time,1)-1
           if (exp_data(1)%time(j) >=  model_data(1)%time(k) .and. exp_data(1)%time(j) < model_data(1)%time(k+1)) then
+
             dt = model_data(1)%time(k+1) - exp_data(1)%time(j)
             if (dt < model_data(1)%time(k+1)*epsilon(dt)) then
               inlast = .true.
@@ -581,7 +669,12 @@ module objfnc
                   modval = model_data(n)%data(pos+1,l)
                 end if
                 
+                
+
+                
+                
                 errors(i)%val(l) = errors(i)%val(l) + (modval - exp_data(n)%data(j,l))*(modval - exp_data(n)%data(j,l))
+                
                 pos2real = pos2real + 1
               end do
             end do
@@ -592,7 +685,7 @@ module objfnc
       
       end do
         
-        
+
    
       do i=1, ubound(errors,1)  
         errors(i)%val = sqrt(errors(i)%val/pos2real)

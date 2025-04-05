@@ -502,6 +502,7 @@ module drutes_init
       use global_objs
       use debug_tools
       use geom_tools
+      use pde_objs
       
       integer(kind=ikind), dimension(:), allocatable :: edgeid
       integer(kind=ikind), dimension(:), allocatable :: nodeid
@@ -631,10 +632,17 @@ module drutes_init
           end select
         end if
       end do
+      
+      do i=1, ubound(pde,1)
+        allocate(pde(i)%bcflux_filename(lbound(bcfluxes,1) : ubound(bcfluxes,1)))
+      end do
 
 
       do bc=lbound(bcfluxes,1), ubound(bcfluxes,1)
         write(filename, fmt="(a,I3, a)") "out/", bc, ".flux"
+        do i=1, ubound(pde,1)
+          pde(i)%bcflux_filename(bc) = filename
+        end do
         open(newunit=bcfluxes(bc)%fileid, file=filename, action="write", status="replace")
         write(bcfluxes(bc)%fileid, fmt=*) "# time,        flux,            cumulative flux"
         call flush(bcfluxes(bc)%fileid)
