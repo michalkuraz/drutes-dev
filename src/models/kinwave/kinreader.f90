@@ -402,14 +402,16 @@ module kinreader
       open(newunit=file_disp, file="drutes.conf/kinwave/dispersivity.conf", status="old", action="read", iostat=ierr)
       
       if (ierr /= 0) then
-		call write_log("missing file: drutes.conf/kinwave/dispersivity.conf, no problem with that, dipersivity for kinematic wave &
-						set 0")
+            call write_log("missing file: drutes.conf/kinwave/dispersivity.conf, no problem with that, & 
+                            dipersivity for kinematic wave set 0 as well as evaporation loss is 0")
 		 
         kindispers = 0
+        kinevap = 0
       else
-		do i=1,n
-	      call fileread(kindispers(i), file_disp, ranges=[0.0_rkind, huge(kindispers(1))] )
-	     end do
+        do i=1,n
+	        call fileread(kindispers(i), file_disp, ranges=[0.0_rkind, huge(kindispers(1))] )
+	      end do
+        call fileread(kinevap, file_disp, ranges=[0.0_rkind, huge(kinevap)] )
 	  end if
             
       

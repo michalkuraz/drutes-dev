@@ -42,6 +42,8 @@ module kinglobs
   
   real(kind=rkind), dimension(:), allocatable, public :: manning, kindispers
   
+  real(kind=rkind), public :: kinevap
+  
   real(kind=rkind), dimension(:), allocatable, public :: oneDslopes
   
   

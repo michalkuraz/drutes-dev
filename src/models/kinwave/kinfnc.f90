@@ -604,7 +604,7 @@ module kinfnc
       integer(kind=ikind), intent(in) :: layer
       !> return value
       real(kind=rkind) :: val
-      real(kind=rkind) :: qin, S, A, K 
+      real(kind=rkind) :: qin, S, A, K, rain
       integer(kind=ikind), save :: position = 1
       integer(kind=ikind) :: i
       
@@ -620,7 +620,7 @@ module kinfnc
         end do
       end if
     
-      val = raindata(el2pt(quadpnt%element))%series(position,2)
+      rain = raindata(el2pt(quadpnt%element))%series(position,2)
 
       select case(inf_model(layer)%name)
         case("Ks")
@@ -637,7 +637,13 @@ module kinfnc
           end if
       end select
       
-      val = max(0.0_rkind, val - qin)
+      
+      
+      if (abs(rain) < epsilon(rain)) then
+        val = -kinevap/86400.0_rkind*1e-3
+      else
+        val = max(0.0_rkind, val - qin)
+      end if
           
       
 

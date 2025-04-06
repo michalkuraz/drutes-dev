@@ -204,6 +204,7 @@ module feminittools
       end do
 
 
+      call write_log("The total domain area is", sum(elements%areas))
 
       deallocate(a_s)
       
