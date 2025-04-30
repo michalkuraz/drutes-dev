@@ -113,8 +113,17 @@ module evapreader
           albedo_conf%albdat(i,2) = datafiller%data(low+2)
         end do
       end if
+      
+      
+      call fileread(atm_emis_method, evapconf, options=["IDSO", "BRUT"])
+      
+      if (atm_emis_method=="BRUT") then
+		call fileread(emisivity_const, evapconf, ranges=[1.0_rkind, 5.0_rkind])
+	  end if
           
-        
+      call fileread(surf_resis%th_lim, evapconf, ranges=[0.0_rkind, 1.0_rkind])
+      
+      call fileread(surf_resis%Cr, evapconf, ranges=[5.0_rkind, 100.0_rkind])
     
       
       counter = 0

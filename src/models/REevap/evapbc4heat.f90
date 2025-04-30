@@ -52,7 +52,15 @@ module evapbc4heat
       !atmospheric vapour pressure 
       ea = 0.611 * relhumid(quadpnt) * exp(17.27*T_a/(T_a_K - 35.85))
       
-      eps_a =  0.7 + 5.95e-5 * ea *exp (1500/T2kelv(T_a))
+      select case(atm_emis_method) 
+		case("BRUT")
+			eps_a = emisivity_const*(ea/T2kelv(T_a))**(1.0_rkind/7.0_rkind)
+		case("IDSO")
+			eps_a =  0.7 + 5.95e-5 * ea *exp (1500/T2kelv(T_a))
+		case default
+			print *, "Undefined atm emisivity method, contact developer"
+			ERROR STOP
+	   end select
       
       Rld = ((1-0.84*c)*eps_a + 0.84*c) * sigm * T_a_K**4
       
@@ -172,15 +180,16 @@ module evapbc4heat
       theta = vangen(pde(re_ord), layer, quadpnt)
       ths = vgset(layer)%ths
       
+
       !> Bare soil
       !rs = max(-805 + 4140*(ths-theta), 0.0_rkind)
-      !rs = 10*exp(0.3563*(0.15-theta))
+      rs = 10*exp(surf_resis%Cr*(surf_resis%th_lim-theta))
       !rs = 0
       !> Plants
-      rl = 100
-      LAI = 1.0
-      LAI_active = LAI*0.3
-      rs = rl/LAI_active
+!      rl = 100
+!      LAI = 1.0
+!      LAI_active = LAI*0.3
+!      rs = rl/LAI_active
       
       pos = getmeteopos()
       quad4atm%type_pnt = "numb"

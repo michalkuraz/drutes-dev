@@ -96,5 +96,15 @@ module evapglob
   real(kind=rkind), dimension(:,:), allocatable :: evap4rain
   
   integer(kind=ikind) :: evap4rain_pos
+  
+  character(len=4), public :: atm_emis_method
+  real(kind=rkind), public :: emisivity_const
+  
+  type, public :: surf_resis_str
+	real(kind=rkind) :: th_lim
+	real(kind=rkind) :: Cr
+  end type surf_resis_str
+  
+  type(surf_resis_str), public :: surf_resis
 
 end module evapglob
