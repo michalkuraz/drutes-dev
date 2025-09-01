@@ -213,6 +213,7 @@ module evapbc4heat
       use evap_heat_constitutive
       use printtools
       use evapglob
+      use evap_RE_constitutive
       
       class(pde_str), intent(in) :: pde_loc
       integer(kind=ikind), intent(in)  :: el_id, node_order
@@ -321,7 +322,7 @@ module evapbc4heat
           layer = elements%material(el_id)
           R = Rnterm(quadpnt_loc, layer)
           H = Hterm(quadpnt_loc)
-          LE = latentheat(quadpnt_loc)*Eterm(quadpnt_loc, layer)
+          LE = latentheat(quadpnt_loc)*Eterm(quadpnt_loc, layer)*dens_liquid(quadpnt_loc)
           ebalance_vals(bc_nds,1) = R
           ebalance_vals(bc_nds,2) = H
           ebalance_vals(bc_nds,3) = LE
