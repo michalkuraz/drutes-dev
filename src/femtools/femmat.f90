@@ -88,6 +88,7 @@ module femmat
         call solve_matrix(spmatrix, pde_common%bvect(1:fin), pde_common%xvect(1:fin,3),  itmax1=fin, &
             reps1=1e-14_rkind, itfin1=pcg_it, repsfin1=reps_err)
             
+            
         if (solver_error) then
           ierr = 1
           success = .false.
@@ -207,7 +208,7 @@ module femmat
 
       integer, intent(out) :: ierr
 
-      integer(kind=ikind) :: i,j,k,l, proc, ll, limits
+      integer(kind=ikind) :: i,j,k,l, proc, ll, limits, ii,jj
             
       type(integpnt_str) :: quadpnt
       
@@ -241,6 +242,8 @@ module femmat
  
 
         stiff_mat = stiff_mat + cap_mat 
+        
+
 
         call in2global(i,spmatrix, pde_common%bvect)
 

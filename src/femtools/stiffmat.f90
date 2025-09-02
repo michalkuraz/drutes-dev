@@ -57,14 +57,14 @@ module stiffmat
       real(kind=rkind) :: csum
       !> sum of reaction terms
       real(kind=rkind) :: rsum
-      integer(kind=ikind) :: i,j,l, top, iproc, jproc, ii, jj, limits
+      integer(kind=ikind) :: i,j,l, top, iproc, jproc, ii, jj, limits, iii, jjj
       real(kind=rkind), dimension(1,3) :: u
       real(kind=rkind), dimension(3,1) :: v
       real(kind=rkind), dimension(1,3) :: w
       real(kind=rkind), dimension(3) :: conv
       real(kind=rkind), dimension(3,3) :: disp
       type(integpnt_str) :: quadpnt
-      real(kind=rkind) :: capacity, react
+      real(kind=rkind) :: capacity, react, tmp
 
       stiff_mat = 0
 
@@ -137,8 +137,10 @@ module stiffmat
 
                 do l=1, ubound(gauss_points%weight,1)
                   quadpnt%order = l
+                  !tmp = pde(iproc)%pde_fnc(jproc)%reaction(pde(iproc),layer(iproc, jproc), quadpnt)
                   rsum = rsum + pde(iproc)%pde_fnc(jproc)%reaction(pde(iproc),layer(iproc, jproc), &
                     quadpnt)*base_fnc(i,l)*base_fnc(j,l)*gauss_points%weight(l)
+                    
                 end do	      
 
                 ii = i + (iproc-1)*limits
@@ -180,7 +182,6 @@ module stiffmat
      stiff_mat = stiff_mat/gauss_points%area*elements%areas(el_id)
      
 
-     
 
      
     end subroutine build_stiff_np
@@ -270,6 +271,8 @@ module stiffmat
           end do
         end if
       end do
+      
+
     
       
 

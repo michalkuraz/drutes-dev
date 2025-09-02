@@ -218,6 +218,7 @@ module evap_RE_constitutive
 
       val = vapour_diff(layer, quadpnt) / dens_liquid(quadpnt) * MolWat * gravity / (T*R_gas)*relhumid(quadpnt)*dens_satvap(quadpnt)
       
+      
       Kvh = 0
 
       do i = 1, drutes_config%dimen
@@ -441,8 +442,12 @@ module evap_RE_constitutive
       real(kind=rkind) :: T
       
       T = T2kelv(pde(heat_ord)%getval(quadpnt))
-    
-      val = 1e-3 *(exp(31.3716 - (6014.79/T) - 7.92495e-3*T))/T
+      
+      if (T < 10.0) then
+        val = 0
+      else
+        val = 1e-3 *(exp(31.3716 - (6014.79/T) - 7.92495e-3*T))/T
+      end if
       
       
     end function dens_satvap
@@ -463,7 +468,7 @@ module evap_RE_constitutive
       
       T = pde(heat_ord)%getval(quadpnt)
       
-      val = 1000 - 7.37e-3*(T - 3.98)**2 + 3.79e-5*(T - 3.98)**3
+      val = max(800.0_rkind, 1000 - 7.37e-3*(T - 3.98)**2 + 3.79e-5*(T - 3.98)**3)
     
     end function dens_liquid
     
