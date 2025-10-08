@@ -405,10 +405,19 @@ module evapbc4heat
             end if
           end do
         end if
-          
+        
+        quadpnt_loc%preproc = .true.
+        quadpnt_loc%column = 1
+        
+        h = pde_loc%getval(quadpnt_loc)  
+        
         if (rainfall_step == "hrs") then
           if (rain > 10*epsilon(rain)) then
-            bcval = rain
+            if (h < h_crit_high) then
+              bcval = rain
+            else
+              bcval = 0
+            end if
           else
             bcval = Eterm(quadpnt_loc, layer)
           end if
@@ -416,10 +425,7 @@ module evapbc4heat
           bcval = rain + Eterm(quadpnt_loc, layer)
         end if
 
-        quadpnt_loc%preproc = .true.
-        quadpnt_loc%column = 1
-        
-        h = pde_loc%getval(quadpnt_loc)
+
         
         theta =  pde_loc%mass(1)%val(pde_loc,layer, quadpnt_loc)
         

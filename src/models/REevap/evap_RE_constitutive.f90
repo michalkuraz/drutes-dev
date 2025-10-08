@@ -468,7 +468,7 @@ module evap_RE_constitutive
       
       T = pde(heat_ord)%getval(quadpnt)
       
-      val = max(800.0_rkind, 1000 - 7.37e-3*(T - 3.98)**2 + 3.79e-5*(T - 3.98)**3)
+      val = max(950.0_rkind, 1000 - 7.37e-3*(T - 3.98)**2 + 3.79e-5*(T - 3.98)**3)
     
     end function dens_liquid
     
