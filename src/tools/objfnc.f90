@@ -646,8 +646,9 @@ module objfnc
       do j=1, ubound(exp_data(1)%time,1) 
         do k=pos, ubound(model_data(1)%time,1)-1
           if (exp_data(1)%time(j) >=  model_data(1)%time(k) .and. exp_data(1)%time(j) < model_data(1)%time(k+1)) then
-
+!            print *, exp_data(1)%time(j) ,  model_data(1)%time(k) , exp_data(1)%time(j) , model_data(1)%time(k+1)
             dt = model_data(1)%time(k+1) - exp_data(1)%time(j)
+
             if (dt < model_data(1)%time(k+1)*epsilon(dt)) then
               inlast = .true.
             else
@@ -688,7 +689,7 @@ module objfnc
 
    
       do i=1, ubound(errors,1)  
-        errors(i)%val = sqrt(errors(i)%val/pos2real)
+        errors(i)%val = sqrt(errors(i)%val)/pos2real
       end do
       
       open(newunit=outfile, file="out/objfnc.val", status="new", action="write")
