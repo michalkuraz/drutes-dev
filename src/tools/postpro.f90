@@ -182,11 +182,11 @@ module postpro
 
       if (anime) then
         prefix = "out/anime/"
-        write(unit=forma, fmt="(a, I7, a)") "(a, a, a, a, a, I", 1," a)"
+        write(unit=forma, fmt="(a, I7, a)") "(a, a, a, a, a, I", 1,", a)"
         run = anime_run
       else
         prefix = "out/"
-        write(unit=forma, fmt="(a, I7, a)") "(a, a, a, a, a, I", postpro_dec," a)"
+        write(unit=forma, fmt="(a, I7, a)") "(a, a, a, a, a, I", postpro_dec,", a)"
         run = postpro_run
       end if
 
