@@ -3,18 +3,22 @@
 in := cd objs
 out := cd ..
 
+
+NETCDF_FFLAGS := $(shell nf-config --fflags)
+NETCDF_FLIBS  := $(shell nf-config --flibs)
+
 #options for debugging, use for development  
-#c= gfortran -fimplicit-none  -fcoarray=single -fbounds-check -fbacktrace -g -g3 -fdefault-real-8 -O0 -finit-real=nan -Wsurprising
+c= gfortran -fimplicit-none  -fcoarray=single -fbounds-check -fbacktrace -g -g3 -fdefault-real-8 -O0 -finit-real=nan -Wsurprising $(NETCDF_FFLAGS)
 
 #options for optimized compilation, use for production purposes on well debugged versions
-c=gfortran -fimplicit-none  -fcoarray=single -fdefault-real-8 -O3 -finit-real=nan -ffpe-summary=none -fno-backtrace  
+#c=gfortran -fimplicit-none  -fcoarray=single -fdefault-real-8 -O3 -finit-real=nan -ffpe-summary=none -fno-backtrace  
 
 d=drutes_obj-`date -I`
 
 all : main.o $(ALL_objs)
-	    [ -d bin ] || mkdir bin && $c -g -o bin/drutes main.o $(ALL_objs)
+	    [ -d bin ] || mkdir bin && $c -g -o  bin/drutes main.o $(ALL_objs) $(NETCDF_FLIBS)
 install : main.o $(ALL_objs)
-	    [ -d bin ] || mkdir bin && $c -g -o bin/drutes main.o $(ALL_objs) && [ -d obj ] || mkdir obj && mv *.o *.mod obj
+	    [ -d bin ] || mkdir bin && $c -g -o bin/drutes main.o $(ALL_objs)  $(NETCDF_FLIBS) && [ -d obj ] || mkdir obj && mv *.o *.mod obj
 	
 dir="obj"
 
@@ -26,7 +30,7 @@ CORE_obj := typy.o global_objs.o globals.o globals1D.o globals2D.o  debug_tools.
 POINTERMAN_obj := manage_pointers.o
 RE_obj := re_constitutive.o re_reader.o re_globals.o re_total.o re_pointers.o re_analytical.o re_evap_methods.o
 MATHTOOLS_obj :=  linalg.o integral.o solver_interfaces.o simplelinalg.o gmres_solver.o
-TOOLS_obj := printtools.o simegen.o read_inputs.o drutes_init.o geom_tools.o postpro.o readtools.o objfnc.o
+TOOLS_obj := printtools.o simegen.o read_inputs.o drutes_init.o geom_tools.o postpro.o readtools.o objfnc.o datetime.o
 FEMTOOLS_obj := feminittools.o capmat.o stiffmat.o fem.o fem_tools.o femmat.o
 DECOMPO_obj :=  decomp_tools.o schwarz_dd.o  decomp_vars.o decomposer.o schwarz_dd2subcyc.o
 PMAoo_obj := fullmatrix.o mtx.o mtx_int.o mtxiotools.o pmatools.o solvers.o sparsematrix.o sparsematrix_int.o matmod.o reorder.o
@@ -37,8 +41,9 @@ HEAT_obj := heat_fnc.o heat_pointers.o heat_globals.o heat_reader.o
 KINWAVE_obj := kinreader.o kinglobs.o kinfnc.o kinpointer.o
 FROZEN_obj := freeze_globs.o freeze_helper.o freeze_fnc.o freeze_reader.o freeze_pointers.o 
 REevap_obj :=  evapglob.o evappointers.o evap_RE_constitutive.o evap_heat_constitutive.o evapreader.o evapbc4heat.o
+NETCDF_obj := init_netcdf.o ncglobvars.o
 
-MODEL_objs := $(RE_obj)  $(BOUSSINESQ_obj) $(ADE_obj) $(REDUAL_obj)  $(HEAT_obj) $(LTNE_obj) $(FROZEN_obj) $(KINWAVE_obj) $(REevap_obj)
+MODEL_objs := $(RE_obj)  $(BOUSSINESQ_obj) $(ADE_obj) $(REDUAL_obj)  $(HEAT_obj) $(LTNE_obj) $(FROZEN_obj) $(KINWAVE_obj) $(REevap_obj) $(NETCDF_obj)
 
 ALL_objs := $(CORE_obj) $(TOOLS_obj) $(POINTERMAN_obj) $(MATHTOOLS_obj) $(FEMTOOLS_obj) $(DECOMPO_obj)  $(PMAoo_obj) $(MODEL_objs)
 #-----------------------------------------------------------------
@@ -124,6 +129,8 @@ postpro.o: $(CORE_obj) $(MATHTOOLS_obj) geom_tools.o src/tools/postpro.f90
 	$c -c src/tools/postpro.f90
 objfnc.o: $(CORE_obj) readtools.o src/tools/objfnc.f90
 	$c -c  src/tools/objfnc.f90
+datetime.o:  $(CORE_obj)  src/tools/datetime.f90
+	$c -c src/tools/datetime.f90
 #-------end TOOLS_obj------------------------------------
 
 #-------begin RE_obj--------------------------------
@@ -257,6 +264,12 @@ evapbc4heat.o: $(CORE_obj) $(RE_obj) evap_RE_constitutive.o evap_heat_constituti
 #------end evaporation_obj-------------------------
 
 
+#------begin netcdf_obj----------------------------
+ncglobvars.o:  $(CORE_obj) $(TOOLS_obj) src/models/fluxLS/ncglobvars.f90
+	$c -c src/models/fluxLS/ncglobvars.f90
+init_netcdf.o: $(CORE_obj) ncglobvars.o src/models/fluxLS/init_netcdf.f90
+	$c -c src/models/fluxLS/init_netcdf.f90
+#-------end netcdf_obj--------------------------------
 
 
 #-------begin POINTERS_obj--------------------------------

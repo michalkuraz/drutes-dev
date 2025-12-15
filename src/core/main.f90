@@ -47,7 +47,7 @@ program main
   use objfnc
   use printtools
   use readtools
-
+  use init_netcdf
   
   character(len=256) :: writer
   character(len=2)   :: ch
@@ -55,6 +55,13 @@ program main
   real ::  stop_time
   real(kind=rkind) :: r, t
   integer :: fileid, i, j, ierrtime
+  
+  
+  call netcdf()
+  
+  
+  
+  STOP
   
   call system("rm -rf out/*")
   
