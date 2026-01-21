@@ -642,12 +642,15 @@ module objfnc
       
       
       pos = 1
+      pos2real = 0.0_qprec
 
       do j=1, ubound(exp_data(1)%time,1) 
         do k=pos, ubound(model_data(1)%time,1)-1
           if (exp_data(1)%time(j) >=  model_data(1)%time(k) .and. exp_data(1)%time(j) < model_data(1)%time(k+1)) then
-!            print *, exp_data(1)%time(j) ,  model_data(1)%time(k) , exp_data(1)%time(j) , model_data(1)%time(k+1)
+!            print *, "time exp", exp_data(1)%time(j) , "time model range", model_data(1)%time(k),  model_data(1)%time(k+1)
             dt = model_data(1)%time(k+1) - exp_data(1)%time(j)
+            
+!            print *, "dt", dt
 
             if (dt < model_data(1)%time(k+1)*epsilon(dt)) then
               inlast = .true.
@@ -658,7 +661,9 @@ module objfnc
             pos = k
             
             n=0
-            pos2real = 1.0_qprec
+            
+            pos2real = pos2real + 1.0_qprec
+            
             do i=1, ubound(errors,1)
               do l=1, ubound(errors(i)%val,1)
                 n=n+1
@@ -670,16 +675,24 @@ module objfnc
                   modval = model_data(n)%data(pos+1,l)
                 end if
                 
+!                print *, "point", i,  "position", pos2real, "modval", modval,  "exp val",  exp_data(n)%data(j,l)
+                
+                
+
+!                print *, "errors quad", errors(i)%val(l), "last error:", abs(modval - exp_data(n)%data(j,l))
+                
+                errors(i)%val(l) = errors(i)%val(l) + abs(modval - exp_data(n)%data(j,l))
                 
 
                 
                 
-                errors(i)%val(l) = errors(i)%val(l) + (modval - exp_data(n)%data(j,l))*(modval - exp_data(n)%data(j,l))
                 
-                pos2real = pos2real + 1
+!                print *, "--------"
               end do
+              
+              
             end do
-           
+
             EXIT
           end if
         end do
@@ -689,12 +702,12 @@ module objfnc
 
    
       do i=1, ubound(errors,1)  
-        errors(i)%val = sqrt(errors(i)%val)/pos2real
+        errors(i)%val = (errors(i)%val)/pos2real
       end do
       
       open(newunit=outfile, file="out/objfnc.val", status="new", action="write")
       
-      write(outfile, *) "# values of objective functions"
+      write(outfile, *) "# values of objective functions (mean deviation between observed and modeled data)"
       
       do i=1, ubound(errors,1)
         do j=1, ubound(errors(i)%val,1)
