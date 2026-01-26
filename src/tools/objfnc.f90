@@ -681,7 +681,7 @@ module objfnc
 
 !                print *, "errors quad", errors(i)%val(l), "last error:", abs(modval - exp_data(n)%data(j,l))
                 
-                errors(i)%val(l) = errors(i)%val(l) + abs(modval - exp_data(n)%data(j,l))
+                errors(i)%val(l) = errors(i)%val(l) + (modval - exp_data(n)%data(j,l))**2
                 
 
                 
@@ -702,7 +702,7 @@ module objfnc
 
    
       do i=1, ubound(errors,1)  
-        errors(i)%val = (errors(i)%val)/pos2real
+        errors(i)%val = sqrt((errors(i)%val)/pos2real)
       end do
       
       open(newunit=outfile, file="out/objfnc.val", status="new", action="write")
