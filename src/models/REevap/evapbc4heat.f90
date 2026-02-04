@@ -476,6 +476,7 @@ module evapbc4heat
           if (theta >=  albedo_conf%theta_min .and. theta < albedo_conf%theta_max) val = albedo_conf%A - theta
         end select
         
+        
       
     
     end function albedo_fnc

@@ -59,7 +59,7 @@ module evapreader
       if (albedo_conf%method == 2) then
         deallocate(tmpdata)
         allocate(tmpdata(5))
-        call fileread(tmpdata, evapconf, checklen=.true.,errmsg="Have you defined parameters for computing albedo from equation")
+        call fileread(tmpdata, evapconf, checklen=.true.,errmsg="Have you defined parameters for computing albedo from equation?")
         albedo_conf%theta_min = tmpdata(1)
         albedo_conf%theta_max = tmpdata(2)
         albedo_conf%albd_min = tmpdata(3)
@@ -72,6 +72,7 @@ module evapreader
         allocate(tmpdata(1))
         call fileread(tmpdata, evapconf, checklen=.true.,errmsg="Have you commented out parameters for computing albedo from & 
                       equation. Note that you have defined an option for providing albedo from measured data")
+                
         zref = tmpdata(1)
         
         open(newunit=albedodat, file="drutes.conf/evaporation/albedo.dat", status="old", action="read", iostat=ierr)
