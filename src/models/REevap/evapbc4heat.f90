@@ -234,7 +234,7 @@ module evapbc4heat
       character(len=1), dimension(3) :: xyz = (/"x", "z", "y"/)
       integer(kind=ikind), save :: bc_nds = 0
       real(kind=rkind), dimension(:,:), allocatable, save :: ebalance_vals
-      real(kind=rkind) :: R, H, LE, rain
+      real(kind=rkind) :: R, H, LE, rain, E, G
       logical :: raining
       
       D = drutes_config%dimen
@@ -301,14 +301,14 @@ module evapbc4heat
       
       
       if (present(value)) then
-        if (.not. allocated(ebalance_vals)) allocate(ebalance_vals(bc_nds,3))
+        if (.not. allocated(ebalance_vals)) allocate(ebalance_vals(bc_nds,5))
         
         if (.not. raining) then
           if (time > epsilon(time) .and. itcount == 1 .and. bc_nds == 1) then
             if (.not. header_written) then
               write(unit=outfile, fmt=*) "#----------------------------------------------------------------------------------------"
               write(unit=outfile, fmt=*) "#----------------------------------------------------------------------------------------"
-              write(unit=outfile, fmt=*) "#time                               R                           H                      LE"
+              write(unit=outfile, fmt=*) "#time             R               H                 LE               E                 G "
               write(unit=outfile, fmt=*) "#- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -"
               header_written = .true.
             end if
@@ -322,10 +322,14 @@ module evapbc4heat
           layer = elements%material(el_id)
           R = Rnterm(quadpnt_loc, layer)
           H = Hterm(quadpnt_loc)
-          LE = latentheat(quadpnt_loc)*Eterm(quadpnt_loc, layer)*dens_liquid(quadpnt_loc)
+          E = Eterm(quadpnt_loc, layer)
+          LE = latentheat(quadpnt_loc)*E*dens_liquid(quadpnt_loc)
+          G = R - H - LE
           ebalance_vals(bc_nds,1) = R
           ebalance_vals(bc_nds,2) = H
           ebalance_vals(bc_nds,3) = LE
+          ebalance_vals(bc_nds,4) = E
+          ebalance_vals(bc_nds,5) = G
           time4wright = time
           value = R - H + LE
         else 
