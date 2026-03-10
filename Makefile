@@ -1,319 +1,463 @@
-##compiler options
+#                             _____________________  _______________________
+#                             ___  __ \__  __ \_  / / /_  /___  ____/_  ___/
+#                             __  / / /_  /_/ /  / / /_  __/_  __/  _____ \ 
+#                             _  /_/ /_  _, _// /_/ / / /_ _  /___  ____/ / 
+#                             /_____/ /_/ |_| \____/  \__/ /_____/  /____/  
+#                                                                           
+# 
+#---------------------------------------------D R U t E S-----------------------------------------
+#                             (Dual Richards' Unsaturated Equation Solver)
+#                                           M a k e f i l e 
 
-in := cd objs
-out := cd ..
+.DEFAULT_GOAL := all
 
-#options for debugging, use for development  
-#c= gfortran -fimplicit-none  -fcoarray=single -fbounds-check -fbacktrace -g -g3 -fdefault-real-8 -O0 -finit-real=nan -Wsurprising
+SHELL := /bin/bash
+#build directories
+BUILD = build
+OBJDIR = $(BUILD)/objs
+MODDIR = $(BUILD)/mods
+BINDIR = bin
 
-#options for optimized compilation, use for production purposes on well debugged versions
-c=gfortran -fimplicit-none  -fcoarray=single -fdefault-real-8 -O3 -finit-real=nan -ffpe-summary=none -fno-backtrace  
+LOGDIR = $(BUILD)/logs
+LOGFILE = $(LOGDIR)/compile.log
 
+$(BUILD):
+	mkdir -p $(BUILD)
+
+$(OBJDIR):
+	mkdir -p $(OBJDIR)
+
+$(MODDIR):
+	mkdir -p $(MODDIR)
+
+$(BINDIR):
+	mkdir -p $(BINDIR)
+	
+$(LOGDIR):
+	mkdir -p $(LOGDIR)
+	
+	
+# ---------- NetCDF detection ----------
+HAVE_NETCDF := $(shell command -v nf-config >/dev/null 2>&1 && echo yes || echo no)
+
+ifeq ($(HAVE_NETCDF),yes)
+  NETCDF_FFLAGS := $(shell nf-config --fflags)
+  NETCDF_FLIBS  := $(shell nf-config --flibs)
+  NETCDF_MSG    := compiled with NetCDF support
+else
+  NETCDF_FFLAGS :=
+  NETCDF_FLIBS  :=
+  NETCDF_MSG    := compiled without NetCDF support
+endif
+
+# -------- compiler --------
+FC = gfortran
+
+# -------- debugging flags (development) --------
+#FFLAGS = -fimplicit-none -fcoarray=single -fbounds-check -fbacktrace -g -g3 \
+#         -fdefault-real-8 -O0 -finit-real=nan -Wsurprising
+
+# -------- optimized flags (production) --------
+FFLAGS = -fimplicit-none -fcoarray=single -fdefault-real-8 -O3 \
+         -finit-real=nan -ffpe-summary=none -fno-backtrace \
+         -J$(MODDIR) $(NETCDF_FFLAGS)
+         
+         
 d=drutes_obj-`date -I`
 
-all : main.o $(ALL_objs)
-	    [ -d bin ] || mkdir bin && $c -g -o bin/drutes main.o $(ALL_objs)
-install : main.o $(ALL_objs)
-	    [ -d bin ] || mkdir bin && $c -g -o bin/drutes main.o $(ALL_objs) && [ -d obj ] || mkdir obj && mv *.o *.mod obj
-	
-dir="obj"
+all: | $(LOGDIR)
+	@set -o pipefail; \
+	start=$$(date +%s.%N); \
+	echo "==== DRUtES compilation log ====" | tee $(LOGFILE); \
+	echo "Compiler: $(FC)" | tee -a $(LOGFILE); \
+	echo "Flags:    $(FFLAGS)" | tee -a $(LOGFILE); \
+	echo "" | tee -a $(LOGFILE); \
+	if $(MAKE) --no-print-directory build_target 2>&1 | tee -a $(LOGFILE); then \
+		status="SUCCESS"; \
+	else \
+		status="FAILED"; \
+	fi; \
+	end=$$(date +%s.%N); \
+	elapsed=$$(awk "BEGIN {print $$end - $$start}"); \
+	echo "" | tee -a $(LOGFILE); \
+	echo "Elapsed: $$elapsed seconds" | tee -a $(LOGFILE); \
+	echo "Status:  $$status" | tee -a $(LOGFILE); \
+	echo "===================================" | tee -a $(LOGFILE); \
+	if [ "$$status" = "FAILED" ]; then exit 1; fi
 
-servers="miguel@neptun01.fsv.cvut.cz:~  miguel@matsrv-lin01.fsv.cvut.cz:~ miguel@cml.fsv.cvut.cz:~"
+build_target: $(BINDIR)/drutes
 
+$(BINDIR)/drutes: $(OBJDIR)/main.o $(ALL_objs) | $(BINDIR)
+	$(FC) $(FFLAGS) -o $@ $(OBJDIR)/main.o $(ALL_objs) $(NETCDF_FLIBS)
 
 #----------------objects definitions-------------------------------
-CORE_obj := typy.o global_objs.o globals.o globals1D.o globals2D.o  debug_tools.o core_tools.o pde_objs.o dummy_procs.o global4solver.o
-POINTERMAN_obj := manage_pointers.o
-RE_obj := re_constitutive.o re_reader.o re_globals.o re_total.o re_pointers.o re_analytical.o re_evap_methods.o
-MATHTOOLS_obj :=  linalg.o integral.o solver_interfaces.o simplelinalg.o gmres_solver.o
-TOOLS_obj := printtools.o simegen.o read_inputs.o drutes_init.o geom_tools.o postpro.o readtools.o objfnc.o
-FEMTOOLS_obj := feminittools.o capmat.o stiffmat.o fem.o fem_tools.o femmat.o
-DECOMPO_obj :=  decomp_tools.o schwarz_dd.o  decomp_vars.o decomposer.o schwarz_dd2subcyc.o
-PMAoo_obj := fullmatrix.o mtx.o mtx_int.o mtxiotools.o pmatools.o solvers.o sparsematrix.o sparsematrix_int.o matmod.o reorder.o
-BOUSSINESQ_obj := boussglob.o boussread.o boussfnc.o bousspointers.o
-ADE_obj := ADE_fnc.o ADE_reader.o ADE_globals.o ADE_pointers.o
-REDUAL_obj := Re_dual_totH.o Re_dual_globals.o Re_dual_pointers.o Re_dual_reader.o Re_dual_tab.o Re_dual_coupling.o Re_dual_bc.o
-HEAT_obj := heat_fnc.o heat_pointers.o heat_globals.o heat_reader.o
-KINWAVE_obj := kinreader.o kinglobs.o kinfnc.o kinpointer.o
-FROZEN_obj := freeze_globs.o freeze_helper.o freeze_fnc.o freeze_reader.o freeze_pointers.o 
-REevap_obj :=  evapglob.o evappointers.o evap_RE_constitutive.o evap_heat_constitutive.o evapreader.o evapbc4heat.o
+CORE_obj := $(OBJDIR)/typy.o $(OBJDIR)/global_objs.o $(OBJDIR)/globals.o $(OBJDIR)/globals1D.o $(OBJDIR)/globals2D.o  $(OBJDIR)/debug_tools.o $(OBJDIR)/core_tools.o $(OBJDIR)/pde_objs.o $(OBJDIR)/dummy_procs.o $(OBJDIR)/global4solver.o
+POINTERMAN_obj := $(OBJDIR)/manage_pointers.o
+RE_obj := $(OBJDIR)/re_constitutive.o $(OBJDIR)/re_reader.o $(OBJDIR)/re_globals.o $(OBJDIR)/re_total.o $(OBJDIR)/re_pointers.o $(OBJDIR)/re_analytical.o $(OBJDIR)/re_evap_methods.o
+MATHTOOLS_obj :=  $(OBJDIR)/linalg.o $(OBJDIR)/integral.o $(OBJDIR)/solver_interfaces.o $(OBJDIR)/simplelinalg.o $(OBJDIR)/gmres_solver.o
+TOOLS_obj := $(OBJDIR)/printtools.o $(OBJDIR)/simegen.o $(OBJDIR)/read_inputs.o $(OBJDIR)/drutes_init.o $(OBJDIR)/geom_tools.o $(OBJDIR)/postpro.o $(OBJDIR)/readtools.o $(OBJDIR)/objfnc.o
+FEMTOOLS_obj := $(OBJDIR)/feminittools.o $(OBJDIR)/capmat.o $(OBJDIR)/stiffmat.o $(OBJDIR)/fem.o $(OBJDIR)/fem_tools.o $(OBJDIR)/femmat.o
+DECOMPO_obj :=  $(OBJDIR)/decomp_tools.o $(OBJDIR)/schwarz_dd.o  $(OBJDIR)/decomp_vars.o $(OBJDIR)/decomposer.o $(OBJDIR)/schwarz_dd2subcyc.o
+PMAoo_obj := $(OBJDIR)/fullmatrix.o $(OBJDIR)/mtx.o $(OBJDIR)/mtx_int.o $(OBJDIR)/mtxiotools.o $(OBJDIR)/pmatools.o $(OBJDIR)/solvers.o $(OBJDIR)/sparsematrix.o $(OBJDIR)/sparsematrix_int.o $(OBJDIR)/matmod.o $(OBJDIR)/reorder.o
+BOUSSINESQ_obj := $(OBJDIR)/boussglob.o $(OBJDIR)/boussread.o $(OBJDIR)/boussfnc.o $(OBJDIR)/bousspointers.o
+ADE_obj := $(OBJDIR)/ADE_fnc.o $(OBJDIR)/ADE_reader.o $(OBJDIR)/ADE_globals.o $(OBJDIR)/ADE_pointers.o
+REDUAL_obj := $(OBJDIR)/Re_dual_totH.o $(OBJDIR)/Re_dual_globals.o $(OBJDIR)/Re_dual_pointers.o $(OBJDIR)/Re_dual_reader.o $(OBJDIR)/Re_dual_tab.o $(OBJDIR)/Re_dual_coupling.o $(OBJDIR)/Re_dual_bc.o
+HEAT_obj := $(OBJDIR)/heat_fnc.o $(OBJDIR)/heat_pointers.o $(OBJDIR)/heat_globals.o $(OBJDIR)/heat_reader.o
+KINWAVE_obj := $(OBJDIR)/kinreader.o $(OBJDIR)/kinglobs.o $(OBJDIR)/kinfnc.o $(OBJDIR)/kinpointer.o
+FROZEN_obj := $(OBJDIR)/freeze_globs.o $(OBJDIR)/freeze_helper.o $(OBJDIR)/freeze_fnc.o $(OBJDIR)/freeze_reader.o $(OBJDIR)/freeze_pointers.o 
+REevap_obj :=  $(OBJDIR)/evapglob.o $(OBJDIR)/evappointers.o $(OBJDIR)/evap_RE_constitutive.o $(OBJDIR)/evap_heat_constitutive.o $(OBJDIR)/evapreader.o $(OBJDIR)/evapbc4heat.o
 
-MODEL_objs := $(RE_obj)  $(BOUSSINESQ_obj) $(ADE_obj) $(REDUAL_obj)  $(HEAT_obj) $(LTNE_obj) $(FROZEN_obj) $(KINWAVE_obj) $(REevap_obj)
+ifeq ($(HAVE_NETCDF),yes)
 
-ALL_objs := $(CORE_obj) $(TOOLS_obj) $(POINTERMAN_obj) $(MATHTOOLS_obj) $(FEMTOOLS_obj) $(DECOMPO_obj)  $(PMAoo_obj) $(MODEL_objs)
+	NETCDF_obj := $(OBJDIR)/init_netcdf.o $(OBJDIR)/ncglobvars.o
+
+else
+
+	NETCDF_obj :=
+
+endif
+
+MODEL_objs := $(RE_obj) $(BOUSSINESQ_obj) $(ADE_obj) $(REDUAL_obj) $(HEAT_obj) $(FROZEN_obj) $(KINWAVE_obj) $(REevap_obj)  $(NETCDF_obj)
+
+ALL_objs := $(CORE_obj) $(TOOLS_obj) $(POINTERMAN_obj) $(MATHTOOLS_obj) $(FEMTOOLS_obj) $(DECOMPO_obj)  $(PMAoo_obj) $(MODEL_objs) 
 #-----------------------------------------------------------------
 
 #-------begin CORE_obj--------------------------------
-typy.o: src/core/typy.f90
-	$c -c src/core/typy.f90 
-global_objs.o: typy.o $(PMAoo_obj) src/core/global_objs.f90
-	$c -c src/core/global_objs.f90
-global4solver.o: typy.o src/core/global4solver.f90
-	$c -c src/core/global4solver.f90
-pde_objs.o: typy.o global_objs.o $(PMAoo_obj) globals.o decomp_vars.o  src/core/pde_objs.f90
-	$c -c src/core/pde_objs.f90
-globals.o: typy.o global_objs.o src/core/globals.f90
-	$c -c src/core/globals.f90
-globals1D.o: typy.o global_objs.o src/core/globals1D.f90
-	$c -c src/core/globals1D.f90
-globals2D.o: typy.o global_objs.o src/core/globals2D.f90
-	$c -c src/core/globals2D.f90
-core_tools.o: typy.o global_objs.o globals.o   src/core/core_tools.f90
-	$c -c src/core/core_tools.f90
-dummy_procs.o: typy.o global_objs.o globals.o pde_objs.o src/core/dummy_procs.f90
-	$c -c src/core/dummy_procs.f90
-debug_tools.o: typy.o core_tools.o src/core/debug_tools.f90
-	$c -c src/core/debug_tools.f90
+$(OBJDIR)/typy.o: src/core/typy.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/core/typy.f90 -o $@
+	
+$(OBJDIR)/global_objs.o: $(OBJDIR)/typy.o $(PMAoo_obj) src/core/global_objs.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/core/global_objs.f90 -o $@
+	
+$(OBJDIR)/global4solver.o: $(OBJDIR)/typy.o src/core/global4solver.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/core/global4solver.f90 -o $@
+	
+$(OBJDIR)/pde_objs.o: $(OBJDIR)/typy.o $(OBJDIR)/global_objs.o $(PMAoo_obj) $(OBJDIR)/globals.o $(OBJDIR)/decomp_vars.o src/core/pde_objs.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/core/pde_objs.f90 -o $@
+	
+$(OBJDIR)/globals.o: $(OBJDIR)/typy.o $(OBJDIR)/global_objs.o src/core/globals.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/core/globals.f90 -o $@
+
+$(OBJDIR)/globals1D.o: $(OBJDIR)/typy.o $(OBJDIR)/global_objs.o src/core/globals1D.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/core/globals1D.f90 -o $@
+	
+$(OBJDIR)/globals2D.o: $(OBJDIR)/typy.o $(OBJDIR)/global_objs.o src/core/globals2D.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/core/globals2D.f90 -o $@
+	
+$(OBJDIR)/core_tools.o: $(OBJDIR)/typy.o $(OBJDIR)/global_objs.o $(OBJDIR)/globals.o src/core/core_tools.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/core/core_tools.f90 -o $@
+	
+$(OBJDIR)/dummy_procs.o: $(OBJDIR)/typy.o $(OBJDIR)/global_objs.o $(OBJDIR)/globals.o $(OBJDIR)/pde_objs.o src/core/dummy_procs.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/core/dummy_procs.f90 -o $@
+
+$(OBJDIR)/debug_tools.o: $(OBJDIR)/typy.o $(OBJDIR)/core_tools.o src/core/debug_tools.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/core/debug_tools.f90 -o $@
+
 #---------end CORE_obj------------------------------
 
 
 #------begin MATHTOOLS_obj-----------------------------
-linalg.o: $(CORE_obj) src/mathtools/linalg.f90
-	$c -c src/mathtools/linalg.f90
-gmres_solver.o: $(CORE_obj) src/mathtools/gmres_solver.f90
-	$c -c src/mathtools/gmres_solver.f90
-integral.o: $(CORE_obj) linalg.o src/mathtools/integral.f90
-	$c -c src/mathtools/integral.f90
-simplelinalg.o:  $(CORE_obj) $(PMAoo_obj) re_globals.o linalg.o src/mathtools/simplelinalg.f90
-	$c -c src/mathtools/simplelinalg.f90
-solver_interfaces.o:  $(CORE_obj) $(PMAoo_obj) readtools.o simplelinalg.o gmres_solver.o src/mathtools/solver_interfaces.f90
-	$c -c src/mathtools/solver_interfaces.f90
+$(OBJDIR)/linalg.o: $(CORE_obj) src/mathtools/linalg.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/mathtools/linalg.f90 -o $@
+
+$(OBJDIR)/gmres_solver.o: $(CORE_obj) src/mathtools/gmres_solver.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/mathtools/gmres_solver.f90 -o $@
+	
+$(OBJDIR)/integral.o: $(CORE_obj) $(OBJDIR)/linalg.o src/mathtools/integral.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/mathtools/integral.f90 -o $@
+
+$(OBJDIR)/simplelinalg.o: $(CORE_obj) $(PMAoo_obj) $(OBJDIR)/re_globals.o $(OBJDIR)/linalg.o src/mathtools/simplelinalg.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/mathtools/simplelinalg.f90 -o $@
+
+$(OBJDIR)/solver_interfaces.o: $(CORE_obj) $(PMAoo_obj) $(OBJDIR)/readtools.o $(OBJDIR)/simplelinalg.o $(OBJDIR)/gmres_solver.o src/mathtools/solver_interfaces.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/mathtools/solver_interfaces.f90 -o $@
 
 #------end MATHTOOLS_obj---------------------------------
 
 
 #--------begin PMAoo_obj------------------------
-pmatools.o: typy.o src/pma++/pmatools.f90
-	$c -c  src/pma++/pmatools.f90
-mtx.o: typy.o pmatools.o  src/pma++/mtx.f90
-	$c -c src/pma++/mtx.f90
-mtx_int.o: typy.o pmatools.o  src/pma++/mtx_int.f90
-	$c -c src/pma++/mtx_int.f90	
-mtxiotools.o: typy.o src/pma++/mtxiotools.f90
-	$c -c src/pma++/mtxiotools.f90 
-fullmatrix.o: typy.o mtx.o src/pma++/fullmatrix.f90
-	$c -c src/pma++/fullmatrix.f90
-sparsematrix.o: typy.o mtx.o src/pma++/sparsematrix.f90
-	$c -c src/pma++/sparsematrix.f90
-sparsematrix_int.o: typy.o mtx.o src/pma++/sparsematrix_int.f90
-	$c -c src/pma++/sparsematrix_int.f90	
-solvers.o: global4solver.o  typy.o mtx.o src/pma++/solvers.f90
-	$c -c src/pma++/solvers.f90
-matmod.o: typy.o mtx.o src/pma++/matmod.f90
-	$c -c  src/pma++/matmod.f90
-datasetup.o: typy.o mtx.o src/pma++/datasetup.f90
-	$c -c src/pma++/datasetup.f90
-reorder.o: typy.o mtx.o datasetup.o solvers.o src/pma++/reorder.f90
-	$c -c  src/pma++/reorder.f90
+$(OBJDIR)/pmatools.o: $(OBJDIR)/typy.o src/pma++/pmatools.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/pma++/pmatools.f90 -o $@
+
+$(OBJDIR)/mtx.o: $(OBJDIR)/typy.o $(OBJDIR)/pmatools.o src/pma++/mtx.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/pma++/mtx.f90 -o $@
+
+$(OBJDIR)/mtx_int.o: $(OBJDIR)/typy.o $(OBJDIR)/pmatools.o src/pma++/mtx_int.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/pma++/mtx_int.f90 -o $@
+
+$(OBJDIR)/mtxiotools.o: $(OBJDIR)/typy.o src/pma++/mtxiotools.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/pma++/mtxiotools.f90 -o $@
+
+$(OBJDIR)/fullmatrix.o: $(OBJDIR)/typy.o $(OBJDIR)/mtx.o src/pma++/fullmatrix.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/pma++/fullmatrix.f90 -o $@
+	
+$(OBJDIR)/sparsematrix.o: $(OBJDIR)/typy.o $(OBJDIR)/mtx.o src/pma++/sparsematrix.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/pma++/sparsematrix.f90 -o $@	
+
+$(OBJDIR)/sparsematrix_int.o: $(OBJDIR)/typy.o $(OBJDIR)/mtx.o src/pma++/sparsematrix_int.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/pma++/sparsematrix_int.f90 -o $@
+	
+$(OBJDIR)/solvers.o: $(OBJDIR)/global4solver.o $(OBJDIR)/typy.o $(OBJDIR)/mtx.o src/pma++/solvers.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/pma++/solvers.f90 -o $@	
+	
+$(OBJDIR)/matmod.o: $(OBJDIR)/typy.o $(OBJDIR)/mtx.o src/pma++/matmod.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/pma++/matmod.f90 -o $@
+
+$(OBJDIR)/datasetup.o: $(OBJDIR)/typy.o $(OBJDIR)/mtx.o src/pma++/datasetup.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/pma++/datasetup.f90 -o $@
+
+$(OBJDIR)/reorder.o: $(OBJDIR)/typy.o $(OBJDIR)/mtx.o $(OBJDIR)/datasetup.o $(OBJDIR)/solvers.o src/pma++/reorder.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/pma++/reorder.f90 -o $@
 #-------end PMA++_obj---------------------------
 
+
+
 #-------begin TOOLS_obj----------------------------------
-readtools.o: $(CORE_obj) src/tools/readtools.f90
-	$c -c src/tools/readtools.f90
-printtools.o: $(CORE_obj) src/tools/printtools.f90
-	$c -c src/tools/printtools.f90
-geom_tools.o: $(CORE_obj) $(MATHTOOLS_obj) core_tools.o readtools.o src/tools/geom_tools.f90
-	$c -c src/tools/geom_tools.f90
-simegen.o:  $(CORE_obj) core_tools.o geom_tools.o src/tools/simegen.f90
-	$c -c src/tools/simegen.f90
-read_inputs.o:  simegen.o objfnc.o $(CORE_obj) readtools.o src/tools/read_inputs.f90
-	$c -c src/tools/read_inputs.f90
-drutes_init.o: read_inputs.o readtools.o core_tools.o $(CORE_obj) src/tools/drutes_init.f90
-	$c -c src/tools/drutes_init.f90
-postpro.o: $(CORE_obj) $(MATHTOOLS_obj) geom_tools.o src/tools/postpro.f90
-	$c -c src/tools/postpro.f90
-objfnc.o: $(CORE_obj) readtools.o src/tools/objfnc.f90
-	$c -c  src/tools/objfnc.f90
+$(OBJDIR)/readtools.o: $(CORE_obj) src/tools/readtools.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/tools/readtools.f90 -o $@
+
+$(OBJDIR)/printtools.o: $(CORE_obj) src/tools/printtools.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/tools/printtools.f90 -o $@
+	
+$(OBJDIR)/geom_tools.o: $(CORE_obj) $(MATHTOOLS_obj) $(OBJDIR)/core_tools.o $(OBJDIR)/readtools.o src/tools/geom_tools.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/tools/geom_tools.f90 -o $@
+
+$(OBJDIR)/simegen.o: $(CORE_obj) $(OBJDIR)/core_tools.o $(OBJDIR)/geom_tools.o src/tools/simegen.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/tools/simegen.f90 -o $@
+
+$(OBJDIR)/read_inputs.o: $(OBJDIR)/simegen.o $(OBJDIR)/objfnc.o $(CORE_obj) $(OBJDIR)/readtools.o src/tools/read_inputs.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/tools/read_inputs.f90 -o $@
+
+$(OBJDIR)/drutes_init.o: $(OBJDIR)/read_inputs.o $(OBJDIR)/readtools.o $(OBJDIR)/core_tools.o $(CORE_obj) src/tools/drutes_init.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/tools/drutes_init.f90 -o $@
+
+$(OBJDIR)/postpro.o: $(CORE_obj) $(MATHTOOLS_obj) $(OBJDIR)/geom_tools.o src/tools/postpro.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/tools/postpro.f90 -o $@
+
+$(OBJDIR)/objfnc.o: $(CORE_obj) $(OBJDIR)/readtools.o src/tools/objfnc.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/tools/objfnc.f90 -o $@
 #-------end TOOLS_obj------------------------------------
 
+
+
 #-------begin RE_obj--------------------------------
-re_globals.o: $(CORE_obj) src/models/RE/re_globals.f90
-	$c -c  src/models/RE/re_globals.f90
-re_constitutive.o: $(CORE_obj) $(TOOLS_obj) re_globals.o src/models/RE/re_constitutive.f90
-	$c -c src/models/RE/re_constitutive.f90
-re_total.o: $(CORE_obj) $(TOOLS_obj) re_globals.o re_constitutive.o src/models/RE/re_total.f90
-	$c -c src/models/RE/re_total.f90
-re_reader.o:  $(CORE_obj) $(TOOLS_obj) re_globals.o  src/models/RE/re_reader.f90
-	$c -c src/models/RE/re_reader.f90	
-re_pointers.o:  $(CORE_obj) re_globals.o re_constitutive.o re_total.o re_reader.o re_evap_methods.o src/models/RE/re_pointers.f90
-	$c -c src/models/RE/re_pointers.f90
-re_analytical.o:  $(CORE_obj) re_globals.o re_constitutive.o src/models/RE/re_analytical.f90
-	$c -c src/models/RE/re_analytical.f90
-re_evap_methods.o: $(CORE_obj) re_globals.o re_constitutive.o src/models/RE/re_evap_methods.f90
-	$c -c src/models/RE/re_evap_methods.f90
-#-------end CONSTITUTIVE_obj--------------------------------
+$(OBJDIR)/re_globals.o: $(CORE_obj) src/models/RE/re_globals.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/models/RE/re_globals.f90 -o $@
+
+$(OBJDIR)/re_constitutive.o: $(CORE_obj) $(TOOLS_obj) $(OBJDIR)/re_globals.o src/models/RE/re_constitutive.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/models/RE/re_constitutive.f90 -o $@
+
+$(OBJDIR)/re_total.o: $(CORE_obj) $(TOOLS_obj) $(OBJDIR)/re_globals.o $(OBJDIR)/re_constitutive.o src/models/RE/re_total.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/models/RE/re_total.f90 -o $@
+
+$(OBJDIR)/re_reader.o: $(CORE_obj) $(TOOLS_obj) $(OBJDIR)/re_globals.o src/models/RE/re_reader.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/models/RE/re_reader.f90 -o $@
+
+$(OBJDIR)/re_pointers.o: $(CORE_obj) $(OBJDIR)/re_globals.o $(OBJDIR)/re_constitutive.o $(OBJDIR)/re_total.o $(OBJDIR)/re_reader.o $(OBJDIR)/re_evap_methods.o src/models/RE/re_pointers.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/models/RE/re_pointers.f90 -o $@
+	
+$(OBJDIR)/re_analytical.o: $(CORE_obj) $(OBJDIR)/re_globals.o $(OBJDIR)/re_constitutive.o src/models/RE/re_analytical.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/models/RE/re_analytical.f90 -o $@
+
+$(OBJDIR)/re_evap_methods.o: $(CORE_obj) $(OBJDIR)/re_globals.o $(OBJDIR)/re_constitutive.o src/models/RE/re_evap_methods.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/models/RE/re_evap_methods.f90 -o $@
+	
+#-------end RE_obj--------------------------------
 
 #------begin HEAT_obj -----------------------------------
-heat_globals.o: $(CORE_obj) src/models/heat/heat_globals.f90
-	$c -c src/models/heat/heat_globals.f90
-heat_fnc.o: $(CORE_obj) heat_globals.o src/models/heat/heat_fnc.f90
-	$c -c src/models/heat/heat_fnc.f90
-heat_reader.o: $(CORE_obj) heat_globals.o heat_fnc.o src/models/heat/heat_reader.f90
-	$c -c src/models/heat/heat_reader.f90
-heat_pointers.o: $(CORE_obj) $(RE_obj) heat_globals.o heat_fnc.o heat_reader.o src/models/heat/heat_pointers.f90
-	$c -c src/models/heat/heat_pointers.f90
+$(OBJDIR)/heat_globals.o: $(CORE_obj) src/models/heat/heat_globals.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/models/heat/heat_globals.f90 -o $@
+
+$(OBJDIR)/heat_fnc.o: $(CORE_obj) $(OBJDIR)/heat_globals.o src/models/heat/heat_fnc.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/models/heat/heat_fnc.f90 -o $@
+
+$(OBJDIR)/heat_reader.o: $(CORE_obj) $(OBJDIR)/heat_globals.o $(OBJDIR)/heat_fnc.o src/models/heat/heat_reader.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/models/heat/heat_reader.f90 -o $@
+
+$(OBJDIR)/heat_pointers.o: $(CORE_obj) $(RE_obj) $(OBJDIR)/heat_globals.o $(OBJDIR)/heat_fnc.o $(OBJDIR)/heat_reader.o src/models/heat/heat_pointers.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/models/heat/heat_pointers.f90 -o $@
 #------end HEAT_obj-------------------------------------
 
 
 #------begin frozen_obj -----------------------------------
-freeze_globs.o: $(CORE_obj) src/models/soilfreeze/freeze_globs.f90
-	$c -c src/models/soilfreeze/freeze_globs.f90
-freeze_helper.o: $(CORE_obj) $(RE_obj) freeze_globs.o src/models/soilfreeze/freeze_helper.f90
-	$c -c src/models/soilfreeze/freeze_helper.f90
-freeze_fnc.o: $(CORE_obj) freeze_helper.o freeze_globs.o src/models/soilfreeze/freeze_fnc.f90
-	$c -c src/models/soilfreeze/freeze_fnc.f90
-freeze_reader.o: $(CORE_obj) freeze_globs.o src/models/soilfreeze/freeze_reader.f90
-	$c -c src/models/soilfreeze/freeze_reader.f90	
-freeze_pointers.o: $(CORE_obj) $(RE_obj) $(HEAT_obj) freeze_globs.o freeze_reader.o src/models/soilfreeze/freeze_pointers.f90
-	$c -c src/models/soilfreeze/freeze_pointers.f90
+$(OBJDIR)/freeze_globs.o: $(CORE_obj) src/models/soilfreeze/freeze_globs.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/models/soilfreeze/freeze_globs.f90 -o $@
+
+$(OBJDIR)/freeze_helper.o: $(CORE_obj) $(RE_obj) $(OBJDIR)/freeze_globs.o src/models/soilfreeze/freeze_helper.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/models/soilfreeze/freeze_helper.f90 -o $@
+
+$(OBJDIR)/freeze_fnc.o: $(CORE_obj) $(OBJDIR)/freeze_helper.o $(OBJDIR)/freeze_globs.o src/models/soilfreeze/freeze_fnc.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/models/soilfreeze/freeze_fnc.f90 -o $@
+
+$(OBJDIR)/freeze_reader.o: $(CORE_obj) $(OBJDIR)/freeze_globs.o src/models/soilfreeze/freeze_reader.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/models/soilfreeze/freeze_reader.f90 -o $@
+
+$(OBJDIR)/freeze_pointers.o: $(CORE_obj) $(RE_obj) $(HEAT_obj) $(OBJDIR)/freeze_globs.o $(OBJDIR)/freeze_reader.o src/models/soilfreeze/freeze_pointers.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/models/soilfreeze/freeze_pointers.f90 -o $@
 #------end frozen_obj -----------------------------------
 
 #-------begin ADE_obj-------------------------------
-ADE_globals.o: $(CORE_obj) src/models/ADE/ADE_globals.f90
-	$c -c src/models/ADE/ADE_globals.f90
-ADE_fnc.o: $(CORE_obj) ADE_globals.o src/models/ADE/ADE_fnc.f90
-	$c -c src/models/ADE/ADE_fnc.f90
-ADE_reader.o: $(CORE_obj) $(TOOLS_obj) ADE_globals.o src/models/ADE/ADE_reader.f90
-	$c -c src/models/ADE/ADE_reader.f90
-ADE_pointers.o: $(CORE_obj) $(TOOLS_obj) ADE_globals.o  ADE_reader.o  $(RE_obj) src/models/ADE/ADE_pointers.f90
-	$c -c src/models/ADE/ADE_pointers.f90
+$(OBJDIR)/ADE_globals.o: $(CORE_obj) src/models/ADE/ADE_globals.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/models/ADE/ADE_globals.f90 -o $@
+
+$(OBJDIR)/ADE_fnc.o: $(CORE_obj) $(OBJDIR)/ADE_globals.o src/models/ADE/ADE_fnc.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/models/ADE/ADE_fnc.f90 -o $@
+
+$(OBJDIR)/ADE_reader.o: $(CORE_obj) $(TOOLS_obj) $(OBJDIR)/ADE_globals.o src/models/ADE/ADE_reader.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/models/ADE/ADE_reader.f90 -o $@
+
+$(OBJDIR)/ADE_pointers.o: $(CORE_obj) $(TOOLS_obj) $(OBJDIR)/ADE_globals.o $(OBJDIR)/ADE_reader.o $(RE_obj) src/models/ADE/ADE_pointers.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/models/ADE/ADE_pointers.f90 -o $@
 #------end ADE_obj---------------------------------
 
 
+
 #-------begin REDUAL_obj-----------------------------
-Re_dual_globals.o: $(CORE_obj) src/models/RE_dual/Re_dual_globals.f90
-	$c -c src/models/RE_dual/Re_dual_globals.f90
-Re_dual_reader.o: $(CORE_obj) $(TOOLS_obj) Re_dual_globals.o src/models/RE_dual/Re_dual_reader.f90
-	$c -c src/models/RE_dual/Re_dual_reader.f90
-Re_dual_totH.o: $(CORE_obj) $(TOOLS_obj) $(RE_obj) Re_dual_globals.o Re_dual_reader.o src/models/RE_dual/Re_dual_totH.f90
-	$c -c src/models/RE_dual/Re_dual_totH.f90
-Re_dual_coupling.o: $(CORE_obj) $(TOOLS_obj) Re_dual_globals.o Re_dual_reader.o Re_dual_totH.o src/models/RE_dual/Re_dual_coupling.f90
-	$c -c src/models/RE_dual/Re_dual_coupling.f90
-Re_dual_tab.o: $(CORE_obj) $(TOOLS_obj) Re_dual_globals.o Re_dual_reader.o Re_dual_totH.o Re_dual_coupling.o src/models/RE_dual/Re_dual_tab.f90
-	$c -c src/models/RE_dual/Re_dual_tab.f90	
-Re_dual_bc.o: $(CORE_obj) $(TOOLS_obj) Re_dual_globals.o src/models/RE_dual/Re_dual_bc.f90
-	$c -c src/models/RE_dual/Re_dual_bc.f90
-Re_dual_pointers.o: $(CORE_obj) $(RE_obj) Re_dual_reader.o Re_dual_totH.o Re_dual_tab.o Re_dual_bc.o src/models/RE_dual/Re_dual_pointers.f90
-	$c -c src/models/RE_dual/Re_dual_pointers.f90
+$(OBJDIR)/Re_dual_globals.o: $(CORE_obj) src/models/RE_dual/Re_dual_globals.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/models/RE_dual/Re_dual_globals.f90 -o $@
+
+$(OBJDIR)/Re_dual_reader.o: $(CORE_obj) $(TOOLS_obj) $(OBJDIR)/Re_dual_globals.o src/models/RE_dual/Re_dual_reader.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/models/RE_dual/Re_dual_reader.f90 -o $@
+
+$(OBJDIR)/Re_dual_totH.o: $(CORE_obj) $(TOOLS_obj) $(RE_obj) $(OBJDIR)/Re_dual_globals.o $(OBJDIR)/Re_dual_reader.o src/models/RE_dual/Re_dual_totH.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/models/RE_dual/Re_dual_totH.f90 -o $@
+
+$(OBJDIR)/Re_dual_coupling.o: $(CORE_obj) $(TOOLS_obj) $(OBJDIR)/Re_dual_globals.o $(OBJDIR)/Re_dual_reader.o $(OBJDIR)/Re_dual_totH.o src/models/RE_dual/Re_dual_coupling.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/models/RE_dual/Re_dual_coupling.f90 -o $@
+
+$(OBJDIR)/Re_dual_tab.o: $(CORE_obj) $(TOOLS_obj) $(OBJDIR)/Re_dual_globals.o $(OBJDIR)/Re_dual_reader.o $(OBJDIR)/Re_dual_totH.o $(OBJDIR)/Re_dual_coupling.o src/models/RE_dual/Re_dual_tab.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/models/RE_dual/Re_dual_tab.f90 -o $@
+
+$(OBJDIR)/Re_dual_bc.o: $(CORE_obj) $(TOOLS_obj) $(OBJDIR)/Re_dual_globals.o src/models/RE_dual/Re_dual_bc.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/models/RE_dual/Re_dual_bc.f90 -o $@
+
+$(OBJDIR)/Re_dual_pointers.o: $(CORE_obj) $(RE_obj) $(OBJDIR)/Re_dual_reader.o $(OBJDIR)/Re_dual_totH.o $(OBJDIR)/Re_dual_tab.o $(OBJDIR)/Re_dual_bc.o src/models/RE_dual/Re_dual_pointers.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/models/RE_dual/Re_dual_pointers.f90 -o $@
 #-------end REDUAL_obj-------------------------------
 
 
 #-------begin BOUSSINESQ-----------------------------
-boussglob.o:  $(CORE_obj) $(TOOLS_obj) src/models/boussinesq/boussglob.f90
-	$c -c src/models/boussinesq/boussglob.f90
-boussread.o: $(CORE_obj) $(TOOLS_obj) boussglob.o src/models/boussinesq/boussread.f90
-	$c -c src/models/boussinesq/boussread.f90
-boussfnc.o:  $(CORE_obj) $(TOOLS_obj) boussglob.o src/models/boussinesq/boussfnc.f90
-	$c -c src/models/boussinesq/boussfnc.f90
-bousspointers.o: $(CORE_obj)  boussfnc.o boussglob.o boussread.o src/models/boussinesq/bousspointers.f90
-	$c -c src/models/boussinesq/bousspointers.f90
+$(OBJDIR)/boussglob.o: $(CORE_obj) $(TOOLS_obj) src/models/boussinesq/boussglob.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/models/boussinesq/boussglob.f90 -o $@
+
+$(OBJDIR)/boussread.o: $(CORE_obj) $(TOOLS_obj) $(OBJDIR)/boussglob.o src/models/boussinesq/boussread.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/models/boussinesq/boussread.f90 -o $@
+
+$(OBJDIR)/boussfnc.o: $(CORE_obj) $(TOOLS_obj) $(OBJDIR)/boussglob.o src/models/boussinesq/boussfnc.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/models/boussinesq/boussfnc.f90 -o $@
+
+$(OBJDIR)/bousspointers.o: $(CORE_obj) $(OBJDIR)/boussfnc.o $(OBJDIR)/boussglob.o $(OBJDIR)/boussread.o src/models/boussinesq/bousspointers.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/models/boussinesq/bousspointers.f90 -o $@
 #-------end BOUSSINESQ-------------------------------
 
-
-
 #------begin FEMTOOLS_obj-----------------------------
-fem_tools.o:  $(CORE_obj) $(MATHTOOLS_obj) $(TOOLS_obj) $(PMA++_obj) src/femtools/fem_tools.f90
-	$c -c  src/femtools/fem_tools.f90
-feminittools.o:  $(CORE_obj) $(MATHTOOLS_obj) $(TOOLS_obj) $(RE_obj) $(PMAoo_obj) src/femtools/feminittools.f90
-	$c -c src/femtools/feminittools.f90
-capmat.o:$(CORE_obj) src/femtools/capmat.f90
-	$c -c src/femtools/capmat.f90
-stiffmat.o: $(CORE_obj) $(LINALG_obj) fem_tools.o src/femtools/stiffmat.f90
-	$c -c src/femtools/stiffmat.f90
-femmat.o: $(CORE_obj) $(PMA++_obj) fem_tools.o stiffmat.o capmat.o decomp_vars.o src/femtools/femmat.f90
-	$c -c src/femtools/femmat.f90
-fem.o: $(CORE_obj) $(LINALG_obj) $(DECOMPO_obj) $(TOOLS_obj) femmat.o src/femtools/fem.f90
-	$c -c src/femtools/fem.f90
+$(OBJDIR)/fem_tools.o: $(CORE_obj) $(MATHTOOLS_obj) $(TOOLS_obj) $(PMAoo_obj) src/femtools/fem_tools.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/femtools/fem_tools.f90 -o $@
+
+$(OBJDIR)/feminittools.o: $(CORE_obj) $(MATHTOOLS_obj) $(TOOLS_obj) $(RE_obj) $(PMAoo_obj) src/femtools/feminittools.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/femtools/feminittools.f90 -o $@
+
+$(OBJDIR)/capmat.o: $(CORE_obj) src/femtools/capmat.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/femtools/capmat.f90 -o $@
+
+$(OBJDIR)/stiffmat.o: $(CORE_obj) $(MATHTOOLS_obj) $(OBJDIR)/fem_tools.o src/femtools/stiffmat.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/femtools/stiffmat.f90 -o $@
+
+$(OBJDIR)/femmat.o: $(CORE_obj) $(PMAoo_obj) $(OBJDIR)/fem_tools.o $(OBJDIR)/stiffmat.o $(OBJDIR)/capmat.o $(OBJDIR)/decomp_vars.o src/femtools/femmat.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/femtools/femmat.f90 -o $@
+
+$(OBJDIR)/fem.o: $(CORE_obj) $(MATHTOOLS_obj) $(DECOMPO_obj) $(TOOLS_obj) $(OBJDIR)/femmat.o src/femtools/fem.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/femtools/fem.f90 -o $@
 #------end FEMTOOLS_obj------------------------------
 
 
 #------begin KINWAVE_obj-----------------------------
-kinglobs.o: $(CORE_obj) src/models/kinwave/kinglobs.f90
-	$c -c src/models/kinwave/kinglobs.f90
-kinfnc.o: $(CORE_obj) kinglobs.o src/models/kinwave/kinfnc.f90
-	$c -c src/models/kinwave/kinfnc.f90
-kinreader.o: $(CORE_obj) kinglobs.o src/models/kinwave/kinreader.f90
-	$c -c src/models/kinwave/kinreader.f90
-kinpointer.o: $(CORE_obj) $(TOOLS_obj) kinglobs.o kinreader.o src/models/kinwave/kinpointer.f90
-	$c -c src/models/kinwave/kinpointer.f90
+$(OBJDIR)/kinglobs.o: $(CORE_obj) src/models/kinwave/kinglobs.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/models/kinwave/kinglobs.f90 -o $@
+
+$(OBJDIR)/kinfnc.o: $(CORE_obj) $(OBJDIR)/kinglobs.o src/models/kinwave/kinfnc.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/models/kinwave/kinfnc.f90 -o $@
+
+$(OBJDIR)/kinreader.o: $(CORE_obj) $(OBJDIR)/kinglobs.o src/models/kinwave/kinreader.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/models/kinwave/kinreader.f90 -o $@
+
+$(OBJDIR)/kinpointer.o: $(CORE_obj) $(TOOLS_obj) $(OBJDIR)/kinglobs.o $(OBJDIR)/kinreader.o src/models/kinwave/kinpointer.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/models/kinwave/kinpointer.f90 -o $@
 #------end KINWAVE_obj-------------------------------
 
 
-
-
 #------begin evaporation_obj-------------------------
-evapglob.o: $(CORE_obj) src/models/REevap/evapglob.f90
-	$c -c src/models/REevap/evapglob.f90
-evapreader.o: $(CORE_obj) $(TOOLS_obj) evapglob.o src/models/REevap/evapreader.f90
-	$c -c src/models/REevap/evapreader.f90
-evap_RE_constitutive.o: $(CORE_obj) $(RE_obj) evapglob.o src/models/REevap/evap_RE_constitutive.f90
-	$c -c src/models/REevap/evap_RE_constitutive.f90
-evap_heat_constitutive.o: $(CORE_obj) $(HEAT_obj) evap_RE_constitutive.o src/models/REevap/evap_heat_constitutive.f90
-	$c -c src/models/REevap/evap_heat_constitutive.f90	
-evappointers.o: $(CORE_obj) $(HEAT_obj) evapbc4heat.o evapreader.o evapglob.o evap_RE_constitutive.o  evap_heat_constitutive.o  src/models/REevap/evappointers.f90
-	$c -c src/models/REevap/evappointers.f90
-evapbc4heat.o: $(CORE_obj) $(RE_obj) evap_RE_constitutive.o evap_heat_constitutive.o src/models/REevap/evapbc4heat.f90
-	$c -c src/models/REevap/evapbc4heat.f90
+$(OBJDIR)/evapglob.o: $(CORE_obj) src/models/REevap/evapglob.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/models/REevap/evapglob.f90 -o $@
+
+$(OBJDIR)/evapreader.o: $(CORE_obj) $(TOOLS_obj) $(OBJDIR)/evapglob.o src/models/REevap/evapreader.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/models/REevap/evapreader.f90 -o $@
+
+$(OBJDIR)/evap_RE_constitutive.o: $(CORE_obj) $(RE_obj) $(OBJDIR)/evapglob.o src/models/REevap/evap_RE_constitutive.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/models/REevap/evap_RE_constitutive.f90 -o $@
+
+$(OBJDIR)/evap_heat_constitutive.o: $(CORE_obj) $(HEAT_obj) $(OBJDIR)/evap_RE_constitutive.o src/models/REevap/evap_heat_constitutive.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/models/REevap/evap_heat_constitutive.f90 -o $@
+
+$(OBJDIR)/evappointers.o: $(CORE_obj) $(HEAT_obj) $(OBJDIR)/evapbc4heat.o $(OBJDIR)/evapreader.o $(OBJDIR)/evapglob.o $(OBJDIR)/evap_RE_constitutive.o $(OBJDIR)/evap_heat_constitutive.o src/models/REevap/evappointers.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/models/REevap/evappointers.f90 -o $@
+
+$(OBJDIR)/evapbc4heat.o: $(CORE_obj) $(RE_obj) $(OBJDIR)/evap_RE_constitutive.o $(OBJDIR)/evap_heat_constitutive.o src/models/REevap/evapbc4heat.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/models/REevap/evapbc4heat.f90 -o $@
 #------end evaporation_obj-------------------------
 
+
+#------begin netcdf_obj----------------------------
+$(OBJDIR)/ncglobvars.o: $(CORE_obj) $(TOOLS_obj) src/models/fluxLS/ncglobvars.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/models/fluxLS/ncglobvars.f90 -o $@
+
+$(OBJDIR)/init_netcdf.o: $(CORE_obj) $(OBJDIR)/ncglobvars.o src/models/fluxLS/init_netcdf.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/models/fluxLS/init_netcdf.f90 -o $@
+#-------end netcdf_obj--------------------------------
 
 
 
 #-------begin POINTERS_obj--------------------------------
-manage_pointers.o: $(CORE_obj) $(TOOLS_obj) $(CORE_obj) $(FEMTOOLS_obj) $(LINALG_obj) $(DECOMPO_obj) $(MODEL_objs) $(EVAPORATION_obj) src/pointerman/manage_pointers.f90 
-	$c -c src/pointerman/manage_pointers.f90
+$(OBJDIR)/manage_pointers.o: $(CORE_obj) $(TOOLS_obj) $(FEMTOOLS_obj) $(MATHTOOLS_obj) $(DECOMPO_obj) $(MODEL_objs) src/pointerman/manage_pointers.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/pointerman/manage_pointers.f90 -o $@
 #-------end pointers_obj--------------------------------
 
 
 #-------begin DECOMPO_obj--------------------------------
-decomp_vars.o:  $(PMAoo_obj) src/decompo/decomp_vars.f90
-	$c -c src/decompo/decomp_vars.f90
-decomposer.o: $(CORE_obj) $(TOOLS_obj) $(PMAoo_obj) decomp_vars.o decomp_tools.o src/decompo/decomposer.f90
-	$c -c src/decompo/decomposer.f90
-decomp_tools.o: $(CORE_obj) $(MATHTOOLS_obj) decomp_vars.o  src/decompo/decomp_tools.f90
-	$c -c src/decompo/decomp_tools.f90
-schwarz_dd.o:  $(CORE_obj) $(MATHTOOLS_obj)  femmat.o decomp_vars.o decomposer.o decomp_tools.o src/decompo/schwarz_dd.f90
-	$c -c src/decompo/schwarz_dd.f90
-schwarz_dd2subcyc.o: $(CORE_obj) $(MATHTOOLS_obj)  femmat.o decomp_vars.o decomposer.o decomp_tools.o src/decompo/schwarz_dd2subcyc.f90
-	$c -c src/decompo/schwarz_dd2subcyc.f90
+$(OBJDIR)/decomp_vars.o: $(PMAoo_obj) src/decompo/decomp_vars.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/decompo/decomp_vars.f90 -o $@
+
+$(OBJDIR)/decomposer.o: $(CORE_obj) $(TOOLS_obj) $(PMAoo_obj) $(OBJDIR)/decomp_vars.o $(OBJDIR)/decomp_tools.o src/decompo/decomposer.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/decompo/decomposer.f90 -o $@
+
+$(OBJDIR)/decomp_tools.o: $(CORE_obj) $(MATHTOOLS_obj) $(OBJDIR)/decomp_vars.o src/decompo/decomp_tools.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/decompo/decomp_tools.f90 -o $@
+
+$(OBJDIR)/schwarz_dd.o: $(CORE_obj) $(MATHTOOLS_obj) $(OBJDIR)/femmat.o $(OBJDIR)/decomp_vars.o $(OBJDIR)/decomposer.o $(OBJDIR)/decomp_tools.o src/decompo/schwarz_dd.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/decompo/schwarz_dd.f90 -o $@
+
+$(OBJDIR)/schwarz_dd2subcyc.o: $(CORE_obj) $(MATHTOOLS_obj) $(OBJDIR)/femmat.o $(OBJDIR)/decomp_vars.o $(OBJDIR)/decomposer.o $(OBJDIR)/decomp_tools.o src/decompo/schwarz_dd2subcyc.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/decompo/schwarz_dd2subcyc.f90 -o $@
 #-------end DECOMPO_obj--------------------------------
 
 
 
-
-
-
 #----build main---------
-main.o:  $(ALL_objs) src/core/main.f90
-	$c -c src/core/main.f90 
+$(OBJDIR)/main.o: $(ALL_objs) src/core/main.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/core/main.f90 -o $@
 #-----------------------
 
-
 cleanall:
-	rm -rf *.o *.mod bin/*
+	rm -rf ./build bin/*
 	
 clean:
-	rm -rf *.o *.mod
+	rm -rf ./build
 	
 git:
 	cat /etc/hostname > sync.stamp && date >> sync.stamp & rm -rf *.o *.mod bin/* && git commit -a
 
 push: 
 	git push
-
-syncup:
-	cat /etc/hostname > sync.stamp && date >> sync.stamp && rsync -avztu -e ssh --delete --exclude 'out' --exclude '*.o' --exclude '*.mod' --exclude 'bin'  --exclude '*~' --exclude '*attr' --exclude '.git' ./ miguel@cml.fsv.cvut.cz:~/drutes-obj/
-
-syncdown:
-	tar -czf /tmp/git.tgz .git && rsync -avztu -e ssh --delete --exclude 'out/*' miguel@cml.fsv.cvut.cz:~/drutes-obj/ ./ && echo "last sync:" && cat sync.stamp && rm -rf .git && tar -xzf /tmp/git.tgz
-		
-pull-dd:
-	git checkout dev-dd && git pull https://www.github.com/michalkuraz/drutes-dev dev-dd
-
-
-
-save:
-	 tar -czf $d.tgz src Makefile drutes.conf  ; for i in `echo $(servers)` ; do scp -P 22  $d.tgz $$i; done
 
 tar :
 	 tar -czf $d.tgz src Makefile drutes.conf 
