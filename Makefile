@@ -95,7 +95,7 @@ CORE_obj := $(OBJDIR)/typy.o $(OBJDIR)/global_objs.o $(OBJDIR)/globals.o $(OBJDI
 POINTERMAN_obj := $(OBJDIR)/manage_pointers.o
 RE_obj := $(OBJDIR)/re_constitutive.o $(OBJDIR)/re_reader.o $(OBJDIR)/re_globals.o $(OBJDIR)/re_total.o $(OBJDIR)/re_pointers.o $(OBJDIR)/re_analytical.o $(OBJDIR)/re_evap_methods.o
 MATHTOOLS_obj :=  $(OBJDIR)/linalg.o $(OBJDIR)/integral.o $(OBJDIR)/solver_interfaces.o $(OBJDIR)/simplelinalg.o $(OBJDIR)/gmres_solver.o
-TOOLS_obj := $(OBJDIR)/printtools.o $(OBJDIR)/simegen.o $(OBJDIR)/read_inputs.o $(OBJDIR)/drutes_init.o $(OBJDIR)/geom_tools.o $(OBJDIR)/postpro.o $(OBJDIR)/readtools.o $(OBJDIR)/objfnc.o
+TOOLS_obj := $(OBJDIR)/printtools.o $(OBJDIR)/simegen.o $(OBJDIR)/read_inputs.o $(OBJDIR)/drutes_init.o $(OBJDIR)/geom_tools.o $(OBJDIR)/postpro.o $(OBJDIR)/readtools.o $(OBJDIR)/objfnc.o $(OBJDIR)/datetime.o
 FEMTOOLS_obj := $(OBJDIR)/feminittools.o $(OBJDIR)/capmat.o $(OBJDIR)/stiffmat.o $(OBJDIR)/fem.o $(OBJDIR)/fem_tools.o $(OBJDIR)/femmat.o
 DECOMPO_obj :=  $(OBJDIR)/decomp_tools.o $(OBJDIR)/schwarz_dd.o  $(OBJDIR)/decomp_vars.o $(OBJDIR)/decomposer.o $(OBJDIR)/schwarz_dd2subcyc.o
 PMAoo_obj := $(OBJDIR)/fullmatrix.o $(OBJDIR)/mtx.o $(OBJDIR)/mtx_int.o $(OBJDIR)/mtxiotools.o $(OBJDIR)/pmatools.o $(OBJDIR)/solvers.o $(OBJDIR)/sparsematrix.o $(OBJDIR)/sparsematrix_int.o $(OBJDIR)/matmod.o $(OBJDIR)/reorder.o
@@ -109,7 +109,7 @@ REevap_obj :=  $(OBJDIR)/evapglob.o $(OBJDIR)/evappointers.o $(OBJDIR)/evap_RE_c
 
 ifeq ($(HAVE_NETCDF),yes)
 
-	NETCDF_obj := $(OBJDIR)/init_netcdf.o $(OBJDIR)/ncglobvars.o
+	NETCDF_obj := $(OBJDIR)/init_netcdf.o $(OBJDIR)/ncglobvars.o $(OBJDIR)/netcdfflux.o
 
 else
 
@@ -236,6 +236,9 @@ $(OBJDIR)/postpro.o: $(CORE_obj) $(MATHTOOLS_obj) $(OBJDIR)/geom_tools.o src/too
 
 $(OBJDIR)/objfnc.o: $(CORE_obj) $(OBJDIR)/readtools.o src/tools/objfnc.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
 	$(FC) $(FFLAGS) -c src/tools/objfnc.f90 -o $@
+	
+$(OBJDIR)/datetime.o: $(CORE_obj)  src/tools/datetime.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/tools/datetime.f90 -o $@
 #-------end TOOLS_obj------------------------------------
 
 
@@ -411,8 +414,11 @@ $(OBJDIR)/evapbc4heat.o: $(CORE_obj) $(RE_obj) $(OBJDIR)/evap_RE_constitutive.o 
 $(OBJDIR)/ncglobvars.o: $(CORE_obj) $(TOOLS_obj) src/models/fluxLS/ncglobvars.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
 	$(FC) $(FFLAGS) -c src/models/fluxLS/ncglobvars.f90 -o $@
 
-$(OBJDIR)/init_netcdf.o: $(CORE_obj) $(OBJDIR)/ncglobvars.o src/models/fluxLS/init_netcdf.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+$(OBJDIR)/init_netcdf.o: $(CORE_obj) $(TOOLS_obj)  $(OBJDIR)/ncglobvars.o src/models/fluxLS/init_netcdf.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
 	$(FC) $(FFLAGS) -c src/models/fluxLS/init_netcdf.f90 -o $@
+	
+$(OBJDIR)/netcdfflux.o: $(CORE_obj) $(TOOLS_obj) $(OBJDIR)/ncglobvars.o $(OBJDIR)/init_netcdf.o  src/models/fluxLS/netcdfflux.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/models/fluxLS/netcdfflux.f90 -o $@
 #-------end netcdf_obj--------------------------------
 
 

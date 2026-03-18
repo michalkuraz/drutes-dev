@@ -1,5 +1,6 @@
 module ncglobvars
   use typy
+  use datetime
 
   integer :: netcdfID
   integer :: varid
@@ -7,6 +8,7 @@ module ncglobvars
   integer :: time_len, lat_len, lon_len
   real(kind=rkind), dimension(:), allocatable :: timenc, lat, lon
   integer(kind=ikind), parameter :: missing = -9999
+  type(datetime_t), public :: starttime, ncstart
 
 
 end module ncglobvars
