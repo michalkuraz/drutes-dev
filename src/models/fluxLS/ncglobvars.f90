@@ -10,6 +10,7 @@ module ncglobvars
   real(kind=rkind), dimension(:), allocatable :: timenc, lat, lon
   integer(kind=ikind), parameter :: missing = -9999
   type(datetime_t), public :: starttime, ncstart
+  integer(kind=ikind) :: geograzone = 32
 
 
 end module ncglobvars

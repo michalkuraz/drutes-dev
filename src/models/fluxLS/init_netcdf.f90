@@ -9,8 +9,10 @@ module init_netcdf
       use datetime
       use globals
       use global_objs
+      use nctools
       
       integer :: ierr
+      real(kind=rkind) :: alt
       
       starttime%year = 2010
       starttime%month = 1
@@ -31,7 +33,7 @@ module init_netcdf
       
       call read_ncorigin(netcdfID, ncstart)
     
-      print *, nodes%data(1,:)
+      call getncalt(nodes%data(1,:), alt)
       
       stop
       
@@ -128,6 +130,9 @@ module init_netcdf
       end if
 
     end subroutine read_ncorigin
+    
+    
+
 
 
 
