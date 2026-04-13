@@ -418,10 +418,10 @@ $(OBJDIR)/ncglobvars.o: $(CORE_obj) $(TOOLS_obj) src/models/fluxLS/ncglobvars.f9
 $(OBJDIR)/nctools.o: $(CORE_obj) $(TOOLS_obj) src/models/fluxLS/nctools.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
 	$(FC) $(FFLAGS) -c src/models/fluxLS/nctools.f90 -o $@
 	
-$(OBJDIR)/ncpointers.o: $(CORE_obj) $(TOOLS_obj) $(OBJDIR)/ncglobvars.o $(OBJDIR)/init_netcdf.o src/models/fluxLS/ncpointers.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+$(OBJDIR)/ncpointers.o: $(CORE_obj) $(TOOLS_obj) $(OBJDIR)/ncglobvars.o $(OBJDIR)/init_netcdf.o  src/models/fluxLS/ncpointers.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
 	$(FC) $(FFLAGS) -c src/models/fluxLS/ncpointers.f90 -o $@
 
-$(OBJDIR)/init_netcdf.o: $(CORE_obj) $(TOOLS_obj)  $(OBJDIR)/ncglobvars.o src/models/fluxLS/init_netcdf.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+$(OBJDIR)/init_netcdf.o: $(CORE_obj) $(TOOLS_obj) $(OBJDIR)/nctools.o $(OBJDIR)/ncglobvars.o src/models/fluxLS/init_netcdf.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
 	$(FC) $(FFLAGS) -c src/models/fluxLS/init_netcdf.f90 -o $@
 	
 $(OBJDIR)/netcdfflux.o: $(CORE_obj) $(TOOLS_obj) $(OBJDIR)/ncglobvars.o $(OBJDIR)/init_netcdf.o  src/models/fluxLS/netcdfflux.f90 | $(BUILD) $(OBJDIR) $(MODDIR)

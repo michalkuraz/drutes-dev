@@ -91,6 +91,9 @@ module nctools
     print *, xy
     print *, latit, longit
     
+    
+    
+    
   end subroutine getncalt
     
     
