@@ -54,13 +54,13 @@ endif
 FC = gfortran
 
 # -------- debugging flags (development) --------
-#FFLAGS = -fimplicit-none -fcoarray=single -fbounds-check -fbacktrace -g -g3 \
-#         -fdefault-real-8 -O0 -finit-real=nan -Wsurprising
+FFLAGS = -fimplicit-none -fcoarray=single -fbounds-check -fbacktrace -g -g3 \
+         -fdefault-real-8 -O0 -finit-real=nan -Wsurprising -J$(MODDIR) $(NETCDF_FFLAGS)
 
 # -------- optimized flags (production) --------
-FFLAGS = -fimplicit-none -fcoarray=single -fdefault-real-8 -O3 \
-         -finit-real=nan -ffpe-summary=none -fno-backtrace \
-         -J$(MODDIR) $(NETCDF_FFLAGS)
+#FFLAGS = -fimplicit-none -fcoarray=single -fdefault-real-8 -O3 \
+#         -finit-real=nan -ffpe-summary=none -fno-backtrace \
+ #        -J$(MODDIR) $(NETCDF_FFLAGS)
          
          
 d=drutes_obj-`date -I`
@@ -109,7 +109,7 @@ REevap_obj :=  $(OBJDIR)/evapglob.o $(OBJDIR)/evappointers.o $(OBJDIR)/evap_RE_c
 
 ifeq ($(HAVE_NETCDF),yes)
 
-	NETCDF_obj := $(OBJDIR)/init_netcdf.o $(OBJDIR)/ncglobvars.o $(OBJDIR)/netcdfflux.o
+	NETCDF_obj := $(OBJDIR)/init_netcdf.o $(OBJDIR)/ncglobvars.o $(OBJDIR)/netcdfflux.o $(OBJDIR)/ncpointers.o $(OBJDIR)/nctools.o
 
 else
 
@@ -411,8 +411,15 @@ $(OBJDIR)/evapbc4heat.o: $(CORE_obj) $(RE_obj) $(OBJDIR)/evap_RE_constitutive.o 
 
 
 #------begin netcdf_obj----------------------------
+
 $(OBJDIR)/ncglobvars.o: $(CORE_obj) $(TOOLS_obj) src/models/fluxLS/ncglobvars.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
 	$(FC) $(FFLAGS) -c src/models/fluxLS/ncglobvars.f90 -o $@
+	
+$(OBJDIR)/nctools.o: $(CORE_obj) $(TOOLS_obj) src/models/fluxLS/nctools.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/models/fluxLS/nctools.f90 -o $@
+	
+$(OBJDIR)/ncpointers.o: $(CORE_obj) $(TOOLS_obj) $(OBJDIR)/ncglobvars.o $(OBJDIR)/init_netcdf.o src/models/fluxLS/ncpointers.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/models/fluxLS/ncpointers.f90 -o $@
 
 $(OBJDIR)/init_netcdf.o: $(CORE_obj) $(TOOLS_obj)  $(OBJDIR)/ncglobvars.o src/models/fluxLS/init_netcdf.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
 	$(FC) $(FFLAGS) -c src/models/fluxLS/init_netcdf.f90 -o $@

@@ -49,6 +49,7 @@ module manage_pointers
       use kinpointer
       use freeze_pointers
       use evappointers
+      use ncpointers
 
       integer(kind=ikind) :: i, processes
       logical :: symetric
@@ -152,6 +153,13 @@ module manage_pointers
             call pde_constructor(pde_common%processes)
             write(unit=drutes_config%fullname, fmt=*) "coupled heat and Richards equation with evaporation"
             call REevap_linker()
+            
+        case("ADEnc")
+        
+          call nc_processes(pde_common%processes)
+          call pde_constructor(pde_common%processes)
+          write(unit=drutes_config%fullname, fmt=*) "Advection dispersion equation with fluxes from netcdf (mHM simulation)"
+          call nclinker(pde(1)) 
         
 
         case default

@@ -7,6 +7,8 @@ module init_netcdf
       use netcdf
       use ncglobvars
       use datetime
+      use globals
+      use global_objs
       
       integer :: ierr
       
@@ -20,11 +22,18 @@ module init_netcdf
       
       ierr = nf90_open(path="drutes.conf/netcdf/flux.nc", mode=nf90_nowrite, ncid=netcdfID)
       
-      if (ierr /= nf90_noerr) ERROR STOP "Error opening NetCDF file"
+      if (ierr /= nf90_noerr) ERROR STOP "Error opening NetCDF file: drutes.conf/netcdf/flux.nc"
+    
+      
+      ierr = nf90_open(path="drutes.conf/netcdf/dem.nc", mode=nf90_nowrite, ncid=ncDEM)
+      
+      if (ierr /= nf90_noerr) ERROR STOP "Error opening NetCDF DEM file: drutes.conf/netcdf/dem.nc"
       
       call read_ncorigin(netcdfID, ncstart)
+    
+      print *, nodes%data(1,:)
       
-      print *, ncstart
+      stop
       
       print *, difftime(ncstart, starttime, "hrs")
       

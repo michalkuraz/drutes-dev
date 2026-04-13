@@ -29,7 +29,7 @@ module typy
     
     integer, parameter, public :: sprec=selected_real_kind(8,9)
     
-    
+
 
     !> real number specification
     integer, parameter, public :: rkind = selected_real_kind(15,99)

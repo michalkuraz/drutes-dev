@@ -82,7 +82,7 @@ module read_inputs
       real(kind=rkind), dimension(3) :: tmp
       character(len=4096) :: filename
       character(len=8192) :: msg
-      character(len=256), dimension(12) :: probnames
+      character(len=256), dimension(13) :: probnames
       character(len=2) :: dimensions
       
 
@@ -111,6 +111,7 @@ module read_inputs
                 new_line("a"),  new_line("a"), &
         "   REevap = Richards equation coupled with heat equation, phase changes due evaporation, vapour flow (in development)", &
         new_line("a"),  new_line("a"), &
+        "   ADEnc = Advection dispersion equation with fluxes from netcdf (mHM simulation) (in development)", &
          new_line("a")
         
 	
@@ -127,6 +128,7 @@ module read_inputs
       probnames(10) = "kinwave"
       probnames(11) = "REevap"
       probnames(12) = "ICENE"
+      probnames(13) = "ADEnc"
       
 	
       call fileread(drutes_config%name, file_global, trim(msg), options=probnames)

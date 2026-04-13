@@ -47,7 +47,6 @@ program main
   use objfnc
   use printtools
   use readtools
-!  use init_netcdf
 
   
   character(len=256) :: writer
@@ -59,8 +58,7 @@ program main
   
   call system("rm -rf out/*")
   
-  call netcdf()
-  stop
+  
   
   
   if (this_image() == 1) then

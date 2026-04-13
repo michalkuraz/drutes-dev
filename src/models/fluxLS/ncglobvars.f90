@@ -3,6 +3,7 @@ module ncglobvars
   use datetime
 
   integer :: netcdfID
+  integer :: ncDEM 
   integer :: varid
   integer :: dimid_time, dimid_lat, dimid_lon
   integer :: time_len, lat_len, lon_len
