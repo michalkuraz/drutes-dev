@@ -49,7 +49,9 @@ module manage_pointers
       use kinpointer
       use freeze_pointers
       use evappointers
-      use ncpointers
+#ifdef HAVE_NETCDF
+        use ncpointers
+#endif
 
       integer(kind=ikind) :: i, processes
       logical :: symetric
@@ -155,11 +157,19 @@ module manage_pointers
             call REevap_linker()
             
         case("ADEnc")
-        
-          call nc_processes(pde_common%processes)
-          call pde_constructor(pde_common%processes)
-          write(unit=drutes_config%fullname, fmt=*) "Advection dispersion equation with fluxes from netcdf (mHM simulation)"
-          call nclinker(pde(1)) 
+
+#ifdef HAVE_NETCDF
+            call nc_processes(pde_common%processes)
+            call pde_constructor(pde_common%processes)
+            write(unit=drutes_config%fullname, fmt=*) "Advection dispersion equation with fluxes from netcdf (mHM simulation)"
+            call nclinker(pde(1))
+#else
+
+            print *, "Model ADEnc requires NetCDF support, but this executable was compiled without NetCDF. "
+            print *, "install libnetcdf-dev and libnetcdff-dev packages and recompile DRUtES"
+            ERROR STOP
+#endif
+
         
 
         case default

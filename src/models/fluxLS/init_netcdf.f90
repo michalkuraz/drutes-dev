@@ -10,6 +10,8 @@ module init_netcdf
       use globals
       use global_objs
       use nctools
+      use debug_tools
+      use ncdem
       
       integer :: ierr
       real(kind=rkind) :: alt
@@ -27,13 +29,12 @@ module init_netcdf
       if (ierr /= nf90_noerr) ERROR STOP "Error opening NetCDF file: drutes.conf/netcdf/flux.nc"
     
       
-      ierr = nf90_open(path="drutes.conf/netcdf/dem.nc", mode=nf90_nowrite, ncid=ncDEM)
-      
-      if (ierr /= nf90_noerr) ERROR STOP "Error opening NetCDF DEM file: drutes.conf/netcdf/dem.nc"
       
       call read_ncorigin(netcdfID, ncstart)
     
-      call getncalt(nodes%data(1,:), alt)
+      call getmeshalt()
+      
+      call printmtx(nodealt, name="alt")
       
       stop
       

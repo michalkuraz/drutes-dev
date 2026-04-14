@@ -43,10 +43,12 @@ HAVE_NETCDF := $(shell command -v nf-config >/dev/null 2>&1 && echo yes || echo 
 ifeq ($(HAVE_NETCDF),yes)
   NETCDF_FFLAGS := $(shell nf-config --fflags)
   NETCDF_FLIBS  := $(shell nf-config --flibs)
+  CPPFLAGS_NETCDF := -DHAVE_NETCDF
   NETCDF_MSG    := compiled with NetCDF support
 else
   NETCDF_FFLAGS :=
   NETCDF_FLIBS  :=
+  CPPFLAGS_NETCDF :=
   NETCDF_MSG    := compiled without NetCDF support
 endif
 
@@ -54,7 +56,7 @@ endif
 FC = gfortran
 
 # -------- debugging flags (development) --------
-FFLAGS = -fimplicit-none -fcoarray=single -fbounds-check -fbacktrace -g -g3 \
+FFLAGS = -cpp $(CPPFLAGS_NETCDF) -fimplicit-none -fcoarray=single -fbounds-check -fbacktrace -g -g3 \
          -fdefault-real-8 -O0 -finit-real=nan -Wsurprising -J$(MODDIR) $(NETCDF_FFLAGS)
 
 # -------- optimized flags (production) --------
@@ -109,7 +111,7 @@ REevap_obj :=  $(OBJDIR)/evapglob.o $(OBJDIR)/evappointers.o $(OBJDIR)/evap_RE_c
 
 ifeq ($(HAVE_NETCDF),yes)
 
-	NETCDF_obj := $(OBJDIR)/init_netcdf.o $(OBJDIR)/ncglobvars.o $(OBJDIR)/netcdfflux.o $(OBJDIR)/ncpointers.o $(OBJDIR)/nctools.o
+	NETCDF_obj := $(OBJDIR)/init_netcdf.o $(OBJDIR)/ncglobvars.o $(OBJDIR)/netcdfflux.o $(OBJDIR)/ncpointers.o $(OBJDIR)/nctools.o $(OBJDIR)/ncdem.o
 
 else
 
@@ -412,16 +414,19 @@ $(OBJDIR)/evapbc4heat.o: $(CORE_obj) $(RE_obj) $(OBJDIR)/evap_RE_constitutive.o 
 
 #------begin netcdf_obj----------------------------
 
+$(OBJDIR)/ncdem.o: $(CORE_obj) $(TOOLS_obj) $(OBJDIR)/nctools.o src/models/fluxLS/ncdem.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/models/fluxLS/ncdem.f90 -o $@
+
 $(OBJDIR)/ncglobvars.o: $(CORE_obj) $(TOOLS_obj) src/models/fluxLS/ncglobvars.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
 	$(FC) $(FFLAGS) -c src/models/fluxLS/ncglobvars.f90 -o $@
 	
-$(OBJDIR)/nctools.o: $(CORE_obj) $(TOOLS_obj) src/models/fluxLS/nctools.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+$(OBJDIR)/nctools.o: $(CORE_obj) $(TOOLS_obj) $(OBJDIR)/ncglobvars.o src/models/fluxLS/nctools.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
 	$(FC) $(FFLAGS) -c src/models/fluxLS/nctools.f90 -o $@
 	
 $(OBJDIR)/ncpointers.o: $(CORE_obj) $(TOOLS_obj) $(OBJDIR)/ncglobvars.o $(OBJDIR)/init_netcdf.o  src/models/fluxLS/ncpointers.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
 	$(FC) $(FFLAGS) -c src/models/fluxLS/ncpointers.f90 -o $@
 
-$(OBJDIR)/init_netcdf.o: $(CORE_obj) $(TOOLS_obj) $(OBJDIR)/nctools.o $(OBJDIR)/ncglobvars.o src/models/fluxLS/init_netcdf.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+$(OBJDIR)/init_netcdf.o: $(CORE_obj) $(TOOLS_obj) $(OBJDIR)/nctools.o $(OBJDIR)/ncglobvars.o $(OBJDIR)/ncdem.o src/models/fluxLS/init_netcdf.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
 	$(FC) $(FFLAGS) -c src/models/fluxLS/init_netcdf.f90 -o $@
 	
 $(OBJDIR)/netcdfflux.o: $(CORE_obj) $(TOOLS_obj) $(OBJDIR)/ncglobvars.o $(OBJDIR)/init_netcdf.o  src/models/fluxLS/netcdfflux.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
