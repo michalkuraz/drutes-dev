@@ -223,10 +223,10 @@ contains
     if (dem%has_fill) then
       if (is_fill(z11, dem%fill_value) .or. is_fill(z12, dem%fill_value) .or. &
           is_fill(z21, dem%fill_value) .or. is_fill(z22, dem%fill_value)) then
-        print *, "dem_get_altitude: DEM fill value encountered."
-        print *, "  input lat/lon      = ", lat0, lon0
-        print *, "  adjusted longitude = ", x
-        print *, "  surrounding values = ", z11, z12, z21, z22
+!        print *, "dem_get_altitude: DEM fill value encountered."
+!        print *, "  input lat/lon      = ", lat0, lon0
+!        print *, "  adjusted longitude = ", x
+!        print *, "  surrounding values = ", z11, z12, z21, z22
         altitude = dem%fill_value
         return
       end if
@@ -578,16 +578,18 @@ contains
     use global_objs
     use ncglobvars
     use nctools
+    use core_tools
 
 
     type(dem_cache) :: dem
     real(kind=rkind) :: z, lat, lon
     integer(kind=ikind) :: i
-    logical :: ok
+    logical :: success
+    character(len=4096) :: msg
 
-    call dem_open(dem, "drutes.conf/netcdf/dem.nc", ok)
+    call dem_open(dem, "drutes.conf/netcdf/dem.nc", success)
     
-    if (.not. ok) then
+    if (.not. success) then
       print *, "Unable to open file drutes.conf/netcdf/dem.nc"
       ERROR STOP
     end if
@@ -596,17 +598,14 @@ contains
     
     do i=1, nodes%kolik
       call utm2latlong(nodes%data(i,1), nodes%data(i,2), lat, lon)
-      call dem_get_altitude(dem, lat, lon, nodealt(i), ok)
-      if (.not. ok) then
-        print *, "failed to get dem altitude, check file dem.nc"
-        print *, "node id", i
-        print *, "exited from ncdem::getmeshalt"
-!        ERROR STOP
+      call dem_get_altitude(dem, lat, lon, nodealt(i), success)
+      if (.not. success) then
+		write(msg, *) "W: failed to get dem altitude, check file drutes.conf/netcdf/dem.nc, for node:", i, &
+						", node will be deactivated"
+        call write_log(msg)
       end if
     end do
     
-    
-
 
     call dem_close(dem)
   end subroutine getmeshalt

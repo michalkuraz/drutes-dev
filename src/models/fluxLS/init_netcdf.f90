@@ -13,9 +13,13 @@ module init_netcdf
       use debug_tools
       use ncdem
       use netcdfflux
+      use core_tools
       
       integer :: ierr
+      integer(kind=ikind) :: i
       logical :: success
+      real(kind=rkind) :: q
+      character(len=1024) :: errmsg
       
       starttime%year = 2010
       starttime%month = 1
@@ -24,6 +28,8 @@ module init_netcdf
       starttime%minute = 0
       starttime%second = 0
       
+      addedbc = maxval(nodes%edge) + 1
+      
       
       ierr = nf90_open(path="drutes.conf/netcdf/mRM_Fluxes_States.nc", mode=nf90_nowrite, ncid=netcdfID)
       
@@ -31,9 +37,10 @@ module init_netcdf
     
       call read_ncorigin(netcdfID, ncstart)
       
-      call ncflux_init(success)
+      call ncflux_init(success, errmsg)
    
       if (.not. success) then
+        print *, cut(errmsg)
 		print *, "unsupported structure of the file drutes.conf/netcdf/mRM_Fluxes_States.nc"
 		print *, "is this correct output from mHM?"
 		print *, "after succesfull mHM simulation you should copy "
@@ -43,22 +50,34 @@ module init_netcdf
     
       call getmeshalt()
       
-      print *, difftime(ncstart, starttime, "hrs")
+      ore_di_ini = difftime(ncstart, starttime, "hrs")
+      
+!      print *, ore_di_ini ; stop      
+      do i=1, nodes%kolik
+      
+		call ncflux_get_xy(nodes%data(i,1), nodes%data(i,2), ore_di_ini, q, success, errmsg)
+		
+		print *, i, q
+		
+
+	  end do
+      
+      
       
       stop
        
       ! Get variable ID for Qrouted
-      ierr = nf90_inq_varid(netcdfID, "Qrouted", varid)
+!      ierr = nf90_inq_varid(netcdfID, "Qrouted", varid)
       
-        ! Get dimension IDs
-      ierr = nf90_inq_dimid(netcdfID, "time", dimid_time)
-      ierr = nf90_inq_dimid(netcdfID, "lat", dimid_lat)
-      ierr = nf90_inq_dimid(netcdfID, "lon", dimid_lon)
+!        ! Get dimension IDs
+!      ierr = nf90_inq_dimid(netcdfID, "time", dimid_time)
+!      ierr = nf90_inq_dimid(netcdfID, "lat", dimid_lat)
+!      ierr = nf90_inq_dimid(netcdfID, "lon", dimid_lon)
       
-        ! Get dimension lengths
-      ierr = nf90_inquire_dimension(netcdfID, dimid_time, len = time_len)
-      ierr = nf90_inquire_dimension(netcdfID, dimid_lat, len = lat_len)
-      ierr = nf90_inquire_dimension(netcdfID, dimid_lon, len = lon_len)
+!        ! Get dimension lengths
+!      ierr = nf90_inquire_dimension(netcdfID, dimid_time, len = time_len)
+!      ierr = nf90_inquire_dimension(netcdfID, dimid_lat, len = lat_len)
+!      ierr = nf90_inquire_dimension(netcdfID, dimid_lon, len = lon_len)
        
     
     end subroutine netcdf

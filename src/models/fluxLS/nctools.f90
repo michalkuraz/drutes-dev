@@ -76,25 +76,41 @@ module nctools
   end subroutine utm2latlong
   
   
-  subroutine getncalt(xy, alt) 
+  subroutine terrain_slopes()
     use typy
-    use netcdf
+    use globals
+    use global_objs
     use ncglobvars
+    use core_tools
+
     
-    real(kind=rkind), dimension(2), intent(in) :: xy
-    real(kind=rkind), intent(out) :: alt
+    integer(kind=ikind) :: el, nd
+    real(kind=rkind), dimension(3,3) :: pts
+    logical :: elfine
     
-    real(kind=rkind) :: latit, longit
+    allocate(elslopes(elements%kolik, 2))
+
+
     
-    call utm2latlong(xy(1), xy(2), latit, longit)
+    do el=1, elements%kolik
+      elfine = .true.
+      do nd = 1,3
+        pts(nd,1:2) = nodes%data(elements%data(el,nd),:)
+        pts(nd,3) = nodealt(elements%data(el,nd))
+        if (int(pts(nd,3)) == missing) then
+          nodes%edge(elements%data(el,:)) = addedbc
+          elfine = .false.
+          EXIT
+        end if
+          
+      end do
+
+      if (elfine)  call plane_derivative(pts(1,:), pts(2,:), pts(3,:), elslopes(el,1), elslopes(el,2))
+    end do
     
-    print *, xy
-    print *, latit, longit
-    
-    
-    
-    
-  end subroutine getncalt
+	end subroutine terrain_slopes
+		
+	
     
     
     
