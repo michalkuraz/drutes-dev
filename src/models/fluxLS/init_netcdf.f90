@@ -12,9 +12,10 @@ module init_netcdf
       use nctools
       use debug_tools
       use ncdem
+      use netcdfflux
       
       integer :: ierr
-      real(kind=rkind) :: alt
+      logical :: success
       
       starttime%year = 2010
       starttime%month = 1
@@ -24,19 +25,23 @@ module init_netcdf
       starttime%second = 0
       
       
-      ierr = nf90_open(path="drutes.conf/netcdf/flux.nc", mode=nf90_nowrite, ncid=netcdfID)
+      ierr = nf90_open(path="drutes.conf/netcdf/mRM_Fluxes_States.nc", mode=nf90_nowrite, ncid=netcdfID)
       
-      if (ierr /= nf90_noerr) ERROR STOP "Error opening NetCDF file: drutes.conf/netcdf/flux.nc"
+      if (ierr /= nf90_noerr) ERROR STOP "Error opening NetCDF file: drutes.conf/netcdf/mRM_Fluxes_States.nc"
     
-      
-      
       call read_ncorigin(netcdfID, ncstart)
+      
+      call ncflux_init(success)
+   
+      if (.not. success) then
+		print *, "unsupported structure of the file drutes.conf/netcdf/mRM_Fluxes_States.nc"
+		print *, "is this correct output from mHM?"
+		print *, "after succesfull mHM simulation you should copy "
+		print *, "      mRM_Fluxes_States.nc -> drutes.conf/netcdf/mRM_Fluxes_States.nc"
+	    ERROR STOP
+	  end if
     
       call getmeshalt()
-      
-      call printmtx(nodealt, name="alt")
-      
-      stop
       
       print *, difftime(ncstart, starttime, "hrs")
       
