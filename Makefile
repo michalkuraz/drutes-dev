@@ -56,7 +56,7 @@ endif
 FC = gfortran
 
 # -------- debugging flags (development) --------
-FFLAGS = -cpp $(CPPFLAGS_NETCDF) -fimplicit-none -fcoarray=single -fbounds-check -fbacktrace -g -g3 \
+FFLAGS =  $(CPPFLAGS_NETCDF) -fimplicit-none -fcoarray=single -fbounds-check -fbacktrace -g -g3 \
          -fdefault-real-8 -O0 -finit-real=nan -Wsurprising -J$(MODDIR) $(NETCDF_FFLAGS)
 
 # -------- optimized flags (production) --------
@@ -440,7 +440,7 @@ $(OBJDIR)/netcdfflux.o: $(CORE_obj) $(TOOLS_obj) $(OBJDIR)/ncglobvars.o  src/mod
 
 #-------begin POINTERS_obj--------------------------------
 $(OBJDIR)/manage_pointers.o: $(CORE_obj) $(TOOLS_obj) $(FEMTOOLS_obj) $(MATHTOOLS_obj) $(DECOMPO_obj) $(MODEL_objs) src/pointerman/manage_pointers.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
-	$(FC) $(FFLAGS) -c src/pointerman/manage_pointers.f90 -o $@
+	$(FC) $(FFLAGS) -cpp -c src/pointerman/manage_pointers.f90 -o $@
 #-------end pointers_obj--------------------------------
 
 
