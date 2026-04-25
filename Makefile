@@ -111,7 +111,7 @@ REevap_obj :=  $(OBJDIR)/evapglob.o $(OBJDIR)/evappointers.o $(OBJDIR)/evap_RE_c
 
 ifeq ($(HAVE_NETCDF),yes)
 
-	NETCDF_obj := $(OBJDIR)/init_netcdf.o $(OBJDIR)/ncglobvars.o $(OBJDIR)/netcdfflux.o $(OBJDIR)/ncpointers.o $(OBJDIR)/nctools.o $(OBJDIR)/ncdem.o
+	NETCDF_obj := $(OBJDIR)/init_netcdf.o $(OBJDIR)/ncglobvars.o $(OBJDIR)/netcdfflux.o $(OBJDIR)/ncpointers.o $(OBJDIR)/nctools.o $(OBJDIR)/ncdem.o  $(OBJDIR)/ncfluxarea.o
 
 else
 
@@ -420,6 +420,9 @@ $(OBJDIR)/ncdem.o: $(CORE_obj) $(TOOLS_obj) $(OBJDIR)/nctools.o src/models/fluxL
 $(OBJDIR)/ncglobvars.o: $(CORE_obj) $(TOOLS_obj) src/models/fluxLS/ncglobvars.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
 	$(FC) $(FFLAGS) -c src/models/fluxLS/ncglobvars.f90 -o $@
 	
+$(OBJDIR)/ncfluxarea.o: $(CORE_obj) $(TOOLS_obj) $(OBJDIR)/ncglobvars.o src/models/fluxLS/ncfluxarea.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/models/fluxLS/ncfluxarea.f90 -o $@
+	
 $(OBJDIR)/nctools.o: $(CORE_obj) $(TOOLS_obj) $(OBJDIR)/ncglobvars.o src/models/fluxLS/nctools.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
 	$(FC) $(FFLAGS) -c src/models/fluxLS/nctools.f90 -o $@
 	
@@ -429,7 +432,7 @@ $(OBJDIR)/ncpointers.o: $(CORE_obj) $(TOOLS_obj) $(OBJDIR)/ncglobvars.o $(OBJDIR
 $(OBJDIR)/init_netcdf.o: $(CORE_obj) $(TOOLS_obj) $(OBJDIR)/nctools.o  $(OBJDIR)/netcdfflux.o $(OBJDIR)/ncglobvars.o $(OBJDIR)/ncdem.o src/models/fluxLS/init_netcdf.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
 	$(FC) $(FFLAGS) -c src/models/fluxLS/init_netcdf.f90 -o $@
 	
-$(OBJDIR)/netcdfflux.o: $(CORE_obj) $(TOOLS_obj) $(OBJDIR)/ncglobvars.o $(OBJDIR)/init_netcdf.o  src/models/fluxLS/netcdfflux.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+$(OBJDIR)/netcdfflux.o: $(CORE_obj) $(TOOLS_obj) $(OBJDIR)/ncglobvars.o  src/models/fluxLS/netcdfflux.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
 	$(FC) $(FFLAGS) -c src/models/fluxLS/netcdfflux.f90 -o $@
 #-------end netcdf_obj--------------------------------
 

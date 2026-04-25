@@ -10,8 +10,11 @@ module ncglobvars
   type(datetime_t), public :: starttime, ncstart
   integer(kind=ikind) :: geograzone = 32
   real(kind=rkind), dimension(:), allocatable :: nodealt
-  
-  type :: ncfluxdata_type
+
+	
+	
+	
+	type :: ncfluxdata_type
 	  logical :: initialized = .false.
 	  logical :: slice_loaded = .false.
 
@@ -31,14 +34,24 @@ module ncglobvars
 	  integer(kind=ikind) :: current_time_index = -1_ikind
 
 	  real(kind=rkind) :: fill_value = -9999.0_rkind
+	  
 	  logical :: has_fill = .false.
 
-	  real(kind=rkind), dimension(:), allocatable :: lon, lat
+	  logical :: has_bounds = .false.
+
+	  real(kind=rkind), dimension(:), allocatable :: lon
+	  real(kind=rkind), dimension(:), allocatable :: lat
 	  integer(kind=ikind), dimension(:), allocatable :: time
+
 	  real(kind=rkind), dimension(:,:), allocatable :: qslice
+
+	  real(kind=rkind), dimension(:,:), allocatable :: lat_bnds
+	  real(kind=rkind), dimension(:,:), allocatable :: lon_bnds
 	end type ncfluxdata_type
 
 	type(ncfluxdata_type) :: ncfluxdata
+	
+	
 	
 	real(kind=rkind), dimension(:,:), allocatable :: elslopes
 	
