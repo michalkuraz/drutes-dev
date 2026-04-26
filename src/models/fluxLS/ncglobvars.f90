@@ -47,6 +47,13 @@ module ncglobvars
 
 	  real(kind=rkind), dimension(:,:), allocatable :: lat_bnds
 	  real(kind=rkind), dimension(:,:), allocatable :: lon_bnds
+	  
+	  logical :: bounds_index_ready = .false.
+
+	  real(kind=rkind) :: lat_b0 = 0.0_rkind
+	  real(kind=rkind) :: lon_b0 = 0.0_rkind
+	  real(kind=rkind) :: dlat_b = 0.0_rkind
+	  real(kind=rkind) :: dlon_b = 0.0_rkind
 	end type ncfluxdata_type
 
 	type(ncfluxdata_type) :: ncfluxdata
