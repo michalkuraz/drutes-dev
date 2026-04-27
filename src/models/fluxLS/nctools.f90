@@ -90,8 +90,7 @@ module nctools
     
     allocate(elslopes(elements%kolik, 2))
 
-
-    
+    elslopes = 0.0_rkind    
     do el=1, elements%kolik
       elfine = .true.
       do nd = 1,3

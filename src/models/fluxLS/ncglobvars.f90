@@ -4,12 +4,14 @@ module ncglobvars
 
   integer :: netcdfID
   integer :: varid
-  integer(kind=ikind) ::  ore_di_ini
+  integer(kind=ikind) ::  ora_di_ini
 
   integer(kind=ikind), parameter :: missing = -9999
   type(datetime_t), public :: starttime, ncstart
   integer(kind=ikind) :: geograzone = 32
   real(kind=rkind), dimension(:), allocatable :: nodealt
+  real(kind=rkind) :: Qmin = 250.0
+  real(kind=rkind) :: LSdisp = 20000.0
 
 	
 	

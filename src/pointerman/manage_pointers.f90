@@ -162,7 +162,7 @@ module manage_pointers
             call nc_processes(pde_common%processes)
             call pde_constructor(pde_common%processes)
             write(unit=drutes_config%fullname, fmt=*) "Advection dispersion equation with fluxes from netcdf (mHM simulation)"
-            call nclinker(pde(1))
+            call nclinker()
 #else
 
             print *, "Model ADEnc requires NetCDF support, but this executable was compiled without NetCDF. "

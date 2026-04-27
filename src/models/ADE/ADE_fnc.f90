@@ -75,9 +75,9 @@ module ADE_fnc
       end if
      
       D = drutes_config%dimen
-      identity = 0.0
+      identity = 0.0_rkind
       do i=1, D
-        identity(i,i) = 1.0
+        identity(i,i) = 1.0_rkind
       end do
       
 

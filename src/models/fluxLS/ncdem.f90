@@ -600,7 +600,7 @@ contains
       call utm2latlong(nodes%data(i,1), nodes%data(i,2), lat, lon)
       call dem_get_altitude(dem, lat, lon, nodealt(i), success)
       if (.not. success) then
-		write(msg, *) "W: failed to get dem altitude, check file drutes.conf/netcdf/dem.nc, for node:", i, &
+      write(msg, *) "W: failed to get dem altitude, check file drutes.conf/netcdf/dem.nc, for node:", i, &
 						", node will be deactivated"
         call write_log(msg)
       end if

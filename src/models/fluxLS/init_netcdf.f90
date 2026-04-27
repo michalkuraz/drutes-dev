@@ -14,8 +14,10 @@ module init_netcdf
       use ncdem
       use netcdfflux
       use core_tools
-      
-      integer :: ierr
+      use pde_objs
+      use readtools
+            
+      integer :: ierr, filetmp, fileconf
       integer(kind=ikind) :: i
       logical :: success
       real(kind=rkind) :: q
@@ -41,45 +43,61 @@ module init_netcdf
    
       if (.not. success) then
         print *, cut(errmsg)
-		print *, "unsupported structure of the file drutes.conf/netcdf/mRM_Fluxes_States.nc"
-		print *, "is this correct output from mHM?"
-		print *, "after succesfull mHM simulation you should copy "
-		print *, "      mRM_Fluxes_States.nc -> drutes.conf/netcdf/mRM_Fluxes_States.nc"
-	    ERROR STOP
-	  end if
+        print *, "unsupported structure of the file drutes.conf/netcdf/mRM_Fluxes_States.nc"
+        print *, "is this correct output from mHM?"
+        print *, "after succesfull mHM simulation you should copy "
+        print *, "      mRM_Fluxes_States.nc -> drutes.conf/netcdf/mRM_Fluxes_States.nc"
+        ERROR STOP
+      end if
     
       call getmeshalt()
       
-      ore_di_ini = difftime(ncstart, starttime, "hrs")
+      ora_di_ini = difftime(ncstart, starttime, "hrs")
       
-!      print *, ore_di_ini ; stop      
+    
       do i=1, nodes%kolik
       
-		call ncflux_get_xy(nodes%data(i,1), nodes%data(i,2), ore_di_ini, q, success, errmsg)
-		
-		print *, i, q
-		
+        call ncflux_get_xy(nodes%data(i,1), nodes%data(i,2), ora_di_ini, q, success, errmsg)
+        if (q < Qmin) then
+          nodes%edge(i) = addedbc
+        end if
+        
+        if (q > 0.0) then
+          if (nint(nodealt(i)) == missing) then
+            write(errmsg, *) "W: your dem model doesn't conver the entire watershed, update drutes.conf/netcdf/dem.nc, node:", i, &
+              "will be deactivated" 
+            call write_log(errmsg)
+            nodes%edge(i) = addedbc
+          end if
+        end if
+        
+        
+      end do
+      
+      call terrain_slopes()
+      
+      open(newunit=fileconf, file="drutes.conf/netcdf/netcdf.conf", action="read", status="old")
+      
+      call readbcvals(unitW=fileconf, struct=pde(1)%bc, dimen=2_ikind, &
+        dirname="drutes.conf/netcdf/")
 
-	  end do
+
+      pde(1)%problem_name(1) = "ADE_in_watershed"
+      pde(1)%problem_name(2) = "Advection-dispersion-reaction equation for watershed large scale"
+
+      pde(1)%solution_name(1) = "solute_concentration" !nazev vystupnich souboru
+      pde(1)%solution_name(2) = "c  [M/L^3]" !popisek grafu
+
+      pde(1)%flux_name(1) = "conc_flux"  
+      pde(1)%flux_name(2) = "concentration flux [M.L^{-2}.T^{-1}]"
       
+      allocate(pde(1)%mass_name(1,2))
+
+      pde(1)%mass_name(1,1) = "conc_in_river"
+      pde(1)%mass_name(1,2) = "concetration [M/L^3]"
       
-      
-      stop
-       
-      ! Get variable ID for Qrouted
-!      ierr = nf90_inq_varid(netcdfID, "Qrouted", varid)
-      
-!        ! Get dimension IDs
-!      ierr = nf90_inq_dimid(netcdfID, "time", dimid_time)
-!      ierr = nf90_inq_dimid(netcdfID, "lat", dimid_lat)
-!      ierr = nf90_inq_dimid(netcdfID, "lon", dimid_lon)
-      
-!        ! Get dimension lengths
-!      ierr = nf90_inquire_dimension(netcdfID, dimid_time, len = time_len)
-!      ierr = nf90_inquire_dimension(netcdfID, dimid_lat, len = lat_len)
-!      ierr = nf90_inquire_dimension(netcdfID, dimid_lon, len = lon_len)
-       
-    
+      pde(1)%print_mass = .true.      
+
     end subroutine netcdf
     
     
