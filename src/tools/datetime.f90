@@ -159,6 +159,12 @@ contains
 
     dtime = dsec * coeff
   end function difftime
+  
+!  function days_in_month(date) result(days)
+!    use typy
+    
+  
+!  end days_in_month
 
 
 end module datetime

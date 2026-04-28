@@ -48,13 +48,17 @@ module init_netcdf
         call write_log(cut(errmsg))
       end if
       
-      stop
+      starttime%year = datearray(1)
       
-!      call fileread(i, fileconf, ranges=(/0.0_rkind, huge(0.0_rkind)/), &
-!                    errmsg="incorrect dispersivity definition in drutes.conf/netcdf/netcdf.conf")
-                    
-      print *, datearray
+      if (datearray(2) < 1 .or. datearray(2) > 12) then
+        write(errmsg, *) "incorrect month specified, month should be within 1-12, you specified", datearray(2)
+        call file_error(fileconf, errmsg)
+      end if
+     
+      starttime%month = datearray(2)
       
+      starttime%day = datearray(3)
+    
       
       call fileread(LSdisp, fileconf, ranges=(/0.0_rkind, huge(0.0_rkind)/), &
                     errmsg="incorrect dispersivity definition in drutes.conf/netcdf/netcdf.conf")
