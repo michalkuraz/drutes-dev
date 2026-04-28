@@ -180,15 +180,14 @@ module lsconstitutive
       use globals
       use global_objs
       use pde_objs
-      use heat_globals
-      use geom_tools
+      use ncglobvars
 
       
       class(pde_str), intent(in out) :: pde_loc
       integer(kind=ikind) :: i, j, k,l, m, layer, D
       real(kind=rkind) :: value
 
-      pde_loc%solution(:) = 0
+      pde_loc%solution(:) = cinit_ls
 
     end subroutine ADEls_icond
     

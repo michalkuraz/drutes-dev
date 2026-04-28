@@ -10,8 +10,9 @@ module ncglobvars
   type(datetime_t), public :: starttime, ncstart
   integer(kind=ikind) :: geograzone = 32
   real(kind=rkind), dimension(:), allocatable :: nodealt
-  real(kind=rkind) :: Qmin = 250.0
-  real(kind=rkind) :: LSdisp = 20000.0
+  real(kind=rkind) :: Qmin 
+  real(kind=rkind) :: LSdisp 
+  real(kind=rkind) :: cinit_ls
 
 	
 	

@@ -22,6 +22,7 @@ module init_netcdf
       logical :: success
       real(kind=rkind) :: q
       character(len=1024) :: errmsg
+      integer(kind=ikind), dimension(3) :: datearray
       
       starttime%year = 2010
       starttime%month = 1
@@ -29,6 +30,43 @@ module init_netcdf
       starttime%hour = 0
       starttime%minute = 0
       starttime%second = 0
+      
+      
+      
+      
+      open(newunit=fileconf, file="drutes.conf/netcdf/netcdf.conf", action="read", status="old")
+      
+!      read_int_array(r, fileid, ranges, errmsg, checklen, noexit)
+
+      call fileread(datearray, fileconf)
+      
+      if (datearray(1) < 1900) then
+        write(errmsg, *) "----------------------------------", new_line("a"), &
+                        "W: the year of your simulation start is very old, check drutes.conf/netcdf/netcdf.conf", new_line("a"), &
+                        "the year you defined is:", datearray(1), new_line("a"), "check your inputs! however simulation continues",&
+                        new_line("a"), "----------------------------------"
+        call write_log(cut(errmsg))
+      end if
+      
+      stop
+      
+!      call fileread(i, fileconf, ranges=(/0.0_rkind, huge(0.0_rkind)/), &
+!                    errmsg="incorrect dispersivity definition in drutes.conf/netcdf/netcdf.conf")
+                    
+      print *, datearray
+      
+      
+      call fileread(LSdisp, fileconf, ranges=(/0.0_rkind, huge(0.0_rkind)/), &
+                    errmsg="incorrect dispersivity definition in drutes.conf/netcdf/netcdf.conf")
+      
+      
+      call fileread(Qmin, fileconf, ranges=(/0.0_rkind, huge(0.0_rkind)/), &
+                    errmsg="incorrect Qmin definition in drutes.conf/netcdf/netcdf.conf")
+    
+      call fileread(cinit_ls, fileconf, ranges=(/0.0_rkind, huge(0.0_rkind)/), &
+                    errmsg="incorrect c initial definition in drutes.conf/netcdf/netcdf.conf")
+
+      
       
       addedbc = maxval(nodes%edge) + 1
       
@@ -75,8 +113,6 @@ module init_netcdf
       end do
       
       call terrain_slopes()
-      
-      open(newunit=fileconf, file="drutes.conf/netcdf/netcdf.conf", action="read", status="old")
       
       call readbcvals(unitW=fileconf, struct=pde(1)%bc, dimen=2_ikind, &
         dirname="drutes.conf/netcdf/")

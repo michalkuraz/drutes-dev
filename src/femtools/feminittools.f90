@@ -162,6 +162,8 @@ module feminittools
 
       i = ubound(pde,1)
       
+      call write_log(text="matrix dimension is (NDOFs):", int1=maxval(pde(i)%permut(:)))
+      
       if (drutes_config%it_method /= 1) then
       	call spmatrix%init(maxval(pde(i)%permut(:)),maxval(pde(i)%permut(:)))
       end if
