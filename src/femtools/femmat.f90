@@ -64,6 +64,12 @@ module femmat
       real(kind=rkind), dimension(:), allocatable :: vcttmp
       real(kind=rkind) :: lambda_l, lambda_h, tmpxx=0, maxtime=0, solver_start, solver_end, picard_old
       
+     
+!      real(kind=rkind), dimension(2) :: printtimes
+!      logical, dimension(2) :: printed = .false.
+!      integer(kind=ikind) :: printpos = 1
+!      character(len=124) :: mtxname
+      
       integer, save :: pocitac=0
       character(len=100) :: soubor
 
@@ -74,6 +80,7 @@ module femmat
       
       picard_old = huge(picard_old)
       
+!      printtimes = [10.0_rkind, 200.0_rkind]
       
       do
 
@@ -87,7 +94,13 @@ module femmat
         solver_error = .false.
         call solve_matrix(spmatrix, pde_common%bvect(1:fin), pde_common%xvect(1:fin,3),  itmax1=fin, &
             reps1=1e-14_rkind, itfin1=pcg_it, repsfin1=reps_err)
-            
+         
+!        if (time > printtimes(printpos) .and. .not. printed(printpos) ) then
+!			write(unit=mtxname, fmt=*) int2char(printpos), ".mtx"
+!			printed(printpos) = .true.
+!			call printmtx(spmatrix, name=cut(mtxname))
+!			printpos = min(ubound(printtimes,1), printpos + 1)
+!		end if
             
         if (solver_error) then
           ierr = 1

@@ -537,6 +537,31 @@ module core_tools
   end subroutine hyperplane_coeff
   
   
+  function int2char(i) result(str)
+	use iso_fortran_env, only: int8, int16, int32, int64
+    class(*), intent(in) :: i
+    character(:), allocatable :: str
+
+    character(128) :: tmp
+
+    select type (i)
+      type is (integer(int8))
+         write(tmp, '(i0)') i
+      type is (integer(int16))
+         write(tmp, '(i0)') i
+      type is (integer(int32))
+         write(tmp, '(i0)') i
+      type is (integer(int64))
+         write(tmp, '(i0)') i
+      class default
+         error stop "exited from core_tools::int2char"
+     end select
+
+     str = trim(tmp)
+
+   end function int2char
+  
+  
  
   
   
