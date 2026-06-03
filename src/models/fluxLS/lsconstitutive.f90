@@ -67,7 +67,7 @@ module lsconstitutive
       end if
       
       if (present(flux)) then
-        flux = q*gradsl/elements%areas(el)
+        flux = -q*gradsl/elements%areas(el)
       end if
       
       if (present(flux_length)) then
