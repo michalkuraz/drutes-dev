@@ -37,8 +37,10 @@ module ADE_pointers
       integer(kind=ikind), intent(out) :: processes
       integer :: adeconf, ierr
       real(kind=rkind), dimension(:), allocatable :: tmp_array
-      integer(kind=ikind) :: i
+      integer(kind=ikind) :: i, D
       character(len=4096) :: msg
+      
+      D = drutes_config%dimen
       
       open(newunit=adeconf, file="drutes.conf/ADE/ADE.conf", status="old", action="read", iostat=ierr)
       
@@ -52,12 +54,12 @@ module ADE_pointers
       allocate(adepar(maxval(elements%material)))
       
       if (.not. use_richards) then
-         allocate(tmp_array(2))
+         allocate(tmp_array(D+1))
          do i=1, maxval(elements%material)
            call fileread(tmp_array, adeconf, errmsg="Convection and water content has to be defined for each layer.", &
                         checklen=.true.)
-           adepar(i)%convection = tmp_array(1)
-           adepar(i)%water_cont = tmp_array(2)
+           adepar(i)%convection(1:D) = tmp_array(1:D)
+           adepar(i)%water_cont = tmp_array(D+1)
          end do
       end if
       

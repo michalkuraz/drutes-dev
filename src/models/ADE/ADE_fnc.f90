@@ -132,12 +132,12 @@ module ADE_fnc
       
       if (pde_loc%order == 1) then
         if (present(vector_out)) then
-          vector_out = adepar(layer)%convection
+          vector_out(1:drutes_config%dimen) = adepar(layer)%convection(1:drutes_config%dimen)
         end if
         
         
         if (present(scalar)) then
-          scalar = abs(adepar(layer)%convection)
+          scalar = norm2(adepar(layer)%convection(1:drutes_config%dimen))
         end if
       else
         if (present(vector_out)) then

@@ -45,7 +45,7 @@ module ade_globals
     real(kind=rkind) :: anisoangle
     real(kind=rkind), dimension(:,:), allocatable :: diff
     real(kind=rkind), dimension(:), allocatable :: orders, lambda 
-    real(kind=rkind) :: convection
+    real(kind=rkind), dimension(3) :: convection
     real(kind=rkind) :: water_cont
     character(len=2) :: icondtype
     real(kind=rkind) :: cmax
