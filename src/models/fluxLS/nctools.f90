@@ -108,17 +108,110 @@ module nctools
     end do
     
 	end subroutine terrain_slopes
+  
+  subroutine ncelslope()
+    use typy
+    use global_objs
+    use ncglobvars
+    use globals
 
 
+    integer(kind=ikind) :: ielem
+    integer(kind=ikind) :: i
+    integer(kind=ikind) :: inode
 
-		
-	
-    
-    
-    
-    
+    integer(kind=ikind), dimension(4) :: nds
 
-    
+    real(kind=rkind), dimension(4) :: x
+    real(kind=rkind), dimension(4) :: y
+    real(kind=rkind), dimension(4) :: z
+
+    real(kind=rkind) :: xbar, ybar, zbar
+    real(kind=rkind) :: xx, yy, xy
+    real(kind=rkind) :: xz, yz
+    real(kind=rkind) :: det
+    real(kind=rkind) :: dzdx, dzdy
+    logical :: valid_element
+
+    if (allocated(ncelements%ders)) then
+      deallocate(ncelements%ders)
+    end if
+
+    allocate(ncelements%ders(ncelements%kolik, drutes_config%dimen, 1))
+
+    ncelements%ders = missing
+
+    do ielem = 1, ncelements%kolik
+
+      nds(:) = ncelements%data(ielem, 1:4)
+
+      valid_element = .true.
+
+      do i = 1, 4
+
+        inode = nds(i)
+
+        if (inode <= 0_ikind .or. inode > ncnodes%kolik) then
+          valid_element = .false.
+          exit
+        end if
+
+        x(i) = ncnodes%data(inode, 1)
+        y(i) = ncnodes%data(inode, 2)
+        z(i) = ncnodes%data(inode, 3)
+
+        if (abs(z(i) - missing) < 1.0e-8_rkind) then
+          valid_element = .false.
+          exit
+        end if
+
+      end do
+
+      if (.not. valid_element) then
+        ncelements%ders(ielem, 1, 1) = missing
+        ncelements%ders(ielem, 2, 1) = missing
+        cycle
+      end if
+
+      xbar = sum(x) / 4.0_rkind
+      ybar = sum(y) / 4.0_rkind
+      zbar = sum(z) / 4.0_rkind
+
+      xx = 0.0_rkind
+      yy = 0.0_rkind
+      xy = 0.0_rkind
+      xz = 0.0_rkind
+      yz = 0.0_rkind
+
+      do i = 1_ikind, 4_ikind
+        xx = xx + (x(i) - xbar) * (x(i) - xbar)
+        yy = yy + (y(i) - ybar) * (y(i) - ybar)
+        xy = xy + (x(i) - xbar) * (y(i) - ybar)
+
+        xz = xz + (x(i) - xbar) * (z(i) - zbar)
+        yz = yz + (y(i) - ybar) * (z(i) - zbar)
+      end do
+
+      det = xx*yy - xy*xy
+
+      if (abs(det) < 1.0e-20_rkind) then
+        ncelements%ders(ielem, 1, 1) = missing
+        ncelements%ders(ielem, 2, 1) = missing
+        cycle
+      end if
+
+      dzdx = (xz*yy - yz*xy) / det
+      dzdy = (yz*xx - xz*xy) / det
+
+      ncelements%ders(ielem, 1, 1) = dzdx
+      ncelements%ders(ielem, 2, 1) = dzdy
+
+    end do
+
+  end subroutine ncelslope
 
 
 end module nctools
+
+
+

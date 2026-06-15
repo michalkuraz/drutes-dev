@@ -16,6 +16,8 @@ module lsconstitutive
       use ncglobvars
       use core_tools
       use netcdfflux
+      use ncfluxarea
+      use init_netcdf
     
       class(pde_str), intent(in) :: pde_loc
       integer(kind=ikind), intent(in)                          :: layer
@@ -28,12 +30,31 @@ module lsconstitutive
       
       real(kind=rkind), dimension(2) :: xy, gradsl
       integer(kind=ikind) :: nowhrs, el
-      real(kind=rkind) :: tmp, q
+      real(kind=rkind) :: tmp, q, Wcell, Acell
       logical :: success
       character(len=1024) :: errmsg
       
+      if (quadpnt%type_pnt == "gqnd") then
+        if (.not. ncfluxdata%activeel(quadpnt%element)) then
+          if (present(flux)) flux = 0
+          if (present(flux_length)) flux_length = 0
+          RETURN
+        end if
+        if (ncfluxdata%cellarea(quadpnt%element) < 0) then
+          print *, "your active mesh is outside of netcdf file"
+          print *, "exited from lsconstitutive::ncflux"
+          error stop
+        end if
+        Acell = ncfluxdata%cellarea(quadpnt%element)
+        Wcell = sqrt(Acell)
+      else
+        Acell = 1
+        Wcell  = 1
+      end if
+      
       
       call getcoor(quadpnt, xy)
+      
       
       nowhrs = ora_di_ini + int(time/86400.0_rkind)*24
       

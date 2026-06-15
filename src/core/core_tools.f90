@@ -205,6 +205,22 @@ module core_tools
 
   end subroutine write_log
   
+  function avgarr(a) result(c)
+    use typy
+    real(kind=rkind), dimension(:), intent(in) :: a
+    real(kind=rkind) :: c
+    integer(kind=ikind) :: i
+    real(kind=rkind) :: total
+    
+    total = 0
+    do i=1, ubound(a,1)
+      total = total + a(i)
+    end do
+    
+    c = total/ubound(a,1)
+    
+  end function avgarr
+  
 
 
 

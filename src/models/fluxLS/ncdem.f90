@@ -1,14 +1,20 @@
-
-
 module ncdem
   use netcdf
   use typy
 
+  implicit none
 
-  private :: dem_cache
-  private :: dem_open, dem_close, dem_get_altitude
+  private
 
-  type, private :: dem_cache
+  character(len=*), parameter :: dem_filename = "drutes.conf/netcdf/dem.nc"
+
+  public :: dem_cache
+  public :: dem_open
+  public :: dem_close
+  public :: dem_get_altitude
+  public :: getmeshalt
+
+  type, public :: dem_cache
     logical :: is_open = .false.
 
     ! NetCDF-facing identifiers
@@ -26,17 +32,19 @@ module ncdem
     logical :: has_fill = .false.
     real(kind=rkind) :: fill_value = -9999.0_rkind
 
-    real(kind=rkind), dimension(:), allocatable :: lat, lon
+    real(kind=rkind), dimension(:), allocatable :: lat
+    real(kind=rkind), dimension(:), allocatable :: lon
     real(kind=rkind), dimension(:,:), allocatable :: z
     ! stored internally always as z(lat,lon)
   end type dem_cache
 
+
 contains
 
-  subroutine dem_open(dem, filename, ok)
+
+  subroutine dem_open(dem, ok)
     type(dem_cache), intent(inout) :: dem
-    character(len=*), intent(in)   :: filename
-    logical, intent(out)           :: ok
+    logical, intent(out) :: ok
 
     integer :: ncerr
     integer :: nvars, ngatts, unlimdimid
@@ -52,7 +60,7 @@ contains
       call dem_close(dem)
     end if
 
-    ncerr = nf90_open(trim(filename), NF90_NOWRITE, dem%ncid)
+    ncerr = nf90_open(trim(dem_filename), NF90_NOWRITE, dem%ncid)
     if (ncerr /= nf90_noerr) return
 
     ncerr = nf90_inquire(dem%ncid, nVariables=nvars, nAttributes=ngatts, unlimitedDimId=unlimdimid)
@@ -110,7 +118,9 @@ contains
 
     if (dimids(1) == lat_dimids(1) .and. dimids(2) == lon_dimids(1)) then
       dem%dem_order = 1_ikind
+
       allocate(dem%z(dem%nlat, dem%nlon))
+
       ncerr = nf90_get_var(dem%ncid, dem%dem_varid, dem%z)
       if (ncerr /= nf90_noerr) then
         call close_ncid_only(dem)
@@ -120,7 +130,9 @@ contains
 
     else if (dimids(1) == lon_dimids(1) .and. dimids(2) == lat_dimids(1)) then
       dem%dem_order = 2_ikind
+
       allocate(tmp(dem%nlon, dem%nlat))
+
       ncerr = nf90_get_var(dem%ncid, dem%dem_varid, tmp)
       if (ncerr /= nf90_noerr) then
         if (allocated(tmp)) deallocate(tmp)
@@ -129,7 +141,9 @@ contains
       end if
 
       allocate(dem%z(dem%nlat, dem%nlon))
+
       dem%z = transpose(tmp)
+
       deallocate(tmp)
 
     else
@@ -138,26 +152,30 @@ contains
     end if
 
     dem%has_fill = .false.
+
     ncerr = nf90_get_att(dem%ncid, dem%dem_varid, "_FillValue", dem%fill_value)
     if (ncerr == nf90_noerr) then
       dem%has_fill = .true.
     else
       ncerr = nf90_get_att(dem%ncid, dem%dem_varid, "missing_value", dem%fill_value)
-      if (ncerr == nf90_noerr) dem%has_fill = .true.
+      if (ncerr == nf90_noerr) then
+        dem%has_fill = .true.
+      end if
     end if
 
     call close_ncid_only(dem)
 
     dem%is_open = .true.
     ok = .true.
+
   end subroutine dem_open
 
 
-   subroutine dem_get_altitude(dem, lat0, lon0, altitude, ok)
-    type(dem_cache), intent(in)      :: dem
-    real(kind=rkind), intent(in)     :: lat0, lon0
-    real(kind=rkind), intent(out)    :: altitude
-    logical, intent(out)             :: ok
+  subroutine dem_get_altitude(dem, lat0, lon0, altitude, ok)
+    type(dem_cache), intent(in)   :: dem
+    real(kind=rkind), intent(in)  :: lat0, lon0
+    real(kind=rkind), intent(out) :: altitude
+    logical, intent(out)          :: ok
 
     integer(kind=ikind) :: i1, i2, j1, j2
     logical :: ok_local
@@ -223,17 +241,15 @@ contains
     if (dem%has_fill) then
       if (is_fill(z11, dem%fill_value) .or. is_fill(z12, dem%fill_value) .or. &
           is_fill(z21, dem%fill_value) .or. is_fill(z22, dem%fill_value)) then
-!        print *, "dem_get_altitude: DEM fill value encountered."
-!        print *, "  input lat/lon      = ", lat0, lon0
-!        print *, "  adjusted longitude = ", x
-!        print *, "  surrounding values = ", z11, z12, z21, z22
         altitude = dem%fill_value
         return
       end if
     end if
 
     altitude = bilinear(z11, z12, z21, z22, wx, wy)
+
     ok = .true.
+
   end subroutine dem_get_altitude
 
 
@@ -255,6 +271,7 @@ contains
     dem%dem_order  = 0_ikind
     dem%has_fill   = .false.
     dem%fill_value = -9999.0_rkind
+
   end subroutine dem_close
 
 
@@ -266,6 +283,7 @@ contains
       ncerr = nf90_close(dem%ncid)
       dem%ncid = -1
     end if
+
   end subroutine close_ncid_only
 
 
@@ -275,8 +293,9 @@ contains
 
     z = (1.0_rkind - wx)*(1.0_rkind - wy)*z11 + &
          wx            *(1.0_rkind - wy)*z12 + &
-         (1.0_rkind - wx)*wy           *z21 + &
-         wx            *wy            *z22
+        (1.0_rkind - wx)*wy            *z21 + &
+         wx            *wy             *z22
+
   end function bilinear
 
 
@@ -294,7 +313,10 @@ contains
     i2 = -1_ikind
 
     n = size(arr, kind=ikind)
-    if (n < 2_ikind) return
+
+    if (n < 2_ikind) then
+      return
+    end if
 
     ascending = (arr(n) > arr(1))
 
@@ -335,6 +357,7 @@ contains
     i1 = lo
     i2 = hi
     ok = .true.
+
   end subroutine binary_search_bracket
 
 
@@ -348,15 +371,23 @@ contains
     lonmax = maxval(lon_arr)
     x = lon0
 
-    if (lonmin >= 0.0_rkind .and. x < 0.0_rkind) x = x + 360.0_rkind
-    if (lonmax <= 180.0_rkind .and. x > 180.0_rkind) x = x - 360.0_rkind
+    if (lonmin >= 0.0_rkind .and. x < 0.0_rkind) then
+      x = x + 360.0_rkind
+    end if
+
+    if (lonmax <= 180.0_rkind .and. x > 180.0_rkind) then
+      x = x - 360.0_rkind
+    end if
+
   end function adjust_longitude_to_grid
 
 
   pure logical function is_fill(z, fill_value)
     real(kind=rkind), intent(in) :: z, fill_value
 
-    is_fill = abs(z - fill_value) < 100.0_rkind*epsilon(1.0_rkind)*max(1.0_rkind, abs(fill_value))
+    is_fill = abs(z - fill_value) < &
+      100.0_rkind*epsilon(1.0_rkind)*max(1.0_rkind, abs(fill_value))
+
   end function is_fill
 
 
@@ -378,7 +409,8 @@ contains
     lon_varid = -1
 
     do varid = 1, nvars
-      ncerr = nf90_inquire_variable(ncid, varid, name=name, xtype=xtype, ndims=ndims, dimids=dimids, natts=natts)
+      ncerr = nf90_inquire_variable(ncid, varid, name=name, xtype=xtype, &
+                                    ndims=ndims, dimids=dimids, natts=natts)
       if (ncerr /= nf90_noerr) return
 
       if (ndims /= 1) cycle
@@ -407,6 +439,7 @@ contains
     end do
 
     ok = found_lat .and. found_lon
+
   end subroutine find_coordinate_variables
 
 
@@ -438,7 +471,8 @@ contains
     do varid = 1, nvars
       if (varid == lat_varid .or. varid == lon_varid) cycle
 
-      ncerr = nf90_inquire_variable(ncid, varid, name=name, xtype=xtype, ndims=ndims, dimids=dimids, natts=natts)
+      ncerr = nf90_inquire_variable(ncid, varid, name=name, xtype=xtype, &
+                                    ndims=ndims, dimids=dimids, natts=natts)
       if (ncerr /= nf90_noerr) return
 
       if (ndims /= 2) cycle
@@ -460,10 +494,15 @@ contains
         return
       end if
 
-      if (dem_varid < 0) dem_varid = varid
+      if (dem_varid < 0) then
+        dem_varid = varid
+      end if
     end do
 
-    if (dem_varid >= 0) ok = .true.
+    if (dem_varid >= 0) then
+      ok = .true.
+    end if
+
   end subroutine find_dem_variable
 
 
@@ -490,6 +529,7 @@ contains
     n = int(n_default, kind=ikind)
 
     allocate(arr(n))
+
     ncerr = nf90_get_var(ncid, varid, arr)
     if (ncerr /= nf90_noerr) then
       if (allocated(arr)) deallocate(arr)
@@ -498,6 +538,7 @@ contains
     end if
 
     ok = .true.
+
   end subroutine read_axis_1d
 
 
@@ -509,7 +550,9 @@ contains
     integer :: ncerr
 
     value = ""
+
     ncerr = nf90_get_att(ncid, varid, trim(attname), value)
+
   end subroutine try_get_text_att
 
 
@@ -523,6 +566,7 @@ contains
     if (trim(lower(standard_name)) == "latitude") is_latitude_variable = .true.
     if (index(lower(units), "degrees_north") > 0) is_latitude_variable = .true.
     if (index(lower(long_name), "latitude") > 0) is_latitude_variable = .true.
+
   end function is_latitude_variable
 
 
@@ -536,6 +580,7 @@ contains
     if (trim(lower(standard_name)) == "longitude") is_longitude_variable = .true.
     if (index(lower(units), "degrees_east") > 0) is_longitude_variable = .true.
     if (index(lower(long_name), "longitude") > 0) is_longitude_variable = .true.
+
   end function is_longitude_variable
 
 
@@ -552,6 +597,7 @@ contains
     if (index(lower(long_name), "elev") > 0) looks_like_dem_variable = .true.
     if (trim(lower(units)) == "m") looks_like_dem_variable = .true.
     if (index(lower(units), "meter") > 0) looks_like_dem_variable = .true.
+
   end function looks_like_dem_variable
 
 
@@ -563,15 +609,17 @@ contains
 
     do i = 1_ikind, len(s, kind=ikind)
       c = iachar(s(i:i), kind=ikind)
+
       if (c >= iachar('A', kind=ikind) .and. c <= iachar('Z', kind=ikind)) then
         out(i:i) = achar(c + 32)
       else
         out(i:i) = s(i:i)
       end if
     end do
+
   end function lower
-  
-  
+
+
   subroutine getmeshalt()
     use typy
     use globals
@@ -580,39 +628,36 @@ contains
     use nctools
     use core_tools
 
-
     type(dem_cache) :: dem
-    real(kind=rkind) :: z, lat, lon
+    real(kind=rkind) :: lat, lon
     integer(kind=ikind) :: i
     logical :: success
     character(len=4096) :: msg
 
-    call dem_open(dem, "drutes.conf/netcdf/dem.nc", success)
-    
+    call dem_open(dem, success)
+
     if (.not. success) then
-      print *, "Unable to open file drutes.conf/netcdf/dem.nc"
+      print *, "Unable to open DEM file: ", trim(dem_filename)
       ERROR STOP
     end if
-    
+
     allocate(nodealt(nodes%kolik))
-    
-    do i=1, nodes%kolik
+
+    do i = 1, nodes%kolik
       call utm2latlong(nodes%data(i,1), nodes%data(i,2), lat, lon)
+
       call dem_get_altitude(dem, lat, lon, nodealt(i), success)
-      if (.not. success) then
-      write(msg, *) "W: failed to get dem altitude, check file drutes.conf/netcdf/dem.nc, for node:", i, &
-						", node will be deactivated"
-        call write_log(msg)
-      end if
+
+      ! if (.not. success) then
+      !   write(msg, *) "W: failed to get dem altitude, check file ", trim(dem_filename), &
+      !                 ", for node:", i, ", node will be deactivated"
+      !   call write_log(msg)
+      ! end if
     end do
-    
 
     call dem_close(dem)
+
   end subroutine getmeshalt
-  
-  
+
 
 end module ncdem
-
-
-

@@ -1,6 +1,7 @@
 module ncglobvars
   use typy
   use datetime
+  use global_objs
 
   integer :: netcdfID
   integer :: varid
@@ -17,55 +18,63 @@ module ncglobvars
 	
 	
 	
-	type :: ncfluxdata_type
-	  logical :: initialized = .false.
-	  logical :: slice_loaded = .false.
+  type :: ncfluxdata_type
+    logical :: initialized = .false.
+    logical :: slice_loaded = .false.
 
-	  character(len=64) :: lon_name  = "lon"
-	  character(len=64) :: lat_name  = "lat"
-	  character(len=64) :: time_name = "time"
-	  character(len=64) :: var_name  = "Qrouted"
+    character(len=64) :: lon_name  = "lon"
+    character(len=64) :: lat_name  = "lat"
+    character(len=64) :: time_name = "time"
+    character(len=64) :: var_name  = "Qrouted"
 
-	  integer :: lon_varid = -1
-	  integer :: lat_varid = -1
-	  integer :: time_varid = -1
-	  integer :: q_varid = -1
+    integer :: lon_varid = -1
+    integer :: lat_varid = -1
+    integer :: time_varid = -1
+    integer :: q_varid = -1
 
-	  integer(kind=ikind) :: nlon = 0_ikind
-	  integer(kind=ikind) :: nlat = 0_ikind
-	  integer(kind=ikind) :: ntime = 0_ikind
-	  integer(kind=ikind) :: current_time_index = -1_ikind
+    integer(kind=ikind) :: nlon = 0_ikind
+    integer(kind=ikind) :: nlat = 0_ikind
+    integer(kind=ikind) :: ntime = 0_ikind
+    integer(kind=ikind) :: current_time_index = -1_ikind
 
-	  real(kind=rkind) :: fill_value = -9999.0_rkind
-	  
-	  logical :: has_fill = .false.
+    real(kind=rkind) :: fill_value = -9999.0_rkind
+    logical :: has_fill = .false.
 
-	  logical :: has_bounds = .false.
+    logical :: has_bounds = .false.
 
-	  real(kind=rkind), dimension(:), allocatable :: lon
-	  real(kind=rkind), dimension(:), allocatable :: lat
-	  integer(kind=ikind), dimension(:), allocatable :: time
+    real(kind=rkind), dimension(:), allocatable :: lon
+    real(kind=rkind), dimension(:), allocatable :: lat
+    integer(kind=ikind), dimension(:), allocatable :: time
 
-	  real(kind=rkind), dimension(:,:), allocatable :: qslice
+    real(kind=rkind), dimension(:,:), allocatable :: qslice
 
-	  real(kind=rkind), dimension(:,:), allocatable :: lat_bnds
-	  real(kind=rkind), dimension(:,:), allocatable :: lon_bnds
-	  
-	  logical :: bounds_index_ready = .false.
+    real(kind=rkind), dimension(:,:), allocatable :: lat_bnds
+    real(kind=rkind), dimension(:,:), allocatable :: lon_bnds
 
-	  real(kind=rkind) :: lat_b0 = 0.0_rkind
-	  real(kind=rkind) :: lon_b0 = 0.0_rkind
-	  real(kind=rkind) :: dlat_b = 0.0_rkind
-	  real(kind=rkind) :: dlon_b = 0.0_rkind
-	end type ncfluxdata_type
+    logical :: bounds_index_ready = .false.
+
+    real(kind=rkind) :: lat_b0 = 0.0_rkind
+    real(kind=rkind) :: lon_b0 = 0.0_rkind
+    real(kind=rkind) :: dlat_b = 0.0_rkind
+    real(kind=rkind) :: dlon_b = 0.0_rkind
+    logical, dimension(:), allocatable :: activeel
+    real(kind=rkind), dimension(:), allocatable :: cellarea
+  end type ncfluxdata_type
 
 	type(ncfluxdata_type) :: ncfluxdata
+  
+  real(kind=rkind), dimension(:,:), allocatable :: nccellxy
 	
 	
 	
 	real(kind=rkind), dimension(:,:), allocatable :: elslopes
 	
 	integer(kind=ikind) :: addedbc
+  
+  type(node) :: ncnodes
+  type(element) :: ncelements
+  
+  integer(kind=ikind), dimension(:), allocatable :: el2ncgrid
 
 
 

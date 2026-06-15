@@ -218,6 +218,7 @@ module geom_tools
       case("obpt")
         array = observation_array(quadpnt%order)%xyz
       case("xypt")
+        print *, quadpnt%xy, ubound(array,1)
         array = quadpnt%xy
       case("ndpt")
         array = nodes%data(quadpnt%order,:)

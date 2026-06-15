@@ -16,13 +16,17 @@ module init_netcdf
       use core_tools
       use pde_objs
       use readtools
+      use ncfluxarea
+      use ncmesh
+      use ncmap
             
       integer :: ierr, filetmp, fileconf
-      integer(kind=ikind) :: i
+      integer(kind=ikind) :: i, bccnt, j
       logical :: success
       real(kind=rkind) :: q
       character(len=1024) :: errmsg
       integer(kind=ikind), dimension(3) :: datearray
+      real(kind=rkind), dimension(2) :: xy
       
       starttime%year = 2010
       starttime%month = 1
@@ -81,8 +85,21 @@ module init_netcdf
     
       call read_ncorigin(netcdfID, ncstart)
       
+
+      
       call ncflux_init(success, errmsg)
    
+      if (.not. success) then
+        print *, cut(errmsg)
+        print *, "unsupported structure of the file drutes.conf/netcdf/mRM_Fluxes_States.nc"
+        print *, "is this correct output from mHM?"
+        print *, "after succesfull mHM simulation you should copy "
+        print *, "      mRM_Fluxes_States.nc -> drutes.conf/netcdf/mRM_Fluxes_States.nc"
+        ERROR STOP
+      end if
+      
+      call read_ncbounds(netcdfID, success, errmsg)
+      
       if (.not. success) then
         print *, cut(errmsg)
         print *, "unsupported structure of the file drutes.conf/netcdf/mRM_Fluxes_States.nc"
@@ -115,6 +132,50 @@ module init_netcdf
         
         
       end do
+      
+      allocate(ncfluxdata%activeel(elements%kolik))
+      
+      do i=1, elements%kolik
+        bccnt = 0
+        do j=1, ubound(elements%data,2)
+          if (nodes%edge(elements%data(i,j)) == addedbc) then
+            bccnt = bccnt + 1
+          end if
+        end do
+        if (bccnt == ubound(elements%data,2)) then
+          ncfluxdata%activeel(i) = .false.
+        else
+          ncfluxdata%activeel(i) = .true.
+        end if
+      end do
+      
+      allocate(ncfluxdata%cellarea(elements%kolik))
+      
+
+      
+      do i = 1, elements%kolik
+        xy(1) = avgarr(nodes%data(elements%data(i,:),1))
+        xy(2) = avgarr(nodes%data(elements%data(i,:),2))
+        call ncflux_cell_area_xy(xy(1), xy(2), ncfluxdata%cellarea(i), success, errmsg)
+      end do
+      
+      
+      call getncmesh(netcdfID, ncnodes, ncelements, success, errmsg)
+
+      if (.not. success) then
+        print *, trim(errmsg)
+        error stop
+      end if
+      
+      call ncelslope()
+      
+      call mapel()
+      
+      call printmtx(el2ncgrid)
+      
+
+      stop
+      
       
       call terrain_slopes()
       
@@ -215,7 +276,79 @@ module init_netcdf
     end subroutine read_ncorigin
     
     
+    subroutine read_ncbounds(ncid, ok, errmsg)
+      use netcdf
+      use typy
+      use ncglobvars
+      
 
+      integer, intent(in) :: ncid
+      logical, intent(out) :: ok
+      character(len=*), intent(out) :: errmsg
+
+      integer :: ierr
+      integer :: lat_bnds_varid, lon_bnds_varid
+      real(kind=rkind), allocatable :: tmp_lat_bnds(:,:)
+      real(kind=rkind), allocatable :: tmp_lon_bnds(:,:)
+
+      ok = .false.
+      errmsg = "read_ncbounds: unknown error"
+
+      ncfluxdata%has_bounds = .false.
+
+      ierr = nf90_inq_varid(ncid, "lat_bnds", lat_bnds_varid)
+      if (ierr /= nf90_noerr) then
+        errmsg = "read_ncbounds: cannot find lat_bnds: " // trim(nf90_strerror(ierr))
+        return
+      end if
+
+      ierr = nf90_inq_varid(ncid, "lon_bnds", lon_bnds_varid)
+      if (ierr /= nf90_noerr) then
+        errmsg = "read_ncbounds: cannot find lon_bnds: " // trim(nf90_strerror(ierr))
+        return
+      end if
+
+      if (allocated(ncfluxdata%lat_bnds)) deallocate(ncfluxdata%lat_bnds)
+      if (allocated(ncfluxdata%lon_bnds)) deallocate(ncfluxdata%lon_bnds)
+
+      ! ncdump shows:
+      !   lat_bnds(lat,bnds)
+      !   lon_bnds(lon,bnds)
+      !
+      ! For NetCDF Fortran, read into reversed shape:
+      !   tmp_lat_bnds(bnds,lat)
+      !   tmp_lon_bnds(bnds,lon)
+      allocate(tmp_lat_bnds(2, ncfluxdata%nlat))
+      allocate(tmp_lon_bnds(2, ncfluxdata%nlon))
+
+      ierr = nf90_get_var(ncid, lat_bnds_varid, tmp_lat_bnds)
+      if (ierr /= nf90_noerr) then
+        errmsg = "read_ncbounds: cannot read lat_bnds: " // trim(nf90_strerror(ierr))
+        deallocate(tmp_lat_bnds, tmp_lon_bnds)
+        return
+      end if
+
+      ierr = nf90_get_var(ncid, lon_bnds_varid, tmp_lon_bnds)
+      if (ierr /= nf90_noerr) then
+        errmsg = "read_ncbounds: cannot read lon_bnds: " // trim(nf90_strerror(ierr))
+        deallocate(tmp_lat_bnds, tmp_lon_bnds)
+        return
+      end if
+
+      ! Store internally as bounds(index,1:2)
+      allocate(ncfluxdata%lat_bnds(ncfluxdata%nlat, 2))
+      allocate(ncfluxdata%lon_bnds(ncfluxdata%nlon, 2))
+
+      ncfluxdata%lat_bnds = transpose(tmp_lat_bnds)
+      ncfluxdata%lon_bnds = transpose(tmp_lon_bnds)
+
+      deallocate(tmp_lat_bnds, tmp_lon_bnds)
+
+      ncfluxdata%has_bounds = .true.
+      ok = .true.
+      errmsg = "everything ok"
+      
+    end subroutine read_ncbounds
 
 
 
