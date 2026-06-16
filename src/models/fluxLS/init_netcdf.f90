@@ -19,6 +19,7 @@ module init_netcdf
       use ncfluxarea
       use ncmesh
       use ncmap
+      use geom_tools
             
       integer :: ierr, filetmp, fileconf
       integer(kind=ikind) :: i, bccnt, j
@@ -27,6 +28,7 @@ module init_netcdf
       character(len=1024) :: errmsg
       integer(kind=ikind), dimension(3) :: datearray
       real(kind=rkind), dimension(2) :: xy
+      real(kind=rkind), dimension(4,2) :: pts
       
       starttime%year = 2010
       starttime%month = 1
@@ -151,7 +153,7 @@ module init_netcdf
       
       allocate(ncfluxdata%cellarea(elements%kolik))
       
-
+      
       
       do i = 1, elements%kolik
         xy(1) = avgarr(nodes%data(elements%data(i,:),1))
@@ -171,13 +173,19 @@ module init_netcdf
       
       call mapel()
       
-      call printmtx(el2ncgrid)
-      
-
-      stop
-      
-      
       call terrain_slopes()
+      
+      allocate(ncelements%areas(ncelements%kolik))
+      
+      do i=1, ncelements%kolik
+        do j=1,4
+          pts(j,:) = ncnodes%data(ncelements%data(i,j),1:2)
+        end do
+
+        ncelements%areas(i) = quad_area(pts(1,:), pts(2,:), pts(3,:), pts(4,:))
+      end do
+      
+      
       
       call readbcvals(unitW=fileconf, struct=pde(1)%bc, dimen=2_ikind, &
         dirname="drutes.conf/netcdf/")

@@ -922,6 +922,31 @@ module geom_tools
   
   end function triarea
   
+  
+  pure function quad_area(a, b, c, d) result(area)
+    use typy
+
+    real(kind=rkind), dimension(2), intent(in) :: a, b, c, d
+    real(kind=rkind) :: area
+
+    real(kind=rkind), dimension(2) :: aa, bb, cc, dd
+    real(kind=rkind), dimension(2) :: origin
+
+    origin = 0.25_rkind * (a + b + c + d)
+
+    aa = a - origin
+    bb = b - origin
+    cc = c - origin
+    dd = d - origin
+
+    area = 0.5_rkind * abs( &
+        aa(1)*bb(2) - bb(1)*aa(2) + &
+        bb(1)*cc(2) - cc(1)*bb(2) + &
+        cc(1)*dd(2) - dd(1)*cc(2) + &
+        dd(1)*aa(2) - aa(1)*dd(2) )
+
+  end function quad_area
+  
   function tetravol(a,b,c,d) result(vol)
     use typy
     use simplelinalg

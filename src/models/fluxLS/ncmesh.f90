@@ -116,6 +116,7 @@ contains
       call cleanup_bounds(lat_bnds, lon_bnds, lat_corner, lon_corner)
       return
     end if
+    
 
     call bounds_to_corners(lat_bnds, lat_corner, success, errmsg)
     if (.not. success) then
@@ -128,6 +129,8 @@ contains
       call cleanup_bounds(lat_bnds, lon_bnds, lat_corner, lon_corner)
       return
     end if
+    
+
 
     if (size(lat_corner) /= nlat + 1) then
       errmsg = "getncmesh: invalid number of latitude corners"
@@ -181,6 +184,8 @@ contains
 
       end do
     end do
+    
+
 
     ielem = 0
 
@@ -212,7 +217,6 @@ contains
 
   end subroutine getncmesh
 
-
   subroutine read_bounds_2d(ncid, varid, ncell, bounds, success, errmsg)
     integer, intent(in) :: ncid
     integer, intent(in) :: varid
@@ -222,7 +226,11 @@ contains
     character(len=*), intent(out) :: errmsg
 
     integer :: ierr
-    real(kind=rkind), dimension(:,:), allocatable :: tmp
+    integer :: ndims
+    integer :: dimlen1, dimlen2
+    integer, dimension(NF90_MAX_VAR_DIMS) :: dimids
+
+    real(kind=rkind), dimension(:,:), allocatable :: tmp21
 
     success = .false.
     errmsg = "read_bounds_2d: unknown error"
@@ -236,28 +244,167 @@ contains
       return
     end if
 
-    allocate(tmp(2, ncell))
-
-    ierr = nf90_get_var(ncid, varid, tmp)
+    ierr = nf90_inquire_variable(ncid, varid, ndims=ndims, dimids=dimids)
 
     if (ierr /= nf90_noerr) then
-      errmsg = "read_bounds_2d: cannot read bounds variable: " // trim(nf90_strerror(ierr))
-      if (allocated(tmp)) then
-        deallocate(tmp)
-      end if
+      errmsg = "read_bounds_2d: cannot inquire bounds variable: " // trim(nf90_strerror(ierr))
       return
     end if
 
-    allocate(bounds(ncell, 2))
+    if (ndims /= 2) then
+      errmsg = "read_bounds_2d: bounds variable must have exactly 2 dimensions"
+      return
+    end if
 
-    bounds = transpose(tmp)
+    ierr = nf90_inquire_dimension(ncid, dimids(1), len=dimlen1)
 
-    deallocate(tmp)
+    if (ierr /= nf90_noerr) then
+      errmsg = "read_bounds_2d: cannot inquire first bounds dimension: " // trim(nf90_strerror(ierr))
+      return
+    end if
+
+    ierr = nf90_inquire_dimension(ncid, dimids(2), len=dimlen2)
+
+    if (ierr /= nf90_noerr) then
+      errmsg = "read_bounds_2d: cannot inquire second bounds dimension: " // trim(nf90_strerror(ierr))
+      return
+    end if
+
+    if (dimlen1 == ncell .and. dimlen2 == 2) then
+
+      allocate(bounds(ncell, 2))
+
+      ierr = nf90_get_var(ncid, varid, bounds)
+
+      if (ierr /= nf90_noerr) then
+        errmsg = "read_bounds_2d: cannot read bounds(ncell,2): " // trim(nf90_strerror(ierr))
+        if (allocated(bounds)) deallocate(bounds)
+        return
+      end if
+
+    else if (dimlen1 == 2 .and. dimlen2 == ncell) then
+
+      allocate(tmp21(2, ncell))
+
+      ierr = nf90_get_var(ncid, varid, tmp21)
+
+      if (ierr /= nf90_noerr) then
+        errmsg = "read_bounds_2d: cannot read bounds(2,ncell): " // trim(nf90_strerror(ierr))
+        if (allocated(tmp21)) deallocate(tmp21)
+        return
+      end if
+
+      allocate(bounds(ncell, 2))
+
+      bounds = transpose(tmp21)
+
+      deallocate(tmp21)
+
+    else
+
+      write(errmsg, '(A,I0,A,I0,A,I0)') &
+        "read_bounds_2d: unexpected bounds dimensions: ", dimlen1, " x ", dimlen2, &
+        ", expected ncell x 2 or 2 x ncell, ncell=", ncell
+
+      return
+
+    end if
 
     success = .true.
     errmsg = "everything ok"
 
   end subroutine read_bounds_2d
+
+
+!  subroutine read_bounds_2d(ncid, varid, ncell, bounds, success, errmsg)
+!    integer, intent(in) :: ncid
+!    integer, intent(in) :: varid
+!    integer, intent(in) :: ncell
+!    real(kind=rkind), dimension(:,:), allocatable, intent(out) :: bounds
+!    logical, intent(out) :: success
+!    character(len=*), intent(out) :: errmsg
+
+!    integer :: ierr
+!    real(kind=rkind), dimension(:,:), allocatable :: tmp
+
+!    success = .false.
+!    errmsg = "read_bounds_2d: unknown error"
+
+!    if (allocated(bounds)) then
+!      deallocate(bounds)
+!    end if
+
+!    if (ncell <= 0) then
+!      errmsg = "read_bounds_2d: invalid ncell"
+!      return
+!    end if
+
+!    allocate(tmp(2, ncell))
+
+!    ierr = nf90_get_var(ncid, varid, tmp)
+
+!    if (ierr /= nf90_noerr) then
+!      errmsg = "read_bounds_2d: cannot read bounds variable: " // trim(nf90_strerror(ierr))
+!      if (allocated(tmp)) then
+!        deallocate(tmp)
+!      end if
+!      return
+!    end if
+
+!    allocate(bounds(ncell, 2))
+
+!    bounds = transpose(tmp)
+
+!    deallocate(tmp)
+
+!    success = .true.
+!    errmsg = "everything ok"
+
+!  end subroutine read_bounds_2d
+
+
+!  subroutine bounds_to_corners(bounds, corners, success, errmsg)
+!    real(kind=rkind), dimension(:,:), intent(in) :: bounds
+!    real(kind=rkind), dimension(:), allocatable, intent(out) :: corners
+!    logical, intent(out) :: success
+!    character(len=*), intent(out) :: errmsg
+
+!    integer :: ncell
+!    integer :: i
+
+!    success = .false.
+!    errmsg = "bounds_to_corners: unknown error"
+
+!    ncell = size(bounds, 1)
+
+!    if (ncell <= 0) then
+!      errmsg = "bounds_to_corners: invalid number of cells"
+!      return
+!    end if
+
+!    if (size(bounds, 2) /= 2) then
+!      errmsg = "bounds_to_corners: bounds second dimension must be 2"
+!      return
+!    end if
+
+!    if (allocated(corners)) then
+!      deallocate(corners)
+!    end if
+
+!    allocate(corners(ncell + 1))
+
+!    do i = 1, ncell
+!      corners(i) = min(bounds(i, 1), bounds(i, 2))
+!    end do
+
+!    corners(ncell + 1) = maxval(bounds)
+
+!    call sort_real_array(corners)
+
+!    success = .true.
+!    errmsg = "everything ok"
+
+!  end subroutine bounds_to_corners
 
 
   subroutine bounds_to_corners(bounds, corners, success, errmsg)
@@ -268,6 +415,7 @@ contains
 
     integer :: ncell
     integer :: i
+    logical :: ascending
 
     success = .false.
     errmsg = "bounds_to_corners: unknown error"
@@ -290,19 +438,30 @@ contains
 
     allocate(corners(ncell + 1))
 
-    do i = 1, ncell
-      corners(i) = min(bounds(i, 1), bounds(i, 2))
-    end do
+    ascending = minval(bounds(1,:)) < minval(bounds(ncell,:))
 
-    corners(ncell + 1) = maxval(bounds)
+    if (ascending) then
 
-    call sort_real_array(corners)
+      do i = 1, ncell
+        corners(i) = min(bounds(i,1), bounds(i,2))
+      end do
+
+      corners(ncell + 1) = max(bounds(ncell,1), bounds(ncell,2))
+
+    else
+
+      do i = 1, ncell
+        corners(i) = max(bounds(i,1), bounds(i,2))
+      end do
+
+      corners(ncell + 1) = min(bounds(ncell,1), bounds(ncell,2))
+
+    end if
 
     success = .true.
     errmsg = "everything ok"
 
   end subroutine bounds_to_corners
-
 
   subroutine sort_real_array(arr)
     real(kind=rkind), dimension(:), intent(inout) :: arr

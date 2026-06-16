@@ -194,7 +194,7 @@ module nctools
 
       det = xx*yy - xy*xy
 
-      if (abs(det) < 1.0e-20_rkind) then
+      if (abs(det) < epsilon(det)) then
         ncelements%ders(ielem, 1, 1) = missing
         ncelements%ders(ielem, 2, 1) = missing
         cycle

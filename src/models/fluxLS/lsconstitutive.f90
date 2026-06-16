@@ -29,29 +29,30 @@ module lsconstitutive
       real(kind=rkind), intent(out), optional                  :: flux_length
       
       real(kind=rkind), dimension(2) :: xy, gradsl
-      integer(kind=ikind) :: nowhrs, el
+      integer(kind=ikind) :: nowhrs, el, ncel
       real(kind=rkind) :: tmp, q, Wcell, Acell
       logical :: success
       character(len=1024) :: errmsg
       
-      if (quadpnt%type_pnt == "gqnd") then
-        if (.not. ncfluxdata%activeel(quadpnt%element)) then
-          if (present(flux)) flux = 0
-          if (present(flux_length)) flux_length = 0
-          RETURN
-        end if
-        if (ncfluxdata%cellarea(quadpnt%element) < 0) then
-          print *, "your active mesh is outside of netcdf file"
-          print *, "exited from lsconstitutive::ncflux"
-          error stop
-        end if
-        Acell = ncfluxdata%cellarea(quadpnt%element)
-        Wcell = sqrt(Acell)
-      else
-        Acell = 1
-        Wcell  = 1
-      end if
       
+      select case(quadpnt%type_pnt)
+        case("gqnd", "obpt")
+          if (.not. ncfluxdata%activeel(quadpnt%element)) then
+            if (present(flux)) flux = 0
+            if (present(flux_length)) flux_length = 0
+            RETURN
+          end if
+        case("ndpt")
+          el = nodes%element(quadpnt%order)%data(1)
+            if (.not. ncfluxdata%activeel(el) )then
+              if (present(flux)) flux = 0
+              if (present(flux_length)) flux_length = 0
+            RETURN
+          end if
+          CONTINUE
+      end select
+      
+ 
       
       call getcoor(quadpnt, xy)
       
@@ -61,19 +62,33 @@ module lsconstitutive
       select case(quadpnt%type_pnt)
         case("gqnd", "obpt")
           el = quadpnt%element
+            if (ncfluxdata%cellarea(el) < 0) then
+              print *, "your active mesh is outside of netcdf file"
+              print *, "exited from lsconstitutive::ncflux"
+              ERROR STOP
+          end if
+          Acell = ncfluxdata%cellarea(el)
+          Wcell = sqrt(Acell)
         case("numb") 
           print *, "unable to print convection value for quadpnt%type_pnt = numb "
           print *, "exited from lsconstitutive::ncflux"
           ERROR STOP
         case("ndpt")
           el = nodes%element(quadpnt%order)%data(1)
+          Acell = ncfluxdata%cellarea(el)
+          Wcell = sqrt(Acell)
         case default
-          print *, "incorrect quadpnt%type_pnt", quadpnt%type_pnt
+          print *, "incorrect quadpnt%type_pnt: ", quadpnt%type_pnt
           print *, "exited from lsconstitutive::ncflux"
           ERROR STOP
       end select
       
-      gradsl = elslopes(el,:)
+
+      ncel = el2ncgrid(el)
+      
+      gradsl = ncelements%ders(ncel,:,1)
+      
+
       
       if (norm2(gradsl) < 100*epsilon(tmp)) then  
         gradsl = 1.0_rkind/sqrt(2.0_rkind)
@@ -81,6 +96,7 @@ module lsconstitutive
         gradsl = gradsl/norm2(gradsl)
       end if
       
+
       call ncflux_get_xy(xy(1), xy(2),  nowhrs, q, success, errmsg)
       
       if (.not. success) then
