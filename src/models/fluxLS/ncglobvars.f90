@@ -75,6 +75,7 @@ module ncglobvars
   type(element) :: ncelements
   
   integer(kind=ikind), dimension(:), allocatable :: el2ncgrid
+  real(kind=rkind) :: vref=1.7, Qref=1672.0
 
 
 

@@ -59,32 +59,30 @@ module lsconstitutive
       
       nowhrs = ora_di_ini + int(time/86400.0_rkind)*24
       
+
+      
       select case(quadpnt%type_pnt)
         case("gqnd", "obpt")
           el = quadpnt%element
-            if (ncfluxdata%cellarea(el) < 0) then
-              print *, "your active mesh is outside of netcdf file"
-              print *, "exited from lsconstitutive::ncflux"
-              ERROR STOP
-          end if
-          Acell = ncfluxdata%cellarea(el)
-          Wcell = sqrt(Acell)
+
+
         case("numb") 
           print *, "unable to print convection value for quadpnt%type_pnt = numb "
           print *, "exited from lsconstitutive::ncflux"
           ERROR STOP
         case("ndpt")
           el = nodes%element(quadpnt%order)%data(1)
-          Acell = ncfluxdata%cellarea(el)
-          Wcell = sqrt(Acell)
+          
         case default
           print *, "incorrect quadpnt%type_pnt: ", quadpnt%type_pnt
           print *, "exited from lsconstitutive::ncflux"
           ERROR STOP
       end select
       
-
-      ncel = el2ncgrid(el)
+      
+      ncel = el2ncgrid(el)      
+      Acell = ncelements%areas(ncel)
+      Wcell = sqrt(Acell)
       
       gradsl = ncelements%ders(ncel,:,1)
       
@@ -96,24 +94,52 @@ module lsconstitutive
         gradsl = gradsl/norm2(gradsl)
       end if
       
+!      gradsl = [0.0_rkind, -1.0_rkind]
 
       call ncflux_get_xy(xy(1), xy(2),  nowhrs, q, success, errmsg)
+      
       
       if (.not. success) then
         q=0.0_rkind
       end if
       
       if (present(flux)) then
-        flux = -q*gradsl/elements%areas(el)
+        flux = -q*gradsl/Wcell
+!flux = gradsl
       end if
       
       if (present(flux_length)) then
-        flux_length = q/elements%areas(el)
+        flux_length = gradsl(2)
       end if
       
   
     end subroutine ncflux
     
+    function velocity(Q, w) result(v)
+      use ncglobvars
+      use typy
+      
+      real(kind=rkind), intent(in) :: Q, w
+      real(kind=rkind) :: v
+      
+      real(kind=rkind) :: k, m=3.0_rkind/5.0_rkind
+      
+      k = vref*w**(1-m)/Qref**(1-m)
+      
+      v = k*Q**(1-m)/w**(1-m)
+    
+    end function velocity
+    
+    function heff(Q, w, v) result(h)
+      use typy
+      real(kind=rkind), intent(in) :: Q, w, v
+      real(kind=rkind) :: h
+      
+      h = Q/(w*v)
+      
+    
+    end function heff
+      
     
     subroutine ADEls_convection(pde_loc, layer, quadpnt, x, vector_in, vector_out, scalar)
       use typy
@@ -151,6 +177,9 @@ module lsconstitutive
       use global_objs
       use pde_objs
       use ADE_globals
+      use ncglobvars
+      use netcdfflux
+      use geom_tools
       
       class(pde_str), intent(in) :: pde_loc
       !> value of the nonlinear function
@@ -162,7 +191,72 @@ module lsconstitutive
       !> return value
       real(kind=rkind)                :: val
       
-      val = 1.0_rkind
+      real(kind=rkind), dimension(2) :: xy
+      integer(kind=ikind) :: nowhrs, ncell, el, ncel
+          
+      logical :: success
+      character(len=1024) :: errmsg
+      real(kind=rkind) :: q, v, Wcell, Acell
+      
+      
+      select case(quadpnt%type_pnt)
+        case("gqnd", "obpt")
+          if (.not. ncfluxdata%activeel(quadpnt%element)) then
+            val = 1
+            RETURN
+          end if
+        case("ndpt")
+          el = nodes%element(quadpnt%order)%data(1)
+            if (.not. ncfluxdata%activeel(el) )then
+              val = 1
+              RETURN
+            end if
+      end select
+      
+      call getcoor(quadpnt, xy)
+      
+      nowhrs = ora_di_ini + int(time/86400.0_rkind)*24
+      
+      call ncflux_get_xy(xy(1), xy(2),  nowhrs, q, success, errmsg)
+      
+      if (q < 0) then
+        val = 1
+        RETURN
+      end if
+      
+      select case(quadpnt%type_pnt)
+        case("gqnd", "obpt")
+          el = quadpnt%element
+
+        case("numb") 
+          print *, "unable to print convection value for quadpnt%type_pnt = numb "
+          print *, "exited from lsconstitutive::ncflux"
+          ERROR STOP
+        case("ndpt")
+          el = nodes%element(quadpnt%order)%data(1)
+        case default
+          print *, "incorrect quadpnt%type_pnt: ", quadpnt%type_pnt
+          print *, "exited from lsconstitutive::ncflux"
+          ERROR STOP
+      end select
+      
+      
+      ncel = el2ncgrid(el)
+      
+     
+      Acell = ncelements%areas(ncel)
+      Wcell = sqrt(Acell)
+      
+      v = velocity(q,Wcell)
+      
+      
+      val = q/(Wcell*v)
+      
+      if (isnan(val)) then
+        print *, Acell, Wcell, q, v
+        stop
+      end if
+      
               
     end function ADEls_tder_coef
     

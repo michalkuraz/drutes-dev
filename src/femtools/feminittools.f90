@@ -739,7 +739,7 @@ module feminittools
             
               call write_log("creating graph of the discretization mesh, and searching for boundary nodes...")
               
-              call find_neighbours(elements, nodes)
+!              call find_neighbours(elements, nodes)
               
               call set_boundary()
               
