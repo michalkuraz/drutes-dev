@@ -22,6 +22,7 @@ module postpro
   public :: write_obs , write_bcfluxes
   public :: get_RAM_use
   private :: print_scilab, print_pure, print_gmsh, write_bcfluxes_old
+  integer(kind=ikind), dimension(:), allocatable, private, save :: gmsh_vcts 
   
 
 
@@ -40,7 +41,7 @@ module postpro
       real(kind=rkind), intent(in), optional                :: curtime
       character(len=*), intent(in), optional                :: name
       logical                                               :: anime, op
-      integer(kind=ikind)                                   :: mode, no_prints
+      integer(kind=ikind)                                   :: mode, no_prints, gmshflux
       type :: filenames_str
       character(len=256), dimension(:), allocatable       :: names
       end type filenames_str
@@ -153,6 +154,14 @@ module postpro
           end if
         end do
         
+        
+        if (observe_info%fmt == "gmsh") then
+			no_files = no_files + 1
+			gmshflux = 1
+			if (.not. allocated(gmsh_vcts)) allocate(gmsh_vcts(ubound(pde,1)))
+		else
+			gmshflux = 0
+		end if
 
      
         allocate(ids(ubound(pde,1), maxval(no_files)))
@@ -173,9 +182,9 @@ module postpro
       
       do i=1, ubound(filenames,1)
         if (.not. allocated(pde(i)%fluxes)) then
-          allocate(filenames(i)%names(3+ubound(pde(i)%mass_name,1)))
+          allocate(filenames(i)%names(3+gmshflux+ubound(pde(i)%mass_name,1)))
         else
-          allocate(filenames(i)%names(2+ubound(pde(i)%mass_name,1)+ubound(pde(i)%fluxes,1)))
+          allocate(filenames(i)%names(2+gmshflux+ubound(pde(i)%mass_name,1)+ubound(pde(i)%fluxes,1)))
         end if
       end do
       
@@ -214,6 +223,13 @@ module postpro
                        trim(pde(proc)%problem_name(1)), "_", &
                        trim(pde(proc)%flux_name(1)), "-", &
                       run,  trim(extension)
+          if (gmshflux > 0) then
+			write(unit=filenames(proc)%names(4+ubound(pde(proc)%mass_name,1)), fmt=forma) trim(prefix),&
+                       trim(pde(proc)%problem_name(1)), "_", &
+                       trim(pde(proc)%flux_name(1)), "-vector-field-", &
+                      run,  ".pos"
+                      gmsh_vcts(proc) = 1
+           end if  
         else
           do i=1, ubound(pde(proc)%fluxes,1)
              write(unit=filenames(proc)%names(2+i+ubound(pde(proc)%mass_name,1)), fmt=forma) trim(prefix),&
@@ -221,8 +237,19 @@ module postpro
                        trim(pde(proc)%fluxes(i)%name(1)), "-", &
                       run,  trim(extension)
           end do
+          if (gmshflux > 0) then
+			 do i=1, ubound(pde(proc)%fluxes,1)
+				write(unit=filenames(proc)%names(2+i+ubound(pde(proc)%mass_name,1)+ ubound(pde(proc)%fluxes,1)), fmt=forma) &
+					   trim(prefix),&
+                       trim(pde(proc)%problem_name(1)), "_", &
+                       trim(pde(proc)%fluxes(i)%name(1)), "-vector-field-", &
+                      run,  ".pos"
+			  end do
+			  gmsh_vcts(proc) =  ubound(pde(proc)%fluxes,1)
+			end if
         end if
         
+ 
 
 
         if ( (.not. anime .and. mode == 0)  .or. &
@@ -242,7 +269,6 @@ module postpro
           end if
         end if
         
-
 
         quadpnt%type_pnt = "ndpt"
         
@@ -967,6 +993,11 @@ module postpro
       integer(kind=ikind) :: i, j, layer, tag1, tag2
       logical, dimension(:), allocatable, save :: printed 
       real(kind=rkind) :: curtime, totflux
+      real(kind=rkind), dimension(3)  :: fluxvct = 0.0_rkind, xyz = 0.0_rkind
+      integer(kind=ikind) :: D, fluxid
+      integer :: fluxf
+      
+      D = drutes_config%dimen
       
       
       if (.not. allocated(printed)) then
@@ -990,7 +1021,7 @@ module postpro
       end select
       
       if (.not. printed(proc)) then
-       do i=1, ubound(ids,1)
+       do i=1, ubound(ids,1) - gmsh_vcts(proc)
             write(unit=ids(i), fmt="(a)") "$MeshFormat"
             write(unit=ids(i), fmt="(a)") "2.2 0 8"
             write(unit=ids(i), fmt="(a)") "$EndMeshFormat"
@@ -1024,7 +1055,7 @@ module postpro
       
       
       
-      do i=1, ubound(ids,1)
+      do i=1, ubound(ids,1)  - gmsh_vcts(proc)
         if (i/=2) then
           write(unit=ids(i), fmt="(a)") "$NodeData"     
           write(unit=ids(i), fmt=*) "1"
@@ -1083,6 +1114,72 @@ module postpro
           write(unit=ids(i), fmt="(a)") "$EndNodeData"
         end if
       end do
+      
+      if (.not. allocated(pde(proc)%fluxes)) then
+		write(unit=ids(ubound(ids,1)), fmt="(a)") 'View "Flux vectors" {'
+
+		do j = 1, nodes%kolik
+		  quadpnt%order = j
+		  quadpnt%preproc = .true.
+
+		  layer = elements%material(nodes%element(j)%data(1))
+
+		  call pde(proc)%flux(layer, quadpnt, vector_out=fluxvct(1:D))
+
+		  xyz(1:D) = nodes%data(j,:)
+
+		  write(unit=ids(ubound(ids,1)), fmt=*) &
+			'VP(', xyz(1), ',', xyz(2), ',', xyz(3), '){', &
+			fluxvct(1), ',', fluxvct(2), ',', fluxvct(3), '};'
+		end do
+
+
+
+		write(unit=ids(ubound(ids,1)), fmt=*) 'TIME{', time, '};'
+		write(unit=ids(ubound(ids,1)), fmt="(a)") '};'
+
+		flush(ids(ubound(ids,1)))
+
+		write(unit=ids(ubound(ids,1)), fmt="(a)") 'Combine TimeStepsByViewName;'
+		flush(ids(ubound(ids,1)))	
+		
+	  else
+		
+		do fluxid = 1, gmsh_vcts(proc)
+		  fluxf = ids(ubound(ids,1)-gmsh_vcts(proc) + fluxid)
+		  write(unit=fluxf, fmt="(a)") 'View "Flux vectors" {'
+		  
+		  do j = 1, nodes%kolik
+			quadpnt%order = j
+			quadpnt%preproc = .true.
+
+			layer = elements%material(nodes%element(j)%data(1))
+
+			call pde(proc)%fluxes(fluxid)%val(pde(proc), layer, quadpnt, vector_out=fluxvct(1:D))
+
+			xyz(1:D) = nodes%data(j,:)
+
+			write(unit=fluxf, fmt=*) &
+			'VP(', xyz(1), ',', xyz(2), ',', xyz(3), '){', &
+			fluxvct(1), ',', fluxvct(2), ',', fluxvct(3), '};'
+		  end do
+
+
+
+   		  write(unit=fluxf, fmt=*) 'TIME{', time, '};'
+		  write(unit=fluxf, fmt="(a)") '};'
+
+		  flush(fluxf)
+
+		  write(unit=fluxf, fmt="(a)") 'Combine TimeStepsByViewName;'
+		  flush(fluxf)	
+		  
+		 end do
+		end if
+		  
+	  
+      
+      
     
 end subroutine print_gmsh
 

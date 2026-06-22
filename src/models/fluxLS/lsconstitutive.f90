@@ -109,7 +109,7 @@ module lsconstitutive
       end if
       
       if (present(flux_length)) then
-        flux_length = gradsl(2)
+        flux_length = norm2(-q*gradsl/Wcell)
       end if
       
   

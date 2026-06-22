@@ -204,6 +204,12 @@ module read_inputs
       
       call fileread(observe_info%fmt, file_global, options=(/"scil", "pure", "gmsh", "csv "/))
       
+      if ((observe_info%fmt == "gmsh" .or. observe_info%fmt == "scil") .and. drutes_config%dimen<2) then
+		write(msg, fmt=*) "incorrect format for observation files outputs, your problem dimension is 1D", &
+		 new_line("a"), "the only supported output file format is pure, you defined:", observe_info%fmt
+		 call file_error(file_global, msg)
+	  end if
+      
       
       call fileread(observe_info%anime, file_global)
       
