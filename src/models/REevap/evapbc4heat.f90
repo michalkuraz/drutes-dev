@@ -370,7 +370,7 @@ module evapbc4heat
       real(kind=rkind), dimension(3) :: gravflux, bcflux
       real(kind=rkind), dimension(:), allocatable, save :: nvectin
 
-      real(kind=rkind)::  bcval, rain, h, theta
+      real(kind=rkind)::  bcval, rain, h, theta, evap
       integer(kind=ikind) :: layer, nodeid, D, i
       type(integpnt_str) :: quadpnt_loc
 
@@ -410,31 +410,27 @@ module evapbc4heat
           end do
         end if
         
+        
         quadpnt_loc%preproc = .true.
         quadpnt_loc%column = 1
         
         h = pde_loc%getval(quadpnt_loc)  
+        evap = Eterm(quadpnt_loc, layer)
         
-        if (rainfall_step == "hrs") then
-          if (rain > 10*epsilon(rain)) then
-            if (h < h_crit_high) then
-              bcval = rain
-            else
-              bcval = 0
-            end if
-          else
-            bcval = Eterm(quadpnt_loc, layer)
-          end if
+        
+        
+        if (h < h_crit_high) then
+          continue
         else
-          bcval = rain + Eterm(quadpnt_loc, layer)
+          rain = 0
         end if
 
-
+        if (h < h_crit_low) then
+          evap = 0
+        end if
         
-        theta =  pde_loc%mass(1)%val(pde_loc,layer, quadpnt_loc)
         
-        if ( theta <= theta_crit .or. h < h_crit_low) bcval = rain
-        if ( h >= h_crit_high) bcval = 0
+        bcval = rain + evap
         
         bcflux(1:D) = nvectin(1:D)*bcval
 
