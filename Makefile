@@ -38,11 +38,14 @@ $(LOGDIR):
 	
 	
 # ---------- NetCDF detection ----------
-HAVE_NETCDF := $(shell command -v nf-config >/dev/null 2>&1 && echo yes || echo no)
+#HAVE_NETCDF := $(shell command -v nf-config >/dev/null 2>&1 && echo yes || echo no)
+# ---------- NetCDF detection ----------
+HAVE_NETCDF := $(shell command -v nf-config >/dev/null 2>&1 && \
+                        command -v nc-config >/dev/null 2>&1 && echo yes || echo no)
 
 ifeq ($(HAVE_NETCDF),yes)
   NETCDF_FFLAGS := $(shell nf-config --fflags)
-  NETCDF_FLIBS  := $(shell nf-config --flibs)
+  NETCDF_FLIBS := -L$(shell nc-config --libdir) $(shell nf-config --flibs)
   CPPFLAGS_NETCDF := -DHAVE_NETCDF
   NETCDF_MSG    := compiled with NetCDF support
 else
@@ -56,7 +59,7 @@ endif
 FC = gfortran
 
 # -------- debugging flags (development) --------
-FFLAGS =  $(CPPFLAGS_NETCDF) -fimplicit-none -fcoarray=single -fbounds-check -fbacktrace -g -g3 \
+FFLAGS = $(CPPFLAGS_NETCDF) -fimplicit-none -fcoarray=single -fbounds-check -fbacktrace -g \
          -fdefault-real-8 -O0 -finit-real=nan -Wsurprising -J$(MODDIR) $(NETCDF_FFLAGS)
 
 # -------- optimized flags (production) --------
