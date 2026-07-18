@@ -41,7 +41,8 @@ module postpro
       real(kind=rkind), intent(in), optional                :: curtime
       character(len=*), intent(in), optional                :: name
       logical                                               :: anime, op
-      integer(kind=ikind)                                   :: mode, no_prints, gmshflux
+      integer(kind=ikind)                                   :: mode, no_prints
+      integer(kind=ikind), save                             :: gmshflux
       type :: filenames_str
       character(len=256), dimension(:), allocatable       :: names
       end type filenames_str
