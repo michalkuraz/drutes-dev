@@ -58,21 +58,22 @@ module ncglobvars
     real(kind=rkind) :: dlat_b = 0.0_rkind
     real(kind=rkind) :: dlon_b = 0.0_rkind
     logical, dimension(:), allocatable :: activeel
+    real(kind=rkind), dimension(:,:), allocatable :: fluxvct
     real(kind=rkind), dimension(:), allocatable :: cellarea
   end type ncfluxdata_type
 
-	type(ncfluxdata_type) :: ncfluxdata
+  type(ncfluxdata_type) :: ncfluxdata
   
   real(kind=rkind), dimension(:,:), allocatable :: nccellxy
 	
 	
 	
-	real(kind=rkind), dimension(:,:), allocatable :: elslopes
+  real(kind=rkind), dimension(:,:), allocatable :: elslopes
 	
-	integer(kind=ikind) :: addedbc
+  integer(kind=ikind) :: addedbc
   
-  type(node) :: ncnodes
-  type(element) :: ncelements
+  type(node) :: ncnodes, channel_nd
+  type(element) :: ncelements, channel_el
   
   integer(kind=ikind), dimension(:), allocatable :: el2ncgrid
   real(kind=rkind) :: vref=1.7, Qref=1672.0

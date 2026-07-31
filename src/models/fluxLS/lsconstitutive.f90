@@ -84,32 +84,21 @@ module lsconstitutive
       Acell = ncelements%areas(ncel)
       Wcell = sqrt(Acell)
       
-      gradsl = ncelements%ders(ncel,:,1)
+      gradsl = ncfluxdata%fluxvct(el,:)
       
-
-      
-      if (norm2(gradsl) < 100*epsilon(tmp)) then  
-        gradsl = 1.0_rkind/sqrt(2.0_rkind)
-      else
-        gradsl = gradsl/norm2(gradsl)
-      end if
-      
-!      gradsl = [0.0_rkind, -1.0_rkind]
-
       call ncflux_get_xy(xy(1), xy(2),  nowhrs, q, success, errmsg)
-      
       
       if (.not. success) then
         q=0.0_rkind
       end if
       
       if (present(flux)) then
-        flux = -q*gradsl/Wcell
+        flux = q*gradsl/Wcell
 !flux = gradsl
       end if
       
       if (present(flux_length)) then
-        flux_length = norm2(-q*gradsl/Wcell)
+        flux_length = norm2(q*gradsl/Wcell)
       end if
       
   
@@ -421,6 +410,7 @@ module lsconstitutive
       if (present(tensor)) then
         tensor = identity*LSdisp*q
       end if
+    
       
       if (present(scalar)) then
         scalar = LSdisp*q

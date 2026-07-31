@@ -27,7 +27,7 @@ module init_netcdf
       real(kind=rkind) :: q
       character(len=1024) :: errmsg
       integer(kind=ikind), dimension(3) :: datearray
-      real(kind=rkind), dimension(2) :: xy
+      real(kind=rkind), dimension(2) :: xy, A, B, C
       real(kind=rkind), dimension(4,2) :: pts
       
       starttime%year = 2010
@@ -152,6 +152,9 @@ module init_netcdf
       end do
       
       allocate(ncfluxdata%cellarea(elements%kolik))
+      allocate(ncfluxdata%fluxvct(elements%kolik,2))
+      
+      ncfluxdata%fluxvct = 0.0_rkind
       
       
       
@@ -174,6 +177,24 @@ module init_netcdf
       call mapel()
       
       call terrain_slopes()
+      
+      call readchannel()
+      
+      do i=1, elements%kolik
+        if (ncfluxdata%activeel(i)) then 
+          C(1) = mean_array(nodes%data(elements%data(i,:),1))
+          C(2) = mean_array(nodes%data(elements%data(i,:),2))
+          channel: do j=1, channel_el%kolik
+                    A = channel_nd%data(channel_el%data(j,1),:)
+                    B = channel_nd%data(channel_el%data(j,2),:)
+                    if ( project_inside(A,B,C) ) then 
+                      ncfluxdata%fluxvct(i,:) = unit_vector(A,B)
+                      EXIT channel
+                    end if
+          end do channel
+        end if
+      end do
+      
       
       allocate(ncelements%areas(ncelements%kolik))
       
@@ -357,6 +378,68 @@ module init_netcdf
       errmsg = "everything ok"
       
     end subroutine read_ncbounds
+    
+    
+    subroutine readchannel()
+      use typy
+      use ncglobvars
+      use readtools
+      use debug_tools
+      
+      
+      integer :: fileid, ierr
+      integer(kind=ikind) :: counter, i
+      real(kind=rkind), dimension(2) :: tmp
+      
+      open(newunit=fileid, file="drutes.conf/netcdf/channel.dat", iostat=ierr, status="old", action="read")
+      
+      if (ierr /= 0) then
+        print *, "unable to open file drutes.conf/netcdf/channel.dat"
+        ERROR STOP
+      end if
+      
+      counter = 0
+      
+      do 
+        call comment(fileid)
+        read(fileid, fmt=*, iostat=ierr) tmp
+        
+        if (ierr == 0) then
+          counter = counter + 1
+        else
+          EXIT
+        end if
+      end do
+      
+      if (counter < 2) then
+        print *, "file drutes.conf/netcdf/channel.dat doesn't contain enough values, check the file! "
+        ERROR STOP
+      end if
+      
+      allocate(channel_nd%data(counter,2))
+      channel_nd%kolik = counter
+      allocate(channel_el%data(counter-1, 2))
+      channel_el%kolik = counter - 1
+      
+      close(fileid)
+      
+      open(newunit=fileid, file="drutes.conf/netcdf/channel.dat", iostat=ierr, status="old", action="read")
+      
+      do i=1, counter
+        call comment(fileid)
+        read(fileid, fmt=*, iostat=ierr) channel_nd%data(i,:)
+      end do
+      
+      do i=1, counter - 1
+        channel_el%data(i,1) = i
+        channel_el%data(i,2) = i+1
+      end do
+
+  
+      
+        
+    
+    end subroutine readchannel 
 
 
 

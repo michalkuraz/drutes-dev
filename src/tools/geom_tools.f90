@@ -43,6 +43,8 @@ module geom_tools
   public :: get_layer
   public :: isboundary
   public :: get_normals3D
+  public :: project_inside
+  public :: unit_vector
 
   
   contains
@@ -1473,6 +1475,74 @@ module geom_tools
       end do
 
     end function interpol_init1D
+    
+    
+    
+    function project_inside(A, B, C) result(is_inside)
+      use typy
+
+      implicit none
+
+      real(kind=rkind), dimension(2), intent(in)  :: A
+      real(kind=rkind), dimension(2), intent(in)  :: B
+      real(kind=rkind), dimension(2), intent(in)  :: C
+
+      real(kind=rkind), dimension(2) :: intersection
+      real(kind=rkind), dimension(2) :: AB
+      real(kind=rkind), dimension(2) :: AC
+      real(kind=rkind)               :: parameter
+      real(kind=rkind)               :: length_squared
+      real(kind=rkind), parameter    :: tolerance = 10*epsilon(tolerance)
+      logical                        :: is_inside
+
+      AB = B - A
+      AC = C - A
+
+      length_squared = dot_product(AB, AB)
+
+      if (length_squared <= tolerance) then
+        intersection = A
+        is_inside = .false.
+        return
+      end if
+
+      parameter = dot_product(AC, AB)/length_squared
+
+      intersection = A + parameter*AB
+      
+      if (parameter >= -tolerance .and. parameter <= 1.0_rkind + tolerance) then
+
+        is_inside = .true.
+
+      else
+
+        is_inside = .false.
+
+      end if
+
+    end function project_inside
+    
+    
+    function unit_vector(A, B) result(vector)
+      use typy
+
+      real(kind=rkind), dimension(2), intent(in) :: A
+      real(kind=rkind), dimension(2), intent(in) :: B
+
+      real(kind=rkind), dimension(2) :: vector
+      real(kind=rkind) :: vector_length
+
+      vector = B - A
+
+      vector_length = sqrt(dot_product(vector, vector))
+
+      if (vector_length > 10*epsilon(1.0_rkind)) then
+        vector = vector/vector_length
+      else
+        vector = 0.0_rkind
+      end if
+
+    end function unit_vector
 
   
     subroutine map1d2d(filename)

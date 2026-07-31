@@ -59,13 +59,13 @@ endif
 FC = gfortran
 
 # -------- debugging flags (development) --------
-FFLAGS = $(CPPFLAGS_NETCDF) -fimplicit-none -fcoarray=single -fbounds-check -fbacktrace -g \
-         -fdefault-real-8 -O0 -finit-real=nan -Wsurprising -J$(MODDIR) $(NETCDF_FFLAGS)
+# FFLAGS = $(CPPFLAGS_NETCDF) -fimplicit-none -fcoarray=single -fbounds-check -fbacktrace -g \
+        -fdefault-real-8 -O0 -finit-real=nan -Wsurprising -J$(MODDIR) $(NETCDF_FFLAGS)
 
 # -------- optimized flags (production) --------
-#FFLAGS = $(CPPFLAGS_NETCDF) -fimplicit-none -fcoarray=single -fdefault-real-8 -O3 \
-#         -finit-real=nan -ffpe-summary=none -fno-backtrace \
-#         -J$(MODDIR) $(NETCDF_FFLAGS)
+FFLAGS = $(CPPFLAGS_NETCDF) -fimplicit-none -fcoarray=single -fdefault-real-8 -O3 \
+         -finit-real=nan -ffpe-summary=none -fno-backtrace \
+         -J$(MODDIR) $(NETCDF_FFLAGS)
          
          
 d=drutes_obj-`date -I`
