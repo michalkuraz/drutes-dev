@@ -601,93 +601,301 @@ module postpro
     
     end subroutine write_bcfluxes_old
  
-
-    !> this subroutine parses /proc/[PID]/status file in order to get RAM consumption statistics, it works Linux only
+ 
+    !> Get memory consumption of the current process.
+    !! Linux: reads /proc/[PID]/status.
+    !! macOS: obtains resident memory (RSS) using ps.
     subroutine get_RAM_use()
       use typy
       use globals
       use core_tools
+
       integer :: PID, fileid, i, ierr
       integer(kind=ikind) :: bytes
       character(len=2) :: byte_unit
       character(len=7) :: ch
-      character(len=256) :: filename, format, command
+      character(len=32) :: system_name
+      character(len=256) :: filename, format, command, tmpfile
 
       PID = getpid()
 
-      i = 0
-      do
-        i = i + 1
-        if ((1.0*PID)/(10**i) < 1) then
-        EXIT
-        end if
-      end do
+      ! ------------------------------------------------------------
+      ! Detect operating system
+      ! ------------------------------------------------------------
 
-      write(unit=format, fmt="(a, I7, a)") "(a, I", i, ", a)"
+      write(tmpfile, '("/tmp/drutes_os_",I0)') PID
+      write(command, '(A,A)') 'uname -s > ', trim(tmpfile)
 
-  !     write(unit=format, fmt = *) "(I.", i, ")"
-
-      write(unit=filename, fmt=format) "/proc/", PID, "/status"
-      
-      write(unit=command, fmt=*) "cp ", cut(filename), " out/"
-      
-      ierr = system(cut(command))
-      
-      open(newunit=fileid, file=filename, action="read", status="old", iostat=ierr)
+      ierr = system(trim(command))
 
       if (ierr /= 0) then
-        write(unit=terminal) "WARNING! this is not POSIX system, unable to get RAM consumption"
-        RETURN
+        write(unit=terminal) "WARNING! unable to detect operating system"
+        return
       end if
 
-      do 
-        read(unit=fileid, fmt=*, iostat=ierr) ch
-        if (ch == "VmPeak:") then
-          backspace fileid
-          EXIT
+      open(newunit=fileid, file=trim(tmpfile), action="read", &
+          status="old", iostat=ierr)
+
+      if (ierr /= 0) then
+        write(unit=terminal) "WARNING! unable to detect operating system"
+        return
+      end if
+
+      read(fileid, *, iostat=ierr) system_name
+      close(fileid, status="delete")
+
+      if (ierr /= 0) then
+        write(unit=terminal) "WARNING! unable to detect operating system"
+        return
+      end if
+
+
+      ! ============================================================
+      ! LINUX
+      ! ============================================================
+
+      if (trim(system_name) == "Linux") then
+
+        i = 0
+        do
+          i = i + 1
+          if ((1.0*PID)/(10**i) < 1) then
+            EXIT
+          end if
+        end do
+
+        write(unit=format, fmt="(a, I7, a)") "(a, I", i, ", a)"
+
+    !   write(unit=format, fmt = *) "(I.", i, ")"
+
+        write(unit=filename, fmt=format) "/proc/", PID, "/status"
+
+        write(unit=command, fmt=*) "cp ", cut(filename), " out/"
+
+        ierr = system(cut(command))
+
+        open(newunit=fileid, file=filename, action="read", &
+            status="old", iostat=ierr)
+
+        if (ierr /= 0) then
+          write(unit=terminal) &
+            "WARNING! unable to get RAM consumption"
+          return
         end if
 
-        if (ierr /=0) then
+        do
+          read(unit=fileid, fmt=*, iostat=ierr) ch
+
+          if (ch == "VmPeak:") then
+            backspace fileid
+            EXIT
+          end if
+
+          if (ierr /= 0) then
+            print *, "unable to fetch memory consumption from system files"
+            close(fileid)
+            return
+          end if
+        end do
+
+        read(unit=fileid, fmt=*, iostat=ierr) ch, bytes, byte_unit
+
+        if (ierr /= 0) then
           print *, "unable to fetch memory consumption from system files"
-          RETURN
-        end if
-      end do
-
-      read(unit=fileid, fmt=*, iostat=ierr) ch, bytes, byte_unit
-      
-      if (ierr /=0) then
-        print *, "unable to fetch memory consumption from system files"
-        RETURN
-      end if
-
-      call write_log(text="Peak RAM  consumption on image", int1=1_ikind*THIS_IMAGE(), text2="was:", int2=bytes, text3=byte_unit)
-
-      do 
-        read(unit=fileid, fmt=*) ch
-        if (ch == "VmSwap:") then
-          backspace fileid
-          EXIT
+          close(fileid)
+          return
         end if
 
-        if (ierr /=0) then
+        call write_log( &
+          text="Peak RAM  consumption on image", &
+          int1=1_ikind*THIS_IMAGE(), &
+          text2="was:", &
+          int2=bytes, &
+          text3=byte_unit)
+
+        do
+          read(unit=fileid, fmt=*, iostat=ierr) ch
+
+          if (ch == "VmSwap:") then
+            backspace fileid
+            EXIT
+          end if
+
+          if (ierr /= 0) then
+            print *, "unable to fetch swap consumption from system files"
+            close(fileid)
+            return
+          end if
+        end do
+
+        read(unit=fileid, fmt=*, iostat=ierr) ch, bytes, byte_unit
+
+        if (ierr /= 0) then
           print *, "unable to fetch swap consumption from system files"
-          RETURN
+          close(fileid)
+          return
         end if
-      end do
 
-      read(unit=fileid, fmt=*, iostat=ierr) ch, bytes, byte_unit
-      
-      if (ierr /=0) then
-        print *, "unable to fetch swap consumption from system files"
-        RETURN
+        call write_log( &
+          text="Peak SWAP consumption on image", &
+          int1=1_ikind*THIS_IMAGE(), &
+          text2="was:", &
+          int2=bytes, &
+          text3=byte_unit)
+
+        close(fileid)
+
+
+      ! ============================================================
+      ! macOS
+      ! ============================================================
+
+      else if (trim(system_name) == "Darwin") then
+
+        ! ps reports RSS in kB
+        write(tmpfile, '("/tmp/drutes_ram_",I0)') PID
+
+        write(command, '("ps -o rss= -p ",I0," > ",A)') &
+          PID, trim(tmpfile)
+
+        ierr = system(trim(command))
+
+        if (ierr /= 0) then
+          write(unit=terminal) &
+            "WARNING! unable to get RAM consumption under macOS"
+          return
+        end if
+
+        open(newunit=fileid, file=trim(tmpfile), action="read", &
+            status="old", iostat=ierr)
+
+        if (ierr /= 0) then
+          write(unit=terminal) &
+            "WARNING! unable to read RAM consumption under macOS"
+          return
+        end if
+
+        read(fileid, *, iostat=ierr) bytes
+        close(fileid, status="delete")
+
+        if (ierr /= 0) then
+          write(unit=terminal) &
+            "WARNING! unable to parse RAM consumption under macOS"
+          return
+        end if
+
+        byte_unit = "kB"
+
+        call write_log( &
+          text="RAM consumption on image", &
+          int1=1_ikind*THIS_IMAGE(), &
+          text2="was:", &
+          int2=bytes, &
+          text3=byte_unit)
+
+
+      ! ============================================================
+      ! OTHER SYSTEM
+      ! ============================================================
+
+      else
+
+        write(unit=terminal) &
+          "WARNING! unsupported operating system: ", trim(system_name)
+
       end if
-
-      call write_log(text="Peak SWAP consumption on image", int1=1_ikind*THIS_IMAGE(), text2="was:", int2=bytes, text3=byte_unit)
-
-
-      close(fileid)
 
     end subroutine get_RAM_use
+    
+ 
+ 
+
+!     !> this subroutine parses /proc/[PID]/status file in order to get RAM consumption statistics, it works Linux only
+!     subroutine get_RAM_use()
+!       use typy
+!       use globals
+!       use core_tools
+!       integer :: PID, fileid, i, ierr
+!       integer(kind=ikind) :: bytes
+!       character(len=2) :: byte_unit
+!       character(len=7) :: ch
+!       character(len=256) :: filename, format, command
+! 
+!       PID = getpid()
+! 
+!       i = 0
+!       do
+!         i = i + 1
+!         if ((1.0*PID)/(10**i) < 1) then
+!         EXIT
+!         end if
+!       end do
+! 
+!       write(unit=format, fmt="(a, I7, a)") "(a, I", i, ", a)"
+! 
+!   !     write(unit=format, fmt = *) "(I.", i, ")"
+! 
+!       write(unit=filename, fmt=format) "/proc/", PID, "/status"
+!       
+!       write(unit=command, fmt=*) "cp ", cut(filename), " out/"
+!       
+!       ierr = system(cut(command))
+!       
+!       open(newunit=fileid, file=filename, action="read", status="old", iostat=ierr)
+! 
+!       if (ierr /= 0) then
+!         write(unit=terminal) "WARNING! this is not POSIX system, unable to get RAM consumption"
+!         RETURN
+!       end if
+! 
+!       do 
+!         read(unit=fileid, fmt=*, iostat=ierr) ch
+!         if (ch == "VmPeak:") then
+!           backspace fileid
+!           EXIT
+!         end if
+! 
+!         if (ierr /=0) then
+!           print *, "unable to fetch memory consumption from system files"
+!           RETURN
+!         end if
+!       end do
+! 
+!       read(unit=fileid, fmt=*, iostat=ierr) ch, bytes, byte_unit
+!       
+!       if (ierr /=0) then
+!         print *, "unable to fetch memory consumption from system files"
+!         RETURN
+!       end if
+! 
+!       call write_log(text="Peak RAM  consumption on image", int1=1_ikind*THIS_IMAGE(), text2="was:", int2=bytes, text3=byte_unit)
+! 
+!       do 
+!         read(unit=fileid, fmt=*) ch
+!         if (ch == "VmSwap:") then
+!           backspace fileid
+!           EXIT
+!         end if
+! 
+!         if (ierr /=0) then
+!           print *, "unable to fetch swap consumption from system files"
+!           RETURN
+!         end if
+!       end do
+! 
+!       read(unit=fileid, fmt=*, iostat=ierr) ch, bytes, byte_unit
+!       
+!       if (ierr /=0) then
+!         print *, "unable to fetch swap consumption from system files"
+!         RETURN
+!       end if
+! 
+!       call write_log(text="Peak SWAP consumption on image", int1=1_ikind*THIS_IMAGE(), text2="was:", int2=bytes, text3=byte_unit)
+! 
+! 
+!       close(fileid)
+! 
+!     end subroutine get_RAM_use
     
     subroutine print_scilab(ids, proc, quadpnt)
       use typy

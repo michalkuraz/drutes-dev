@@ -19,6 +19,7 @@ class ParameterType(str, Enum):
     BOOLEAN = "boolean"
     CHOICE = "choice"
     FLOAT_LIST = "float_list"
+    STRING_LIST = "string_list"
 
 
 @dataclass(frozen=True)

@@ -51,8 +51,16 @@ class ConfigParser:
 
             raw_values = [lines[index].strip() for index in indexes]
             value: ParameterValue
-            if definition.value_type is ParameterType.FLOAT_LIST:
-                value = [self._convert(raw, ParameterType.FLOAT) for raw in raw_values]
+            if definition.value_type in {
+                ParameterType.FLOAT_LIST,
+                ParameterType.STRING_LIST,
+            }:
+                item_type = (
+                    ParameterType.FLOAT
+                    if definition.value_type is ParameterType.FLOAT_LIST
+                    else ParameterType.STRING
+                )
+                value = [self._convert(raw, item_type) for raw in raw_values]
             else:
                 value = self._convert(raw_values[0], definition.value_type)
 
