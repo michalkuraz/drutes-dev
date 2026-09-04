@@ -44,6 +44,7 @@ module geom_tools
   public :: isboundary
   public :: get_normals3D
   public :: project_inside
+  public :: point_segment_distance
   public :: unit_vector
 
   
@@ -1521,6 +1522,33 @@ module geom_tools
       end if
 
     end function project_inside
+
+
+    ! Return the shortest distance from point C to the finite line segment A--B.
+    function point_segment_distance(A, B, C) result(distance)
+      use typy
+
+      real(kind=rkind), dimension(2), intent(in) :: A
+      real(kind=rkind), dimension(2), intent(in) :: B
+      real(kind=rkind), dimension(2), intent(in) :: C
+
+      real(kind=rkind), dimension(2) :: AB, AC, closest_point
+      real(kind=rkind) :: parameter, length_squared, distance
+
+      AB = B - A
+      AC = C - A
+      length_squared = dot_product(AB, AB)
+
+      if (length_squared <= 10.0_rkind*epsilon(1.0_rkind)) then
+        closest_point = A
+      else
+        parameter = dot_product(AC, AB)/length_squared
+        parameter = max(0.0_rkind, min(1.0_rkind, parameter))
+        closest_point = A + parameter*AB
+      end if
+
+      distance = norm2(C - closest_point)
+    end function point_segment_distance
     
     
     function unit_vector(A, B) result(vector)

@@ -86,7 +86,8 @@ module lsconstitutive
       
       gradsl = ncfluxdata%fluxvct(el,:)
       
-      call ncflux_get_xy(xy(1), xy(2),  nowhrs, q, success, errmsg)
+!       call ncflux_get_xy(xy(1), xy(2),  nowhrs, q, success, errmsg)
+      call ncflux_get_xy_cell(xy(1), xy(2),  nowhrs, q, success, errmsg)
       
       if (.not. success) then
         q=0.0_rkind
@@ -206,7 +207,7 @@ module lsconstitutive
       
       nowhrs = ora_di_ini + int(time/86400.0_rkind)*24
       
-      call ncflux_get_xy(xy(1), xy(2),  nowhrs, q, success, errmsg)
+      call ncflux_get_xy_cell(xy(1), xy(2),  nowhrs, q, success, errmsg)
       
       if (q < 0) then
         val = 1

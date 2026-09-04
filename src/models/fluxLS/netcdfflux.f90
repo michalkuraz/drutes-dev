@@ -7,6 +7,10 @@ module netcdfflux
 
   public :: ncflux_init
   public :: ncflux_get_xy
+  public :: ncflux_get_xy_bilin
+  public :: ncflux_get_xy_pw
+  public :: ncflux_get_xy_nn
+  public :: ncflux_get_xy_cell
   public :: ncflux_close
 
   contains
@@ -149,6 +153,7 @@ module netcdfflux
     end subroutine ncflux_init
 
 
+    ! Original NetCDF flux lookup retained for compatibility; it uses bilinear interpolation.
      subroutine ncflux_get_xy(x, y, cur_hrs, qval, ok, errmsg)
       real(kind=rkind), intent(in) :: x, y
       integer(kind=ikind), intent(in) :: cur_hrs
@@ -190,6 +195,155 @@ module netcdfflux
       end if
 
     end subroutine ncflux_get_xy
+
+
+    ! Bilinear interpolation using all four corners of the enclosing NetCDF cell.
+    subroutine ncflux_get_xy_bilin(x, y, cur_hrs, qval, ok, errmsg)
+      real(kind=rkind), intent(in) :: x, y
+      integer(kind=ikind), intent(in) :: cur_hrs
+      real(kind=rkind), intent(out) :: qval
+      logical, intent(out) :: ok
+      character(len=*), intent(out) :: errmsg
+
+      real(kind=rkind) :: lat0, lon0
+      integer(kind=ikind) :: tidx
+
+      ok = .false.
+      qval = ncfluxdata%fill_value
+      errmsg = "unknown error"
+
+      if (.not. ncfluxdata%initialized) then
+        errmsg = "ncfluxdata not initialized"
+        return
+      end if
+
+      call find_time_index(cur_hrs, tidx, ok)
+      if (.not. ok) then
+        errmsg = "time out of range or not present in NetCDF"
+        return
+      end if
+
+      call load_qslice(tidx, ok, errmsg)
+      if (.not. ok) return
+
+      call utm2latlong(x, y, lat0, lon0)
+      call interpolate_flux_latlon(lat0, lon0, qval, ok, errmsg)
+
+      if (ok) errmsg = "everything ok"
+    end subroutine ncflux_get_xy_bilin
+
+
+    ! Piecewise-linear interpolation on the triangle containing the requested point.
+    subroutine ncflux_get_xy_pw(x, y, cur_hrs, qval, ok, errmsg)
+      real(kind=rkind), intent(in) :: x, y
+      integer(kind=ikind), intent(in) :: cur_hrs
+      real(kind=rkind), intent(out) :: qval
+      logical, intent(out) :: ok
+      character(len=*), intent(out) :: errmsg
+
+      real(kind=rkind) :: lat0, lon0
+      integer(kind=ikind) :: tidx
+
+      ok = .false.
+      qval = ncfluxdata%fill_value
+      errmsg = "unknown error"
+
+      if (.not. ncfluxdata%initialized) then
+        errmsg = "ncfluxdata not initialized"
+        return
+      end if
+
+      call find_time_index(cur_hrs, tidx, ok)
+      if (.not. ok) then
+        errmsg = "time out of range or not present in NetCDF"
+        return
+      end if
+
+      call load_qslice(tidx, ok, errmsg)
+      if (.not. ok) return
+
+      call utm2latlong(x, y, lat0, lon0)
+      call interpolate_flux_latlon_pw(lat0, lon0, qval, ok, errmsg)
+
+      if (ok) errmsg = "everything ok"
+    end subroutine ncflux_get_xy_pw
+
+
+    ! Nearest-neighbour interpolation using the closest valid corner of the enclosing NetCDF cell.
+    subroutine ncflux_get_xy_nn(x, y, cur_hrs, qval, ok, errmsg)
+      real(kind=rkind), intent(in) :: x, y
+      integer(kind=ikind), intent(in) :: cur_hrs
+      real(kind=rkind), intent(out) :: qval
+      logical, intent(out) :: ok
+      character(len=*), intent(out) :: errmsg
+
+      real(kind=rkind) :: lat0, lon0
+      integer(kind=ikind) :: tidx
+
+      ok = .false.
+      qval = ncfluxdata%fill_value
+      errmsg = "unknown error"
+
+      if (.not. ncfluxdata%initialized) then
+        errmsg = "ncfluxdata not initialized"
+        return
+      end if
+
+      call find_time_index(cur_hrs, tidx, ok)
+      if (.not. ok) then
+        errmsg = "time out of range or not present in NetCDF"
+        return
+      end if
+
+      call load_qslice(tidx, ok, errmsg)
+      if (.not. ok) return
+
+      call utm2latlong(x, y, lat0, lon0)
+      call interpolate_flux_latlon_nn(lat0, lon0, qval, ok, errmsg)
+
+      if (ok) errmsg = "everything ok"
+    end subroutine ncflux_get_xy_nn
+
+
+    ! Piecewise-constant lookup using the bounds of the containing hydrological grid cell.
+    subroutine ncflux_get_xy_cell(x, y, cur_hrs, qval, ok, errmsg)
+      real(kind=rkind), intent(in) :: x, y
+      integer(kind=ikind), intent(in) :: cur_hrs
+      real(kind=rkind), intent(out) :: qval
+      logical, intent(out) :: ok
+      character(len=*), intent(out) :: errmsg
+
+      real(kind=rkind) :: lat0, lon0
+      integer(kind=ikind) :: tidx
+
+      ok = .false.
+      qval = ncfluxdata%fill_value
+      errmsg = "unknown error"
+
+      if (.not. ncfluxdata%initialized) then
+        errmsg = "ncfluxdata not initialized"
+        return
+      end if
+
+      if (.not. ncfluxdata%has_bounds) then
+        errmsg = "NetCDF latitude/longitude bounds are not available"
+        return
+      end if
+
+      call find_time_index(cur_hrs, tidx, ok)
+      if (.not. ok) then
+        errmsg = "time out of range or not present in NetCDF"
+        return
+      end if
+
+      call load_qslice(tidx, ok, errmsg)
+      if (.not. ok) return
+
+      call utm2latlong(x, y, lat0, lon0)
+      call get_flux_cell(lat0, lon0, qval, ok, errmsg)
+
+      if (ok) errmsg = "everything ok"
+    end subroutine ncflux_get_xy_cell
 
     subroutine load_qslice(tidx, ok, errmsg)
       integer(kind=ikind), intent(in) :: tidx
@@ -297,6 +451,197 @@ module netcdfflux
       errmsg = "everything ok"
 
     end subroutine interpolate_flux_latlon
+
+
+    subroutine interpolate_flux_latlon_pw(lat0, lon0, qval, ok, errmsg)
+      real(kind=rkind), intent(in) :: lat0, lon0
+      real(kind=rkind), intent(out) :: qval
+      logical, intent(out) :: ok
+      character(len=*), intent(out) :: errmsg
+
+      integer(kind=ikind) :: i1, i2, j1, j2
+      logical :: ok_local
+      real(kind=rkind) :: x, y, wx, wy
+      real(kind=rkind) :: q11, q12, q21, q22
+
+      ok = .false.
+      errmsg = "unknown error"
+      qval = ncfluxdata%fill_value
+
+      x = adjust_longitude_to_grid(ncfluxdata%lon, lon0)
+      y = lat0
+
+      call binary_search_bracket(ncfluxdata%lat, y, i1, i2, ok_local)
+      if (.not. ok_local) then
+        errmsg = "latitude out of NetCDF range"
+        return
+      end if
+
+      call binary_search_bracket(ncfluxdata%lon, x, j1, j2, ok_local)
+      if (.not. ok_local) then
+        errmsg = "longitude out of NetCDF range"
+        return
+      end if
+
+      wx = (x - ncfluxdata%lon(j1))/(ncfluxdata%lon(j2) - ncfluxdata%lon(j1))
+      wy = (y - ncfluxdata%lat(i1))/(ncfluxdata%lat(i2) - ncfluxdata%lat(i1))
+
+      q11 = ncfluxdata%qslice(i1,j1)
+      q12 = ncfluxdata%qslice(i1,j2)
+      q21 = ncfluxdata%qslice(i2,j1)
+      q22 = ncfluxdata%qslice(i2,j2)
+
+      if (wy <= wx) then
+        if (is_missing_flux(q11) .or. is_missing_flux(q12) .or. is_missing_flux(q22)) then
+          errmsg = "NetCDF returned fill value in containing triangle"
+          return
+        end if
+        qval = (1.0_rkind - wx)*q11 + (wx - wy)*q12 + wy*q22
+      else
+        if (is_missing_flux(q11) .or. is_missing_flux(q21) .or. is_missing_flux(q22)) then
+          errmsg = "NetCDF returned fill value in containing triangle"
+          return
+        end if
+        qval = (1.0_rkind - wy)*q11 + (wy - wx)*q21 + wx*q22
+      end if
+
+      ok = .true.
+      errmsg = "everything ok"
+    end subroutine interpolate_flux_latlon_pw
+
+
+    subroutine interpolate_flux_latlon_nn(lat0, lon0, qval, ok, errmsg)
+      real(kind=rkind), intent(in) :: lat0, lon0
+      real(kind=rkind), intent(out) :: qval
+      logical, intent(out) :: ok
+      character(len=*), intent(out) :: errmsg
+
+      integer(kind=ikind) :: i1, i2, j1, j2
+      integer :: k
+      logical :: ok_local
+      logical, dimension(4) :: valid
+      real(kind=rkind) :: x, y, wx, wy, best_distance
+      real(kind=rkind), dimension(4) :: values, distance_squared
+
+      ok = .false.
+      errmsg = "unknown error"
+      qval = ncfluxdata%fill_value
+
+      x = adjust_longitude_to_grid(ncfluxdata%lon, lon0)
+      y = lat0
+
+      call binary_search_bracket(ncfluxdata%lat, y, i1, i2, ok_local)
+      if (.not. ok_local) then
+        errmsg = "latitude out of NetCDF range"
+        return
+      end if
+
+      call binary_search_bracket(ncfluxdata%lon, x, j1, j2, ok_local)
+      if (.not. ok_local) then
+        errmsg = "longitude out of NetCDF range"
+        return
+      end if
+
+      wx = (x - ncfluxdata%lon(j1))/(ncfluxdata%lon(j2) - ncfluxdata%lon(j1))
+      wy = (y - ncfluxdata%lat(i1))/(ncfluxdata%lat(i2) - ncfluxdata%lat(i1))
+
+      values = (/ ncfluxdata%qslice(i1,j1), ncfluxdata%qslice(i1,j2), &
+                  ncfluxdata%qslice(i2,j1), ncfluxdata%qslice(i2,j2) /)
+      distance_squared = (/ wx*wx + wy*wy, &
+                            (1.0_rkind - wx)**2 + wy*wy, &
+                            wx*wx + (1.0_rkind - wy)**2, &
+                            (1.0_rkind - wx)**2 + (1.0_rkind - wy)**2 /)
+
+      do k = 1, 4
+        valid(k) = .not. is_missing_flux(values(k))
+      end do
+
+      if (.not. any(valid)) then
+        errmsg = "NetCDF returned fill values at all enclosing cell corners"
+        return
+      end if
+
+      best_distance = huge(1.0_rkind)
+      do k = 1, 4
+        if (valid(k) .and. distance_squared(k) < best_distance) then
+          best_distance = distance_squared(k)
+          qval = values(k)
+        end if
+      end do
+
+      ok = .true.
+      errmsg = "everything ok"
+    end subroutine interpolate_flux_latlon_nn
+
+
+    subroutine get_flux_cell(lat0, lon0, qval, ok, errmsg)
+      real(kind=rkind), intent(in) :: lat0, lon0
+      real(kind=rkind), intent(out) :: qval
+      logical, intent(out) :: ok
+      character(len=*), intent(out) :: errmsg
+
+      integer(kind=ikind) :: ilat, ilon
+      logical :: lat_ok, lon_ok
+      real(kind=rkind) :: lon_adjusted
+
+      ok = .false.
+      qval = ncfluxdata%fill_value
+      errmsg = "unknown error"
+
+      if (.not. ncfluxdata%has_bounds) then
+        errmsg = "NetCDF latitude/longitude bounds are not available"
+        return
+      end if
+
+      lon_adjusted = adjust_longitude_to_grid(ncfluxdata%lon, lon0)
+
+      call find_bounds_cell(ncfluxdata%lat_bnds, lat0, ilat, lat_ok)
+      if (.not. lat_ok) then
+        errmsg = "latitude outside NetCDF cell bounds"
+        return
+      end if
+
+      call find_bounds_cell(ncfluxdata%lon_bnds, lon_adjusted, ilon, lon_ok)
+      if (.not. lon_ok) then
+        errmsg = "longitude outside NetCDF cell bounds"
+        return
+      end if
+
+      qval = ncfluxdata%qslice(ilat, ilon)
+      if (is_missing_flux(qval)) then
+        errmsg = "NetCDF returned fill value for containing grid cell"
+        return
+      end if
+
+      ok = .true.
+      errmsg = "everything ok"
+    end subroutine get_flux_cell
+
+
+    subroutine find_bounds_cell(bounds, value, idx, ok)
+      real(kind=rkind), dimension(:,:), intent(in) :: bounds
+      real(kind=rkind), intent(in) :: value
+      integer(kind=ikind), intent(out) :: idx
+      logical, intent(out) :: ok
+
+      integer(kind=ikind) :: i
+      real(kind=rkind) :: lower_bound, upper_bound
+      real(kind=rkind), parameter :: tolerance = 1.0e-10_rkind
+
+      ok = .false.
+      idx = -1_ikind
+
+      do i = 1_ikind, size(bounds, 1, kind=ikind)
+        lower_bound = min(bounds(i,1), bounds(i,2))
+        upper_bound = max(bounds(i,1), bounds(i,2))
+
+        if (value >= lower_bound - tolerance .and. value <= upper_bound + tolerance) then
+          idx = i
+          ok = .true.
+          return
+        end if
+      end do
+    end subroutine find_bounds_cell
 
 
 	  subroutine find_time_index(cur_hrs, tidx, ok)
@@ -429,6 +774,13 @@ module netcdfflux
       is_fill = abs(x - fill_value) < &
             100.0_rkind*epsilon(1.0_rkind)*max(1.0_rkind, abs(fill_value))
 	  end function is_fill
+
+
+      logical function is_missing_flux(x)
+      real(kind=rkind), intent(in) :: x
+
+      is_missing_flux = ncfluxdata%has_fill .and. is_fill(x, ncfluxdata%fill_value)
+      end function is_missing_flux
 
 
 	  subroutine ncflux_close()

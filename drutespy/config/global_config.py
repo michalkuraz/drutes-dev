@@ -47,5 +47,53 @@ GLOBAL_DEFINITIONS = (
 class GlobalConfigFile(ConfigFile):
     """The DRUtES global configuration."""
 
+    LENGTH_UNIT_MARKER = "# GUI length unit:"
+
     def __init__(self, path: str | Path) -> None:
         super().__init__(path, GLOBAL_DEFINITIONS)
+        self.length_unit = "m"
+        self._length_unit_modified = False
+
+    def load(self) -> GlobalConfigFile:
+        super().load()
+        self.length_unit = "m"
+        for line in self._lines:
+            if line.strip().startswith(self.LENGTH_UNIT_MARKER):
+                value = line.strip()[len(self.LENGTH_UNIT_MARKER) :].strip()
+                if value:
+                    self.length_unit = value
+                break
+        self._length_unit_modified = False
+        return self
+
+    def set_length_unit(self, value: str) -> None:
+        """Set GUI length units without adding a positional Fortran value."""
+        self.length_unit = value
+        self._length_unit_modified = True
+
+    def save(self) -> None:
+        length_unit = self.length_unit
+        update_length_unit = self._length_unit_modified
+        super().save()
+        if not update_length_unit:
+            return
+
+        replacement = f"{self.LENGTH_UNIT_MARKER} {length_unit}\n"
+        marker_index = next(
+            (
+                index
+                for index, line in enumerate(self._lines)
+                if line.strip().startswith(self.LENGTH_UNIT_MARKER)
+            ),
+            None,
+        )
+        if marker_index is None:
+            if self._lines and self._lines[-1].strip():
+                self._lines.append("\n")
+            self._lines.append(replacement)
+        else:
+            self._lines[marker_index] = replacement
+        temporary = self.path.with_name(f".{self.path.name}.tmp")
+        temporary.write_text("".join(self._lines), encoding="utf-8", newline="")
+        temporary.replace(self.path)
+        self.load()

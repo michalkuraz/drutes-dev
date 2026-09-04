@@ -24,7 +24,7 @@ module init_netcdf
       integer :: ierr, filetmp, fileconf
       integer(kind=ikind) :: i, bccnt, j
       logical :: success
-      real(kind=rkind) :: q
+      real(kind=rkind) :: q, segment_distance, best_segment_distance
       character(len=1024) :: errmsg
       integer(kind=ikind), dimension(3) :: datearray
       real(kind=rkind), dimension(2) :: xy, A, B, C
@@ -118,23 +118,25 @@ module init_netcdf
     
       do i=1, nodes%kolik
       
-        call ncflux_get_xy(nodes%data(i,1), nodes%data(i,2), ora_di_ini, q, success, errmsg)
-        if (q < Qmin) then
+        call ncflux_get_xy_cell(nodes%data(i,1), nodes%data(i,2), ora_di_ini, q, success, errmsg)
+        if (.not. success) then
+          nodes%edge(i) = addedbc
+        else if (q < Qmin) then
           nodes%edge(i) = addedbc
         end if
         
-        if (q > 0.0) then
-          if (nint(nodealt(i)) == missing) then
-            write(errmsg, *) "W: your dem model doesn't conver the entire watershed, update drutes.conf/netcdf/dem.nc, node:", i, &
-              "will be deactivated" 
-            call write_log(errmsg)
-            nodes%edge(i) = addedbc
-          end if
-        end if
+!         if (q > 0.0) then
+!           if (nint(nodealt(i)) == missing) then
+!             write(errmsg, *) "W: your dem model doesn't conver the entire watershed, update drutes.conf/netcdf/dem.nc, node:", i, &
+!               "will be deactivated"
+!             call write_log(errmsg)
+!             nodes%edge(i) = addedbc
+!           end if
+!         end if
         
         
       end do
-      
+
       allocate(ncfluxdata%activeel(elements%kolik))
       
       do i=1, elements%kolik
@@ -150,6 +152,8 @@ module init_netcdf
           ncfluxdata%activeel(i) = .true.
         end if
       end do
+      
+!       ncfluxdata%activeel(:) = .true.
       
       allocate(ncfluxdata%cellarea(elements%kolik))
       allocate(ncfluxdata%fluxvct(elements%kolik,2))
@@ -184,12 +188,14 @@ module init_netcdf
         if (ncfluxdata%activeel(i)) then 
           C(1) = mean_array(nodes%data(elements%data(i,:),1))
           C(2) = mean_array(nodes%data(elements%data(i,:),2))
+          best_segment_distance = huge(1.0_rkind)
           channel: do j=1, channel_el%kolik
                     A = channel_nd%data(channel_el%data(j,1),:)
                     B = channel_nd%data(channel_el%data(j,2),:)
-                    if ( project_inside(A,B,C) ) then 
+                    segment_distance = point_segment_distance(A, B, C)
+                    if (segment_distance < best_segment_distance) then
+                      best_segment_distance = segment_distance
                       ncfluxdata%fluxvct(i,:) = unit_vector(A,B)
-                      EXIT channel
                     end if
           end do channel
         end if

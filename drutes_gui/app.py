@@ -1,11 +1,13 @@
 """Entry point for the DRUtES configuration GUI."""
 
 import html
+from io import BytesIO
 from pathlib import Path
 import re
 import subprocess
 import sys
 import threading
+from zipfile import ZIP_DEFLATED, ZipFile
 
 import streamlit as st
 
@@ -23,12 +25,171 @@ from pages.model_configuration import (  # noqa: E402
 )
 from pages.solver_configuration import SolverConfigurationPage  # noqa: E402
 from pages.richards_outputs import RichardsOutputPage  # noqa: E402
+from pages.heat_outputs import HeatOutputPage  # noqa: E402
+from pages.solver_time_output import SolverTimeOutputPage  # noqa: E402
+from pages.simulation_log import SimulationLogPage  # noqa: E402
 from drutespy.config.global_config import GlobalConfigFile  # noqa: E402
 from drutespy.config.heat_config import HeatConfigFile  # noqa: E402
 from drutespy.config.matrix_config import MatrixConfigFile  # noqa: E402
 from drutespy.config.mesh_config import Mesh1DConfigFile  # noqa: E402
 from drutespy.config.solver_config import SolverConfigFile  # noqa: E402
 from drutespy.config.root_uptake_config import RootUptakeConfigFile  # noqa: E402
+from drutes_gui.projects import (  # noqa: E402
+    ProjectStore,
+    build_configuration_archive,
+)
+
+
+def build_output_archive(output_directory: Path) -> bytes:
+    """Return the complete output directory as an in-memory ZIP archive."""
+    archive_buffer = BytesIO()
+    with ZipFile(archive_buffer, mode="w", compression=ZIP_DEFLATED) as archive:
+        archive.writestr(f"{output_directory.name}/", b"")
+        for path in sorted(output_directory.rglob("*")):
+            if not path.is_file() or path.is_symlink():
+                continue
+            archive.write(
+                path,
+                arcname=str(Path(output_directory.name) / path.relative_to(output_directory)),
+            )
+    return archive_buffer.getvalue()
+
+
+def authentication_is_configured() -> bool:
+    """Return whether all required Google OIDC settings are present."""
+    try:
+        auth = st.secrets["auth"]
+    except (FileNotFoundError, KeyError):
+        return False
+    required = (
+        "redirect_uri",
+        "cookie_secret",
+        "client_id",
+        "client_secret",
+        "server_metadata_url",
+    )
+    return all(str(auth.get(key, "")).strip() for key in required)
+
+
+def activate_project(project_name: str) -> None:
+    """Switch projects without retaining editor widgets from another project."""
+    for key in list(st.session_state):
+        del st.session_state[key]
+    st.session_state.active_project = project_name
+    st.session_state.configuration_page = "project_home"
+    st.session_state.visited_configuration_pages = set()
+
+
+def configuration_signature(project: Path) -> tuple[int, int, int]:
+    """Summarize configuration state so prepared downloads cannot go stale."""
+    files = [
+        path
+        for root_name in ("drutes.conf", "bin")
+        for path in (project / root_name).rglob("*")
+        if path.is_file() and not path.is_symlink()
+    ]
+    if not files:
+        return 0, 0, 0
+    statistics = [path.stat() for path in files]
+    return (
+        len(files),
+        sum(item.st_size for item in statistics),
+        max(item.st_mtime_ns for item in statistics),
+    )
+
+
+def render_project_gateway(store: ProjectStore, email: str) -> Path | None:
+    """Select or create the authenticated user's persistent project."""
+    active_name = st.session_state.get("active_project")
+    if active_name:
+        try:
+            project = store.resolve_project(email, str(active_name))
+        except (FileNotFoundError, ValueError):
+            st.session_state.pop("active_project", None)
+        else:
+            with st.sidebar:
+                st.markdown(f"**{st.user.get('name', email)}**")
+                st.caption(email)
+                st.markdown(f"Project: **{project.name}**")
+                if st.button("Switch project", width="stretch"):
+                    process = st.session_state.get("model_process")
+                    if process is not None and process.poll() is None:
+                        st.error("Stop the running simulation before switching projects.")
+                    else:
+                        st.session_state.pop("active_project", None)
+                        st.rerun()
+                if st.button("Log out", width="stretch"):
+                    process = st.session_state.get("model_process")
+                    if process is not None and process.poll() is None:
+                        stop_model_process(process)
+                    st.logout()
+                if st.button("Prepare configuration ZIP", width="stretch"):
+                    with st.spinner("Creating configuration archive…"):
+                        st.session_state.configuration_archive = (
+                            build_configuration_archive(project)
+                        )
+                        st.session_state.configuration_archive_signature = (
+                            configuration_signature(project)
+                        )
+                archive = st.session_state.get("configuration_archive")
+                archive_is_current = st.session_state.get(
+                    "configuration_archive_signature"
+                ) == configuration_signature(project)
+                if archive is not None and archive_is_current:
+                    st.download_button(
+                        "Download project configuration",
+                        data=archive,
+                        file_name=f"{project.name}-configuration.zip",
+                        mime="application/zip",
+                        width="stretch",
+                    )
+                elif archive is not None:
+                    st.session_state.pop("configuration_archive", None)
+                    st.session_state.pop("configuration_archive_signature", None)
+            return project
+
+    st.markdown('<p class="drutes-kicker">Secure workspace</p>', unsafe_allow_html=True)
+    st.title("Your DRUtES projects")
+    st.markdown(
+        '<p class="drutes-subtitle">Create a new simulation project or reopen '
+        'one of your existing projects.</p><div class="drutes-rule"></div>',
+        unsafe_allow_html=True,
+    )
+    account_column, logout_column = st.columns([4, 1])
+    with account_column:
+        st.write(f"Signed in as **{st.user.get('name', email)}** ({email})")
+    with logout_column:
+        if st.button("Log out", width="stretch"):
+            st.logout()
+
+    with st.container(border=True):
+        st.subheader("Create a project")
+        project_name = st.text_input(
+            "Project name",
+            placeholder="My simulation",
+            max_chars=64,
+        )
+        if st.button("Create project", type="primary", width="stretch"):
+            try:
+                with st.spinner("Copying the default DRUtES configuration…"):
+                    project = store.create_project(email, project_name)
+            except (OSError, ValueError) as error:
+                st.error(f"Project was not created: {error}")
+            else:
+                activate_project(project.name)
+                st.rerun()
+
+    projects = store.list_projects(email)
+    if projects:
+        with st.container(border=True):
+            st.subheader("Existing projects")
+            selected = st.selectbox("Project", projects)
+            if st.button("Open project", width="stretch"):
+                activate_project(selected)
+                st.rerun()
+    else:
+        st.info("You do not have any projects yet.")
+    return None
 
 
 def terminal_document(output: str) -> str:
@@ -257,8 +418,44 @@ def main() -> None:
     )
     apply_drutes_theme()
 
+    if not authentication_is_configured():
+        st.markdown('<p class="drutes-kicker">Authentication setup</p>', unsafe_allow_html=True)
+        st.title("Google sign-in is not configured")
+        st.info(
+            "Copy .streamlit/secrets.toml.example to .streamlit/secrets.toml, "
+            "then add your Google OAuth client ID, client secret, and a strong "
+            "cookie secret. Restart Streamlit after saving the file."
+        )
+        return
+    if not st.user.is_logged_in:
+        st.markdown('<p class="drutes-kicker">Secure workspace</p>', unsafe_allow_html=True)
+        st.title("Sign in to DRUtES")
+        st.markdown(
+            '<p class="drutes-subtitle">Use your Google account to access '
+            'your simulation projects.</p><div class="drutes-rule"></div>',
+            unsafe_allow_html=True,
+        )
+        if st.button("Continue with Google", type="primary", width="stretch"):
+            st.login()
+        return
+
+    email = str(st.user.get("email", "")).strip().lower()
+    if not email:
+        st.error("Google did not provide an email address for this account.")
+        if st.button("Log out"):
+            st.logout()
+        return
+    project_store = ProjectStore(
+        PROJECT_ROOT / "user",
+        PROJECT_ROOT / "drutes.conf",
+        PROJECT_ROOT / "bin" / "drutes",
+    )
+    workspace_root = render_project_gateway(project_store, email)
+    if workspace_root is None:
+        return
+
     if "configuration_page" not in st.session_state:
-        st.session_state.configuration_page = "global"
+        st.session_state.configuration_page = "project_home"
     if "visited_configuration_pages" not in st.session_state:
         st.session_state.visited_configuration_pages = {"global"}
 
@@ -268,29 +465,36 @@ def main() -> None:
 
     def save_all(model_type: str) -> None:
         configs = [
-            GlobalConfigFile(PROJECT_ROOT / "drutes.conf" / "global.conf"),
+            GlobalConfigFile(workspace_root / "drutes.conf" / "global.conf"),
             Mesh1DConfigFile(
-                PROJECT_ROOT / "drutes.conf" / "mesh" / "drumesh1d.conf"
+                workspace_root / "drutes.conf" / "mesh" / "drumesh1d.conf"
             ),
-            SolverConfigFile(PROJECT_ROOT / "drutes.conf" / "solver.conf"),
+            SolverConfigFile(workspace_root / "drutes.conf" / "solver.conf"),
         ]
         if model_type == "heat":
-            configs.append(
-                HeatConfigFile(PROJECT_ROOT / "drutes.conf" / "heat" / "heat.conf")
-            )
+            heat = HeatConfigFile(
+                workspace_root / "drutes.conf" / "heat" / "heat.conf"
+            ).load()
+            configs.append(heat)
+            if bool(heat["couple_with_richards"].value):
+                configs.append(
+                    MatrixConfigFile(
+                        workspace_root / "drutes.conf" / "water.conf" / "matrix.conf"
+                    )
+                )
         else:
             matrix = MatrixConfigFile(
-                PROJECT_ROOT / "drutes.conf" / "water.conf" / "matrix.conf"
+                workspace_root / "drutes.conf" / "water.conf" / "matrix.conf"
             )
             configs.append(matrix)
             matrix.load()
             if bool(matrix["root_water_uptake"].value):
                 mesh = Mesh1DConfigFile(
-                    PROJECT_ROOT / "drutes.conf" / "mesh" / "drumesh1d.conf"
+                    workspace_root / "drutes.conf" / "mesh" / "drumesh1d.conf"
                 ).load()
                 configs.append(
                     RootUptakeConfigFile(
-                        PROJECT_ROOT
+                        workspace_root
                         / "drutes.conf"
                         / "water.conf"
                         / "root4uptake.conf",
@@ -310,7 +514,7 @@ def main() -> None:
         st.divider()
         st.subheader("Model terminal")
         st.caption(
-            "Runs bin/drutes from the repository root. Standard output and "
+            "Runs this project's bin/drutes from the project directory. Standard output and "
             "errors are displayed below."
         )
         process = st.session_state.get("model_process")
@@ -322,7 +526,7 @@ def main() -> None:
         ):
             return
 
-        executable = PROJECT_ROOT / "bin" / "drutes"
+        executable = workspace_root / "bin" / "drutes"
         if not executable.is_file():
             st.error(f"Model executable was not found: {executable}")
             return
@@ -331,7 +535,7 @@ def main() -> None:
         try:
             process = subprocess.Popen(
                 [str(executable)],
-                cwd=PROJECT_ROOT,
+                cwd=workspace_root,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 text=True,
@@ -360,9 +564,48 @@ def main() -> None:
     if current_page != "global" and logo_path.exists():
         st.image(str(logo_path), width=420)
 
-    if current_page == "mesh":
+    if current_page == "project_home":
+        st.markdown('<p class="drutes-kicker">Project workspace</p>', unsafe_allow_html=True)
+        st.title(workspace_root.name)
+        st.markdown(
+            '<p class="drutes-subtitle">Run the saved model again or open '
+            'the visual configuration workflow.</p><div class="drutes-rule"></div>',
+            unsafe_allow_html=True,
+        )
+        configure_column, run_column = st.columns(2)
+        with configure_column:
+            if st.button(
+                "Reconfigure project",
+                type="primary",
+                width="stretch",
+            ):
+                st.session_state.visited_configuration_pages = {"global"}
+                navigate("global")
+                st.rerun()
+        with run_column:
+            if st.button("Run saved configuration", width="stretch"):
+                try:
+                    saved_model = str(
+                        GlobalConfigFile(
+                            workspace_root / "drutes.conf" / "global.conf"
+                        ).load()["model_type"].value
+                    )
+                except (OSError, ValueError, KeyError) as error:
+                    st.error(f"The saved configuration cannot be opened: {error}")
+                else:
+                    st.session_state.selected_problem_type = saved_model
+                    st.session_state.all_configurations_saved = True
+                    navigate("run")
+                    st.rerun()
+        project_output = workspace_root / "out"
+        if project_output.is_dir() and any(project_output.iterdir()):
+            st.info(
+                "This project contains results from a previous run. Running "
+                "again may replace files in its out directory."
+            )
+    elif current_page == "mesh":
         mesh_page = MeshConfigurationPage(
-            PROJECT_ROOT / "drutes.conf" / "mesh" / "drumesh1d.conf",
+            workspace_root / "drutes.conf" / "mesh" / "drumesh1d.conf",
             on_return=lambda: navigate("global"),
         )
         mesh_page.on_navigate = navigate
@@ -373,7 +616,7 @@ def main() -> None:
         mesh_page.render()
     elif current_page == "solver":
         solver_page = SolverConfigurationPage(
-            PROJECT_ROOT / "drutes.conf" / "solver.conf",
+            workspace_root / "drutes.conf" / "solver.conf",
             on_return=lambda: navigate("global"),
         )
         solver_page.on_navigate = navigate
@@ -384,7 +627,7 @@ def main() -> None:
         solver_page.render()
     elif current_page == "heat":
         heat_page = HeatConfigurationPage(
-            PROJECT_ROOT / "drutes.conf" / "heat" / "heat.conf",
+            workspace_root / "drutes.conf" / "heat" / "heat.conf",
             on_return=lambda: navigate("global"),
         )
         heat_page.on_navigate = navigate
@@ -394,17 +637,19 @@ def main() -> None:
         heat_page.render()
     elif current_page == "matrix":
         matrix_page = MatrixConfigurationPage(
-            PROJECT_ROOT / "drutes.conf" / "water.conf" / "matrix.conf",
+            workspace_root / "drutes.conf" / "water.conf" / "matrix.conf",
             on_return=lambda: navigate("global"),
         )
         matrix_page.on_navigate = navigate
         matrix_page.on_save_all = save_all
-        matrix_page.model_type = "RE"
+        matrix_page.model_type = str(
+            st.session_state.get("selected_problem_type", "RE")
+        )
         matrix_page.visited_pages = st.session_state.visited_configuration_pages
         matrix_page.render()
     elif current_page == "root_uptake":
         root_page = RootUptakeConfigurationPage(
-            PROJECT_ROOT / "drutes.conf" / "water.conf" / "root4uptake.conf",
+            workspace_root / "drutes.conf" / "water.conf" / "root4uptake.conf",
             on_return=lambda: navigate("global"),
         )
         root_page.on_navigate = navigate
@@ -431,6 +676,21 @@ def main() -> None:
         selected_model = str(
             st.session_state.get("selected_problem_type", "RE")
         )
+        heat_coupled_with_richards = False
+        if selected_model == "heat":
+            try:
+                heat_coupled_with_richards = bool(
+                    HeatConfigFile(
+                        workspace_root / "drutes.conf" / "heat" / "heat.conf"
+                    ).load()["couple_with_richards"].value
+                )
+            except (OSError, ValueError, KeyError):
+                heat_coupled_with_richards = bool(
+                    st.session_state.get("heat_coupled_with_richards", False)
+                )
+            st.session_state.heat_coupled_with_richards = (
+                heat_coupled_with_richards
+            )
         edit_pages = [
             ("global", "global.conf"),
             ("mesh", "drumesh1D.conf"),
@@ -438,6 +698,8 @@ def main() -> None:
         ]
         if selected_model == "heat":
             edit_pages.append(("heat", "heat.conf"))
+            if heat_coupled_with_richards:
+                edit_pages.append(("matrix", "matrix.conf"))
         else:
             edit_pages.append(("matrix", "matrix.conf"))
             if st.session_state.get("root_uptake_enabled", False):
@@ -457,14 +719,57 @@ def main() -> None:
                     navigate(page)
                     st.rerun()
         render_model_runner()
-        if selected_model != "heat" and not model_running:
-            RichardsOutputPage(
-                PROJECT_ROOT / "out",
-                PROJECT_ROOT / "drutes.conf" / "global.conf",
+        if not model_running:
+            SimulationLogPage(workspace_root / "out" / "DRUtES.log").render()
+            output_directory = workspace_root / "out"
+            if output_directory.is_dir():
+                st.download_button(
+                    "Download all outputs as ZIP",
+                    data=build_output_archive(output_directory),
+                    file_name="drutes-outputs.zip",
+                    mime="application/zip",
+                    key="download_all_outputs",
+                    width="stretch",
+                )
+        try:
+            record_solver_time = bool(
+                SolverConfigFile(
+                    workspace_root / "drutes.conf" / "solver.conf"
+                ).load()["record_solver_time"].value
+            )
+        except (OSError, ValueError, KeyError):
+            record_solver_time = False
+        if record_solver_time and not model_running:
+            SolverTimeOutputPage(
+                workspace_root / "out" / "solver.time",
+                workspace_root / "drutes.conf" / "global.conf",
             ).render()
+        if not model_running:
+            output_directory = workspace_root / "out"
+            global_config_path = workspace_root / "drutes.conf" / "global.conf"
+            if selected_model == "heat" and heat_coupled_with_richards:
+                heat_tab, richards_tab = st.tabs(
+                    ["Heat equation solution", "Richards equation solution"]
+                )
+                with heat_tab:
+                    HeatOutputPage(
+                        output_directory, global_config_path
+                    ).render()
+                with richards_tab:
+                    RichardsOutputPage(
+                        output_directory, global_config_path
+                    ).render()
+            elif selected_model == "heat":
+                HeatOutputPage(
+                    output_directory, global_config_path
+                ).render()
+            else:
+                RichardsOutputPage(
+                    output_directory, global_config_path
+                ).render()
     else:
         GlobalConfigurationPage(
-            PROJECT_ROOT / "drutes.conf" / "global.conf",
+            workspace_root / "drutes.conf" / "global.conf",
             logo_path,
             on_edit_mesh=lambda: navigate("mesh"),
             on_edit_solver=lambda: navigate("solver"),
