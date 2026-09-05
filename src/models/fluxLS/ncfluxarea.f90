@@ -5,6 +5,7 @@ module ncfluxarea
 
   public :: ncflux_cell_area
   public :: ncflux_cell_area_xy
+  public :: ncflux_active_width
 
 contains
 
@@ -93,6 +94,49 @@ contains
   end subroutine ncflux_cell_area_xy
 
 
+  ! Return the mapped hydrological cell width perpendicular to an element's flow direction.
+  function ncflux_active_width(element_number) result(width)
+    integer(kind=ikind), intent(in) :: element_number
+    real(kind=rkind) :: width
+
+    integer(kind=ikind) :: grid_element, i, node_number
+    real(kind=rkind), dimension(2) :: direction, normal
+    real(kind=rkind), dimension(4) :: projection
+    real(kind=rkind) :: direction_length
+
+    width = 0.0_rkind
+
+    if (.not. allocated(el2ncgrid)) return
+    if (.not. allocated(ncfluxdata%fluxvct)) return
+    if (.not. allocated(ncelements%data)) return
+    if (.not. allocated(ncnodes%data)) return
+
+    if (element_number < 1_ikind .or. element_number > size(el2ncgrid, kind=ikind)) return
+    if (element_number > size(ncfluxdata%fluxvct, 1, kind=ikind)) return
+
+    grid_element = el2ncgrid(element_number)
+    if (grid_element < 1_ikind .or. grid_element > ncelements%kolik) return
+
+    direction = ncfluxdata%fluxvct(element_number,:)
+    direction_length = norm2(direction)
+    if (direction_length <= 10.0_rkind*epsilon(1.0_rkind)) return
+
+    direction = direction/direction_length
+    normal = (/ -direction(2), direction(1) /)
+
+    do i = 1_ikind, 4_ikind
+      node_number = ncelements%data(grid_element,i)
+      if (node_number < 1_ikind .or. node_number > ncnodes%kolik) then
+        width = 0.0_rkind
+        return
+      end if
+      projection(i) = dot_product(ncnodes%data(node_number,1:2), normal)
+    end do
+
+    width = maxval(projection) - minval(projection)
+  end function ncflux_active_width
+
+
   subroutine find_cell_from_bounds(bounds, value, idx, ok)
     use typy
     implicit none
@@ -137,5 +181,4 @@ contains
   end function adjust_longitude_to_grid
 
 end module ncfluxarea
-
 

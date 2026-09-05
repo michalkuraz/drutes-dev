@@ -29,8 +29,8 @@ module lsconstitutive
       real(kind=rkind), intent(out), optional                  :: flux_length
       
       real(kind=rkind), dimension(2) :: xy, gradsl
-      integer(kind=ikind) :: nowhrs, el, ncel
-      real(kind=rkind) :: tmp, q, Wcell, Acell
+      integer(kind=ikind) :: nowhrs, el
+      real(kind=rkind) :: tmp, q, Wcell
       logical :: success
       character(len=1024) :: errmsg
       
@@ -80,9 +80,7 @@ module lsconstitutive
       end select
       
       
-      ncel = el2ncgrid(el)      
-      Acell = ncelements%areas(ncel)
-      Wcell = sqrt(Acell)
+      Wcell = ncflux_active_width(el)
       
       gradsl = ncfluxdata%fluxvct(el,:)
       
@@ -93,6 +91,12 @@ module lsconstitutive
         q=0.0_rkind
       end if
       
+      if (Wcell <= 0.0_rkind) then
+        if (present(flux)) flux = 0.0_rkind
+        if (present(flux_length)) flux_length = 0.0_rkind
+        return
+      end if
+
       if (present(flux)) then
         flux = q*gradsl/Wcell
 !flux = gradsl
@@ -169,6 +173,7 @@ module lsconstitutive
       use ADE_globals
       use ncglobvars
       use netcdfflux
+      use ncfluxarea
       use geom_tools
       
       class(pde_str), intent(in) :: pde_loc
@@ -182,11 +187,11 @@ module lsconstitutive
       real(kind=rkind)                :: val
       
       real(kind=rkind), dimension(2) :: xy
-      integer(kind=ikind) :: nowhrs, ncell, el, ncel
+      integer(kind=ikind) :: nowhrs, el
           
       logical :: success
       character(len=1024) :: errmsg
-      real(kind=rkind) :: q, v, Wcell, Acell
+      real(kind=rkind) :: q, v, Wcell
       
       
       select case(quadpnt%type_pnt)
@@ -231,11 +236,11 @@ module lsconstitutive
       end select
       
       
-      ncel = el2ncgrid(el)
-      
-     
-      Acell = ncelements%areas(ncel)
-      Wcell = sqrt(Acell)
+      Wcell = ncflux_active_width(el)
+      if (Wcell <= 0.0_rkind) then
+        val = 1.0_rkind
+        return
+      end if
       
       v = velocity(q,Wcell)
       
@@ -243,7 +248,7 @@ module lsconstitutive
       val = q/(Wcell*v)
       
       if (isnan(val)) then
-        print *, Acell, Wcell, q, v
+        print *, Wcell, q, v
         stop
       end if
       
