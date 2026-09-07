@@ -1,0 +1,4 @@
+streamlit[auth]<2,>=1.36
+
+[test]
+pytest<9,>=8

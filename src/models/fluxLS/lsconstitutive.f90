@@ -98,8 +98,8 @@ module lsconstitutive
       end if
 
       if (present(flux)) then
-        flux = q*gradsl/Wcell
-!flux = gradsl
+         flux = q*gradsl/Wcell
+! flux = Wcell
       end if
       
       if (present(flux_length)) then
@@ -214,7 +214,9 @@ module lsconstitutive
       
       call ncflux_get_xy_cell(xy(1), xy(2),  nowhrs, q, success, errmsg)
       
-      if (q < 0) then
+      ! Dry cells and failed lookups have no advective storage contribution;
+      ! retain the existing inactive-cell convention without dividing by zero.
+      if (.not. success .or. q <= 0.0_rkind) then
         val = 1
         RETURN
       end if

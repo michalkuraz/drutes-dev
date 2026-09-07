@@ -200,8 +200,18 @@ module init_netcdf
           end do channel
         end if
       end do
-      
-      
+
+      call ncflux_prepare_widths(success, errmsg, bccnt)
+      if (.not. success) then
+        call write_log(trim(errmsg))
+        error stop "Unable to compute active river widths"
+      end if
+      if (bccnt > 0) then
+        write(errmsg, *) "W: active river FE elements with no positive width:", bccnt, &
+          "; check corner-only/tangential contacts and flow directions."
+        call write_log(trim(errmsg))
+      end if
+
       allocate(ncelements%areas(ncelements%kolik))
       
       do i=1, ncelements%kolik
