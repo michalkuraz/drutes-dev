@@ -114,7 +114,7 @@ REevap_obj :=  $(OBJDIR)/evapglob.o $(OBJDIR)/evappointers.o $(OBJDIR)/evap_RE_c
 
 ifeq ($(HAVE_NETCDF),yes)
 
-	NETCDF_obj := $(OBJDIR)/init_netcdf.o $(OBJDIR)/ncglobvars.o $(OBJDIR)/netcdfflux.o $(OBJDIR)/ncpointers.o $(OBJDIR)/nctools.o $(OBJDIR)/ncdem.o  $(OBJDIR)/ncfluxarea.o $(OBJDIR)/lsconstitutive.o $(OBJDIR)/ncmesh.o $(OBJDIR)/ncmap.o
+	NETCDF_obj := $(OBJDIR)/init_netcdf.o $(OBJDIR)/ncglobvars.o $(OBJDIR)/netcdfflux.o $(OBJDIR)/ncpointers.o $(OBJDIR)/nctools.o $(OBJDIR)/ncdem.o $(OBJDIR)/ncwidth_geometry.o $(OBJDIR)/ncfluxarea.o $(OBJDIR)/lsconstitutive.o $(OBJDIR)/ncmesh.o $(OBJDIR)/ncmap.o
 
 else
 
@@ -437,15 +437,18 @@ $(OBJDIR)/ncmap.o: $(CORE_obj) $(TOOLS_obj) $(OBJDIR)/nctools.o $(OBJDIR)/ncglob
 	$(FC) $(FFLAGS) -c src/models/fluxLS/ncmap.f90 -o $@
 
 
-$(OBJDIR)/netcdfflux.o: $(CORE_obj) $(TOOLS_obj) $(OBJDIR)/ncglobvars.o src/models/fluxLS/netcdfflux.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+$(OBJDIR)/netcdfflux.o: $(CORE_obj) $(TOOLS_obj) $(OBJDIR)/ncglobvars.o $(OBJDIR)/nctools.o src/models/fluxLS/netcdfflux.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
 	$(FC) $(FFLAGS) -c src/models/fluxLS/netcdfflux.f90 -o $@
 
 
-$(OBJDIR)/ncfluxarea.o: $(CORE_obj) $(TOOLS_obj) $(OBJDIR)/ncglobvars.o src/models/fluxLS/ncfluxarea.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+$(OBJDIR)/ncwidth_geometry.o: $(OBJDIR)/typy.o src/models/fluxLS/ncwidth_geometry.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/models/fluxLS/ncwidth_geometry.f90 -o $@
+
+$(OBJDIR)/ncfluxarea.o: $(CORE_obj) $(TOOLS_obj) $(OBJDIR)/ncglobvars.o $(OBJDIR)/nctools.o $(OBJDIR)/netcdfflux.o $(OBJDIR)/ncwidth_geometry.o src/models/fluxLS/ncfluxarea.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
 	$(FC) $(FFLAGS) -c src/models/fluxLS/ncfluxarea.f90 -o $@
 
 
-$(OBJDIR)/lsconstitutive.o: $(CORE_obj) $(TOOLS_obj) $(OBJDIR)/ncglobvars.o $(OBJDIR)/netcdfflux.o src/models/fluxLS/lsconstitutive.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+$(OBJDIR)/lsconstitutive.o: $(CORE_obj) $(TOOLS_obj) $(OBJDIR)/ncglobvars.o $(OBJDIR)/netcdfflux.o $(OBJDIR)/ncfluxarea.o $(OBJDIR)/init_netcdf.o src/models/fluxLS/lsconstitutive.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
 	$(FC) $(FFLAGS) -c src/models/fluxLS/lsconstitutive.f90 -o $@
 
 
@@ -502,5 +505,4 @@ push:
 
 tar :
 	 tar -czf $d.tgz src Makefile drutes.conf 
-
 
