@@ -1,6 +1,7 @@
 """Entry point for the DRUtES configuration GUI."""
 
 import html
+from collections import deque
 from io import BytesIO
 from pathlib import Path
 import re
@@ -194,6 +195,8 @@ def render_project_gateway(store: ProjectStore, email: str) -> Path | None:
 
 def terminal_document(output: str) -> str:
     """Build an isolated, fixed-height terminal display for model output."""
+    # Keep browser updates small even when the solver prints very long lines.
+    output = output[-200_000:]
     escaped_output = html.escape(output or "Waiting for terminal output…")
     return f"""
     <!doctype html>
@@ -263,7 +266,7 @@ ANSI_ESCAPE = re.compile(r"\x1b\[[0-?]*[ -/]*[@-~]")
 
 
 def capture_model_output(
-    process: subprocess.Popen[str], output_lines: list[str]
+    process: subprocess.Popen[str], output_lines: deque[str]
 ) -> None:
     """Continuously collect merged DRUtES output without blocking Streamlit."""
     if process.stdout is None:
@@ -285,7 +288,6 @@ def stop_model_process(process: subprocess.Popen[str]) -> None:
         process.wait(timeout=2)
 
 
-@st.fragment(run_every=0.5)
 def render_model_process_monitor() -> None:
     """Draw the live terminal and the transient kill control."""
     process = st.session_state.get("model_process")
@@ -293,8 +295,9 @@ def render_model_process_monitor() -> None:
     if process is None:
         output = str(st.session_state.get("model_terminal_output", ""))
     else:
-        output = "".join(output_lines)
+        output = "".join(list(output_lines))
 
+    st.caption("Terminal preview: the latest 2,000 lines (up to 200,000 characters).")
     st.iframe(terminal_document(output), height=460)
     if process is None:
         return
@@ -316,7 +319,7 @@ def render_model_process_monitor() -> None:
     output_thread = st.session_state.get("model_output_thread")
     if output_thread is not None:
         output_thread.join(timeout=1)
-    output = "".join(output_lines)
+    output = "".join(list(output_lines))[-200_000:]
     st.session_state.model_terminal_output = output
 
     if st.session_state.get("model_was_killed", False):
@@ -329,6 +332,34 @@ def render_model_process_monitor() -> None:
     if not st.session_state.get("model_completion_handled", False):
         st.session_state.model_completion_handled = True
         st.rerun()
+
+
+@st.fragment(run_every=5)
+def render_live_model_process_monitor() -> None:
+    """Poll only while a model is running; completion triggers a full rerun."""
+    render_model_process_monitor()
+
+
+def render_model_terminal() -> None:
+    """Leave no periodic fragment registered for a completed simulation."""
+    process = st.session_state.get("model_process")
+    if process is not None and process.poll() is None:
+        render_live_model_process_monitor()
+    else:
+        render_model_process_monitor()
+
+
+def render_output_download(output_directory: Path) -> None:
+    """Compress outputs on download, not during log or plotting interactions."""
+    st.download_button(
+        "Download all outputs as ZIP",
+        data=lambda: build_output_archive(output_directory),
+        file_name="drutes-outputs.zip",
+        mime="application/zip",
+        key="download_all_outputs",
+        on_click="ignore",
+        width="stretch",
+    )
 
 
 def apply_drutes_theme() -> None:
@@ -437,6 +468,10 @@ def main() -> None:
         )
         if st.button("Continue with Google", type="primary", width="stretch"):
             st.login()
+        st.caption(
+            "By continuing, you acknowledge the "
+            "[DRUtES GUI Privacy Policy](https://drutes.org/privacy/)."
+        )
         return
 
     email = str(st.user.get("email", "")).strip().lower()
@@ -519,7 +554,7 @@ def main() -> None:
         )
         process = st.session_state.get("model_process")
         running = process is not None and process.poll() is None
-        render_model_process_monitor()
+        render_model_terminal()
 
         if running or not st.button(
             "Run model", type="primary", use_container_width=True
@@ -531,7 +566,7 @@ def main() -> None:
             st.error(f"Model executable was not found: {executable}")
             return
 
-        output_lines: list[str] = []
+        output_lines: deque[str] = deque(maxlen=2000)
         try:
             process = subprocess.Popen(
                 [str(executable)],
@@ -723,14 +758,7 @@ def main() -> None:
             SimulationLogPage(workspace_root / "out" / "DRUtES.log").render()
             output_directory = workspace_root / "out"
             if output_directory.is_dir():
-                st.download_button(
-                    "Download all outputs as ZIP",
-                    data=build_output_archive(output_directory),
-                    file_name="drutes-outputs.zip",
-                    mime="application/zip",
-                    key="download_all_outputs",
-                    width="stretch",
-                )
+                render_output_download(output_directory)
         try:
             record_solver_time = bool(
                 SolverConfigFile(

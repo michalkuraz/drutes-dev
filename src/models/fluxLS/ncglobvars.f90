@@ -14,6 +14,7 @@ module ncglobvars
   real(kind=rkind) :: Qmin 
   real(kind=rkind) :: LSdisp 
   real(kind=rkind) :: cinit_ls
+  integer(kind=ikind) :: channel_count = 1_ikind
 
 	
 	

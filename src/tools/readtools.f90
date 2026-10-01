@@ -1058,7 +1058,7 @@ module readtools
     end subroutine  set_tensor
 
 
-    subroutine readbcvals(unitW, struct, dimen, dirname)
+    subroutine readbcvals(unitW, struct, dimen, dirname, highest_boundary_id)
       use typy
       use globals
       use global_objs
@@ -1070,6 +1070,8 @@ module readtools
       integer, intent(in) :: unitW
       type(boundary_vals), dimension(:), allocatable, intent(out) :: struct
       integer(kind=ikind), intent(in) :: dimen
+      ! ADEnc reserves an inactive boundary even when no mesh node uses it.
+      integer(kind=ikind), intent(in), optional :: highest_boundary_id
       !> directory name, where data with boundary condition are stored
       character(len=*), intent(in) :: dirname
       integer(kind=ikind) :: i, j, n
@@ -1089,7 +1091,10 @@ module readtools
 	     print *, "W: strange bc struct already allocated with bounds:", lbound(struct,1), ":", ubound(struct,1)
       end if
       
-      if (maxval(nodes%edge) /= ubound(struct,1)) then
+      if (present(highest_boundary_id)) then
+        if (highest_boundary_id /= ubound(struct,1) .or. maxval(nodes%edge) > highest_boundary_id) &
+          error stop "Inconsistent ADEnc boundary range"
+      else if (maxval(nodes%edge) /= ubound(struct,1)) then
        inquire(unit=unitW, name=filename)
         if (maxval(nodes%edge)-100 - dimen == ubound(measured_pts,1) ) then
           write(unit=msg, fmt="(a)") "There is an inconsistent boundary description, it seems like you have forgot & 
@@ -1127,6 +1132,13 @@ module readtools
           inquire(unit=unitW, name=filename)
           write(unit=msg, fmt=*) "HINT: check number of boundary records in file: ", trim(filename)
           call file_error(unitW, trim(msg))
+        end if
+
+        if (present(highest_boundary_id)) then
+          if (struct(i)%ID /= i) then
+            write(*,*) "ADEnc boundary records must be ordered from 101; expected ID", i
+            error stop "Incorrect ADEnc boundary ID"
+          end if
         end if
 
         if (struct(i)%file) then

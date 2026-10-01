@@ -234,8 +234,8 @@ module solver_interfaces
       fin = spmatrix%getn()
       
       
-      call diag_precond(a=spmatrix, x=pde_common%xvect(1:fin,3), mode=1)
-!    call unify_rows(spmatrix, pde_common%bvect(1:fin))
+!      call diag_precond(a=spmatrix, x=pde_common%xvect(1:fin,3), mode=1)
+    call unify_rows(spmatrix, pde_common%bvect(1:fin))
 
       gmres_reps_abs=reps1
       
@@ -246,7 +246,7 @@ module solver_interfaces
     
       repsfin1 = sqrt(repsfin1)
                   
-      call diag_precond(a=spmatrix, x=pde_common%xvect(1:fin,3), mode=-1)     
+  !    call diag_precond(a=spmatrix, x=pde_common%xvect(1:fin,3), mode=-1)     
 
       
     end subroutine gmres_face

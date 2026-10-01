@@ -76,9 +76,12 @@ module init_netcdf
       call fileread(cinit_ls, fileconf, ranges=(/0.0_rkind, huge(0.0_rkind)/), &
                     errmsg="incorrect c initial definition in drutes.conf/netcdf/netcdf.conf")
 
+      call fileread(channel_count, fileconf, ranges=(/1_ikind, huge(1_ikind)/), &
+                    errmsg="number of channels in drutes.conf/netcdf/netcdf.conf must be at least 1")
+
       
       
-      addedbc = maxval(nodes%edge) + 1
+      call set_adenc_boundary_id()
       
       
       ierr = nf90_open(path="drutes.conf/netcdf/mRM_Fluxes_States.nc", mode=nf90_nowrite, ncid=netcdfID)
@@ -192,6 +195,7 @@ module init_netcdf
           channel: do j=1, channel_el%kolik
                     A = channel_nd%data(channel_el%data(j,1),:)
                     B = channel_nd%data(channel_el%data(j,2),:)
+                    if (norm2(B-A) <= 10.0_rkind*epsilon(1.0_rkind)) cycle channel
                     segment_distance = point_segment_distance(A, B, C)
                     if (segment_distance < best_segment_distance) then
                       best_segment_distance = segment_distance
@@ -224,8 +228,8 @@ module init_netcdf
       
       
       
-      call readbcvals(unitW=fileconf, struct=pde(1)%bc, dimen=2_ikind, &
-        dirname="drutes.conf/netcdf/")
+      call read_adenc_boundaries(fileconf)
+      close(fileconf)
 
 
       pde(1)%problem_name(1) = "ADE_in_watershed"
@@ -396,65 +400,194 @@ module init_netcdf
     end subroutine read_ncbounds
     
     
+    subroutine set_adenc_boundary_id()
+      use typy
+      use globals, only: nodes
+      use ncglobvars, only: addedbc
+      implicit none
+
+      if (any(nodes%edge > 0_ikind .and. nodes%edge < 101_ikind) .or. maxval(nodes%edge) < 101_ikind) &
+        error stop "ADEnc mesh boundary IDs must start at 101"
+      addedbc = maxval(nodes%edge) + 1_ikind
+    end subroutine set_adenc_boundary_id
+
+    subroutine read_adenc_boundaries(fileconf)
+      use typy
+      use ncglobvars, only: addedbc
+      use pde_objs, only: pde
+      use readtools, only: readbcvals
+      implicit none
+      integer, intent(in) :: fileconf
+
+      call readbcvals(unitW=fileconf, struct=pde(1)%bc, dimen=addedbc-100_ikind, &
+        dirname="drutes.conf/netcdf/", highest_boundary_id=addedbc)
+    end subroutine read_adenc_boundaries
+
     subroutine readchannel()
       use typy
       use ncglobvars
-      use readtools
-      use debug_tools
-      
-      
-      integer :: fileid, ierr
-      integer(kind=ikind) :: counter, i
+      use, intrinsic :: ieee_arithmetic, only: ieee_is_finite
+      use, intrinsic :: iso_fortran_env, only: iostat_end
+      implicit none
+
+      integer :: fileid, ierr, line_number
+      integer(kind=ikind) :: channel_index, counter, i
+      integer(kind=ikind) :: node_offset, element_offset
+      integer(kind=ikind) :: total_nodes, total_elements
+      integer(kind=ikind), dimension(:), allocatable :: node_counts
       real(kind=rkind), dimension(2) :: tmp
-      
-      open(newunit=fileid, file="drutes.conf/netcdf/channel.dat", iostat=ierr, status="old", action="read")
-      
-      if (ierr /= 0) then
-        print *, "unable to open file drutes.conf/netcdf/channel.dat"
-        ERROR STOP
-      end if
-      
-      counter = 0
-      
-      do 
-        call comment(fileid)
-        read(fileid, fmt=*, iostat=ierr) tmp
-        
-        if (ierr == 0) then
-          counter = counter + 1
-        else
-          EXIT
+      real(kind=rkind), dimension(2) :: previous
+      logical :: eof
+      character(len=256) :: channel_file
+
+      if (channel_count < 1_ikind) error stop "ADEnc requires at least one channel"
+      allocate(node_counts(channel_count))
+      total_nodes = 0_ikind
+      total_elements = 0_ikind
+
+      ! Count each polyline separately. This prevents the final point of one
+      ! channel from being connected to the first point of the next channel.
+      do channel_index = 1, channel_count
+        call channel_filename(channel_index, channel_file)
+        open(newunit=fileid, file=trim(channel_file), iostat=ierr, status="old", action="read")
+
+        if (ierr /= 0) then
+          print *, "unable to open file ", trim(channel_file)
+          ERROR STOP
         end if
-      end do
-      
-      if (counter < 2) then
-        print *, "file drutes.conf/netcdf/channel.dat doesn't contain enough values, check the file! "
-        ERROR STOP
-      end if
-      
-      allocate(channel_nd%data(counter,2))
-      channel_nd%kolik = counter
-      allocate(channel_el%data(counter-1, 2))
-      channel_el%kolik = counter - 1
-      
-      close(fileid)
-      
-      open(newunit=fileid, file="drutes.conf/netcdf/channel.dat", iostat=ierr, status="old", action="read")
-      
-      do i=1, counter
-        call comment(fileid)
-        read(fileid, fmt=*, iostat=ierr) channel_nd%data(i,:)
-      end do
-      
-      do i=1, counter - 1
-        channel_el%data(i,1) = i
-        channel_el%data(i,2) = i+1
+
+        counter = 0_ikind
+        line_number = 0
+        do
+          call read_point(fileid, channel_file, line_number, tmp, eof)
+          if (eof) exit
+          if (counter > 0_ikind) then
+            if (norm2(tmp-previous) <= 10.0_rkind*epsilon(1.0_rkind)) &
+              call point_error(channel_file, line_number, "duplicate consecutive channel points")
+          end if
+          previous = tmp
+          counter = counter + 1_ikind
+        end do
+        close(fileid)
+
+        if (counter < 2_ikind) then
+          print *, "file ", trim(channel_file), " doesn't contain enough values; at least two points are required"
+          ERROR STOP
+        end if
+
+        node_counts(channel_index) = counter
+        total_nodes = total_nodes + counter
+        total_elements = total_elements + counter - 1_ikind
       end do
 
-  
-      
-        
-    
+      if (allocated(channel_nd%data)) deallocate(channel_nd%data)
+      if (allocated(channel_el%data)) deallocate(channel_el%data)
+      allocate(channel_nd%data(total_nodes,2))
+      allocate(channel_el%data(total_elements,2))
+      channel_nd%kolik = total_nodes
+      channel_el%kolik = total_elements
+
+      node_offset = 0_ikind
+      element_offset = 0_ikind
+
+      do channel_index = 1, channel_count
+        call channel_filename(channel_index, channel_file)
+        open(newunit=fileid, file=trim(channel_file), iostat=ierr, status="old", action="read")
+
+        if (ierr /= 0) then
+          print *, "unable to reopen file ", trim(channel_file)
+          ERROR STOP
+        end if
+
+        line_number = 0
+        do i = 1, node_counts(channel_index)
+          call read_point(fileid, channel_file, line_number, channel_nd%data(node_offset+i,:), eof)
+          if (eof) call point_error(channel_file, line_number, "channel file changed during loading")
+        end do
+        close(fileid)
+
+        do i = 1, node_counts(channel_index) - 1_ikind
+          channel_el%data(element_offset+i,1) = node_offset + i
+          channel_el%data(element_offset+i,2) = node_offset + i + 1_ikind
+        end do
+
+        node_offset = node_offset + node_counts(channel_index)
+        element_offset = element_offset + node_counts(channel_index) - 1_ikind
+      end do
+
+      deallocate(node_counts)
+
+    contains
+
+      subroutine point_error(filename, line, message)
+        character(len=*), intent(in) :: filename, message
+        integer, intent(in) :: line
+        write(*,'(a,a,a,i0,a,a)') "Invalid channel file ", trim(filename), " at line ", line, ": ", message
+        error stop "Invalid channel geometry"
+      end subroutine point_error
+
+      subroutine read_point(unit, filename, line, point, eof)
+        integer, intent(in) :: unit
+        character(len=*), intent(in) :: filename
+        integer, intent(inout) :: line
+        real(kind=rkind), intent(out) :: point(2)
+        logical, intent(out) :: eof
+        character(len=4096) :: record
+        integer :: status, pos, last, first, count, comment_pos
+
+        eof = .false.
+        do
+          read(unit,'(a)',iostat=status) record
+          if (status == iostat_end) then
+            eof = .true.
+            return
+          end if
+          line = line + 1
+          if (status /= 0) call point_error(filename, line, "unable to read line")
+          if (len_trim(record) == len(record)) call point_error(filename, line, "line is too long")
+          comment_pos = index(record, '#')
+          if (comment_pos > 0) record(comment_pos:) = ' '
+          last = len_trim(record)
+          if (last == 0) cycle
+
+          count = 0
+          pos = 1
+          do while (pos <= last)
+            if (record(pos:pos) == ' ' .or. record(pos:pos) == achar(9)) then
+              pos = pos + 1
+              cycle
+            end if
+            first = pos
+            do while (pos <= last)
+              if (record(pos:pos) == ' ' .or. record(pos:pos) == achar(9)) exit
+              pos = pos + 1
+            end do
+            count = count + 1
+            if (count > 2) call point_error(filename, line, "expected exactly two coordinates")
+            ! Disallow list-directed null/repeated values and slash termination.
+            if (scan(record(first:pos-1), ',/*') > 0) &
+              call point_error(filename, line, "expected a numeric coordinate")
+            read(record(first:pos-1),*,iostat=status) point(count)
+            if (status /= 0) call point_error(filename, line, "expected a numeric coordinate")
+            if (.not. ieee_is_finite(point(count))) &
+              call point_error(filename, line, "coordinates must be finite")
+          end do
+          if (count /= 2) call point_error(filename, line, "expected exactly two coordinates")
+          return
+        end do
+      end subroutine read_point
+
+      subroutine channel_filename(index, filename)
+        integer(kind=ikind), intent(in) :: index
+        character(len=*), intent(out) :: filename
+
+        if (index == 1_ikind) then
+          filename = "drutes.conf/netcdf/channel.dat"
+        else
+          write(filename, '("drutes.conf/netcdf/channel",I0,".dat")') index
+        end if
+      end subroutine channel_filename
+
     end subroutine readchannel 
 
 
