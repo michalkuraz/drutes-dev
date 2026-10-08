@@ -32,6 +32,8 @@ warnings remain; terrain geometry has not been repaired by this change.
 
 Nodal hydrological output now selects an adjacent active triangle if one
 exists, rather than blindly selecting the first (possibly inactive) triangle.
+The search uses the smartarray's valid length `%pos`, never its allocated
+capacity; unused capacity is uninitialized and is not an element-ID list.
 This does not resolve all previously noted observation-history discrepancies.
 
 ## Zero total solute flux
@@ -65,7 +67,8 @@ including residual artificial diffusion, when that is enabled.
 - Production-module bounds-checked Fortran test checks edge integrals/signs,
   tangent flow, active/active exclusion, active/inactive vs external edge
   classification, port preservation, unknown bank DOFs, and inactive-first
-  nodal adjacency.
+  nodal adjacency. Production smartarray filling also checks inactive-only
+  adjacency with invalid sentinels in unused storage capacity.
 - A manufactured closed square uses the production assembler and bank hook,
   synthetic cached constant hydrology and anisotropic diffusion. A separate
   inactive triangle raises an error if accidentally assembled. Both lumped
@@ -80,6 +83,11 @@ including residual artificial diffusion, when that is enabled.
   15,099 unused nodes, 46 inlet nodes, inlet series shape (3,2).
   There are 713 active FE elements with zero effective width, inherited from
   the existing approximate mask/width mapping. They are not newly repaired.
+- The Rhine preflight's `--full` option additionally exercises the actual
+  linker, FEM initialization and initial spatial/observation output in a fresh
+  diagnostic directory, without time stepping. This passes on Mac and Linux
+  after the adjacency-length fix; input-only initialization had missed that
+  output-path bug. `run_banks.sh` requires the full check before launching.
 
 ## Remaining limitations / before a new Rhine run
 
@@ -98,5 +106,9 @@ interpreting a long run physically. Do not relabel every bank as an outlet.
 Natural zero dispersive flux on an unlabelled external mesh edge is not the
 same as this internal-bank condition.
 
-No production time simulation or server deployment was performed by this
-implementation. Current server executables/configurations/results are intact.
+On 2026-10-08 the three variants were restarted on hydrocalc using the pulled
+8548d416 code plus the uncommitted adjacency-length fix. The first failed
+attempt and all older outputs remain preserved. The new batch is
+`/mnt/stock/ncflux-three-variants-20261008/runs/20261008T151502Z-banks-69WBpi`.
+All three passed full startup/export checks and advanced into time stepping;
+completion and physical results are not yet assessed.

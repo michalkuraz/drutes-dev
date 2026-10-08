@@ -130,10 +130,12 @@ contains
     use ncglobvars, only: LSbank_noflow,ncfluxdata
     integer(kind=ikind), intent(in) :: node_id
     integer(kind=ikind) :: el
-    integer :: j
+    integer(kind=ikind) :: j
     el=nodes%element(node_id)%data(1)
     if (.not. LSbank_noflow) return
-    do j=1,size(nodes%element(node_id)%data)
+    ! smartarray data includes spare, uninitialized capacity. Only pos entries
+    ! are adjacent elements (especially important for inactive-only nodes).
+    do j=1,nodes%element(node_id)%pos
       if (ncfluxdata%activeel(nodes%element(node_id)%data(j))) then
         el=nodes%element(node_id)%data(j)
         return

@@ -80,10 +80,18 @@ program test_adenc_banks
   nodes%data(:,1)=[0,1,1,0,2,2]+500000.0_rkind
   nodes%data(:,2)=[0,0,1,1,0,1]+5000000.0_rkind
   elements%data(1,:)=[1,2,3]; elements%data(2,:)=[1,3,4]; elements%data(3,:)=[2,3,5]
-  nodes%element(1)%data=[1_ikind,2_ikind]
-  nodes%element(2)%data=[3_ikind,1_ikind] ! inactive FIRST: nodal trace must select active
-  nodes%element(3)%data=[1_ikind,2_ikind,3_ikind]
-  nodes%element(4)%data=[2_ikind]; nodes%element(5)%data=[3_ikind]; nodes%element(6)%data=[3_ikind]
+  ! Use production smartarray fill, including spare capacity. Invalid sentinels
+  ! in the unused tail must never be interpreted as adjacent element IDs.
+  call nodes%element(1)%fill(1_ikind); call nodes%element(1)%fill(2_ikind)
+  call nodes%element(2)%fill(3_ikind); call nodes%element(2)%fill(1_ikind)
+  call nodes%element(3)%fill(1_ikind); call nodes%element(3)%fill(2_ikind)
+  call nodes%element(3)%fill(3_ikind)
+  call nodes%element(4)%fill(2_ikind)
+  call nodes%element(5)%fill(3_ikind); call nodes%element(5)%fill(3_ikind)
+  call nodes%element(5)%fill(3_ikind)
+  call nodes%element(6)%fill(3_ikind)
+  nodes%element(3)%data(nodes%element(3)%pos+1:)=-999999_ikind
+  nodes%element(5)%data(nodes%element(5)%pos+1:)=-999999_ikind
   elements%ders(1,:,1)=[-1,1,0]; elements%ders(1,:,2)=[0,-1,1]
   elements%ders(2,:,1)=[0,1,-1]; elements%ders(2,:,2)=[-1,0,1]
   elements%ders(3,:,:)=0; elements%areas=.5_rkind; elements%material=1
@@ -97,6 +105,8 @@ program test_adenc_banks
   if (any(nodes%edge(1:4)/=0) .or. any(nodes%edge(5:6)/=addedbc)) error stop 'bank DOFs/unused nodes'
   if (any(pde(1)%assembly_mask .neqv. ncfluxdata%activeel)) error stop 'assembly mask'
   if (active_node_element(2_ikind)/=1) error stop 'inactive-first nodal trace'
+  if (active_node_element(5_ikind)/=3) error stop 'inactive-only nodal trace reads spare capacity'
+  if (active_node_element(6_ikind)/=3) error stop 'single inactive adjacency fallback'
   ! Opposite inlet/outlet edges must be preserved; diagonal must not be a bank.
   original=[101,102,102,101,0,0]
   call prepare_adenc_banks(original,.true.)

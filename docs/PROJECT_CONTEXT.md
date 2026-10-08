@@ -1,5 +1,21 @@
 # DRUtES project context
 
+Follow-up 2026-10-08 server restart: stopped the remaining old Galerkin process,
+preserving all results, pulled testing to 8548d416 on hydrocalc, and rebuilt
+the Linux executable including Schwarz. All three initial restart attempts
+failed at initial output in active_node_element: it iterated smartarray storage
+capacity instead of its valid entry count %pos. Fixed locally and deployed by
+SCP (NOT yet committed); production-fill regression tests now cover invalid
+spare entries and inactive-only nodes. All 35 tests pass. Extended the Rhine
+preflight with --full (real callback linking, FEM initialization and initial
+spatial/observation export, no stepping) in a separate output directory; it
+passes on Mac and Linux. Updated run_banks.sh requires this check for all cases.
+Three simulations are now stepping in new isolated server batch
+/mnt/stock/ncflux-three-variants-20261008/runs/20261008T151502Z-banks-69WBpi:
+galerkin PID2606471, supg2 PID2606473, supg2-shock1 PID2606475. Run state is a
+dated observation, not a completion/validation claim. Failed restart logs remain
+in 20261008T150735Z-banks-ByCd17. Shared NetCDF forcing is unchanged/symlinked.
+
 Follow-up 2026-10-08: optional netcdf/riverbank.conf implements ADEnc zero-total-
 solute-flux internal banks via ncboundary.f90. Root enabled; legacy mode when
 absent/off. Active FE triangles only assemble (optional PDE assembly_mask);

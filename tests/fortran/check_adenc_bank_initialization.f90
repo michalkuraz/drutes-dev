@@ -7,15 +7,35 @@ program check_adenc_bank_initialization
   use init_netcdf, only: initialize_nc=>netcdf
   use ncglobvars
   use ncfluxarea, only: ncflux_active_width
+  use drutes_init, only: parse_globals,init_measured,init_observe
+  use manage_pointers, only: set_pointers
+  use feminittools, only: feminit
+  use postpro, only: make_print,write_obs
   implicit none
   integer :: e,k,a,b,zero_widths
   integer, parameter :: ends(2,3)=reshape([1,2,2,3,3,1],[2,3])
-  open(newunit=file_global,file='drutes.conf/global.conf',status='old',action='read')
-  call read_global(); close(file_global)
-  open(newunit=file_mesh,file='drutes.conf/mesh/mesh.msh',status='old',action='read')
-  call read_2dmesh_gmsh(); close(file_mesh)
-  allocate(pde(1)); pde_common%processes=1
-  call initialize_nc()
+  character(len=16) :: mode
+  call get_command_argument(1,mode)
+  if (trim(mode)=='--full') then
+    ! Use only a fresh diagnostic directory: these calls create initial outputs.
+    ! Exercise the real callback linker, FEM initialization and initial export,
+    ! including inactive nodes with overallocated adjacency lists. No solving.
+    call parse_globals()
+    call init_measured()
+    call set_pointers()
+    call init_observe()
+    call feminit()
+    time=0; time_step=init_dt
+    call make_print('separately')
+    call write_obs()
+  else
+    open(newunit=file_global,file='drutes.conf/global.conf',status='old',action='read')
+    call read_global(); close(file_global)
+    open(newunit=file_mesh,file='drutes.conf/mesh/mesh.msh',status='old',action='read')
+    call read_2dmesh_gmsh(); close(file_mesh)
+    allocate(pde(1)); pde_common%processes=1
+    call initialize_nc()
+  end if
   if (.not. LSbank_noflow) error stop 'bank preflight requires enabled riverbank.conf'
   if (.not. allocated(pde(1)%assembly_mask)) error stop 'missing assembly mask'
   if (any(pde(1)%assembly_mask .neqv. ncfluxdata%activeel)) error stop 'mask mismatch'
@@ -39,4 +59,5 @@ program check_adenc_bank_initialization
   print *, 'PREFLIGHT inlet nodes / reserved unused ID:',count(nodes%edge==101),addedbc
   print *, 'PREFLIGHT inlet series:',pde(1)%bc(101)%series
   print *, 'Rhine no-flow bank initialization passed (no time stepping)'
+  if (trim(mode)=='--full') print *, 'Full FEM initialization and initial export passed'
 end program
