@@ -94,11 +94,18 @@ module fem
 
       do
 
+        do i=1,size(pde)
+          if (associated(pde(i)%step_begin)) call pde(i)%step_begin(time,time_step)
+        end do
+
         if (minimal_dt > time_step) then
           minimal_dt = time_step
         end if
 
         call pde_common%treat_pde(ierr,  success)
+        do i=1,size(pde)
+          if (associated(pde(i)%step_end)) call pde(i)%step_end(success)
+        end do
         
         
         

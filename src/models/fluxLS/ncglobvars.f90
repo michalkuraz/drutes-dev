@@ -19,6 +19,12 @@ module ncglobvars
   logical :: LSshock = .false.
   real(kind=rkind) :: LSshock_factor = 1.0_rkind
   logical :: LSbank_noflow = .false.
+  logical :: LSconservative=.false., LSbalance=.false., LSstep_active=.false.
+  logical :: LSclock_override=.false.
+  real(kind=rkind) :: LSstate_time=0, LSprevious_time=0, LStrial_time=0, LSoverride_time=0
+  real(kind=rkind) :: LSstep_start=0, LSstep_dt=0
+  real(kind=rkind), allocatable :: LSdepth_old(:,:),LSdepth_new(:,:)
+  logical, allocatable :: open_edges(:,:) ! original exterior edges, excluding Dirichlet ports
   logical, allocatable :: bank_edges(:,:) ! local edges (1,2), (2,3), (3,1)
   real(kind=rkind) :: cinit_ls
   integer(kind=ikind) :: channel_count = 1_ikind
@@ -88,4 +94,15 @@ module ncglobvars
 
 
 
+contains
+  function adenc_coefficient_time() result(t)
+    use globals, only: time
+    real(kind=rkind) :: t
+    t=time
+    if (LSconservative) then
+      t=LSstate_time
+      if (LSstep_active) t=LStrial_time
+    end if
+    if (LSclock_override) t=LSoverride_time
+  end function
 end module ncglobvars

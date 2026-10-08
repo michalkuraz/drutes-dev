@@ -8,6 +8,7 @@ module ncboundary
   private
   public :: read_adenc_banks, prepare_adenc_banks, adenc_bank_element, bank_edge_terms
   public :: active_node_element
+  public :: adenc_open_element
 contains
   subroutine read_adenc_banks()
     use ncglobvars, only: LSbank_noflow
@@ -31,7 +32,7 @@ contains
   end subroutine read_adenc_banks
 
   subroutine prepare_adenc_banks(original_edge, close_exterior)
-    use ncglobvars, only: LSbank_noflow, bank_edges, ncfluxdata, addedbc
+    use ncglobvars, only: LSbank_noflow, bank_edges, ncfluxdata, addedbc,open_edges
     use globals, only: nodes, elements
     use pde_objs, only: pde
     use core_tools, only: write_log
@@ -97,6 +98,12 @@ contains
         interface_edges(local_edge(item),owner(item))=.true.
       end do
     end do
+    if (allocated(open_edges)) deallocate(open_edges)
+    allocate(open_edges(3,elements%kolik))
+    open_edges=bank_edges .and. .not. interface_edges
+    if (present(close_exterior)) then
+      if (close_exterior) open_edges=.false.
+    end if
     if (present(close_exterior)) then
       if (.not. close_exterior) bank_edges=bank_edges .and. interface_edges
     else
@@ -107,9 +114,11 @@ contains
     ! inside a triangle (all three nodes may lie on different bank edges).
     do e=1,elements%kolik
       do k=1,3
-        if (.not. bank_edges(k,e)) cycle
         a=elements%data(e,ends(1,k)); b=elements%data(e,ends(2,k))
-        if (original_edge(a)>100 .and. original_edge(a)==original_edge(b)) bank_edges(k,e)=.false.
+        if (original_edge(a)>100 .and. original_edge(a)==original_edge(b)) then
+          bank_edges(k,e)=.false.
+          open_edges(k,e)=.false.
+        end if
       end do
     end do
     do a=1,nodes%kolik
@@ -203,4 +212,50 @@ contains
       stiff_mat=stiff_mat+matrix
     end do
   end subroutine adenc_bank_element
+
+  ! Conservative form: J.n=0 is natural on banks; exterior outflow has
+  ! zero diffusive flux and retains q.n*C. Unspecified inflow is an error.
+  subroutine adenc_open_element(el_id,dt,matrix)
+    use globals, only: nodes,elements
+    use ncglobvars, only: open_edges,ncfluxdata,ora_di_ini,adenc_coefficient_time
+    use netcdfflux, only: ncflux_get_xy_cell
+    use ncfluxarea, only: ncflux_active_width
+    integer(kind=ikind), intent(in) :: el_id
+    real(kind=rkind), intent(in) :: dt
+    real(kind=rkind), intent(out) :: matrix(3,3)
+    integer, parameter :: ends(2,3)=reshape([1,2,2,3,3,1],[2,3])
+    real(kind=rkind) :: a(2),b(2),center(2),normal(2),point(2),length,s,Q,W,qn(2),part(3,3)
+    integer :: k,g
+    logical :: ok
+    character(len=1024) :: message
+    matrix=0
+    if (.not. allocated(open_edges)) error stop 'Conservative exterior topology not initialized'
+    W=ncflux_active_width(el_id)
+    if (W<=0) return
+    center=sum(nodes%data(elements%data(el_id,:),1:2),dim=1)/3
+    do k=1,3
+      if (.not. open_edges(k,el_id)) cycle
+      a=nodes%data(elements%data(el_id,ends(1,k)),1:2)
+      b=nodes%data(elements%data(el_id,ends(2,k)),1:2)
+      length=norm2(b-a)
+      if (length<=0) error stop 'Degenerate conservative exterior edge'
+      normal=[b(2)-a(2),a(1)-b(1)]/length
+      if (dot_product(normal,center-(a+b)/2)>0) normal=-normal
+      do g=1,2
+        s=(1+(2*g-3)/sqrt(3.0_rkind))/2
+        point=(1-s)*a+s*b
+        point=point+1.e-8_rkind*(center-point)
+        call ncflux_get_xy_cell(point(1),point(2), &
+          ora_di_ini+int(adenc_coefficient_time()/86400.0_rkind)*24,Q,ok,message)
+        qn(g)=0
+        if (ok .and. Q>0) qn(g)=Q/W*dot_product(ncfluxdata%fluxvct(el_id,:),normal)
+        if (qn(g)<-1.e-12_rkind) then
+          print *, 'Unspecified ADEnc exterior inflow at element/edge:',el_id,k
+          error stop 'Label exterior inflow with an explicit Dirichlet inlet'
+        end if
+      end do
+      call bank_edge_terms(ends(:,k),length,qn,dt,part)
+      matrix=matrix-part ! negative equation sign: -dt integral Ni*Jn
+    end do
+  end subroutine
 end module ncboundary

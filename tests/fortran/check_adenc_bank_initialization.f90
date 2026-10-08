@@ -11,12 +11,13 @@ program check_adenc_bank_initialization
   use manage_pointers, only: set_pointers
   use feminittools, only: feminit
   use postpro, only: make_print,write_obs
+  use femmat, only: assemble_mat
   implicit none
-  integer :: e,k,a,b,zero_widths
+  integer :: e,k,a,b,zero_widths,ierr
   integer, parameter :: ends(2,3)=reshape([1,2,2,3,3,1],[2,3])
   character(len=16) :: mode
   call get_command_argument(1,mode)
-  if (trim(mode)=='--full') then
+  if (trim(mode)=='--full' .or. trim(mode)=='--assemble') then
     ! Use only a fresh diagnostic directory: these calls create initial outputs.
     ! Exercise the real callback linker, FEM initialization and initial export,
     ! including inactive nodes with overallocated adjacency lists. No solving.
@@ -28,6 +29,13 @@ program check_adenc_bank_initialization
     time=0; time_step=init_dt
     call make_print('separately')
     call write_obs()
+    if (trim(mode)=='--assemble') then
+      if (.not.LSconservative) error stop 'assembly preflight requires conservative mode'
+      call pde(1)%step_begin(time,time_step)
+      call assemble_mat(ierr)
+      call pde(1)%step_end(.false.) ! dry assembly; no solve or accepted time step
+      print *, 'Conservative Rhine matrix assembly passed (no solve/time stepping)'
+    end if
   else
     open(newunit=file_global,file='drutes.conf/global.conf',status='old',action='read')
     call read_global(); close(file_global)
@@ -59,5 +67,6 @@ program check_adenc_bank_initialization
   print *, 'PREFLIGHT inlet nodes / reserved unused ID:',count(nodes%edge==101),addedbc
   print *, 'PREFLIGHT inlet series:',pde(1)%bc(101)%series
   print *, 'Rhine no-flow bank initialization passed (no time stepping)'
-  if (trim(mode)=='--full') print *, 'Full FEM initialization and initial export passed'
+  if (trim(mode)=='--full' .or. trim(mode)=='--assemble') &
+    print *, 'Full FEM initialization and initial export passed'
 end program

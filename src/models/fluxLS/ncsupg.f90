@@ -108,17 +108,20 @@ contains
   ! Lag the viscosity at the current Picard iterate, diffuse the new unknown.
   ! Broken P1 residual shares the coefficient-jump limitation of SUPG.
   pure subroutine shock_terms(q,depth,gradients,basis,current,previous,dt,transient, &
-                             reaction,source,factor,stiffness)
+                             reaction,source,factor,stiffness,old_depth)
     real(kind=rkind), intent(in) :: q(2),depth,gradients(3,2),basis(3),current(3),previous(3)
     real(kind=rkind), intent(in) :: dt,reaction,source,factor
     logical, intent(in) :: transient
     real(kind=rkind), intent(out) :: stiffness(3,3)
+    real(kind=rkind), intent(in), optional :: old_depth
     real(kind=rkind) :: gradient(2),residual,nu
     stiffness=0
     if (depth<=0 .or. factor<=0 .or. dt<=0) return
     gradient=matmul(transpose(gradients),current-current(1))
     residual=(dot_product(q,gradient)-reaction*dot_product(basis,current)-source)/depth
     if (transient) residual=residual+dot_product(basis,current-previous)/dt
+    if (transient .and. present(old_depth)) &
+      residual=residual+(1-old_depth/depth)*dot_product(basis,previous)/dt
     nu=shock_diffusivity(q/depth,gradients,gradient,residual,factor)
     stiffness=-dt*depth*nu*matmul(gradients,transpose(gradients))
   end subroutine shock_terms
@@ -127,7 +130,7 @@ contains
     use global_objs
     use globals
     use pde_objs
-    use ncglobvars, only: LSsupg, LSsupg_factor, LSshock, LSshock_factor
+    use ncglobvars, only: LSsupg, LSsupg_factor, LSshock, LSshock_factor, LSconservative,LSdepth_old
     class(pde_str), intent(in) :: pde_loc
     integer(kind=ikind), intent(in) :: el_id
     real(kind=rkind), intent(in) :: dt
@@ -173,15 +176,26 @@ contains
       call supg_terms(q,depth,tensor,elements%ders(el_id,:,1:2),base_fnc(:,l), &
         dt,transient,reaction,source,supg_factor,temporal,spatial,forcing)
       if (LSshock .and. LSshock_factor>0) then
-        call shock_terms(q,depth,elements%ders(el_id,:,1:2),base_fnc(:,l),current,elnode_prev, &
-          dt,transient,reaction,source,LSshock_factor,shock)
+        if (LSconservative) then
+          call shock_terms(q,depth,elements%ders(el_id,:,1:2),base_fnc(:,l),current,elnode_prev, &
+            dt,transient,reaction,source,LSshock_factor,shock,LSdepth_old(l,el_id))
+        else
+          call shock_terms(q,depth,elements%ders(el_id,:,1:2),base_fnc(:,l),current,elnode_prev, &
+            dt,transient,reaction,source,LSshock_factor,shock)
+        end if
         spatial=spatial+shock
       end if
       weight=gauss_points%weight(l)*elements%areas(el_id)/gauss_points%area
       cap_mat=cap_mat+weight*temporal
       stiff_mat=stiff_mat+weight*spatial
       bside=bside+weight*forcing
-      if (transient) bside=bside+weight*matmul(temporal,elnode_prev)
+      if (transient) then
+        if (LSconservative) then
+          bside=bside+weight*matmul(temporal,elnode_prev)*LSdepth_old(l,el_id)/depth
+        else
+          bside=bside+weight*matmul(temporal,elnode_prev)
+        end if
+      end if
     end do
   end subroutine adenc_supg_element
 end module ncsupg

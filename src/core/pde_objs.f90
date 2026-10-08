@@ -120,6 +120,10 @@ module pde_objs
     procedure(basic_subrt), nopass, pointer          :: read_parameters
     ! Optional post-capacity local stabilization; unassociated for other models.
     procedure(element_stabilization_fnc), pass(pde_loc), pointer :: stabilize_element => null()
+    ! Optional single-model step/history hooks; legacy models remain unchanged.
+    procedure(step_begin_fnc), pass(pde_loc), pointer :: step_begin => null()
+    procedure(step_end_fnc), pass(pde_loc), pointer :: step_end => null()
+    procedure(boundary_history_fnc), pass(pde_loc), pointer :: boundary_history => null()
     ! Optional fixed active-element domain; absent for ordinary PDEs.
     logical, allocatable :: assembly_mask(:)
     !> bc is allocated in read_inputs::readbcval
@@ -244,6 +248,26 @@ module pde_objs
       type(bcpts_str), intent(in), optional :: bcpts
     end subroutine bc_fnc
   end interface 
+
+  abstract interface
+    subroutine step_begin_fnc(pde_loc,t,dt)
+      import :: pde_str,rkind
+      class(pde_str), intent(in) :: pde_loc
+      real(kind=rkind), intent(in) :: t
+      real(kind=rkind), intent(in out) :: dt
+    end subroutine
+    subroutine step_end_fnc(pde_loc,accepted)
+      import :: pde_str
+      class(pde_str), intent(in) :: pde_loc
+      logical, intent(in) :: accepted
+    end subroutine
+    function boundary_history_fnc(pde_loc,el,node,column) result(value)
+      import :: pde_str,ikind,rkind
+      class(pde_str), intent(in) :: pde_loc
+      integer(kind=ikind), intent(in) :: el,node,column
+      real(kind=rkind) :: value
+    end function
+  end interface
 
   abstract interface
     subroutine element_stabilization_fnc(pde_loc, el_id, dt, quadpnt_in)
@@ -647,7 +671,11 @@ module pde_objs
               edge = nodes%edge(pts(i))
 
                       
-              call pde_loc%bc(edge)%value_fnc(pde_loc, el, i, ndvals(i))
+              if (associated(pde_loc%boundary_history)) then
+                ndvals(i)=pde_loc%boundary_history(el,i,quadpnt%column)
+              else
+                call pde_loc%bc(edge)%value_fnc(pde_loc, el, i, ndvals(i))
+              end if
       
             end if
           end do
@@ -763,7 +791,11 @@ module pde_objs
                 EXIT
               end if
             end do
-            call pde_loc%bc(edge)%value_fnc(pde_loc, el, order, val)
+            if (associated(pde_loc%boundary_history)) then
+              val=pde_loc%boundary_history(el,order,quadpnt%column)
+            else
+              call pde_loc%bc(edge)%value_fnc(pde_loc, el, order, val)
+            end if
           end if
 
         case default

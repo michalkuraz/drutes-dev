@@ -23,6 +23,7 @@ module init_netcdf
       use ncdispersion, only: parse_ls_dispersivity
       use ncsupg, only: read_adenc_supg
       use ncboundary, only: read_adenc_banks,prepare_adenc_banks
+      use ncconservative, only: read_adenc_conservative
             
       integer :: ierr, filetmp, fileconf
       integer(kind=ikind) :: i, bccnt, j
@@ -81,6 +82,7 @@ module init_netcdf
       call write_log(trim(errmsg))
       call read_adenc_supg()
       call read_adenc_banks()
+      call read_adenc_conservative()
       
       
       call fileread(Qmin, fileconf, ranges=(/0.0_rkind, huge(0.0_rkind)/), &
@@ -269,6 +271,12 @@ module init_netcdf
 
       pde(1)%mass_name(1,1) = "conc_in_river"
       pde(1)%mass_name(1,2) = "concetration [M/L^3]"
+      if (LSconservative) then
+        pde(1)%mass_name(1,1) = "solute_inventory_density"
+        pde(1)%mass_name(1,2) = "H*c [M/L^2]"
+        ! ncflux exports hydrological q, NOT C*q-K*grad(C); retain its filename.
+        pde(1)%flux_name(2) = "depth-integrated water flux [L^2/T]"
+      end if
       
       pde(1)%print_mass = .true.      
 

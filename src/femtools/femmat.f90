@@ -244,7 +244,11 @@ module femmat
             elnode_prev(j) = pde_common%xvect(k,1)
 		      else
             k = nodes%edge(elements%data(i,ll))
-            call pde(proc)%bc(k)%value_fnc(pde(proc), i, ll, value)
+            if (associated(pde(proc)%boundary_history)) then
+              value=pde(proc)%boundary_history(i,ll,1_ikind)
+            else
+              call pde(proc)%bc(k)%value_fnc(pde(proc), i, ll, value)
+            end if
             elnode_prev(j) = value
 		      end if
 		    end do
@@ -288,7 +292,11 @@ module femmat
               pde(proc)%solution(nd) = pde_common%xvect(pde(proc)%permut(nd),3)
             else
               edge = nodes%edge(nd)
-              call pde(proc)%bc(edge)%value_fnc(pde(proc), i, j, value)
+              if (associated(pde(proc)%boundary_history)) then
+                value=pde(proc)%boundary_history(i,j,3_ikind)
+              else
+                call pde(proc)%bc(edge)%value_fnc(pde(proc), i, j, value)
+              end if
               pde(proc)%solution(nd) = value
             end if
           end do

@@ -20,14 +20,22 @@ module ncpointers
       use ncglobvars
       use init_netcdf
       use lsconstitutive
+      use ncconservative
 
 
       integer(kind=ikind) :: i
       
       call netcdf()
       nullify(pde(1)%stabilize_element)
-      if (LSbank_noflow .or. (LSsupg .and. LSsupg_factor>0) .or. (LSshock .and. LSshock_factor>0)) &
+      nullify(pde(1)%step_begin,pde(1)%step_end,pde(1)%boundary_history)
+      if (LSconservative .or. LSbalance .or. LSbank_noflow .or. &
+          (LSsupg .and. LSsupg_factor>0) .or. (LSshock .and. LSshock_factor>0)) &
         pde(1)%stabilize_element => adenc_element_corrections
+      if (LSconservative .or. LSbalance) then
+        pde(1)%step_begin=>conservative_begin
+        pde(1)%step_end=>conservative_end
+      end if
+      if (LSconservative) pde(1)%boundary_history=>adenc_boundary_history
       
 
  
@@ -65,13 +73,19 @@ module ncpointers
       use ncglobvars
       use ncsupg, only: adenc_supg_element
       use ncboundary, only: adenc_bank_element
+      use ncconservative, only: conservative_element
+      use ncbalance, only: balance_capture
       class(pde_str), intent(in) :: pde_loc
       integer(kind=ikind), intent(in) :: el_id
       real(kind=rkind), intent(in) :: dt
       type(integpnt_str), intent(in), optional :: quadpnt_in
+      real(kind=rkind) :: oldcap(3,3),newcap(3,3),open_matrix(3,3),source
+      if (LSconservative .or. LSbalance) &
+        call conservative_element(pde_loc,el_id,dt,oldcap,newcap,open_matrix,source)
       if ((LSsupg .and. LSsupg_factor>0) .or. (LSshock .and. LSshock_factor>0)) &
         call adenc_supg_element(pde_loc,el_id,dt,quadpnt_in)
-      call adenc_bank_element(pde_loc,el_id,dt,quadpnt_in)
+      if (.not. LSconservative) call adenc_bank_element(pde_loc,el_id,dt,quadpnt_in)
+      if (LSbalance) call balance_capture(el_id,oldcap,newcap,open_matrix,source)
     end subroutine adenc_element_corrections
     
     

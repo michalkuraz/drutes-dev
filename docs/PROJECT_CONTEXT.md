@@ -1,5 +1,37 @@
 # DRUtES project context
 
+Follow-up 2026-10-08 server conservative launch: user explicitly authorized
+stopping the three older bank-only runs and launching all three new variants.
+Private source snapshot exported to /mnt/stock/ncflux-conservative-20261008;
+server ~/drutes-dev working tree preserved. Linux build, bank/conservative
+regressions and full initialization/export/conservative assembly passed for
+ALL three cases before the old launcher2606342 was sent TERM. Old batch
+20261008T151502Z-banks-69WBpi outputs preserved, statuses INTERRUPTED.
+New batch /mnt/stock/ncflux-conservative-20261008/runs/
+20261008T164531Z-conservative-V9Flrm runs galerkin PID2608442, supg2 PID2608444,
+supg2-shock1 PID2608446; launcher2608329. Conservative and balance flags y/y;
+shared forcing symlinked to prior export, original hashes verified, no recopy.
+First 6/6/7 accepted steps reached 2315/2315/2846 seconds with finite CSV values
+and max relative budget error about 2.3e-15. This is STARTUP evidence only,
+not completed-run conservation/physical validation. See
+ADENC_CONSERVATIVE_SERVER_20261008.md for exact paths/provenance.
+
+Follow-up 2026-10-08 conservative ADEnc: implemented optional conservative
+d(H*C)/dt + div(q*C-K*grad(C)) transport and accepted-step unscaled inventory
+audit. New ncconservative/ncbalance modules; three null-by-default shared
+step/history hooks; no generic capmat/stiffmat/solver/Schwarz implementation
+changes. Optional netcdf/conservative.conf defaults n/n, so root and existing
+server runs retain previous physics. Single 2D P1 Picard transient Euler only;
+restart from backup/Schwarz rejected for this mode, Schwarz still builds.
+Variable/jumping-H closed tests, pulse/Dirichlet/outflow budget, rejection,
+event clipping and legacy audit tested through production assembly. Fresh
+Rhine conservative full-init/initial-export/matrix preflight passed without a
+solve. No server interaction/deployment/restart or long simulation performed.
+Existing zero-width, internal sealed outlet and physical reconstruction
+limitations remain; see ADENC_CONSERVATIVE.md. Prior dated paragraphs below
+may describe older Git/deployment states (adjacency fix is now committed in
+3e9d563); do not treat them as current run-status evidence.
+
 Follow-up 2026-10-08 server restart: stopped the remaining old Galerkin process,
 preserving all results, pulled testing to 8548d416 on hydrocalc, and rebuilt
 the Linux executable including Schwarz. All three initial restart attempts

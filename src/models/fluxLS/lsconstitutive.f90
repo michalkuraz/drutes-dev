@@ -58,7 +58,7 @@ module lsconstitutive
       call getcoor(quadpnt, xy)
       
       
-      nowhrs = ora_di_ini + int(time/86400.0_rkind)*24
+      nowhrs = ora_di_ini + int(adenc_coefficient_time()/86400.0_rkind)*24
       
 
       
@@ -211,7 +211,7 @@ module lsconstitutive
       
       call getcoor(quadpnt, xy)
       
-      nowhrs = ora_di_ini + int(time/86400.0_rkind)*24
+      nowhrs = ora_di_ini + int(adenc_coefficient_time()/86400.0_rkind)*24
       
       call ncflux_get_xy_cell(xy(1), xy(2),  nowhrs, q, success, errmsg)
       
@@ -266,6 +266,7 @@ module lsconstitutive
       use ADE_globals
       use debug_tools
       use netcdfflux
+      use ncglobvars, only: LSconservative
       
       class(pde_str), intent(in) :: pde_loc
       !> value of the nonlinear function
@@ -295,6 +296,10 @@ module lsconstitutive
       end select
       
       c = pde(1)%getval(quadpnt)
+      if (LSconservative) then
+        val=c*ADEls_tder_coef(pde_loc,layer,quadpnt)
+        return
+      end if
       
       call pde(1)%flux(layer, quadpnt, scalar=q)
       
@@ -327,7 +332,8 @@ module lsconstitutive
       use global_objs
       use pde_objs
       use debug_tools
-      
+      use ncglobvars, only: LSconservative,adenc_coefficient_time
+      use ncconservative, only: adenc_boundary_value
       class(pde_str), intent(in) :: pde_loc
       integer(kind=ikind), intent(in)  :: el_id, node_order
       real(kind=rkind), intent(out), optional    :: value
@@ -342,6 +348,11 @@ module lsconstitutive
       
       edge_id = nodes%edge(elements%data(el_id, node_order))
       if (present(value)) then
+        if (LSconservative) then
+          value=adenc_boundary_value(pde_loc,el_id,node_order,adenc_coefficient_time())
+          if (present(code)) code=1
+          return
+        end if
         if (pde_loc%bc(edge_id)%file) then
           do i=1, ubound(pde_loc%bc(edge_id)%series,1)
             if (pde_loc%bc(edge_id)%series(i,1) > time) then

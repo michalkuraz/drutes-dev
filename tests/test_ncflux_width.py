@@ -80,6 +80,44 @@ def test_width_cache_with_real_modules(tmp_path: Path) -> None:
          str(ROOT / 'tests/fortran/test_adenc_banks.f90'),
          *map(str, objects), *libraries, '-o', str(bank_executable)], tmp_path)
     assert 'closed mass checks passed' in run([str(bank_executable)], tmp_path)
+    conservative_executable = tmp_path / 'test-adenc-conservative'
+    run([required['gfortran'], '-fcoarray=single', '-fdefault-real-8', '-fcheck=all',
+         '-I', str(build / 'mods'), *nf_flags,
+         str(ROOT / 'tests/fortran/test_adenc_conservative.f90'),
+         *map(str, objects), *libraries, '-o', str(conservative_executable)], tmp_path)
+    (tmp_path / 'out').mkdir(exist_ok=True)
+    assert 'ADEnc conservative checks passed' in run([str(conservative_executable)], tmp_path)
+    budget = np.genfromtxt(tmp_path / 'out/adenc_mass_balance.csv', delimiter=',', names=True)
+    assert budget.size == 20  # accepted pulse/outflow steps; rejected trials add no rows
+    assert np.all(np.isfinite(budget.tolist()))
+    assert np.max(np.abs(budget['error'])) < 1e-11
+    assert np.max(np.abs(budget['free_residual'])) < 1e-11
+    assert budget['cumulative_in'][-1] > 0
+    assert budget['cumulative_out'][-1] > 0
+    assert budget['cumulative_source'][-1] == 0
+    for label, content in {'absent': None, 'off': 'n\nn\n', 'on': 'y\ny\n',
+                           'audit': 'n\ny\n', 'schwarz': 'y\ny\n', '3d': 'y\ny\n',
+                           'backup': 'y\ny\n'}.items():
+        case = tmp_path / f'conservative-{label}'
+        inputs = case / 'drutes.conf/netcdf'
+        inputs.mkdir(parents=True)
+        if content is not None:
+            (inputs / 'conservative.conf').write_text(content)
+        result = subprocess.run([str(conservative_executable), label], cwd=case,
+                                text=True, capture_output=True, timeout=20)
+        if label in ('schwarz', '3d', 'backup'):
+            assert result.returncode != 0
+            assert ('requires 2D standard Picard' if label != 'backup' else
+                    'restart from backup is not supported') in result.stdout + result.stderr
+        else:
+            assert result.returncode == 0, result.stdout + result.stderr
+    case = tmp_path / 'conservative-inflow'
+    case.mkdir()
+    (case / 'out').mkdir()
+    result = subprocess.run([str(conservative_executable), 'inflow'], cwd=case,
+                            text=True, capture_output=True, timeout=20)
+    assert result.returncode != 0
+    assert 'Label exterior inflow' in result.stdout + result.stderr
     for label, content in {'absent': None, 'on': 'y\n', 'schwarz': 'y\n', '3d': 'y\n'}.items():
         case = tmp_path / f'banks-{label}'
         inputs = case / 'drutes.conf/netcdf'
