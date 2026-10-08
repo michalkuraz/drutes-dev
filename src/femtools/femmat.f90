@@ -232,6 +232,9 @@ module femmat
       limits = ubound(stiff_mat,1)/ubound(pde,1)
 
       do i=1, elements%kolik
+        if (allocated(pde(1)%assembly_mask)) then
+          if (.not. pde(1)%assembly_mask(i)) cycle
+        end if
         pde_common%current_el = i
         processes: do proc=1, ubound(pde,1)
 		    do j=1+(proc-1)*limits, ubound(elements%data,2) + (proc-1)*limits
@@ -252,6 +255,7 @@ module femmat
         call build_stiff_np(i, time_step)
 
         call pde_common%time_integ(i)
+        call apply_element_stabilization(i, time_step)
  
 
         stiff_mat = stiff_mat + cap_mat 

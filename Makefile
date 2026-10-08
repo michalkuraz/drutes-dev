@@ -114,7 +114,7 @@ REevap_obj :=  $(OBJDIR)/evapglob.o $(OBJDIR)/evappointers.o $(OBJDIR)/evap_RE_c
 
 ifeq ($(HAVE_NETCDF),yes)
 
-	NETCDF_obj := $(OBJDIR)/init_netcdf.o $(OBJDIR)/ncglobvars.o $(OBJDIR)/netcdfflux.o $(OBJDIR)/ncpointers.o $(OBJDIR)/nctools.o $(OBJDIR)/ncdem.o $(OBJDIR)/ncwidth_geometry.o $(OBJDIR)/ncfluxarea.o $(OBJDIR)/lsconstitutive.o $(OBJDIR)/ncmesh.o $(OBJDIR)/ncmap.o
+	NETCDF_obj := $(OBJDIR)/init_netcdf.o $(OBJDIR)/ncglobvars.o $(OBJDIR)/netcdfflux.o $(OBJDIR)/ncpointers.o $(OBJDIR)/nctools.o $(OBJDIR)/ncdem.o $(OBJDIR)/ncwidth_geometry.o $(OBJDIR)/ncfluxarea.o $(OBJDIR)/lsconstitutive.o $(OBJDIR)/ncmesh.o $(OBJDIR)/ncmap.o $(OBJDIR)/ncdispersion.o $(OBJDIR)/ncsupg.o $(OBJDIR)/ncboundary.o
 
 else
 
@@ -448,15 +448,24 @@ $(OBJDIR)/ncfluxarea.o: $(CORE_obj) $(TOOLS_obj) $(OBJDIR)/ncglobvars.o $(OBJDIR
 	$(FC) $(FFLAGS) -c src/models/fluxLS/ncfluxarea.f90 -o $@
 
 
-$(OBJDIR)/lsconstitutive.o: $(CORE_obj) $(TOOLS_obj) $(OBJDIR)/ncglobvars.o $(OBJDIR)/netcdfflux.o $(OBJDIR)/ncfluxarea.o $(OBJDIR)/init_netcdf.o src/models/fluxLS/lsconstitutive.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+$(OBJDIR)/ncdispersion.o: $(OBJDIR)/typy.o src/models/fluxLS/ncdispersion.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/models/fluxLS/ncdispersion.f90 -o $@
+
+$(OBJDIR)/ncsupg.o: $(CORE_obj) $(TOOLS_obj) $(OBJDIR)/ncglobvars.o src/models/fluxLS/ncsupg.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/models/fluxLS/ncsupg.f90 -o $@
+
+$(OBJDIR)/ncboundary.o: $(CORE_obj) $(TOOLS_obj) $(OBJDIR)/ncglobvars.o $(OBJDIR)/netcdfflux.o $(OBJDIR)/ncfluxarea.o src/models/fluxLS/ncboundary.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/models/fluxLS/ncboundary.f90 -o $@
+
+$(OBJDIR)/lsconstitutive.o: $(CORE_obj) $(TOOLS_obj) $(OBJDIR)/ncglobvars.o $(OBJDIR)/netcdfflux.o $(OBJDIR)/ncfluxarea.o $(OBJDIR)/init_netcdf.o $(OBJDIR)/ncdispersion.o $(OBJDIR)/ncboundary.o src/models/fluxLS/lsconstitutive.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
 	$(FC) $(FFLAGS) -c src/models/fluxLS/lsconstitutive.f90 -o $@
 
 
-$(OBJDIR)/init_netcdf.o: $(CORE_obj) $(TOOLS_obj) $(OBJDIR)/nctools.o $(OBJDIR)/netcdfflux.o $(OBJDIR)/ncglobvars.o $(OBJDIR)/ncdem.o $(OBJDIR)/ncmesh.o $(OBJDIR)/ncmap.o $(OBJDIR)/ncfluxarea.o src/models/fluxLS/init_netcdf.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+$(OBJDIR)/init_netcdf.o: $(CORE_obj) $(TOOLS_obj) $(OBJDIR)/nctools.o $(OBJDIR)/netcdfflux.o $(OBJDIR)/ncglobvars.o $(OBJDIR)/ncdem.o $(OBJDIR)/ncmesh.o $(OBJDIR)/ncmap.o $(OBJDIR)/ncfluxarea.o $(OBJDIR)/ncdispersion.o $(OBJDIR)/ncsupg.o $(OBJDIR)/ncboundary.o src/models/fluxLS/init_netcdf.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
 	$(FC) $(FFLAGS) -c src/models/fluxLS/init_netcdf.f90 -o $@
 
 
-$(OBJDIR)/ncpointers.o: $(CORE_obj) $(TOOLS_obj) $(OBJDIR)/ncglobvars.o $(OBJDIR)/init_netcdf.o $(OBJDIR)/lsconstitutive.o src/models/fluxLS/ncpointers.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+$(OBJDIR)/ncpointers.o: $(CORE_obj) $(TOOLS_obj) $(OBJDIR)/ncglobvars.o $(OBJDIR)/init_netcdf.o $(OBJDIR)/lsconstitutive.o $(OBJDIR)/ncsupg.o $(OBJDIR)/ncboundary.o src/models/fluxLS/ncpointers.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
 	$(FC) $(FFLAGS) -c src/models/fluxLS/ncpointers.f90 -o $@
 
 

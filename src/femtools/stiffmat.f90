@@ -28,7 +28,22 @@
 module stiffmat
   public :: build_stiff_np
   public :: build_bvect
+  public :: apply_element_stabilization
   contains
+    ! Called after time_integ: do not lump the SUPG temporal correction.
+    subroutine apply_element_stabilization(el_id, dt, quadpnt_in)
+      use typy
+      use global_objs
+      use pde_objs
+      integer(kind=ikind), intent(in) :: el_id
+      real(kind=rkind), intent(in) :: dt
+      type(integpnt_str), intent(in), optional :: quadpnt_in
+      integer :: proc
+      do proc=1,size(pde)
+        if (associated(pde(proc)%stabilize_element)) &
+          call pde(proc)%stabilize_element(el_id,dt,quadpnt_in)
+      end do
+    end subroutine apply_element_stabilization
    
    
    !> build local stifness matrix for nonlinear problems and Picard method

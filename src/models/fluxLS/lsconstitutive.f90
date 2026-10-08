@@ -1,4 +1,5 @@
 module lsconstitutive
+  use ncboundary, only: active_node_element
 
   contains 
   
@@ -43,7 +44,7 @@ module lsconstitutive
             RETURN
           end if
         case("ndpt")
-          el = nodes%element(quadpnt%order)%data(1)
+          el = active_node_element(quadpnt%order)
             if (.not. ncfluxdata%activeel(el) )then
               if (present(flux)) flux = 0
               if (present(flux_length)) flux_length = 0
@@ -71,7 +72,7 @@ module lsconstitutive
           print *, "exited from lsconstitutive::ncflux"
           ERROR STOP
         case("ndpt")
-          el = nodes%element(quadpnt%order)%data(1)
+          el = active_node_element(quadpnt%order)
           
         case default
           print *, "incorrect quadpnt%type_pnt: ", quadpnt%type_pnt
@@ -201,7 +202,7 @@ module lsconstitutive
             RETURN
           end if
         case("ndpt")
-          el = nodes%element(quadpnt%order)%data(1)
+          el = active_node_element(quadpnt%order)
             if (.not. ncfluxdata%activeel(el) )then
               val = 1
               RETURN
@@ -230,7 +231,7 @@ module lsconstitutive
           print *, "exited from lsconstitutive::ncflux"
           ERROR STOP
         case("ndpt")
-          el = nodes%element(quadpnt%order)%data(1)
+          el = active_node_element(quadpnt%order)
         case default
           print *, "incorrect quadpnt%type_pnt: ", quadpnt%type_pnt
           print *, "exited from lsconstitutive::ncflux"
@@ -286,7 +287,7 @@ module lsconstitutive
           print *, "exited from lsconstitutive::ncflux"
           ERROR STOP
         case("ndpt")
-          el = nodes%element(quadpnt%order)%data(1)
+          el = active_node_element(quadpnt%order)
         case default
           print *, "incorrect quadpnt%type_pnt",  quadpnt%type_pnt
           print *, "exited from lsconstitutive::ncflux"
@@ -377,6 +378,7 @@ module lsconstitutive
       use re_globals
       use debug_tools
       use ncglobvars
+      use ncdispersion, only: ls_dispersion_tensor
       
       class(pde_str), intent(in) :: pde_loc
       !> value of the nonlinear function
@@ -390,9 +392,8 @@ module lsconstitutive
       !> relative scalar value of the nonlinear function 
       real(kind=rkind), intent(out), optional                 :: scalar
 
-      integer(kind=ikind) :: D, i
-      real(kind=rkind) :: q
-      real(kind=rkind), dimension(2,2) :: identity
+      integer(kind=ikind) :: D
+      real(kind=rkind), dimension(2) :: qvector
       
      
       if (present(quadpnt) .and. present(x)) then
@@ -407,21 +408,19 @@ module lsconstitutive
      
       D = drutes_config%dimen
       
-      identity = 0.0_rkind
-      do i=1, D
-        identity(i,i) = 1.0_rkind
-      end do
-      
-      call pde(1)%flux(layer, quadpnt, scalar=q)
+      if (D /= 2) error stop "ADEnc dispersion requires two dimensions"
+      if (.not. present(quadpnt)) error stop "ADEnc dispersion requires an integration point"
+      call pde(1)%flux(layer, quadpnt, vector_out=qvector)
       
       
       if (present(tensor)) then
-        tensor = identity*LSdisp*q
+        call ls_dispersion_tensor(qvector, LSdisp, LSdisp_transverse, tensor)
       end if
     
       
       if (present(scalar)) then
-        scalar = LSdisp*q
+        ! Scalar interface reports the longitudinal coefficient, not the tensor.
+        scalar = LSdisp*norm2(qvector)
       end if
  
     

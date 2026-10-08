@@ -527,6 +527,7 @@ module schwarz_dd2subcyc
                           call build_stiff_np(el, dt, quadpnt_in=quadpnt)
 
                           call pde_common%time_integ(el, quadpnt_in=quadpnt)
+                          call apply_element_stabilization(el, dt, quadpnt_in=quadpnt)
                                
                           quadpnt%element = el
 			  quadpnt%column = 2

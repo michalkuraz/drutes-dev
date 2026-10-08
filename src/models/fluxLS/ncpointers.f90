@@ -25,6 +25,9 @@ module ncpointers
       integer(kind=ikind) :: i
       
       call netcdf()
+      nullify(pde(1)%stabilize_element)
+      if (LSbank_noflow .or. (LSsupg .and. LSsupg_factor>0) .or. (LSshock .and. LSshock_factor>0)) &
+        pde(1)%stabilize_element => adenc_element_corrections
       
 
  
@@ -54,6 +57,22 @@ module ncpointers
      
     
     end subroutine nclinker
+
+    subroutine adenc_element_corrections(pde_loc,el_id,dt,quadpnt_in)
+      use typy
+      use pde_objs
+      use global_objs
+      use ncglobvars
+      use ncsupg, only: adenc_supg_element
+      use ncboundary, only: adenc_bank_element
+      class(pde_str), intent(in) :: pde_loc
+      integer(kind=ikind), intent(in) :: el_id
+      real(kind=rkind), intent(in) :: dt
+      type(integpnt_str), intent(in), optional :: quadpnt_in
+      if ((LSsupg .and. LSsupg_factor>0) .or. (LSshock .and. LSshock_factor>0)) &
+        call adenc_supg_element(pde_loc,el_id,dt,quadpnt_in)
+      call adenc_bank_element(pde_loc,el_id,dt,quadpnt_in)
+    end subroutine adenc_element_corrections
     
     
 

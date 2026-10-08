@@ -1,0 +1,461 @@
+# DRUtES project context
+
+Follow-up 2026-10-08: optional netcdf/riverbank.conf implements ADEnc zero-total-
+solute-flux internal banks via ncboundary.f90. Root enabled; legacy mode when
+absent/off. Active FE triangles only assemble (optional PDE assembly_mask);
+participating bank DOFs restored after legacy missing-DEM annotations. Edge
+Robin correction uses one-sided hydrological q.n; actual external mesh/ports
+remain separate. Only standard 2D Picard supported; Schwarz still builds.
+35 tests pass, constant-H closed-box mass checks cover 180 assembled steps,
+Rhine initialization succeeds (4968 elements, 723 banks). No server deployment
+or production simulation. The scenario1 mesh has only inlet101; reserved102 is
+NOT an outlet, so an internal active-domain end needs explicit outlet labeling
+before long-run physical interpretation. 713 zero-width active triangles and
+interior continuity/storage conservation issues remain. See ADENC_NOFLOW_BANKS.md.
+
+Follow-up 2026-10-08 restart fix: server export run_all.sh now launches into
+fresh runs/<UTC timestamp>-<unique suffix>/ directories, not cases/ outputs.
+Preserves old results/markers; flock plus process detection prevents duplicate
+active batches. Each attempt has a private binary and regenerated shared-data
+symlinks. Updated server script/README/SHA256SUMS, --check passed, previous
+script backed up in script-backup-rEDEBT3E. No simulation launched by this fix.
+The original transfer tar.gz contains the old launcher; installed server and
+local export directory contain the fixed version.
+
+Follow-up 2026-10-08: exported three identical-physics Rhine scenario1 variants
+(Galerkin, SUPG2, SUPG2+shock1) to exports/ncflux-three-variants-20261008.tar.gz
+and scp to miguel@hydrocalc.science.fzp.czu.cz:/mnt/stock/. Unpacked as
+/mnt/stock/ncflux-three-variants-20261008; native Linux build and SHA256 checks
+passed. Shared NetCDF inputs stored once, relative symlinks in each case.
+run_all.sh builds then launches three processes concurrently with rerun guards.
+No server simulation launched yet. AFC/FCT is not included/implemented.
+
+Follow-up 2026-10-07: optional ADEnc netcdf/shock.conf adds capped isotropic
+residual viscosity via the existing ncsupg element hook. Root enabled factor1;
+missing settings retain old behavior. No additional shared FEM/Schwarz edits.
+Current Picard nodal values drive the viscosity; physical dispersion unchanged.
+The active scenario1-supg2-rI7lgx run/binary/configs remain untouched. See
+ADENC_SHOCK_CAPTURING.md for equations, nonlinear cost and smearing limitations.
+
+Follow-up 2026-10-07: user selected SUPG multiplier 2. Root supg.conf changed
+to 2.0; a new isolated scenario1-supg2-rI7lgx folder in the simulation batch
+was prepared with 200/0.2 m dispersion and the original first-scenario 14-day
+inputs. NetCDF files are symlinks, not copies. Production initialization
+checked factor=2, date, inlet series and widths. Model has NOT been launched.
+
+Follow-up 2026-10-07 SUPG: optional netcdf/supg.conf enables ADEnc-only
+residual stabilization via ncsupg.f90 and a null-by-default PDE element hook
+after capacity assembly. Includes consistent temporal correction and old-time
+RHS; lumped base capacity is unchanged. Root defaults enable factor 1; existing
+scenario/run copies remain unchanged. Algebra/real-assembly tests pass, and a
+small synthetic strip shows min C improving -1.3065 to -0.1334, RMS error
+0.2403 to 0.0605. This does not establish positivity or Rhine stability.
+Schwarz hooks are present but not numerically validated. See ADENC_SUPG.md.
+
+Follow-up 2026-10-07: ADEnc now supports direction-aligned dispersion with
+separate alpha_L and alpha_T on the existing dispersivity line. One scalar
+preserves legacy isotropic behavior. `ncdispersion.f90` provides strict record
+parsing and tensor algebra; `ADElsdisp` uses the actual depth-integrated flux
+vector and returns K=|q|[alpha_T I+(alpha_L-alpha_T)dd^T]. Root defaults are
+200 m / 0.2 m, exploratory and uncalibrated. Prepared scenario folders and
+finished run copies retain the original 2000 m setting. No new simulation
+was requested here. See docs/ADENC_DISPERSION.md for units and limitations.
+
+Follow-up 2026-10-04: prepared independent drutes.conf3a (Rhine-only continuous
+unit-concentration release) and drutes.conf3b (Moselle-only release). Both use
+Qmin=100, start 2015-06-01 and the inherited one-day duration/2000 m dispersivity.
+Their identical meshes add five physical inlet-102 line records on existing
+western exterior triangle edges, without changing nodes or triangles. Their
+original grid-centre channel2.dat is extended upstream to that inlet; the
+experimental DEM-guided channel2.dat-v2 remains comparison-only. Boundaries are
+101 Rhine, 102 Moselle, 103 reserved inactive. An isolated production-module
+initialization check (not main/time stepping/solve_pde) passed both setups:
+44/6 surviving inlet nodes, positive widths and inward Moselle direction,
+correct concentration callbacks at start/middle/end. The extended line's 1414
+samples lie inside the FE mesh with Q >=116.89 on the initial date. No simulation
+run; original drutes.conf and drutes.conf3 unchanged. Qmin selects all qualifying
+cells, not only named rivers; equal inlet concentrations are not equal masses.
+The inherited northern DEM coverage warnings remain. See each new scenario's
+SCENARIO_README.md and scenario.json for setup and verification details.
+
+Follow-up 2026-10-01: ADEnc now reads `channel_count` after initial concentration,
+loading `channel.dat`, `channel2.dat`, through `channelN.dat` as separate
+polylines. The reader requires two finite coordinates per data line, reports
+file/line errors, and rejects duplicate consecutive points within each file.
+Shared coordinates between files remain valid for confluences. Segment direction
+selection defensively skips zero-length segments. Boundary count is derived from
+the original mesh maximum ID plus its reserved inactive boundary; configuration
+records must be ordered from 101 through that ID. Separate physical inlets can
+load separate concentration files. See `docs/ADENC_CHANNEL_INPUTS.md`. This is
+code support; scenario 3 still needs actual tributary geometry and inlet labeling.
+
+Follow-up 2026-10-04: scenario 3 now includes `netcdf/channel2.dat` for the
+lower Moselle and sets channel_count=2. Its nine downstream-ordered UTM 32N
+points follow the routed-cell corridor, ending on segment 22 of the original
+Rhine line. All 808 sampled locations are inside the FE domain and valid Q cells.
+At 2015-06-01 the tributary Q is approximately 130.5--136.0 m3/s; the unchanged
+Qmin=300 excludes it. Scenario 3 still needs an activation threshold/date decision
+and a separate release boundary. See its SCENARIO_README.md and scenario.json.
+Only a channel-reader driver was executed; no transport simulation was run.
+
+Updated 2026-09-05 at the user's request: read the numerical source first,
+then the GUI, and retain working context. Repository root on this machine is
+`/Users/miguel/drutes-dev`. Snapshot: branch `testing`, HEAD
+`2834aad` (`improved width computation`), preceded by `25467cf`
+(`ADE nc fixed`). This is an architectural orientation, not a complete
+line-by-line numerical correctness audit. No model run, build, authentication
+test, or automated test suite was performed during this context refresh.
+
+Follow-up completed 2026-09-06: implemented and checked contact-limited river
+widths, set the requested root `Qmin` to 35, ran all 15 tests successfully,
+and rebuilt root `bin/drutes`. The width section below describes this newer
+working-tree state; HEAD above is the earlier committed baseline. Existing
+simulation outputs and GUI project copies were not changed.
+
+## Working boundaries
+
+- Preserve existing code, configurations, outputs, and untracked work. At
+  inspection, tracked files were clean but many GUI modules, documentation,
+  configuration extras, build products, and outputs were untracked. Untracked
+  does not mean disposable. No implementation changes were requested in this
+  refresh; only this context document and its `AGENTS.md` entry point were added.
+- The model starts by clearing `out/*` relative to its working directory in
+  `src/core/main.f90`. Inspection must not casually execute `bin/drutes` on
+  existing results. A future numerical test needs an explicitly isolated run
+  directory with the required inputs.
+- Never copy OAuth credentials into chat, source, notes, or screenshots. Native
+  authentication already exists and should be continued, not reimplemented.
+- Current conversation language is Czech; GUI labels and code are English.
+
+## Numerical source: `src/`
+
+There are 104 `.f90` files, totaling 51,212 physical lines including comments
+and blank lines at this snapshot. These totals do not imply that every source
+variant is built. `src/drutes_gui.egg-info/` is Python packaging metadata, not
+part of the numerical solver.
+
+DRUtES is a modular Fortran finite-element simulator for nonlinear, potentially
+coupled transport/flow PDEs, with 1D, 2D/axisymmetric, and 3D infrastructure.
+Individual model/dimension combinations have their own restrictions.
+
+| Directory | Responsibility |
+| --- | --- |
+| `src/core/` | Main program, numeric kinds, mesh/global types, PDE types, global state and shared callbacks. |
+| `src/pointerman/` | Connect model names and solver settings to concrete procedures. |
+| `src/femtools/` | FEM initialization, quadrature, local capacity/stiffness/load assembly, global assembly, nonlinear/time stepping and mass/flux calculations. |
+| `src/mathtools/` | Geometry-independent numerical helpers, quadrature and linear-solver interfaces including GMRES. |
+| `src/pma++/` | Matrix classes, sparse/full storage, reordering, matrix I/O, direct and iterative linear algebra. |
+| `src/decompo/` | Schwarz domain decomposition, subdomains, coarse levels and subcycling variants. |
+| `src/tools/` | Configuration and mesh readers, initialization, geometry/projection utilities, output, logging, timing and inverse-model objective support. |
+| `src/models/` | Model-specific readers, state, constitutive relations, boundary conditions and callback linking. |
+
+Execution route: `main` -> `parse_globals`/mesh and solver inputs ->
+`set_pointers` -> observations and `feminit` -> optional decomposition ->
+`solve_pde` -> outputs and final diagnostics. `fem.solve_pde` writes initial
+outputs and advances time through `pde_common%treat_pde` and adaptive time-step
+handling. `femmat.solve_picard` assembles the coupled system, calls
+`solve_matrix`, checks convergence, and accepts/rejects iterates.
+
+`global_objs.f90` defines `node`, `element`, observation and integration-point
+types. `nodes%element(node)%data` stores adjacent FE elements.
+`elements%data` is connectivity; `%gc` centroids; `%areas` measures;
+`%neighbours` adjacency; `%material` material IDs. Internal array positions
+must not be assumed identical to arbitrary external mesh tags.
+
+`pde_objs.f90` defines `PDE_str`, `pde_fnc_str`, and `pde_common_str`.
+Procedure pointers provide dispersion, convection, elasticity/storage,
+reaction/source, flux, initial and boundary conditions, and value/gradient
+evaluation. The point descriptor distinguishes `gqnd`, `obpt`, and `ndpt`.
+Changing one model callback can affect assembly AND postprocessing.
+
+Model names dispatched by `manage_pointers.f90` include `RE`, `REstd`,
+`REtest`, `Re_dual`, `ADE`, `ADEnc`, `heat`, `boussi`, `kinwave`, `freeze`,
+`LTNE`, `ICENE`, and `REevap`. Several are explicitly developmental. The GUI
+supports only a subset; do not equate the GUI's model list with solver scope.
+
+Richards implementations live in `models/RE/`: `RE` uses total hydraulic head,
+while `REstd` uses pressure head and has different boundary support.
+`re_reader.f90` reads matrix/root parameters; `re_constitutive.f90` contains
+van Genuchten/Mualem, constitutive tables, root sink and related functions;
+`re_total.f90` supplies total-head operations. Other model directories cover
+dual porosity, evaporation/vapour, solute ADE, heat, soil freezing, Boussinesq
+and kinematic-wave flow.
+
+Heat coupling is decided from the first value in `heat.conf`:
+`heat_pointers.f90` creates one heat PDE, or Richards as PDE 1 and heat as
+PDE 2. `heat_reader.f90` reads convection rows ONLY when Richards coupling
+is off. Initial temperature may be a per-material numeric block or the
+legacy `file` input; the GUI exposes per-layer temperatures.
+
+`tools/postpro.f90` writes observation series, spatial profiles and Gmsh
+data. Observation series begin with time, then solution, printed mass
+properties, flux components, and cumulative flux. Exact column counts depend
+on the model and dimension. `out/solver.time` is written when enabled around
+linear-system solves; multiple solves can share a simulation time.
+
+The root `Makefile` builds `bin/drutes`, objects in `build/objs`, modules in
+`build/mods`, and logs in `build/logs/compile.log`. Defaults include gfortran,
+optimization, implicit-none, single-image coarrays and default-real-8.
+NetCDF support is conditional on detecting `nf-config` and `nc-config`
+(`HAVE_NETCDF`). Consult the Makefile before building; source presence alone
+does not imply inclusion or parallel execution in the default build.
+
+## Current work: NetCDF river flux and hypothetical width
+
+Relevant files are in `src/models/fluxLS/`, plus geometric helpers in
+`src/tools/geom_tools.f90`. Inputs include
+`drutes.conf/netcdf/netcdf.conf`, `mRM_Fluxes_States.nc`, `dem.nc`, and
+`channel.dat`. Keep these user data intact.
+
+- `ncglobvars.f90`: NetCDF axes/time/cache, Qrouted variable metadata, cell
+  bounds, active-element flags and flow directions; hydro mesh and FE mapping.
+  Current geographic zone is 32. Do not silently change coordinate assumptions.
+- `netcdfflux.f90`: public subroutines `ncflux_get_xy` (original bilinear),
+  `_bilin`, `_pw` (triangular piecewise linear), `_nn` (nearest valid one of
+  four bracketing sample locations), and `_cell` (piecewise constant value of
+  the containing hydrological cell using bounds). `_nn` is not a global
+  nearest-valid search and is not the same as `_cell`.
+- Each public lookup takes `(x, y, cur_hrs, qval, ok, errmsg)`, transforms UTM
+  to lat/lon, looks up an exact integer-hour time index, and caches one slice.
+  NetCDF data are read `(nlon,nlat,1)` then transposed to `(nlat,nlon)`.
+  Handle `ok`; do not interpret a failed lookup as physical zero automatically.
+- `init_netcdf.f90` uses `_cell` at mesh nodes for initialization/activation.
+  A node is assigned the added boundary if lookup fails or Q is below Qmin;
+  an FE element is inactive if all of its nodes have that boundary. This mask
+  is constructed at initialization, not recomputed for every later time slice.
+  The DEM-based node-deactivation block in `init_netcdf` is commented out,
+  but `nctools::terrain_slopes` still marks nodes adjacent to missing DEM
+  elevations as `addedbc` afterwards, without rebuilding `activeel`. Do not
+  describe DEM-based boundary marking as completely disabled. This pre-existing
+  behavior was not changed by the width update.
+- `ncmesh.f90` constructs hydrological quadrilaterals from bounds and maps
+  coordinates to UTM; `ncdem.f90` loads/interpolates elevations;
+  `nctools.f90` provides coordinate conversion and slopes.
+- `ncmap.f90::mapel` maps FE centroids to containing hydrological quads in
+  `el2ncgrid`. This is separate from discharge lookup at an arbitrary point.
+- Channel direction comes from ordered consecutive point pairs in
+  `channel.dat`. For each active FE centroid, initialization now chooses the
+  nearest segment using clamped point-to-segment distance, then stores its
+  unit direction in `ncfluxdata%fluxvct`. It no longer requires the
+  perpendicular projection to fall strictly inside some segment.
+- User reported the channel holes disappeared after that direction-mapping
+  change. Element 8777 was a historical debugging example. Recheck data at
+  the actual simulation time before any new diagnosis; an old first-slice
+  inspection is not evidence about another date. Neither unusual element
+  numbers nor the screenshot alone prove missing NetCDF values.
+- `lsconstitutive.f90::ncflux` uses `_cell`, flow direction, and width to
+  return `Q * direction / width` (or zero on certain failures). Its output is
+  named `conc_flux`, but this callback does not multiply by concentration.
+  Do not infer its physical formula from the filename alone.
+- Current time sampling there and in the storage callback is
+  `ora_di_ini + int(time / 86400) * 24`: daily steps in seconds-to-hours
+  conversion, followed by an exact NetCDF-time match.
+- Nodal flux evaluation uses the first adjacent element for activation,
+  direction and width. Gauss/observation evaluation uses the specified
+  element. These choices matter for discontinuities and displayed results.
+
+### Width: contact-limited implementation (2026-09-06)
+
+`src/models/fluxLS/ncfluxarea.f90::ncflux_active_width(element_number)` returns
+a cached effective width in UTM coordinate length units. Initialization calls
+`ncflux_prepare_widths` after FE mapping and channel-direction assignment.
+The cache uses the initial NetCDF slice: valid finite Q > 0 and Q >= Qmin.
+Missing/dry/below-threshold cells do not supply active contacts. Rebuild the
+cache explicitly if the mesh, directions, mapping or initial mask changes;
+loading another daily discharge slice does not change the fixed geometry.
+
+`ncwidth_geometry.f90::river_contact_width` computes actual shared edge
+overlaps between a hydrological quad and its active neighbouring quads.
+Each opening contributes `overlap_length * abs(dot(d, outward_edge_normal))`,
+with normalized flow direction d. It sums inlet openings and outlet openings
+separately (parallel branches), and limits the previous full-cell transverse
+span by the smaller available inlet/outlet width. Partial faces are supported
+by the geometry routine; structured-grid neighbours are gathered from the
+eight surrounding cells so corner-only contacts are also recognized.
+
+An absent inlet/outlet is treated as an open channel end. A known connection
+only through a corner has zero width unless there is also a positive face
+opening on that side. A direction tangent to all real contacts returns zero.
+An isolated cell retains its full span because no connecting width is known.
+Inactive/unmapped/invalid FE entries and zero directions return zero.
+Initialization logs the number of zero-width elements mapped to flowing cells.
+No epsilon-width replacement is used to hide a closed contact.
+
+This is a geometric effective-width approximation, not a measured wetted
+river width, a local cross-section through the FE centroid, or a conservative
+remapping of Qrouted between cells. Inlet and outlet transport conservation
+for varying directions/branch discharges would require a separate numerical
+assessment. Flow directions and existing FE/hydrological mapping were not
+changed. Both flux and effective-depth/storage callbacks use the same width.
+The storage callback now guards failed lookups and Q <= 0 before division.
+
+User explicitly requested Qmin = 35: root
+`drutes.conf/netcdf/netcdf.conf` now contains 35 (m3/s for this Qrouted data).
+The initial date is 2015-06-01 (NetCDF time index 20240, zero-based), not the
+first data slice. At that date, Q >= 35 selects 196 cells forming one
+face-connected component; the previous Qmin=0 selected 1,439 positive cells.
+
+Verification on 2026-09-06:
+
+- `python -m pytest -q`: 15 passed, including new Fortran geometry and real-module
+  cache tests. Cases include oblique/partial contacts, branches, corner-only
+  connections, rotated UTM coordinates, reversed orientation, both descending
+  axes, zero/NaN/missing discharges, invalid mapping, and explicit cache rebuild.
+  Integration tests build the real solver modules in temporary directories and
+  run a dedicated test driver, never DRUtES main.
+- `make build_target`: successful optimized build of root `bin/drutes`.
+- A separate read-only geometry driver used the real NetCDF, Gmsh mesh,
+  channel polyline and production mapping/direction/width routines: 35,137 FE
+  triangles, 6,873 active by the initial node criterion; 5,875 of those have
+  centroids in flowing cells. None of these 5,875 has zero width; 5,141 widths
+  are reduced. Positive widths range about 408.746--16,492.418 m. Another 998
+  node-active FE centroids are below Qmin/unmapped and get zero width, consistent
+  with the cache's centroid-cell criterion. This checks width geometry, not
+  complete FEM boundary handling or a transient simulation.
+- No full model simulation was run; existing `out/` results are untouched.
+  No existing GUI project executable or configuration copies were replaced.
+
+Remaining related follow-ups, not addressed by this change: `velocity(Q,w)`
+still algebraically cancels width for positive w; duplicate channel points
+can yield zero direction; nodal evaluation still uses the first adjacent FE
+element. The initial FE activation criterion (any active node) differs from
+the centroid-cell criterion used by the width cache near river banks.
+
+## GUI: Python modules and workflow
+
+GUI/application code is split across `drutes_gui/`, root `pages/`, and
+`drutespy/config/`; reading only `drutes_gui/` misses the editors.
+These directories plus the two test modules total 4,394 Python lines at this
+snapshot. `pyproject.toml` requires Python >=3.12 and `streamlit[auth]`;
+pytest is the test extra. The declared Streamlit minimum is not a verified
+compatibility guarantee for every API currently used.
+
+- `drutes_gui/app.py`: entry point, theme and root `logo.png`, Google native
+  login, project gateway, session navigation, save-all, subprocess terminal,
+  results pages, configuration/output ZIP downloads.
+- `drutes_gui/projects.py`: validates account/project path components,
+  creates projects by staging and renaming copied defaults, resolves and lists
+  projects, and produces configuration archives.
+- `drutespy/config/parameter.py`: parameter types, schema definitions, values,
+  original values and line positions.
+- `parser.py`: strict positional parser, skips blank/whole-line `#` comments,
+  supports counted lists and y/n booleans, rejects unexpected extra records.
+- `writer.py`: edits modified values bottom-up and replaces the target via a
+  temporary file. Unchanged records/comments are retained; replacing a list
+  replaces its full line span, so do not promise arbitrary comment retention
+  inside modified list blocks.
+- `configfile.py`: UI-independent load/get/set/save API combining parser/writer.
+  Model schemas: `global_config.py`, `mesh_config.py`, `solver_config.py`,
+  `heat_config.py`, `matrix_config.py`, `root_uptake_config.py`.
+- `pages/global_configuration.py`: global controller plus UI. Supports only
+  `RE` and `heat`; saving forces 1D, internal mesh, pure output, Picard and
+  implicit Euler plus other `FIXED_VALUES`. Never use this as a generic
+  round-trip editor for every Fortran model/configuration.
+- `pages/mesh_configuration.py`: live SVG of soil, mesh spacing dx and
+  observation points; range/continuity/alignment messages below the title.
+- `pages/solver_configuration.py`: linear solver and solver-time toggle.
+- `pages/model_configuration.py`: heat, Richards matrix and root-uptake
+  editors; shared continuation controls and boundary upload validation.
+- Output pages: `richards_outputs.py`, `heat_outputs.py`,
+  `solver_time_output.py`, `simulation_log.py`.
+
+Navigation: Google login -> project selection -> project home -> global ->
+mesh / solver / heat or matrix -> optional coupled matrix / root uptake ->
+save all -> separate run page. `visited_configuration_pages` makes labels
+change from Edit to Return and enables completion when required pages were
+opened; visiting is intentionally not synonymous with editing. Individual
+saves persist edits. `save_all` reloads/saves files on disk; it is not a
+transaction committing every outstanding widget value.
+
+The physical path is lowercase `drutes.conf/mesh/drumesh1d.conf`; some display
+labels say `drumesh1D.conf`. Preserve correct spelling on case-sensitive
+servers. Mesh layer count drives read-only counts and row resizing in the
+model pages; those files are updated when saved, not immediately on mesh edit.
+Fortran material counts use maximum material ID, so arbitrary material IDs
+need care when assuming one row per layer.
+
+Richards UI retains hidden RCZA tokens; initial options map to `hpres`,
+`H_tot`, `theta`. Bottom/top are stored IDs 101/102. Boundary choices map to
+1 Dirichlet, 2 Neumann, -1 height-defined Dirichlet, 3 free drainage,
+4 seepage, 5 atmospheric. Time-dependent inputs use 101.bc/102.bc beside the
+model config; ordinary inputs require two columns, atmospheric three and
+forced time dependence. Heat offers only Dirichlet/Neumann with two-column
+files. Root uptake exposes per-layer Feddes h1, h2, h3, h4, Smax.
+
+Heat coupling hides AND removes convection rows from the saved file;
+turning it off exposes and inserts them again. This matches the Fortran
+reader. Coupled results have separate heat and Richards tabs.
+
+Richards units: time sec/min/hrs/day and length mm/cm/m. Heat: fixed sec/m.
+Length is stored as `# GUI length unit:` in global.conf, not an extra
+positional Fortran record. Unit selection controls metadata/labels; it does
+not rescale all physical numeric inputs. Keep physical parameters consistent.
+
+### Authentication, projects, and running
+
+Native `st.login()`, `st.user`, `st.logout()`; required `[auth]` fields are
+`redirect_uri`, `cookie_secret`, `client_id`, `client_secret`,
+`server_metadata_url`. Local intended redirect is
+`http://localhost:8501/oauth2callback`; Google discovery is
+`https://accounts.google.com/.well-known/openid-configuration`.
+Local secrets belong in `.streamlit/secrets.toml`, template in
+`.streamlit/secrets.toml.example`. Credential contents were not read during
+this review. Current `.gitignore` ignores secrets, `user/`, and `backups/`;
+the ignore rules were checked. The ignore file itself was untracked.
+
+Projects live under `user/<normalized-google-email>/<project-name>/` with
+their own `drutes.conf/`, `bin/drutes`, `out/`, and `project.json`.
+They copy current root defaults and executable at creation. Rebuilding root
+`bin/drutes` does NOT update existing projects' private executable copies.
+Configuration ZIP includes configs, binary and metadata; output ZIP includes
+the entire project's `out/`. Archives are built in memory and skip symlinks.
+
+The runner uses `subprocess.Popen` with project cwd and merged stdout/stderr.
+A daemon reader thread accumulates lines; a 0.5-second Streamlit fragment
+renders an escaped fixed-height terminal and running-only kill control.
+Termination targets the process (terminate, then kill if needed), not a
+separate process group. This is session-local execution, not a durable job
+queue. The GUI prevents switching project/re-editing through the run-page
+buttons while running and stops the process on explicit logout.
+
+Documented local launch (paths exist, but server not started in this review):
+
+```sh
+cd /Users/miguel/drutes-dev
+source /Users/miguel/.venv/bin/activate
+streamlit run drutes_gui/app.py
+```
+
+Browser: `http://localhost:8501/`.
+
+### Outputs, checks, and documentation
+
+- Richards series: `out/obspt_RE_matrix-N.out`; column names inferred from
+  comments. Multiple selected points each have independent property selectors.
+  Profiles: `RE_matrix_{press_head,sat-dg,theta,flux}-N.dat` with node ID,
+  coordinate, value. Index 0 is initial; configured observation times follow;
+  the expected last index is observation count + 1 for end time.
+- Heat series: `obspt_heat-N.out`, exactly four columns for this 1D GUI:
+  time, temperature, heat flux, cumulative transfer. Profiles:
+  `heat_temperature-N.dat` and `heat_heat_flux-N.dat`. Display labels use
+  seconds, metres, degrees Celsius, W/m² and J/m².
+- Charts allow multiple properties on one axis with comma-separated labels;
+  there is no normalization into a common physical unit or independent axes.
+- `solver.time`: optional separate timing display/download. `DRUtES.log`:
+  parsed timestamped events, metrics and rendered report plus original-file
+  download. Do not treat that rendered subset as a complete diagnostic log.
+- Existing automated tests cover global parser/writer behavior and project
+  creation/path validation/archives (`tests/test_global_config.py`,
+  `tests/test_projects.py`), not a full numerical or browser regression suite.
+- Manual source: `docs/manual/drutes_gui_manual.tex`; screenshots:
+  `docs/manual/images/`; PDF copies: `docs/manual/build/drutes_gui_manual.pdf`
+  and `output/pdf/drutes_gui_manual.pdf`. The TeX graphic path supports the
+  repository root and manual directory. Render/layout freshness was not
+  checked in this review.
+
+Other static-review follow-ups, not changes made now: boundary validation
+checks the expected column count but converts only columns 1 and 2, even
+for atmospheric data; mesh alignment errors are displayed without blocking
+save; coupled-heat/root-uptake navigation and completion requirements are
+not handled uniformly on every route. Review these with targeted tests if
+asked to change the related workflow.

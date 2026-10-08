@@ -118,6 +118,10 @@ module pde_objs
     !> procedure to be called after process change
     procedure(basic_subrt), nopass, pointer          :: process_change
     procedure(basic_subrt), nopass, pointer          :: read_parameters
+    ! Optional post-capacity local stabilization; unassociated for other models.
+    procedure(element_stabilization_fnc), pass(pde_loc), pointer :: stabilize_element => null()
+    ! Optional fixed active-element domain; absent for ordinary PDEs.
+    logical, allocatable :: assembly_mask(:)
     !> bc is allocated in read_inputs::readbcval
     type(boundary_vals), dimension(:), allocatable   :: bc
     integer(kind=ikind), dimension(:), allocatable   :: permut
@@ -240,6 +244,18 @@ module pde_objs
       type(bcpts_str), intent(in), optional :: bcpts
     end subroutine bc_fnc
   end interface 
+
+  abstract interface
+    subroutine element_stabilization_fnc(pde_loc, el_id, dt, quadpnt_in)
+      use typy
+      use global_objs
+      import :: pde_str
+      class(pde_str), intent(in) :: pde_loc
+      integer(kind=ikind), intent(in) :: el_id
+      real(kind=rkind), intent(in) :: dt
+      type(integpnt_str), intent(in), optional :: quadpnt_in
+    end subroutine element_stabilization_fnc
+  end interface
 
   !> abstract interface for scalar function
   abstract interface

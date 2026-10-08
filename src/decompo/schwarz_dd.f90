@@ -479,6 +479,7 @@ module schwarz_dd
                           call build_stiff_np(el, domain%time_step)
 
                           call pde_common%time_integ(el)
+                          call apply_element_stabilization(el, domain%time_step)
 
                           stiff_mat = stiff_mat + cap_mat
 

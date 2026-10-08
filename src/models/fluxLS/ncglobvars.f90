@@ -12,7 +12,14 @@ module ncglobvars
   integer(kind=ikind) :: geograzone = 32
   real(kind=rkind), dimension(:), allocatable :: nodealt
   real(kind=rkind) :: Qmin 
-  real(kind=rkind) :: LSdisp 
+  real(kind=rkind) :: LSdisp ! longitudinal dispersivity [m]; legacy name retained
+  real(kind=rkind) :: LSdisp_transverse ! transverse dispersivity [m]
+  logical :: LSsupg = .false.
+  real(kind=rkind) :: LSsupg_factor = 1.0_rkind
+  logical :: LSshock = .false.
+  real(kind=rkind) :: LSshock_factor = 1.0_rkind
+  logical :: LSbank_noflow = .false.
+  logical, allocatable :: bank_edges(:,:) ! local edges (1,2), (2,3), (3,1)
   real(kind=rkind) :: cinit_ls
   integer(kind=ikind) :: channel_count = 1_ikind
 

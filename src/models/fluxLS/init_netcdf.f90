@@ -20,13 +20,18 @@ module init_netcdf
       use ncmesh
       use ncmap
       use geom_tools
+      use ncdispersion, only: parse_ls_dispersivity
+      use ncsupg, only: read_adenc_supg
+      use ncboundary, only: read_adenc_banks,prepare_adenc_banks
             
       integer :: ierr, filetmp, fileconf
       integer(kind=ikind) :: i, bccnt, j
       logical :: success
       real(kind=rkind) :: q, segment_distance, best_segment_distance
       character(len=1024) :: errmsg
+      character(len=4096) :: dispersivity_line
       integer(kind=ikind), dimension(3) :: datearray
+      integer(kind=ikind), allocatable :: original_edge(:)
       real(kind=rkind), dimension(2) :: xy, A, B, C
       real(kind=rkind), dimension(4,2) :: pts
       
@@ -66,8 +71,16 @@ module init_netcdf
       starttime%day = datearray(3)
     
       
-      call fileread(LSdisp, fileconf, ranges=(/0.0_rkind, huge(0.0_rkind)/), &
-                    errmsg="incorrect dispersivity definition in drutes.conf/netcdf/netcdf.conf")
+      call comment(fileconf)
+      read(fileconf, '(A)', iostat=ierr) dispersivity_line
+      if (ierr /= 0) call file_error(fileconf, "missing ADEnc dispersivity record")
+      call parse_ls_dispersivity(dispersivity_line, LSdisp, LSdisp_transverse, success)
+      if (.not. success) call file_error(fileconf, &
+        "ADEnc dispersivity must be one or two finite nonnegative values: alpha_L [m] alpha_T [m]")
+      write(errmsg, *) "ADEnc dispersivity [m]: alpha_L=", LSdisp, " alpha_T=", LSdisp_transverse
+      call write_log(trim(errmsg))
+      call read_adenc_supg()
+      call read_adenc_banks()
       
       
       call fileread(Qmin, fileconf, ranges=(/0.0_rkind, huge(0.0_rkind)/), &
@@ -82,6 +95,7 @@ module init_netcdf
       
       
       call set_adenc_boundary_id()
+      original_edge=nodes%edge
       
       
       ierr = nf90_open(path="drutes.conf/netcdf/mRM_Fluxes_States.nc", mode=nf90_nowrite, ncid=netcdfID)
@@ -184,6 +198,10 @@ module init_netcdf
       call mapel()
       
       call terrain_slopes()
+      ! terrain_slopes historically pins entire triangles with missing DEM to
+      ! addedbc. Restore participating DOFs only AFTER that legacy annotation.
+      ! ADEnc flux direction below comes from channel polylines, not DEM slopes.
+      call prepare_adenc_banks(original_edge)
       
       call readchannel()
       
@@ -229,6 +247,12 @@ module init_netcdf
       
       
       call read_adenc_boundaries(fileconf)
+      if (LSbank_noflow) then
+        ! This ID now belongs ONLY to unused nodes; not the participating banks.
+        pde(1)%bc(addedbc)%code=1
+        pde(1)%bc(addedbc)%file=.false.
+        pde(1)%bc(addedbc)%value=0
+      end if
       close(fileconf)
 
 
