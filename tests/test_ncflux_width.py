@@ -114,6 +114,23 @@ def test_width_cache_with_real_modules(tmp_path: Path) -> None:
     (linear_case / 'out').mkdir()
     (linear_inputs / 'hydroflow.conf').write_text(hydro_config.replace('y\n0\n0\n', 'y\n0\n1\n', 1))
     assert 'Hydroflow production checks passed' in run([str(hydro_executable), 'linear'], linear_case)
+    for label, suffix, argument, succeeds in (
+        ('enabled', 'y\n', 'island', True),
+        ('point-contact', 'y\n', 'island-point', True),
+        ('disabled', 'n\n', 'island', False),
+        ('default', '', 'island', False),
+    ):
+        case = tmp_path / f'hydro-filter-{label}'
+        inputs = case / 'drutes.conf/netcdf'
+        inputs.mkdir(parents=True)
+        (case / 'out').mkdir()
+        (inputs / 'hydroflow.conf').write_text(hydro_config + suffix)
+        result = subprocess.run([str(hydro_executable), argument], cwd=case,
+                                text=True, capture_output=True, timeout=20)
+        output = result.stdout + result.stderr
+        assert (result.returncode == 0) == succeeds, output
+        assert ('component filter checks passed' if succeeds else
+                'Every hydroflow component needs') in output, output
     invalid_hydro = {
         'legacy': (hydro_config, 'requires conservative'),
         'source': (hydro_config.replace('y\n0\n', 'y\n2\n', 1), 'policy must be 0 or 1'),

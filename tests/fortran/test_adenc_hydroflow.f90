@@ -20,7 +20,8 @@ program test_adenc_hydroflow
   use netcdf
   implicit none
   integer :: owner(5,2),iterations,i,j,k,e,mode,method,ierr,dims(3),variable_id,unit
-  integer(kind=ikind) :: original(6)
+  integer(kind=ikind), allocatable :: original(:)
+  integer :: mesh_nodes,mesh_elements
   real(kind=rkind) :: preferred(5),weights(5),fixed_value(5),target(3),f(5),error
   real(kind=rkind) :: vertices(3,2),q(2),h,divq,v,normal(2),xy(2),divk(2),fd(2),plus(2,2),minus(2,2)
   real(kind=rkind) :: current(3),previous(3),mass(3,3),stiffness(3,3),rhs(3),gradient(3,2),basis(3)
@@ -28,10 +29,11 @@ program test_adenc_hydroflow
   real(kind=rkind) :: water,load,water_sum,load_sum,water_saved,load_saved,initial_lateral
   real(kind=rkind) :: offset(2)
   logical :: fixed(5),ok
-  logical :: lateral_case,clean_case,load_case
+  logical :: lateral_case,clean_case,load_case,island_case
   character(len=1024) :: message
   character(len=32) :: argument
   call get_command_argument(1,argument)
+  island_case=index(argument,'island')==1
   lateral_case=argument=='lateral-uniform' .or. argument=='lateral-clean' .or. argument=='lateral-zero' .or. &
     argument=='lateral-short' .or. argument=='lateral-load' .or. argument=='lateral-overlap'
   clean_case=argument=='lateral-clean'
@@ -40,7 +42,7 @@ program test_adenc_hydroflow
   end_time=172800
   LSbank_noflow=.true.; LSconservative=.true.
   if (len_trim(argument)>0 .and. trim(argument)/='production' .and. trim(argument)/='linear' .and. &
-      .not.lateral_case) then
+      .not.lateral_case .and. .not.island_case) then
     if (argument=='legacy') LSconservative=.false.
     call read_adenc_hydro()
     if (argument=='absent' .and. LShydro) error stop 'hydroflow default changed'
@@ -97,27 +99,38 @@ program test_adenc_hydroflow
   current=1; previous=1
   if (maxval(abs(matmul(mass+stiffness,current)-matmul(mass,previous)/1.2_rkind))>1.e-12_rkind) &
     error stop 'SUPG constant-state residual'
-  if (trim(argument)/='production' .and. trim(argument)/='linear' .and. .not.lateral_case) then
+  if (trim(argument)/='production' .and. trim(argument)/='linear' .and. .not.lateral_case .and. .not.island_case) then
     print *, 'Hydroflow kernel checks passed'
     stop
   end if
 
   ! Four-triangle strip, two inlet edges sharing one ID, two explicit outlets.
   allocate(pde(1),pde_common%xvect(3,4),pde_common%bvect(3))
-  allocate(pde(1)%pde_fnc(1),pde(1)%permut(6),pde(1)%bc(101:103))
-  nodes%kolik=6; elements%kolik=4
+  mesh_nodes=6; mesh_elements=4
+  if (island_case) then
+    mesh_nodes=9; mesh_elements=5
+  end if
+  allocate(original(mesh_nodes))
+  allocate(pde(1)%pde_fnc(1),pde(1)%permut(mesh_nodes),pde(1)%bc(101:103))
+  nodes%kolik=mesh_nodes; elements%kolik=mesh_elements
   offset=[500000.0_rkind,5000000.0_rkind]
   ! Overlapping groups deliberately produce strongly nonuniform divergence.
   ! Use a well-conditioned local origin for this sub-metre synthetic fixture;
   ! all original production cases retain their realistic UTM coordinates.
   if (argument=='lateral-overlap') offset=1000
-  allocate(nodes%data(6,2),nodes%edge(6),nodes%element(6),elements%data(4,3))
-  allocate(elements%ders(4,3,2),elements%areas(4),elements%material(4))
-  nodes%data=0; nodes%data(:,1)=[0,1,0,1,0,1]+offset(1)
-  nodes%data(:,2)=[0.0_rkind,0.0_rkind,.5_rkind,.5_rkind,1.0_rkind,1.0_rkind]+offset(2)
+  allocate(nodes%data(mesh_nodes,2),nodes%edge(mesh_nodes),nodes%element(mesh_nodes),elements%data(mesh_elements,3))
+  allocate(elements%ders(mesh_elements,3,2),elements%areas(mesh_elements),elements%material(mesh_elements))
+  nodes%data=0; nodes%data(:6,1)=[0,1,0,1,0,1]+offset(1)
+  nodes%data(:6,2)=[0.0_rkind,0.0_rkind,.5_rkind,.5_rkind,1.0_rkind,1.0_rkind]+offset(2)
   elements%data(1,:)=[1,2,4]; elements%data(2,:)=[1,4,3]
   elements%data(3,:)=[3,4,6]; elements%data(4,:)=[3,6,5]
-  do e=1,4
+  if (island_case) then
+    nodes%data(7:9,1)=[-.5_rkind,-1.0_rkind,-.5_rkind]+offset(1)
+    nodes%data(7:9,2)=[-.5_rkind,-.5_rkind,-1.0_rkind]+offset(2)
+    elements%data(5,:)=[7,8,9]
+    if (argument=='island-point') elements%data(5,:)=[1,7,8]
+  end if
+  do e=1,mesh_elements
     do i=1,3
       call nodes%element(elements%data(e,i))%fill(int(e,ikind))
     end do
@@ -127,9 +140,11 @@ program test_adenc_hydroflow
     elements%ders(e+1,:,1)=[0,1,-1]; elements%ders(e+1,:,2)=[-2,0,2]
   end do
   elements%areas=.25_rkind; elements%material=1
-  allocate(ncfluxdata%activeel(4),ncfluxdata%fluxvct(4,2))
+  allocate(ncfluxdata%activeel(mesh_elements),ncfluxdata%fluxvct(mesh_elements,2))
   ncfluxdata%activeel=.true.; ncfluxdata%fluxvct(:,1)=1; ncfluxdata%fluxvct(:,2)=0
-  original=[101,0,101,0,101,0]; nodes%edge=original; addedbc=103
+  original=0; original(:6)=[101,0,101,0,101,0]
+  if (argument=='island-explicit') original(7:9)=101
+  nodes%edge=original; addedbc=103
   ! Synthetic NetCDF with an actual second/third daily slice, read by real code.
   call nc_check(nf90_create('forcing.nc',nf90_clobber,netcdfID))
   call nc_check(nf90_def_dim(netcdfID,'lon',1,dims(1)))
@@ -146,7 +161,7 @@ program test_adenc_hydroflow
   allocate(ncfluxdata%lon_bnds(1,2),ncfluxdata%lat_bnds(1,2))
   ncfluxdata%time=[0,24,48,72]; ncfluxdata%lon=9; ncfluxdata%lat=45; ncfluxdata%qslice=2
   ncfluxdata%lon_bnds(1,:)=[-180.0_rkind,180.0_rkind]; ncfluxdata%lat_bnds(1,:)=[0.0_rkind,90.0_rkind]
-  allocate(ncnodes%data(4,2),ncelements%data(1,4),el2ncgrid(4))
+  allocate(ncnodes%data(4,2),ncelements%data(1,4),el2ncgrid(mesh_elements))
   ncnodes%data(:,1)=[-1,3,3,-1]+offset(1)
   ncnodes%data(:,2)=[-1,-1,3,3]+offset(2)
   ncelements%kolik=1; ncelements%data(1,:)=[1,2,3,4]; el2ncgrid=1; Qmin=0; ora_di_ini=0
@@ -155,6 +170,20 @@ program test_adenc_hydroflow
   call read_adenc_hydro()
   if (.not.LShydro) error stop 'Production hydro test config absent'
   call hydro_filter(); call prepare_adenc_banks(original); call hydro_initialize(original)
+  if (island_case) then
+    if (count(ncfluxdata%activeel)/=4 .or. ncfluxdata%activeel(5)) error stop 'Unported island not removed'
+    if (.not.all(ncfluxdata%activeel(:4))) error stop 'Connected strip changed'
+    if (any(pde(1)%assembly_mask .neqv. ncfluxdata%activeel)) error stop 'Stale assembly mask'
+    if (any(nodes%edge(7:9)/=addedbc)) error stop 'Unused island nodes not eliminated'
+    if (nodes%edge(1)/=101) error stop 'Shared vertex inlet removed'
+    if (any(bank_edges(:,5)) .or. any(open_edges(:,5))) error stop 'Stale island edge masks'
+    total_out=hydro_normal_flux(1,2)*.5_rkind+hydro_normal_flux(3,2)*.5_rkind
+    if (abs(total_out-2)>1e-11_rkind) error stop 'Island filter changed balanced outlet flow'
+    call hydro_initialize(original)
+    if (count(ncfluxdata%activeel)/=4) error stop 'Island filter is not idempotent'
+    print *, 'Hydroflow component filter checks passed'
+    stop
+  end if
   pde(1)%pde_fnc(1)%convection=>ADEls_convection; pde(1)%flux=>ncflux
   pde(1)%pde_fnc(1)%dispersion=>ADElsdisp; LSdisp=.05_rkind; LSdisp_transverse=.005_rkind
   pde(1)%pde_fnc(1)%elasticity=>ADEls_tder_coef; pde(1)%pde_fnc(1)%reaction=>dummy_scalar

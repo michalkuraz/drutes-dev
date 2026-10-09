@@ -11,6 +11,7 @@ module nchydroflow
   public :: hydro_project_outflow
   public :: hydro_sources,hydro_clip_step
   logical :: LShydro=.false.,ready=.false.,trial=.false.
+  logical :: drop_unported_components=.false.
   real(kind=rkind) :: tolerance=1.e-10_rkind,correction_limit=1.0_rkind
   integer :: max_iterations=20000,forcing_mode=1
   integer, allocatable :: ports(:,:),owners(:,:),edge_nodes(:,:),edge_of(:,:),orientation(:,:)
@@ -39,7 +40,7 @@ contains
     logical :: exists
     character(len=1024) :: line
     real(kind=rkind) :: flow
-    LShydro=.false.; ready=.false.; trial=.false.
+    LShydro=.false.; ready=.false.; trial=.false.; drop_unported_components=.false.
     if (allocated(lateral)) deallocate(lateral)
     if (allocated(ports)) deallocate(ports,port_kind,port_flow)
     inquire(file='drutes.conf/netcdf/hydroflow.conf',exist=exists)
@@ -81,7 +82,19 @@ contains
       ports(:,i)=[min(a,b),max(a,b)]; port_kind(i)=kind; port_flow(i)=flow
     end do
     call record(unit,line,status)
-    if (status==0) error stop 'Unexpected trailing hydroflow record'
+    if (status==0) then
+      ! Backward compatible: absent record keeps the strict component guard.
+      select case(trim(adjustl(line)))
+      case('y')
+        drop_unported_components=.true.
+      case('n')
+        drop_unported_components=.false.
+      case default
+        error stop 'Hydroflow component filter must be one y/n record'
+      end select
+      call record(unit,line,status)
+      if (status==0) error stop 'Unexpected trailing hydroflow record'
+    end if
     close(unit)
     if (policy==1) call read_lateral()
   end subroutine
@@ -256,20 +269,25 @@ contains
     call write_log(trim(message))
   end subroutine
 
-  subroutine hydro_initialize(original_edge)
+  recursive subroutine hydro_initialize(original_edge)
     use globals, only: elements,nodes
     use ncglobvars, only: ncfluxdata,bank_edges,open_edges,addedbc
+    use pde_objs, only: pde
+    use core_tools, only: write_log
     integer(kind=ikind), intent(in) :: original_edge(:)
     integer, allocatable :: head(:),next(:),lo(:),hi(:),root(:)
-    logical, allocatable :: inlet_node(:),has_in(:),has_out(:)
-    integer :: e,k,a,b,bucket,item,nedge,buckets,p,n,r,e2
+    logical, allocatable :: inlet_node(:),has_in(:),has_out(:),remove(:),removed_root(:)
+    integer :: e,k,a,b,bucket,item,nedge,buckets,p,n,r,e2,removed
+    character(len=256) :: message
     real(kind=rkind) :: aa(2),bb(2),cc(2),side(2),qraw(elements%kolik,2),rate(elements%kolik)
     if (.not.LShydro) return
     raw_hour=-huge(1); projected_hour=-huge(1); projection_cached=.false.
     if (allocated(raw_depth)) deallocate(raw_depth,raw_q,cached_target,cached_flux)
     if (allocated(owners)) then
-      deallocate(owners,edge_nodes,edge_of,orientation,port_edge,area,center,edge_length,normal, &
-        depth_state,depth_trial,flux_state,flux_trial,port_id)
+      deallocate(owners,edge_nodes,edge_of,orientation,port_edge,area,center,edge_length,normal,port_id)
+    end if
+    if (allocated(depth_state)) then
+      deallocate(depth_state,depth_trial,flux_state,flux_trial)
       deallocate(water_state,water_trial,solute_state,solute_trial)
     end if
     n=elements%kolik; buckets=2*n+1
@@ -348,6 +366,40 @@ contains
           error stop 'Do not mix fixed and Qrouted inlet edges under one boundary ID'
       end do
     end do
+    if (drop_unported_components) then
+      allocate(remove(n),removed_root(n)); remove=.false.; removed_root=.false.
+      do e=1,n
+        if (area(e)<=0) cycle
+        r=find_root(root,e)
+        ! Never hide an incomplete explicit inlet/outlet, or prune connected arms.
+        if (has_in(r) .or. has_out(r)) cycle
+        remove(e)=.true.; removed_root(r)=.true.
+      end do
+      removed=count(remove)
+      if (removed>0) then
+        if (allocated(lateral)) then
+          do p=1,size(lateral)
+            if (any(lateral(p)%elements>n)) error stop 'Lateral element outside FE mesh'
+            if (any(remove(lateral(p)%elements))) &
+              error stop 'Cannot filter a component with explicit lateral sources'
+          end do
+        end if
+        write(message,*) 'ADEnc hydroflow initial component filter: removed components=',count(removed_root), &
+          ' elements=',removed,' area[m2]=',sum(area,mask=remove)
+        call write_log(trim(message))
+        ncfluxdata%activeel=ncfluxdata%activeel .and. .not.remove
+        pde(1)%assembly_mask=ncfluxdata%activeel
+        inlet_node=.false.
+        do e=1,n
+          if (ncfluxdata%activeel(e)) inlet_node(elements%data(e,:))=.true.
+        end do
+        where (.not.inlet_node) nodes%edge=addedbc
+        ! Rebuild banks and edge topology from the restricted active domain.
+        ! A single retry suffices: every retained component has an explicit port.
+        call hydro_initialize(original_edge)
+        return
+      end if
+    end if
     do e=1,n
       if (area(e)<=0) cycle
       r=find_root(root,e)
@@ -356,6 +408,7 @@ contains
     end do
     ! Every unlabelled exposed edge is a WATER bank, even on the exterior mesh.
     ! Only listed inlet nodes retain Dirichlet DOFs; outlet and bank nodes are free.
+    bank_edges=.false.; open_edges=.false.
     do e=1,n
       if (area(e)<=0) cycle
       do k=1,3

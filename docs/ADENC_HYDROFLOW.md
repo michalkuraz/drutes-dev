@@ -30,7 +30,7 @@ It does NOT establish that the hydrological input or inferred geometry is exact.
   Initially node-active elements with missing/below-Qmin/nonpositive centroid Q
   or zero width are removed. This is a documented homogenization/mask change,
   NOT exact clipping of triangles against hydrological cell boundaries.
-- Every connected FE component must have explicitly listed inlet and outlet
+- Every retained connected FE component must have explicitly listed inlet and outlet
   edges. All other exposed edges, including exterior mesh edges, are sealed
   WATER banks. No downstream outlet is inferred from a channel endpoint.
 - Source policy0 means **no distributed lateral water sources/sinks**.
@@ -91,7 +91,8 @@ gradient solve of B W B^T determines the correction. This auxiliary solver is
 contained entirely in nchydroflow.f90; the transport solver is unchanged.
 The generic projection kernel also handles compatible closed components with
 a potential gauge and rejects incompatible closed balances. Production setup
-requires explicit inlet/outlet components rather than inventing open boundaries.
+requires explicit inlet/outlet components rather than inventing open boundaries;
+the optional initial filter only excludes entirely unported components.
 
 `hydro_project_outflow` enforces the exterior-outlet inequality with a monotone
 active set: solve the equality projection, fix any negative outlet to zero,
@@ -131,6 +132,16 @@ the previous ADEnc behavior unchanged. For y, the remaining records are:
 5. Positive finite maximum relative edge-flux correction.
 6. Number of port-edge records (at least2).
 7. That many records: `node1 node2 kind discharge`.
+8. Optional final `y/n`: remove entire shared-edge connected components with
+   **no explicit inlet AND no explicit outlet**, once at initialization.
+   Absent or `n` preserves the strict historical behavior. `y` logs component
+   count, removed FE count and area, then rebuilds the active assembly mask,
+   node participation, banks and hydraulic topology. Components with even one
+   explicit port retain the existing inlet/outlet completeness checks. An
+   explicit lateral source in a component selected for removal is an error,
+   not silently discarded. Vertex-only contact is not a hydraulic connection.
+   This is an explicit domain restriction, NOT a fabricated source or a repair
+   of disconnected routing geometry. Connected tributary arms remain active.
 
 Mode1 linearly interpolates daily Q and the depths derived from each daily Q
 using the existing velocity law. Thus H is continuous across day boundaries;

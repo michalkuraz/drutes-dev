@@ -1,5 +1,134 @@
 # DRUtES project context
 
+LATEST2026-10-09 scenario4 COMPLETE/DELIVERED. Allsix100daytwo-daypulse
+models4aRhine/4bMoselle×Galerkin/SUPG2/shockfinishedexit0,batch
+/mnt/stock/ncflux-case4-pulse2days-20261009-DMJGJD,originalconfig/sourceintact.
+5027acceptedsteps,dt15.081--1800s,wall37--43min,285finitefields and7history
+column2c/P1checks. MaxrelativeSIGNEDdiscretebudget3.8473e-14,notphysical
+validationorpositivity. Shockextrema4a[-.01783,1.0000024],4b[-.009733,1];
+Galerkin/SUPGoscillationsremain substantial. TwoAVI102s/2448decodedframes/
+24fps/1536x864/stereosyntheticjazz+water,truthfuldynamiccommonperframescale;
+latezero-color and amplifiednumericaltailcaveats inRESULTS.md.
+CompleteZIPCRC/SHA256 andbothAVIhashespassed afterresumabletransfer.
+Localruns/case4-pulse2days-20261009-DMJGJD/paper-media/verified-videos
+containsAVI+metadata; adjacentRESULTS.md/completion-statistics.json/verified
+case4-pulse-media-retry.zip delivered. Previouspartialfilespreserved.
+Scenario3videos/fourcorrectedindividualsymlogcollagesalsoverified/delivered.
+Existingcheck-ncflux-simulations followupPAUSEDafterdelivery. Noactivejobs
+claimed, no newGit/numericalsource/physicsactions. OlderRUNNINGnotes historical.
+
+LATEST2026-10-09 scenario4 DEPLOYED/RUNNING21:05:40Europe/Rome.
+Freshbatch /mnt/stock/ncflux-case4-pulse2days-20261009-DMJGJD;
+local runs/case4-pulse2days-20261009-DMJGJD/RUN.md and STATUS.md.
+4aRhine and4bMoselle TWO-DAYC1pulse thenC0,otherinletclean,100dayduration,
+eachGalerkin/SUPG2/shock1=6runs. Same current scenario3 geometry/forcing/
+Qmin40/disp200-.2/conservative/no-flow/5874FE/66ports/7points/285maps.
+All6localANDnativeproduction/pulsecallback/routing/assemblycheckspassed;
+fullLOCAL100daywaterwindow reused after hydraulicidentityproof, interrupted
+nativefull100daycheckNOTclaimedpassed. Privateverifiedcase3Linuxbinary,
+sharedNC/DEM/routing/exactgeometrysymlinks,NOlargeNCtransfer/source/Gitchange.
+Independent19:06:09UTC ALL6RUNNING/activePIDs/acceptedsteps~.177--.307days,
+finiteauditrelativeerrors<=1.75e-15; detachedPPID1workers/noTTY.
+finish-media.sh waitsall6thencreatesactualfielddynamic-scaleAVI comparisons
+with numericallegends/minmax/sourcecutoff; no concentrationclipping/interpolation.
+Existing10minfollowup monitorsnewbatch+pendingoldmedia,quietwhilehealthy.
+No completion/positivity/calibration/equalmassclaim. Neverrerunexistingout.
+
+LATEST2026-10-09 scenario3 COMPLETED ALL6 exit0 by18:09:50Europe/Rome.
+Samecurrentbatch below, no restart/source/physicschange. Read-onlyPythonchecker
+verifiedactual86400s audit+all7history endpoints,strictlyorderedfinite6column
+histories,and7finiteconcentrationNodeData snapshots percase.105steps each,
+dt127.999493--1800s; wall43/45/46s3aGalerkin/SUPG/shock,45/45/55s3b.
+Maxrelativeauditerror<=1.891e-14. Saved extrema3aG[-.016572,1.213272],
+SUPG[-.016420,1.145366],shock[-.009371,1.000000009];3bG[-.001235,1.222358],
+SUPG[-.001086,1.171559],shock[-.000503,1]. No positivity/physicalvalidation.
+Correctc column2: Rhinepoint1 meaningfulin3a,Mosellepoint5 meaningfulin3b,
+point7confluenceessentiallycleanat24h. OriginalONEday preserved, NOTenough
+forcompleteconfluence/downstreampassage; a longer userauthorizedexperiment
+needs newhydraulicwindow checks. Outputsremainserver,noarticleplotsforthis
+launch-onlytask. Readruns/case3-current-20261009-vtWBja/STATUS.md/RUN.md.
+Localdrutes.conf3a/bscenario.json/CURRENT_SETUP recordservercompletion; original
+smallinputs backedup; hugeNC targets intact. No newmonitoringautomation.
+
+LATEST2026-10-09 scenario3 LAUNCHED18:08:55Europe/Rome (16:08:55UTC).
+User authorized updatedinputs and hydrocalc launch. Bothdrutes.conf3a/3b updated,
+oldsmallconfigs backedup inruns/case3-current-20261009-vtWBja/original-case3-inputs.tar.gz;
+hugeexistingNC copies/data untouched, mandatoryrouting symlinks added. Olddrutes.conf3
+remains historical. PreservedJune1,2015 ONEday86400s continuousrelease:3aRhineC1/
+cleanMoselle,3bMoselleC1/cleanRhine. CurrentQmin40,disp200/0.2,conservative/audit/
+noflowbanks,linear daily hydraulics/sourcepolicy0,channel_count2. Explicit66water
+ports44Rhine+5Moselleinlets+17balancedoutlets; all5874validFE oneconnectedcomponent.
+Sevenobservationpoints4Rhine+2Moselle+1geometricconfluence, containmentverified;
+exact1/3/6/12/18h maps, initial/final24h. DefaultSUPG2+shock1,serverALL6release/
+stabilizationcombinations. This isNOT14daypulse or equalmass experiment.
+Localall6production/routing/dryassemblychecks andboth48trialone-day waterwindows
+passed; maxglobalwaterresidual4.54e-12/local2.31e-9,correction0.6556--0.6562LARGE.
+Private nativehydrocalc buildinclSchwarz/39regressions/all6preflights/bothfullwater
+windows/exactgeometrypassed; prepared.flag16:08:19UTC. Newremoteparent
+/mnt/stock/ncflux-case3-current-20261009-2E0c0e; sharedNC/DEM/routing allsymlinked,
+NOhugeNC transferred. Sourceb8395079+same testeduncommittedcomponentfilter;
+NOnewnumericalsource/Gitpublication/~/drutes-dev changes. NativebinarySHA256
+54ce8e4e6cfd85378019a9dd91b3b60778e81f78c69ca9706f47bee546328e71.
+IndependentSSH16:09:09UTC ALL6RUNNING withacceptedsteps9515--15109s, finiteaudits,
+latestrelativebudget<=1.93e-15,workersPPID1/ownSID/noTTY. Worker/modelIDs
+3aGalerkin2652125/2652166,SUPG2652127/2652170,shock2652129/2652173;
+3bGalerkin2652131/2652174,SUPG2652133/2652176,shock2652135/2652177.
+StartupONLYnotcompletion/positivity/calibratedphysics. Mac/SSHcanclose; no new
+scheduledmonitoringclaimed. ReadlocalRUN.md/STATUS.md. Neverrerunmaininexistingout.
+Scenario2previousbatchcompletedall14days/exit0, articlePNG/SVG/CSV/report/ZIP
+deliveredfromruns/case2-qmin40-filtered-20261009-tRDW3D/paper-results;
+check-ncflux-simulations automationPAUSED afterdelivery. OlderRUNNING paragraphs
+beloware historical, not currentstate. Its17savednormalizedextremaGalerkin
+[-.3692,1.0895],SUPG[-.1280,1.0322],shock[-.01408,1], discretebudget<=1.264e-13;
+observation P1/export mismatch<=6.94e-18. No physicalvalidation or positivityclaim.
+
+LATEST2026-10-09 scenario2 Qmin40 transport LAUNCHED at15:36:09UTC/17:36Rome.
+New hydrocalc batch/mnt/stock/ncflux-case2-qmin40-20261009-YAg7OS with private
+b8395079+tested initial component filter, not new committed/publishedrevision.
+Fresh native checkedO2 build inclSchwarz/39checks/all3physics-obs-routing-
+assembly preflights/full672trial14day hydraulic window/exact8321FE geometry
+passed beforelaunch; shared NetCDF symlinked, server checkout/oldresults intact.
+Detachedworker/model PIDs2650356/2650380 Galerkin,2650358/2650379 SUPG2,
+2650360/2650381 shock1. Independent15:38:43UTC readconfirmedALLRUNNING at
+3.166/3.187/2.995 simulateddays of14, finiteauditrows,relativeerrors<=5.75e-14.
+Startup/progress evidence ONLY, not transport completion or physicalvalidation.
+User requested article outputs afterfinish; existing check-ncflux-simulations
+heartbeat updatedACTIVE10min ONLYthesejobs, quietwhilehealthy, collect actual
+outputs/plot/QA/report/ZIP afterfinish thenpause. Local staging and STATUS.md:
+runs/case2-qmin40-filtered-20261009-tRDW3D. No scenario3 launch: existing3a/3b
+still lack current hydraulic/conservative/bank/routing configs and explicit
+bothwaterports; their2000m dispersion isold. Filter cannot create missing
+tributary connectivity or boundary conditions. Below no-launch paragraph is
+historical localtest state; newjobs runindependently ofMac/SSH. Automaticlocal
+analysis requiresMac/app/VPN; never rerunmain in any resultsdirectory.
+
+LATEST2026-10-09 initial unported-component filter (local implementation):
+User requested rerun case2 with Qmin15, then Qmin40. Both isolated production
+checks failed component ports: Qmin15 gave12294 FE with231 unported islands;
+Qmin40 gave8401 FE,main8321 plus45/28/7 islands. User explicitly authorized
+disabling disconnected areas at initialization. nchydroflow now accepts optional
+final y/n after hydroflow.conf port records; absent/n keeps old strict behavior.
+y removes ONLY whole shared-edge components with no explicit inlet AND no
+explicit outlet, rejecting removal of explicit lateral sources. Port validation
+and incomplete-port component guards remain. Logs removed component/FE counts
+and area; rebuilds active assembly mask, unused-node BCs, banks/edge topology
+before hydraulics or transport initialization. Vertex-only contacts do not
+join hydraulic components. No shared FEM/solver/Schwarz or numerical flux/time
+algorithms changed. Connected tributaries remain active; no fabricated sources.
+Fresh checkedO2 full build inclSchwarz,39 standalone checks passed; case2Qmin40
+filtered all3 production/routing/finite assembly checks passed,80 FE removed.
+All41pytest tests passed (74 existing NumPy deprecation warnings); full14day
+hydraulic window passed672x1800s to1209600s with finite coefficients, outlets>=0,
+maxglobally-scaled waterresidual5.67e-12 and maxlocal-scaled7.83e-9. No lateral
+sources; projectioncorrection0.624--0.660 remainsLARGE, not physical validation.
+No commit,server upload or transport launch of this filter. Tests/evidence:
+runs/component-filter-tests-20261009-2DyjUz and
+runs/case2-qmin40-filtered-20261009-tRDW3D. Earlier case2Qmin300 was launched
+on hydrocalc in/mnt/stock/ncflux-case2-cellwidth-20261009-IIIbV4 withb8395079;
+that width commit is now published toGitHub testing. Existing results/jobs,
+original configs/NetCDF targets untouched. Older dated statuses below are
+historical, not current evidence.
+
 LATEST2026-10-09 cell-width correction (local only, NOT yet committed/uploaded):
 After VPN restored, user approved pushingd23ee9a toGitHub; hydrocalc pulled/
 rebuilt it in~/drutes-dev. Fresh case1 parent
@@ -773,3 +902,69 @@ for atmospheric data; mesh alignment errors are displayed without blocking
 save; coupled-heat/root-uptake navigation and completion requirements are
 not handled uniformly on every route. Review these with targeted tests if
 asked to change the related workflow.
+
+## 2026-10-09: scenario3 extended to100days,server media pipeline
+
+User requested100days and dense output,then immediate launch and AVI with
+gentle jazz/water audio plus temporal-progression collages. NEW local staging
+runs/case3-100days-20261009-M1UTwp; NEW remote
+/mnt/stock/ncflux-case3-100days-20261009-LVqvZs. Earlier one-day/root3a/3b inputs
+and results preserved. Same b8395079+tested uncommitted component filter,
+no numerical changes/Gitpublication. June1,2015;8640000s;continuous C1 into
+Rhine3a/Moselle3b,other inletC0;Qmin40;alpha_L200/alpha_T0.2;5874FE;
+66ports;conservative/no-flow/audit/sourcepolicy0/linear daily hydrology.
+283interior maps(3h through14d,12h thereafter),initial/final=>285maps;7points.
+Full local4800-trial water window andall6preflights passed. Native39regressions/
+all6preflights passed; redundant native fullwindow explicitly stopped onuser
+immediate-launch request with partial3071trial/63.979day audit preserved;
+do NOT claim full native100day check. No model guards relaxed.
+Six detached runs launched17:39:04UTC;allRUNNING with acceptedfinite audits
+verified17:45:52UTC. Worker/model PID/evidence in localSTATUS.md. Shared NC,
+DEM andmandatoryrouting are symlinks; nevermodifytargets/relaunchmain.
+Native101daily geometry export andAVIvideo/audioQA passed. Detached
+finish-animations.sh waitsall6,then render_animation.py validates completion/
+285finite maps/c-column2history-vs-P1 and creates two102s/24fps AVI comparisons
+with original PROCEDURAL jazz-like keys/bass/brushes+syntheticwaterbubbles,
+sixPNG/SVGcollages(days0,.25,1,3,7,14,21,35,60,100),metadata andmediaZIP.
+No concentration interpolation/clipping;shared0..1scale withunder/over colors.
+AVI QA is INITIAL-STATE only,notcompleted100day transport. Media stillpending.
+Server model/media jobs independently detached fromMac. Existing heartbeat
+check-ncflux-simulations ACTIVE/every10min updated toonlythisbatch,quiethealthy,
+aftercompletion inspect/download/deliver andpause. Localfollow-up needsMac/app/
+VPN; usercanpoweroffMacwithoutstoppingserverjobs. Preserve olderbatches.
+
+Follow-up2026-10-09: user superseded fixed-calendar ten-panel contact sheets.
+Requested actual representative transport stages and previous9panel format.
+Separate output-only finish-representative-collages.sh waits for original
+animation validation, then generates four3x3figures (3times x3methods), two per
+release: upper/confluence and below/lower. Chooses six sustained regional
+P1area-mean threshold crossings from shock1 actual saved fields, within12km
+of upperpoints2/6,confluence7,below3,lower4; common times across methods,
+common0..1scale, explicit under/over colors, no field clipping/interpolation.
+Selection diagnostics/provenance included; unreached stages error rather than
+invent transport. Four local+Linux tests pass, real finite0--40day maps yield
+provisional3a3.125/4.375/5.5/6.125/7.375/9d and3b1.875/2.25/3.375/3.75/4.75/6.25d.
+Full100day levels/final visual QA stillpending. New final mediaZIP includes
+representative figures and validatedAVI/audio, not fixed-daycontact sheets.
+Only output scripts/docs changed; model/source/config/NC untouched.
+
+Latestcase3read18:20:20UTC ALL6FINISHEDexit0through100days; subsequentlyoriginal
+AVIvalidator and separateactual-stage collagejob bothFINISHED.5027steps each,
+dt15.081--1800s,wall38m24s--40m10s;285finite savedfields/all7correctc-column2
+independentP1checks passed. Maxreportedrelative discretebudget<=3.6582e-14.
+Long-run Galerkin/SUPG oscillations substantial; shock3ac[-.020971,1.030480],
+3bc[-.030689,1.000010],NOTstrictpositivity/calibratedvalidation. Fourfinal9panel
+PNGs downloaded andvisuallyinspected inpaper-media-6r4tUQ;RESULTS.mdrecords
+actualselection/ranges/limits. Full AVI/SVG/provenancedownload interruptedby
+VPN/DNSloss; partialZIP preserved.part, notadeliveredvalidarchive. Original
+serverAVI~259/266MiB remainintact. Localcompact_media.py prepared butNOTuploaded
+orrunyet (DNSfailed); needsmallerAVIderivativesandverifieddeliveryonceVPNreturns.
+AutomationstillACTIVE ONLYtofinishoutputs; neverrerunmodels. No source/config,
+Git,NC orservercheckoutchanges.
+SubsequentlyverifiedknownIP10.132.67.5 reachablewithSTRICTexistinghydrocalc
+HostKeyAlias;compact_media.pyuploaded/executedSUCCESS,MPEG4/MP3AVI31.99/33.08MB,
+each2448frames/24fps/1536x864/102s/stereochecked. NewcompactZIP59,286,072bytes.
+Networkagainunstableduringdownloads; localcompactZIPPARTIAL,notusableyet.
+Follow-upcontainsactualtransfer sessions49945/79336andasksnotduplicateor
+rerunencoder. FourrepresentativePNG/allvisualQAandRESULTS.mdcomplete locally;
+remainingAVI/SVG/provenancedelivery+CRC/hash/sampleQAawaitstableconnection.

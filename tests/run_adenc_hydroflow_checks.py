@@ -69,6 +69,15 @@ def main() -> None:
         "correction": (config.replace("\n100\n4\n", "\n0.001\n4\n"), "production", "correction exceeds", True),
         "source": (config.replace("y\n0\n", "y\n2\n", 1), "production", "policy must be 0 or 1", True),
         "legacy-mode": (config, "legacy", "requires conservative", True),
+        "filter-enabled": (config+"y\n", "island", "component filter checks passed", False),
+        "filter-point-contact": (config+"y\n", "island-point", "component filter checks passed", False),
+        "filter-absent": (config, "island", "Every hydroflow component", True),
+        "filter-disabled": (config+"n\n", "island", "Every hydroflow component", True),
+        "filter-explicit-port": (config.replace("\n4\n", "\n5\n")+"7 8 -1 0\ny\n",
+                                 "island-explicit", "Every hydroflow component", True),
+        "filter-invalid": (config+"yes\n", "config", "component filter must", True),
+        "filter-extra-field": (config+"y n\n", "config", "component filter must", True),
+        "filter-extra-record": (config+"y\nn\n", "config", "Unexpected trailing hydroflow record", True),
     }
     for label, (content, argument, expected, fail) in cases.items():
         case = work / label
@@ -113,6 +122,14 @@ def main() -> None:
         if content is not None:
             (inputs / 'lateral.conf').write_text(content)
         run(label, [executables['hydroflow'], argument], case, expected, fail)
+    case = work / 'filter-lateral-protection'
+    inputs = case / 'drutes.conf/netcdf'
+    inputs.mkdir(parents=True)
+    (case / 'out').mkdir()
+    (inputs / 'hydroflow.conf').write_text(config.replace('y\n0\n0\n', 'y\n1\n0\n', 1)+'y\n')
+    (inputs / 'lateral.conf').write_text('1\n1 2\n5\n0 0.1 1\n172800 0.1 1\n')
+    run('filter-lateral-protection', [executables['hydroflow'], 'island-lateral'], case,
+        'Cannot filter a component with explicit lateral sources', True)
     print(f"All {len(results)} checks passed. Preserved logs: {work}")
 
 
