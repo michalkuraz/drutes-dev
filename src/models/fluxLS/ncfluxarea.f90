@@ -2,7 +2,7 @@ module ncfluxarea
   use typy
   use ncglobvars
   use nctools
-  use ncwidth_geometry, only: river_contact_width
+  use ncwidth_geometry, only: river_cell_width
   use netcdfflux, only: is_missing_flux
   use, intrinsic :: ieee_arithmetic, only: ieee_is_finite
 
@@ -101,17 +101,18 @@ contains
   end subroutine ncflux_cell_area_xy
 
 
-  ! Cache effective widths after mapping elements and assigning flow directions.
+  ! Cache full cell-transverse widths after mapping and assigning flow directions.
+  ! Contacts/topology constrain shared edge fluxes, NOT the storage width.
   ! Use the same initial NetCDF slice/Qmin as channel activation, excluding dry
-  ! cells: a valid zero discharge is not an active river contact even if Qmin=0.
+  ! cells: a valid zero discharge is not an active river cell even if Qmin=0.
   subroutine ncflux_prepare_widths(ok, errmsg, zero_width_count)
     logical, intent(out) :: ok
     character(len=*), intent(out) :: errmsg
     integer(kind=ikind), intent(out), optional :: zero_width_count
     logical, allocatable :: active_cells(:)
     real(kind=rkind), allocatable :: vertices(:,:,:)
-    real(kind=rkind) :: neighbours(4,2,8), q
-    integer(kind=ikind) :: cell, el, i, inode, ilat, ilon, row, col, adjacent, count
+    real(kind=rkind) :: q
+    integer(kind=ikind) :: cell, el, i, inode, ilat, ilon
 
     ok = .false.
     if (present(zero_width_count)) zero_width_count = 0
@@ -164,20 +165,7 @@ contains
       cell = el2ncgrid(el)
       if (cell < 1 .or. cell > ncelements%kolik) cycle
       if (.not. active_cells(cell)) cycle
-      ilat = (cell-1)/ncfluxdata%nlon + 1
-      ilon = mod(cell-1,ncfluxdata%nlon) + 1
-      count = 0
-      do row = max(1_ikind,ilat-1), min(ncfluxdata%nlat,ilat+1)
-        do col = max(1_ikind,ilon-1), min(ncfluxdata%nlon,ilon+1)
-          adjacent = (row-1)*ncfluxdata%nlon + col
-          if (adjacent == cell) cycle
-          if (.not. active_cells(adjacent)) cycle
-          count = count + 1
-          neighbours(:,:,count) = vertices(:,:,adjacent)
-        end do
-      end do
-      active_widths(el) = river_contact_width(vertices(:,:,cell), &
-        ncfluxdata%fluxvct(el,:), neighbours(:,:,1:count))
+      active_widths(el) = river_cell_width(vertices(:,:,cell),ncfluxdata%fluxvct(el,:))
       if (present(zero_width_count)) then
         if (active_widths(el) <= 0.0_rkind) zero_width_count = zero_width_count + 1
       end if
@@ -187,7 +175,8 @@ contains
   end subroutine ncflux_prepare_widths
 
 
-  ! Effective transverse width limited by the active inlet/outlet contacts.
+  ! Full hydrological-cell transverse span for homogenized Q/W and storage.
+  ! Not physical river width, a minimum face opening, or a connectivity test.
   ! Call ncflux_prepare_widths again if the mask, mapping or directions change.
   function ncflux_active_width(element_number) result(width)
     integer(kind=ikind), intent(in) :: element_number

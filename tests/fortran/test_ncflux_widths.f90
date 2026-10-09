@@ -46,7 +46,7 @@ program test_ncflux_widths
   ncfluxdata%fluxvct(7,:) = 0.0_rkind
   call prepare()
   if (zero_width_count /= 1) error stop "Incorrect count of blocked flowing elements"
-  call check("oblique contact cap from initial mask",ncflux_active_width(1_ikind),1/sqrt(2.0_rkind))
+  call check("full oblique cell span",ncflux_active_width(1_ikind),sqrt(2.0_rkind))
   call check("dry mapped cell",ncflux_active_width(2_ikind),0.0_rkind)
   call check("unmapped FE element",ncflux_active_width(3_ikind),0.0_rkind)
   call check("invalid mapping",ncflux_active_width(4_ikind),0.0_rkind)
@@ -59,11 +59,11 @@ program test_ncflux_widths
   ncnodes%data(:,2) = 3.0_rkind - ncnodes%data(:,2)
   ncfluxdata%fluxvct(:,2) = -ncfluxdata%fluxvct(:,2)
   call prepare()
-  call check("descending latitude order",ncflux_active_width(1_ikind),1/sqrt(2.0_rkind))
+  call check("descending latitude order",ncflux_active_width(1_ikind),sqrt(2.0_rkind))
   ncnodes%data(:,1) = 3.0_rkind - ncnodes%data(:,1)
   ncfluxdata%fluxvct(:,1) = -ncfluxdata%fluxvct(:,1)
   call prepare()
-  call check("descending longitude order",ncflux_active_width(1_ikind),1/sqrt(2.0_rkind))
+  call check("descending longitude order",ncflux_active_width(1_ikind),sqrt(2.0_rkind))
   ncnodes%data = 3.0_rkind - ncnodes%data
   ncfluxdata%fluxvct = -ncfluxdata%fluxvct
   call prepare()
@@ -71,7 +71,7 @@ program test_ncflux_widths
   ! A later slice must not silently redefine the initial fixed channel geometry.
   ncfluxdata%qslice = 0.0_rkind
   ncfluxdata%qslice(2,2) = 20.0_rkind
-  call check("width cache is fixed",ncflux_active_width(1_ikind),1/sqrt(2.0_rkind))
+  call check("width cache is fixed",ncflux_active_width(1_ikind),sqrt(2.0_rkind))
   call prepare()
   call check("explicit cache rebuild",ncflux_active_width(1_ikind),sqrt(2.0_rkind))
   Qmin = 21.0_rkind
@@ -79,14 +79,18 @@ program test_ncflux_widths
   call check("threshold excludes cell",ncflux_active_width(1_ikind),0.0_rkind)
   Qmin = 0.0_rkind
 
-  ! Corner contact is not a finite downstream passage.
+  ! A corner-only neighbour is not a finite flow opening, but it must NOT
+  ! collapse the full-cell storage width. Connectivity is handled separately.
   ncfluxdata%qslice(3,3) = 10.0_rkind
   call prepare()
-  call check("corner-only grid connection",ncflux_active_width(1_ikind),0.0_rkind)
-  ! A full face connection removes that bottleneck; neighbour order is irrelevant.
+  call check("corner neighbour does not shrink storage width",ncflux_active_width(1_ikind),sqrt(2.0_rkind))
+  ! Additional active neighbours must not redefine the cell storage volume.
   ncfluxdata%qslice(2,3) = 10.0_rkind
   call prepare()
-  call check("full face beside corner",ncflux_active_width(1_ikind),1/sqrt(2.0_rkind))
+  call check("face neighbour does not shrink storage width",ncflux_active_width(1_ikind),sqrt(2.0_rkind))
+  ncfluxdata%fluxvct(1,:)=[1.0_rkind,1.e-8_rkind]
+  call prepare()
+  call check("near-tangential contacts retain cell-scale width",ncflux_active_width(1_ikind),1+1.e-8_rkind)
 
   ncfluxdata%nlon = 4
   call ncflux_prepare_widths(ok,errmsg)

@@ -90,6 +90,10 @@ RT0 reconstruction; old concentration outputs were computed with the old
 directions. Adding a routing file to an archived case does **not** retroactively
 validate those results or make them outputs of this implementation.
 
+Width follow-up2026-10-09: production storage now uses full cell-transverse
+span rather than minimum projected neighbour opening. See ADENC_CELL_WIDTH.md.
+Routing direction APIs and mandatory graph validation are unchanged.
+
 This does not infer lateral rates from Q differences, restore historical
 storage, transfer upstream solute across unresolved tributaries, automatically
 open FE boundary ports, or fix the case-2 rising-wave storage deficit. The

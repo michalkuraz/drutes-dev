@@ -239,9 +239,10 @@ module init_netcdf
         call write_log(trim(errmsg))
         error stop "Unable to compute active river widths"
       end if
+      call write_log('ADEnc effective width: full hydrological-cell transverse span, not contact opening.')
       if (bccnt > 0) then
         write(errmsg, *) "W: active river FE elements with no positive width:", bccnt, &
-          "; check corner-only/tangential contacts and flow directions."
+          "; check cell geometry, mapping and flow directions."
         call write_log(trim(errmsg))
       end if
       if (LShydro) then

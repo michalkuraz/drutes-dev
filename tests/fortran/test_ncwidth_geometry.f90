@@ -1,6 +1,6 @@
 program test_ncwidth_geometry
   use typy, only: rkind
-  use ncwidth_geometry, only: river_contact_width
+  use ncwidth_geometry, only: river_contact_width,river_cell_width
   use, intrinsic :: ieee_arithmetic, only: ieee_value, ieee_quiet_nan
   implicit none
   real(kind=rkind) :: cell(4,2), adjacent(4,2,3), d(2), rotated(4,2,3), transformed(4,2)
@@ -12,9 +12,14 @@ program test_ncwidth_geometry
   adjacent(:,:,1) = rectangle(-2.0_rkind,0.0_rkind,0.0_rkind,2.0_rkind)
   adjacent(:,:,2) = rectangle(2.0_rkind,4.0_rkind,0.0_rkind,2.0_rkind)
   d = [1.0_rkind,0.0_rkind]
+  call check("full cell span",river_cell_width(cell,d),2.0_rkind)
+  call check("cell direction normalization",river_cell_width(cell,12*d),2.0_rkind)
+  call check("reversed flow cell span",river_cell_width(cell,-d),2.0_rkind)
   call check("straight channel", river_contact_width(cell,d,adjacent(:,:,1:2)), 2.0_rkind)
   call check("direction normalization", river_contact_width(cell,12*d,adjacent(:,:,1:2)), 2.0_rkind)
   d = [1.0_rkind,1.0_rkind]
+  call check("oblique cell span",river_cell_width(cell,d),2*sqrt(2.0_rkind))
+  call check("clockwise cell span",river_cell_width(cell([1,4,3,2],:),d),2*sqrt(2.0_rkind))
   call check("oblique full contacts", river_contact_width(cell,d,adjacent(:,:,1:2)), sqrt(2.0_rkind))
   call check("isolated cell span", river_contact_width(cell,d,adjacent(:,:,1:0)), 2*sqrt(2.0_rkind))
 
@@ -43,6 +48,7 @@ program test_ncwidth_geometry
     end do
     call check("rotated UTM contact", &
       river_contact_width(transformed,matmul(rotation,d),rotated(:,:,1:2)), 1/sqrt(2.0_rkind))
+    call check("rotated UTM full cell span",river_cell_width(transformed,matmul(rotation,d)),2*sqrt(2.0_rkind))
   end do
 
   adjacent(:,:,2) = rectangle(2.0_rkind,4.0_rkind,0.0_rkind,1.0_rkind)
@@ -61,8 +67,26 @@ program test_ncwidth_geometry
   call check("tangent to sole contact", river_contact_width(cell,d,adjacent(:,:,2:2)), 0.0_rkind)
   call check("zero direction", river_contact_width(cell,0*d,adjacent), 0.0_rkind)
   nan = ieee_value(0.0_rkind,ieee_quiet_nan)
+  call check("zero cell direction",river_cell_width(cell,[0.0_rkind,0.0_rkind]),0.0_rkind)
+  call check("nonfinite cell direction",river_cell_width(cell,[nan,1.0_rkind]),0.0_rkind)
+  transformed=cell; transformed(1,1)=nan
+  call check("nonfinite cell coordinates",river_cell_width(transformed,d),0.0_rkind)
+  ! Tiny projected side contacts previously generated metre-scale widths on
+  ! kilometre-scale cells. Cell width must stay finite at tangent directions.
+  transformed=rectangle(0.0_rkind,10000.0_rkind,0.0_rkind,14000.0_rkind)
+  call check("near-horizontal kilometre cell", &
+    river_cell_width(transformed,[1.0_rkind,1.e-8_rkind]),14000.0001_rkind)
+  call check("near-vertical kilometre cell", &
+    river_cell_width(transformed,[1.e-8_rkind,1.0_rkind]),10000.00014_rkind)
+  do k=0,360
+    angle=real(k,rkind)*acos(-1.0_rkind)/180
+    d=[cos(angle),sin(angle)]
+    call check("rectangular cell analytical span",river_cell_width(transformed,d), &
+      10000*abs(d(2))+14000*abs(d(1)))
+  end do
   call check("nonfinite direction", river_contact_width(cell,[nan,1.0_rkind],adjacent), 0.0_rkind)
   cell(:,2) = 0.0_rkind
+  call check("degenerate cell span",river_cell_width(cell,d),0.0_rkind)
   call check("degenerate cell", river_contact_width(cell,d,adjacent), 0.0_rkind)
   print '(a,i0,a)', "PASS: ", checks, " river contact geometry checks"
 

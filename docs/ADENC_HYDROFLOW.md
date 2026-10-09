@@ -58,6 +58,12 @@ The implementation retains the previous algebraic evaluation with W factors;
 they cancel analytically. This defines preferred hydrology, not a constraint
 that the corrected field must preserve this speed exactly.
 
+Since2026-10-09 W is the **full hydrological-cell transverse span**, not a
+narrow projected neighbour contact. H is an equivalent cell-area storage
+coefficient, not physical channel depth. See ADENC_CELL_WIDTH.md for the
+geometry/volume convention and its limits. Edge contacts/banks remain separate
+flux constraints; no lateral source or actual mHM storage is inferred.
+
 Each unique edge has one oriented integrated flux F [m3/s], positive outwards
 from its first owner; the second owner uses -F. The element incidence matrix B
 therefore gives its net outward discharge. At a transport trial step:

@@ -5,10 +5,46 @@ module ncwidth_geometry
   implicit none
   private
   public :: river_contact_width
+  public :: river_cell_width
 
 contains
 
+  ! Homogenized ADEnc width: full hydrological-cell span normal to flow [m].
+  ! This is NOT a physical wetted-channel width or a projected face opening.
+  ! Use it consistently for cell-averaged Q/W and H=Q/(W*v). A near-tangential
+  ! neighbour contact must not collapse storage width over the entire cell.
+  pure function river_cell_width(vertices, direction) result(width)
+    real(kind=rkind), intent(in) :: vertices(4,2), direction(2)
+    real(kind=rkind) :: width, d(2), normal(2), local(4,2), projections(4)
+    real(kind=rkind) :: centre(2), norm_d, tolerance, orientation
+    integer :: i, next_i
+
+    width = 0.0_rkind
+    if (.not. all(ieee_is_finite(vertices))) return
+    if (.not. all(ieee_is_finite(direction))) return
+    norm_d = norm2(direction)
+    if (.not. ieee_is_finite(norm_d) .or. norm_d <= tiny(1.0_rkind)) return
+    d = direction/norm_d
+    normal = [-d(2),d(1)]
+    centre = sum(vertices,dim=1)/4.0_rkind
+    do i = 1, 4
+      local(i,:) = vertices(i,:) - centre
+      projections(i) = dot_product(local(i,:),normal)
+    end do
+    tolerance = max(1.0e-9_rkind, &
+      64.0_rkind*epsilon(1.0_rkind)*max(1.0_rkind,maxval(abs(vertices))))
+    orientation = 0.0_rkind
+    do i = 1, 4
+      next_i = mod(i,4) + 1
+      orientation = orientation + cross2(local(i,:),local(next_i,:))
+    end do
+    if (abs(orientation) <= tolerance*maxval(abs(local))) return
+    width = maxval(projections) - minval(projections)
+    if (width <= tolerance .or. .not. ieee_is_finite(width)) width = 0.0_rkind
+  end function river_cell_width
+
   ! Effective width, not the wetted width of a surveyed river cross-section.
+  ! Retained as a contact diagnostic/legacy API, NOT ADEnc's storage width.
   ! Each shared edge contributes length * abs(dot(flow, outward_edge_normal)).
   ! Sum contacts on each side of the cell (branches are parallel openings),
   ! then limit the full transverse span by the narrower inlet/outlet.

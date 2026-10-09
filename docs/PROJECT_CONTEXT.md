@@ -1,5 +1,36 @@
 # DRUtES project context
 
+LATEST2026-10-09 cell-width correction (local only, NOT yet committed/uploaded):
+After VPN restored, user approved pushingd23ee9a toGitHub; hydrocalc pulled/
+rebuilt it in~/drutes-dev. Fresh case1 parent
+/mnt/stock/ncflux-routing-case1-20261009-RepMhS passed30 checks,real routing,
+all3 initializations/assembly, but full-window hydraulics failed after4days.
+No prepared.flag or transport launch; old results preserved. User required
+all further checks locally before upload. Mac reproduced exact failure:
+surrogate H~68m,W~7.4m,V~157km3;storage-growth20824m3/s vs inlet371m3/s.
+All17 outlets boundzero; pass2 incompatible, NOT PCG iteration-limit/mHM
+corruption proof. Diagnostics runs/routing-window-local-20261009-v5KQW5/.
+User authorized replacing contact-limited effective width with hydrological
+cell-scale width. ncwidth_geometry::river_cell_width now computes full quad
+span normal to direction; ncfluxarea cache uses it for ALL existing Q/W and
+H consumers. river_contact_width retained as legacy diagnostic, NOT storage.
+No arbitrary width floor, changed sources/ports, velocity law, conservation,
+FEM/solver/Schwarz numerical logic, timestep/stabilization or forcing data.
+init_netcdf logs width convention. Near-tangent/corner neighbours no longer
+collapse whole-cell width. Heff is equivalent volume/area, NOT physical depth.
+Tests in runs/cell-width-tests-20261009-rB68lI: fresh checkedO2 full build
+inclSchwarz,41 pytest tests,30 standalone checks and all3 routing/physics/
+finite-matrix preflights pass. Full14day window passed672x1800s, outlets>=0,
+max globally-scaled residual7.59e-12 (local7.99e-10). Active FE4254 unchanged.
+W8.656--16.360km;day4Heff0.028--0.060m;formerFE824W13.915km/H0.0375m.
+Day4+30min storage demand56.862m3/s, not20824;no invented inflows.
+Day4inventory~0.336km3. Hydraulic correction stillLARGE0.655--0.667;
+numerical feasibility != calibrated/validated physical velocities/transport.
+Local root executable rebuild; existing private binaries/results unchanged.
+No new server upload, transport simulation or commit of this correction yet.
+See ADENC_CELL_WIDTH.md and runREPORT/assessment.json. Older paragraphs below
+describe superseded contact widths/deployments; do not use as current status.
+
 LATEST2026-10-09 mandatory mRM routing: discovered Maryam's actual Rhine L0
 dem.asc/fdir.asc/facc.asc and L11 graph in restart/mRM_restart_001.nc on
 hydrocalc. ncrouting.f90 requires fixed drutes.conf/netcdf/mRM_restart_001.nc
