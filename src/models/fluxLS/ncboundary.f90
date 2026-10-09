@@ -220,6 +220,7 @@ contains
     use ncglobvars, only: open_edges,ncfluxdata,ora_di_ini,adenc_coefficient_time
     use netcdfflux, only: ncflux_get_xy_cell
     use ncfluxarea, only: ncflux_active_width
+    use nchydroflow, only: LShydro,hydro_normal_flux
     integer(kind=ikind), intent(in) :: el_id
     real(kind=rkind), intent(in) :: dt
     real(kind=rkind), intent(out) :: matrix(3,3)
@@ -241,6 +242,13 @@ contains
       if (length<=0) error stop 'Degenerate conservative exterior edge'
       normal=[b(2)-a(2),a(1)-b(1)]/length
       if (dot_product(normal,center-(a+b)/2)>0) normal=-normal
+      if (LShydro) then
+        qn=hydro_normal_flux(int(el_id),k)
+        if (any(qn<-1.e-12_rkind)) error stop 'Reconstructed outlet became inflow'
+        call bank_edge_terms(ends(:,k),length,qn,dt,part)
+        matrix=matrix-part
+        cycle
+      end if
       do g=1,2
         s=(1+(2*g-3)/sqrt(3.0_rkind))/2
         point=(1-s)*a+s*b

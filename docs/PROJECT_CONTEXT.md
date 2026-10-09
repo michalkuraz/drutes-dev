@@ -1,5 +1,182 @@
 # DRUtES project context
 
+DEPLOYMENT requested2026-10-09: user now explicitly requests a local commit,
+server git pull, compilation inside ~/drutes-dev and executable copies into
+fresh Galerkin/SUPG2/SUPG2+shock1 benchmarks. Parent reserved:
+/mnt/stock/ncflux-inside-benchmarks-20261009-5aQSXB. Existing outputs remain
+untouched and shared NetCDF/DEM stay symlinked. Server's old dirty fixes were
+archived/stashed and its HEAD fast-forwarded to55e11ad; an earlier preparation
+stopped before compiling/launching because AppleDouble metadata differences
+were treated as source changes. No new simulation has launched at this dated
+snapshot. Continue with the explicitly requested commit/pull workflow; do not
+rerun the first prepare.sh or use an existing results out/. Latest deployment
+evidence will be in runs/inside-benchmark-deploy-20261009-kaMjg7/REPORT.md.
+
+LATEST observation fix2026-10-09: reproduced the export mismatch with actual
+production initialization and saved SUPG2 nodal fields. init_observe/old inside
+selected FE5538/10189/14710/2877 rather than true10679/6415/10417/17993; all
+selected points lie outside their chosen triangles. The P1 interpolation itself
+agrees with independent barycentric interpolation when the correct FE is used.
+User authorized replacing containment: src/tools/geom_tools.f90 now provides
+deterministic translated/scaled barycentric inside for2D triangles, finite and
+degenerate guards, scale-aware tolerance and boundary flag. Original routine
+retained publicly as inside_shoot (Fortran identifiers cannot contain '-');
+intervals/general polygons retain legacy behavior. No FEM matrices, ADEnc
+physics, Schwarz sources, configs or original results changed. New tests:
+tests/test_geom_inside.py and tests/fortran/test_geom_inside.f90. Bounds-checked
+full build passes;60000 random containment comparisons against independent
+quad-precision half-plane oracle, vertex/edge/order/scale/UTM checks,1000 random
+full-Rhine-mesh unique-location queries and4known points pass. Isolated Linux
+production-init checks now select all4correct active FE, with100/100 repeated
+containment and roundoff agreement on saved day2/day12 concentrations. Local
+bin/drutes rebuilt; server checkout and running/production binaries NOT updated,
+only isolated diagnostic module linked. No new simulation launched.15hydraulic/
+bank/conservative checks plus analysis/chart/width/dispersion regressions pass.
+See runs/inside-barycentric-20261009-5hxi8k/REPORT.md and logs; old mismatch
+paragraphs below are historical. Existing saved nodal fields remain usable;
+old obspt exports remain wrong until reconstructed or rerun with the fix.
+
+LATEST assessment2026-10-09: all3 bounded-hydraulics variants FINISHED exit0,
+14days,779 steps,17 saved concentration snapshots,397--413s wall; no drutes
+processes remain. Read-only check/download, no new runs or source/config edits.
+Saved active c ranges: Galerkin[-.202053,1.072579], SUPG2[-.090123,1.025660],
+SUPG2+shock1[-.001441,1]. Discrete mass-budget errors<=1.50e-13; independent
+all-daily-Q P0H*P1c spatial inventories match audit<=4.21e-15. Shock1 strongly
+reduces oscillations but broadens pulse; not positivity/calibrated accuracy.
+Reconstructed original-coordinate samples show pulse at points1/2/3 around
+days2/7/12 and risingpoint4 nearend; shockpoint3 still risingday14. Exported
+obspt histories disagree for ALL4 points (especially1/3), despite using the
+correct column2 c. Headers/source confirm columns time,c,H*c,q-components,cumq.
+User specifically challenged quantity selection; verified SUPG2point1day2
+column2=-.00210647 vs spatialP1c=.14142310; point3 exports0 but spatialday12
+.06972162. Exact export/location cause NOT established/fixed. Fortran ES24.16
+omits E at tiny three-digit exponents; diagnostic reader accounts for this,
+no actual NaN hidden. See runs/hydro-assessment-20261009-YdM7fE/REPORT.md,
+assessment.json, analyze.py and scientific comparison PNGs. Old RUNNING
+paragraphs below are historical. Numerical mass balance != validated hydrology.
+
+LATEST pre-shutdown2026-10-09: bounded SUPG2 benchmark FINISHED exit0 at1209600s
+(14days). Full output assessment pending; final audit relative error-1.158e-13,
+negative nodal inventory8.0522e4, so no positivity/calibrated-physics claim.
+Galerkin and SUPG2+shock1 remain RUNNING at357676s/349954s (>4days), detached
+workers verified PPID1/ownsession/noTTY. User requested leaving computations
+until morning and will turn off MacBook; do not terminate/restart existing
+cases. Server processes continue without Mac or SSH; no new local automation
+is claimed. THREE_VARIANTS.md now records this newer status; prior RUNNING
+SUPG2 paragraphs below are dated history.
+
+LATEST follow-up2026-10-09: user requested all three stabilization variants.
+Kept the already running bounded SUPG2 (no restart); separately launched
+Galerkin and SUPG2+shock1 after identical-input diff (onlysupg.conf/shock.conf
+excluded), private binary hash check and production FEM assembly/flag checks.
+New cases in /mnt/stock/ncflux-hydro-outflow-fix-20261008-tDsU4W/variants-W1ELRu/
+galerkin and supg2-shock1. Workers/model PIDs2614690/2614705 and2614692/2614706,
+detached PPID1/ownsessions; started22:22:03UTC Oct8. All three confirmed RUNNING
+with accepted steps after launch; SUPG2 then1013400s (>old3dayfailure), other
+two>12h. Dated startup evidence, not completion. Same14day6hpulsephysics,
+bounded hydraulics/sourcepolicy0, alpha200/0.2, identical private binary and
+shared NetCDF symlinks. Original results/checkout preserved. Definitions are
+the previously used Galerkin / SUPG factor2 / SUPG2+residual shock factor1,
+NOT AFC/FCT. See runs/hydroflow-test-20261008-GGI9Sq/THREE_VARIANTS.md for
+paths/provenance, later read-only status checks and comparison caveats.
+
+LATEST2026-10-09: user authorized fixing the long-run outlet reversal.
+Only nchydroflow.f90 numerical implementation changed: hydro_project_outflow
+enforces F_out>=0 using an exterior-edge monotone active set, re-solving ALL
+local water balances after binding negative outlets to0, not clipping flux.
+Incompatible incoming water demand, dry-data and correction-limit guards stay;
+no sources, incoming concentrations, FEM, solver or Schwarz changes.38 local
+pytest tests, Mac build, Linux bounds-checked build/15 checks pass;100 random
+graph cases match exhaustive bound-subset reference. Full production Rhine
+hydraulic-window preflight PASSED672x1800s through1209600s, all outlets>=0,
+independent global-scaled max water residual1.764e-11; per-element normalization
+max1.182e-8 is also reported (PCG uses global normalization). Full FEM dry
+assembly passes. New detached SUPG2 transport run started22:16:41UTC Oct8 in
+/mnt/stock/ncflux-hydro-outflow-fix-20261008-tDsU4W/benchmark-supg2-bounded-14d-l7PyH3,
+worker2614099 PPID1/SID2614099, model2614106. RUNNING at startup inspection,
+not transport completion. Inputs byte-identical to old failed14-day run;
+shared NetCDF symlinks unchanged, private binary96e67cd8..., old results intact.
+Read runs/hydroflow-test-20261008-GGI9Sq/OUTFLOW_FIX.md and
+BOUNDED_BENCHMARK_RUN.md. Root hydroflow remains n. This fixes local outlet
+admissibility, NOT concentration positivity or full mHM/calibrated hydrology.
+The failed run described below is historical and remains preserved.
+
+LATEST long-benchmark status2026-10-08: the detached benchmark-supg2-14d-RS7VLL
+already FAILED exit1 at the first trial after259200s,194 accepted steps (3days,
+not14days). Error: Hydroflow outlet reversed: an inflow concentration is required.
+Last trial logged water residual5.693e-12, correction0.82716, so the reversal
+guard, NOT PCG failure/correction-limit/memory reporting, stopped this run.
+Outputs/diagnostics preserved at the directory below. Detached launch worked
+and continued after SSH disconnect; prior RUNNING/PID paragraphs are historical,
+not evidence of an ongoing job. No guards disabled, sources/ports changed or
+replacement simulation launched. User was warned before being told the run
+could continue with Mac off. Resolve hydraulic boundary/source assumptions
+before any authorized fresh rerun; do not rerun main in this results directory.
+
+Follow-up 2026-10-08 long benchmark: user explicitly authorized the long run
+and will power off MacBook. One tested SUPG2/conservative/hydroflow case started
+detached via nohup+setsid in NEW isolated
+/mnt/stock/ncflux-hydro-rhine-20261008-tEDEXw/benchmark-supg2-14d-RS7VLL.
+Original14-day end1209600s, six-hour unit inlet pulse, bulk IC0, dt300/max1800,
+same tested61 ports, linear H/Q, no lateral sources, alpha200/0.2,Qmin300.
+Bounds-checked private binary unchanged; full initialization/matrix preflight
+passed. Worker PID2612317 PPID1/SID2612317, model PID2612324, TTYnone,
+stdin/dev/null and server log redirection. Separate post-launch SSH confirmed
+RUNNING through78493.70209s about23:37Rome; this is dated startup evidence,
+NOT a completion claim. worker.sh has flock/one-shot launch guard and records
+status.txt,exit-code.txt,model/worker PIDs and start/finish UTC; no wall timeout.
+Do not rerun main in this directory: outputs would be cleared. No new other
+variants, automations or source/physics changes. NetCDF symlinked, previous
+results intact. Guards can still reject future forcing/outlet reversals;
+hydraulic correction is large. See runs/hydroflow-test-20261008-GGI9Sq/
+BENCHMARK_RUN.md for provenance and read-only inspection commands. Older
+paragraph saying no model remained applies to completed SHORT tests only.
+
+Follow-up 2026-10-08 enabled Rhine tests: user authorized a short hydrocalc test.
+New isolated parent /mnt/stock/ncflux-hydro-rhine-20261008-tEDEXw contains two
+completed SUPG2/conservative/hydroflow runs, constant-state and short-pulse,
+each six300s steps to1800s, exit0. Linear daily H, source policy0, explicit
+44 original inlet101 edges and17 west-facing test outlet edges; not a calibrated
+hydrological boundary. Initial wider cap preflight rejected a reversed corner
+flux; guard retained, failed artifacts preserved, successful geometry explicit.
+Saved C1 deviation <=1.021e-9; relative budget errors <=4.134e-15/1.435e-15;
+independent P0(H)*P1(C) spatial inventory agrees at roundoff. Short600s pulse
+final Cmin=-3.154e-6; no positivity claim. Hydraulic relative correction0.8114
+is LARGE and requires hydrological assessment before benchmark interpretation.
+Initial discrete pulse inventory is nonzero due prescribed inlet P1 values;
+post-release strong C0 inlet can export mass, which audit includes. Root
+hydroflow.conf remains n; old server runs/results/working tree and shared
+NetCDF targets unchanged. No drutes processes remained after tests. Read
+ADENC_HYDROFLOW_RHINE_TEST_20261008.md for exact inputs, limits and artifacts.
+
+Follow-up 2026-10-08 compatible ADEnc hydraulics: added optional nchydroflow.f90
+with shared oriented FE edge fluxes, RT0 reconstruction and P0 centroid storage.
+Local backward-Euler water balance is imposed by a private matrix-free PCG
+projection; existing velocity law is reused. Explicit inlet/outlet FE edges,
+including multiple Qrouted-driven tributary inlet IDs, are required. No hidden
+lateral source inference; policy0 is source-free except listed ports. Optional
+linear daily Q/H interpolation avoids instantaneous storage jumps; the original
+daily mode remains selectable. Flux/storage/bank/conservative hooks and SUPG/
+shock residuals use the compatible field (including div(q) and analytic div(K)).
+No edits to shared FEM, primary solver or Schwarz files. Root hydroflow.conf is
+n: existing model inputs retain old behavior. README/config example documents
+that toy port indices are NOT Rhine configuration and node IDs are FE array
+positions. All35 local pytest tests and optimized Mac build pass. Bounds-checked
+Linux build and15 standalone checks pass in the NEW isolated directory
+/mnt/stock/ncflux-hydroflow-check-20261008-DXKlWg; logs under
+checks/hydro-checks-g3el0fbs. No server working-tree overwrite, new simulation
+or existing-output reuse. Previous conservative models were explicitly STOPPED
+at user request; current pgrep finds no drutes processes. Older paragraphs below
+describing running PIDs are dated history, not current status. A real Rhine port
+configuration and short enabled-mode assessment are still required. See
+ADENC_HYDROFLOW.md; no claim of concentration positivity or full mHM replication.
+All three original Rhine variants also passed Linux full initialization,
+initial export and conservative matrix assembly, with no solve/time advance,
+in rhine-preflight/<case>/terminal.log under that new private directory. These
+real-data checks used absent/off hydroflow configuration, so they establish
+legacy compatibility only, not enabled reconstruction validity. Their legacy
+713 zero-width active triangles remain a documented limitation.
+
 Follow-up 2026-10-08 server conservative launch: user explicitly authorized
 stopping the three older bank-only runs and launching all three new variants.
 Private source snapshot exported to /mnt/stock/ncflux-conservative-20261008;

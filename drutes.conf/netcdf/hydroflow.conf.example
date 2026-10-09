@@ -1,0 +1,22 @@
+# TOY mesh from test_adenc_hydroflow.f90; these node numbers are NOT Rhine ports.
+# Copy and replace port edges with verified FE ARRAY node indices, not arbitrary Gmsh tags.
+# Enable reconstruction (requires conservative and no-flow-bank modes).
+y
+# Lateral water source policy: 0 = none; tributaries must enter through listed inlets.
+0
+# Time interpolation: 1 = linear daily Q and endpoint-derived H; 0 = daily jumps.
+1
+# Relative local water-balance tolerance; maximum PCG iterations.
+1e-10
+20000
+# Maximum relative L2 edge-flux correction. 1 means 100%, not a calibration criterion.
+1.0
+# Number of explicit port edges.
+4
+# node1 node2 kind discharge[m3/s]
+# kind -1=inlet, +1=outlet. Inlet 0 uses Qrouted; outlet 0 is free balanced discharge.
+# Both inlet edges have the SAME concentration boundary ID; Q is split, NOT repeated.
+1 3 -1 0
+3 5 -1 0
+2 4  1 0
+4 6  1 0

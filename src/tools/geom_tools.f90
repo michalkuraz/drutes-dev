@@ -23,6 +23,7 @@ module geom_tools
 
   public :: init_transform
   public :: inside
+  public :: inside_shoot
   public :: inside3D
   public :: triarea
   public :: tetravol
@@ -638,7 +639,60 @@ module geom_tools
 
   end function get_nx
 
- function inside(domain,bod, atboundary, dimen_input) result(true)
+  !> Deterministic containment for a 2D P1 triangle. Coordinates are translated
+  !! and scaled before computing barycentric weights. Boundary points belong
+  !! to both adjacent triangles; the caller determines the element tie-break.
+  !! Preserve the legacy interval/polygon behavior through inside_shoot.
+  function inside(domain,bod,atboundary,dimen_input) result(true)
+    use typy
+    use globals, only: drutes_config
+    use, intrinsic :: ieee_arithmetic, only: ieee_is_finite
+    real(kind=rkind), intent(in) :: domain(:,:), bod(:)
+    logical, intent(out), optional :: atboundary
+    integer(kind=ikind), intent(in), optional :: dimen_input
+    logical :: true
+    integer(kind=ikind) :: dimen_loc
+    real(kind=rkind) :: u(2),v(2),r(2),weights(3)
+    real(kind=rkind) :: scale,coordscale,coordtol,det,deterr,tol,roundoff
+
+    true=.false.
+    if (present(atboundary)) atboundary=.false.
+    dimen_loc=drutes_config%dimen
+    if (present(dimen_input)) dimen_loc=dimen_input
+    if (dimen_loc/=2 .or. size(domain,1)/=3) then
+      true=inside_shoot(domain,bod,atboundary,dimen_input)
+      return
+    end if
+    if (size(domain,2)/=2 .or. size(bod)<2) return
+    if (.not.all(ieee_is_finite(domain)) .or. .not.all(ieee_is_finite(bod(1:2)))) return
+
+    coordscale=max(maxval(abs(domain)),maxval(abs(bod(1:2))))
+    ! Account for input-coordinate/subtraction roundoff, not a fixed metre epsilon.
+    coordtol=8*epsilon(1.0_rkind)*coordscale
+    if (any(bod(1:2)<minval(domain,dim=1)-coordtol) .or. &
+        any(bod(1:2)>maxval(domain,dim=1)+coordtol)) return
+    u=domain(2,:)-domain(1,:)
+    v=domain(3,:)-domain(1,:)
+    r=bod(1:2)-domain(1,:)
+    scale=max(maxval(abs(u)),maxval(abs(v)))
+    if (.not.ieee_is_finite(scale) .or. scale<=tiny(scale)) return
+    u=u/scale; v=v/scale; r=r/scale
+    roundoff=8*epsilon(1.0_rkind)*max(1.0_rkind,coordscale/scale)
+    det=u(1)*v(2)-u(2)*v(1)
+    deterr=8*epsilon(1.0_rkind)*(abs(u(1)*v(2))+abs(u(2)*v(1))) + &
+           4*roundoff*(sum(abs(u))+sum(abs(v)))
+    ! A collapsed or numerically unresolved triangle has no reliable interior.
+    if (abs(det)<=deterr) return
+    weights(2)=(r(1)*v(2)-r(2)*v(1))/det
+    weights(3)=(u(1)*r(2)-u(2)*r(1))/det
+    weights(1)=1-weights(2)-weights(3)
+    tol=(32*epsilon(1.0_rkind)+4*roundoff*(1+maxval(abs(r))))/abs(det)
+    true=all(weights>=-tol) .and. all(weights<=1+tol)
+    if (present(atboundary)) atboundary=true .and. any(abs(weights)<=tol)
+  end function inside
+
+  !> Original random-ray containment, retained for comparison and non-triangles.
+ function inside_shoot(domain,bod, atboundary, dimen_input) result(true)
     use typy
     use globals
     use global_objs
@@ -758,7 +812,7 @@ module geom_tools
         ERROR stop "generated from geom_tools::inside"
     end select
 
-  end function inside
+  end function inside_shoot
   
   
   function inside3D(volume, bod) result(true)

@@ -4,6 +4,7 @@ module ncsupg
   implicit none
   private
   public :: read_adenc_supg, adenc_supg_element, supg_tau, supg_terms, shock_diffusivity, shock_terms
+  public :: rt0_dispersion_divergence
 contains
   subroutine read_adenc_supg()
     use ncglobvars, only: LSsupg, LSsupg_factor, LSshock, LSshock_factor
@@ -66,25 +67,30 @@ contains
   end function supg_tau
 
   ! Return NEGATIVE-sign DRUtES corrections at one quadrature point.
-  ! Strong residual: h C_t + q.grad(C) - reaction*C - source.
-  ! P1 Hessian is zero; q and K are piecewise constant inside each hydro cell.
+  ! Legacy strong residual: h C_t + q.grad(C) - reaction*C - source.
+  ! Optional RT0 conservative mode adds div(q)*C - div(K).grad(C).
+  ! P1 Hessian is zero. Legacy hydro-cell/interface jumps remain omitted.
   pure subroutine supg_terms(q, depth, tensor, gradients, basis, dt, transient, &
-                            reaction, source, factor, mass, stiffness, rhs)
+                            reaction, source, factor, mass, stiffness, rhs,divq,divtensor)
     real(kind=rkind), intent(in) :: q(2), depth, tensor(2,2), gradients(3,2), basis(3)
     real(kind=rkind), intent(in) :: dt, reaction, source, factor
     logical, intent(in) :: transient
     real(kind=rkind), intent(out) :: mass(3,3), stiffness(3,3), rhs(3)
-    real(kind=rkind) :: tau, test(3), convective_derivative(3)
+    real(kind=rkind), intent(in), optional :: divq,divtensor(2)
+    real(kind=rkind) :: tau, test(3), convective_derivative(3),rate,drift(2)
     integer :: i,j
     mass=0; stiffness=0; rhs=0
     if (depth<=0 .or. factor<=0) return
-    tau=factor*supg_tau(q/depth,tensor/depth,gradients,dt,transient,reaction/depth)
+    rate=reaction; drift=q
+    if (present(divq)) rate=rate-divq
+    if (present(divtensor)) drift=drift-divtensor
+    tau=factor*supg_tau(q/depth,tensor/depth,gradients,dt,transient,rate/depth)
     test=tau*matmul(gradients,q/depth)
-    convective_derivative=matmul(gradients,q)
+    convective_derivative=matmul(gradients,drift)
     do i=1,3
       do j=1,3
         if (transient) mass(i,j)=-test(i)*depth*basis(j)
-        stiffness(i,j)=-dt*test(i)*(convective_derivative(j)-reaction*basis(j))
+        stiffness(i,j)=-dt*test(i)*(convective_derivative(j)-rate*basis(j))
       end do
       rhs(i)=-dt*test(i)*source
     end do
@@ -106,19 +112,24 @@ contains
   end function shock_diffusivity
 
   ! Lag the viscosity at the current Picard iterate, diffuse the new unknown.
-  ! Broken P1 residual shares the coefficient-jump limitation of SUPG.
+  ! Broken P1 residual: same optional RT0 divergence terms as SUPG.
+  ! Does not add interelement diffusive jump residuals or a positivity limiter.
   pure subroutine shock_terms(q,depth,gradients,basis,current,previous,dt,transient, &
-                             reaction,source,factor,stiffness,old_depth)
+                             reaction,source,factor,stiffness,old_depth,divq,divtensor)
     real(kind=rkind), intent(in) :: q(2),depth,gradients(3,2),basis(3),current(3),previous(3)
     real(kind=rkind), intent(in) :: dt,reaction,source,factor
     logical, intent(in) :: transient
     real(kind=rkind), intent(out) :: stiffness(3,3)
     real(kind=rkind), intent(in), optional :: old_depth
-    real(kind=rkind) :: gradient(2),residual,nu
+    real(kind=rkind), intent(in), optional :: divq,divtensor(2)
+    real(kind=rkind) :: gradient(2),residual,nu,rate,drift(2)
     stiffness=0
     if (depth<=0 .or. factor<=0 .or. dt<=0) return
     gradient=matmul(transpose(gradients),current-current(1))
-    residual=(dot_product(q,gradient)-reaction*dot_product(basis,current)-source)/depth
+    rate=reaction; drift=q
+    if (present(divq)) rate=rate-divq
+    if (present(divtensor)) drift=drift-divtensor
+    residual=(dot_product(drift,gradient)-rate*dot_product(basis,current)-source)/depth
     if (transient) residual=residual+dot_product(basis,current-previous)/dt
     if (transient .and. present(old_depth)) &
       residual=residual+(1-old_depth/depth)*dot_product(basis,previous)/dt
@@ -126,11 +137,23 @@ contains
     stiffness=-dt*depth*nu*matmul(gradients,transpose(gradients))
   end subroutine shock_terms
 
+  ! RT0 has grad(q)=b*I, div(q)=2*b. For the physical ADEnc tensor
+  ! K=alpha_T*|q|*I+(alpha_L-alpha_T)*q*q^T/|q| this is exact away from q=0.
+  pure function rt0_dispersion_divergence(q,divq,alpha_l,alpha_t) result(value)
+    real(kind=rkind), intent(in) :: q(2),divq,alpha_l,alpha_t
+    real(kind=rkind) :: value(2),speed
+    value=0; speed=norm2(q)
+    if (speed>tiny(1.0_rkind)) value=.5_rkind*divq*(2*alpha_l-alpha_t)*q/speed
+  end function
+
   subroutine adenc_supg_element(pde_loc,el_id,dt,quadpnt_in)
     use global_objs
     use globals
     use pde_objs
     use ncglobvars, only: LSsupg, LSsupg_factor, LSshock, LSshock_factor, LSconservative,LSdepth_old
+    use ncglobvars, only: LSdisp,LSdisp_transverse
+    use nchydroflow, only: LShydro,hydro_value
+    use geom_tools, only: getcoor
     class(pde_str), intent(in) :: pde_loc
     integer(kind=ikind), intent(in) :: el_id
     real(kind=rkind), intent(in) :: dt
@@ -138,7 +161,7 @@ contains
     type(integpnt_str) :: point, nodepoint
     integer :: l,j
     integer(kind=ikind) :: layer
-    real(kind=rkind) :: q(2),tensor(2,2),depth,reaction,source,weight
+    real(kind=rkind) :: q(2),tensor(2,2),depth,reaction,source,weight,divq,divtensor(2),xy(2)
     real(kind=rkind) :: temporal(3,3),spatial(3,3),forcing(3)
     real(kind=rkind) :: current(3),shock(3,3),supg_factor
     logical :: transient
@@ -173,12 +196,18 @@ contains
       call pde_loc%pde_fnc(1)%dispersion(pde_loc,layer,point,tensor=tensor)
       reaction=pde_loc%pde_fnc(1)%reaction(pde_loc,layer,point)
       source=pde_loc%pde_fnc(1)%zerord(pde_loc,layer,point)
+      divq=0; divtensor=0
+      if (LShydro) then
+        call getcoor(point,xy)
+        call hydro_value(int(el_id),xy,q,depth,divq)
+        divtensor=rt0_dispersion_divergence(q,divq,LSdisp,LSdisp_transverse)
+      end if
       call supg_terms(q,depth,tensor,elements%ders(el_id,:,1:2),base_fnc(:,l), &
-        dt,transient,reaction,source,supg_factor,temporal,spatial,forcing)
+        dt,transient,reaction,source,supg_factor,temporal,spatial,forcing,divq,divtensor)
       if (LSshock .and. LSshock_factor>0) then
         if (LSconservative) then
           call shock_terms(q,depth,elements%ders(el_id,:,1:2),base_fnc(:,l),current,elnode_prev, &
-            dt,transient,reaction,source,LSshock_factor,shock,LSdepth_old(l,el_id))
+            dt,transient,reaction,source,LSshock_factor,shock,LSdepth_old(l,el_id),divq,divtensor)
         else
           call shock_terms(q,depth,elements%ders(el_id,:,1:2),base_fnc(:,l),current,elnode_prev, &
             dt,transient,reaction,source,LSshock_factor,shock)

@@ -1,5 +1,6 @@
 module lsconstitutive
   use ncboundary, only: active_node_element
+  use nchydroflow, only: LShydro,hydro_value,hydro_velocity
 
   contains 
   
@@ -31,7 +32,7 @@ module lsconstitutive
       
       real(kind=rkind), dimension(2) :: xy, gradsl
       integer(kind=ikind) :: nowhrs, el
-      real(kind=rkind) :: tmp, q, Wcell
+      real(kind=rkind) :: tmp, q, Wcell,h,divq,qvector(2)
       logical :: success
       character(len=1024) :: errmsg
       
@@ -81,6 +82,12 @@ module lsconstitutive
       end select
       
       
+      if (LShydro) then
+        call hydro_value(int(el),xy,qvector,h,divq)
+        if (present(flux)) flux=qvector
+        if (present(flux_length)) flux_length=norm2(qvector)
+        return
+      end if
       Wcell = ncflux_active_width(el)
       
       gradsl = ncfluxdata%fluxvct(el,:)
@@ -117,11 +124,7 @@ module lsconstitutive
       real(kind=rkind), intent(in) :: Q, w
       real(kind=rkind) :: v
       
-      real(kind=rkind) :: k, m=3.0_rkind/5.0_rkind
-      
-      k = vref*w**(1-m)/Qref**(1-m)
-      
-      v = k*Q**(1-m)/w**(1-m)
+      v = hydro_velocity(Q,w)
     
     end function velocity
     
@@ -192,7 +195,7 @@ module lsconstitutive
           
       logical :: success
       character(len=1024) :: errmsg
-      real(kind=rkind) :: q, v, Wcell
+      real(kind=rkind) :: q, v, Wcell,qvector(2),divq
       
       
       select case(quadpnt%type_pnt)
@@ -210,6 +213,12 @@ module lsconstitutive
       end select
       
       call getcoor(quadpnt, xy)
+      if (LShydro) then
+        el=quadpnt%element
+        if (quadpnt%type_pnt=='ndpt') el=active_node_element(quadpnt%order)
+        call hydro_value(int(el),xy,qvector,val,divq)
+        return
+      end if
       
       nowhrs = ora_di_ini + int(adenc_coefficient_time()/86400.0_rkind)*24
       

@@ -24,6 +24,7 @@ module init_netcdf
       use ncsupg, only: read_adenc_supg
       use ncboundary, only: read_adenc_banks,prepare_adenc_banks
       use ncconservative, only: read_adenc_conservative
+      use nchydroflow, only: read_adenc_hydro,LShydro,hydro_filter,hydro_initialize
             
       integer :: ierr, filetmp, fileconf
       integer(kind=ikind) :: i, bccnt, j
@@ -83,6 +84,7 @@ module init_netcdf
       call read_adenc_supg()
       call read_adenc_banks()
       call read_adenc_conservative()
+      call read_adenc_hydro()
       
       
       call fileread(Qmin, fileconf, ranges=(/0.0_rkind, huge(0.0_rkind)/), &
@@ -234,6 +236,11 @@ module init_netcdf
         write(errmsg, *) "W: active river FE elements with no positive width:", bccnt, &
           "; check corner-only/tangential contacts and flow directions."
         call write_log(trim(errmsg))
+      end if
+      if (LShydro) then
+        call hydro_filter()
+        call prepare_adenc_banks(original_edge)
+        call hydro_initialize(original_edge)
       end if
 
       allocate(ncelements%areas(ncelements%kolik))

@@ -95,6 +95,53 @@ def test_width_cache_with_real_modules(tmp_path: Path) -> None:
     assert budget['cumulative_in'][-1] > 0
     assert budget['cumulative_out'][-1] > 0
     assert budget['cumulative_source'][-1] == 0
+    hydro_executable = tmp_path / 'test-adenc-hydroflow'
+    run([required['gfortran'], '-fcoarray=single', '-fdefault-real-8', '-fcheck=all',
+         '-I', str(build / 'mods'), *nf_flags,
+         str(ROOT / 'tests/fortran/test_adenc_hydroflow.f90'),
+         *map(str, objects), *libraries, '-o', str(hydro_executable)], tmp_path)
+    assert 'Hydroflow kernel checks passed' in run([str(hydro_executable)], tmp_path)
+    hydro_config = 'y\n0\n0\n1e-12\n1000\n100\n4\n1 3 -1 0\n3 5 -1 0\n2 4 1 0\n4 6 1 0\n'
+    hydro_case = tmp_path / 'hydro-production'
+    hydro_inputs = hydro_case / 'drutes.conf/netcdf'
+    hydro_inputs.mkdir(parents=True)
+    (hydro_case / 'out').mkdir()
+    (hydro_inputs / 'hydroflow.conf').write_text(hydro_config)
+    assert 'Hydroflow production checks passed' in run([str(hydro_executable), 'production'], hydro_case)
+    linear_case = tmp_path / 'hydro-linear'
+    linear_inputs = linear_case / 'drutes.conf/netcdf'
+    linear_inputs.mkdir(parents=True)
+    (linear_case / 'out').mkdir()
+    (linear_inputs / 'hydroflow.conf').write_text(hydro_config.replace('y\n0\n0\n', 'y\n0\n1\n', 1))
+    assert 'Hydroflow production checks passed' in run([str(hydro_executable), 'linear'], linear_case)
+    invalid_hydro = {
+        'legacy': (hydro_config, 'requires conservative'),
+        'source': (hydro_config.replace('y\n0\n', 'y\n1\n', 1), 'zero lateral'),
+        'nan': (hydro_config.replace('1e-12', 'NaN'), 'Nonfinite hydroflow'),
+        'duplicate': (hydro_config.replace('3 5 -1 0', '1 3 -1 0'), 'Duplicate hydroflow port'),
+        'interior': (hydro_config.replace('1 3 -1 0', '1 4 -1 0'), 'active-domain boundary'),
+        'no-outlet': (hydro_config.replace('2 4 1 0', '2 4 -1 0').replace('4 6 1 0', '4 6 -1 0'),
+                      'real concentration boundary ID'),
+        'correction': (hydro_config.replace('\n100\n4\n', '\n0.001\n4\n'), 'correction exceeds'),
+        'extra': (hydro_config.replace('1 3 -1 0', '1 3 -1 0 junk'), 'Extra or invalid'),
+    }
+    for label, (content, expected) in invalid_hydro.items():
+        case = tmp_path / f'hydro-{label}'
+        inputs = case / 'drutes.conf/netcdf'
+        inputs.mkdir(parents=True)
+        (case / 'out').mkdir()
+        (inputs / 'hydroflow.conf').write_text(content)
+        result = subprocess.run([str(hydro_executable), 'legacy' if label == 'legacy' else 'production'],
+                                cwd=case, text=True, capture_output=True, timeout=20)
+        assert result.returncode != 0, label
+        assert expected in result.stdout + result.stderr, result.stdout + result.stderr
+    for label, content in {'absent': None, 'off': 'n\n'}.items():
+        case = tmp_path / f'hydro-{label}'
+        inputs = case / 'drutes.conf/netcdf'
+        inputs.mkdir(parents=True)
+        if content is not None:
+            (inputs / 'hydroflow.conf').write_text(content)
+        assert 'Hydroflow config checks passed' in run([str(hydro_executable), label], case)
     for label, content in {'absent': None, 'off': 'n\nn\n', 'on': 'y\ny\n',
                            'audit': 'n\ny\n', 'schwarz': 'y\ny\n', '3d': 'y\ny\n',
                            'backup': 'y\ny\n'}.items():
