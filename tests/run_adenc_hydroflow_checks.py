@@ -67,7 +67,7 @@ def main() -> None:
         "duplicate": (config.replace("3 5 -1 0", "1 3 -1 0"), "production", "Duplicate hydroflow port", True),
         "interior": (config.replace("1 3 -1 0", "1 4 -1 0"), "production", "active-domain boundary", True),
         "correction": (config.replace("\n100\n4\n", "\n0.001\n4\n"), "production", "correction exceeds", True),
-        "source": (config.replace("y\n0\n", "y\n1\n", 1), "production", "zero lateral", True),
+        "source": (config.replace("y\n0\n", "y\n2\n", 1), "production", "policy must be 0 or 1", True),
         "legacy-mode": (config, "legacy", "requires conservative", True),
     }
     for label, (content, argument, expected, fail) in cases.items():
@@ -78,6 +78,41 @@ def main() -> None:
         if content is not None:
             (inputs / "hydroflow.conf").write_text(content)
         run(label, [executables["hydroflow"], argument], case, expected, fail)
+    lateral_config = config.replace("y\n0\n0\n", "y\n1\n1\n", 1)
+    # Two disjoint groups, each TOTAL Q=.1 initially, increasing to .2.
+    # Physical volumes/load are distributed per area, never duplicated per FE.
+    def lateral_data(concentration: int = 1, zero: bool = False) -> str:
+        q0, q1 = (0, 0) if zero else (.1, .2)
+        series = (f"0 {q0} {concentration}\n3600 {q1} {concentration}\n"
+                  f"172800 {q1} {concentration}\n259200 {q1} {concentration}\n")
+        return "2\n2 4\n1\n2\n" + series + "2 4\n3\n4\n" + series
+
+    lateral_cases = {
+        "lateral-uniform": (lateral_data(), "lateral-uniform", "production checks passed", False),
+        "lateral-clean": (lateral_data(0), "lateral-clean", "production checks passed", False),
+        "lateral-zero": (lateral_data(1, True), "lateral-zero", "production checks passed", False),
+        "lateral-load": (lateral_data().replace("3600 0.2 1", "3600 0.2 2"), "lateral-load", "production checks passed", False),
+        "lateral-overlap": (lateral_data().replace("3\n4\n", "1\n2\n"), "lateral-overlap", "production checks passed", False),
+        "lateral-missing": (None, "production", "policy 1 requires lateral.conf", True),
+        "lateral-negative": (lateral_data().replace("0 0.1 1", "0 -0.1 1"), "production", "nonnegative", True),
+        "lateral-nan": (lateral_data().replace("0 0.1 1", "0 NaN 1"), "production", "Nonfinite lateral", True),
+        "lateral-duplicate": (lateral_data().replace("1\n2\n", "1\n1\n", 1), "production", "Duplicate lateral", True),
+        "lateral-element": (lateral_data().replace("1\n2\n", "1\n99\n", 1), "production", "outside FE mesh", True),
+        "lateral-time": (lateral_data().replace("3600", "0", 1), "production", "strictly increase", True),
+        "lateral-short": (lateral_data().replace("259200", "172801"), "lateral-short", "does not cover", True),
+        "lateral-coverage": (lateral_data().replace("172800", "7200").replace("259200", "10800"), "production", "does not cover configured", True),
+        "lateral-extra": (lateral_data()+"99\n", "production", "Unexpected trailing lateral", True),
+        "lateral-extra-field": (lateral_data().replace("0 0.1 1", "0 0.1 1 9"), "production", "Extra or invalid", True),
+    }
+    for label, (content, argument, expected, fail) in lateral_cases.items():
+        case = work / label
+        inputs = case / 'drutes.conf/netcdf'
+        inputs.mkdir(parents=True)
+        (case / 'out').mkdir()
+        (inputs / 'hydroflow.conf').write_text(lateral_config)
+        if content is not None:
+            (inputs / 'lateral.conf').write_text(content)
+        run(label, [executables['hydroflow'], argument], case, expected, fail)
     print(f"All {len(results)} checks passed. Preserved logs: {work}")
 
 

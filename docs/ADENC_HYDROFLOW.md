@@ -33,10 +33,13 @@ It does NOT establish that the hydrological input or inferred geometry is exact.
 - Every connected FE component must have explicitly listed inlet and outlet
   edges. All other exposed edges, including exterior mesh edges, are sealed
   WATER banks. No downstream outlet is inferred from a channel endpoint.
-- Current source policy0 means **no distributed lateral water sources/sinks**.
+- Source policy0 means **no distributed lateral water sources/sinks**.
   Multiple resolved tributaries are supported as separate explicit inlets;
   their discharge can be read from Qrouted. This is NOT automatic inference
   of an mRM routing graph or local runoff from neighbouring raster values.
+- Source policy1 (2026-10-09) reads explicitly prescribed incoming water and
+  contaminant-load series from lateral.conf; see ADENC_LATERAL_INFLOWS.md.
+  It does not infer sources from Qrouted differences or implement withdrawals.
 - No clipping of concentrations or artificial cancellation of div(q)*C.
 
 Qrouted alone is not a full hydrological water balance. Genuine lateral runoff,
@@ -59,7 +62,10 @@ Each unique edge has one oriented integrated flux F [m3/s], positive outwards
 from its first owner; the second owner uses -F. The element incidence matrix B
 therefore gives its net outward discharge. At a transport trial step:
 
-    B F = -A_e * (Hnew_e-Hold_e)/dt.
+    B F = A_e * (Rbar_e - (Hnew_e-Hold_e)/dt).
+
+Rbar=0 for policy0. For1 it is the exact interval-average explicitly supplied
+water source, with the matching solute load added to the transport equation.
 
 Initial reconstruction uses BF=0 for daily-step forcing, or BF=-A*dH/dt for
 linearly interpolated forcing. Prescribed inlet edges have negative F;
@@ -112,7 +118,7 @@ is a diagnostic of the total reconstruction, not only its interior solve.
 Optional `drutes.conf/netcdf/hydroflow.conf` starts with y/n. Absent or n leaves
 the previous ADEnc behavior unchanged. For y, the remaining records are:
 
-1. Integer lateral source policy (currently0 only).
+1. Integer lateral source policy:0=none,1=explicit lateral.conf.
 2. Integer forcing mode: 0=daily step, 1=linear interpolation (recommended).
 3. Positive finite relative water-balance tolerance, at most1e-6.
 4. Positive integer maximum auxiliary PCG iterations.

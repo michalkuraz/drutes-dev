@@ -25,13 +25,22 @@ program test_adenc_hydroflow
   real(kind=rkind) :: vertices(3,2),q(2),h,divq,v,normal(2),xy(2),divk(2),fd(2),plus(2,2),minus(2,2)
   real(kind=rkind) :: current(3),previous(3),mass(3,3),stiffness(3,3),rhs(3),gradient(3,2),basis(3)
   real(kind=rkind) :: data(1,1,4),system_matrix(3,3),old(3),new(3),qsave(2),hsave,dt,total_in,total_out,expected_out
+  real(kind=rkind) :: water,load,water_sum,load_sum,water_saved,load_saved,initial_lateral
+  real(kind=rkind) :: offset(2)
   logical :: fixed(5),ok
+  logical :: lateral_case,clean_case,load_case
   character(len=1024) :: message
   character(len=32) :: argument
   call get_command_argument(1,argument)
+  lateral_case=argument=='lateral-uniform' .or. argument=='lateral-clean' .or. argument=='lateral-zero' .or. &
+    argument=='lateral-short' .or. argument=='lateral-load' .or. argument=='lateral-overlap'
+  clean_case=argument=='lateral-clean'
+  load_case=argument=='lateral-load'
   drutes_config%dimen=2; drutes_config%it_method=0; drutes_config%run_from_backup=.false.
+  end_time=172800
   LSbank_noflow=.true.; LSconservative=.true.
-  if (len_trim(argument)>0 .and. trim(argument)/='production' .and. trim(argument)/='linear') then
+  if (len_trim(argument)>0 .and. trim(argument)/='production' .and. trim(argument)/='linear' .and. &
+      .not.lateral_case) then
     if (argument=='legacy') LSconservative=.false.
     call read_adenc_hydro()
     if (argument=='absent' .and. LShydro) error stop 'hydroflow default changed'
@@ -88,7 +97,7 @@ program test_adenc_hydroflow
   current=1; previous=1
   if (maxval(abs(matmul(mass+stiffness,current)-matmul(mass,previous)/1.2_rkind))>1.e-12_rkind) &
     error stop 'SUPG constant-state residual'
-  if (trim(argument)/='production' .and. trim(argument)/='linear') then
+  if (trim(argument)/='production' .and. trim(argument)/='linear' .and. .not.lateral_case) then
     print *, 'Hydroflow kernel checks passed'
     stop
   end if
@@ -97,10 +106,15 @@ program test_adenc_hydroflow
   allocate(pde(1),pde_common%xvect(3,4),pde_common%bvect(3))
   allocate(pde(1)%pde_fnc(1),pde(1)%permut(6),pde(1)%bc(101:103))
   nodes%kolik=6; elements%kolik=4
+  offset=[500000.0_rkind,5000000.0_rkind]
+  ! Overlapping groups deliberately produce strongly nonuniform divergence.
+  ! Use a well-conditioned local origin for this sub-metre synthetic fixture;
+  ! all original production cases retain their realistic UTM coordinates.
+  if (argument=='lateral-overlap') offset=1000
   allocate(nodes%data(6,2),nodes%edge(6),nodes%element(6),elements%data(4,3))
   allocate(elements%ders(4,3,2),elements%areas(4),elements%material(4))
-  nodes%data=0; nodes%data(:,1)=[0,1,0,1,0,1]+500000.0_rkind
-  nodes%data(:,2)=[0.0_rkind,0.0_rkind,.5_rkind,.5_rkind,1.0_rkind,1.0_rkind]+5000000.0_rkind
+  nodes%data=0; nodes%data(:,1)=[0,1,0,1,0,1]+offset(1)
+  nodes%data(:,2)=[0.0_rkind,0.0_rkind,.5_rkind,.5_rkind,1.0_rkind,1.0_rkind]+offset(2)
   elements%data(1,:)=[1,2,4]; elements%data(2,:)=[1,4,3]
   elements%data(3,:)=[3,4,6]; elements%data(4,:)=[3,6,5]
   do e=1,4
@@ -133,8 +147,8 @@ program test_adenc_hydroflow
   ncfluxdata%time=[0,24,48,72]; ncfluxdata%lon=9; ncfluxdata%lat=45; ncfluxdata%qslice=2
   ncfluxdata%lon_bnds(1,:)=[-180.0_rkind,180.0_rkind]; ncfluxdata%lat_bnds(1,:)=[0.0_rkind,90.0_rkind]
   allocate(ncnodes%data(4,2),ncelements%data(1,4),el2ncgrid(4))
-  ncnodes%data(:,1)=[-1,3,3,-1]+500000.0_rkind
-  ncnodes%data(:,2)=[-1,-1,3,3]+5000000.0_rkind
+  ncnodes%data(:,1)=[-1,3,3,-1]+offset(1)
+  ncnodes%data(:,2)=[-1,-1,3,3]+offset(2)
   ncelements%kolik=1; ncelements%data(1,:)=[1,2,3,4]; el2ncgrid=1; Qmin=0; ora_di_ini=0
   call ncflux_prepare_widths(ok,message)
   if (.not.ok) error stop 'Synthetic width preparation'
@@ -163,8 +177,21 @@ program test_adenc_hydroflow
   total_in=hydro_normal_flux(2,3)*.5_rkind+hydro_normal_flux(4,3)*.5_rkind
   total_out=hydro_normal_flux(1,2)*.5_rkind+hydro_normal_flux(3,2)*.5_rkind
   expected_out=2
-  if (argument=='linear') expected_out=2-(2.4_rkind/(4*hydro_velocity(2.4_rkind,4.0_rkind))- &
+  if (argument=='linear' .or. lateral_case) expected_out=2-(2.4_rkind/(4*hydro_velocity(2.4_rkind,4.0_rkind))- &
     2.0_rkind/(4*hydro_velocity(2.0_rkind,4.0_rkind)))/86400
+  initial_lateral=0
+  do e=1,4
+    call hydro_sources(e,water,load)
+    initial_lateral=initial_lateral+elements%areas(e)*water
+  end do
+  if (lateral_case) then
+    if (argument=='lateral-zero') then
+      if (initial_lateral/=0) error stop 'Zero lateral source created water'
+    else
+      if (abs(initial_lateral-.2_rkind)>1.e-12_rkind) error stop 'Lateral Q repeated per element or group'
+    end if
+  end if
+  expected_out=expected_out+initial_lateral
   if (abs(total_in+2)>1.e-10_rkind .or. abs(total_out-expected_out)>1.e-10_rkind) &
     error stop 'Qrouted inlet repeated per edge instead of shared per port'
   if (abs(hydro_normal_flux(1,1))+abs(hydro_normal_flux(4,2))>1.e-12_rkind) &
@@ -187,6 +214,27 @@ program test_adenc_hydroflow
         if (k==1) dt=86400
         time_step=dt; pde_common%xvect(:,1)=old; pde_common%xvect(:,2)=old
         call pde(1)%step_begin(time,time_step)
+        if (lateral_case .and. k==1) then
+          if (time_step/=3600) error stop 'Lateral knot not clipped'
+          water_sum=0; load_sum=0
+          do e=1,4
+            call hydro_sources(e,water,load)
+            water_sum=water_sum+elements%areas(e)*water
+            load_sum=load_sum+elements%areas(e)*load
+          end do
+          if (argument/='lateral-zero') then
+            if (abs(water_sum-.3_rkind)>1.e-12_rkind) error stop 'Lateral interval water integral'
+            if (clean_case) then
+              if (load_sum/=0) error stop 'Clean lateral water added solute'
+            else if (load_case) then
+              if (abs(load_sum-.5_rkind)>1.e-12_rkind) error stop 'Q*C load interpolation or integration'
+            else
+              if (abs(load_sum-water_sum)>1.e-12_rkind) error stop 'Matching lateral C1 lost solute'
+            end if
+          else
+            if (water_sum/=0 .or. load_sum/=0) error stop 'Zero water added solute'
+          end if
+        end if
         call assemble_mat(ierr)
         ! assemble_mat's historical ierr argument is not assigned by that routine.
         ! Check the actual assembled equation and solved residual below instead.
@@ -195,25 +243,39 @@ program test_adenc_hydroflow
             system_matrix(i,j)=spmatrix%get(int(i,ikind),int(j,ikind))
           end do
         end do
-        if (maxval(abs(matmul(system_matrix,old)-pde_common%bvect))/ &
-            max(1.0_rkind,maxval(abs(system_matrix)))>1.e-10_rkind) &
+        if (.not.(clean_case .or. load_case) .and. maxval(abs(matmul(system_matrix,old)-pde_common%bvect))/ &
+            max(1.0_rkind,maxval(abs(system_matrix)))>1.e-10_rkind) then
+          print *, 'Constant residual, capacity method/mode/step:',method,mode,k
+          print *, matmul(system_matrix,old)-pde_common%bvect
           error stop 'Production constant-state matrix residual'
+        end if
         call dense_solve(system_matrix,pde_common%bvect,new)
-        if (maxval(abs(new-1))>1.e-9_rkind) error stop 'Uniform concentration not preserved'
+        if (.not.(clean_case .or. load_case) .and. maxval(abs(new-1))>1.e-9_rkind) &
+          error stop 'Uniform concentration not preserved'
+        if (clean_case .and. k==1 .and. minval(new)>=.999_rkind) error stop 'Clean lateral water did not dilute'
+        if (load_case .and. k==1 .and. maxval(new)<=1.001_rkind) error stop 'Lateral contaminant load missing'
         pde_common%xvect(:,3)=new; call pde(1)%step_end(.true.)
         if (abs(balance_error)>1.e-9_rkind) error stop 'Hydro transport inventory budget'
         time=time+time_step; old=new
       end do
-      xy=[500000.5_rkind,5000000.25_rkind]
+      xy=offset+[.5_rkind,.25_rkind]
       call hydro_value(1,xy,qsave,hsave,divq)
+      call hydro_sources(1,water_saved,load_saved)
       dt=600; call pde(1)%step_begin(172800.0_rkind,dt)
       call hydro_value(1,xy,q,h,divq)
       if (abs(h-hsave)<1.e-6_rkind) error stop 'New forcing storage not loaded'
       call pde(1)%step_end(.false.)
       call hydro_value(1,xy,q,h,divq)
       if (maxval(abs(q-qsave))>1.e-12_rkind .or. h/=hsave) error stop 'Rejected hydro state committed'
+      call hydro_sources(1,water,load)
+      if (water/=water_saved .or. load/=load_saved) error stop 'Rejected lateral source committed'
     end do
   end do
+  if (argument=='lateral-short') then
+    dt=600
+    call pde(1)%step_begin(172801.0_rkind,dt)
+    error stop 'Expired lateral forcing was accepted'
+  end if
   call nc_check(nf90_close(netcdfID))
   print *, 'Hydroflow production checks passed: shared Qrouted inlet, storage, uniform C, modes and rejection'
 contains

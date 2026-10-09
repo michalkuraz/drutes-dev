@@ -25,6 +25,7 @@ module init_netcdf
       use ncboundary, only: read_adenc_banks,prepare_adenc_banks
       use ncconservative, only: read_adenc_conservative
       use nchydroflow, only: read_adenc_hydro,LShydro,hydro_filter,hydro_initialize
+      use ncrouting, only: read_adenc_routing,routing_apply_directions
             
       integer :: ierr, filetmp, fileconf
       integer(kind=ikind) :: i, bccnt, j
@@ -132,6 +133,7 @@ module init_netcdf
         ERROR STOP
       end if
     
+      call read_adenc_routing()
       call getmeshalt()
       
       ora_di_ini = difftime(ncstart, starttime, "hrs")
@@ -227,6 +229,11 @@ module init_netcdf
         end if
       end do
 
+      call routing_apply_directions(success,errmsg)
+      if (.not.success) then
+        print *, trim(errmsg)
+        error stop 'Unable to apply mRM routing directions'
+      end if
       call ncflux_prepare_widths(success, errmsg, bccnt)
       if (.not. success) then
         call write_log(trim(errmsg))

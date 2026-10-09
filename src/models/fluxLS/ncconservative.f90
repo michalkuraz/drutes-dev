@@ -67,7 +67,7 @@ contains
     use globals, only: elements,gauss_points
     use global_objs, only: integpnt_str
     use, intrinsic :: ieee_arithmetic, only: ieee_is_finite
-    use nchydroflow, only: hydro_begin
+    use nchydroflow, only: hydro_begin,hydro_clip_step
     class(pde_str), intent(in) :: pde_loc
     real(kind=rkind), intent(in) :: t
     real(kind=rkind), intent(in out) :: dt
@@ -103,6 +103,7 @@ contains
         end do
       end do
     end if
+    call hydro_clip_step(t,dt)
     if (.not. ieee_is_finite(dt) .or. dt<=0 .or. t+dt<=t) error stop 'Invalid ADEnc trial time step'
     LSstep_start=t; LSstep_dt=dt
     ! Left limit at discontinuities: a step ending at pulse/day change uses
@@ -127,7 +128,7 @@ contains
       end do
       LSclock_override=.false.
     end if
-    call hydro_begin(LStrial_time,dt)
+    call hydro_begin(LStrial_time,dt,t)
     LSstep_active=.true.
   end subroutine
 
@@ -151,19 +152,22 @@ contains
     use globals
     use global_objs
     use ncboundary, only: adenc_open_element
+    use nchydroflow, only: hydro_sources
     use, intrinsic :: ieee_arithmetic, only: ieee_is_finite
     class(pde_str), intent(in) :: pde_loc
     integer(kind=ikind), intent(in) :: el
     real(kind=rkind), intent(in) :: dt
     real(kind=rkind), intent(out) :: oldcap(3,3),newcap(3,3),open_matrix(3,3),source
     type(integpnt_str) :: point
-    real(kind=rkind) :: q(2),h,w,tmp,row_sum(3)
+    real(kind=rkind) :: q(2),h,w,tmp,row_sum(3),water,lateral_load
     integer :: i,j,g
     if (.not. LSstep_active) error stop 'ADEnc assembly without step preparation'
     oldcap=0; newcap=cap_mat; open_matrix=0
     ! time_integ already added the old-concentration capacity load to bside.
     ! Only the remaining load represents a physical source, not inventory.
     source=-sum(bside-matmul(newcap,elnode_prev))
+    call hydro_sources(int(el),water,lateral_load)
+    source=source+dt*elements%areas(el)*lateral_load
     point%type_pnt='gqnd'; point%element=el; point%column=2
     do g=1,size(gauss_points%weight)
       point%order=g
@@ -171,6 +175,9 @@ contains
       if (.not. ieee_is_finite(h) .or. h<=0) error stop 'Invalid ADEnc storage depth'
       LSdepth_new(g,el)=h
       w=elements%areas(el)*gauss_points%weight(g)/gauss_points%area
+      ! Explicit local P1 load: shared zerord assembly does not weight by Ni.
+      ! Keep this ADEnc source local and audit its physical (positive) amount.
+      bside=bside-dt*w*base_fnc(:,g)*lateral_load
       call pde_loc%pde_fnc(1)%convection(pde_loc,elements%material(el),point,vector_out=q)
       do j=1,3
         do i=1,3

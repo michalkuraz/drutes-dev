@@ -2,7 +2,8 @@
 # Copy and replace port edges with verified FE ARRAY node indices, not arbitrary Gmsh tags.
 # Enable reconstruction (requires conservative and no-flow-bank modes).
 y
-# Lateral water source policy: 0 = none; tributaries must enter through listed inlets.
+# Lateral policy: 0 = none; 1 = explicit lateral.conf (see lateral.conf.example).
+# Resolved tributaries enter through distinct listed inlet boundary IDs.
 0
 # Time interpolation: 1 = linear daily Q and endpoint-derived H; 0 = daily jumps.
 1

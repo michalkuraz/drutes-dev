@@ -1,0 +1,15 @@
+# TOY example only; FE ARRAY indices 1,2 are NOT Rhine source locations.
+# Activated only by source policy 1 in hydroflow.conf. Never infer Q from residuals.
+# Number of independently specified source groups.
+1
+# Number of receiving active FE triangles; number of time records.
+2 3
+# One FE ARRAY element index per record. Total Q is divided by total group area.
+1
+2
+# time since simulation start [s], TOTAL incoming Q [m3/s], concentration
+# C=0 means clean water. Q and Q*C are interpolated linearly separately.
+# Series must begin at zero and cover the entire simulation; no extrapolation.
+0      10.0 0.0
+86400  15.0 0.0
+172800 10.0 0.0

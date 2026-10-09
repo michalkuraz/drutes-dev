@@ -9,6 +9,7 @@ module nchydroflow
   public :: LShydro,read_adenc_hydro,hydro_filter,hydro_initialize,hydro_begin,hydro_end
   public :: hydro_value,hydro_normal_flux,hydro_project,hydro_rt0,hydro_velocity
   public :: hydro_project_outflow
+  public :: hydro_sources,hydro_clip_step
   logical :: LShydro=.false.,ready=.false.,trial=.false.
   real(kind=rkind) :: tolerance=1.e-10_rkind,correction_limit=1.0_rkind
   integer :: max_iterations=20000,forcing_mode=1
@@ -20,6 +21,14 @@ module nchydroflow
   integer :: raw_hour=-huge(1),projected_hour=-huge(1)
   real(kind=rkind) :: raw_time=-huge(1.0_rkind),projected_time=-huge(1.0_rkind)
   logical :: projection_cached=.false.
+  ! Explicit unresolved tributary/lateral input; never inferred from Q differences.
+  type :: lateral_group
+    integer, allocatable :: elements(:)
+    real(kind=rkind), allocatable :: time(:),water(:),solute(:)
+    real(kind=rkind) :: volume_area=0
+  end type
+  type(lateral_group), allocatable :: lateral(:)
+  real(kind=rkind), allocatable :: water_state(:),water_trial(:),solute_state(:),solute_trial(:)
   integer, parameter :: ends(2,3)=reshape([1,2,2,3,3,1],[2,3]),opposite(3)=[3,1,2]
 contains
   subroutine read_adenc_hydro()
@@ -31,6 +40,7 @@ contains
     character(len=1024) :: line
     real(kind=rkind) :: flow
     LShydro=.false.; ready=.false.; trial=.false.
+    if (allocated(lateral)) deallocate(lateral)
     if (allocated(ports)) deallocate(ports,port_kind,port_flow)
     inquire(file='drutes.conf/netcdf/hydroflow.conf',exist=exists)
     if (.not.exists) return
@@ -43,7 +53,7 @@ contains
     if (.not.LSconservative .or. .not.LSbank_noflow .or. drutes_config%dimen/=2 .or. &
         drutes_config%it_method/=0) error stop 'Hydro reconstruction requires conservative 2D Picard/no-flow banks'
     call fileread(policy,unit)
-    if (policy/=0) error stop 'Hydroflow currently supports explicit zero lateral-water-source policy only'
+    if (policy/=0 .and. policy/=1) error stop 'Hydroflow lateral source policy must be 0 or 1'
     call fileread(forcing_mode,unit)
     if (forcing_mode/=0 .and. forcing_mode/=1) error stop 'Hydroflow forcing mode must be 0 (daily) or 1 (linear)'
     call fileread(tolerance,unit)
@@ -73,6 +83,124 @@ contains
     call record(unit,line,status)
     if (status==0) error stop 'Unexpected trailing hydroflow record'
     close(unit)
+    if (policy==1) call read_lateral()
+  end subroutine
+
+  ! Each group has an independently supplied TOTAL discharge and concentration.
+  ! Distribution over listed FE triangles is uniform per area, not Q per triangle.
+  subroutine read_lateral()
+    use globals, only: end_time
+    integer :: unit,status,n,g,ne,nt,i,j,extra
+    real(kind=rkind) :: t,q,c,unused
+    character(len=1024) :: line
+    open(newunit=unit,file='drutes.conf/netcdf/lateral.conf',status='old',action='read',iostat=status)
+    if (status/=0) error stop 'Hydroflow policy 1 requires lateral.conf'
+    if (.not.ieee_is_finite(end_time) .or. end_time<=0) error stop 'Invalid lateral-source simulation period'
+    call record(unit,line,status)
+    if (status/=0) error stop 'Missing lateral group count'
+    read(line,*,iostat=status) n
+    if (status/=0) error stop 'Invalid lateral group count'
+    read(line,*,iostat=status) n,extra
+    if (status>=0 .or. n<1 .or. scan(line,',/*')>0) error stop 'Invalid lateral group count'
+    allocate(lateral(n))
+    do g=1,n
+      call record(unit,line,status)
+      if (status/=0) error stop 'Missing lateral group sizes'
+      read(line,*,iostat=status) ne,nt
+      if (status/=0) error stop 'Invalid lateral group sizes'
+      read(line,*,iostat=status) ne,nt,extra
+      if (status>=0 .or. ne<1 .or. nt<2 .or. scan(line,',/*')>0) error stop 'Invalid lateral group sizes'
+      allocate(lateral(g)%elements(ne),lateral(g)%time(nt),lateral(g)%water(nt),lateral(g)%solute(nt))
+      do i=1,ne
+        call record(unit,line,status)
+        if (status/=0) error stop 'Missing lateral element'
+        read(line,*,iostat=status) j
+        if (status/=0) error stop 'Invalid lateral element'
+        read(line,*,iostat=status) j,extra
+        if (status>=0 .or. j<1 .or. scan(line,',/*')>0) error stop 'Invalid lateral element'
+        if (any(lateral(g)%elements(:i-1)==j)) error stop 'Duplicate lateral element in one group'
+        lateral(g)%elements(i)=j
+      end do
+      do i=1,nt
+        call record(unit,line,status)
+        if (status/=0) error stop 'Missing lateral time Q C record'
+        read(line,*,iostat=status) t,q,c
+        if (status/=0) error stop 'Invalid lateral time Q C record'
+        read(line,*,iostat=status) t,q,c,unused
+        if (status>=0 .or. scan(line,',/*')>0) error stop 'Extra or invalid lateral time Q C field'
+        if (.not.all(ieee_is_finite([t,q,c]))) error stop 'Nonfinite lateral time Q C'
+        if (t<0 .or. q<0 .or. c<0) error stop 'Lateral inputs require nonnegative time Q C (no withdrawals)'
+        if (i==1) then
+          if (t/=0) error stop 'Lateral series must start at simulation time zero'
+        else
+          if (t<=lateral(g)%time(i-1)) error stop 'Lateral times must strictly increase'
+        end if
+        lateral(g)%time(i)=t; lateral(g)%water(i)=q; lateral(g)%solute(i)=q*c
+        if (.not.ieee_is_finite(q*c)) error stop 'Nonfinite lateral solute load'
+      end do
+      if (lateral(g)%time(nt)<end_time) error stop 'Lateral series does not cover configured simulation period'
+    end do
+    call record(unit,line,status)
+    if (status==0) error stop 'Unexpected trailing lateral record'
+    close(unit)
+  end subroutine
+
+  ! Knots are explicit events; no step crosses a change of interpolation segment.
+  subroutine hydro_clip_step(t,dt)
+    real(kind=rkind), intent(in) :: t
+    real(kind=rkind), intent(in out) :: dt
+    integer :: g,i
+    if (.not.LShydro .or. .not.allocated(lateral)) return
+    do g=1,size(lateral)
+      if (t>=lateral(g)%time(size(lateral(g)%time))) error stop 'Lateral series does not cover trial interval'
+      do i=2,size(lateral(g)%time)
+        if (lateral(g)%time(i)>t) then
+          dt=min(dt,lateral(g)%time(i)-t)
+          exit
+        end if
+      end do
+    end do
+  end subroutine
+
+  subroutine lateral_sample(t,water,solute)
+    real(kind=rkind), intent(in) :: t
+    real(kind=rkind), intent(out) :: water(:),solute(:)
+    integer :: g,i,nt
+    real(kind=rkind) :: fraction,q,load
+    water=0; solute=0
+    if (.not.allocated(lateral)) return
+    do g=1,size(lateral)
+      nt=size(lateral(g)%time)
+      if (.not.ieee_is_finite(t)) error stop 'Invalid lateral forcing time'
+      if (t<0 .or. t>lateral(g)%time(nt)) error stop 'Lateral series does not cover trial interval'
+      i=1
+      do while(i<nt-1)
+        if (lateral(g)%time(i+1)>=t) exit
+        i=i+1
+      end do
+      fraction=(t-lateral(g)%time(i))/(lateral(g)%time(i+1)-lateral(g)%time(i))
+      q=(1-fraction)*lateral(g)%water(i)+fraction*lateral(g)%water(i+1)
+      load=(1-fraction)*lateral(g)%solute(i)+fraction*lateral(g)%solute(i+1)
+      water(lateral(g)%elements)=water(lateral(g)%elements)+q/lateral(g)%volume_area
+      solute(lateral(g)%elements)=solute(lateral(g)%elements)+load/lateral(g)%volume_area
+    end do
+    if (.not.all(ieee_is_finite(water)) .or. .not.all(ieee_is_finite(solute))) &
+      error stop 'Nonfinite distributed lateral source'
+  end subroutine
+
+  ! Depth-rate water source [m/s], solute source [concentration*m/s].
+  ! Trial values are interval averages, shared by hydraulic balance and transport.
+  subroutine hydro_sources(el,water,solute)
+    integer, intent(in) :: el
+    real(kind=rkind), intent(out) :: water,solute
+    water=0; solute=0
+    if (.not.LShydro) return
+    if (.not.ready) error stop 'Lateral source before hydraulic initialization'
+    if (trial) then
+      water=water_trial(el); solute=solute_trial(el)
+    else
+      water=water_state(el); solute=solute_state(el)
+    end if
   end subroutine
 
   subroutine record(unit,line,status)
@@ -142,6 +270,7 @@ contains
     if (allocated(owners)) then
       deallocate(owners,edge_nodes,edge_of,orientation,port_edge,area,center,edge_length,normal, &
         depth_state,depth_trial,flux_state,flux_trial,port_id)
+      deallocate(water_state,water_trial,solute_state,solute_trial)
     end if
     n=elements%kolik; buckets=2*n+1
     allocate(head(buckets),next(3*n),lo(3*n),hi(3*n),owners(3*n,2),edge_nodes(3*n,2))
@@ -249,9 +378,19 @@ contains
     end do
     allocate(depth_state(n),depth_trial(n),flux_state(nedge),flux_trial(nedge))
     allocate(raw_depth(n,2),raw_q(n,2,2),cached_target(n),cached_flux(nedge))
+    allocate(water_state(n),water_trial(n),solute_state(n),solute_trial(n))
+    if (allocated(lateral)) then
+      do p=1,size(lateral)
+        if (any(lateral(p)%elements>n)) error stop 'Lateral element outside FE mesh'
+        if (any(area(lateral(p)%elements)<=0)) error stop 'Lateral source element is inactive'
+        lateral(p)%volume_area=sum(area(lateral(p)%elements))
+      end do
+    end if
+    call lateral_sample(0.0_rkind,water_state,solute_state)
     call raw_field(0.0_rkind,depth_state,qraw,rate)
     depth_trial=depth_state
-    call project_field(qraw,-area*rate,flux_state)
+    call project_field(qraw,area*(water_state-rate),flux_state)
+    water_trial=water_state; solute_trial=solute_state
     flux_trial=flux_state; trial=.false.; ready=.true.
   end subroutine
 
@@ -318,14 +457,28 @@ contains
     end do
   end subroutine
 
-  subroutine hydro_begin(t,dt)
+  subroutine hydro_begin(t,dt,start_time)
     real(kind=rkind), intent(in) :: t,dt
-    real(kind=rkind), allocatable :: qraw(:,:),target(:)
+    real(kind=rkind), intent(in), optional :: start_time
+    real(kind=rkind), allocatable :: qraw(:,:),target(:),water_old(:),solute_old(:)
+    real(kind=rkind) :: start,span
     if (.not.LShydro) return
     if (.not.ready .or. dt<=0) error stop 'Hydroflow step before initialization/invalid dt'
-    allocate(qraw(size(area),2),target(size(area)))
+    allocate(qraw(size(area),2),target(size(area)),water_old(size(area)),solute_old(size(area)))
+    start=max(0.0_rkind,t-dt)
+    ! The forcing endpoint is a left-limit timestamp; subtracting dt can put
+    ! a knot-aligned start just BEFORE its knot. Use the actual solver start.
+    if (present(start_time)) start=start_time
+    ! Caller clips at knots. Exact interval mean of linear Q and Q*C.
+    span=dt
+    call hydro_clip_step(start,span)
+    if (dt-span>32*epsilon(dt)*max(1.0_rkind,abs(t),dt)) &
+      error stop 'Hydraulic trial crosses a lateral forcing knot'
+    call lateral_sample(start,water_old,solute_old)
+    call lateral_sample(t,water_trial,solute_trial)
+    water_trial=(water_old+water_trial)/2; solute_trial=(solute_old+solute_trial)/2
     call raw_field(t,depth_trial,qraw)
-    target=-area*(depth_trial-depth_state)/dt
+    target=area*(water_trial-(depth_trial-depth_state)/dt)
     call project_field(qraw,target,flux_trial)
     trial=.true.
   end subroutine
@@ -335,6 +488,7 @@ contains
     if (.not.LShydro) return
     if (accepted) then
       depth_state=depth_trial; flux_state=flux_trial
+      water_state=water_trial; solute_state=solute_trial
     end if
     trial=.false.
   end subroutine

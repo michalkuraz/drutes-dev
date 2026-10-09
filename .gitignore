@@ -5,3 +5,5 @@ __pycache__/
 .streamlit/secrets.toml
 user/
 backups/
+# Large externally supplied mHM routing inputs; symlinks/copies installed per case.
+**/netcdf/mRM_restart_*.nc

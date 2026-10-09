@@ -15,7 +15,7 @@ program check_adenc_hydro_window
   real(kind=rkind), allocatable :: old_h(:),volume(:)
   real(kind=rkind) :: t,dt,xy(2),q(2),h,divq,edge_flux(3),balance,scale,max_error,min_out,total_out
   real(kind=rkind) :: vertices(3,2),residual_div
-  real(kind=rkind) :: max_absolute,water_scale
+  real(kind=rkind) :: max_absolute,water_scale,water,solute,total_water,total_solute
   open(newunit=file_global,file='drutes.conf/global.conf',status='old',action='read')
   call read_global(); close(file_global)
   open(newunit=file_mesh,file='drutes.conf/mesh/mesh.msh',status='old',action='read')
@@ -33,16 +33,21 @@ program check_adenc_hydro_window
     call hydro_value(e,xy,q,old_h(e),divq)
   end do
   open(newunit=u,file='hydro-window.txt',status='new',action='write')
-  write(u,'(A)') '# time[s] min_outlet[m3/s] total_outlet[m3/s] max_local_scaled_residual global_scaled_residual'
+  write(u,'(A)') '# time[s] min_outlet[m3/s] total_outlet[m3/s] max_local_scaled_residual global_scaled_residual ' // &
+    'lateral_water[m3/s] lateral_solute[concentration*m3/s]'
   t=0; step=0
   do while(t<end_time)
     dt=min(1800.0_rkind,end_time-t)
-    call hydro_begin(t+dt,dt)
+    call hydro_clip_step(t,dt)
+    call hydro_begin(t+dt,dt,t)
     max_error=0; max_absolute=0; water_scale=1; min_out=huge(1.0_rkind); total_out=0
+    total_water=0; total_solute=0
     do e=1,elements%kolik
       if (.not.ncfluxdata%activeel(e)) cycle
       vertices=nodes%data(elements%data(e,:),1:2); xy=sum(vertices,dim=1)/3
       call hydro_value(e,xy,q,h,divq)
+      call hydro_sources(e,water,solute)
+      total_water=total_water+volume(e)*water; total_solute=total_solute+volume(e)*solute
       if (any(.not.ieee_is_finite(q)) .or. .not.ieee_is_finite(h) .or. h<=0) &
         error stop 'Nonfinite/invalid hydraulic coefficients'
       do k=1,3
@@ -54,12 +59,12 @@ program check_adenc_hydro_window
         end if
         if (bank_edges(k,e) .and. abs(edge_flux(k))>1.e-10_rkind) error stop 'Water crossed bank'
       end do
-      balance=volume(e)*(h-old_h(e))/dt+sum(edge_flux)
+      balance=volume(e)*((h-old_h(e))/dt-water)+sum(edge_flux)
       scale=max(1.0_rkind,maxval(abs(edge_flux)))
       residual_div=volume(e)*divq-sum(edge_flux)
       max_error=max(max_error,abs(balance)/scale,abs(residual_div)/scale)
       max_absolute=max(max_absolute,abs(balance),abs(residual_div))
-      water_scale=max(water_scale,scale,abs(volume(e)*(h-old_h(e))/dt))
+      water_scale=max(water_scale,scale,abs(volume(e)*(h-old_h(e))/dt),abs(volume(e)*water))
       old_h(e)=h
     end do
     ! PCG uses a global flux/target scale, NOT each tiny element's own flux.
@@ -71,7 +76,7 @@ program check_adenc_hydro_window
     end if
     call hydro_end(.true.)
     t=t+dt; step=step+1
-    write(u,'(5(ES24.16,1X))') t,min_out,total_out,max_error,max_absolute/water_scale
+    write(u,'(7(ES24.16,1X))') t,min_out,total_out,max_error,max_absolute/water_scale,total_water,total_solute
     if (mod(step,48)==0) print *, 'Hydraulic window passed through day=',t/86400
   end do
   close(u)

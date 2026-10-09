@@ -116,7 +116,7 @@ def test_width_cache_with_real_modules(tmp_path: Path) -> None:
     assert 'Hydroflow production checks passed' in run([str(hydro_executable), 'linear'], linear_case)
     invalid_hydro = {
         'legacy': (hydro_config, 'requires conservative'),
-        'source': (hydro_config.replace('y\n0\n', 'y\n1\n', 1), 'zero lateral'),
+        'source': (hydro_config.replace('y\n0\n', 'y\n2\n', 1), 'policy must be 0 or 1'),
         'nan': (hydro_config.replace('1e-12', 'NaN'), 'Nonfinite hydroflow'),
         'duplicate': (hydro_config.replace('3 5 -1 0', '1 3 -1 0'), 'Duplicate hydroflow port'),
         'interior': (hydro_config.replace('1 3 -1 0', '1 4 -1 0'), 'active-domain boundary'),

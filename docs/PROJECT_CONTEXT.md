@@ -1,5 +1,63 @@
 # DRUtES project context
 
+LATEST2026-10-09 mandatory mRM routing: discovered Maryam's actual Rhine L0
+dem.asc/fdir.asc/facc.asc and L11 graph in restart/mRM_restart_001.nc on
+hydrocalc. ncrouting.f90 requires fixed drutes.conf/netcdf/mRM_restart_001.nc
+for EVERY ADEnc init (missing/invalid=>ERROR STOP), maps by actual lat/lon to
+Qrouted axes rather than dimension names or IDs, validates links and cycles,
+and exposes cell/FE upstream/downstream/direction queries. Network-based UTM
+unit vectors replace channel directions before widths/hydro preparation;
+true mRM outlets retain the explicit channel exit vector with a logged count.
+No automatic lateral rates/storage/FE ports inferred. Other models and generic
+FEM/solver/Schwarz numerical sources unchanged. mHM filenames are configurable;
+_001/_002 are documented domain1/domain2 conventions, not a universal suffix.
+VPN/DNS failed after a125KiB routing-only extract downloaded. Local fixed-name
+file is that exact static-field extract with source_file provenance, NOT the
+full467MiB restart and NOT usable to restart mHM. Reader also accepts fullfile.
+User authorized completing tests/commit OFFLINE; no further server actions or
+case2/3 input changes. Data excluded from Git; case1 symlinks installed only
+after commit; existing outputs/private executables never overwritten or rerun.
+Artifacts runs/routing-tests-20261009-QRW8Ce: full checked+optimized builds,
+synthetic failures/mapping checks, real1438links/1outlet/476headwaters/401
+confluences and independent Python graph comparison; all41pytest tests and30
+hydro/bank/conservative standalone checks passed. Production case1 init/dry
+assembly passed with4correct observation FE; one additional zero-width FE
+removed (714), projected raw-field correction~0.9455 is LARGE. This changes
+future geometry/hydraulics, not validation or retroactive correction of saved
+case1 results. First old preflight guard only rejected its inherited case2
+inlet amplitude0.19055; staged unit case1 inlet fixed, no numerical code fix.
+See ADENC_ROUTING.md; replacing full restart/server config installation waits
+for restored VPN. Prior lateral implementation below is included in the tested
+working version; no source-free case2 launch or calibrated physics claim.
+
+LATEST2026-10-09 lateral-inflow extension: case2 initialization reproduced on
+Mac and freshly rebuilt hydrocalc code. Its May2 rising-wave empirical storage
+growth2253.4m3/s exceeds weighted inlet1903.1m3/s at t0; first two full-day
+budgets also require negative outlet volumes under source policy0. This is a
+coupling/storage/input-assumption incompatibility, not a demonstrated corrupt
+mHM file or ADE time-integration error. No case2 transport run launched.
+The inspected NetCDF contains only Qrouted/coordinates/time; DEM contains no
+routing graph. User authorized explicit tributary/lateral-inflow support:
+nchydroflow now accepts policy1 with mandatory lateral.conf groups of active
+FE indices and time/Q/C records. Total group Q and Q*C are distributed per area,
+linearly interpolated separately and interval-averaged; source knots clip dt.
+Water balance, ADEnc-local P1 load, existing mass audit and SUPG/shock residual
+use the same sources. Rejected trials restore accepted sources. Existing
+multiple resolved tributary inlet IDs remain supported. No automatic Q-difference
+source inference, withdrawals, generic FEM/solver/Schwarz changes, benchmark
+source enabling, commit or server deployment. Root/default configs unchanged.
+See ADENC_LATERAL_INFLOWS.md and lateral.conf.example (toy indices only).
+Bounds-checked fresh Mac full build,30 standalone checks and40 pytest tests
+passed. Matching C1, clean dilution, variable contaminant loads, overlap,
+integration/knots/rejection and invalid input cases tested; synthetic inventory
+relative errors<=2.15e-16. These are not physical validation of case2.
+Source-free Rhine hydraulic regression over the October24 window also passed
+all672x1800s trials through1209600s with nonnegative outlets; no transport/main
+run. Only its staged diagnostic date changed from May2 to October24. Final
+coverage guard requires source series to cover the configured duration at read.
+Artifacts: runs/lateral-tests-20261009-jg4qef. Missing genuine mHM routing/lateral
+inputs or independently justified tributary mappings still block case2 launch.
+
 DEPLOYMENT requested2026-10-09: user now explicitly requests a local commit,
 server git pull, compilation inside ~/drutes-dev and executable copies into
 fresh Galerkin/SUPG2/SUPG2+shock1 benchmarks. Parent reserved:

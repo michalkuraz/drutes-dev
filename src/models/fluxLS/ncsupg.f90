@@ -152,7 +152,7 @@ contains
     use pde_objs
     use ncglobvars, only: LSsupg, LSsupg_factor, LSshock, LSshock_factor, LSconservative,LSdepth_old
     use ncglobvars, only: LSdisp,LSdisp_transverse
-    use nchydroflow, only: LShydro,hydro_value
+    use nchydroflow, only: LShydro,hydro_value,hydro_sources
     use geom_tools, only: getcoor
     class(pde_str), intent(in) :: pde_loc
     integer(kind=ikind), intent(in) :: el_id
@@ -164,6 +164,7 @@ contains
     real(kind=rkind) :: q(2),tensor(2,2),depth,reaction,source,weight,divq,divtensor(2),xy(2)
     real(kind=rkind) :: temporal(3,3),spatial(3,3),forcing(3)
     real(kind=rkind) :: current(3),shock(3,3),supg_factor
+    real(kind=rkind) :: lateral_water,lateral_load
     logical :: transient
     if (.not. ((LSsupg .and. LSsupg_factor>0) .or. (LSshock .and. LSshock_factor>0))) return
     if (size(pde)/=1 .or. drutes_config%dimen/=2 .or. size(stiff_mat,1)/=3) &
@@ -196,6 +197,8 @@ contains
       call pde_loc%pde_fnc(1)%dispersion(pde_loc,layer,point,tensor=tensor)
       reaction=pde_loc%pde_fnc(1)%reaction(pde_loc,layer,point)
       source=pde_loc%pde_fnc(1)%zerord(pde_loc,layer,point)
+      call hydro_sources(int(el_id),lateral_water,lateral_load)
+      source=source+lateral_load
       divq=0; divtensor=0
       if (LShydro) then
         call getcoor(point,xy)
