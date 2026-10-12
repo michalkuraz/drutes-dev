@@ -22,6 +22,7 @@
 
 
 module femmat
+
   public :: solve_picard
   private :: results_extractor
   private :: results_eraser
@@ -29,8 +30,11 @@ module femmat
   
 
   contains
+
   !>solves the problem using Picard method
+
     subroutine solve_picard(ierr, success)
+
       use typy
       use globals
       use global_objs
@@ -103,29 +107,39 @@ module femmat
 !		end if
             
         if (solver_error) then
+
           ierr = 1
           success = .false.
           call write_log("Looks like a poor conditioning...:/")
           EXIT
+
         end if
         
         
         if (itersolver) then
+
           write(unit=file_itcg, fmt=*) time, pcg_it, reps_err
           call flush(file_itcg)
+
         end if
             
         if (record_solver_time) then
+
           call cpu_time(solver_end)
           write(unit=solver_time_file, fmt=*) time, solver_end - solver_start
           call flush(solver_time_file)
+
         end if
           
   
         if (pcg_it > 0.55*fin) then 
+
           ierr=-1
+
         else
+
           ierr=0
+
         end if
 		  
     
@@ -137,38 +151,52 @@ module femmat
         write(unit=file_picard, fmt=*) time, error
    
         if (itcount == 1 .or. error <= iter_criterion) then
+
           do proc=1, ubound(pde,1)
+
             top = pde(proc)%permut(1)
             bot = pde(proc)%permut(ubound(pde(proc)%permut,1))
             dt_fine = pde(proc)%dt_check()
+
           end do
+
         else
+
           dt_fine = .true.
+
         end if
 
 
         if (.not.(dt_fine)) then
+
           ierr = 2
           success = .false.
           RETURN
+
         end if
         
         if (itcount == 1) picard_old = error
         
         if (itcount >= 3) then
+
           if (error > picard_old) then
+
             ierr = 2
             success = .false.
             call results_eraser()
             RETURN
+
           end if
+
         end if
         
         if (isnan(error)) then
+
           ierr = 2
           success = .false.
           call results_eraser()
           RETURN
+
         end if
 				
 
@@ -179,6 +207,7 @@ module femmat
           if (ierr /= -1) ierr = 0
           
           if (drutes_config%check4mass) then
+
             call make_print("separately")
             call do_masscheck()
             
@@ -189,22 +218,29 @@ module femmat
           success = .true.
           iter_succesfull = .true.
           RETURN
+
         else
+
           pde_common%xvect(:,2) = pde_common%xvect(:,3)
+
         end if
 
         if (itcount >= max_itcount) then
+
           ierr = 1
           success = .false.
           iter_succesfull = .false.
           call results_eraser()
           EXIT
+
         end if
+
       end do
 
     end subroutine solve_picard
     
     subroutine assemble_mat(ierr)
+
       use typy
       use globals
       use global_objs
@@ -232,26 +268,46 @@ module femmat
       limits = ubound(stiff_mat,1)/ubound(pde,1)
 
       do i=1, elements%kolik
+
         if (allocated(pde(1)%assembly_mask)) then
+
           if (.not. pde(1)%assembly_mask(i)) cycle
+
         end if
+
         pde_common%current_el = i
+
         processes: do proc=1, ubound(pde,1)
+
 		    do j=1+(proc-1)*limits, ubound(elements%data,2) + (proc-1)*limits
+
 		      ll = j - (proc-1)*ubound(stiff_mat,1)/ubound(pde,1)
 		      k = pde(proc)%permut(elements%data(i,ll))
+
 		      if (k > 0) then
+
             elnode_prev(j) = pde_common%xvect(k,1)
+
 		      else
+
             k = nodes%edge(elements%data(i,ll))
+
             if (associated(pde(proc)%boundary_history)) then
-              value=pde(proc)%boundary_history(i,ll,1_ikind)
+
+              value = pde(proc)%boundary_history(i, ll, 1_ikind)
+
             else
+
               call pde(proc)%bc(k)%value_fnc(pde(proc), i, ll, value)
+
             end if
+
             elnode_prev(j) = value
+
 		      end if
+
 		    end do
+
         end do processes
 
         call build_bvect(i, time_step)
@@ -259,6 +315,7 @@ module femmat
         call build_stiff_np(i, time_step)
 
         call pde_common%time_integ(i)
+
         call apply_element_stabilization(i, time_step)
  
 
@@ -269,12 +326,14 @@ module femmat
         call in2global(i,spmatrix, pde_common%bvect)
 
       end do
+
       printedk=.false.
 
     end subroutine assemble_mat
     
     
     subroutine results_extractor()
+
       use typy
       use globals
       use global_objs
@@ -285,22 +344,39 @@ module femmat
 
       
       do proc=1, ubound(pde,1)
+
         do i=1, elements%kolik
+
           do j=1, ubound(elements%data,2)
+
             nd = elements%data(i,j)
+
             if (pde(proc)%permut(nd) > 0) then
+
               pde(proc)%solution(nd) = pde_common%xvect(pde(proc)%permut(nd),3)
+
             else
+
               edge = nodes%edge(nd)
+
               if (associated(pde(proc)%boundary_history)) then
-                value=pde(proc)%boundary_history(i,j,3_ikind)
+
+                value = pde(proc)%boundary_history(i, j, 3_ikind)
+
               else
+
                 call pde(proc)%bc(edge)%value_fnc(pde(proc), i, j, value)
+
               end if
+
               pde(proc)%solution(nd) = value
+
             end if
+
           end do
+
         end do
+
       end do
 
       pde_common%xvect(:,4) = pde_common%xvect(:,1)
@@ -310,6 +386,7 @@ module femmat
     end subroutine results_extractor
     
     subroutine results_eraser()
+
       use pde_objs
     
       pde_common%xvect(:,2) = pde_common%xvect(:,1)

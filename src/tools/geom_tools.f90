@@ -52,6 +52,7 @@ module geom_tools
   contains
   
   function isboundary(quadpnt) result(answer)
+
     use typy
     use global_objs
     use globals
@@ -60,20 +61,35 @@ module geom_tools
     logical :: answer
     
     select case(quadpnt%type_pnt)
+
       case("obpt")
+
         if (observation_array(quadpnt%order)%boundary) then
+
           answer = .true.
+
         else
+
           answer = .false.
+
         end if
+
       case("ndpt")
+
         if (nodes%boundary(quadpnt%order)) then
+
           answer = .true.
+
         else
+
           answer = .false.
+
         end if
+
       case default
+
         answer = .false.
+
     end select
     
     answer = .false.
@@ -81,6 +97,7 @@ module geom_tools
   end function isboundary 
   
   function get_layer(quadpnt) result(layer)
+
     use typy
     use globals
     use global_objs
@@ -90,29 +107,41 @@ module geom_tools
     integer(kind=ikind) :: el
     
     select case(quadpnt%type_pnt)
+
       case("ndpt")
+
         el = nodes%element(quadpnt%order)%data(1)
         layer=elements%material(el)
+
       case("obpt", "gqnd","xypt", "numb")
+
         el = quadpnt%element
+
         if (.not. (el >= 1 .and. el<=elements%kolik)) then
+
           print *, "error in quadpnt data", el, quadpnt%type_pnt
           print *, "called from geom_tools::get_layer"
           print *, "contact Michal -> michalkuraz@gmail.com"
           ERROR STOP
+
         end if
+
         layer = elements%material(el)
+
       case default
+
           print *, "err or in quadpnt data"
           print *, "called from geom_tools::get_layer"
           print *, "contact Michal -> michalkuraz@gmail.com"
           ERROR STOP
+
     end select
   
   end function get_layer
   
   
   subroutine getcoor(quadpnt, array)
+
     use typy
     use pde_objs
     use globals
@@ -130,13 +159,18 @@ module geom_tools
      
     
     select case(quadpnt%type_pnt)
+
       case("gqnd")
+
       select case (drutes_config%dimen)
+
         case(1)
+
           el = quadpnt%element
           nd(1:2) = elements%data(el,1:2)
           dist1 = nodes%data(nd(2),1) - nodes%data(nd(1),1)
           array(1) = nodes%data(nd(1),1) + dist1*gauss_points%point(quadpnt%order,1)
+
         case(2)
          
           ! triag scheme	  
@@ -159,9 +193,13 @@ module geom_tools
         
           vert = .false.
           el = quadpnt%element
+
           do i=1,3
+
             triagpnt(i,:) = nodes%data(elements%data(el,i),:)
+
           end do
+
           d(1) = dist(triagpnt(1,:), triagpnt(3,:))
           d(2) = dist(triagpnt(1,:), triagpnt(2,:))
           !z distance on unit triangle
@@ -174,19 +212,28 @@ module geom_tools
           midpnt(2,:) = triagpnt(1,:) + (triagpnt(2,:) - triagpnt(1,:)) * r(2)
           
           if (abs(midpnt(2,1)-triagpnt(1,1)) > 100*epsilon(k1) ) then
+
             k(1) = (midpnt(2,2) - triagpnt(1,2))/(midpnt(2,1)-triagpnt(1,1))
+
           else
+
             vert(1) = .true.
+
           end if
           
           if (abs(midpnt(1,1)-triagpnt(1,1)) > 100*epsilon(k1) ) then
+
             k(2) = (midpnt(1,2) - triagpnt(1,2))/(midpnt(1,1)-triagpnt(1,1))
+
           else
+
             vert(2) = .true.
+
           end if
           
           where (.not.(vert))
             q(:) = midpnt(:,2) - k(:)*midpnt(:,1)
+
           end where
           
     ! 	    print *, "----beg-------"
@@ -198,39 +245,64 @@ module geom_tools
           
           
           if (.not. vert(1) .and. .not. vert(2)) then
+
             array(1) = (q(1)- q(2))/(k(2)-k(1))
+
             if (abs(k(1) - k(2)) <= epsilon(k1)) then
+
               print *, "there must be a bug, both lines have equal tangent, or your mesh is really bad"
               print *, "interrupted from geom_tools::getcoor"
               ERROR STOP
+
             end if
+
             array(2) = k(1)*array(1) + q(1)
+
           else
+
             if (vert(1) .and. .not. (vert(2))) then
+
               array(1) = midpnt(1,1)
               array(2) = midpnt(2,2) + k(2)*(midpnt(1,1)-midpnt(2,1))
+
             else if (.not.vert(1) .and. (vert(2))) then
+
               array(1) = midpnt(2,1)
               array(2) = midpnt(1,2) + k(1)*(midpnt(2,1) - midpnt(1,1))
+
             else if ( vert(1) .and. vert(2) ) then
+
               print *, "there must be a bug, both lines are vertical"
               print *, "interrupted from geom_tools::getcoor"
               ERROR STOP
+
             end if
+
           end if   
+
         end select
+
       case("obpt")
+
         array = observation_array(quadpnt%order)%xyz
+
       case("xypt")
+
         print *, quadpnt%xy, ubound(array,1)
         array = quadpnt%xy
+
       case("ndpt")
+
         array = nodes%data(quadpnt%order,:)
+
     end select
+
    end subroutine getcoor
 
   !> returns the solution values on gaussian nodes positions
+
   subroutine interpolate(vals, points)
+
     use typy
     use globals
     use global_objs
@@ -243,16 +315,24 @@ module geom_tools
     real(kind=rkind) :: xder, yder
 
     select case(drutes_config%dimen)
+
       case(1)
+
         do i=1, ubound(gauss_points%weight,1)
+
           points(i) = (vals(2) - vals(1))*gauss_points%point(i,1) + vals(1) 
+
         end do
+
       case(2)
+
         call plane_derivative((/0.0_rkind, 0.0_rkind, vals(1)/), (/1.0_rkind, 0.0_rkind, vals(2)/), (/0.0_rkind, &
                                1.0_rkind, vals(3)/), xder, yder)
 
         do i=1, ubound(gauss_points%weight,1)
+
           points(i) = vals(1) + xder*gauss_points%point(i,1) + yder*gauss_points%point(i,2)
+
         end do
 
     end select
@@ -266,7 +346,9 @@ module geom_tools
   !! where (e,f) is the vector of move and the matrix \f[ \left( \begin{array}{cc}   a & b \\ c & d  \end{array}\right) \f] is the matrix of rotation
   !! each line represents the element id, the first column in row represents numbers e,f,a,b the second column reprerents numbers f,c,d
   !<
+
    subroutine init_transform(aT,bT,cT,matrix)
+
     use typy
     !> nodes of triangle
     real(kind=rkind), dimension(:), intent(in) :: aT
@@ -319,7 +401,9 @@ module geom_tools
 
 
   !> function that provides z coordinate of inner boundary normal vector, the boundary is defined by two points: bod1, bod2
+
   function get_nz(el_id, order1, order2) result(zcoord)
+
     use typy
     use globals
     use global_objs
@@ -336,29 +420,44 @@ module geom_tools
     bod2 = nodes%data(elements%data(el_id,order2),:)
 
     if (abs(bod1(1)-bod2(1)) > 100*epsilon(tg)) then
+
       tg = (abs(bod2(2)-bod1(2))/abs(bod1(1)-bod2(1)))
       zcoord = 1.0_rkind/sqrt(1+tg*tg)
+
     else
+
       zcoord = 0
+
     end if
 
     select case(order1+order2)
+
       case(3)
+
         order3=3
+
       case(4)
+
         order3=2
+
       case(5)
+
         order3=1
+
     end select
 
     if (.not. aboveline(bod1, bod2, nodes%data(elements%data(el_id, order3),:))) then
+
       zcoord = -zcoord
+
     end if
 
   end function get_nz
   
   !> returns normal vector coordinates of an inner normal boundary vector to tetrahedron surface
+
   function get_normals3D(a,b,c, d) result(nvect)
+
     use typy
     use debug_tools
     use core_tools
@@ -379,9 +478,13 @@ module geom_tools
     dopr = dot_product(AD, n)
     
     if (dopr > 0) then
+
       n = -n
+
     else
+
       CONTINUE
+
     end if
     
     nvect = n / (sqrt(n(1)*n(1) + n(2)*n(2) + n(3)*n(3)))
@@ -391,6 +494,7 @@ module geom_tools
   
   
   function get_normals2D(a,b,c) result(nvect)
+
   	use typy
   	real(kind=rkind), dimension(:), intent(in):: a,b,c
   	real(kind=rkind), dimension(2) :: nvect
@@ -412,9 +516,13 @@ module geom_tools
     nlength = sqrt(n1(1)*n1(1) + n1(2)*n1(2))
     
     if (d1 < 0) then
+
       nvect = n1/nlength
+
     else
+
       nvect = n2/nlength
+
     end if
   	
   
@@ -422,6 +530,7 @@ module geom_tools
   end function get_normals2D
   
   subroutine get_normals(el_id, bcpts, nvect) 
+
     use typy
     use pde_objs
     integer(kind=ikind), intent(in) :: el_id
@@ -435,28 +544,40 @@ module geom_tools
     if (.not. allocated(nvect)) allocate(nvect(D))
     
     if (ubound(nvect,1) /= D) then
+
       print *, "runtime error, contact developer michalkuraz@gmail.com"
       print *, "exited from geom_tools::getnormals"
       ERROR STOP
+
     end if
     
     select case(D)
+
       case(1)
+
         if (nodes%data(elements%data(el_id, bcpts%border(1)),1) > nodes%data(elements%data(el_id, bcpts%extpt),1 ) ) then
+
           nvect(1) = -1
+
         else
+
           nvect(1) = 1
+
         end if
+
       case(2)
+
         nvect = get_normals2D(nodes%data(elements%data(el_id,bcpts%border(1)),:), &
                 										  nodes%data(elements%data(el_id,bcpts%border(2)),:), &
                 										  nodes%data(elements%data(el_id,bcpts%extpt),:) )
                                       
       case(3)
+
         nvect = get_normals3D(nodes%data(elements%data(el_id,bcpts%border(1)),:), &
                       nodes%data(elements%data(el_id,bcpts%border(2)),:), &
                       nodes%data(elements%data(el_id,bcpts%border(3)),:), &
                       nodes%data(elements%data(el_id,bcpts%extpt),:) )
+
     end select
     
     
@@ -464,6 +585,7 @@ module geom_tools
   end subroutine get_normals
   
   function get_fluxsgn(el_id, bcpts, flux) result(sgn)
+
     use typy
     use pde_objs
     use globals
@@ -486,29 +608,47 @@ module geom_tools
     D = drutes_config%dimen
     
     if (D > 1 .and. .not.(allocated(pts))) then
+
       allocate(pts(D,D))
       allocate(ptsext(D))
+
     end if
     
     select case(D)
+
       case(1)
+
         if (nodes%data(elements%data(el_id, bcpts%border(1)),1) > nodes%data(elements%data(el_id, bcpts%extpt),1 ) ) then
+
           if (flux(1) >= 0) then
+
             sgn = -1
+
           else
+
             sgn = 1
+
           end if
+
         else
+
          if (flux(1) < 0) then
+
             sgn = -1
+
           else
+
             sgn = 1
+
           end if
+
         end if
           
         
       case(2)
+
         if (norm2(flux) > 1e3*epsilon(1.0_rkind)) then
+
           pts(1,:) = nodes%data(elements%data(el_id, bcpts%border(1)),:)
           pts(2,:) = nodes%data(elements%data(el_id, bcpts%border(2)),:)
           
@@ -517,18 +657,30 @@ module geom_tools
           call line_coeff(pts(1,:), pts(2,:), line)
           
           if ( abs(flux(1)*line(1) + flux(2)*line(2)) > 1e3*epsilon(1.0_rkind)) then
+
             tinter = -(line(3) + line(1)*ptsext(1) + line(2)*ptsext(2))/(flux(1)*line(1) + flux(2)*line(2))
+
           else
+
             sgn = 0
             return
+
           end if
+
           if (tinter > 0 ) then
+
             sgn = -1
+
           else
+
             sgn = 1
+
           end if
+
         else
+
           sgn = 0
+
         end if
           
         
@@ -545,26 +697,39 @@ module geom_tools
           call plane_coeff(pts, plane) 
           
           if (abs(plane(1)*flux(1) + plane(2)*flux(2) + plane(3)*flux(3)) > 1e3*epsilon(1.0_rkind)) then
+
             tinter = -(plane(1)*ptsext(1) + plane(2)*ptsext(2) + plane(3)*ptsext(3) + plane(4)) / &
                         (plane(1)*flux(1) + plane(2)*flux(2) + plane(3)*flux(3))
+
           else
+
             sgn = 0
             return
+
           end if
     
           if (tinter > 0 ) then
+
             sgn = -1
+
           else
+
             sgn = 1
+
           end if
+
         else
+
           sgn = 0
+
         end if
+
     end select
   
   end function get_fluxsgn  
   
   subroutine line_coeff(A,B, coeffs)
+
     use typy
     
     real(kind=rkind), dimension(:), intent(in) :: A,B
@@ -573,10 +738,14 @@ module geom_tools
     real(kind=rkind) :: k
     
     if (abs(A(1) - B(1)) > 1e3*epsilon(k)) then
+
       k = (B(2) - A(2))/(B(1) - A(1))
+
     else
+
       coeffs = [1.0_rkind, 0.0_rkind, A(1)]
       return
+
     end if
     
     coeffs(3) = A(2) - k*A(1)
@@ -586,7 +755,9 @@ module geom_tools
   end subroutine line_coeff
 
   !> function that provides x coordinate of inner boundary normal vector, the boundary is defined by two points: bod1, bod2
+
   function get_nx(el_id, order1, order2) result(xcoord)
+
     use typy
     use globals
     use global_objs
@@ -603,38 +774,64 @@ module geom_tools
     bod2 = nodes%data(elements%data(el_id,order2),:)
 
     if (abs(bod1(1)-bod2(1)) > epsilon(tg)) then
+
       tg = (abs(bod2(2)-bod1(2))/abs(bod1(1)-bod2(1)))
       zcoord = 1/sqrt(1+tg*tg)
+
     else
+
       zcoord = 0
+
     end if
 
     select case(order1+order2)
+
       case(3)
+
         order3=3
+
       case(4)
+
         order3=2
+
       case(5)
+
         order3=1
+
     end select
     
     xcoord = sqrt(1-zcoord*zcoord)
     
     if (abs(bod1(1)-bod2(1)) < 10*epsilon(bod1(1)) ) then
+
       if (nodes%data(elements%data(el_id, order3),1) < bod1(1) ) then
+
         xcoord = -xcoord
+
       end if
+
     else
+
       slope = (bod2(2) - bod1(2))/(bod2(1) - bod1(1))
+
       if (slope < 0) then
+
         if (.not. aboveline(bod1, bod2, nodes%data(elements%data(el_id, order3),:))) then
+
           xcoord = -xcoord
+
         end if
+
       else
+
         if ( aboveline(bod1, bod2, nodes%data(elements%data(el_id, order3),:))) then
+
           xcoord = -xcoord
+
         end if
+
       end if
+
     end if
 
   end function get_nx
@@ -643,56 +840,116 @@ module geom_tools
   !! and scaled before computing barycentric weights. Boundary points belong
   !! to both adjacent triangles; the caller determines the element tie-break.
   !! Preserve the legacy interval/polygon behavior through inside_shoot.
-  function inside(domain,bod,atboundary,dimen_input) result(true)
+
+  function inside(domain, bod, atboundary, dimen_input) result(true)
+
     use typy
     use globals, only: drutes_config
     use, intrinsic :: ieee_arithmetic, only: ieee_is_finite
-    real(kind=rkind), intent(in) :: domain(:,:), bod(:)
+    real(kind=rkind), dimension(:, :), intent(in) :: domain
+    real(kind=rkind), dimension(:), intent(in) :: bod
     logical, intent(out), optional :: atboundary
     integer(kind=ikind), intent(in), optional :: dimen_input
     logical :: true
     integer(kind=ikind) :: dimen_loc
-    real(kind=rkind) :: u(2),v(2),r(2),weights(3)
-    real(kind=rkind) :: scale,coordscale,coordtol,det,deterr,tol,roundoff
+    real(kind=rkind), dimension(2) :: u
+    real(kind=rkind), dimension(2) :: v
+    real(kind=rkind), dimension(2) :: r
+    real(kind=rkind), dimension(3) :: weights
+    real(kind=rkind) :: scale, coordscale, coordtol, det, deterr, tol, roundoff
 
-    true=.false.
-    if (present(atboundary)) atboundary=.false.
-    dimen_loc=drutes_config%dimen
-    if (present(dimen_input)) dimen_loc=dimen_input
-    if (dimen_loc/=2 .or. size(domain,1)/=3) then
-      true=inside_shoot(domain,bod,atboundary,dimen_input)
-      return
+    true = .false.
+
+    if (present(atboundary)) then
+
+      atboundary = .false.
+
     end if
-    if (size(domain,2)/=2 .or. size(bod)<2) return
-    if (.not.all(ieee_is_finite(domain)) .or. .not.all(ieee_is_finite(bod(1:2)))) return
 
-    coordscale=max(maxval(abs(domain)),maxval(abs(bod(1:2))))
+    dimen_loc = drutes_config%dimen
+
+    if (present(dimen_input)) then
+
+      dimen_loc = dimen_input
+
+    end if
+
+
+    if (dimen_loc /= 2 .or. size(domain, 1) /= 3) then
+
+      true = inside_shoot(domain, bod, atboundary, dimen_input)
+      return
+
+    end if
+
+    if (size(domain, 2) /= 2 .or. size(bod) < 2) then
+
+      return
+
+    end if
+
+    if (.not. all(ieee_is_finite(domain)) .or. .not. all(ieee_is_finite(bod(1:2)))) then
+
+      return
+
+    end if
+
+
+    coordscale = max(maxval(abs(domain)), maxval(abs(bod(1:2))))
     ! Account for input-coordinate/subtraction roundoff, not a fixed metre epsilon.
-    coordtol=8*epsilon(1.0_rkind)*coordscale
-    if (any(bod(1:2)<minval(domain,dim=1)-coordtol) .or. &
-        any(bod(1:2)>maxval(domain,dim=1)+coordtol)) return
-    u=domain(2,:)-domain(1,:)
-    v=domain(3,:)-domain(1,:)
-    r=bod(1:2)-domain(1,:)
-    scale=max(maxval(abs(u)),maxval(abs(v)))
-    if (.not.ieee_is_finite(scale) .or. scale<=tiny(scale)) return
-    u=u/scale; v=v/scale; r=r/scale
-    roundoff=8*epsilon(1.0_rkind)*max(1.0_rkind,coordscale/scale)
-    det=u(1)*v(2)-u(2)*v(1)
-    deterr=8*epsilon(1.0_rkind)*(abs(u(1)*v(2))+abs(u(2)*v(1))) + &
-           4*roundoff*(sum(abs(u))+sum(abs(v)))
+    coordtol = 8*epsilon(1.0_rkind)*coordscale
+
+    if (any(bod(1:2) < minval(domain, dim=1) - coordtol) .or. any(bod(1:2) > maxval(domain, dim=1) + coordtol)) then
+
+      return
+
+    end if
+
+    u = domain(2, :) - domain(1, :)
+    v = domain(3, :) - domain(1, :)
+    r = bod(1:2) - domain(1, :)
+    scale = max(maxval(abs(u)), maxval(abs(v)))
+
+    if (.not. ieee_is_finite(scale) .or. scale <= tiny(scale)) then
+
+      return
+
+    end if
+
+    u = u/scale
+    v = v/scale
+    r = r/scale
+    roundoff = 8*epsilon(1.0_rkind)*max(1.0_rkind, coordscale/scale)
+    det = u(1)*v(2) - u(2)*v(1)
+    deterr = 8*epsilon(1.0_rkind)*(abs(u(1)*v(2)) + abs(u(2)*v(1))) + &
+             4*roundoff*(sum(abs(u)) + sum(abs(v)))
     ! A collapsed or numerically unresolved triangle has no reliable interior.
-    if (abs(det)<=deterr) return
-    weights(2)=(r(1)*v(2)-r(2)*v(1))/det
-    weights(3)=(u(1)*r(2)-u(2)*r(1))/det
-    weights(1)=1-weights(2)-weights(3)
-    tol=(32*epsilon(1.0_rkind)+4*roundoff*(1+maxval(abs(r))))/abs(det)
-    true=all(weights>=-tol) .and. all(weights<=1+tol)
-    if (present(atboundary)) atboundary=true .and. any(abs(weights)<=tol)
+
+    if (abs(det) <= deterr) then
+
+      return
+
+    end if
+
+    weights(2) = (r(1)*v(2) - r(2)*v(1))/det
+    weights(3) = (u(1)*r(2) - u(2)*r(1))/det
+    weights(1) = 1 - weights(2) - weights(3)
+    tol = (32*epsilon(1.0_rkind) + 4*roundoff*(1 + maxval(abs(r))))/abs(det)
+    true = all(weights >= -tol) .and. all(weights <= 1 + tol)
+
+    if (present(atboundary)) then
+
+      atboundary = true .and. any(abs(weights) <= tol)
+
+    end if
+
+
   end function inside
 
   !> Original random-ray containment, retained for comparison and non-triangles.
- function inside_shoot(domain,bod, atboundary, dimen_input) result(true)
+
+  function inside_shoot(domain,bod, atboundary, dimen_input) result(true)
+
     use typy
     use globals
     use global_objs
@@ -715,26 +972,42 @@ module geom_tools
     
     
     if (present(dimen_input)) then
+
       dimen_loc = dimen_input
+
     else
+
       dimen_loc = drutes_config%dimen
+
     end if
     
     select case(dimen_loc)
+
       case(1)
+
         if ((domain(1,1) <= bod(1) .and. domain(2,1) >= bod(1)) .or. &
             (domain(1,1) >= bod(1) .and. domain(2,1) <= bod(1)) ) then
+
           true = .true.
           
           if (present(atboundary)) then
+
             if (abs( bod(1) - domain(1,1)) < epsilon(bod(1)) .or. abs( bod(1) - domain(2,1)) < epsilon(bod(1))) then
+
                atboundary = .true.
+
             else
+
                atboundary = .false.
+
             end if
+
           end if
+
         else
+
           true = .false.
+
         end if
 
       case(2)
@@ -747,12 +1020,17 @@ module geom_tools
 
 
         do i=1, ubound(domain,1)
+
           if (i < ubound(domain,1)) then
+
             l = i
             p = i+1
+
           else
+
             l = i
             p = 1
+
           end if
 	  
           a = domain(l,:)
@@ -761,61 +1039,90 @@ module geom_tools
           
 
           if (inline(domain(l,:), domain(p,:), bod)) then
+
             true = .TRUE.
             if (present(atboundary)) atboundary = .TRUE.
             RETURN
+
           end if
 
           do j=1, ubound(smer,1)
+
             smer(j) = rand() + 0.25
             call shoot(bod, smer(j), domain,  inter(j,:,:), valid)
             zasah = 0
+
             do k=1, ubound(domain,1)
+
               if (valid(k)) then
+
                 if (dist(a,inter(j,k,:), dimen_loc) > 10*epsilon(smer(1)) .and. dist(b,inter(j,k,:), dimen_loc) & 
                                                                                                       > 10*epsilon(smer(1))) then
+
                   zasah = zasah + 1
+
                 else
+
                   checked(j) = -1
+
                 end if
+
               end if
+
             end do
             
             if (checked(j) /= -1) then
+
               if (modulo(zasah,2) /= 0 .and. zasah /= ubound(domain,1)) then
+
                 checked(j) = 1
+
               end if
+
             end if
   
 	      
           end do
+
         end do
+
         j=0
+
         do i=1, ubound(checked,1) 
+
           if (checked(i) == 0) then
+
             true = .false.
             if (present(atboundary)) atboundary = .false.
             RETURN
+
           end if
+
           j = j + checked(i)
+
         end do
         
         if (j == -ubound(checked,1)) then
+
           print *, "bug in geom_tools::inside, contact developer with a full bug report"
           ERROR stop
+
         end if
         
         true = .true.
         if (present(atboundary)) atboundary = .false.
       
       case default
+
         ERROR stop "generated from geom_tools::inside"
+
     end select
 
   end function inside_shoot
   
   
   function inside3D(volume, bod) result(true)
+
     use typy
     use linalg
     use debug_tools
@@ -836,19 +1143,24 @@ module geom_tools
     integer(kind=ikind) :: i
     
     if (ubound(volume,2) /= 3 ) then
+
       print *, "the volume must be surrounded by triangles, typicaly Delauney triangulation"
       print *, "exited from geom_tools::inside3D"
       ERROR STOP
+
     end if
     
     if (ubound(volume,3) /= 3 ) then
+
       print *, "points in 3D must have three coordinates"
       print *, "exited from geom_tools::inside3D"
       ERROR STOP
+
     end if
     
 
     bang = 0
+
     do surf=1, ubound(volume,1)
 
       call plane_coeff(volume(surf, :, :), coeff)
@@ -857,31 +1169,46 @@ module geom_tools
   
       inter(1) = bod(1)
       inter(3) = bod(3)
+
       if (abs(coeff(2)) > 1e3*epsilon(coeff(2))) then
+
         t = (coeff(1)*bod(1) + coeff(2)*bod(2) + coeff(3)*bod(3)  + coeff(4))/coeff(2)
         inter(2) = bod(2) + t
           
           if (inter(2) >= bod(2)) then
          
             do pt=1,3
+
               domain2D(pt,:) = [volume(surf, pt, 1), volume(surf, pt, 3)]
+
             end do
+
             if (inside(domain2D, [inter(1), inter(3)], dimen_input = 2_ikind)) bang = bang + 1
+
           end if
+
         else
+
           if (abs(inter(1) - volume(surf, 1, 1)) < epsilon(t) .and. abs(inter(1) - volume(surf, 2, 1)) < epsilon(t) .and. &
               abs(inter(1) - volume(surf, 3, 1)) < epsilon(t)) then
            
             do pt=1,3
+
               domain2D(pt,:) = [volume(surf, pt, 2), volume(surf, pt, 3)]
+
             end do 
          
             if (inside(domain2D, [inter(2), inter(3)], dimen_input = 2_ikind)) then
+
               true = .true.
               RETURN
+
             end if
+
           end if
+
         end if
+
       end do
             
         
@@ -893,15 +1220,20 @@ module geom_tools
           
     
     if (modulo(bang, 2_ikind) /= 0) then
+
       true = .true.
+
     else
+
       true = .false.
+
     end if
     
   
   end function inside3D
   
   subroutine shoot(bod, k, domain, inter, valid)
+
     use typy
     real(kind=rkind), dimension(:), intent(in) :: bod
     real(kind=rkind), intent(in) :: k
@@ -916,12 +1248,17 @@ module geom_tools
     q = bod(2) - k*bod(1)
     
     do i=1, ubound(domain,1)
+
       if (i < ubound(domain,1)) then
+
         l = i
         p = i+1
+
       else
+
         l = i
         p = 1
+
       end if 
       
       a = domain(l,:)
@@ -929,31 +1266,54 @@ module geom_tools
       b = domain(p,:)
       
       if (abs(a(1)-b(1)) > 10*epsilon(a(1))) then
+
         kk = (b(2) - a(2))/(b(1)-a(1))
         qq = b(2) - b(1)*kk
+
         if (abs(k-kk) > 10*epsilon(k)) then
+
           inter(i,1) = (qq-q)/(k-kk)
           inter(i,2) = k*inter(i,1) + q
+
         else
+
           if (abs(q-qq) > 10*epsilon(q)) then
+
             inter(i,:) = (/huge(k), huge(k)/)
+
           else
+
             if (a(1) > b(1)) then
+
               inter(i,:) = a
+
             else
+
               inter(i,:) = b
+
             end if
+
           end if
+
         end if
+
       else
+
         inter(i,1) = a(1)
         inter(i,2) = k*inter(i,1) + q
+
       end if
+
       if (inline(a,b, inter(i,:)) .and. inter(i,1) > bod(1)) then
+
         valid(i) = .true.
+
       else
+
         valid(i) = .false.
+
       end if
+
     end do
     
  
@@ -962,6 +1322,7 @@ module geom_tools
 
 
   function triarea(a,b,c) result(area)
+
     use typy
     !> triangle points
     real(kind=rkind), dimension(:), intent(in) :: a,b,c
@@ -981,6 +1342,7 @@ module geom_tools
   
   
   pure function quad_area(a, b, c, d) result(area)
+
     use typy
 
     real(kind=rkind), dimension(2), intent(in) :: a, b, c, d
@@ -1005,6 +1367,7 @@ module geom_tools
   end function quad_area
   
   function tetravol(a,b,c,d) result(vol)
+
     use typy
     use simplelinalg
     use core_tools
@@ -1027,6 +1390,7 @@ module geom_tools
 
   
   function dist(A,B, dimen_input) result(l)
+
     use typy
     use globals
     
@@ -1036,18 +1400,29 @@ module geom_tools
     integer(kind=ikind) :: dimen_loc
     
     if (present(dimen_input)) then
+
       dimen_loc = dimen_input
+
     else
+
       dimen_loc = drutes_config%dimen
+
     end if
     
     select case(dimen_loc)
+
       case(1)
+
         l = abs(A(1) - B(1))
+
       case(2)
+
         l = sqrt((A(1)-B(1))*(A(1)-B(1)) + (A(2)-B(2))*(A(2)-B(2)))
+
       case(3)
+
         l = sqrt( (A(1)-B(1))*(A(1)-B(1)) + (A(2)-B(2))*(A(2)-B(2)) + (A(3)-B(3))*(A(3)-B(3)) )
+
     end select
     
   
@@ -1056,6 +1431,7 @@ module geom_tools
 
 
   function angle(A, B, C) result(gamma)
+
     use typy
     
     real(kind=rkind), dimension(:), intent(in) :: A, B, C
@@ -1067,16 +1443,22 @@ module geom_tools
     la = dist(B,C)
     
     if (la > 10*epsilon(la) .and. lb > 10*epsilon(la)) then
+
       gamma = acos(min((lc**2-la**2-lb**2)/(-2.0_rkind*la*lb),1.0_rkind))
+
     else
+
       gamma = acos(1.0_dprec)
+
     end if
 
   end function angle
 
 
     !> function to determine whether the third point is on line formed by the first two points
+
   function inline(A,B,bod) result(true)
+
     use typy
     real(kind=rkind), dimension(:), intent(in) :: bod, a,b
     real(kind=rkind) :: precision
@@ -1087,9 +1469,13 @@ module geom_tools
 
 
     if (abs(dist(a,b, 2_ikind) - dist(a,bod, 2_ikind) - dist(b,bod, 2_ikind)) < precision) then
+
       true = .true.
+
     else
+
       true = .false.
+
     end if
 
 
@@ -1098,7 +1484,9 @@ module geom_tools
 
 
   !> bisecton method searching for a root of function f on defined intervals xmin and xmax
+
   subroutine solve_bisect(xmin, xmax, f, reps, ierr, solution)
+
     use typy 
     use globals
     use core_tools
@@ -1106,13 +1494,19 @@ module geom_tools
     !> a interval where the root is searched
     real(kind=rkind), intent(in) :: xmin, xmax
     !> function which is processed
+
     interface
+
       pure function f(x) result(y)
+
         use typy
         real(kind=rkind), intent(in) :: x
         real(kind=rkind) :: y
+
       end function
+
     end interface
+
     !> accuracy
     real(kind=rkind), intent(in) :: reps
     !> error code output
@@ -1123,9 +1517,11 @@ module geom_tools
     real(kind=rkind) :: xmid, x1, x2
 
     if ((f(xmin) > 0 .and. f(xmax) > 0) .or. (f(xmin) < 0 .and. f(xmax) < 0)) then
+
       ierr = -1
       call  write_log("WARNING! geom_tools::solve_bisect returned error code -1")
       RETURN
+
     end if
 
     x1=xmin
@@ -1133,30 +1529,51 @@ module geom_tools
     xmid = (xmin+xmax)/2.0
 
     do 
+
       if ((f(x1) > 0 .and. f(x2) > 0) .or. (f(x1) < 0 .and. f(x2) < 0)) then
+
         ierr = -2
         call  write_log("WARNING! geom_tools::solve_bisect returned error code -2")
         RETURN
+
             end if
+
             if (f(x1) > 0 .and. f(x2) < 0) then
+
         if (f(xmid) > 0) then
+
           x1 = xmid
+
         else
+
           x2 = xmid
+
         end if
+
             else
+
         if (f(xmid) > 0) then
+
           x2 = xmid
+
         else
+
           x1 = xmid
+
         end if
+
             end if
+
             xmid = (x1+x2)/2.0
+
             if (abs(x1-x2) < reps) then
+
         solution = (x1+x2)/2.0
         ierr = 1
         EXIT
+
       end if
+
     end do
 
   end subroutine solve_bisect
@@ -1166,7 +1583,9 @@ module geom_tools
   !! result is logical value nad, if true point lies above if false it lies below
   !! if the line is vertical, then if true the point lies on the left hand side from the line, if false the point lies on the right hand side from the line.
   !<
+
   function aboveline (a,b,c) result(nad)
+
     use typy
     use globals
     use globals2d
@@ -1176,6 +1595,7 @@ module geom_tools
     !first define the coefficient of the line equation defined by A and B
     
     if (abs(b(1)-a(1)) > 100*epsilon(xa1) .and. abs(b(2)-a(2)) > 100*epsilon(xa1)) then
+
       xa1 = (b(2) - a(2))/(b(1) - a(1))
       
       yb1 = -1.0_rkind
@@ -1194,17 +1614,27 @@ module geom_tools
       
       
       if (y_int >= c(2)) then
+
         nad = .false.
+
       else
+
         nad = .true.
+
       end if
+
     else
+
       if (abs(b(1)-a(1)) < 100*epsilon(xa1)) then ! vertical line
  
         if (c(1) >= b(1)) then 
+
           nad = .false.
+
         else 
+
           nad = .true.
+
         end if
         
       end if
@@ -1212,11 +1642,17 @@ module geom_tools
       if (abs(b(2)-a(2)) < 100*epsilon(xa1)) then ! horizontal line
         
         if (c(2) >= b(2)) then
+
           nad = .true.
+
         else
+
           nad = .false.
+
         end if
+
       end if
+
     end if
     
   end function aboveline
@@ -1226,7 +1662,9 @@ module geom_tools
   !! bcpoints - nodes ids at the element boundary, integer, dimension(2)
   !! thirdpt - coordinates of a point at at element, which lies out of the boundary. It is important in order to obtain proper positive direction of the normal vector
   !<    
+
   subroutine getnormal(bcpoints, thirdpt, nvect)
+
     use typy
     use globals
     
@@ -1237,9 +1675,11 @@ module geom_tools
     real(kind=rkind) :: k
     
     if (drutes_config%dimen == 1) then
+
       print *, "RUNTIME ERROR, function geomtools::getnormal is called for 1D problem"
       print *, "if (desporate) contact Michal -> michalkuraz@gmail.com"
       ERROR STOP
+
     end if    
     
     if (.not. allocated(nvect)) allocate(nvect(drutes_config%dimen))
@@ -1250,54 +1690,78 @@ module geom_tools
       k = (bcpoints(1,2)-bcpoints(2,2))/(bcpoints(1,1)-bcpoints(2,1))
      
       if (aboveline(bcpoints(1,:), bcpoints(2,:), thirdpt)) then
+
         nvect(2) = -1
+
       else
+
         nvect(2) = 1
+
       end if
       
       ! change x for y
+
       if (aboveline((/bcpoints(1,2), bcpoints(1,1)/), (/bcpoints(2,2), bcpoints(2,1)/), (/thirdpt(2), thirdpt(1)/))) then
+
         nvect(1) =  -abs(1.0_rkind/k)
+
       else
+
         nvect(1) = abs(1.0_rkind/k)
+
       end if
       
       nvect = nvect/(sqrt(nvect(1)*nvect(1)+nvect(2)*nvect(2)))
      
     !vertical line
+
     else if (abs(bcpoints(1,1)-bcpoints(2,1)) < 100*epsilon(bcpoints(1,1)) .and. &
        abs(bcpoints(1,2)-bcpoints(2,2)) > 100*epsilon(bcpoints(1,1))) then
        
        if (aboveline(bcpoints(1,:), bcpoints(2,:), thirdpt)) then
+
          nvect(1) = 1
+
        else
+
          nvect(1) = -1
+
        end if
        
        nvect(2) = 0
        
      !horizontal line
+
     else if (abs(bcpoints(1,1)-bcpoints(2,1)) > 100*epsilon(bcpoints(1,1)) .and. &
        abs(bcpoints(1,2)-bcpoints(2,2)) < 100*epsilon(bcpoints(1,1))) then
        
        if (aboveline(bcpoints(1,:), bcpoints(2,:), thirdpt)) then
+
          nvect(2) = -1
+
        else
+
          nvect(2) = 1
+
        end if
        
        nvect(1) = 0
+
      else
+
        print *, "runtime error, exited from geomtools::getnormal seems like your boundary is defined by a single point"
        print *, "check your mesh, if your mesh is ok, then contact Michal -> michalkuraz@gmail.com"
        ERROR STOP
+
      end if
   
   end subroutine getnormal
 
 
  !> subroutine seeking for the point which is on line identified by points a and b, and line between this point and c is rectangular to the line <a,b>
+
   subroutine najdi_bod(a,b,c,bod)
+
     use typy
     !> element points
     real(kind=rkind), dimension(:), intent(in) :: a,b,c
@@ -1308,6 +1772,7 @@ module geom_tools
 
 
     if (abs(b(1) - a(1)) > 100*epsilon(a(1))) then
+
       k = (b(2)-a(2))/(b(1)-a(1))
 
       q = a(2) - k*a(1)
@@ -1319,14 +1784,18 @@ module geom_tools
       bod(1) = -k*bod(2)-q2
 
     else
+
       bod(1) = a(1)
       bod(2) = c(2)
+
     end if
       
   end subroutine najdi_bod
 
   !> subroutine searching for the maximum height on triangle element
+
   subroutine max_height(a,b,c, height)
+
     use typy
     !>input element edges
     real(kind=rkind), dimension(:), intent(in) :: a,b,c
@@ -1357,6 +1826,7 @@ module geom_tools
 
 
   function gravity_center(a,b,c) result(gc)
+
     use typy
     use linalg
     real(kind=rkind), dimension(:), intent(in) :: a,b,c
@@ -1373,6 +1843,7 @@ module geom_tools
 
 
     if (abs(a(1)-point(1)) > 1000*epsilon(a(1))) then
+
       bside(1) = a(2)
       bside(2) = point(2)
 
@@ -1385,15 +1856,18 @@ module geom_tools
       vertical = .false.
 
     else
+
       gc(1) = (a(1)+point(1))/2.0_rkind
       vertical = .true.
       i = 2
+
     end if
       
     
     point = (a + c)/2.0_rkind
    
     if (abs(b(1)-point(1)) > 1000*epsilon(a(1))) then
+
       bside(1) = b(2)
       bside(2) = point(2)
       matrix(:,2) = 1
@@ -1403,12 +1877,15 @@ module geom_tools
       call gem(matrix, bside, line_pars(2,:))
 
     else
+
       gc(1) = (b(1)+point(1))/2.0_rkind
       vertical = .true.
       i = 1
+
     end if
       
     if (.not.(vertical)) then
+
       bside = -line_pars(:,2)
 
       matrix(:,1) = line_pars(:,1)
@@ -1416,8 +1893,11 @@ module geom_tools
       matrix(:,2) = -1.0_rkind
 
       call gem(matrix, bside, gc)
+
     else
+
       gc(2) = line_pars(i,1)*gc(1) + line_pars(i,2)
+
     end if
     
 
@@ -1425,6 +1905,7 @@ module geom_tools
   
   
     subroutine find_neighbours(el, nd)
+
       use typy
       use globals
       use global_objs
@@ -1441,16 +1922,25 @@ module geom_tools
       el%neighbours = 0_ikind
       
       select case(drutes_config%dimen)
+
         case(1)
+
           do i=1, el%kolik - 1
+
             el%neighbours(i,1) = i-1
             el%neighbours(i,2) = i+1
+
            end do
+
            el%neighbours(elements%kolik,1) = elements%kolik - 1
            el%neighbours(elements%kolik,2) = 0
+
         case(2:3)
+
             !set neighbours
+
             do i=1, el%kolik
+
               pos = 0
               j = i
               k = i
@@ -1458,45 +1948,74 @@ module geom_tools
               call progressbar(int(100*i/el%kolik))
 
               okoli: do 
+
                 j = min(j+1, el%kolik+1)
                 k = max(k-1, 0_ikind)
 
                 if (j <= el%kolik) then
+
                   upward = 0
+
                   moje1: do l=1,ubound(el%data,2)
+
                       nasel1: do m=1,ubound(el%data,2)
+
                         if (el%data(i,l) == el%data(j,m) .and. i/=j) then
+
                           upward = upward + 1
+
                           if (upward == drutes_config%dimen) then 
+
                       pos = pos + 1
                       el%neighbours(i,pos) = j
                       EXIT nasel1
+
                           end if
+
                         end if
+
                     end do nasel1
+
                   end do moje1
+
                 end if
 
                 if (k > 0) then
+
                   downward = 0
+
                   moje2: do l=1,ubound(el%data,2)
+
                     nasel2: do m=1,ubound(el%data,2)
+
                         if (el%data(i,l) == el%data(k,m) .and. i /= k) then
+
                           downward = downward + 1
+
                           if (downward == drutes_config%dimen) then 
+
                       pos = pos + 1
                       el%neighbours(i,pos) = k
                       EXIT nasel2
+
                           end if
+
                         end if
+
                     end do nasel2 
+
                   end do moje2
+
                 end if
 
                 if (pos == ubound(el%data,2) .or. (j == el%kolik+1 .and. k == 0_ikind)) then
+
                   EXIT okoli
+
                 end if
+
               end do okoli
+
             end do
             
       end select
@@ -1506,6 +2025,7 @@ module geom_tools
     
     
     function interpol_init1D(x, polygon) result(y)
+
       use typy
       real(kind=rkind), intent(in) :: x                ! The point where interpolation is performed
       real(kind=rkind), dimension(:,:), intent(in) :: polygon       ! Array of x-coordinates
@@ -1515,18 +2035,26 @@ module geom_tools
       n = ubound(polygon,1)
       
       ! Check bounds
+
       if (x < polygon(1,1) .or. x > polygon(n,1)) then
+
         print *, "Your initial condition measurement data are not covering the entire computational domain"
         print *, "exited from geom_tools::interpol_init1D"
         ERROR STOP
+
       end if
 
       ! Find the interval [x_array(j), x_array(j+1)] where x lies
+
       do j = 1, n - 1
+
         if (x >= polygon(j,1) .and. x <= polygon(j + 1,1)) then
+
           y = polygon(j,2) + (x - polygon(j,1)) * (polygon(j + 1,2) - polygon(j,2)) / (polygon(j + 1,1) - polygon(j,1)) 
           return
+
         end if
+
       end do
 
     end function interpol_init1D
@@ -1534,6 +2062,7 @@ module geom_tools
     
     
     function project_inside(A, B, C) result(is_inside)
+
       use typy
 
       implicit none
@@ -1556,9 +2085,11 @@ module geom_tools
       length_squared = dot_product(AB, AB)
 
       if (length_squared <= tolerance) then
+
         intersection = A
         is_inside = .false.
         return
+
       end if
 
       parameter = dot_product(AC, AB)/length_squared
@@ -1579,7 +2110,9 @@ module geom_tools
 
 
     ! Return the shortest distance from point C to the finite line segment A--B.
+
     function point_segment_distance(A, B, C) result(distance)
+
       use typy
 
       real(kind=rkind), dimension(2), intent(in) :: A
@@ -1594,18 +2127,24 @@ module geom_tools
       length_squared = dot_product(AB, AB)
 
       if (length_squared <= 10.0_rkind*epsilon(1.0_rkind)) then
+
         closest_point = A
+
       else
+
         parameter = dot_product(AC, AB)/length_squared
         parameter = max(0.0_rkind, min(1.0_rkind, parameter))
         closest_point = A + parameter*AB
+
       end if
 
       distance = norm2(C - closest_point)
+
     end function point_segment_distance
     
     
     function unit_vector(A, B) result(vector)
+
       use typy
 
       real(kind=rkind), dimension(2), intent(in) :: A
@@ -1619,15 +2158,20 @@ module geom_tools
       vector_length = sqrt(dot_product(vector, vector))
 
       if (vector_length > 10*epsilon(1.0_rkind)) then
+
         vector = vector/vector_length
+
       else
+
         vector = 0.0_rkind
+
       end if
 
     end function unit_vector
 
   
     subroutine map1d2d(filename)
+
       use typy
       use global_objs
       use globals
@@ -1650,21 +2194,30 @@ module geom_tools
       open(unit=fileid, file=cut(filename), action="read", iostat=ierr)
       
       if (ierr /= 0) then
+
         print *, "unable to open file with the vertical distribution of the initial condition, exiting...."
         print *, "called from map1d2d::drutes_init"
         ERROR STOP
+
       end if
       
       counter = 0
       
       do
+
         call comment(fileid)
         read(fileid, fmt=*, iostat=ierr) tmp
+
         if (ierr /= 0) then
+
           EXIT
+
         else
+
           counter = counter + 1
+
         end if
+
       end do
       
       allocate(input(counter, ubound(pde,1)+1))
@@ -1674,53 +2227,92 @@ module geom_tools
       open(unit=fileid, file=cut(filename), action="read")
       
       do i=1, counter
+
         call fileread(input(i,:), fileid)
+
       end do
             
       do i=1, elements%kolik
+
         do j=1, ubound(elements%data,2)
+
           k = elements%data(i,j)
           l = nodes%edge(k)
+
           do proc=1, ubound(pde,1)
+
             m = pde(proc)%permut(k)
+
             if (m == 0) then
+
               if (l>100) then
+
                 call pde(proc)%bc(l)%value_fnc(pde(proc), i, j, value)
                 val_defined=.true.
+
               else
+
                 print *, "runtime error, exited from map1d2d::drutes_init"
                 ERROR STOP
+
               end if             
+
             else
+
               val_defined=.false.
+
               do ii=1, ubound(input,1)-1
+
                 if (nodes%data(k,2) >= input(ii,1) .and. nodes%data(k,2) <= input(ii+1,1)) then
+
                   grad = (input(ii+1,proc+1) - input(ii,proc+1))/(input(ii+1,1) - input(ii,1))
                   value =  input(ii,proc+1) + grad*(nodes%data(k,2) - input(ii,1))
                   val_defined=.true.
+
                   if (isnan(value)) then
+
                     call file_error(fileid, "bad input file with initial conditions")
+
                   end if
+
                   EXIT
+
                 end if
+
               end do
+
               if (.not. val_defined) then
+
                 if (nodes%data(k,2) < minval(input(:,1))) then
+
                   value = input(minloc(input(:,1),1), proc)
                   val_defined=.true.
+
                 end if
+
                 if (nodes%data(k,2) < maxval(input(:,1))) then
+
                   value = input(maxloc(input(:,1),1), proc)
                   val_defined=.true.
+
                 end if
+
                 if (.not. val_defined) then
+
                   call file_error(fileid, "Have you covered the entire vertical profile with data for the initial condition?")
+
                 end if
+
               end if
+
             end if
+
             pde(proc)%solution(k) =  value 
+
           end do
+
         end do
+
       end do
             
       close(fileid)
@@ -1730,6 +2322,7 @@ module geom_tools
     
     
     subroutine map1d2dJ(pde_loc,filename, correct_h)
+
       use typy
       use global_objs
       use globals
@@ -1753,22 +2346,32 @@ module geom_tools
       
       
       open(unit=fileid, file=cut(filename), action="read", iostat=ierr)
+
       if (ierr /= 0) then
+
         print *, "unable to open file with the vertical distribution of the initial condition, exiting...."
         print *, "called from map1d2dJ::drutes_init"
         ERROR STOP
+
       end if
       
       counter = 0
       
       do
+
         call comment(fileid)
         read(fileid, fmt=*, iostat=ierr) tmp
+
         if (ierr /= 0) then
+
           EXIT
+
         else
+
           counter = counter + 1
+
         end if
+
       end do
       
       allocate(input(counter, 3))
@@ -1778,71 +2381,119 @@ module geom_tools
       open(unit=fileid, file=cut(filename), action="read")
       
       do i=1, counter
+
         call fileread(input(i,:), fileid)
+
       end do
 
       do i=1, elements%kolik
+
         do j=1, ubound(elements%data,2)
+
           k = elements%data(i,j)
           l = nodes%edge(k)
             m = pde_loc%permut(k)
+
             if (m == 0) then
+
               if (l>100) then
+
                 do ii=1, ubound(input,1)-1
     
                   if (nodes%data(k,D) >= input(ii,2) .and. nodes%data(k,D) <= input(ii+1,2)) then
+
                     grad = (input(ii+1,3) - input(ii,3))/(input(ii+1,2) - input(ii,2))
                     value =  input(ii,3) + grad*(nodes%data(k,D) - input(ii,2))
                     val_defined=.true.
+
                     if (isnan(value)) then
+
                       call file_error(fileid, "bad input file with initial conditions")
+
                     end if
+
                     EXIT
+
                    end if
+
                  end do
+
                  if(.not. val_defined) then
+
                    call pde(proc)%bc(l)%value_fnc(pde(proc), i, j, value)
                    val_defined=.true.
+
                  end if 
+
               else
+
                 print *, "runtime error, exited from map1d2dJ::drutes_init"
                 ERROR STOP
+
               end if             
+
             else
+
               val_defined=.false.
+
               do ii=1, ubound(input,1)-1
+
                 if (nodes%data(k,D) >= input(ii,2) .and. nodes%data(k,D) <= input(ii+1,2)) then
                   
                   grad = (input(ii+1,3) - input(ii,3))/(input(ii+1,2) - input(ii,2))
                   value =  input(ii,3) + grad*(nodes%data(k,D) - input(ii,2))
 
                   val_defined=.true.
+
                   if (isnan(value)) then
+
                     call file_error(fileid, "bad input file with initial conditions")
+
                   end if
+
                   EXIT
+
                 end if
+
               end do
+
               if (.not. val_defined) then
+
                 if (nodes%data(k,D) < minval(input(:,2))) then
+
                   value = input(minloc(input(:,2),1),3)
                   val_defined=.true.
+
                 end if
+
                 if (nodes%data(k,D) > maxval(input(:,2))) then
+
                   value = input(maxloc(input(:,2),1), 3)
                   val_defined=.true.
+
                 end if
+
                 if (.not. val_defined) then
+
                   print *, nodes%data(k,D) ; stop
                   call file_error(fileid, "Have you covered the entire vertical profile with data for the initial condition?")
+
                 end if
+
               end if
+
             end if
+
             pde_loc%solution(k) =  value 
+
             if(correct_h) then
+
               pde_loc%solution(k) =  pde_loc%solution(k)+nodes%data(k,D) 
+
             end if 
+
         end do
+
       end do
         
       close(fileid)

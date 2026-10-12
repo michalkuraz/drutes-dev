@@ -25,29 +25,44 @@
 
 
 !> stiffness matrix procedure for non-linear problems linearized by Picard method
+
 module stiffmat
+
   public :: build_stiff_np
   public :: build_bvect
   public :: apply_element_stabilization
+
   contains
+
     ! Called after time_integ: do not lump the SUPG temporal correction.
+
     subroutine apply_element_stabilization(el_id, dt, quadpnt_in)
+
       use typy
       use global_objs
       use pde_objs
       integer(kind=ikind), intent(in) :: el_id
       real(kind=rkind), intent(in) :: dt
       type(integpnt_str), intent(in), optional :: quadpnt_in
-      integer :: proc
-      do proc=1,size(pde)
-        if (associated(pde(proc)%stabilize_element)) &
-          call pde(proc)%stabilize_element(el_id,dt,quadpnt_in)
+      integer(kind=ikind) :: proc
+
+      do proc = 1, size(pde)
+
+        if (associated(pde(proc)%stabilize_element)) then
+
+          call pde(proc)%stabilize_element(el_id, dt, quadpnt_in)
+
+        end if
+
       end do
+
     end subroutine apply_element_stabilization
    
    
    !> build local stifness matrix for nonlinear problems and Picard method
+
      subroutine build_stiff_np(el_id, dt, domain_id, quadpnt_in)
+
       use typy
       use globals
       use global_objs
@@ -84,13 +99,19 @@ module stiffmat
       stiff_mat = 0
 
       if (.not. allocated(layer)) then
+
         allocate(layer(ubound(pde,1), ubound(pde,1)))
+
       end if
 
       do iproc=1,ubound(pde,1)
+
         do jproc=1,ubound(pde,1)
+
             layer(iproc, jproc) = elements%material(el_id)
+
         end do
+
       end do
       
       limits = ubound(stiff_mat,1)/ubound(pde,1)
@@ -98,7 +119,9 @@ module stiffmat
       top = drutes_config%dimen
       
       if (present(quadpnt_in)) then
+
         quadpnt=quadpnt_in
+
       end if
 
       quadpnt%element = el_id
@@ -106,17 +129,26 @@ module stiffmat
       quadpnt%type_pnt = "gqnd"
       
       if (present(domain_id)) then
+
         quadpnt%ddlocal = .true.
         quadpnt%subdom = domain_id
+
       end if
       
       do iproc=1,ubound(pde,1)
+
         !use Galerkin FEM
+
         if (pde(iproc)%diffusion) then
+
           do jproc=1, ubound(pde,1)
+
             pde_block_column = jproc
+
             do i=1, ubound(stiff_mat,1)/ ubound(pde,1)
+
               do j=1, ubound(stiff_mat,1)/ubound(pde,1)
+
                 dsum = 0
                 csum = 0
                 rsum = 0
@@ -127,6 +159,7 @@ module stiffmat
                 
 
                 do l=1, ubound(gauss_points%weight,1)
+
                   quadpnt%order = l
                   call pde(iproc)%pde_fnc(jproc)%dispersion(pde(iproc), layer(iproc, jproc), &
                      quadpnt, tensor=disp(1:top,1:top))
@@ -137,7 +170,9 @@ module stiffmat
                   
                   
                 end do
+
                 do l=1, ubound(gauss_points%weight,1)
+
                   quadpnt%order = l
                   call pde(iproc)%pde_fnc(jproc)%convection(pde(iproc), layer(iproc, jproc), quadpnt, &
                     vector_out=conv(1:top))
@@ -151,6 +186,7 @@ module stiffmat
 
 
                 do l=1, ubound(gauss_points%weight,1)
+
                   quadpnt%order = l
                   !tmp = pde(iproc)%pde_fnc(jproc)%reaction(pde(iproc),layer(iproc, jproc), quadpnt)
                   rsum = rsum + pde(iproc)%pde_fnc(jproc)%reaction(pde(iproc),layer(iproc, jproc), &
@@ -164,33 +200,45 @@ module stiffmat
                 stiff_mat(ii,jj) = (dsum(1,1) + csum + rsum)*dt
  
               end do
+
             end do 
+
           end do
         
         !use least-square FEM (for convection only problems)
+
         else
+
            do i=1, ubound(stiff_mat,1)/ ubound(pde,1)
+
             do j=1, ubound(stiff_mat,1)/ubound(pde,1)
+
                 csum = 0
                 v(1:top,1) = elements%ders(el_id,i,1:top)
                 u(1,1:top) = elements%ders(el_id,j,1:top)
 
                 do l=1, ubound(gauss_points%weight,1)
+
                   quadpnt%order = l
                   call pde(iproc)%pde_fnc(iproc)%convection(pde(iproc), layer(iproc, iproc), quadpnt, &
                     vector_out=conv(1:top))
                   csum = csum + ((base_fnc(i,l) + dt*dot_product(conv(1:top), v(1:top,1)))* &
                           (base_fnc(j,l) + dt*dot_product(conv(1:top), u(1,1:top))))* &
                           gauss_points%weight(l)
+
                  end do
+
                  ii = i + (iproc-1)*limits
                  jj = j + (iproc-1)*limits
                 
                 stiff_mat(ii,jj) =  csum 
+
                end do
+
              end do
           
         end if
+
       end do
 
      
@@ -205,6 +253,7 @@ module stiffmat
     
     
     subroutine build_bvect(el_id, dt, domain_id, quadpnt_in)    
+
       use typy
       use globals
       use global_objs
@@ -231,7 +280,9 @@ module stiffmat
       top = drutes_config%dimen
       
       if (present(quadpnt_in)) then
+
         quadpnt = quadpnt_in
+
       end if
       
       quadpnt%element = el_id
@@ -241,19 +292,26 @@ module stiffmat
       limits = ubound(stiff_mat,1)/ubound(pde,1)
 
       if (present(domain_id)) then
+
         quadpnt%ddlocal = .true.
         quadpnt%subdom = domain_id
+
       end if
       
       do iproc = 1, ubound(pde,1)
+
         if (pde(iproc)%diffusion) then
+
           do i=1, ubound(stiff_mat,1)/ ubound(pde,1)
+
             suma = 0
             
             do l=1, ubound(gauss_points%weight,1)
+
               quadpnt%order = l	  
               suma = suma - pde(iproc)%pde_fnc(iproc)%zerord(pde(iproc), layer=elements%material(el_id), quadpnt=quadpnt)* &
               gauss_points%weight(l)
+
             end do
       
             ii = i + (iproc-1)*limits
@@ -261,15 +319,18 @@ module stiffmat
             bside(ii) = suma*dt*elements%areas(el_id)/gauss_points%area
 
           end do
+
         else
         
           layer = elements%material(el_id)
           
           do i=1, ubound(stiff_mat,1)/ ubound(pde,1)
+
             v(1:top,1) = elements%ders(el_id,i,1:top)
             suma = 0
 
             do l=1,  ubound(gauss_points%weight,1)
+
               quadpnt%order = l
               quadpnt%column = 1
               hp = pde(iproc)%getval(quadpnt)
@@ -279,12 +340,16 @@ module stiffmat
                       vector_out=conv(1:top))
               suma = suma + (hp + dt*source) *(base_fnc(1,l)+dot_product(dt*conv(1:top), v(1:top,1)))* &
                     gauss_points%weight(l)  
+
             end do
             
             ii = i + (iproc-1)*limits
             bside(ii) = suma*elements%areas(el_id)/gauss_points%area
+
           end do
+
         end if
+
       end do
       
 

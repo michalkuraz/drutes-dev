@@ -1,4 +1,5 @@
 module schwarz_dd2subcyc
+
     use typy
     public :: schwarz_subcyc
     private :: build_xvect_loc
@@ -12,7 +13,9 @@ module schwarz_dd2subcyc
     contains
 
       !>solves the problem using Picard method with Schwarz multiplicative domain decomposition reflecting the nonlinear problem
+
       subroutine schwarz_subcyc(ierr, success)
+
         use typy
         use globals
         use global_objs
@@ -57,13 +60,18 @@ module schwarz_dd2subcyc
         ddcoarse_mesh(:)%iter_count = 4
 	
 	!the residual vector is not allocated, thus we are at the beginning
+
         if (.not. allocated(resvct)) then
+
           first_run = .true.
           allocate(resvct(fin))
           allocate(corrvct(fin))          
           call set_subdomains()
+
         else
+
           first_run = .false.
+
         end if
 
         subdomain(:)%time_step = time_step
@@ -94,7 +102,9 @@ module schwarz_dd2subcyc
 	  subdoms:  do i=1, ubound(subdomain,1)
 	 
 	    if (.not. subdomain(i)%solved) then    
+
 	      call solve_subdomain(subdomain(i), reps=1e-10_rkind)
+
 	    end if
      	    
 	  end do subdoms
@@ -104,14 +114,21 @@ module schwarz_dd2subcyc
 	  call wait()
 	  
 	  if (domains_solved() == ubound(subdomain,1)) then
+
 	    call build_xvect_loc()
 	    
 	    do i=1, ubound(subdomain,1)
+
 	      call combinevals(subdomain(i), short=.false.)
+
 	    end do
+
 	    if (domains_solved() == ubound(subdomain,1)) then
+
 	      EXIT schwarz
+
 	    end if
+
 	  end if
 	
 	end do schwarz
@@ -181,6 +198,7 @@ module schwarz_dd2subcyc
       end subroutine schwarz_subcyc
       
       subroutine solve_subdomain(sub, reps)
+
 	use typy
 	use decomp_vars
 	use decomp_tools
@@ -236,25 +254,40 @@ module schwarz_dd2subcyc
 	sub%xvect(:,3) = sub%xvect(:,2)
 	
 	do i=1, ubound(sub%xvect,1)
+
           pnd = sub%permut(i)
           nd = pde_common%invpermut(pnd)
+
           do j=1, ddinfo%nodesinextsub(nd)%pos
+
             extdom = ddinfo%nodesinextsub(nd)%data(j)
             extpnd = subdomain(extdom)%extinvpermut(pnd)
+
             if (extpnd /= 0) then
+
               subdomain(extdom)%extxvect(extpnd,2:3) = (subdomain(extdom)%extxvect(extpnd,2:3) + sub%xvect(i,2:3))/2.0_rkind
+
             end if
+
           end do
+
         end do
 	
 	
 	if (error < iter_criterion) then
+
 	  sub%time = sub%time + sub%time_step
+
 	  if (abs(sub%time - time - time_step) < 100*epsilon(time)) then
+
 	    call set_solved(sub, mode=1)
+
 	  else
+
 	    call set_solved(sub, mode=0)
+
 	  end if
+
 	end if
 	
 
@@ -264,6 +297,7 @@ module schwarz_dd2subcyc
 
       
       subroutine combinevals(subdom, short)
+
 	use typy
 	use decomp_vars
 	use pde_objs
@@ -276,32 +310,46 @@ module schwarz_dd2subcyc
 	real(kind=rkind) :: value, oldvalue
 	
 	do i=1, ubound(subdom%xvect,1)
+
 	  glob = subdom%permut(i)
 	  globgeom = pde_common%invpermut(glob)
 	  oldvalue = subdom%xvect(i,2)
+
 	  if (ddinfo%nodesinsub(globgeom)%pos >= 1) then
 	  
 	    value = 0
+
 	    do j=1, ddinfo%nodesinsub(globgeom)%pos
+
 	      sub = ddinfo%nodesinsub(globgeom)%data(j)
 	      loc = subdomain(sub)%invpermut(glob)
 	      value = value + subdomain(sub)%returnval(loc, subdom%time)*prolong_mtx%get(glob,sub)
+
 	    end do
 
 	    if (short) then
+
 	      if (subdom%short_dt) then
+
 		subdom%xvect(i, 2:3) = value
+
 	      end if
+
 	    else
+
 	      subdom%xvect(i, 2:3) = value
+
 	    end if
 	    
 	    
 	    if (subdom%solved .and. abs(value-oldvalue) > iter_criterion) then
+
 	      call set_solved(subdom, mode=-1)
+
 	    end if
 	    
 	  end if
+
 	end do
 	
       
@@ -309,6 +357,7 @@ module schwarz_dd2subcyc
       
       
       subroutine build_xvect_loc()
+
 	use typy
 	use globals
 	use global_objs
@@ -323,23 +372,30 @@ module schwarz_dd2subcyc
         
         
         do i = 1, ubound(subdomain,1)
+
 	  do loc = 1, subdomain(i)%ndof
+
 	    glob =  subdomain(i)%permut(loc)
 	    pde_common%xvect(glob,2:3) = pde_common%xvect(glob,2:3) + subdomain(i)%xvect(loc,2:3)*prolong_mtx%get(glob,i)
+
 	  end do
+
 	end do
 	
 	pde_common%xvect(:,1) = pde_common%xvect(:,3)
 	
 	do i=1, ubound(subdomain,1)
+
 	  subdomain(i)%xvect(:,:) = pde_common%xvect(subdomain(i)%permut(1:subdomain(i)%ndof),:)
           subdomain(i)%extxvect(:,:) = pde_common%xvect(subdomain(i)%extpermut(1:subdomain(i)%extndof),:)
+
 	end do
 	
 	
       end subroutine build_xvect_loc
 
       subroutine search_error_cluster(sub, itcnt)
+
         use typy
         use globals
         use global_objs
@@ -355,22 +411,36 @@ module schwarz_dd2subcyc
         
 
         do i=1, ubound(sub%coarse_el,1)
+
           j = sub%coarse_el(i)
           loc_error = 0
+
           do ii=1, ubound(ddcoarse_mesh(j)%elements,1)
+
             el = ddcoarse_mesh(j)%elements(ii)
+
             do jj = 1, ubound(elements%data,2)
+
               nd = elements%data(el,jj)
               xpos = pde(1)%permut(nd)
+
               if (xpos > 0) then
+
           xpos_loc = sub%invpermut(xpos)
           loc_error = max(loc_error, abs(sub%xvect(xpos_loc,3)-sub%xvect(xpos_loc,2)) )
+
               end if
+
             end do
+
           end do
+
           if (loc_error > iter_criterion) then
+
             ddcoarse_mesh(j)%iter_count = ddcoarse_mesh(j)%iter_count + 1
+
           end if
+
         end do
         
 
@@ -381,7 +451,9 @@ module schwarz_dd2subcyc
  
 
       !> counts number of solved subdomains
+
       function domains_solved() result(no)
+
         use typy
         use globals
         use global_objs
@@ -394,15 +466,21 @@ module schwarz_dd2subcyc
         no = 0
 
         do i=1, ubound(subdomain,1)
+
           if (subdomain(i)%solved) then
+
             no = no + 1
+
           end if
+
         end do
 
       end function domains_solved
       
             !> counts number of solved subdomains
+
       function ndofs_solved() result(no)
+
         use typy
         use globals
         use global_objs
@@ -415,15 +493,20 @@ module schwarz_dd2subcyc
         no = 0
 
         do i=1, ubound(subdomain,1)
+
           if (subdomain(i)%solved) then
+
             no = no + subdomain(i)%ndof
+
           end if
+
         end do
 
       end function ndofs_solved
       
     
    subroutine locmat_assembler(mtx, bvect, permut,  dt, invpermut, domain_id, extended, ierr)
+
       use typy
       use globals
       use global_objs
@@ -454,7 +537,9 @@ module schwarz_dd2subcyc
 
       
       if (.not. allocated(elsolved)) then
+
         allocate(elsolved(elements%kolik))
+
       end if
       
       
@@ -471,7 +556,9 @@ module schwarz_dd2subcyc
       loop_nodes: do pnd=1, ubound(permut,1)
 
                       if (permut(pnd) == 0) then
+
                         EXIT loop_nodes
+
                       end if
 
                       nd = permut(pnd)
@@ -492,11 +579,15 @@ module schwarz_dd2subcyc
         
                           
                           if (domain_id /= ddinfo%coarseinsub(coarseel)) then
+
                             quadpnt%extended = .false.
                             quadpnt%subdom = ddinfo%coarseinsub(coarseel)
+
                           else
+
                             quadpnt%subdom=domain_id
                             quadpnt%extended = extended
+
                           end if
 
                           do k = 1, ubound(elements%data,2)
@@ -506,17 +597,24 @@ module schwarz_dd2subcyc
                             
                            
                             if (pnnd /= 0) then 
+
                               if (domain_id /= quadpnt%subdom) then                                   
+
                                 quadpnt%globtime = .false.
                                 quadpnt%time4eval = subdomain(domain_id)%time
                                 quadpnt%column = 2
+
                               else
+
                                 quadpnt%globtime = .true.
+
                               end if
+
                             end if
                             
                             quadpnt%order = nnd
                             elnode_prev(k) = pde(proc)%getval(quadpnt)
+
                           end do 
                           
 			  
@@ -527,6 +625,7 @@ module schwarz_dd2subcyc
                           call build_stiff_np(el, dt, quadpnt_in=quadpnt)
 
                           call pde_common%time_integ(el, quadpnt_in=quadpnt)
+
                           call apply_element_stabilization(el, dt, quadpnt_in=quadpnt)
                                
                           quadpnt%element = el
@@ -540,7 +639,9 @@ module schwarz_dd2subcyc
 	        	  call in2global(el,mtx, bvect, invpermut)
  			  
                           elsolved(el) = .true.
+
                         end if
+
                       end do
 
       end do loop_nodes
@@ -550,6 +651,7 @@ module schwarz_dd2subcyc
     
     
     subroutine set_solved(sub, mode)
+
       use decomp_vars
       
       type(subdomain_str), intent(in out) :: sub
@@ -560,22 +662,33 @@ module schwarz_dd2subcyc
       integer, intent(in) :: mode
       
       select case(mode)
+
 	case(0)
+
 	  sub%xvect(1,:) = sub%xvect(3,:)
+
 	case(1)
+
 	  sub%xvect(1,:) = sub%xvect(3,:)
 	  sub%solved = .true.
+
 	case(2)
+
 	  sub%xvect(1,:) = sub%xvect(3,:)
 	  sub%xvect(2,:) = sub%xvect(3,:)
 	  sub%xvect(4,:) = sub%xvect(3,:)
 	  sub%solved = .true.
+
 	case(-1)
+
 	  sub%solved = .false.
 	  sub%xvect(1,:) = sub%xvect(4,:)
+
 	case default
+
 	  print *, "code bug, incorrect mode value, exited from schwarz_dd2subcyc::set_solved"
 	  error stop
+
       end select
     
     end subroutine set_solved

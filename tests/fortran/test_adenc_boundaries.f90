@@ -7,7 +7,8 @@ program test_adenc_boundaries
   use lsconstitutive, only: ADEls_dirichlet
   implicit none
   character(len=32) :: argument
-  integer :: unit, mode
+  integer(kind=ikind) :: unit
+  integer :: mode
   real(kind=rkind) :: value
 
   call get_command_argument(1, argument)

@@ -26,6 +26,7 @@
 
 
 module pde_objs
+
   use typy
   use sparsematrix 
   use global_objs
@@ -35,6 +36,7 @@ module pde_objs
   
   
   type, public :: pde_fnc_str
+
     procedure(tensor_fnc), nopass, pointer           :: dispersion
     procedure(vector_fnc), nopass, pointer           :: convection
     procedure(vector_fnc), nopass, pointer           :: hidden_convect
@@ -46,20 +48,26 @@ module pde_objs
     procedure(scalar_fnc), nopass, pointer           :: zerord
     procedure(scalar_fnc), nopass, pointer           :: elasticity
     logical                                          :: coupling
+
   end type pde_fnc_str
   
   type, public :: mass_fnc_str
+
     procedure(scalar_fnc), nopass, pointer  :: val
+
   end type mass_fnc_str
   
   type, public :: fluxes_fnc_str
+
     character(len=128), dimension(2) :: name
     procedure(vector_fnc), nopass, pointer  :: val
     real(kind=rkind) :: cumval = 0
+
   end type fluxes_fnc_str
   
 
   type, public :: pde_common_str
+
     real(kind=rkind), dimension(:), allocatable :: bvect
     real(kind=rkind), dimension(:,:), allocatable :: xvect
     integer(kind=ikind), dimension(:), allocatable :: invpermut
@@ -73,10 +81,13 @@ module pde_objs
     integer(kind=ikind) :: current_el
     !> nonlinear solver method (standard Picard, Schwarz Picard, etc...)
     procedure(treat_pde_subrt), nopass, pointer       :: treat_pde
+
   end type pde_common_str
   
   !> data structure  to carry boundary value problem setup, allocation starts at 100
+
   type, public :: boundary_vals
+
     integer(kind=ikind) :: ID
     integer(kind=ikind) :: code
     logical             :: file
@@ -93,6 +104,7 @@ module pde_objs
     !> current position in series data
     integer(kind=ikind) :: series_pos
     integer(kind=ikind) :: xy_count
+
   end type boundary_vals
   
 
@@ -100,7 +112,9 @@ module pde_objs
   !> type definition for common quasilinear partial diferential equation in a format
   !! \f[  \begin{split} \sum_{i=1}^n C_{1,i} \frac{\partial p_i}{\partial t} &= \sum_{i=1}^n \left( \nabla \cdot \mathbf{D}_{1,i} \nabla p_i - \nabla  \cdot (\vec{q}_{1,i} p_i) -  \sum_{r=0}^{r_{max}} \lambda_{1,i}p_i^r \right)  \\ \\ & \vdots  \\  \sum_{i=1}^n C_{n,i} \frac{\partial p_i}{\partial t} &= \sum_{i=1}^n \left( \nabla \cdot \mathbf{D}_{n,i} \nabla p_i - \nabla  \cdot (\vec{q}_{n,i} p_i) -  \sum_{r=0}^{r_{max}} \lambda_{n,i}p_i^r \right) \end{split} \f]
   !<
+
   type, public :: PDE_str
+
     !> the first item is used for filename 
     !! the second item is printed inside the text files
     !>
@@ -125,7 +139,7 @@ module pde_objs
     procedure(step_end_fnc), pass(pde_loc), pointer :: step_end => null()
     procedure(boundary_history_fnc), pass(pde_loc), pointer :: boundary_history => null()
     ! Optional fixed active-element domain; absent for ordinary PDEs.
-    logical, allocatable :: assembly_mask(:)
+    logical, dimension(:), allocatable :: assembly_mask
     !> bc is allocated in read_inputs::readbcval
     type(boundary_vals), dimension(:), allocatable   :: bc
     integer(kind=ikind), dimension(:), allocatable   :: permut
@@ -148,26 +162,35 @@ module pde_objs
     !<
     logical :: symmetric = .false.
     procedure(getval_str), pass(pde_loc), pointer :: getval
+
     contains 
+
       !> get vector of gradient of the solution
       procedure :: getgrad=>getgradp1
+
   end type PDE_str
   
   
   abstract interface
+
     function getval_str(pde_loc, quadpnt) result(value)
+
       use typy
       use global_objs
       import::pde_str
       class(pde_str), intent(in) :: pde_loc
       type(integpnt_str), intent(in) :: quadpnt
       real(kind=rkind) :: value
+
     end function getval_str
+
   end interface
 
   abstract interface
+
       subroutine matrix_solver(A,b,x,itmax1,reps1,ilev1,itfin1,repsfin1,&
                   ll1,ll2,cond1,opcnt1,errcode1)
+
         use mtx
         use sparsematrix
         use typy
@@ -209,19 +232,26 @@ module pde_objs
         !! - 5 ... vycerpan povoleny pocet iteraci
         !! - 6 ... prestalo klesat residuum i energie
         integer, intent(out), optional :: errcode1
+
     end subroutine matrix_solver
+
   end interface 
 
 
   type, public :: bcpts_str
+
     integer(kind=ikind), dimension(:), allocatable:: border
     integer(kind=ikind) :: extpt
+
   end type bcpts_str
   
   
  !> abstract interface for boundary value function
+
   abstract interface
+
     subroutine bc_fnc(pde_loc, element, node, value, code, valarray, bcpts) 
+
       use typy
       import :: pde_str
       import :: bcpts_str
@@ -246,31 +276,45 @@ module pde_objs
       real(kind=rkind), dimension(:), intent(out), optional :: valarray
       !> normal boundary vector
       type(bcpts_str), intent(in), optional :: bcpts
+
     end subroutine bc_fnc
+
   end interface 
 
   abstract interface
-    subroutine step_begin_fnc(pde_loc,t,dt)
-      import :: pde_str,rkind
+
+    subroutine step_begin_fnc(pde_loc, t, dt)
+
+      import :: pde_str, rkind
       class(pde_str), intent(in) :: pde_loc
       real(kind=rkind), intent(in) :: t
       real(kind=rkind), intent(in out) :: dt
-    end subroutine
-    subroutine step_end_fnc(pde_loc,accepted)
+
+    end subroutine step_begin_fnc
+
+    subroutine step_end_fnc(pde_loc, accepted)
+
       import :: pde_str
       class(pde_str), intent(in) :: pde_loc
       logical, intent(in) :: accepted
-    end subroutine
-    function boundary_history_fnc(pde_loc,el,node,column) result(value)
-      import :: pde_str,ikind,rkind
+
+    end subroutine step_end_fnc
+
+    function boundary_history_fnc(pde_loc, el, node, column) result(value)
+
+      import :: pde_str, ikind, rkind
       class(pde_str), intent(in) :: pde_loc
-      integer(kind=ikind), intent(in) :: el,node,column
+      integer(kind=ikind), intent(in) :: el, node, column
       real(kind=rkind) :: value
+
     end function
+
   end interface
 
   abstract interface
+
     subroutine element_stabilization_fnc(pde_loc, el_id, dt, quadpnt_in)
+
       use typy
       use global_objs
       import :: pde_str
@@ -278,12 +322,17 @@ module pde_objs
       integer(kind=ikind), intent(in) :: el_id
       real(kind=rkind), intent(in) :: dt
       type(integpnt_str), intent(in), optional :: quadpnt_in
+
     end subroutine element_stabilization_fnc
+
   end interface
 
   !> abstract interface for scalar function
+
   abstract interface
+
     function scalar_fnc(pde_loc, layer, quadpnt, x) result(val)
+
       use typy
       use global_objs
       import :: pde_str
@@ -296,12 +345,17 @@ module pde_objs
       integer(kind=ikind), intent(in) :: layer
       !> return value
       real(kind=rkind)                :: val
+
     end function scalar_fnc
+
   end interface 
 
   !> abstract interface for vector function
+
   abstract interface
+
     subroutine vector_fnc(pde_loc, layer, quadpnt, x, vector_in, vector_out, scalar)
+
       use typy
       use global_objs
       import :: pde_str
@@ -318,14 +372,19 @@ module pde_objs
       real(kind=rkind), dimension(:), intent(out), optional :: vector_out
       !> relative scalar value of the nonlinear function 
       real(kind=rkind), intent(out), optional               :: scalar
+
     end subroutine vector_fnc
+
   end interface 
 
 
 
   !> abstract interface for vector function
+
   abstract interface
+
     subroutine tensor_fnc(pde_loc, layer, quadpnt, x, tensor, scalar)
+
       use typy
       use global_objs
       import :: pde_str
@@ -340,58 +399,83 @@ module pde_objs
       real(kind=rkind), dimension(:,:), intent(out), optional :: tensor
       !> relative scalar value of the nonlinear function 
       real(kind=rkind), intent(out), optional                 :: scalar
+
     end subroutine tensor_fnc 
+
   end interface
 
 
   abstract interface
+
     subroutine timeint_fnc(el_id, domain_id, quadpnt_in)
+
       use typy
       use global_objs
       integer(kind=ikind), intent(in) :: el_id
       !>subdomain number (inserted only if domain decomposition used and if only local data needed)
       integer(kind=ikind), intent(in), optional :: domain_id
       type(integpnt_str), intent(in out), optional :: quadpnt_in
+
     end subroutine timeint_fnc
+
   end interface
 
   abstract interface
+
     function logical_fnc() result(valid)
+
       logical :: valid
+
     end function logical_fnc
+
   end interface
   
   abstract interface
+
     function time_check(pde_loc) result(ok)
+
       use typy
       import :: pde_str
       class(pde_str), intent(in) :: pde_loc
       logical :: ok
+
     end function time_check
+
   end interface
 
 
   abstract interface
+
     subroutine icond_fnc(pde_loc)
+
       use typy
       import :: pde_str
       class(PDE_str), intent(in out) :: pde_loc
+
     end subroutine icond_fnc
+
   end interface
 
 
   abstract interface
+
     subroutine basic_subrt()
+
     end subroutine basic_subrt
+
   end interface
 
 
   abstract interface
+
     subroutine treat_pde_subrt(ierr, success)
+
       use typy
       integer, intent(out) :: ierr
       logical, intent(out) :: success
+
     end subroutine treat_pde_subrt
+
   end interface
   
   public :: getgradp1, getvalp1, do_nothing
@@ -406,7 +490,9 @@ module pde_objs
   
 
     !> returns solution gradient for p1 approximation
+
     subroutine getgradp1(pde_loc, quadpnt, grad)
+
       use typy
       use decomp_vars
       use core_tools
@@ -427,74 +513,112 @@ module pde_objs
       
       
       if (.not. allocated(grad)) then
+
         allocate(grad(drutes_config%dimen))
+
       else if (ubound(grad,1) /= drutes_config%dimen ) then
+
         deallocate(grad)
         allocate(grad(drutes_config%dimen))
+
       end if
       
       if (.not. allocated(pts)) then
+
         allocate(pts(ubound(elements%data,2)))
         allocate(quadpntloc(ubound(elements%data,2)))
+
         if (drutes_config%dimen > 1) then
+
           allocate(a(drutes_config%dimen+1))
           allocate(b(drutes_config%dimen+1))
           allocate(c(drutes_config%dimen+1))
           if (drutes_config%dimen > 2) allocate(d(drutes_config%dimen + 1))
+
         end if
+
       end if
       
       
       select case(quadpnt%type_pnt)
+
         case("gqnd", "obpt", "xypt")
+
           top = 1
+
         case("ndpt")
+
           !in case of ndpt the gradient is assumed as an average value of gradients at neighbourhood points
           top = nodes%element(quadpnt%order)%pos
+
         case default
+
           print *, "RUNTIME ERROR: incorrect quadpnt type definition (value quadpnt%type_pnt)"
           print *, "the value specified in code was:", quadpnt%type_pnt
           print *, "exited from pde_objs::getgradp1"
           ERROR STOP
+
       end select
       
       if (top == 0) then
+
         print *, "something is wrong, exited from pde_objs::getgrad"
         print *, "contact developer michalkuraz@gmail.com"
         ERROR STOP
+
       end if
       
       
       gradloc = 0
+
       do i=1, top  
+
         select case(quadpnt%type_pnt)
+
           case("gqnd")
+
             el = quadpnt%element
+
           case("xypt")
+
             if (quadpnt%element > 0) then
+
               el = quadpnt%element
+
             else
+
               print *, "specify correct value for quadpnt%element"
               print *, "exited from pde_objs::getgradp1"
               ERROR STOP
+
             end if
+
           case("obpt")
+
             el = observation_array(quadpnt%order)%element
+
           case("ndpt")
+
             el = nodes%element(quadpnt%order)%data(i)
+
         end select
       
         pts = elements%data(el,:)
       
         quadpntloc(:) = quadpnt
         quadpntloc(:)%type_pnt = "ndpt"
+
         select case(drutes_config%dimen)
+
           case(1)
+
             dx = nodes%data(pts(2),1) - nodes%data(pts(1),1)
             quadpntloc(1)%order = pts(1)
             quadpntloc(2)%order = pts(2)
             gradloc(1) = gradloc(1) + (getvalp1(pde_loc,quadpntloc(2)) - getvalp1(pde_loc, quadpntloc(1)))/dx
+
           case(2)
+
             a(1:drutes_config%dimen) = nodes%data(pts(1),:)
             b(1:drutes_config%dimen) = nodes%data(pts(2),:)
             c(1:drutes_config%dimen) = nodes%data(pts(3),:)
@@ -512,7 +636,9 @@ module pde_objs
             call plane_derivative(a,b,c,grad(1), grad(2))
 
             gradloc(1:2) = gradloc(1:2) + grad
+
           case(3)
+
             a(1:drutes_config%dimen) = nodes%data(pts(1),:)
             b(1:drutes_config%dimen) = nodes%data(pts(2),:)
             c(1:drutes_config%dimen) = nodes%data(pts(3),:)
@@ -531,6 +657,7 @@ module pde_objs
             
           
         end select
+
       end do
       
       grad = gradloc(1:drutes_config%dimen)/top
@@ -538,7 +665,9 @@ module pde_objs
     end subroutine getgradp1
     
     !> returns solution value for p1 approximation
+
     function getvalp1(pde_loc, quadpnt) result(val)
+
       use typy
       use decomp_vars
       
@@ -555,16 +684,24 @@ module pde_objs
 
 
       if (quadpnt%globtime .or. quadpnt%column==1) then
+
         RETURN
+
       else
+
         quadpntloc = quadpnt
         quadpntloc%column = 4
+
       if (quadpnt%ddlocal) then
+
         timeglob = subdomain(quadpnt%subdom)%time
         timeprev = subdomain(quadpnt%subdom)%time - subdomain(quadpnt%subdom)%time_step
+
       else
+
         timeglob = time
         timeprev = time-time_step
+
       end if
 
         valprev = getvalp1loc(pde_loc, quadpntloc)
@@ -577,7 +714,9 @@ module pde_objs
     
     
     !> in case of asynchronyous temporal integration this function is separated from getvalp1, if standard temporal integration used, then this function is called from the first line of getvalp1
+
     function getvalp1loc(pde_loc, quadpnt, stopme) result(val)
+
       use typy
       use decomp_vars
       use core_tools
@@ -601,39 +740,58 @@ module pde_objs
       if (.not. allocated(a)) allocate(a(drutes_config%dimen+1, drutes_config%dimen+1))
       
        if (quadpnt%type_pnt=="numb") then
+
          val = quadpnt%this_is_the_value
          RETURN
+
        end if
       
       if (.not. allocated(pde_common%xvect)) then
+
         print *, "runtime error, you are probably calling getval function too early, vector with solution is not yet allocated"
         print *, "contact Michal -> michalkuraz@gmail.com"
         ERROR STOP
+
       end if
       
       
       select case(quadpnt%type_pnt)
+
         case("gqnd", "obpt", "xypt")
+
           if (.not. allocated(pts) ) then
+
             allocate(pts(ubound(elements%data,2)))
             allocate(ppts(ubound(elements%data,2)))
             allocate(ndvals(ubound(elements%data,2)))
+
           end if
           
           
           select case(quadpnt%type_pnt)
+
             case("gqnd")
+
               el = quadpnt%element
+
             case("xypt")
+
               if (quadpnt%element > 0) then
+
                 el = quadpnt%element
+
               else
+
                 print *, "specify correct value for quadpnt%element"
                 print *, "exited from pde_objs::getvalp1loc"
                 ERROR STOP
+
               end if
+
             case("obpt")
+
               el = observation_array(quadpnt%order)%element
+
           end select
             
           pts = elements%data(el,:)
@@ -641,15 +799,23 @@ module pde_objs
           
         
           if (quadpnt%ddlocal) then
+
             if (.not. quadpnt%extended) then
+
               where (ppts /= 0)
                 ppts = subdomain(quadpnt%subdom)%invpermut(ppts)
+
               end where
+
             else 
+
               where (ppts /= 0)
                 ppts = subdomain(quadpnt%subdom)%extinvpermut(ppts)
+
               end where
+
             end if
+
           end if
 
 
@@ -657,67 +823,102 @@ module pde_objs
           do i=1, ubound(elements%data,2)
       
             if (ppts(i) > 0) then
+
               if (.not. quadpnt%ddlocal) then
+
                 ndvals(i) = pde_common%xvect(ppts(i), quadpnt%column)
+
               else
+
                 if (.not. quadpnt%extended) then
+
                   ndvals(i) = subdomain(quadpnt%subdom)%xvect(ppts(i), quadpnt%column)
+
                 else
+
                   ndvals(i) = subdomain(quadpnt%subdom)%extxvect(ppts(i), quadpnt%column)
+
                 end if
+
               end if
+
             else
 
               edge = nodes%edge(pts(i))
 
                       
               if (associated(pde_loc%boundary_history)) then
-                ndvals(i)=pde_loc%boundary_history(el,i,quadpnt%column)
+
+                ndvals(i) = pde_loc%boundary_history(el, i, quadpnt%column)
+
               else
+
                 call pde_loc%bc(edge)%value_fnc(pde_loc, el, i, ndvals(i))
+
               end if
       
             end if
+
           end do
 
 
           select case(quadpnt%type_pnt)
+
             case("gqnd")
+
               select case(drutes_config%dimen)
+
                 case(1)
+
                   val = (ndvals(2) - ndvals(1))*gauss_points%point(quadpnt%order,1) + ndvals(1)
+
                 case(2)
+
                   call plane_derivative((/0.0_rkind, 0.0_rkind, ndvals(1)/), (/1.0_rkind, 0.0_rkind, ndvals(2)/), (/0.0_rkind, &
                      1.0_rkind, ndvals(3)/), xder, yder)
                   val = ndvals(1) + xder*gauss_points%point(quadpnt%order,1) + yder*gauss_points%point(quadpnt%order,2)
+
                 case(3)
+
                   call hyperplane_coeff([0.0_rkind,0.0_rkind, 0.0_rkind,ndvals(1)], [1.0_rkind, 0.0_rkind, 0.0_rkind,ndvals(2)], &
                                         [0.0_rkind, 1.0_rkind, 0.0_rkind,ndvals(3)], [0.0_rkind, 0.0_rkind, 1.0_rkind,ndvals(4)], &
                                         coeffs)
                   val = (coeffs(1)*gauss_points%point(quadpnt%order,1) + coeffs(2)*gauss_points%point(quadpnt%order,2) + &
                         coeffs(3)*gauss_points%point(quadpnt%order,3) + coeffs(5))/(-coeffs(4))
+
               end select
+
             case("obpt")
+
               select case(drutes_config%dimen)
+
                 case(1)
+
                    val = (ndvals(2) - ndvals(1))/(nodes%data(pts(2),1) - nodes%data(pts(1),1))* & 
                    (observation_array(quadpnt%order)%xyz(1) - &
                    nodes%data(pts(1),1)) + ndvals(1)
+
                 case(2)
+
                   do i=1,3
+
                     a(i,1:2) = nodes%data(pts(i),:)
                     a(i,3) = ndvals(i)
+
                   end do
         
                   call plane_derivative(a(1,:), a(2,:), a(3,:), xder, yder)
                 
                   val = ndvals(1) + xder*(observation_array(quadpnt%order)%xyz(1) - a(1,1)) + &
                   yder * (observation_array(quadpnt%order)%xyz(2) - a(1,2))
+
                 case(3)
                 
                   do i=1,4
+
                     a(i,1:3) = nodes%data(pts(i),:)
                     a(i,4) = ndvals(i)
+
                   end do
                   
                   call hyperplane_coeff(a(1,:), a(2,:), a(3,:), a(4,:), coeffs)
@@ -727,16 +928,24 @@ module pde_objs
                 
                   
               end select
+
             case("xypt")
+
               select case(drutes_config%dimen)
+
                 case(1)
+
                    val = (ndvals(2) - ndvals(1))/(nodes%data(pts(2),1) - nodes%data(pts(1),1))* & 
                    (quadpnt%xy(1) - &
                    nodes%data(pts(1),1)) + ndvals(1)
+
                 case(2)
+
                   do i=1,3
+
                     a(i,1:2) = nodes%data(pts(i),:)
                     a(i,3) = ndvals(i)
+
                   end do
         
                   call plane_derivative(a(1,:), a(2,:), a(3,:), xder, yder)
@@ -747,8 +956,10 @@ module pde_objs
                 case(3)
                 
                   do i=1,4
+
                     a(i,1:3) = nodes%data(pts(i),:)
                     a(i,4) = ndvals(i)
+
                   end do
                   
                   call hyperplane_coeff(a(1,:), a(2,:), a(3,:), a(4,:), coeffs)
@@ -764,11 +975,15 @@ module pde_objs
                   
         
         case("ndpt")
+
           i = pde_loc%permut(quadpnt%order)
 
           if (i > 0) then
+
             if (.not. quadpnt%ddlocal) then
+
               val = pde_common%xvect(i, quadpnt%column)
+
             else
             
               if (.not. quadpnt%extended) then
@@ -778,31 +993,49 @@ module pde_objs
                 val = subdomain(quadpnt%subdom)%xvect(i, quadpnt%column)
 
               else
+
                 i = subdomain(quadpnt%subdom)%extinvpermut(i)
                 val = subdomain(quadpnt%subdom)%extxvect(i, quadpnt%column)
+
               end if
+
             end if
+
           else
+
             edge = nodes%edge(quadpnt%order)
             el = nodes%element(quadpnt%order)%data(1)
+
             do i=1, ubound(elements%data,2)
+
               if (elements%data(el,i) == quadpnt%order) then
+
                 order = i
                 EXIT
+
               end if
+
             end do
+
             if (associated(pde_loc%boundary_history)) then
-              val=pde_loc%boundary_history(el,order,quadpnt%column)
+
+              val = pde_loc%boundary_history(el, order, quadpnt%column)
+
             else
+
               call pde_loc%bc(edge)%value_fnc(pde_loc, el, order, val)
+
             end if
+
           end if
 
         case default
+
           print *, "RUNTIME ERROR: incorrect quadpnt type definition (value quadpnt%type_pnt)"
           print *, "the value specified in code was:", quadpnt%type_pnt
           print *, "exited from pde_objs::getvalp1"
           ERROR STOP
+
       end select
 	  
 

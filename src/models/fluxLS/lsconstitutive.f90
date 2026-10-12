@@ -1,450 +1,595 @@
 module lsconstitutive
+
   use ncboundary, only: active_node_element
-  use nchydroflow, only: LShydro,hydro_value,hydro_velocity
+  use nchydroflow, only: LShydro, hydro_value, hydro_velocity
 
-  contains 
-  
-  
-    
-  
-    subroutine ncflux(pde_loc, layer, quadpnt, x, grad,  flux, flux_length)
-      use typy
-      use globals 
-      use global_objs
-      use pde_objs
-      use geom_tools
-      use debug_tools
-      use datetime
-      use ncglobvars
-      use core_tools
-      use netcdfflux
-      use ncfluxarea
-      use init_netcdf
-    
-      class(pde_str), intent(in) :: pde_loc
-      integer(kind=ikind), intent(in)                          :: layer
-      type(integpnt_str), intent(in), optional :: quadpnt    
-      real(kind=rkind), intent(in), dimension(:), optional                   :: x
-      !> this value is optional, because it is required by the vector_fnc procedure pointer global definition
-      real(kind=rkind), dimension(:), intent(in), optional     :: grad
-      real(kind=rkind), dimension(:), intent(out), optional    :: flux
-      real(kind=rkind), intent(out), optional                  :: flux_length
-      
-      real(kind=rkind), dimension(2) :: xy, gradsl
-      integer(kind=ikind) :: nowhrs, el
-      real(kind=rkind) :: tmp, q, Wcell,h,divq,qvector(2)
-      logical :: success
-      character(len=1024) :: errmsg
-      
-      
-      select case(quadpnt%type_pnt)
-        case("gqnd", "obpt")
-          if (.not. ncfluxdata%activeel(quadpnt%element)) then
-            if (present(flux)) flux = 0
-            if (present(flux_length)) flux_length = 0
-            RETURN
-          end if
-        case("ndpt")
-          el = active_node_element(quadpnt%order)
-            if (.not. ncfluxdata%activeel(el) )then
-              if (present(flux)) flux = 0
-              if (present(flux_length)) flux_length = 0
-            RETURN
-          end if
-          CONTINUE
-      end select
-      
- 
-      
-      call getcoor(quadpnt, xy)
-      
-      
-      nowhrs = ora_di_ini + int(adenc_coefficient_time()/86400.0_rkind)*24
-      
+contains
 
-      
-      select case(quadpnt%type_pnt)
-        case("gqnd", "obpt")
-          el = quadpnt%element
+  subroutine ncflux(pde_loc, layer, quadpnt, x, grad, flux, flux_length)
 
+    use typy
+    use globals
+    use global_objs
+    use pde_objs
+    use geom_tools
+    use debug_tools
+    use datetime
+    use ncglobvars
+    use core_tools
+    use netcdfflux
+    use ncfluxarea
+    use init_netcdf
 
-        case("numb") 
-          print *, "unable to print convection value for quadpnt%type_pnt = numb "
-          print *, "exited from lsconstitutive::ncflux"
-          ERROR STOP
-        case("ndpt")
-          el = active_node_element(quadpnt%order)
-          
-        case default
-          print *, "incorrect quadpnt%type_pnt: ", quadpnt%type_pnt
-          print *, "exited from lsconstitutive::ncflux"
-          ERROR STOP
-      end select
-      
-      
-      if (LShydro) then
-        call hydro_value(int(el),xy,qvector,h,divq)
-        if (present(flux)) flux=qvector
-        if (present(flux_length)) flux_length=norm2(qvector)
-        return
+    class(pde_str), intent(in) :: pde_loc
+    integer(kind=ikind), intent(in)                          :: layer
+    type(integpnt_str), intent(in), optional :: quadpnt
+    real(kind=rkind), intent(in), dimension(:), optional                   :: x
+    !> this value is optional, because it is required by the vector_fnc procedure pointer global definition
+    real(kind=rkind), dimension(:), intent(in), optional     :: grad
+    real(kind=rkind), dimension(:), intent(out), optional    :: flux
+    real(kind=rkind), intent(out), optional                  :: flux_length
+
+    real(kind=rkind), dimension(2) :: xy, gradsl
+    integer(kind=ikind) :: nowhrs, el
+    real(kind=rkind) :: tmp, q, Wcell, h, divq
+    real(kind=rkind), dimension(2) :: qvector
+    logical :: success
+    character(len=1024) :: errmsg
+
+    select case (quadpnt%type_pnt)
+
+    case ("gqnd", "obpt")
+
+      if (.not. ncfluxdata%activeel(quadpnt%element)) then
+
+        if (present(flux)) then
+
+          flux = 0
+
+        end if
+
+        if (present(flux_length)) then
+
+          flux_length = 0
+
+        end if
+
+        RETURN
+
       end if
-      Wcell = ncflux_active_width(el)
-      
-      gradsl = ncfluxdata%fluxvct(el,:)
-      
-!       call ncflux_get_xy(xy(1), xy(2),  nowhrs, q, success, errmsg)
-      call ncflux_get_xy_cell(xy(1), xy(2),  nowhrs, q, success, errmsg)
-      
-      if (.not. success) then
-        q=0.0_rkind
+
+    case ("ndpt")
+
+      el = active_node_element(quadpnt%order)
+
+      if (.not. ncfluxdata%activeel(el)) then
+
+        if (present(flux)) then
+
+          flux = 0
+
+        end if
+
+        if (present(flux_length)) then
+
+          flux_length = 0
+
+        end if
+
+        RETURN
+
       end if
-      
-      if (Wcell <= 0.0_rkind) then
-        if (present(flux)) flux = 0.0_rkind
-        if (present(flux_length)) flux_length = 0.0_rkind
-        return
-      end if
+
+      CONTINUE
+
+    end select
+
+    call getcoor(quadpnt, xy)
+
+    nowhrs = ora_di_ini + int(adenc_coefficient_time()/86400.0_rkind)*24
+
+    select case (quadpnt%type_pnt)
+
+    case ("gqnd", "obpt")
+
+      el = quadpnt%element
+
+    case ("numb")
+
+      print *, "unable to print convection value for quadpnt%type_pnt = numb "
+      print *, "exited from lsconstitutive::ncflux"
+      ERROR STOP
+
+    case ("ndpt")
+
+      el = active_node_element(quadpnt%order)
+
+    case default
+
+      print *, "incorrect quadpnt%type_pnt: ", quadpnt%type_pnt
+      print *, "exited from lsconstitutive::ncflux"
+      ERROR STOP
+
+    end select
+
+    if (LShydro) then
+
+      call hydro_value(int(el), xy, qvector, h, divq)
 
       if (present(flux)) then
-         flux = q*gradsl/Wcell
-! flux = Wcell
+
+        flux = qvector
+
       end if
-      
+
       if (present(flux_length)) then
-        flux_length = norm2(q*gradsl/Wcell)
+
+        flux_length = norm2(qvector)
+
       end if
-      
-  
-    end subroutine ncflux
-    
-    function velocity(Q, w) result(v)
-      use ncglobvars
-      use typy
-      
-      real(kind=rkind), intent(in) :: Q, w
-      real(kind=rkind) :: v
-      
-      v = hydro_velocity(Q,w)
-    
-    end function velocity
-    
-    function heff(Q, w, v) result(h)
-      use typy
-      real(kind=rkind), intent(in) :: Q, w, v
-      real(kind=rkind) :: h
-      
-      h = Q/(w*v)
-      
-    
-    end function heff
-      
-    
-    subroutine ADEls_convection(pde_loc, layer, quadpnt, x, vector_in, vector_out, scalar)
-      use typy
-      use global_objs
-      use pde_objs
-      use ADE_globals
-      class(pde_str), intent(in) :: pde_loc
-      !> value of the nonlinear function
-      real(kind=rkind), dimension(:), intent(in), optional    :: x
-      !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
-      type(integpnt_str), intent(in), optional :: quadpnt
-      !> material ID
-      integer(kind=ikind), intent(in) :: layer
-      !> input vector
-      real(kind=rkind), dimension(:), intent(in), optional  :: vector_in
-      !> output vector
-      real(kind=rkind), dimension(:), intent(out), optional :: vector_out
-      !> relative scalar value of the nonlinear function 
-      real(kind=rkind), intent(out), optional               :: scalar
-    
-     
-      if (present(vector_out)) then
-        call pde(1)%flux(layer, quadpnt, vector_out=vector_out)
+
+      return
+
+    end if
+
+    Wcell = ncflux_active_width(el)
+
+    gradsl = ncfluxdata%fluxvct(el, :)
+
+!       call ncflux_get_xy(xy(1), xy(2),  nowhrs, q, success, errmsg)
+    call ncflux_get_xy_cell(xy(1), xy(2), nowhrs, q, success, errmsg)
+
+    if (.not. success) then
+
+      q = 0.0_rkind
+
+    end if
+
+    if (Wcell <= 0.0_rkind) then
+
+      if (present(flux)) then
+
+        flux = 0.0_rkind
+
       end if
-        
-      if (present(scalar)) then
-        call pde(1)%flux(layer, quadpnt, scalar=scalar)
+
+      if (present(flux_length)) then
+
+        flux_length = 0.0_rkind
+
       end if
-      
-    end subroutine ADEls_convection
-    
-    
-    function ADEls_tder_coef(pde_loc, layer, quadpnt, x) result(val)
-      use typy
-      use global_objs
-      use pde_objs
-      use ADE_globals
-      use ncglobvars
-      use netcdfflux
-      use ncfluxarea
-      use geom_tools
-      
-      class(pde_str), intent(in) :: pde_loc
-      !> value of the nonlinear function
-      real(kind=rkind), dimension(:), intent(in), optional    :: x
-      !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
-      type(integpnt_str), intent(in), optional :: quadpnt
-      !> material ID
-      integer(kind=ikind), intent(in) :: layer
-      !> return value
-      real(kind=rkind)                :: val
-      
-      real(kind=rkind), dimension(2) :: xy
-      integer(kind=ikind) :: nowhrs, el
-          
-      logical :: success
-      character(len=1024) :: errmsg
-      real(kind=rkind) :: q, v, Wcell,qvector(2),divq
-      
-      
-      select case(quadpnt%type_pnt)
-        case("gqnd", "obpt")
-          if (.not. ncfluxdata%activeel(quadpnt%element)) then
-            val = 1
-            RETURN
-          end if
-        case("ndpt")
-          el = active_node_element(quadpnt%order)
-            if (.not. ncfluxdata%activeel(el) )then
-              val = 1
-              RETURN
-            end if
-      end select
-      
-      call getcoor(quadpnt, xy)
-      if (LShydro) then
-        el=quadpnt%element
-        if (quadpnt%type_pnt=='ndpt') el=active_node_element(quadpnt%order)
-        call hydro_value(int(el),xy,qvector,val,divq)
-        return
-      end if
-      
-      nowhrs = ora_di_ini + int(adenc_coefficient_time()/86400.0_rkind)*24
-      
-      call ncflux_get_xy_cell(xy(1), xy(2),  nowhrs, q, success, errmsg)
-      
-      ! Dry cells and failed lookups have no advective storage contribution;
-      ! retain the existing inactive-cell convention without dividing by zero.
-      if (.not. success .or. q <= 0.0_rkind) then
+
+      return
+
+    end if
+
+    if (present(flux)) then
+
+      flux = q*gradsl/Wcell
+! flux = Wcell
+
+    end if
+
+    if (present(flux_length)) then
+
+      flux_length = norm2(q*gradsl/Wcell)
+
+    end if
+
+  end subroutine ncflux
+
+  function velocity(Q, w) result(v)
+
+    use ncglobvars
+    use typy
+
+    real(kind=rkind), intent(in) :: Q, w
+    real(kind=rkind) :: v
+
+    v = hydro_velocity(Q, w)
+
+  end function velocity
+
+  function heff(Q, w, v) result(h)
+
+    use typy
+    real(kind=rkind), intent(in) :: Q, w, v
+    real(kind=rkind) :: h
+
+    h = Q/(w*v)
+
+  end function heff
+
+  subroutine ADEls_convection(pde_loc, layer, quadpnt, x, vector_in, vector_out, scalar)
+
+    use typy
+    use global_objs
+    use pde_objs
+    use ADE_globals
+    class(pde_str), intent(in) :: pde_loc
+    !> value of the nonlinear function
+    real(kind=rkind), dimension(:), intent(in), optional    :: x
+    !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
+    type(integpnt_str), intent(in), optional :: quadpnt
+    !> material ID
+    integer(kind=ikind), intent(in) :: layer
+    !> input vector
+    real(kind=rkind), dimension(:), intent(in), optional  :: vector_in
+    !> output vector
+    real(kind=rkind), dimension(:), intent(out), optional :: vector_out
+    !> relative scalar value of the nonlinear function
+    real(kind=rkind), intent(out), optional               :: scalar
+
+    if (present(vector_out)) then
+
+      call pde(1)%flux(layer, quadpnt, vector_out=vector_out)
+
+    end if
+
+    if (present(scalar)) then
+
+      call pde(1)%flux(layer, quadpnt, scalar=scalar)
+
+    end if
+
+  end subroutine ADEls_convection
+
+  function ADEls_tder_coef(pde_loc, layer, quadpnt, x) result(val)
+
+    use typy
+    use global_objs
+    use pde_objs
+    use ADE_globals
+    use ncglobvars
+    use netcdfflux
+    use ncfluxarea
+    use geom_tools
+
+    class(pde_str), intent(in) :: pde_loc
+    !> value of the nonlinear function
+    real(kind=rkind), dimension(:), intent(in), optional    :: x
+    !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
+    type(integpnt_str), intent(in), optional :: quadpnt
+    !> material ID
+    integer(kind=ikind), intent(in) :: layer
+    !> return value
+    real(kind=rkind)                :: val
+
+    real(kind=rkind), dimension(2) :: xy
+    integer(kind=ikind) :: nowhrs, el
+
+    logical :: success
+    character(len=1024) :: errmsg
+    real(kind=rkind) :: q, v, Wcell, divq
+    real(kind=rkind), dimension(2) :: qvector
+
+    select case (quadpnt%type_pnt)
+
+    case ("gqnd", "obpt")
+
+      if (.not. ncfluxdata%activeel(quadpnt%element)) then
+
         val = 1
         RETURN
-      end if
-      
-      select case(quadpnt%type_pnt)
-        case("gqnd", "obpt")
-          el = quadpnt%element
 
-        case("numb") 
-          print *, "unable to print convection value for quadpnt%type_pnt = numb "
-          print *, "exited from lsconstitutive::ncflux"
-          ERROR STOP
-        case("ndpt")
-          el = active_node_element(quadpnt%order)
-        case default
-          print *, "incorrect quadpnt%type_pnt: ", quadpnt%type_pnt
-          print *, "exited from lsconstitutive::ncflux"
-          ERROR STOP
-      end select
-      
-      
-      Wcell = ncflux_active_width(el)
-      if (Wcell <= 0.0_rkind) then
-        val = 1.0_rkind
-        return
       end if
-      
-      v = velocity(q,Wcell)
-      
-      
-      val = q/(Wcell*v)
-      
-      if (isnan(val)) then
-        print *, Wcell, q, v
-        stop
+
+    case ("ndpt")
+
+      el = active_node_element(quadpnt%order)
+
+      if (.not. ncfluxdata%activeel(el)) then
+
+        val = 1
+        RETURN
+
       end if
-      
-              
-    end function ADEls_tder_coef
-    
-    
-    function ADEls_mass(pde_loc, layer, quadpnt, x) result(val)
-      use typy
-      use global_objs
-      use pde_objs
-      use ADE_globals
-      use debug_tools
-      use netcdfflux
-      use ncglobvars, only: LSconservative
-      
-      class(pde_str), intent(in) :: pde_loc
-      !> value of the nonlinear function
-      real(kind=rkind), dimension(:), intent(in), optional    :: x
-      !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
-      type(integpnt_str), intent(in), optional :: quadpnt
-      !> material ID
-      integer(kind=ikind), intent(in) :: layer
-      !> return value
-      real(kind=rkind)                :: val 
-      real(kind=rkind)                :: q, c
-      integer(kind=ikind) :: el
-      
-      select case(quadpnt%type_pnt)
-        case("gqnd", "obpt")
-          el = quadpnt%element
-        case("numb") 
-          print *, "unable to print convection value for quadpnt%type_pnt = numb "
-          print *, "exited from lsconstitutive::ncflux"
-          ERROR STOP
-        case("ndpt")
-          el = active_node_element(quadpnt%order)
-        case default
-          print *, "incorrect quadpnt%type_pnt",  quadpnt%type_pnt
-          print *, "exited from lsconstitutive::ncflux"
-          ERROR STOP
-      end select
-      
-      c = pde(1)%getval(quadpnt)
+
+    end select
+
+    call getcoor(quadpnt, xy)
+
+    if (LShydro) then
+
+      el = quadpnt%element
+
+      if (quadpnt%type_pnt == 'ndpt') then
+
+        el = active_node_element(quadpnt%order)
+
+      end if
+
+      call hydro_value(int(el), xy, qvector, val, divq)
+      return
+
+    end if
+
+    nowhrs = ora_di_ini + int(adenc_coefficient_time()/86400.0_rkind)*24
+
+    call ncflux_get_xy_cell(xy(1), xy(2), nowhrs, q, success, errmsg)
+
+    ! Dry cells and failed lookups have no advective storage contribution;
+    ! retain the existing inactive-cell convention without dividing by zero.
+
+    if (.not. success .or. q <= 0.0_rkind) then
+
+      val = 1
+      RETURN
+
+    end if
+
+    select case (quadpnt%type_pnt)
+
+    case ("gqnd", "obpt")
+
+      el = quadpnt%element
+
+    case ("numb")
+
+      print *, "unable to print convection value for quadpnt%type_pnt = numb "
+      print *, "exited from lsconstitutive::ncflux"
+      ERROR STOP
+
+    case ("ndpt")
+
+      el = active_node_element(quadpnt%order)
+
+    case default
+
+      print *, "incorrect quadpnt%type_pnt: ", quadpnt%type_pnt
+      print *, "exited from lsconstitutive::ncflux"
+      ERROR STOP
+
+    end select
+
+    Wcell = ncflux_active_width(el)
+
+    if (Wcell <= 0.0_rkind) then
+
+      val = 1.0_rkind
+      return
+
+    end if
+
+    v = velocity(q, Wcell)
+
+    val = q/(Wcell*v)
+
+    if (isnan(val)) then
+
+      print *, Wcell, q, v
+      stop
+
+    end if
+
+  end function ADEls_tder_coef
+
+  function ADEls_mass(pde_loc, layer, quadpnt, x) result(val)
+
+    use typy
+    use global_objs
+    use pde_objs
+    use ADE_globals
+    use debug_tools
+    use netcdfflux
+    use ncglobvars, only: LSconservative
+
+    class(pde_str), intent(in) :: pde_loc
+    !> value of the nonlinear function
+    real(kind=rkind), dimension(:), intent(in), optional    :: x
+    !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
+    type(integpnt_str), intent(in), optional :: quadpnt
+    !> material ID
+    integer(kind=ikind), intent(in) :: layer
+    !> return value
+    real(kind=rkind)                :: val
+    real(kind=rkind)                :: q, c
+    integer(kind=ikind) :: el
+
+    select case (quadpnt%type_pnt)
+
+    case ("gqnd", "obpt")
+
+      el = quadpnt%element
+
+    case ("numb")
+
+      print *, "unable to print convection value for quadpnt%type_pnt = numb "
+      print *, "exited from lsconstitutive::ncflux"
+      ERROR STOP
+
+    case ("ndpt")
+
+      el = active_node_element(quadpnt%order)
+
+    case default
+
+      print *, "incorrect quadpnt%type_pnt", quadpnt%type_pnt
+      print *, "exited from lsconstitutive::ncflux"
+      ERROR STOP
+
+    end select
+
+    c = pde(1)%getval(quadpnt)
+
+    if (LSconservative) then
+
+      val = c*ADEls_tder_coef(pde_loc, layer, quadpnt)
+      return
+
+    end if
+
+    call pde(1)%flux(layer, quadpnt, scalar=q)
+
+    val = c*q*elements%areas(el)
+
+  end function ADEls_mass
+
+  subroutine ADEls_icond(pde_loc)
+
+    use typy
+    use globals
+    use global_objs
+    use pde_objs
+    use ncglobvars
+
+    class(pde_str), intent(in out) :: pde_loc
+    integer(kind=ikind) :: i, j, k, l, m, layer, D
+    real(kind=rkind) :: value
+
+    pde_loc%solution(:) = cinit_ls
+
+  end subroutine ADEls_icond
+
+  subroutine ADEls_dirichlet(pde_loc, el_id, node_order, value, code, array, bcpts)
+
+    use typy
+    use globals
+    use global_objs
+    use pde_objs
+    use debug_tools
+    use ncglobvars, only: LSconservative, adenc_coefficient_time
+    use ncconservative, only: adenc_boundary_value
+    class(pde_str), intent(in) :: pde_loc
+    integer(kind=ikind), intent(in)  :: el_id, node_order
+    real(kind=rkind), intent(out), optional    :: value
+    integer(kind=ikind), intent(out), optional :: code
+    !> unused for this model (implementation for Robin boundary)
+    real(kind=rkind), dimension(:), intent(out), optional :: array
+    type(bcpts_str), intent(in), optional :: bcpts
+
+    integer(kind=ikind) :: edge_id, i, j, proc
+    real(kind=rkind) :: tempval
+
+    edge_id = nodes%edge(elements%data(el_id, node_order))
+
+    if (present(value)) then
+
       if (LSconservative) then
-        val=c*ADEls_tder_coef(pde_loc,layer,quadpnt)
+
+        value = adenc_boundary_value(pde_loc, el_id, node_order, adenc_coefficient_time())
+
+        if (present(code)) then
+
+          code = 1
+
+        end if
+
         return
+
       end if
-      
-      call pde(1)%flux(layer, quadpnt, scalar=q)
-      
-      val = c*q*elements%areas(el)
-      
 
-    end function ADEls_mass
-    
-    
-    subroutine ADEls_icond(pde_loc) 
-      use typy
-      use globals
-      use global_objs
-      use pde_objs
-      use ncglobvars
+      if (pde_loc%bc(edge_id)%file) then
 
-      
-      class(pde_str), intent(in out) :: pde_loc
-      integer(kind=ikind) :: i, j, k,l, m, layer, D
-      real(kind=rkind) :: value
+        do i = 1, ubound(pde_loc%bc(edge_id)%series, 1)
 
-      pde_loc%solution(:) = cinit_ls
+          if (pde_loc%bc(edge_id)%series(i, 1) > time) then
 
-    end subroutine ADEls_icond
-    
-    
-    subroutine ADEls_dirichlet(pde_loc, el_id, node_order, value, code, array, bcpts) 
-      use typy
-      use globals
-      use global_objs
-      use pde_objs
-      use debug_tools
-      use ncglobvars, only: LSconservative,adenc_coefficient_time
-      use ncconservative, only: adenc_boundary_value
-      class(pde_str), intent(in) :: pde_loc
-      integer(kind=ikind), intent(in)  :: el_id, node_order
-      real(kind=rkind), intent(out), optional    :: value
-      integer(kind=ikind), intent(out), optional :: code
-      !> unused for this model (implementation for Robin boundary)
-      real(kind=rkind), dimension(:), intent(out), optional :: array
-      type(bcpts_str), intent(in), optional :: bcpts
+            if (i > 1) then
 
-      
-      integer(kind=ikind) :: edge_id, i, j, proc
-      real(kind=rkind) :: tempval
-      
-      edge_id = nodes%edge(elements%data(el_id, node_order))
-      if (present(value)) then
-        if (LSconservative) then
-          value=adenc_boundary_value(pde_loc,el_id,node_order,adenc_coefficient_time())
-          if (present(code)) code=1
-          return
-        end if
-        if (pde_loc%bc(edge_id)%file) then
-          do i=1, ubound(pde_loc%bc(edge_id)%series,1)
-            if (pde_loc%bc(edge_id)%series(i,1) > time) then
-              if (i > 1) then
-                j = i-1
-              else
-                j = i
-              end if
-              tempval = pde_loc%bc(edge_id)%series(j,2)
-              EXIT
+              j = i - 1
+
+            else
+
+              j = i
+
             end if
-          end do
-        else
-          tempval =  pde_loc%bc(edge_id)%value
-        end if
-        value = tempval 
+
+            tempval = pde_loc%bc(edge_id)%series(j, 2)
+            EXIT
+
+          end if
+
+        end do
+
+      else
+
+        tempval = pde_loc%bc(edge_id)%value
+
       end if
 
-      
-      if (present(code)) then
-        code = 1
-      end if
-      
+      value = tempval
 
-    end subroutine adeLS_dirichlet
-    
-    
-    subroutine ADElsdisp(pde_loc, layer, quadpnt, x, tensor, scalar)
-      use typy
-      use global_objs
-      use pde_objs
-      use globals
-      use ADE_globals
-      use re_globals
-      use debug_tools
-      use ncglobvars
-      use ncdispersion, only: ls_dispersion_tensor
-      
-      class(pde_str), intent(in) :: pde_loc
-      !> value of the nonlinear function
-      real(kind=rkind), dimension(:), intent(in), optional    :: x
-      !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
-      type(integpnt_str), intent(in), optional :: quadpnt
-      !> material ID
-      integer(kind=ikind), intent(in) :: layer
-      !> return tensor
-      real(kind=rkind), dimension(:,:), intent(out), optional :: tensor
-      !> relative scalar value of the nonlinear function 
-      real(kind=rkind), intent(out), optional                 :: scalar
+    end if
 
-      integer(kind=ikind) :: D
-      real(kind=rkind), dimension(2) :: qvector
-      
-     
-      if (present(quadpnt) .and. present(x)) then
-        print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
-        print *, "exited from lsconstitutive::ADElsdisp"
-        ERROR stop
-      else if (.not. present(quadpnt) .and. .not. present(x)) then
-        print *, "ERROR: you have not specified either integ point or x value"
-        print *, "exited from lsconstitutive::ADElsdisp"
-        ERROR stop
-      end if
-     
-      D = drutes_config%dimen
-      
-      if (D /= 2) error stop "ADEnc dispersion requires two dimensions"
-      if (.not. present(quadpnt)) error stop "ADEnc dispersion requires an integration point"
-      call pde(1)%flux(layer, quadpnt, vector_out=qvector)
-      
-      
-      if (present(tensor)) then
-        call ls_dispersion_tensor(qvector, LSdisp, LSdisp_transverse, tensor)
-      end if
-    
-      
-      if (present(scalar)) then
-        ! Scalar interface reports the longitudinal coefficient, not the tensor.
-        scalar = LSdisp*norm2(qvector)
-      end if
- 
-    
-    end subroutine ADElsdisp
+    if (present(code)) then
 
+      code = 1
+
+    end if
+
+  end subroutine adeLS_dirichlet
+
+  subroutine ADElsdisp(pde_loc, layer, quadpnt, x, tensor, scalar)
+
+    use typy
+    use global_objs
+    use pde_objs
+    use globals
+    use ADE_globals
+    use re_globals
+    use debug_tools
+    use ncglobvars
+    use ncdispersion, only: ls_dispersion_tensor
+
+    class(pde_str), intent(in) :: pde_loc
+    !> value of the nonlinear function
+    real(kind=rkind), dimension(:), intent(in), optional    :: x
+    !> Gauss quadrature point structure (element number and rank of Gauss quadrature point)
+    type(integpnt_str), intent(in), optional :: quadpnt
+    !> material ID
+    integer(kind=ikind), intent(in) :: layer
+    !> return tensor
+    real(kind=rkind), dimension(:, :), intent(out), optional :: tensor
+    !> relative scalar value of the nonlinear function
+    real(kind=rkind), intent(out), optional                 :: scalar
+
+    integer(kind=ikind) :: D
+    real(kind=rkind), dimension(2) :: qvector
+
+    if (present(quadpnt) .and. present(x)) then
+
+      print *, "ERROR: the function can be called either with integ point or x value definition, not both of them"
+      print *, "exited from lsconstitutive::ADElsdisp"
+      ERROR stop
+
+    else if (.not. present(quadpnt) .and. .not. present(x)) then
+
+      print *, "ERROR: you have not specified either integ point or x value"
+      print *, "exited from lsconstitutive::ADElsdisp"
+      ERROR stop
+
+    end if
+
+    D = drutes_config%dimen
+
+    if (D /= 2) then
+
+      error stop "ADEnc dispersion requires two dimensions"
+
+    end if
+
+    if (.not. present(quadpnt)) then
+
+      error stop "ADEnc dispersion requires an integration point"
+
+    end if
+
+    call pde(1)%flux(layer, quadpnt, vector_out=qvector)
+
+    if (present(tensor)) then
+
+      call ls_dispersion_tensor(qvector, LSdisp, LSdisp_transverse, tensor)
+
+    end if
+
+    if (present(scalar)) then
+
+      ! Scalar interface reports the longitudinal coefficient, not the tensor.
+      scalar = LSdisp*norm2(qvector)
+
+    end if
+
+  end subroutine ADElsdisp
 
 end module lsconstitutive

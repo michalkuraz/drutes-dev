@@ -24,6 +24,7 @@
 
 
 module schwarz_dd
+
     public :: schwarz_picard
     private :: build_xvect
     private :: domains_solved
@@ -35,7 +36,9 @@ module schwarz_dd
     contains
     
       !>solves the problem using Picard method with Schwarz multiplicative domain decomposition reflecting the nonlinear problem
+
       subroutine schwarz_picard(ierr,  success)
+
         use typy
         use globals
         use global_objs
@@ -79,14 +82,19 @@ module schwarz_dd
         ddcoarse_mesh(:)%iter_count = 2
 	
 	!the residual vector is not allocated, thus we are at the beginning
+
         if (.not. allocated(resvct)) then
+
           first_run = .true.
           allocate(resvct(fin))
           allocate(corrvct(fin))          
           call set_subdomains()
           subdomain(:)%time = 0
+
         else
+
           first_run = .false.
+
         end if
 
         subdomain(:)%time_step = time_step
@@ -111,11 +119,17 @@ module schwarz_dd
 
   ! 	  !compute the local residuum
   ! 	  !and create the local matrices
+
           do i=1, ubound(subdomain,1)
+
             subdomain(i)%xvect(:,1:3) = pde_common%xvect(subdomain(i)%permut(1:subdomain(i)%ndof),1:3)
+
             if (.not. subdomain(i)%solved) then
+
               call locmat_assembler(subdomain(i), ierr, i)
+
             end if
+
           end do
 
 	  	  
@@ -123,6 +137,7 @@ module schwarz_dd
 
 
           if (use_coarselev .and. ubound(subdomain,1) > 3) then
+
             call build_coarsemtx(resvct)
             xcoarse = 0
 
@@ -130,26 +145,36 @@ module schwarz_dd
             call solve_matrix(coarse_mtx, bcoarse, xcoarse, ilev1=0, itmax1=1_ikind*ubound(subdomain,1), reps1=1e-20_rkind)
             
             if (.not. allocated(coarse2fine) ) then
+
               allocate(coarse2fine(fin))
+
             end if
             
             coarse2fine = prolong_mtx%mul(xcoarse)
             
             do i=1, ubound(subdomain,1)
+
               if (subdomain(i)%critical) then
+
                 do j= 1, subdomain(i)%ndof
+
                   nd = subdomain(i)%permut(j)
                   pde_common%xvect(nd,2) = pde_common%xvect(nd,2) + prolong_mtx%get(nd,i) * coarse2fine(nd)
+
                 end do
+
               end if
+
             end do
 	      
 
             pde_common%xvect(:,3) = pde_common%xvect(:,2) 
 
             do i=1, ubound(subdomain,1)
+
               subdomain(i)%xvect(:,1:3) = pde_common%xvect(subdomain(i)%permut(1:subdomain(i)%ndof),1:3)
               call locmat_assembler(subdomain(i), ierr, i)
+
             end do
 
             call get_residual(resvct)
@@ -157,6 +182,7 @@ module schwarz_dd
           end if
 	  
           cumerr = 0
+
           subdoms:  do i=1, ubound(subdomain,1)
 
             subfin = subdomain(i)%ndof
@@ -165,9 +191,13 @@ module schwarz_dd
           !  			res_error = maxval(resvct(subdomain(i)%permut(1:subfin)))
 
             if (res_error > inner_criterion) then
+
               subdomain(i)%solved = .false.
+
             else
+
               subdomain(i)%solved = .true.
+
             end if
             
             if (.not. subdomain(i)%solved) then
@@ -175,9 +205,13 @@ module schwarz_dd
               corrvct(1:subfin) = 0.0
 
               if (subdomain(i)%critical) then
+
                 reps = 1e-10
+
               else
+
                 reps = 1e-10
+
               end if
 
               call diag_precond(a=subdomain(i)%matrix, prmt=subdomain(i)%permut,  mode=1)
@@ -204,9 +238,12 @@ module schwarz_dd
 
 	      
               if (error <= iter_criterion .and. norm2(resvct(subdomain(i)%permut(1:subfin))) < inner_criterion) then 
+
                 subdomain(i)%solved = .true.
                 subdomain(i)%time  = subdomain(i)%time + subdomain(i)%time_step
+
               end if
+
             end if
 					
           end do subdoms
@@ -222,19 +259,28 @@ module schwarz_dd
             dt_fine = pde(proc)%dt_check()
             
             if (.not.(dt_fine)) then
+
               ierr = 2
               success = .false.
               RETURN
+
             end if
         
             call etime(taaray(2,:), rslt(2))
+
             do i=1, ubound(subdomain,1)
+
               if (.not. subdomain(i)%critical .and. subdomain(i)%itcount>1 ) then
+
                 reset_domains = .true.
                 EXIT
+
               else
+
                 reset_domains = .false.
+
               end if
+
             end do
 
 	   
@@ -245,13 +291,16 @@ module schwarz_dd
             write(unit=file_ddinfo, fmt=*) time, itcount, "|", subdomain(:)%ndof
             call flush(file_ddinfo)
             EXIT picard_loop
+
           end if
 
           if (itcount > max_itcount) then
+
             call set_subdomains()
             success = .FALSE.
             ierr = 1
             RETURN
+
           end if
 
         end do picard_loop
@@ -259,23 +308,32 @@ module schwarz_dd
 
 
         do proc=1, ubound(pde,1)
+
           do i=1, ubound(subdomain,1)
+
             dt_fine = pde(proc)%dt_check()
+
           end do
+
         end do
             
         if (.not.(dt_fine)) then
+
           ierr = 2
           success = .false.
           RETURN
+
         else
+
           ierr = 0
           call results_extractor()
+
         end if
 
       end subroutine schwarz_picard
       
       subroutine build_xvect()
+
         use typy
         use globals
         use global_objs
@@ -290,16 +348,21 @@ module schwarz_dd
         
         
         do i = 1, ubound(subdomain,1)
+
           do loc = 1, subdomain(i)%ndof
+
             glob =  subdomain(i)%permut(loc)
             pde_common%xvect(glob,2:3) = pde_common%xvect(glob,2:3) + subdomain(i)%xvect(loc,2:3)*prolong_mtx%get(glob,i)
+
           end do
+
         end do
 	
 
       end subroutine build_xvect
 
       subroutine search_error_cluster(sub, itcnt)
+
         use typy
         use globals
         use global_objs
@@ -315,22 +378,36 @@ module schwarz_dd
         
 
         do i=1, ubound(sub%coarse_el,1)
+
           j = sub%coarse_el(i)
           loc_error = 0
+
           do ii=1, ubound(ddcoarse_mesh(j)%elements,1)
+
             el = ddcoarse_mesh(j)%elements(ii)
+
             do jj = 1, ubound(elements%data,2)
+
               nd = elements%data(el,jj)
               xpos = pde(1)%permut(nd)
+
               if (xpos > 0) then
+
                 xpos_loc = sub%invpermut(xpos)
                 loc_error = max(loc_error, abs(sub%xvect(xpos_loc,3)-sub%xvect(xpos_loc,2)) )
+
               end if
+
             end do
+
           end do
+
           if (loc_error > iter_criterion) then
+
             ddcoarse_mesh(j)%iter_count = ddcoarse_mesh(j)%iter_count + 1
+
           end if
+
         end do
     
 
@@ -338,6 +415,7 @@ module schwarz_dd
 
 
       subroutine results_extractor()
+
         use typy
         use globals
         use global_objs
@@ -348,14 +426,22 @@ module schwarz_dd
 
 
         do proc=1, ubound(pde,1)
+
             do i=1, nodes%kolik
+
           if (pde(proc)%permut(i) > 0) then
+
               pde(proc)%solution(i) = pde_common%xvect(pde(proc)%permut(i),3)
+
           else
+
               j = nodes%edge(i)
               pde(proc)%solution(i) = pde(proc)%bc(j)%value
+
           end if
+
             end do
+
         end do
       
 
@@ -368,7 +454,9 @@ module schwarz_dd
  
 
       !> counts number of solved subdomains
+
       function domains_solved() result(no)
+
         use typy
         use globals
         use global_objs
@@ -381,15 +469,21 @@ module schwarz_dd
         no = 0
 
         do i=1, ubound(subdomain,1)
+
           if (subdomain(i)%solved) then
+
             no = no + 1
+
           end if
+
         end do
 
       end function domains_solved
       
             !> counts number of solved subdomains
+
       function ndofs_solved() result(no)
+
         use typy
         use globals
         use global_objs
@@ -402,14 +496,19 @@ module schwarz_dd
         no = 0
 
         do i=1, ubound(subdomain,1)
+
           if (subdomain(i)%solved) then
+
             no = no + subdomain(i)%ndof
+
           end if
+
         end do
 
       end function ndofs_solved
       
     subroutine locmat_assembler(domain,  ierr, kde)
+
       use typy
       use globals
       use global_objs
@@ -435,7 +534,9 @@ module schwarz_dd
 
       
       if (.not. allocated(elsolved)) then
+
         allocate(elsolved(elements%kolik))
+
       end if
       
       
@@ -451,7 +552,9 @@ module schwarz_dd
       loop_nodes: do pnd=1, ubound(domain%permut,1)
 
                       if (domain%permut(pnd) == 0) then
+
                         EXIT loop_nodes
+
                       end if
 
                       nd = domain%permut(pnd)
@@ -467,9 +570,12 @@ module schwarz_dd
 
                           quadpnt%type_pnt = "ndpt"
                           quadpnt%column = 1			  
+
                           do k = 1, ubound(elements%data,2)			      
+
                             quadpnt%order = elements%data(el,k)
                             elnode_prev(k) = pde(1)%getval(quadpnt)
+
                           end do  
 
 			  
@@ -479,6 +585,7 @@ module schwarz_dd
                           call build_stiff_np(el, domain%time_step)
 
                           call pde_common%time_integ(el)
+
                           call apply_element_stabilization(el, domain%time_step)
 
                           stiff_mat = stiff_mat + cap_mat
@@ -486,8 +593,11 @@ module schwarz_dd
                           call in2global(el,domain%matrix, domain%bvect, domain%invpermut)
                           
                           elsolved(el) = .true.
+
                         end if
+
                       end do
+
       end do loop_nodes
 
     end subroutine locmat_assembler

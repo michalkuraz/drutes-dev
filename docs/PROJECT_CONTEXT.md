@@ -1,5 +1,33 @@
 # DRUtES project context
 
+LATEST 2026-10-12 coding-style review: user requested explicit DIMENSION
+attributes for arrays, ikind Fortran file handles, and spacious block indentation,
+including previously added code outside ADEnc. Restyled the transport/hydraulic
+modules and initialization/constitutive/pointer code; touched only our added
+hooks and containment algorithm in shared PDE/FEM/Schwarz/geometry files.
+Legacy default-kind readtools/readbcvals are bridged with int(file_handle);
+NetCDF ABI integers and existing public default-kind hydraulic interfaces remain
+compatible. No numerical formulas or physical parameters changed.
+Optimized build and fresh bounds-check build passed;30configuration and39hydraulic
+checks passed. Two final isolated3600s simulations (Galerkin and SUPG2/shock1)
+exited0;7histories,5fields and budgets match pre-style reference, maxdifference0.
+Evidence: runs/style-review-20261012/REPORT.md. No server/ownCloud changes,
+Git commit or push for this review.
+Follow-up spacing preference: put a blank line before and after every block,
+including nested blocks; also directly after opening statements and immediately
+before closing statements. Apply this to IF/ELSE/END IF, loops, SELECT/CASE,
+procedures, interfaces and type/module blocks. Added only empty lines in the
+reviewed source files; verified every nonblank source line remained identical.
+Second follow-up: adenc_element_corrections now has separate DIMENSION matrix
+declarations, separated imports/arguments/locals and four explicit commented
+IF/THEN sections. Expanded logical single-line IF statements in the reviewed
+transport modules and new inside routine; numerical conditions/actions unchanged.
+Rebuild,30config,39hydraulic checks and bounds-check pytest passed. Two fresh
+3600s comparisons again exit0/maxdifference0; evidence two-simulations-9grxmozp.
+User then authorized committing and publishing the verified style cleanup to
+the existing GitHub testing branch, including the local configuration-consolidation
+commit not previously pushed. Unrelated untracked files remain excluded.
+
 LATEST 2026-10-12: user authorized configuration consolidation and explicitly
 removed legacy support. NetCDF transport now reads transport.conf (banks,
 conservative, audit, hydraulic flags plus hydraulic payload) and stabilization.conf
