@@ -1,5 +1,11 @@
 # TOY mesh from test_adenc_hydroflow.f90; these node numbers are NOT Rhine ports.
 # Copy and replace port edges with verified FE ARRAY node indices, not arbitrary Gmsh tags.
+# Zero total solute flux on banks.
+y
+# Conservative transport.
+y
+# Accepted-step mass audit.
+y
 # Enable reconstruction (requires conservative and no-flow-bank modes).
 y
 # Lateral policy: 0 = none; 1 = explicit lateral.conf (see lateral.conf.example).

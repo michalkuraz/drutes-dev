@@ -1,7 +1,10 @@
 # ADEnc impermeable solute banks
 
-Implemented 2026-10-08. Enable with `drutes.conf/netcdf/riverbank.conf` containing
-`y`. Root configuration is enabled. A missing file or `n` retains the legacy
+Implemented 2026-10-08. Enable with the first flag in
+`drutes.conf/netcdf/transport.conf` set to `y`. The next flags select
+conservative transport, mass audit and hydraulic reconstruction. See
+[ADENC_CONFIGS.md](ADENC_CONFIGS.md); separate `riverbank.conf` is rejected.
+Root configuration is enabled. A missing file or bank flag `n` retains the legacy
 absorbing C=0 mask. Existing run/export configuration copies are unchanged.
 Supported: ADEnc, 2D P1 triangles, standard Picard (`it_method=0`). Schwarz
 modules still compile/link, but this feature rejects Schwarz execution.

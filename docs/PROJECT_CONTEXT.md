@@ -1,5 +1,29 @@
 # DRUtES project context
 
+LATEST 2026-10-12: user authorized configuration consolidation and explicitly
+removed legacy support. NetCDF transport now reads transport.conf (banks,
+conservative, audit, hydraulic flags plus hydraulic payload) and stabilization.conf
+(SUPG flag/factor, residual-viscosity flag/factor). Old five filenames are
+rejected, not read as fallback. Numerical formulas unchanged; ncconfig.f90
+centralizes flags and validation. Root/top-level drutes.conf1/2/3/3a/3b migrated
+with original small files backed up. New examples/adenc has five physical
+release configurations x three stabilization variants, with shared NC symlinks;
+archived completed-run inputs/results stay intact. See docs/ADENC_CONFIGS.md.
+Local optimized build,41pytest,30config,39hydro and15example preflights passed.
+Three paired3600s real-data old/new executable runs all exit0; seven histories,
+five snapshots and mass budgets agree, maximum concentration difference0.
+Evidence runs/config-consolidation-20261012/REPORT.md. Hydrocalc source and root
+inputs updated/backed up in/mnt/stock/ncflux-config-consolidation-20261012-2QWYEe.
+After VPN reconnection, native build,30config,39hydro,15example preflights and
+three paired3600s real-data comparisons independently VERIFIED; all field
+differences0. Changed source/Makefile SHA256 matches local. Server executable
+SHA2560861500fa5b62f13658a3a7a392350d623b6c88df854dd6d9fb0689703f34828.
+Fresh server examples at/home/miguel/drutes-dev/examples/adenc; large NC data
+remain symlinks. Old inputs backed up; archived results remain unchanged.
+User subsequently authorized a local Git commit including removal of obsolete
+tracked configurations. No push, long simulation or numerical-physics changes
+requested for this cleanup.
+
 LATEST2026-10-09 scenario4 COMPLETE/DELIVERED. Allsix100daytwo-daypulse
 models4aRhine/4bMoselle×Galerkin/SUPG2/shockfinishedexit0,batch
 /mnt/stock/ncflux-case4-pulse2days-20261009-DMJGJD,originalconfig/sourceintact.

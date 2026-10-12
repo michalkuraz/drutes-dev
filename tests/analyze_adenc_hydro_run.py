@@ -12,14 +12,14 @@ import math
 from pathlib import Path
 
 
-def nodal_blocks(path):
+def nodal_blocks(path, number=float):
     """Read all scalar Gmsh2 NodeData blocks, including multiple times per file."""
     with path.open() as stream:
         for line in stream:
             if line.strip() != '$NodeData':
                 continue
             strings = [next(stream).strip() for _ in range(int(next(stream)))]
-            reals = [float(next(stream)) for _ in range(int(next(stream)))]
+            reals = [number(next(stream)) for _ in range(int(next(stream)))]
             ints = [int(next(stream)) for _ in range(int(next(stream)))]
             if len(ints) < 3 or ints[1] != 1 or not reals:
                 raise ValueError('Expected scalar NodeData with time and record count')
@@ -28,7 +28,7 @@ def nodal_blocks(path):
                 row = next(stream).split()
                 if len(row) != 2 or int(row[0]) in values:
                     raise ValueError('Invalid or duplicate scalar nodal record')
-                values[int(row[0])] = float(row[1])
+                values[int(row[0])] = number(row[1])
             if next(stream).strip() != '$EndNodeData':
                 raise ValueError('Missing EndNodeData')
             yield reals[0], strings, values

@@ -1,5 +1,10 @@
 # Compatible hydraulic reconstruction for ADEnc
 
+Current input format: [ADENC_CONFIGS.md](ADENC_CONFIGS.md). The bank,
+conservative, audit and hydraulic settings share `transport.conf`.
+Historical file names in the implementation notes below refer to the format
+before 2026-10-12 and are no longer accepted.
+
 Implemented 2026-10-08, optional and **disabled in the repository configuration**.
 This is a hydraulic coupling/projection layer, not a new hydrodynamic model,
 positivity limiter, or validation of the Rhine model. Existing server runs and
@@ -122,8 +127,9 @@ is a diagnostic of the total reconstruction, not only its interior solve.
 
 ## Configuration and ports
 
-Optional `drutes.conf/netcdf/hydroflow.conf` starts with y/n. Absent or n leaves
-the previous ADEnc behavior unchanged. For y, the remaining records are:
+Optional `drutes.conf/netcdf/transport.conf` starts with four y/n records:
+no-flow banks, conservative transport, mass audit, hydraulic reconstruction.
+For hydraulic reconstruction `y`, the remaining records are:
 
 1. Integer lateral source policy:0=none,1=explicit lateral.conf.
 2. Integer forcing mode: 0=daily step, 1=linear interpolation (recommended).
@@ -175,7 +181,7 @@ Only listed inlet nodes retain Dirichlet DOFs. Bank/outlet participating nodes
 are free, including any old outlet Dirichlet tag. Inlet and outlet edges cannot
 share a node. Duplicate, interior and absent port edges are rejected.
 
-`hydroflow.conf.example` is a FOUR-TRIANGLE TEST mesh, not valid Rhine input.
+`transport.conf.example` is a FOUR-TRIANGLE TEST mesh, not valid Rhine input.
 Before enabling a Rhine case, identify all upstream inflows and the real
 downstream outlet on its reconstructed active domain. The existing reserved
 ID102 alone is not an outlet and the example's node numbers must not be copied.

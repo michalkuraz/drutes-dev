@@ -13,18 +13,13 @@ contains
   subroutine read_adenc_banks()
     use ncglobvars, only: LSbank_noflow
     use globals, only: drutes_config
-    use readtools, only: fileread
+    use ncconfig, only: open_transport_config
     use core_tools, only: write_log
-    logical :: exists
-    integer :: unit, ierr
+    logical :: exists,conservative,audit,hydro
+    integer :: unit
     LSbank_noflow=.false.
-    inquire(file='drutes.conf/netcdf/riverbank.conf',exist=exists)
-    if (exists) then
-      open(newunit=unit,file='drutes.conf/netcdf/riverbank.conf',status='old',action='read',iostat=ierr)
-      if (ierr/=0) error stop 'Cannot open ADEnc riverbank.conf'
-      call fileread(LSbank_noflow,unit)
-      close(unit)
-    end if
+    call open_transport_config(unit,exists,LSbank_noflow,conservative,audit,hydro)
+    if (exists) close(unit)
     if (.not. LSbank_noflow) return
     if (drutes_config%dimen/=2 .or. drutes_config%it_method/=0) &
       error stop 'ADEnc no-flow banks require 2D and standard Picard (no Schwarz)'

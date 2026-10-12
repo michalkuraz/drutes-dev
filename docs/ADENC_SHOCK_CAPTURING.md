@@ -6,16 +6,22 @@ unchanged. The running SUPG-factor-2 case retains its original binary.
 
 ## Settings
 
-Optional `drutes.conf/netcdf/shock.conf` has two records:
+Optional `drutes.conf/netcdf/stabilization.conf` has four records, shared with SUPG:
 
 ```
-# enable
+# enable SUPG
+y
+# SUPG multiplier
+2.0
+# enable residual viscosity
 y
 # nonnegative finite multiplier
 1.0
 ```
 
-Missing file, `n`, or factor zero disables shock capturing independently of
+Separate `shock.conf` and `supg.conf` files are rejected. See
+[ADENC_CONFIGS.md](ADENC_CONFIGS.md) for the current input format.
+Missing file, residual-viscosity flag `n`, or factor zero disables shock capturing independently of
 SUPG. Root defaults enable factor 1; existing configurations without the file
 retain their behavior. A future isolated run needs this file and the rebuilt
 binary. Never launch main in an existing output directory: it clears `out/*`.

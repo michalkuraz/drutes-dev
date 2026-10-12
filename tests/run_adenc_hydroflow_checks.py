@@ -85,7 +85,7 @@ def main() -> None:
         inputs = case / "drutes.conf/netcdf"
         inputs.mkdir(parents=True)
         if content is not None:
-            (inputs / "hydroflow.conf").write_text(content)
+            (inputs / "transport.conf").write_text('y\ny\ny\n' + content)
         run(label, [executables["hydroflow"], argument], case, expected, fail)
     lateral_config = config.replace("y\n0\n0\n", "y\n1\n1\n", 1)
     # Two disjoint groups, each TOTAL Q=.1 initially, increasing to .2.
@@ -118,7 +118,7 @@ def main() -> None:
         inputs = case / 'drutes.conf/netcdf'
         inputs.mkdir(parents=True)
         (case / 'out').mkdir()
-        (inputs / 'hydroflow.conf').write_text(lateral_config)
+        (inputs / 'transport.conf').write_text('y\ny\ny\n' + lateral_config)
         if content is not None:
             (inputs / 'lateral.conf').write_text(content)
         run(label, [executables['hydroflow'], argument], case, expected, fail)
@@ -126,7 +126,7 @@ def main() -> None:
     inputs = case / 'drutes.conf/netcdf'
     inputs.mkdir(parents=True)
     (case / 'out').mkdir()
-    (inputs / 'hydroflow.conf').write_text(config.replace('y\n0\n0\n', 'y\n1\n0\n', 1)+'y\n')
+    (inputs / 'transport.conf').write_text('y\ny\ny\n' + config.replace('y\n0\n0\n', 'y\n1\n0\n', 1)+'y\n')
     (inputs / 'lateral.conf').write_text('1\n1 2\n5\n0 0.1 1\n172800 0.1 1\n')
     run('filter-lateral-protection', [executables['hydroflow'], 'island-lateral'], case,
         'Cannot filter a component with explicit lateral sources', True)

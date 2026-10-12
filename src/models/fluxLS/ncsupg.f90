@@ -9,6 +9,7 @@ contains
   subroutine read_adenc_supg()
     use ncglobvars, only: LSsupg, LSsupg_factor, LSshock, LSshock_factor
     use readtools, only: fileread
+    use ncconfig, only: config_flag,config_end,reject_old_config
     use core_tools, only: write_log
     use, intrinsic :: ieee_arithmetic, only: ieee_is_finite
     integer :: unit, ierr
@@ -16,30 +17,27 @@ contains
     character(len=256) :: message
     LSsupg=.false.
     LSsupg_factor=1.0_rkind
-    inquire(file='drutes.conf/netcdf/supg.conf',exist=exists)
+    LSshock=.false.
+    LSshock_factor=1.0_rkind
+    call reject_old_config('drutes.conf/netcdf/supg.conf')
+    call reject_old_config('drutes.conf/netcdf/shock.conf')
+    inquire(file='drutes.conf/netcdf/stabilization.conf',exist=exists)
     if (exists) then
-      open(newunit=unit,file='drutes.conf/netcdf/supg.conf',status='old',action='read',iostat=ierr)
-      if (ierr/=0) error stop 'Unable to open ADEnc supg.conf'
-      call fileread(LSsupg,unit)
+      open(newunit=unit,file='drutes.conf/netcdf/stabilization.conf',status='old',action='read',iostat=ierr)
+      if (ierr/=0) error stop 'Unable to open ADEnc stabilization.conf'
+      call config_flag(unit,LSsupg)
       call fileread(LSsupg_factor,unit)
+      call config_flag(unit,LSshock)
+      call fileread(LSshock_factor,unit)
       if (.not. ieee_is_finite(LSsupg_factor)) error stop 'SUPG factor must be finite'
       if (LSsupg_factor<0) error stop 'SUPG factor must be nonnegative'
+      if (.not. ieee_is_finite(LSshock_factor)) error stop 'Shock factor must be finite'
+      if (LSshock_factor<0) error stop 'Shock factor must be nonnegative'
+      call config_end(unit)
       close(unit)
     end if
     write(message,*) 'ADEnc SUPG enabled=',LSsupg,' factor=',LSsupg_factor
     call write_log(trim(message))
-    LSshock=.false.
-    LSshock_factor=1.0_rkind
-    inquire(file='drutes.conf/netcdf/shock.conf',exist=exists)
-    if (exists) then
-      open(newunit=unit,file='drutes.conf/netcdf/shock.conf',status='old',action='read',iostat=ierr)
-      if (ierr/=0) error stop 'Unable to open ADEnc shock.conf'
-      call fileread(LSshock,unit)
-      call fileread(LSshock_factor,unit)
-      if (.not. ieee_is_finite(LSshock_factor)) error stop 'Shock factor must be finite'
-      if (LSshock_factor<0) error stop 'Shock factor must be nonnegative'
-      close(unit)
-    end if
     write(message,*) 'ADEnc shock capturing enabled=',LSshock,' factor=',LSshock_factor
     call write_log(trim(message))
   end subroutine read_adenc_supg

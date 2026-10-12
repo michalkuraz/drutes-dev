@@ -35,18 +35,17 @@ contains
   subroutine read_adenc_hydro()
     use ncglobvars, only: LSconservative,LSbank_noflow
     use readtools, only: fileread
+    use ncconfig, only: open_transport_config
     use globals, only: drutes_config
     integer :: unit,i,n,policy,status,a,b,kind,extra
-    logical :: exists
+    logical :: exists,banks,conservative,audit
     character(len=1024) :: line
     real(kind=rkind) :: flow
     LShydro=.false.; ready=.false.; trial=.false.; drop_unported_components=.false.
     if (allocated(lateral)) deallocate(lateral)
     if (allocated(ports)) deallocate(ports,port_kind,port_flow)
-    inquire(file='drutes.conf/netcdf/hydroflow.conf',exist=exists)
+    call open_transport_config(unit,exists,banks,conservative,audit,LShydro)
     if (.not.exists) return
-    open(newunit=unit,file='drutes.conf/netcdf/hydroflow.conf',status='old',action='read')
-    call fileread(LShydro,unit)
     if (.not.LShydro) then
       close(unit)
       return

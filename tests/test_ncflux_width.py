@@ -4,6 +4,7 @@ from pathlib import Path
 import shlex
 import shutil
 import subprocess
+import sys
 import numpy as np
 
 import pytest
@@ -52,6 +53,9 @@ def test_width_cache_with_real_modules(tmp_path: Path) -> None:
          f"FFLAGS={flags}"], ROOT)
     objects = sorted(path for path in (build / "objs").glob("*.o") if path.name != "main.o")
     assert objects
+    assert 'consolidated configuration checks passed' in run(
+        [sys.executable, str(ROOT / 'tests/run_adenc_config_checks.py'),
+         '--build', str(build), '--output-parent', str(tmp_path)], ROOT)
     executable = tmp_path / "test-width-cache"
     nc_libdir = run([required["nc-config"], "--libdir"], tmp_path).strip()
     libraries = [f"-L{nc_libdir}", *shlex.split(run([required["nf-config"], "--flibs"], tmp_path))]
@@ -106,13 +110,13 @@ def test_width_cache_with_real_modules(tmp_path: Path) -> None:
     hydro_inputs = hydro_case / 'drutes.conf/netcdf'
     hydro_inputs.mkdir(parents=True)
     (hydro_case / 'out').mkdir()
-    (hydro_inputs / 'hydroflow.conf').write_text(hydro_config)
+    (hydro_inputs / 'transport.conf').write_text('y\ny\ny\n' + hydro_config)
     assert 'Hydroflow production checks passed' in run([str(hydro_executable), 'production'], hydro_case)
     linear_case = tmp_path / 'hydro-linear'
     linear_inputs = linear_case / 'drutes.conf/netcdf'
     linear_inputs.mkdir(parents=True)
     (linear_case / 'out').mkdir()
-    (linear_inputs / 'hydroflow.conf').write_text(hydro_config.replace('y\n0\n0\n', 'y\n0\n1\n', 1))
+    (linear_inputs / 'transport.conf').write_text('y\ny\ny\n' + hydro_config.replace('y\n0\n0\n', 'y\n0\n1\n', 1))
     assert 'Hydroflow production checks passed' in run([str(hydro_executable), 'linear'], linear_case)
     for label, suffix, argument, succeeds in (
         ('enabled', 'y\n', 'island', True),
@@ -124,7 +128,7 @@ def test_width_cache_with_real_modules(tmp_path: Path) -> None:
         inputs = case / 'drutes.conf/netcdf'
         inputs.mkdir(parents=True)
         (case / 'out').mkdir()
-        (inputs / 'hydroflow.conf').write_text(hydro_config + suffix)
+        (inputs / 'transport.conf').write_text('y\ny\ny\n' + hydro_config + suffix)
         result = subprocess.run([str(hydro_executable), argument], cwd=case,
                                 text=True, capture_output=True, timeout=20)
         output = result.stdout + result.stderr
@@ -147,7 +151,7 @@ def test_width_cache_with_real_modules(tmp_path: Path) -> None:
         inputs = case / 'drutes.conf/netcdf'
         inputs.mkdir(parents=True)
         (case / 'out').mkdir()
-        (inputs / 'hydroflow.conf').write_text(content)
+        (inputs / 'transport.conf').write_text('y\ny\ny\n' + content)
         result = subprocess.run([str(hydro_executable), 'legacy' if label == 'legacy' else 'production'],
                                 cwd=case, text=True, capture_output=True, timeout=20)
         assert result.returncode != 0, label
@@ -157,7 +161,7 @@ def test_width_cache_with_real_modules(tmp_path: Path) -> None:
         inputs = case / 'drutes.conf/netcdf'
         inputs.mkdir(parents=True)
         if content is not None:
-            (inputs / 'hydroflow.conf').write_text(content)
+            (inputs / 'transport.conf').write_text('n\nn\nn\n' + content)
         assert 'Hydroflow config checks passed' in run([str(hydro_executable), label], case)
     for label, content in {'absent': None, 'off': 'n\nn\n', 'on': 'y\ny\n',
                            'audit': 'n\ny\n', 'schwarz': 'y\ny\n', '3d': 'y\ny\n',
@@ -166,7 +170,7 @@ def test_width_cache_with_real_modules(tmp_path: Path) -> None:
         inputs = case / 'drutes.conf/netcdf'
         inputs.mkdir(parents=True)
         if content is not None:
-            (inputs / 'conservative.conf').write_text(content)
+            (inputs / 'transport.conf').write_text('y\n' + content + 'n\n')
         result = subprocess.run([str(conservative_executable), label], cwd=case,
                                 text=True, capture_output=True, timeout=20)
         if label in ('schwarz', '3d', 'backup'):
@@ -187,7 +191,7 @@ def test_width_cache_with_real_modules(tmp_path: Path) -> None:
         inputs = case / 'drutes.conf/netcdf'
         inputs.mkdir(parents=True)
         if content is not None:
-            (inputs / 'riverbank.conf').write_text(content)
+            (inputs / 'transport.conf').write_text(content + 'n\nn\nn\n')
         result = subprocess.run([str(bank_executable), label], cwd=case,
                                 text=True, capture_output=True, timeout=20)
         if label in ('schwarz', '3d'):
@@ -201,14 +205,14 @@ def test_width_cache_with_real_modules(tmp_path: Path) -> None:
         inputs.mkdir(parents=True)
         (case / "out").mkdir()
         if content is not None:
-            (inputs / "supg.conf").write_text(content)
+            (inputs / "stabilization.conf").write_text(content + 'n\n1\n')
         assert "SUPG configuration checks passed" in run([str(supg_executable), label], case)
     for label, factor in {"negative": "-1", "nan": "NaN", "infinite": "Inf"}.items():
         case = tmp_path / f"supg-{label}"
         inputs = case / "drutes.conf/netcdf"
         inputs.mkdir(parents=True)
         (case / "out").mkdir()
-        (inputs / "supg.conf").write_text(f"y\n{factor}\n")
+        (inputs / "stabilization.conf").write_text(f"y\n{factor}\nn\n1\n")
         result = subprocess.run([str(supg_executable), "invalid"], cwd=case,
                                 text=True, capture_output=True, timeout=20)
         assert result.returncode != 0
@@ -220,14 +224,14 @@ def test_width_cache_with_real_modules(tmp_path: Path) -> None:
         inputs.mkdir(parents=True)
         (case / "out").mkdir()
         if content is not None:
-            (inputs / "shock.conf").write_text(content)
+            (inputs / "stabilization.conf").write_text('n\n1\n' + content)
         assert "SUPG configuration checks passed" in run([str(supg_executable), label], case)
     for label, factor in {"negative": "-1", "nan": "NaN", "infinite": "Inf"}.items():
         case = tmp_path / f"shock-invalid-{label}"
         inputs = case / "drutes.conf/netcdf"
         inputs.mkdir(parents=True)
         (case / "out").mkdir()
-        (inputs / "shock.conf").write_text(f"y\n{factor}\n")
+        (inputs / "stabilization.conf").write_text(f"n\n1\ny\n{factor}\n")
         result = subprocess.run([str(supg_executable), "invalid"], cwd=case,
                                 text=True, capture_output=True, timeout=20)
         assert result.returncode != 0

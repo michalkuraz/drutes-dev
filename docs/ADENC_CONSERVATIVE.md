@@ -2,24 +2,29 @@
 
 Implemented locally 2026-10-08. Existing server runs, private run binaries,
 original scenario inputs and NetCDF data were not changed. The repository's
-new `drutes.conf/netcdf/conservative.conf` defaults to `n` / `n`: no change to
+`drutes.conf/netcdf/transport.conf` conservative/audit flags default to `n` / `n`: no change to
 the default transport formulation or production output filenames in legacy mode.
 
 ## Enable in a NEW isolated run directory
 
-Two logical records, with comments allowed above records:
+Four logical records in `transport.conf`, with comments allowed above records:
 
 ```text
+# Zero total solute flux on banks
+y
 # Conservative transport formulation
 y
 # Accepted-step mass-balance output
 y
+# Compatible hydraulic reconstruction (append its port settings if enabled)
+n
 ```
 
-`n` / `y` enables an audit of the original formulation without changing its
+Conservative/audit flags `n` / `y` enable an audit of the original formulation without changing its
 matrices, Dirichlet timing or time-step selection. A missing file or `n` / `n`
-retains the original path. `riverbank.conf` must contain `y` for either audit
-or conservative mode. Supported: single ADEnc equation, 2D P1 triangles,
+retains the original path. The first flag (no-flow banks) must be `y` for either audit
+or conservative mode. Separate `conservative.conf` and `riverbank.conf` are
+rejected; see [ADENC_CONFIGS.md](ADENC_CONFIGS.md). Supported: single ADEnc equation, 2D P1 triangles,
 standard Picard, transient implicit Euler with lumped or consistent capacity.
 Other solvers/time methods and restart from backup are rejected, not silently
 used with missing storage history. Schwarz still compiles/links; this optional

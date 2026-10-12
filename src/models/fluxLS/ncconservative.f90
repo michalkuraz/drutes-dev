@@ -9,21 +9,17 @@ module ncconservative
 contains
   subroutine read_adenc_conservative()
     use globals, only: drutes_config
-    use readtools, only: fileread
+    use ncconfig, only: open_transport_config
     use core_tools, only: write_log
     use ncbalance, only: balance_reset
     integer :: unit
-    logical :: exists
+    logical :: exists,banks,hydro
     LSconservative=.false.; LSbalance=.false.; LSstep_active=.false.; LSclock_override=.false.
     LSstate_time=0; LSprevious_time=0
     call balance_reset()
     if (allocated(LSdepth_old)) deallocate(LSdepth_old,LSdepth_new)
-    inquire(file='drutes.conf/netcdf/conservative.conf',exist=exists)
-    if (.not. exists) return
-    open(newunit=unit,file='drutes.conf/netcdf/conservative.conf',status='old',action='read')
-    call fileread(LSconservative,unit)
-    call fileread(LSbalance,unit)
-    close(unit)
+    call open_transport_config(unit,exists,banks,LSconservative,LSbalance,hydro)
+    if (exists) close(unit)
     if (.not. (LSconservative .or. LSbalance)) return
     if (drutes_config%run_from_backup) &
       error stop 'ADEnc conservative/audit restart from backup is not supported'

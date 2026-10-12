@@ -44,7 +44,7 @@ program check_adenc_bank_initialization
     allocate(pde(1)); pde_common%processes=1
     call initialize_nc()
   end if
-  if (.not. LSbank_noflow) error stop 'bank preflight requires enabled riverbank.conf'
+  if (.not. LSbank_noflow) error stop 'bank preflight requires banks enabled in transport.conf'
   if (.not. allocated(pde(1)%assembly_mask)) error stop 'missing assembly mask'
   if (any(pde(1)%assembly_mask .neqv. ncfluxdata%activeel)) error stop 'mask mismatch'
   if (size(pde(1)%bc(101)%series,2)/=2) error stop 'invalid inlet series columns'

@@ -1,5 +1,9 @@
 # ADEnc SUPG stabilization
 
+Current input format: [ADENC_CONFIGS.md](ADENC_CONFIGS.md). SUPG and residual
+viscosity share `drutes.conf/netcdf/stabilization.conf`; separate `supg.conf`
+and `shock.conf` files are no longer accepted.
+
 Optional residual shock capturing is now available independently; see
 [ADENC_SHOCK_CAPTURING.md](ADENC_SHOCK_CAPTURING.md). SUPG itself is unchanged.
 
@@ -9,12 +13,16 @@ It is not a positivity-preserving limiter or a calibration of river transport.
 
 ## Configuration and scope
 
-Optional `drutes.conf/netcdf/supg.conf`:
+Optional `drutes.conf/netcdf/stabilization.conf`:
 
 ```
 # enable [y/n]
 y
 # nonnegative, finite multiplier
+1.0
+# residual viscosity enabled [y/n]
+n
+# residual-viscosity multiplier
 1.0
 ```
 
