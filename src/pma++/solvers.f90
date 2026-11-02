@@ -1746,221 +1746,313 @@ module solvers
     !<
 
     !> metoda sdruzenych gradientu \ref pcg
-    subroutine PCG(A,Minv,b,x,itmax1,reps1,ilev1,itfin1,repsfin1,&
-        ll1,ll2,cond1,opcnt1,errcode1)
+    subroutine PCG(A, Minv, b, x, itmax1, reps1, ilev1, itfin1, repsfin1, &
+                   ll1, ll2, cond1, opcnt1, errcode1, abstol1)
+
         use mtx
-        use typy, r4type=>r4
+        use typy
+        use, intrinsic :: ieee_arithmetic, only: ieee_is_finite
+
         implicit none
-        !> matice soustavy\n
-        !! musi poskytovat getn, getm, mul (nasobeni vektorem)
+
         class(matrix), intent(in) :: A
-        !> matice predpodmineni - ve skutecnosti operator\n
-        !! musi poskytovat mul (nasobeni vektorem)
         class(matrix), intent(in) :: Minv
-        !> vektor prave strany
         real(kind=rkind), dimension(:), intent(in) :: b
-        !> aproximace reseni, postupne menena
-        real(kind=rkind), dimension(:), intent(in out) :: x
-        !> maximalni povoleny pocet iteraci, default = n ( Rozmer matice)
+        real(kind=rkind), dimension(:), intent(inout) :: x
         integer(kind=ikind), intent(in), optional :: itmax1
-        !> pozadovana relativni zmena rezidua, default = 1e-6
         real(kind=rkind), intent(in), optional :: reps1
-        !> informacni podrobnost\n
-        !> - 0 ... pracuj tise
-        !! - 1 ... minimalni informace
-        !! - 10 ... maximalni ukecanost
         integer, intent(in), optional :: ilev1
-        !> skutecne provedeny pocet iteraci
         integer(kind=ikind), intent(out), optional :: itfin1
-        !> skutecne dosazena relativni zmena residua
         real(kind=rkind), intent(out), optional :: repsfin1
-        !> odhad nejvetsiho vlastniho cisla
         real(kind=rkind), intent(out), optional :: ll1
-        !> odhad nejmensiho vlastniho cisla
         real(kind=rkind), intent(out), optional :: ll2
-        !> odhad cisla podminenosti : cond1 = ll1/ll2
         real(kind=rkind), intent(out), optional :: cond1
-        !> celkovy pocet provedenych operaci a cas behu
         type(tcount), intent(out), optional :: opcnt1
-        !> kod pripadnr chyby
-        !! - 0 ... OK
-        !! - 1 ... matice neni ctvercova
-        !! - 2 ... nesouhlasi b
-        !! - 3 ... nesouhasi x
-        !! - 4 ... ani jeden z vektoru nesouhlasi
-        !! - 5 ... vycerpan povoleny pocet iteraci
-        !! - 6 ... prestalo klesat residuum i energie
+        ! Error codes: 1 non-square; 2 RHS size; 3 solution size; 4 both sizes;
+        ! 5 iteration limit; 7 invalid data or non-positive/nonfinite curvature.
         integer, intent(out), optional :: errcode1
+        ! Optional absolute Euclidean criterion, instead of the relative
+        ! preconditioned residual criterion used by existing callers.
+        real(kind=rkind), intent(in), optional :: abstol1
+
         integer(kind=ikind) :: itmax, cnt, n
-        integer :: ilev,rcount, rcount1, errcode
-        real(kind=rkind) :: reps, repsfin, r0, r1, r2,r3,r4,l1,l2,t1,t2
-        real(kind=rkind) :: wrk, en, enmin, res2min
-        real(kind=rkind), dimension(:), allocatable :: res,p,Ap,&
-        alfa, beta, z
+        integer :: ilev, errcode
+        real(kind=rkind) :: reps, repsfin, r0, rz, rzold, curvature
+        real(kind=rkind) :: alpha, beta, l1, l2, t1, t2, abstol
+        real(kind=rkind), dimension(:), allocatable :: res, p, Ap, z
+        real(kind=rkind), dimension(:), allocatable :: alphas, betas
+        logical :: converged, estimate_spectrum
         type(tcount) :: opcnt
 
         call cpu_time(t1)
         !$ t1 = omp_get_wtime()
-        errcode = 0
-        if ( present(errcode1)) errcode1 = 0
+
         n = A%getn()
-        rcount = 0
-        rcount1 = 0
+        itmax = n
+        reps = 1.e-6_rkind
+        abstol = 0
+        ilev = 0
+        cnt = 0
+        errcode = 0
+        repsfin = huge(1.0_rkind)
         l1 = 1
         l2 = 1
-        if (present(ilev1)) then
-        ilev = ilev1
-        else
-            ilev = 0
-        end if
+        estimate_spectrum = present(ll1) .or. present(ll2) .or. present(cond1)
 
         if (present(itmax1)) then
-        itmax = itmax1
-        else
-            itmax = A%getn()
-            if (ilev==10) print *,&
-            "nastavuji default hodnotu pro itmax na",itmax
+
+            itmax = itmax1
+
         end if
-        allocate(alfa(0:itmax), beta(0:itmax))
+
+        if (present(reps1)) then
+
+            reps = reps1
+
+        end if
+
+        if (present(abstol1)) then
+
+            abstol = abstol1
+
+        end if
+
+        if (present(ilev1)) then
+
+            ilev = ilev1
+
+        end if
+
+        ! Check dimensions before any matrix-vector product.
         if (A%getn() /= A%getm()) then
-            if (present(errcode1)) then
-                errcode1 = 1
-                if (ilev>0) print *,"CG: Matice neni ctvercova"
-            return
-            else
-                Stop "CG: Matice neni ctvercova"
+
+            errcode = 1
+
+        else if (size(b, kind=ikind) /= n .and. size(x, kind=ikind) /= n) then
+
+            errcode = 4
+
+        else if (size(b, kind=ikind) /= n) then
+
+            errcode = 2
+
+        else if (size(x, kind=ikind) /= n) then
+
+            errcode = 3
+
+        else if (Minv%getn() /= n .or. Minv%getm() /= n) then
+
+            errcode = 7
+
+        else if (itmax < 1 .or. .not. ieee_is_finite(reps) .or. reps < 0 .or. &
+                 .not. ieee_is_finite(abstol) .or. abstol < 0) then
+
+            errcode = 7
+
+        else if (any(.not. ieee_is_finite(b)) .or. any(.not. ieee_is_finite(x))) then
+
+            errcode = 7
+
+        end if
+
+        if (errcode == 0) then
+
+            if (estimate_spectrum) then
+
+                allocate (alphas(0:itmax - 1), betas(0:itmax - 1))
+
             end if
-        end if
-        if (A%getn() /= ubound(b,1)) then
-            if (present(errcode1)) then
-                errcode1 = 2
-            if (ilev>0) print *,"CG : nesouhlasi delka prave strany"
-            else
-                Stop "CG: Nesouhlasi delka prave strany"
-            end if
-        end if
-        if (A%getm() /= ubound(x,1)) then
-            if (present(errcode1)) then
-                if (errcode1==0) then
-                    errcode1 = 3
-                if (ilev>0) print *,"CG: nesouhlasi delka reseni"
-                else
-                    errcode1 = 4
-                    if (ilev>0) print *,"CG: nesouhlasi delky obou vektoru"
-                end if
-            else
-                Stop "CG: Nesouhlasi delka vektoru neznamych"
-            end if
-        end if
-        if (present(errcode1)) then
-            if (errcode1>0) return
-        end if
-        if (present(reps1) ) then
-        reps = reps1
-        else
-            reps = 1.0e-6
-            if (ilev==10) print *,"nastavuji reps na defaultni hodnotu "&
-            , reps
-        end if
-        ! ted uz je snad vyrizeno vsechno ze vstupu
-        ! jdu pocitat
-        cnt = 0
-        !! Step 1
-        res = b - A%mul(x,opcnt)
-        z = Minv%mul(res)
-        r4 = dot_product(res,res)
-        r2 = dot_product(res,z)
-        r0 = r2
-        p = z
-        opcnt%ad  = n-1
-        opcnt%mul = n
-        !! Step 2
-        do
-            !! Step 3
-            Ap =A%mul(p,opcnt)
-            r1 = dot_product(p,Ap)
-            !!! tady zkontrolovat nulu
-            if ( r1 == 0.0) then
-                ! nasypat vysledky
-                ! zatim stopka
-                repsfin = 0
-                exit
-            end if
-            wrk = r2/r1
-            if (ilev>0) print *,"alfa=",wrk
-            alfa(cnt) = wrk
-            ! tenhle usek je jen kvuli vypoctu energie
-            en = -dot_product(x,b+res) ! je to vychozi energie
-            !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            !! Step 4
-            x = x + wrk*p
-            !! Step 5
-            res = res - wrk*Ap
+
+            res = b - A%mul(x, opcnt)
             z = Minv%mul(res)
-            !! Step 6
-            r3 = r2
-            r4 = dot_product(res,res)
-            r2 = dot_product(res,z)
-            wrk = r2/r3
-            if (ilev>0) print *,"beta=",wrk
-            beta(cnt) = wrk
-            !! Step 7
-            p = res + wrk*p
-            opcnt%ad  = opcnt%ad  + 4*n-2 + 2*n-1
-            opcnt%mul = opcnt%mul + 4*n   + n
-            opcnt%div = opcnt%div + 1
+            rz = dot_product(res, z)
+            r0 = rz
+            p = z
 
-            !! odhadnout vlastni cisla
-            call esteig(l1,l2,cnt,alfa,beta)
-            print *, "odhad vl. cisel:",l1,l2
-            !! hotovo
+            ! Handle a zero RHS or an exact initial guess before dividing by r0.
+            converged = norm2(res) == 0
 
-            cnt = cnt + 1
-            if (cnt==1) then
-                enmin = en
-                res2min = r2
-                if (r0==0.0_rkind) then
-                    repsfin=0
+            if (present(abstol1)) then
+
+                converged = norm2(res) <= abstol
+
+            end if
+
+            do while (.not. converged)
+
+                if (cnt >= itmax) then
+
+                    errcode = 5
                     exit
+
                 end if
+
+                if (rz <= 0 .or. .not. ieee_is_finite(rz)) then
+
+                    errcode = 7
+                    exit
+
+                end if
+
+                Ap = A%mul(p, opcnt)
+                curvature = dot_product(p, Ap)
+
+                if (curvature <= 0 .or. .not. ieee_is_finite(curvature)) then
+
+                    errcode = 7
+                    exit
+
+                end if
+
+                alpha = rz/curvature
+                x = x + alpha*p
+                res = res - alpha*Ap
+                cnt = cnt + 1
+
+                ! Control recurrence roundoff without model-specific solver code.
+                if (mod(cnt, 50_ikind) == 0) then
+
+                    res = b - A%mul(x, opcnt)
+
+                end if
+
+                z = Minv%mul(res)
+                rzold = rz
+                rz = dot_product(res, z)
+
+                if (rz < 0 .or. .not. ieee_is_finite(rz) .or. any(.not. ieee_is_finite(x))) then
+
+                    errcode = 7
+                    exit
+
+                end if
+
+                beta = rz/rzold
+                p = z + beta*p
+                repsfin = sqrt(rz/r0)
+                opcnt%ad = opcnt%ad + 6*n
+                opcnt%mul = opcnt%mul + 6*n
+                opcnt%div = opcnt%div + 2
+
+                if (estimate_spectrum) then
+
+                    alphas(cnt - 1) = alpha
+                    betas(cnt - 1) = beta
+                    call esteig(l1, l2, cnt - 1, alphas, betas)
+
+                end if
+
+                if (ilev > 0) then
+
+                    print *, cnt, norm2(res), repsfin
+
+                end if
+
+                if (present(abstol1)) then
+
+                    converged = norm2(res) <= abstol
+
+                else
+
+                    converged = repsfin <= reps
+
+                end if
+
+                if (converged) then
+
+                    ! Confirm convergence using the true residual, not only
+                    ! the recursively accumulated one.
+                    res = b - A%mul(x, opcnt)
+                    z = Minv%mul(res)
+                    rz = dot_product(res, z)
+
+                    if (rz < 0 .or. .not. ieee_is_finite(rz)) then
+
+                        errcode = 7
+                        exit
+
+                    end if
+
+                    repsfin = sqrt(rz/r0)
+
+                    if (present(abstol1)) then
+
+                        converged = norm2(res) <= abstol
+
+                    else
+
+                        converged = repsfin <= reps
+
+                    end if
+
+                    if (.not. converged) then
+
+                        p = z
+
+                    end if
+
+                end if
+
+            end do
+
+            if (cnt == 0 .and. converged) then
+
+                repsfin = 0
+
             end if
-            if (en < enmin) then
-                rcount = 0
-            enmin = en
-            else
-                rcount = rcount+1
-            end if
-            if (r2 < res2min) then
-                res2min = r2
-            rcount1 = 0
-            else
-                rcount1 = rcount1+1
-            end if
-            if (ilev>0)  print *, cnt,sqrt(r2), reps, en, enmin
-            if (cnt == itmax) then
-                errcode = 5
-                exit
-            end if
-            repsfin = sqrt(r2/r0)
-            if (repsfin < reps) exit
-            if ((rcount1>5) .and. (rcount > 5)) then
-                errcode = 6
-                exit
-            end if
-        end do
+
+        end if
 
         call cpu_time(t2)
         !$ t2 = omp_get_wtime()
-        opcnt%time = t2-t1
-        ! vyridit konec
-        if (present(opcnt1)) opcnt1 = opcnt
-        if (present(errcode1)) errcode1 = errcode
-        if (present(itfin1)) itfin1 = cnt
-        if (present(repsfin1)) repsfin1 = repsfin
-        if (present(ll1)) ll1 = l1
-        if (present(ll2)) ll2 = l2
-        if (present(cond1)) cond1 = l1/l2
 
+        opcnt%time = t2 - t1
+
+        if (present(opcnt1)) then
+
+            opcnt1 = opcnt
+
+        end if
+
+        if (present(errcode1)) then
+
+            errcode1 = errcode
+
+        else if (errcode /= 0) then
+
+            error stop 'PCG: invalid system or convergence failure'
+
+        end if
+
+        if (present(itfin1)) then
+
+            itfin1 = cnt
+
+        end if
+
+        if (present(repsfin1)) then
+
+            repsfin1 = repsfin
+
+        end if
+
+        if (present(ll1)) then
+
+            ll1 = l1
+
+        end if
+
+        if (present(ll2)) then
+
+            ll2 = l2
+
+        end if
+
+        if (present(cond1)) then
+
+            cond1 = l1/l2
+
+        end if
 
     end subroutine PCG
 

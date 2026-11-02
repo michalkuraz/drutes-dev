@@ -99,7 +99,7 @@ $(BINDIR)/drutes: $(OBJDIR)/main.o $(ALL_objs) | $(BINDIR)
 CORE_obj := $(OBJDIR)/typy.o $(OBJDIR)/global_objs.o $(OBJDIR)/globals.o $(OBJDIR)/globals1D.o $(OBJDIR)/globals2D.o  $(OBJDIR)/debug_tools.o $(OBJDIR)/core_tools.o $(OBJDIR)/pde_objs.o $(OBJDIR)/dummy_procs.o $(OBJDIR)/global4solver.o
 POINTERMAN_obj := $(OBJDIR)/manage_pointers.o
 RE_obj := $(OBJDIR)/re_constitutive.o $(OBJDIR)/re_reader.o $(OBJDIR)/re_globals.o $(OBJDIR)/re_total.o $(OBJDIR)/re_pointers.o $(OBJDIR)/re_analytical.o $(OBJDIR)/re_evap_methods.o
-MATHTOOLS_obj :=  $(OBJDIR)/linalg.o $(OBJDIR)/integral.o $(OBJDIR)/solver_interfaces.o $(OBJDIR)/simplelinalg.o $(OBJDIR)/gmres_solver.o
+MATHTOOLS_obj :=  $(OBJDIR)/linalg.o $(OBJDIR)/integral.o $(OBJDIR)/solver_interfaces.o $(OBJDIR)/simplelinalg.o $(OBJDIR)/gmres_solver.o $(OBJDIR)/sparse_operators.o
 TOOLS_obj := $(OBJDIR)/printtools.o $(OBJDIR)/simegen.o $(OBJDIR)/read_inputs.o $(OBJDIR)/drutes_init.o $(OBJDIR)/geom_tools.o $(OBJDIR)/postpro.o $(OBJDIR)/readtools.o $(OBJDIR)/objfnc.o $(OBJDIR)/datetime.o
 FEMTOOLS_obj := $(OBJDIR)/feminittools.o $(OBJDIR)/capmat.o $(OBJDIR)/stiffmat.o $(OBJDIR)/fem.o $(OBJDIR)/fem_tools.o $(OBJDIR)/femmat.o
 DECOMPO_obj :=  $(OBJDIR)/decomp_tools.o $(OBJDIR)/schwarz_dd.o  $(OBJDIR)/decomp_vars.o $(OBJDIR)/decomposer.o $(OBJDIR)/schwarz_dd2subcyc.o
@@ -178,6 +178,9 @@ $(OBJDIR)/solver_interfaces.o: $(CORE_obj) $(PMAoo_obj) $(OBJDIR)/readtools.o $(
 	$(FC) $(FFLAGS) -c src/mathtools/solver_interfaces.f90 -o $@
 
 #------end MATHTOOLS_obj---------------------------------
+
+$(OBJDIR)/sparse_operators.o: $(OBJDIR)/typy.o $(OBJDIR)/mtx.o src/mathtools/sparse_operators.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+	$(FC) $(FFLAGS) -c src/mathtools/sparse_operators.f90 -o $@
 
 
 #--------begin PMAoo_obj------------------------
@@ -456,7 +459,7 @@ $(OBJDIR)/ncdispersion.o: $(OBJDIR)/typy.o src/models/fluxLS/ncdispersion.f90 | 
 $(OBJDIR)/ncconfig.o: $(OBJDIR)/readtools.o src/models/fluxLS/ncconfig.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
 	$(FC) $(FFLAGS) -c src/models/fluxLS/ncconfig.f90 -o $@
 
-$(OBJDIR)/nchydroflow.o: $(CORE_obj) $(TOOLS_obj) $(OBJDIR)/ncconfig.o $(OBJDIR)/ncglobvars.o $(OBJDIR)/netcdfflux.o $(OBJDIR)/ncfluxarea.o src/models/fluxLS/nchydroflow.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
+$(OBJDIR)/nchydroflow.o: $(CORE_obj) $(TOOLS_obj) $(OBJDIR)/solvers.o $(OBJDIR)/sparsematrix.o $(OBJDIR)/sparse_operators.o $(OBJDIR)/ncconfig.o $(OBJDIR)/ncglobvars.o $(OBJDIR)/netcdfflux.o $(OBJDIR)/ncfluxarea.o src/models/fluxLS/nchydroflow.f90 | $(BUILD) $(OBJDIR) $(MODDIR)
 	$(FC) $(FFLAGS) -c src/models/fluxLS/nchydroflow.f90 -o $@
 
 $(OBJDIR)/ncsupg.o: $(CORE_obj) $(TOOLS_obj) $(OBJDIR)/ncconfig.o $(OBJDIR)/ncglobvars.o $(OBJDIR)/nchydroflow.o src/models/fluxLS/ncsupg.f90 | $(BUILD) $(OBJDIR) $(MODDIR)

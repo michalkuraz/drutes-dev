@@ -82,15 +82,11 @@ comments are allowed. Changing these files does not require recompilation.
 
 ## Migrating an existing configuration
 
-```sh
-python3 scripts/migrate_adenc_configs.py /path/to/drutes.conf --backup-parent /path/to/backups
-```
-
-The utility preserves the old parameter values and port list, writes the two
-combined files, archives the five small old files before removing them, and
-leaves large NetCDF files untouched. It refuses differing existing combined
-files. Pass input configuration folders explicitly; do not alter the archived
-inputs of completed scientific runs merely to inspect their outputs.
+Preserve the old parameter values and port list when transferring them into
+the two combined files described above. Back up the old small configuration
+files outside the run directory, then remove the five obsolete files from the
+active configuration. Large NetCDF inputs do not need to change. Do not alter
+archived inputs of completed scientific runs merely to inspect their outputs.
 
 Every new model run needs its own empty `out/`: main clears `out/*` at startup.
 Numerical calculations, boundary formulas, flux projection and stabilization

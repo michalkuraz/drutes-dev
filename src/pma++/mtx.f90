@@ -134,6 +134,8 @@ module mtx
     end interface
 
     public :: mtxtest
+    !> Base constructor for derived matrix implementations overriding init/resize.
+    public :: initmatrix
     public :: estimeigvalues
     public :: copyperm
 

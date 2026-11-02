@@ -7,3 +7,53 @@ user/
 backups/
 # Large externally supplied mHM routing inputs; symlinks/copies installed per case.
 **/netcdf/mRM_restart_*.nc
+
+# Local builds, generated output and machine/editor state.
+/bin/
+/build/
+/out/
+/output/
+/runs/
+/exports/
+/tmp/
+/solver.time
+*.o
+*.mod
+*.smod
+*.egg-info/
+.DS_Store
+.fortls
+
+# GUI, Python tooling and local agent notes are maintained outside the solver.
+/drutes_gui/
+/drutespy/
+/pages/
+/deploy/
+/scripts/
+/tests/
+*.py
+/pyproject.toml
+/.streamlit/
+/AGENTS.md
+/docs/PROJECT_CONTEXT.md
+/docs/ADENC_AREA_AUDIT_20261008.md
+/docs/ADENC_CONSERVATIVE_SERVER_20261008.md
+/docs/ADENC_HYDROFLOW_RHINE_TEST_20261008.md
+/docs/DRUTES_NETCDF_CHATGPT_HANDOVER_EN.txt
+/docs/adenc_reference/
+/docs/manual/
+/logo.png
+
+# Local experiment copies and auxiliary plotting/drawing files.
+/drutes.conf[0-9]*/
+/examples/
+/drutes.conf/dwgs/
+/drutes.conf/heat/heatplots.R
+*.bak
+*.temp
+*.conf.init
+*.conf.new
+
+# Hydrological payloads are installed separately; do not add them by accident.
+# A deliberately selected small NetCDF fixture can be added with git add -f.
+*.nc

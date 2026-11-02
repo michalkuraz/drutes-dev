@@ -1,8 +1,0 @@
-core
-decompo
-femtools
-mathtools
-models
-pma++
-pointerman
-tools

@@ -217,6 +217,11 @@ ID102 alone is not an outlet and the example's node numbers must not be copied.
 
 ## Verification and remaining work
 
+The following is a historical verification record. Python test harnesses and
+server-run reports referenced in this record are local development artifacts,
+not distributed with the Fortran solver. Fortran test drivers remain under
+`tests/fortran/`.
+
 Tests in test_adenc_hydroflow.f90 and test_ncflux_width.py exercise the real
 modules in temporary directories, never main or existing results directories:
 
@@ -279,8 +284,8 @@ to1.021e-9; assembly budgets and independent saved-field inventories agree at
 roundoff. The600s pulse still has a small negative tail. Hydraulic correction
 is about0.8114, and the outlet is a restricted numerical-test opening, with no
 lateral sources. These results are not physical calibration or a positivity
-proof. See ADENC_HYDROFLOW_RHINE_TEST_20261008.md, including the guarded failed
-outlet selection and initial/boundary mass caveats. No long benchmark run was
+proof. The local verification report also records the guarded failed outlet
+selection and initial/boundary mass caveats. No long benchmark run was
 launched; repository defaults and earlier outputs remain untouched.
 
 Method background: Odsæter et al., *Postprocessing of Non-Conservative Flux for

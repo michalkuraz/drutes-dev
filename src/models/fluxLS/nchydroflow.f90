@@ -1672,11 +1672,15 @@ contains
   end subroutine
 
   ! min sum((F-F0)**2 / weight), subject to B F=target and prescribed edges.
-  ! Matrix-free Jacobi-PCG on B W B^T; no changes to DRUtES transport solver.
+  ! Assemble B W B^T using the shared sparse matrix and PCG solver.
   ! Closed compatible components use one potential gauge; inconsistent ones fail.
 
   subroutine hydro_project(owner, preferred, weight, fixed, fixed_value, target, rtol, maxiter, &
                            flux, ok, iterations, error)
+
+    use sparsematrix, only: smtx
+    use sparse_operators, only: csr_matrix, diagonal_matrix
+    use solvers, only: PCG
 
     integer, dimension(:, :), intent(in) :: owner
     integer, intent(in) :: maxiter
@@ -1693,12 +1697,17 @@ contains
     real(kind=rkind), dimension(size(target)) :: diagonal
     real(kind=rkind), dimension(size(target)) :: rhs
     real(kind=rkind), dimension(size(target)) :: lambda
-    real(kind=rkind), dimension(size(target)) :: r
-    real(kind=rkind), dimension(size(target)) :: z
-    real(kind=rkind), dimension(size(target)) :: p
     real(kind=rkind), dimension(size(target)) :: ap
     real(kind=rkind), dimension(size(target)) :: sumr
-    real(kind=rkind) :: rz, rznew, alpha, denom, scale, tol, delta
+    real(kind=rkind) :: scale, tol, delta
+    type(smtx) :: assembled
+    type(csr_matrix) :: matrix
+    type(diagonal_matrix) :: preconditioner
+    integer(kind=ikind), dimension(size(target)) :: compact_index
+    integer(kind=ikind), dimension(:), allocatable :: free_ids
+    real(kind=rkind), dimension(:), allocatable :: reduced_rhs, solution
+    integer(kind=ikind) :: n, row, col, count_iterations
+    integer :: solver_error
     integer, dimension(size(target)) :: root
     integer :: i
     integer :: a
@@ -1837,51 +1846,68 @@ contains
     end do
 
     where (diagonal == 0) pinned = .true.
-    where (pinned) diagonal = 1
     lambda = 0
-    r = rhs
-    where (pinned) r = 0
-    z = r/diagonal
-    p = z
-    rz = dot_product(r, z)
+    compact_index = 0
+    n = count(.not. pinned, kind=ikind)
+    free_ids = pack([(row, row = 1, size(target, kind=ikind))], .not. pinned)
+    allocate (solution(n))
+    solution = 0
+    reduced_rhs = rhs(free_ids)
 
-    do while (norm2(r) > tol)
+    ! Known zero potentials (inactive elements and gauges) are eliminated.
+    ! Preserve global FE numbering everywhere outside the algebraic solve.
+    call assembled%init(n, n)
 
-      if (iterations >= maxiter .or. rz <= 0 .or. .not. ieee_is_finite(rz)) then
+    do row = 1, n
 
-        return
-
-      end if
-
-      call action(p, ap)
-      denom = dot_product(p, ap)
-
-      if (denom <= 0 .or. .not. ieee_is_finite(denom)) then
-
-        return
-
-      end if
-
-      alpha = rz/denom
-      lambda = lambda + alpha*p
-      r = r - alpha*ap
-      iterations = iterations + 1
-      ! Recompute occasionally instead of trusting accumulated PCG roundoff.
-
-      if (mod(iterations, 50) == 0) then
-
-        call action(lambda, ap)
-        r = rhs - ap
-        where (pinned) r = 0
-
-      end if
-
-      z = r/diagonal
-      rznew = dot_product(r, z)
-      p = z + (rznew/rz)*p
-      rz = rznew
+      compact_index(free_ids(row)) = row
+      call assembled%set(diagonal(free_ids(row)), row, row)
 
     end do
+
+    call preconditioner%set_values(1.0_rkind/diagonal(free_ids))
+
+    do i = 1, size(flux)
+
+      if (fixed(i)) then
+
+        cycle
+
+      end if
+
+      row = owner(i, 1)
+      col = owner(i, 2)
+
+      if (col > 0) then
+
+        if (.not. pinned(row) .and. .not. pinned(col)) then
+
+          call assembled%add(-weight(i), compact_index(row), compact_index(col))
+          call assembled%add(-weight(i), compact_index(col), compact_index(row))
+
+        end if
+
+      end if
+
+    end do
+
+    if (n > 0) then
+
+      call matrix%from_matrix(assembled)
+      call PCG(A=matrix, Minv=preconditioner, b=reduced_rhs, x=solution, &
+               itmax1=int(maxiter, ikind), abstol1=tol, ilev1=0, &
+               itfin1=count_iterations, errcode1=solver_error)
+      iterations = int(count_iterations)
+
+      if (solver_error /= 0) then
+
+        return
+
+      end if
+
+      lambda(free_ids) = solution
+
+    end if
 
     do i = 1, size(flux)
 
@@ -1932,68 +1958,6 @@ contains
 
     end subroutine
 
-    subroutine action(x, v)
-
-      real(kind=rkind), dimension(:), intent(in) :: x
-      real(kind=rkind), dimension(:), intent(out) :: v
-      integer :: k, a, b
-      real(kind=rkind) :: d
-
-      v = 0
-
-      do k = 1, size(flux)
-
-        if (fixed(k)) then
-
-          cycle
-
-        end if
-
-        a = owner(k, 1)
-        b = owner(k, 2)
-        d = 0
-
-        if (.not. pinned(a)) then
-
-          d = x(a)
-
-        end if
-
-
-        if (b > 0) then
-
-          if (.not. pinned(b)) then
-
-            d = d - x(b)
-
-          end if
-
-
-        end if
-
-        if (.not. pinned(a)) then
-
-          v(a) = v(a) + weight(k)*d
-
-        end if
-
-
-        if (b > 0) then
-
-          if (.not. pinned(b)) then
-
-            v(b) = v(b) - weight(k)*d
-
-          end if
-
-
-        end if
-
-      end do
-
-      where (pinned) v = x
-
-    end subroutine
 
   end subroutine
 
