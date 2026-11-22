@@ -1,53 +1,86 @@
-# NetCDF transport configuration — 2026-10-12
+# NetCDF transport configuration
 
-The model now uses two files under `drutes.conf/netcdf/`:
-`transport.conf` and `stabilization.conf`. The former separate
-`riverbank.conf`, `conservative.conf`, `hydroflow.conf`, `supg.conf` and
-`shock.conf` are rejected, including when a combined file is also present.
-This prevents an obsolete setting from being silently ignored.
+The active ADEnc configurations put transport and hydraulics in
+`netcdf.conf`, before the concentration boundary records. Stabilization
+remains in `stabilization.conf`.
 
 ## Transport and hydraulics
 
-The first four data records of `transport.conf`, in order, are:
+In `netcdf/netcdf.conf`, the section immediately after the start date sets
+longitudinal dispersivity `alpha_L` [m], transverse dispersivity `alpha_T`
+[m], and the first-order deposition rate `k_dep` [s⁻¹]. Use `uniform` followed by two lines: dispersivity, then deposition.
+Historical unlabelled uniform records are still readable. To partition the catchment, replace
+that record with a block like the following (illustrative values only):
 
 ```text
-# Zero total solute flux on banks
-y
-# Conservative transport
-y
-# Write accepted-step mass balance to out/adenc_mass_balance.csv
-y
-# Compatible hydraulic reconstruction
-y
+materials
+200 0.2        # material 1: longitudinal/transverse dispersivity [m]
+0              # material 1: deposition [1/s]
+500 2.0        # material 2: dispersivity [m]
+1e-5           # material 2: deposition [1/s]
+end materials
 ```
 
-If the fourth flag is `n`, the file ends there. If it is `y`, append:
+Leave the existing Qmin record immediately after this block. As in ADE and
+Richards, material IDs start at 1; provide two lines for every index through
+the largest mesh material ID, including unused intermediate IDs. In a Gmsh
+2.2 mesh these are the triangles’ physical surface tags, not element IDs,
+boundary tags or channel path numbers. All values must be finite and
+nonnegative. Omitting `alpha_T` gives isotropic dispersion; setting
+`k_dep` to zero disables deposition in that material. The local suspended-mass
+sink is `-k_dep * H * C` and uses the same virtual depth as storage.
+Channel selection (Qmin), hydrology, and the initial concentration remain
+catchment-wide.
 
-1. Lateral source policy: `0` = no distributed sources; `1` = explicit `lateral.conf`.
-2. Hydraulic forcing: `0` = daily steps; `1` = linear daily interpolation.
-3. Relative water-balance tolerance, positive and at most `1e-6`.
-4. Maximum auxiliary projection PCG iterations, a positive integer.
-5. Maximum relative edge-flux correction, positive.
-6. Number of explicit port edges, at least two.
-7. That many `node1 node2 kind discharge` records.
-8. Optional final `y/n` to remove unported disconnected components at initialization.
+After the channel count, add the `transport` block. Its two flags select
+no-flow banks (required for ADEnc) and the accepted-step mass audit.
+The conservative formulation is always used in this block. Deposition
+decreases suspended mass; it is included as a sink in the mass balance.
+A complete example for the current Rhine/Moselle mesh is:
 
-Port nodes are FE array indices. `kind=-1` is an inlet: discharge `0` uses
-Qrouted and positive values prescribe m³/s. `kind=1` is an outlet and requires
-discharge `0`; its nonnegative flux is determined by the hydraulic projection.
-Port lists must match the active mesh. The example file is a four-triangle
-test configuration; its node indices are not Rhine boundary definitions.
+```text
+transport
+y              # no solute flux through banks
+y              # write out/adenc_mass_balance.csv
+outlet profile
+293200 5740000
+293200 5751500
+hydraulic settings
+0              # lateral sources: 0 = none, 1 = explicit lateral.conf
+1              # forcing: 0 = daily steps, 1 = linear interpolation
+1e-10          # relative water-balance tolerance
+20000          # maximum projection PCG iterations
+1.0            # maximum relative edge-flux correction
+y              # remove whole disconnected components with neither inlet nor outlet
+end transport
+```
 
-Conservative/audit modes require no-flow banks and standard 2D Picard.
-Hydraulic reconstruction also requires conservative mode. Conservative
-time integration requires the supported transient implicit Euler formulation;
-restart from backup and Schwarz execution remain unsupported in this mode.
-The audit flag can be off when conservative hydraulic reconstruction is on.
+Each point is `x y` in the mesh CRS (metres). Order them so that downstream
+is to the **left** when looking from the first point to the second. ADEnc
+looks for midpoints of open active-domain edges in a band extending 2.5%
+of the segment length on either side. The routed flow must point downstream
+and outward across the edge. Place the segment along the outlet face,
+slightly overlapping the real opening. This selects existing edges,
+rather than cutting or retriangulating the mesh. Where two eligible edges
+project onto the same part of the profile, the closer edge takes priority.
+Reversed or misplaced points can fail initialization.
 
-Absent `transport.conf` means all four options are disabled, provided no
-obsolete file is present. Root defaults preserve their previous physics:
-banks on, conservative/audit/hydraulic reconstruction off. Current scenario
-3a/3b input folders enable all four options.
+The tagged edges on the exterior of the mesh supply inlets. Their discharge
+comes from `Qrouted`, with the existing length weighting per inlet ID.
+Outlets use the existing balanced-discharge projection. No node IDs are
+entered. Missing elevation is not used to choose ports.
+
+The `hydraulic settings` subsection is optional. Defaults are
+`0, 1, 1e-10, 20000, 1.0, n` (in that order). ADEnc's conservative
+formulation requires no-flow banks and standard 2D Picard.
+Omit `outlet profile` and its settings entirely to use unreconstructed
+flux with a warning. A supplied profile which cannot be resolved is an
+error, not a silent fallback. The independent mRM routing input is still
+required in both modes.
+
+The root configuration and scenarios 1, 2, and 3 keep their previous
+unreconstructed transport. Scenarios 3a and 3b and the runnable examples
+specify the profile above.
 
 ## Stabilization
 
@@ -82,11 +115,14 @@ comments are allowed. Changing these files does not require recompilation.
 
 ## Migrating an existing configuration
 
-Preserve the old parameter values and port list when transferring them into
-the two combined files described above. Back up the old small configuration
-files outside the run directory, then remove the five obsolete files from the
-active configuration. Large NetCDF inputs do not need to change. Do not alter
-archived inputs of completed scientific runs merely to inspect their outputs.
+Keep the no-flow banks and mass-audit flags in the block after the channel count.
+Remove the old conservative-transport flag; set the bank flag to `y`.
+If reconstruction was used, replace the node-pair list with an outlet
+profile and keep any non-default hydraulic settings. Check the physical
+inlet tags in the mesh: they must mark only the actual inlet openings.
+Archive the old `transport.conf` outside the configuration; a merged block
+and the old file cannot coexist. Unmerged historical inputs remain readable
+for reproducibility.
 
 Every new model run needs its own empty `out/`: main clears `out/*` at startup.
 Numerical calculations, boundary formulas, flux projection and stabilization

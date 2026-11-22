@@ -113,7 +113,7 @@ contains
     implicit none
     integer(kind=ikind), intent(in) :: unit
     integer(kind=ikind) :: status
-    logical :: banks, conservative, audit, old_file
+    logical :: banks, audit, old_file
     character(len=1024) :: line
 
     call config_record(unit, line, status)
@@ -138,10 +138,9 @@ contains
     call reject_old_config('drutes.conf/netcdf/hydroflow.conf')
 
     call config_flag(unit, banks)
-    call config_flag(unit, conservative)
     call config_flag(unit, audit)
     call read_adenc_banks(banks)
-    call read_adenc_conservative(conservative, audit)
+    call read_adenc_conservative(audit_enabled=audit)
     call config_record(unit, line, status)
     if (status /= 0) error stop 'Missing outlet profile or end transport in netcdf.conf'
 
@@ -154,6 +153,10 @@ contains
     case ('outlet profile')
 
       call read_adenc_hydro(unit, .true.)
+
+    case ('y', 'n')
+
+      error stop 'Remove the obsolete conservative transport flag from netcdf.conf'
 
     case default
 
@@ -739,6 +742,7 @@ contains
     use, intrinsic :: ieee_arithmetic, only: ieee_is_finite
     use, intrinsic :: iso_fortran_env, only: iostat_end
     implicit none
+    
 
     integer(kind=ikind) :: fileid
     integer :: ierr, line_number

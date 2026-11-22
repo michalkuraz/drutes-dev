@@ -1,8 +1,8 @@
 # Explicit tributary and lateral inflows for ADEnc
 
 Current input format: [ADENC_CONFIGS.md](ADENC_CONFIGS.md). Hydraulic settings
-now follow the first four flags in `transport.conf`; references to
-`hydroflow.conf` below describe the pre-2026-10-12 input layout.
+follow the outlet profile in the `netcdf.conf` transport block; references
+to `hydroflow.conf` below describe the historical input layout.
 
 Implemented 2026-10-09. Opt-in, ADEnc-local, no changes to global FEM/solver/
 Schwarz files. Existing source policy0 and missing/off hydroflow configs retain

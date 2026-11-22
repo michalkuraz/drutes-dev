@@ -2,28 +2,25 @@
 
 Implemented locally 2026-10-08. Existing server runs, private run binaries,
 original scenario inputs and NetCDF data were not changed. The repository's
-`drutes.conf/netcdf/transport.conf` conservative/audit flags default to `n` / `n`: no change to
-the default transport formulation or production output filenames in legacy mode.
+`drutes.conf/netcdf/netcdf.conf` transport block always uses conservative
+assembly. The mass audit can be switched on separately.
 
 ## Enable in a NEW isolated run directory
 
-Four logical records in `transport.conf`, with comments allowed above records:
+Two logical records in the `netcdf.conf` transport block, with comments allowed above records:
 
 ```text
+transport
 # Zero total solute flux on banks
-y
-# Conservative transport formulation
 y
 # Accepted-step mass-balance output
 y
-# Compatible hydraulic reconstruction (append its port settings if enabled)
-n
+end transport
 ```
 
-Conservative/audit flags `n` / `y` enable an audit of the original formulation without changing its
-matrices, Dirichlet timing or time-step selection. A missing file or `n` / `n`
-retains the original path. The first flag (no-flow banks) must be `y` for either audit
-or conservative mode. Separate `conservative.conf` and `riverbank.conf` are
+The first flag (no-flow banks) must be `y`. The second flag enables the audit
+without changing the transport equations. Deposition counts as mass leaving
+the water phase, not as a numerical conservation error. Separate `conservative.conf` and `riverbank.conf` are
 rejected; see [ADENC_CONFIGS.md](ADENC_CONFIGS.md). Supported: single ADEnc equation, 2D P1 triangles,
 standard Picard, transient implicit Euler with lumped or consistent capacity.
 Other solvers/time methods and restart from backup are rejected, not silently
