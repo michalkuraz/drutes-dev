@@ -2,6 +2,167 @@ module init_netcdf
 
 contains
 
+  ! As in ADE and Richards, row i describes mesh material i. A single
+  ! unlabelled parameter record retains its legacy, catchment-wide meaning.
+  subroutine read_adenc_materials(unit, material_ids, params)
+
+    use ncglobvars, only: ikind, rkind, adenc_material
+    use ncconfig, only: config_record
+    use ncdispersion, only: parse_ls_dispersivity
+    implicit none
+    integer(kind=ikind), intent(in) :: unit
+    integer(kind=ikind), dimension(:), intent(in) :: material_ids
+    type(adenc_material), dimension(:), allocatable, intent(out) :: params
+    character(len=4096) :: line
+    integer(kind=ikind) :: i, status
+    integer(kind=ikind) :: nvalues
+    real(kind=rkind) :: unused
+    logical :: table, paired, ok
+
+    if (size(material_ids) == 0 .or. minval(material_ids) < 1) then
+
+      error stop 'ADEnc requires positive mesh material IDs'
+
+    end if
+
+    allocate (params(maxval(material_ids)))
+    call config_record(unit, line, status)
+
+    if (status /= 0) then
+
+      error stop 'Missing ADEnc transport parameters in netcdf.conf'
+
+    end if
+
+    table = adjustl(line) == 'materials'
+    paired = table .or. adjustl(line) == 'uniform'
+
+    do i = 1, size(params)
+
+      if (paired) then
+
+        call config_record(unit, line, status)
+
+        if (status /= 0) then
+
+          error stop 'Incomplete ADEnc materials block in netcdf.conf'
+
+        end if
+
+      end if
+
+      if (paired) then
+
+        call parse_ls_dispersivity(line, params(i)%alpha_l, params(i)%alpha_t, ok)
+
+        if (ok) then
+
+          call config_record(unit, line, status)
+          ok = .false.
+
+          if (status == 0) then
+
+            call parse_ls_dispersivity(line, params(i)%k_dep, unused, ok, value_count=nvalues)
+            ok = ok .and. nvalues == 1
+
+          end if
+
+        end if
+
+      else
+
+        ! Historical uniform single-record inputs (no marker).
+        call parse_ls_dispersivity(line, params(i)%alpha_l, params(i)%alpha_t, ok, params(i)%k_dep)
+
+      end if
+
+      if (.not. ok) then
+
+        print '(a,i0)', 'netcdf.conf: invalid dispersivity or deposition rate for material ', i
+        error stop 'Invalid or missing ADEnc material record'
+
+      end if
+
+      if (.not. table) then
+
+        params = params(1)
+        return
+
+      end if
+
+    end do
+
+    call config_record(unit, line, status)
+
+    if (status /= 0 .or. adjustl(line) /= 'end materials') then
+
+      error stop 'Expected end materials after one record per mesh material in netcdf.conf'
+
+    end if
+
+  end subroutine read_adenc_materials
+
+  ! The transport block follows channel_count, before the concentration BCs.
+  subroutine read_adenc_transport(unit)
+
+    use typy, only: ikind
+    use ncconfig, only: config_record, config_flag, reject_old_config
+    use ncboundary, only: read_adenc_banks
+    use ncconservative, only: read_adenc_conservative
+    use nchydroflow, only: read_adenc_hydro
+    implicit none
+    integer(kind=ikind), intent(in) :: unit
+    integer(kind=ikind) :: status
+    logical :: banks, conservative, audit, old_file
+    character(len=1024) :: line
+
+    call config_record(unit, line, status)
+
+    if (status /= 0) error stop 'Missing ADEnc transport or boundary settings'
+
+    if (trim(adjustl(line)) /= 'transport') then
+
+      ! Allow historical, unmerged configurations to reproduce their results.
+      backspace (unit)
+      call read_adenc_banks()
+      call read_adenc_conservative()
+      call read_adenc_hydro()
+      return
+
+    end if
+
+    inquire (file='drutes.conf/netcdf/transport.conf', exist=old_file)
+    if (old_file) error stop 'Remove obsolete transport.conf when using the netcdf.conf transport block'
+    call reject_old_config('drutes.conf/netcdf/riverbank.conf')
+    call reject_old_config('drutes.conf/netcdf/conservative.conf')
+    call reject_old_config('drutes.conf/netcdf/hydroflow.conf')
+
+    call config_flag(unit, banks)
+    call config_flag(unit, conservative)
+    call config_flag(unit, audit)
+    call read_adenc_banks(banks)
+    call read_adenc_conservative(conservative, audit)
+    call config_record(unit, line, status)
+    if (status /= 0) error stop 'Missing outlet profile or end transport in netcdf.conf'
+
+    select case (trim(adjustl(line)))
+
+    case ('end transport')
+
+      call read_adenc_hydro(unit, .false.)
+
+    case ('outlet profile')
+
+      call read_adenc_hydro(unit, .true.)
+
+    case default
+
+      error stop 'Expected outlet profile or end transport in netcdf.conf'
+
+    end select
+
+  end subroutine read_adenc_transport
+
   subroutine netcdf()
 
     use typy
@@ -21,11 +182,9 @@ contains
     use ncmesh
     use ncmap
     use geom_tools
-    use ncdispersion, only: parse_ls_dispersivity
     use ncsupg, only: read_adenc_supg
-    use ncboundary, only: read_adenc_banks, prepare_adenc_banks
-    use ncconservative, only: read_adenc_conservative
-    use nchydroflow, only: read_adenc_hydro, LShydro, hydro_filter, hydro_initialize
+    use ncboundary, only: prepare_adenc_banks
+    use nchydroflow, only: LShydro, hydro_filter, hydro_initialize
     use ncrouting, only: read_adenc_routing, routing_apply_directions
 
     integer :: ierr
@@ -34,7 +193,6 @@ contains
     logical :: success
     real(kind=rkind) :: q, segment_distance, best_segment_distance
     character(len=1024) :: errmsg
-    character(len=4096) :: dispersivity_line
     integer(kind=ikind), dimension(3) :: datearray
     integer(kind=ikind), dimension(:), allocatable :: original_edge
     real(kind=rkind), dimension(2) :: xy, A, B, C
@@ -76,29 +234,16 @@ contains
 
     starttime%day = datearray(3)
 
-    call comment(int(fileconf))
-    read (fileconf, '(A)', iostat=ierr) dispersivity_line
+    call read_adenc_materials(fileconf, elements%material, adencpar)
 
-    if (ierr /= 0) then
+    do i = 1, size(adencpar)
 
-      call file_error(int(fileconf), "missing ADEnc dispersivity record")
+      write (errmsg, '(a,i0,3(a,es14.6))') 'ADEnc material ', i, ': alpha_L [m]=', adencpar(i)%alpha_l, &
+        ' alpha_T [m]=', adencpar(i)%alpha_t, ' k_dep [1/s]=', adencpar(i)%k_dep
+      call write_log(trim(errmsg))
 
-    end if
-
-    call parse_ls_dispersivity(dispersivity_line, LSdisp, LSdisp_transverse, success)
-
-    if (.not. success) then
-
-      call file_error(int(fileconf), "ADEnc dispersivity must be one or two finite nonnegative values: alpha_L [m] alpha_T [m]")
-
-    end if
-
-    write (errmsg, *) "ADEnc dispersivity [m]: alpha_L=", LSdisp, " alpha_T=", LSdisp_transverse
-    call write_log(trim(errmsg))
+    end do
     call read_adenc_supg()
-    call read_adenc_banks()
-    call read_adenc_conservative()
-    call read_adenc_hydro()
 
     call fileread(Qmin, int(fileconf), ranges=(/0.0_rkind, huge(0.0_rkind)/), &
                   errmsg="incorrect Qmin definition in drutes.conf/netcdf/netcdf.conf")
@@ -108,6 +253,8 @@ contains
 
     call fileread(channel_count, int(fileconf), ranges=(/1_ikind, huge(1_ikind)/), &
                   errmsg="number of channels in drutes.conf/netcdf/netcdf.conf must be at least 1")
+
+    call read_adenc_transport(fileconf)
 
     call set_adenc_boundary_id()
     original_edge = nodes%edge

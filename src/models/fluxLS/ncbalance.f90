@@ -15,6 +15,7 @@ module ncbalance
   logical, dimension(:), allocatable :: seen
   real(kind=rkind), public :: balance_error = 0, balance_mass = 0, balance_free_residual = 0
   real(kind=rkind) :: initial_mass = 0, cum_in = 0, cum_out = 0, cum_source = 0
+  real(kind=rkind) :: cum_deposited = 0
   integer(kind=ikind) :: output_unit = 0
   logical :: started = .false.
 
@@ -33,6 +34,7 @@ contains
     cum_in = 0
     cum_out = 0
     cum_source = 0
+    cum_deposited = 0
     balance_error = 0
     balance_mass = 0
     balance_free_residual = 0
@@ -79,7 +81,7 @@ contains
 
     use pde_objs, only: pde_str, pde_common
     use globals, only: elements, nodes
-    use ncglobvars, only: ncfluxdata
+    use ncglobvars, only: ncfluxdata, adencpar
     class(pde_str), intent(in) :: pde_loc
     logical, intent(in) :: accepted
     real(kind=rkind), intent(in) :: t, dt
@@ -90,6 +92,8 @@ contains
     real(kind=rkind) :: source
     real(kind=rkind) :: step_in
     real(kind=rkind) :: step_out
+    real(kind=rkind) :: deposited, step_error, element_mass
+    logical :: report_deposition
     real(kind=rkind) :: negative
     real(kind=rkind) :: scale
     real(kind=rkind) :: flux
@@ -125,6 +129,8 @@ contains
     reaction = 0
     balance_mass = 0
     oldmass = 0
+    deposited = 0
+    report_deposition = any(adencpar%k_dep > 0.0_rkind)
     source = 0
     net = 0
     negative = 0
@@ -160,7 +166,10 @@ contains
 
       end do
 
-      balance_mass = balance_mass + dot_product(new_weights(:, el), c)
+      element_mass = dot_product(new_weights(:, el), c)
+      balance_mass = balance_mass + element_mass
+      ! Same implicit H*C inventory and local rate as the assembled reaction.
+      deposited = deposited + dt*adencpar(elements%material(el))%k_dep*element_mass
       negative = negative + dot_product(new_weights(:, el), max(-c, 0.0_rkind))
       oldmass = oldmass + old_inventory(el)
       source = source + source_amount(el)
@@ -207,8 +216,14 @@ contains
 
       end if
 
-      write (output_unit, '(a)') 'time_s,dt_s,inventory,initial_inventory,cumulative_in,cumulative_out,'// &
+      write (output_unit, '(a)', advance='no') 'time_s,dt_s,inventory,initial_inventory,cumulative_in,cumulative_out,'// &
         'cumulative_source,error,relative_error,step_error,free_residual,negative_nodal_inventory'
+      if (report_deposition) then
+
+        write (output_unit, '(a)', advance='no') ',step_deposited,cumulative_deposited'
+
+      end if
+      write (output_unit, '()')
       started = .true.
 
     end if
@@ -216,11 +231,19 @@ contains
     cum_in = cum_in + step_in
     cum_out = cum_out + step_out
     cum_source = cum_source + source
-    balance_error = balance_mass - initial_mass - cum_in + cum_out - cum_source
+    cum_deposited = cum_deposited + deposited
+    balance_error = balance_mass - initial_mass - cum_in + cum_out - cum_source + cum_deposited
+    step_error = balance_mass - oldmass - step_in + step_out - source + deposited
     scale = max(abs(initial_mass) + cum_in + abs(cum_source), tiny(1.0_rkind))
-    write (output_unit, '(*(es24.16,:,","))') t + dt, dt, balance_mass, initial_mass, cum_in, cum_out, cum_source, &
-      balance_error, balance_error/scale, balance_mass - oldmass - step_in + step_out - source, &
+    write (output_unit, '(*(es24.16,:,","))', advance='no') t + dt, dt, balance_mass, initial_mass, cum_in, cum_out, cum_source, &
+      balance_error, balance_error/scale, step_error, &
       balance_free_residual, negative
+    if (report_deposition) then
+
+      write (output_unit, '(2(",",es24.16))', advance='no') deposited, cum_deposited
+
+    end if
+    write (output_unit, '()')
     flush (output_unit)
     seen = .false.
 

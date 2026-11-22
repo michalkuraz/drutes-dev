@@ -13,8 +13,15 @@ module ncglobvars
   integer(kind=ikind) :: geograzone = 32
   real(kind=rkind), dimension(:), allocatable :: nodealt
   real(kind=rkind) :: Qmin
-  real(kind=rkind) :: LSdisp ! longitudinal dispersivity [m]; legacy name retained
-  real(kind=rkind) :: LSdisp_transverse ! transverse dispersivity [m]
+  type :: adenc_material
+
+    real(kind=rkind) :: alpha_l = 0.0_rkind ! longitudinal dispersivity [m]
+    real(kind=rkind) :: alpha_t = 0.0_rkind ! transverse dispersivity [m]
+    real(kind=rkind) :: k_dep = 0.0_rkind   ! suspended inventory transfer to bed [1/s]
+
+  end type adenc_material
+
+  type(adenc_material), dimension(:), allocatable :: adencpar ! indexed by elements%material
   logical :: LSsupg = .false.
   real(kind=rkind) :: LSsupg_factor = 1.0_rkind
   logical :: LSshock = .false.

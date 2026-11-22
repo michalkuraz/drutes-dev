@@ -234,6 +234,38 @@ contains
 
   end subroutine ADEls_convection
 
+  ! First-order loss of suspended inventory H*C. FEM supplies the factor C.
+  function ADEls_deposition(pde_loc, layer, quadpnt, x) result(val)
+
+    use typy
+    use pde_objs
+    use ncglobvars, only: adencpar, ncfluxdata
+    class(pde_str), intent(in) :: pde_loc
+    integer(kind=ikind), intent(in) :: layer
+    type(integpnt_str), optional, intent(in) :: quadpnt
+    real(kind=rkind), dimension(:), optional, intent(in) :: x
+    real(kind=rkind) :: val
+    integer(kind=ikind) :: el
+
+    if (quadpnt%type_pnt == 'ndpt') then
+
+      el = active_node_element(quadpnt%order)
+
+    else
+
+      el = quadpnt%element
+
+    end if
+
+    val = 0.0_rkind
+    if (ncfluxdata%activeel(el)) then
+
+      val = -adencpar(layer)%k_dep * pde_loc%pde_fnc(1)%elasticity(pde_loc, layer, quadpnt, x)
+
+    end if
+
+  end function ADEls_deposition
+
   function ADEls_tder_coef(pde_loc, layer, quadpnt, x) result(val)
 
     use typy
@@ -579,14 +611,14 @@ contains
 
     if (present(tensor)) then
 
-      call ls_dispersion_tensor(qvector, LSdisp, LSdisp_transverse, tensor)
+      call ls_dispersion_tensor(qvector, adencpar(layer)%alpha_l, adencpar(layer)%alpha_t, tensor)
 
     end if
 
     if (present(scalar)) then
 
       ! Scalar interface reports the longitudinal coefficient, not the tensor.
-      scalar = LSdisp*norm2(qvector)
+      scalar = adencpar(layer)%alpha_l*norm2(qvector)
 
     end if
 

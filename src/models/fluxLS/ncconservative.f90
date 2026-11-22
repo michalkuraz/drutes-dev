@@ -11,13 +11,14 @@ module ncconservative
 
 contains
 
-  subroutine read_adenc_conservative()
+  subroutine read_adenc_conservative(enabled, audit_enabled)
 
     use globals, only: drutes_config
     use ncconfig, only: open_transport_config
     use core_tools, only: write_log
     use ncbalance, only: balance_reset
     integer(kind=ikind) :: unit
+    logical, optional, intent(in) :: enabled, audit_enabled
     logical :: exists, banks, hydro
 
     LSconservative = .false.
@@ -34,11 +35,21 @@ contains
 
     end if
 
-    call open_transport_config(unit, exists, banks, LSconservative, LSbalance, hydro)
+    if (present(enabled)) then
 
-    if (exists) then
+      if (.not. present(audit_enabled)) error stop 'ADEnc internal error: missing mass audit flag'
+      LSconservative = enabled
+      LSbalance = audit_enabled
 
-      close (unit)
+    else
+
+      call open_transport_config(unit, exists, banks, LSconservative, LSbalance, hydro)
+
+      if (exists) then
+
+        close (unit)
+
+      end if
 
     end if
 

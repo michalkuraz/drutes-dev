@@ -6,6 +6,7 @@ module ncconfig
   implicit none
   private
   public :: open_transport_config, config_flag, config_end, reject_old_config
+  public :: config_record
 
 contains
 
@@ -19,7 +20,7 @@ contains
     if (exists) then
 
       print *, 'Obsolete configuration file: ', trim(path)
-      error stop 'Use transport.conf and stabilization.conf; separate legacy files are no longer supported'
+      error stop 'Use the netcdf.conf transport block and stabilization.conf; separate legacy files are no longer supported'
 
     end if
 
@@ -118,7 +119,7 @@ contains
 
   end subroutine
 
-  ! The caller owns the open unit, positioned immediately after the four flags.
+  ! The caller owns the open unit, positioned after the three flags.
 
   subroutine open_transport_config(unit, exists, banks, conservative, audit, hydro)
 
@@ -153,13 +154,22 @@ contains
     call config_flag(unit, banks)
     call config_flag(unit, conservative)
     call config_flag(unit, audit)
-    call config_flag(unit, hydro)
+    ! Old fourth y/n flags must not be misread as a hydraulic parameter.
+    block
+      character(len=1024) :: line
+      call config_record(unit, line, status)
+      if (is_iostat_end(status)) then
 
-    if (.not. hydro) then
+        return
 
-      call config_end(unit)
+      end if
 
-    end if
+      if (status /= 0) error stop 'Unable to read hydraulic settings in transport.conf'
+      if (adjustl(line) == 'n' .or. adjustl(line) == 'y') &
+        error stop 'Remove the obsolete hydraulic switch; supply hydraulic settings to enable reconstruction'
+      backspace(unit)
+      hydro = .true.
+    end block
 
 
   end subroutine

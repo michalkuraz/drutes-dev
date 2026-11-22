@@ -14,6 +14,8 @@ module nchydroflow
   public :: hydro_sources, hydro_clip_step
   logical :: LShydro = .false., ready = .false., trial = .false.
   logical :: drop_unported_components = .false.
+  logical :: use_outlet_profile = .false.
+  real(kind=rkind), dimension(2, 2) :: outlet_profile
   real(kind=rkind) :: tolerance = 1.e-10_rkind, correction_limit = 1.0_rkind
   integer :: max_iterations = 20000, forcing_mode = 1
   integer, dimension(:, :), allocatable :: ports
@@ -60,12 +62,14 @@ module nchydroflow
 
 contains
 
-  subroutine read_adenc_hydro()
+  subroutine read_adenc_hydro(config_unit, profile_present)
 
-    use ncglobvars, only: LSconservative, LSbank_noflow
+    use core_tools, only: write_log
+
     use readtools, only: fileread
     use ncconfig, only: open_transport_config
-    use globals, only: drutes_config
+    integer(kind=ikind), optional, intent(in) :: config_unit
+    logical, optional, intent(in) :: profile_present
     integer(kind=ikind) :: unit
     integer :: i, n, policy, status, a, b, kind, extra
     logical :: exists, banks, conservative, audit
@@ -76,6 +80,7 @@ contains
     ready = .false.
     trial = .false.
     drop_unported_components = .false.
+    use_outlet_profile = .false.
 
     if (allocated(lateral)) then
 
@@ -89,27 +94,37 @@ contains
 
     end if
 
-    call open_transport_config(unit, exists, banks, conservative, audit, LShydro)
+    if (present(config_unit)) then
 
-    if (.not. exists) then
+      if (.not. present(profile_present)) error stop 'ADEnc internal error: missing outlet-profile state'
+
+      if (profile_present) then
+
+        call read_hydro_profile(config_unit)
+
+      else
+
+        call write_log('WARNING: ADEnc hydraulic reconstruction disabled: no outlet profile in netcdf.conf.'// &
+                       ' Using unreconstructed flux.')
+
+      end if
 
       return
 
     end if
 
+    call open_transport_config(unit, exists, banks, conservative, audit, LShydro)
 
     if (.not. LShydro) then
 
-      close (unit)
+      if (exists) close (unit)
+      call write_log('WARNING: ADEnc hydraulic reconstruction disabled: no hydraulic settings in netcdf/transport.conf.'// &
+                     ' Using unreconstructed flux.')
       return
 
     end if
 
-    if (.not. LSconservative .or. .not. LSbank_noflow .or. drutes_config%dimen /= 2 .or. drutes_config%it_method /= 0) then
 
-      error stop 'Hydro reconstruction requires conservative 2D Picard/no-flow banks'
-
-    end if
 
     call fileread(policy, int(unit))
 
@@ -143,13 +158,47 @@ contains
 
     end if
 
-    call fileread(n, int(unit))
+    call record(unit, line, status)
+
+    if (is_iostat_end(status)) then
+
+      n = 0
+
+    else
+
+      if (status /= 0) error stop 'Cannot read hydroflow port count'
+      line = adjustl(line)
+      if (verify(trim(line), '0123456789') /= 0) error stop 'Invalid hydroflow port count'
+      read (line, *, iostat=status) n
+      if (status /= 0) error stop 'Invalid hydroflow port count'
+
+      if (n == 0) then
+
+        call record(unit, line, status)
+        if (.not. is_iostat_end(status)) error stop 'Unexpected hydraulic data after zero port count'
+
+      end if
+
+    end if
+
+    if (n == 0) then
+
+      if (policy /= 0) error stop 'Cannot disable reconstruction with configured lateral sources'
+      LShydro = .false.
+      close (unit)
+      call write_log('WARNING: ADEnc hydraulic reconstruction disabled: no inlet/outlet ports in netcdf/transport.conf.'// &
+                     ' Using unreconstructed flux.')
+      return
+
+    end if
 
     if (n < 2) then
 
       error stop 'Hydroflow needs explicit inlet and outlet edges'
 
     end if
+
+    call check_hydro_mode()
 
     allocate (ports(2, n), port_kind(n), port_flow(n))
 
@@ -252,6 +301,121 @@ contains
 
 
   end subroutine
+
+  subroutine check_hydro_mode()
+
+    use globals, only: drutes_config
+    use ncglobvars, only: LSconservative, LSbank_noflow
+
+    if (.not. LSconservative .or. .not. LSbank_noflow .or. drutes_config%dimen /= 2 .or. drutes_config%it_method /= 0) then
+
+      error stop 'Hydro reconstruction requires conservative 2D Picard/no-flow banks'
+
+    end if
+
+  end subroutine check_hydro_mode
+
+  subroutine read_hydro_profile(unit)
+
+    use ncconfig, only: config_flag
+    integer(kind=ikind), intent(in) :: unit
+    integer :: i, status, policy
+    character(len=1024) :: line
+    character(len=1) :: extra
+
+    call check_hydro_mode()
+
+    do i = 1, 2
+
+      call record(unit, line, status)
+      if (status /= 0) error stop 'Outlet profile requires two x y points in mesh coordinates'
+      if (scan(line, ',/*') > 0) error stop 'Outlet profile requires two x y points in mesh coordinates'
+      read (line, *, iostat=status) outlet_profile(:, i)
+      if (status /= 0) error stop 'Outlet profile requires two x y points in mesh coordinates'
+      read (line, *, iostat=status) outlet_profile(:, i), extra
+      if (status >= 0) error stop 'Outlet profile requires exactly two coordinates per point'
+
+    end do
+
+    if (.not. all(ieee_is_finite(outlet_profile))) error stop 'Nonfinite outlet profile coordinates'
+    if (norm2(outlet_profile(:, 2) - outlet_profile(:, 1)) <= epsilon(1.0_rkind)) &
+      error stop 'Outlet profile points must be distinct'
+
+    policy = 0
+    forcing_mode = 1
+    tolerance = 1.e-10_rkind
+    max_iterations = 20000
+    correction_limit = 1.0_rkind
+    call record(unit, line, status)
+
+    if (status == 0 .and. adjustl(line) == 'hydraulic settings') then
+
+      call read_profile_setting(unit, 'lateral source policy', int_value=policy)
+      call read_profile_setting(unit, 'forcing mode', int_value=forcing_mode)
+      call read_profile_setting(unit, 'water-balance tolerance', real_value=tolerance)
+      call read_profile_setting(unit, 'maximum iterations', int_value=max_iterations)
+      call read_profile_setting(unit, 'flux-correction limit', real_value=correction_limit)
+      call config_flag(unit, drop_unported_components)
+      call record(unit, line, status)
+
+    end if
+
+    if (status /= 0 .or. adjustl(line) /= 'end transport') error stop 'Expected end transport after ADEnc outlet profile'
+    if (policy /= 0 .and. policy /= 1) error stop 'Hydroflow lateral source policy must be 0 or 1'
+    if (forcing_mode /= 0 .and. forcing_mode /= 1) error stop 'Hydroflow forcing mode must be 0 (daily) or 1 (linear)'
+    if (tolerance <= 0 .or. tolerance > 1.e-6_rkind .or. max_iterations < 1 .or. correction_limit <= 0) &
+      error stop 'Invalid hydroflow tolerance/iterations/correction limit'
+
+    if (policy == 1) then
+
+      call read_lateral()
+
+    end if
+
+    use_outlet_profile = .true.
+    LShydro = .true.
+
+  end subroutine read_hydro_profile
+
+  subroutine read_profile_setting(unit, label, int_value, real_value)
+
+    integer(kind=ikind), intent(in) :: unit
+    character(len=*), intent(in) :: label
+    integer, intent(out), optional :: int_value
+    real(kind=rkind), intent(out), optional :: real_value
+    character(len=1024) :: line
+    integer :: status
+
+    call record(unit, line, status)
+    line = trim(adjustl(line))
+
+    if (status /= 0 .or. scan(trim(line), ' ,/*'//achar(9)) > 0) then
+
+      status = 1
+
+    else if (present(int_value)) then
+
+      read (line, *, iostat=status) int_value
+
+    else
+
+      read (line, *, iostat=status) real_value
+      if (status == 0) then
+
+        if (.not. ieee_is_finite(real_value)) status = 1
+
+      end if
+
+    end if
+
+    if (status /= 0) then
+
+      print '(a)', 'netcdf.conf: invalid or missing '//label
+      error stop 'Invalid ADEnc hydraulic setting'
+
+    end if
+
+  end subroutine read_profile_setting
 
   ! Each group has an independently supplied TOTAL discharge and concentration.
   ! Distribution over listed FE triangles is uniform per area, not Q per triangle.
@@ -736,6 +900,7 @@ contains
     logical, dimension(:), allocatable :: has_out
     logical, dimension(:), allocatable :: remove
     logical, dimension(:), allocatable :: removed_root
+    logical, dimension(:), allocatable :: mesh_exterior
     integer :: e, k, a, b, bucket, item, nedge, buckets, p, n, r, e2, removed
     character(len=256) :: message
     real(kind=rkind), dimension(2) :: aa
@@ -879,6 +1044,46 @@ contains
     edge_nodes = edge_nodes(:nedge, :)
     edge_length = edge_length(:nedge)
     normal = normal(:nedge, :)
+
+    if (use_outlet_profile .and. .not. allocated(ports)) then
+
+      allocate (mesh_exterior(nedge))
+      mesh_exterior = owners(:, 2) == 0
+
+      ! Inlets require a true mesh boundary. An inactive neighbour makes an
+      ! edge an active-domain boundary, but not a full-mesh boundary.
+      do e = 1, n
+
+        if (ncfluxdata%activeel(e)) cycle
+
+        do k = 1, 3
+
+          a = minval(elements%data(e, ends(:, k)))
+          b = maxval(elements%data(e, ends(:, k)))
+          bucket = int(modulo(31_8*int(a, 8) + int(b, 8), int(buckets, 8))) + 1
+          item = head(bucket)
+
+          do while (item /= 0)
+
+            if (lo(item) == a .and. hi(item) == b) then
+
+              mesh_exterior(item) = .false.
+              exit
+
+            end if
+
+            item = next(item)
+
+          end do
+
+        end do
+
+      end do
+
+      call build_profile_ports(original_edge, mesh_exterior)
+
+    end if
+
     allocate (port_edge(size(port_kind)), port_id(size(port_kind)), &
               inlet_node(nodes%kolik), root(n), has_in(n), has_out(n))
     inlet_node = .false.
@@ -1193,6 +1398,123 @@ contains
     ready = .true.
 
   end subroutine
+
+  ! Build ports on the active edge graph. The segment runs along the opening;
+  ! a narrow band on both sides accommodates the jagged triangle boundary.
+  subroutine build_profile_ports(original_edge, mesh_exterior)
+
+    use globals, only: nodes
+    use ncglobvars, only: ncfluxdata, addedbc
+    use core_tools, only: write_log
+    integer(kind=ikind), dimension(:), intent(in) :: original_edge
+    logical, dimension(:), intent(in) :: mesh_exterior
+    integer, dimension(:), allocatable :: kind_of_edge, candidates
+    integer :: i, j, a, b, e, ni, no, p
+    real(kind=rkind), dimension(2) :: tangent, downstream, delta
+    real(kind=rkind), dimension(:, :), allocatable :: along_end, across_end
+    real(kind=rkind) :: span, along, across, eps, half_band, interval, fraction, other_distance
+    character(len=256) :: message
+
+    tangent = outlet_profile(:, 2) - outlet_profile(:, 1)
+    span = norm2(tangent)
+    tangent = tangent/span
+    downstream = [-tangent(2), tangent(1)]
+    half_band = 0.025_rkind*span
+    eps = 32*epsilon(span)*maxval(abs(outlet_profile))
+    allocate (kind_of_edge(size(edge_nodes, 1)))
+    kind_of_edge = 0
+
+    do i = 1, size(edge_nodes, 1)
+
+      if (owners(i, 2) /= 0) cycle
+      a = edge_nodes(i, 1)
+      b = edge_nodes(i, 2)
+      e = owners(i, 1)
+
+      if (original_edge(a) > 100 .and. original_edge(a) /= addedbc .and. original_edge(a) == original_edge(b)) then
+
+        if (mesh_exterior(i)) kind_of_edge(i) = -1
+        cycle
+
+      end if
+
+      ! Never reclassify a physical concentration boundary as an outlet.
+      if (original_edge(a) > 100 .or. original_edge(b) > 100) cycle
+      delta = (nodes%data(a, 1:2) + nodes%data(b, 1:2))/2 - outlet_profile(:, 1)
+      along = dot_product(delta, tangent)
+      across = dot_product(delta, downstream)
+      if (along < -eps .or. along > span + eps .or. abs(across) > half_band + eps) cycle
+      if (dot_product(normal(i, :), ncfluxdata%fluxvct(e, :)) <= 0.25_rkind) cycle
+      if (dot_product(downstream, ncfluxdata%fluxvct(e, :)) <= 0.0_rkind) cycle
+      kind_of_edge(i) = 1
+
+    end do
+
+    ! If two nearby boundaries occupy the same part of the profile, use
+    ! the nearest one at each candidate midpoint, not one triangle globally.
+    candidates = pack([(i, i=1,size(kind_of_edge))], kind_of_edge == 1)
+    allocate (along_end(2, size(candidates)), across_end(2, size(candidates)))
+
+    do i = 1, size(candidates)
+
+      do j = 1, 2
+
+        a = edge_nodes(candidates(i), j)
+        delta = nodes%data(a, 1:2) - outlet_profile(:, 1)
+        along_end(j, i) = dot_product(delta, tangent)
+        across_end(j, i) = dot_product(delta, downstream)
+
+      end do
+
+    end do
+
+    do i = 1, size(candidates)
+
+      along = sum(along_end(:, i))/2
+      across = abs(sum(across_end(:, i))/2)
+
+      do j = 1, size(candidates)
+
+        if (i == j) cycle
+        interval = along_end(2, j) - along_end(1, j)
+        if (abs(interval) <= eps) cycle
+        fraction = (along - along_end(1, j))/interval
+        if (fraction <= 0.0_rkind .or. fraction >= 1.0_rkind) cycle
+        other_distance = abs(across_end(1, j) + fraction*(across_end(2, j) - across_end(1, j)))
+
+        if (other_distance + eps < across) then
+
+          kind_of_edge(candidates(i)) = 0
+          exit
+
+        end if
+
+      end do
+
+    end do
+
+    ni = count(kind_of_edge == -1)
+    no = count(kind_of_edge == 1)
+    write (message, '(a,i0,a,i0)') 'ADEnc outlet profile: inlet edges=', ni, ', outlet edges=', no
+    call write_log(trim(message))
+    if (ni == 0) error stop 'ADEnc outlet profile: no active inlet edges with a physical boundary tag'
+    if (no == 0) error stop 'ADEnc outlet profile: no downstream active edges; check position and point order'
+
+    allocate (ports(2, ni + no), port_kind(ni + no), port_flow(ni + no))
+    p = 0
+
+    do i = 1, size(kind_of_edge)
+
+      if (kind_of_edge(i) == 0) cycle
+      p = p + 1
+      ports(:, p) = edge_nodes(i, :)
+      port_kind(p) = kind_of_edge(i)
+
+    end do
+
+    port_flow = 0
+
+  end subroutine build_profile_ports
 
   integer function find_root(root, i) result(r)
     integer, dimension(:), intent(in out) :: root

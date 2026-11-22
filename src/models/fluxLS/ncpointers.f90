@@ -60,6 +60,12 @@ contains
 
     pde(1)%pde_fnc(1)%elasticity => ADEls_tder_coef
 
+    if (any(adencpar%k_dep > 0.0_rkind)) then
+
+      pde(1)%pde_fnc(1)%reaction => ADEls_deposition
+
+    end if
+
     pde(1)%mass(1)%val => ADEls_mass
 
     do i = lbound(pde(1)%bc, 1), ubound(pde(1)%bc, 1)

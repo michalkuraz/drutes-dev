@@ -14,21 +14,30 @@ module ncboundary
 
 contains
 
-  subroutine read_adenc_banks()
+  subroutine read_adenc_banks(enabled)
 
     use ncglobvars, only: LSbank_noflow
     use globals, only: drutes_config
     use ncconfig, only: open_transport_config
     use core_tools, only: write_log
+    logical, optional, intent(in) :: enabled
     logical :: exists, conservative, audit, hydro
     integer(kind=ikind) :: unit
 
     LSbank_noflow = .false.
-    call open_transport_config(unit, exists, LSbank_noflow, conservative, audit, hydro)
+    if (present(enabled)) then
 
-    if (exists) then
+      LSbank_noflow = enabled
 
-      close (unit)
+    else
+
+      call open_transport_config(unit, exists, LSbank_noflow, conservative, audit, hydro)
+
+      if (exists) then
+
+        close (unit)
+
+      end if
 
     end if
 

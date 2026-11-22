@@ -13,15 +13,24 @@ contains
   ! One legacy value means alpha_L = alpha_T. Two values mean alpha_L alpha_T.
   ! Parse one physical record only, never consuming the following Qmin record.
 
-  subroutine parse_ls_dispersivity(line, alpha_l, alpha_t, ok)
+  subroutine parse_ls_dispersivity(line, alpha_l, alpha_t, ok, deposition, value_count)
 
     character(len=*), intent(in) :: line
     real(kind=rkind), intent(out) :: alpha_l, alpha_t
     logical, intent(out) :: ok
+    real(kind=rkind), optional, intent(out) :: deposition
     integer(kind=ikind) :: i, first, last, count, ierr, hash
-    real(kind=rkind), dimension(2) :: values
+    real(kind=rkind), dimension(3) :: values
 
+    integer(kind=ikind), optional, intent(out) :: value_count
+
+    if (present(value_count)) value_count = 0
     ok = .false.
+    if (present(deposition)) then
+
+      deposition = 0.0_rkind
+
+    end if
     alpha_l = 0.0_rkind
     alpha_t = 0.0_rkind
     last = len_trim(line)
@@ -61,7 +70,7 @@ contains
 
       count = count + 1
 
-      if (count > 2) then
+      if (count > size(values) .or. (count == 3 .and. .not. present(deposition))) then
 
         return
 
@@ -107,12 +116,19 @@ contains
     alpha_l = values(1)
     alpha_t = values(1)
 
-    if (count == 2) then
+    if (count >= 2) then
 
       alpha_t = values(2)
 
     end if
 
+    if (count == 3) then
+
+      deposition = values(3)
+
+    end if
+
+    if (present(value_count)) value_count = count
     ok = .true.
 
   end subroutine parse_ls_dispersivity

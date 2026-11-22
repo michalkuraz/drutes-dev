@@ -354,7 +354,7 @@ contains
     use globals
     use pde_objs
     use ncglobvars, only: LSsupg, LSsupg_factor, LSshock, LSshock_factor, LSconservative, LSdepth_old
-    use ncglobvars, only: LSdisp, LSdisp_transverse
+    use ncglobvars, only: adencpar
     use nchydroflow, only: LShydro, hydro_value, hydro_sources
     use geom_tools, only: getcoor
     class(pde_str), intent(in) :: pde_loc
@@ -472,7 +472,7 @@ contains
 
         call getcoor(point, xy)
         call hydro_value(int(el_id), xy, q, depth, divq)
-        divtensor = rt0_dispersion_divergence(q, divq, LSdisp, LSdisp_transverse)
+        divtensor = rt0_dispersion_divergence(q, divq, adencpar(layer)%alpha_l, adencpar(layer)%alpha_t)
 
       end if
 
