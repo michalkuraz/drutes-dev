@@ -122,12 +122,7 @@ contains
 
     if (trim(adjustl(line)) /= 'transport') then
 
-      ! Allow historical, unmerged configurations to reproduce their results.
-      backspace (unit)
-      call read_adenc_banks()
-      call read_adenc_conservative()
-      call read_adenc_hydro()
-      return
+      error stop 'ADEnc requires a netcdf.conf transport block with an outlet profile'
 
     end if
 
@@ -138,21 +133,22 @@ contains
     call reject_old_config('drutes.conf/netcdf/hydroflow.conf')
 
     call config_flag(unit, banks)
+    if (.not. banks) error stop 'ADEnc requires no-flow banks'
     call config_flag(unit, audit)
     call read_adenc_banks(banks)
     call read_adenc_conservative(audit_enabled=audit)
     call config_record(unit, line, status)
-    if (status /= 0) error stop 'Missing outlet profile or end transport in netcdf.conf'
+    if (status /= 0) error stop 'ADEnc requires an outlet profile in netcdf.conf'
 
     select case (trim(adjustl(line)))
 
     case ('end transport')
 
-      call read_adenc_hydro(unit, .false.)
+      error stop 'ADEnc requires an outlet profile in netcdf.conf'
 
     case ('outlet profile')
 
-      call read_adenc_hydro(unit, .true.)
+      call read_adenc_hydro(unit)
 
     case ('y', 'n')
 
@@ -160,7 +156,7 @@ contains
 
     case default
 
-      error stop 'Expected outlet profile or end transport in netcdf.conf'
+      error stop 'Expected outlet profile in netcdf.conf'
 
     end select
 
@@ -187,7 +183,7 @@ contains
     use geom_tools
     use ncsupg, only: read_adenc_supg
     use ncboundary, only: prepare_adenc_banks
-    use nchydroflow, only: LShydro, hydro_filter, hydro_initialize
+    use nchydroflow, only: hydro_filter, hydro_initialize
     use ncrouting, only: read_adenc_routing, routing_apply_directions
 
     integer :: ierr
@@ -455,13 +451,9 @@ contains
 
     end if
 
-    if (LShydro) then
-
-      call hydro_filter()
-      call prepare_adenc_banks(original_edge)
-      call hydro_initialize(original_edge)
-
-    end if
+    call hydro_filter()
+    call prepare_adenc_banks(original_edge)
+    call hydro_initialize(original_edge)
 
     allocate (ncelements%areas(ncelements%kolik))
 
@@ -479,14 +471,10 @@ contains
 
     call read_adenc_boundaries(fileconf)
 
-    if (LSbank_noflow) then
-
-      ! This ID now belongs ONLY to unused nodes; not the participating banks.
-      pde(1)%bc(addedbc)%code = 1
-      pde(1)%bc(addedbc)%file = .false.
-      pde(1)%bc(addedbc)%value = 0
-
-    end if
+    ! This ID belongs only to nodes outside the active river domain.
+    pde(1)%bc(addedbc)%code = 1
+    pde(1)%bc(addedbc)%file = .false.
+    pde(1)%bc(addedbc)%value = 0
 
     close (fileconf)
 
@@ -496,22 +484,12 @@ contains
     pde(1)%solution_name(1) = "solute_concentration" !nazev vystupnich souboru
     pde(1)%solution_name(2) = "c  [M/L^3]" !popisek grafu
 
+    ! ncflux exports hydrological q, not the solute flux.
     pde(1)%flux_name(1) = "conc_flux"
-    pde(1)%flux_name(2) = "concentration flux [M.L^{-2}.T^{-1}]"
-
+    pde(1)%flux_name(2) = "depth-integrated water flux [L^2/T]"
     allocate (pde(1)%mass_name(1, 2))
-
-    pde(1)%mass_name(1, 1) = "conc_in_river"
-    pde(1)%mass_name(1, 2) = "concetration [M/L^3]"
-
-    if (LSconservative) then
-
-      pde(1)%mass_name(1, 1) = "solute_inventory_density"
-      pde(1)%mass_name(1, 2) = "H*c [M/L^2]"
-      ! ncflux exports hydrological q, NOT C*q-K*grad(C); retain its filename.
-      pde(1)%flux_name(2) = "depth-integrated water flux [L^2/T]"
-
-    end if
+    pde(1)%mass_name(1, 1) = "solute_inventory_density"
+    pde(1)%mass_name(1, 2) = "H*c [M/L^2]"
 
     pde(1)%print_mass = .true.
 

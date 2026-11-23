@@ -1,4 +1,4 @@
-! Optional compatible hydraulic reconstruction for conservative ADEnc.
+! Compatible hydraulic reconstruction for conservative ADEnc.
 ! One oriented volume flux per FE edge, RT0 inside each triangle, P0 storage.
 ! This is a projection of supplied hydrology, NOT a hydrodynamic flow model.
 
@@ -16,8 +16,11 @@ module nchydroflow
   logical :: drop_unported_components = .false.
   logical :: use_outlet_profile = .false.
   real(kind=rkind), dimension(2, 2) :: outlet_profile
-  real(kind=rkind) :: tolerance = 1.e-10_rkind, correction_limit = 1.0_rkind
-  integer :: max_iterations = 20000, forcing_mode = 1
+  ! The hydraulic projection uses the shared PCG, independently of solver.conf.
+  real(kind=rkind), parameter :: hydraulic_rtol = 1.e-10_rkind
+  integer, parameter :: hydraulic_max_iterations = 20000
+  real(kind=rkind) :: correction_limit = 1.0_rkind
+  integer :: forcing_mode = 1
   integer, dimension(:, :), allocatable :: ports
   integer, dimension(:, :), allocatable :: owners
   integer, dimension(:, :), allocatable :: edge_nodes
@@ -62,19 +65,18 @@ module nchydroflow
 
 contains
 
-  subroutine read_adenc_hydro(config_unit, profile_present)
+  subroutine read_adenc_hydro(config_unit)
 
     use core_tools, only: write_log
 
     use readtools, only: fileread
     use ncconfig, only: open_transport_config
     integer(kind=ikind), optional, intent(in) :: config_unit
-    logical, optional, intent(in) :: profile_present
     integer(kind=ikind) :: unit
-    integer :: i, n, policy, status, a, b, kind, extra
+    integer :: i, n, policy, status, a, b, kind, extra, legacy_iteration_limit
     logical :: exists, banks, conservative, audit
     character(len=1024) :: line
-    real(kind=rkind) :: flow
+    real(kind=rkind) :: flow, legacy_tolerance
 
     LShydro = .false.
     ready = .false.
@@ -96,19 +98,7 @@ contains
 
     if (present(config_unit)) then
 
-      if (.not. present(profile_present)) error stop 'ADEnc internal error: missing outlet-profile state'
-
-      if (profile_present) then
-
-        call read_hydro_profile(config_unit)
-
-      else
-
-        call write_log('WARNING: ADEnc hydraulic reconstruction disabled: no outlet profile in netcdf.conf.'// &
-                       ' Using unreconstructed flux.')
-
-      end if
-
+      call read_hydro_profile(config_unit)
       return
 
     end if
@@ -142,17 +132,18 @@ contains
 
     end if
 
-    call fileread(tolerance, int(unit))
-    call fileread(max_iterations, int(unit))
+    ! Consume the old fixture fields without overriding the fixed PCG controls.
+    call fileread(legacy_tolerance, int(unit))
+    call fileread(legacy_iteration_limit, int(unit))
     call fileread(correction_limit, int(unit))
 
-    if (.not. ieee_is_finite(tolerance) .or. .not. ieee_is_finite(correction_limit)) then
+    if (.not. ieee_is_finite(legacy_tolerance) .or. .not. ieee_is_finite(correction_limit)) then
 
       error stop 'Nonfinite hydroflow tolerance/correction limit'
 
     end if
 
-    if (tolerance <= 0 .or. tolerance > 1.e-6_rkind .or. max_iterations < 1 .or. correction_limit <= 0) then
+    if (legacy_tolerance <= 0 .or. legacy_tolerance > 1.e-6_rkind .or. legacy_iteration_limit < 1 .or. correction_limit <= 0) then
 
       error stop 'Invalid hydroflow tolerance/iterations/correction limit'
 
@@ -343,8 +334,6 @@ contains
 
     policy = 0
     forcing_mode = 1
-    tolerance = 1.e-10_rkind
-    max_iterations = 20000
     correction_limit = 1.0_rkind
     call record(unit, line, status)
 
@@ -352,8 +341,6 @@ contains
 
       call read_profile_setting(unit, 'lateral source policy', int_value=policy)
       call read_profile_setting(unit, 'forcing mode', int_value=forcing_mode)
-      call read_profile_setting(unit, 'water-balance tolerance', real_value=tolerance)
-      call read_profile_setting(unit, 'maximum iterations', int_value=max_iterations)
       call read_profile_setting(unit, 'flux-correction limit', real_value=correction_limit)
       call config_flag(unit, drop_unported_components)
       call record(unit, line, status)
@@ -363,8 +350,7 @@ contains
     if (status /= 0 .or. adjustl(line) /= 'end transport') error stop 'Expected end transport after ADEnc outlet profile'
     if (policy /= 0 .and. policy /= 1) error stop 'Hydroflow lateral source policy must be 0 or 1'
     if (forcing_mode /= 0 .and. forcing_mode /= 1) error stop 'Hydroflow forcing mode must be 0 (daily) or 1 (linear)'
-    if (tolerance <= 0 .or. tolerance > 1.e-6_rkind .or. max_iterations < 1 .or. correction_limit <= 0) &
-      error stop 'Invalid hydroflow tolerance/iterations/correction limit'
+    if (correction_limit <= 0) error stop 'Hydroflow correction limit must be positive'
 
     if (policy == 1) then
 
@@ -633,7 +619,7 @@ contains
     real(kind=rkind), intent(in out) :: dt
     integer :: g, i
 
-    if (.not. LShydro .or. .not. allocated(lateral)) then
+    if (.not. allocated(lateral)) then
 
       return
 
@@ -839,12 +825,6 @@ contains
     real(kind=rkind) :: Q
     logical :: ok
     character(len=1024) :: message
-
-    if (.not. LShydro) then
-
-      return
-
-    end if
 
     raw_hour = -huge(1)
     projected_hour = -huge(1)
@@ -1410,7 +1390,7 @@ contains
     logical, dimension(:), intent(in) :: mesh_exterior
     integer, dimension(:), allocatable :: kind_of_edge, candidates
     integer :: i, j, a, b, e, ni, no, p
-    real(kind=rkind), dimension(2) :: tangent, downstream, delta
+    real(kind=rkind), dimension(2) :: tangent, profile_normal, delta
     real(kind=rkind), dimension(:, :), allocatable :: along_end, across_end
     real(kind=rkind) :: span, along, across, eps, half_band, interval, fraction, other_distance
     character(len=256) :: message
@@ -1418,7 +1398,7 @@ contains
     tangent = outlet_profile(:, 2) - outlet_profile(:, 1)
     span = norm2(tangent)
     tangent = tangent/span
-    downstream = [-tangent(2), tangent(1)]
+    profile_normal = [-tangent(2), tangent(1)]
     half_band = 0.025_rkind*span
     eps = 32*epsilon(span)*maxval(abs(outlet_profile))
     allocate (kind_of_edge(size(edge_nodes, 1)))
@@ -1442,10 +1422,13 @@ contains
       if (original_edge(a) > 100 .or. original_edge(b) > 100) cycle
       delta = (nodes%data(a, 1:2) + nodes%data(b, 1:2))/2 - outlet_profile(:, 1)
       along = dot_product(delta, tangent)
-      across = dot_product(delta, downstream)
+      across = dot_product(delta, profile_normal)
       if (along < -eps .or. along > span + eps .or. abs(across) > half_band + eps) cycle
       if (dot_product(normal(i, :), ncfluxdata%fluxvct(e, :)) <= 0.25_rkind) cycle
-      if (dot_product(downstream, ncfluxdata%fluxvct(e, :)) <= 0.0_rkind) cycle
+      ! Compare flow and the outward edge normal across the profile.
+      ! Reversing the endpoints flips both projections, not their product.
+      if (dot_product(profile_normal, normal(i, :))* &
+          dot_product(profile_normal, ncfluxdata%fluxvct(e, :)) <= 0.0_rkind) cycle
       kind_of_edge(i) = 1
 
     end do
@@ -1462,7 +1445,7 @@ contains
         a = edge_nodes(candidates(i), j)
         delta = nodes%data(a, 1:2) - outlet_profile(:, 1)
         along_end(j, i) = dot_product(delta, tangent)
-        across_end(j, i) = dot_product(delta, downstream)
+        across_end(j, i) = dot_product(delta, profile_normal)
 
       end do
 
@@ -1498,7 +1481,7 @@ contains
     write (message, '(a,i0,a,i0)') 'ADEnc outlet profile: inlet edges=', ni, ', outlet edges=', no
     call write_log(trim(message))
     if (ni == 0) error stop 'ADEnc outlet profile: no active inlet edges with a physical boundary tag'
-    if (no == 0) error stop 'ADEnc outlet profile: no downstream active edges; check position and point order'
+    if (no == 0) error stop 'ADEnc outlet profile: no outward-flowing active edges; check profile position and alignment'
 
     allocate (ports(2, ni + no), port_kind(ni + no), port_flow(ni + no))
     p = 0
@@ -1833,8 +1816,8 @@ contains
 
     end do
 
-    call hydro_project_outflow(owners, preferred, weight, fixed, fixed_value, outflow, target, tolerance, max_iterations, &
-                               flux, ok, iterations, error, bounded, passes)
+    call hydro_project_outflow(owners, preferred, weight, fixed, fixed_value, outflow, target, &
+                               hydraulic_rtol, hydraulic_max_iterations, flux, ok, iterations, error, bounded, passes)
 
     if (.not. ok) then
 
@@ -1857,7 +1840,7 @@ contains
 
     do p = 1, size(port_kind)
 
-      if (port_kind(p) == 1 .and. flux(port_edge(p)) < -tolerance) then
+      if (port_kind(p) == 1 .and. flux(port_edge(p)) < -hydraulic_rtol) then
 
         error stop 'Hydroflow outlet reversed: an inflow concentration is required'
 

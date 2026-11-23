@@ -28,30 +28,10 @@ contains
     integer(kind=ikind) :: i
 
     call netcdf()
-    nullify (pde(1)%stabilize_element)
-    nullify (pde(1)%step_begin, pde(1)%step_end, pde(1)%boundary_history)
-
-    if (LSconservative .or. LSbalance .or. LSbank_noflow .or. &
-        (LSsupg .and. LSsupg_factor > 0) .or. (LSshock .and. LSshock_factor > 0)) &
- then
-
-      pde(1)%stabilize_element => adenc_element_corrections
-
-    end if
-
-
-    if (LSconservative .or. LSbalance) then
-
-      pde(1)%step_begin => conservative_begin
-      pde(1)%step_end => conservative_end
-
-    end if
-
-    if (LSconservative) then
-
-      pde(1)%boundary_history => adenc_boundary_history
-
-    end if
+    pde(1)%stabilize_element => adenc_element_corrections
+    pde(1)%step_begin => conservative_begin
+    pde(1)%step_end => conservative_end
+    pde(1)%boundary_history => adenc_boundary_history
 
 
     pde(1)%pde_fnc(1)%dispersion => ADElsdisp
@@ -70,13 +50,8 @@ contains
 
     do i = lbound(pde(1)%bc, 1), ubound(pde(1)%bc, 1)
 
-      select case (pde(1)%bc(i)%code)
-
-      case (1)
-
-        pde(1)%bc(i)%value_fnc => ADEls_dirichlet
-
-      end select
+      if (pde(1)%bc(i)%code /= 1) error stop 'ADEnc requires Dirichlet concentration boundary records'
+      pde(1)%bc(i)%value_fnc => ADEls_dirichlet
 
     end do
 
@@ -93,7 +68,7 @@ contains
     use global_objs
     use ncglobvars
     use ncsupg, only: adenc_supg_element
-    use ncboundary, only: adenc_bank_element
+
     use ncconservative, only: conservative_element
     use ncbalance, only: balance_capture
 
@@ -123,13 +98,7 @@ contains
 
     end if
 
-    ! Conservative transport handles its bank condition in the weak form.
 
-    if (.not. LSconservative) then
-
-      call adenc_bank_element(pde_loc, el_id, dt, quadpnt_in)
-
-    end if
 
     ! Record the completed local operator for the accepted-step mass audit.
 

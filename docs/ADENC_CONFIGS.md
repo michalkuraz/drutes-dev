@@ -48,22 +48,21 @@ outlet profile
 hydraulic settings
 0              # lateral sources: 0 = none, 1 = explicit lateral.conf
 1              # forcing: 0 = daily steps, 1 = linear interpolation
-1e-10          # relative water-balance tolerance
-20000          # maximum projection PCG iterations
 1.0            # maximum relative edge-flux correction
 y              # remove whole disconnected components with neither inlet nor outlet
 end transport
 ```
 
-Each point is `x y` in the mesh CRS (metres). Order them so that downstream
-is to the **left** when looking from the first point to the second. ADEnc
+Each point is `x y` in the mesh CRS (metres); the two endpoints can be
+listed in either order. ADEnc
 looks for midpoints of open active-domain edges in a band extending 2.5%
-of the segment length on either side. The routed flow must point downstream
-and outward across the edge. Place the segment along the outlet face,
+of the segment length on either side. The routed flow must point outward
+across the edge and cross the profile in the direction of the edge's exterior.
+Place the segment along the outlet face,
 slightly overlapping the real opening. This selects existing edges,
 rather than cutting or retriangulating the mesh. Where two eligible edges
 project onto the same part of the profile, the closer edge takes priority.
-Reversed or misplaced points can fail initialization.
+Misplaced points can fail initialization; reversing their order does not.
 
 The tagged edges on the exterior of the mesh supply inlets. Their discharge
 comes from `Qrouted`, with the existing length weighting per inlet ID.
@@ -71,16 +70,20 @@ Outlets use the existing balanced-discharge projection. No node IDs are
 entered. Missing elevation is not used to choose ports.
 
 The `hydraulic settings` subsection is optional. Defaults are
-`0, 1, 1e-10, 20000, 1.0, n` (in that order). ADEnc's conservative
+`0, 1, 1.0, n` (in that order). The hydraulic PCG uses a fixed relative
+tolerance of `1e-10` and a limit of `20000` iterations; neither setting is
+read from `netcdf.conf` or `solver.conf`. ADEnc's conservative
 formulation requires no-flow banks and standard 2D Picard.
-Omit `outlet profile` and its settings entirely to use unreconstructed
-flux with a warning. A supplied profile which cannot be resolved is an
-error, not a silent fallback. The independent mRM routing input is still
-required in both modes.
+Hydraulic reconstruction is mandatory. A missing or unusable
+`outlet profile` stops initialization. The independent mRM routing input
+is still required. The root configuration, scenarios, and runnable
+examples all specify the profile above.
 
-The root configuration and scenarios 1, 2, and 3 keep their previous
-unreconstructed transport. Scenarios 3a and 3b and the runnable examples
-specify the profile above.
+Reconstruction balances the water inputs actually represented in the
+domain. It does not turn downstream increases in `Qrouted` into implicit
+tributary inflows. To represent dilution, provide a tagged tributary inlet
+with its concentration (zero for clean water), or specify its discharge
+and concentration as a lateral source using policy 1.
 
 ## Stabilization
 
@@ -117,12 +120,13 @@ comments are allowed. Changing these files does not require recompilation.
 
 Keep the no-flow banks and mass-audit flags in the block after the channel count.
 Remove the old conservative-transport flag; set the bank flag to `y`.
-If reconstruction was used, replace the node-pair list with an outlet
-profile and keep any non-default hydraulic settings. Check the physical
+Add an outlet profile, replacing the old node-pair list if present, and
+keep any non-default hydraulic settings. Check the physical
 inlet tags in the mesh: they must mark only the actual inlet openings.
+Remove the former tolerance and iteration records from `hydraulic settings`.
 Archive the old `transport.conf` outside the configuration; a merged block
-and the old file cannot coexist. Unmerged historical inputs remain readable
-for reproducibility.
+and the old file cannot coexist. Unmerged historical inputs must be migrated
+before running them with the current code.
 
 Every new model run needs its own empty `out/`: main clears `out/*` at startup.
 Numerical calculations, boundary formulas, flux projection and stabilization

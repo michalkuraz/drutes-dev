@@ -1,14 +1,11 @@
-! Impermeable solute banks on the boundary of the fixed active ADEnc FE domain.
-! With the existing advective volume form, K grad(C).n = (q.n) C.
-! DRUtES uses negative mass/stiffness signs: the Robin edge addition is +dt*q.n*Ni*Nj.
-! This removes absorbing banks; it does not repair interior flux jumps or H_t+div(q).
+! Active-domain edge topology and conservative ADEnc outlet fluxes.
 
 module ncboundary
 
   use typy
   implicit none
   private
-  public :: read_adenc_banks, prepare_adenc_banks, adenc_bank_element, bank_edge_terms
+  public :: read_adenc_banks, prepare_adenc_banks, bank_edge_terms
   public :: active_node_element
   public :: adenc_open_element
 
@@ -59,7 +56,7 @@ contains
 
   subroutine prepare_adenc_banks(original_edge, close_exterior)
 
-    use ncglobvars, only: LSbank_noflow, bank_edges, ncfluxdata, addedbc, open_edges
+    use ncglobvars, only: bank_edges, ncfluxdata, addedbc, open_edges
     use globals, only: nodes, elements
     use pde_objs, only: pde
     use core_tools, only: write_log
@@ -79,12 +76,6 @@ contains
     integer :: e, k, a, b, bucket, item, item_count, buckets, nbanks
     integer, dimension(2, 3), parameter :: ends = reshape([1, 2, 2, 3, 3, 1], [2, 3])
     character(len=256) :: message
-
-    if (.not. LSbank_noflow) then
-
-      return
-
-    end if
 
     if (size(elements%data, 2) /= 3) then
 
@@ -311,18 +302,12 @@ contains
   function active_node_element(node_id) result(el)
 
     use globals, only: nodes
-    use ncglobvars, only: LSbank_noflow, ncfluxdata
+    use ncglobvars, only: ncfluxdata
     integer(kind=ikind), intent(in) :: node_id
     integer(kind=ikind) :: el
     integer(kind=ikind) :: j
 
     el = nodes%element(node_id)%data(1)
-
-    if (.not. LSbank_noflow) then
-
-      return
-
-    end if
 
     ! smartarray data includes spare, uninitialized capacity. Only pos entries
     ! are adjacent elements (especially important for inactive-only nodes).
@@ -374,108 +359,7 @@ contains
 
   end subroutine bank_edge_terms
 
-  subroutine adenc_bank_element(pde_loc, el_id, dt, quadpnt_in)
 
-    use global_objs, only: integpnt_str
-    use globals, only: stiff_mat, time, nodes, elements
-    use pde_objs, only: pde_str
-    use ncglobvars, only: LSbank_noflow, bank_edges, ncfluxdata, ora_di_ini
-    use netcdfflux, only: ncflux_get_xy_cell
-    use ncfluxarea, only: ncflux_active_width
-    class(pde_str), intent(in) :: pde_loc
-    integer(kind=ikind), intent(in) :: el_id
-    real(kind=rkind), intent(in) :: dt
-    type(integpnt_str), intent(in), optional :: quadpnt_in
-    integer, dimension(2, 3), parameter :: ends = reshape([1, 2, 2, 3, 3, 1], [2, 3])
-    integer :: k, g
-    real(kind=rkind), dimension(2) :: a
-    real(kind=rkind), dimension(2) :: b
-    real(kind=rkind), dimension(2) :: center
-    real(kind=rkind), dimension(2) :: point
-    real(kind=rkind), dimension(2) :: normal
-    real(kind=rkind) :: length
-    real(kind=rkind) :: s
-    real(kind=rkind) :: Q
-    real(kind=rkind) :: W
-    real(kind=rkind), dimension(2) :: qn
-    real(kind=rkind), dimension(3, 3) :: matrix
-    logical :: ok
-    character(len=1024) :: message
-
-    if (.not. LSbank_noflow) then
-
-      return
-
-    end if
-
-    if (.not. ncfluxdata%activeel(el_id)) then
-
-      return
-
-    end if
-
-    W = ncflux_active_width(el_id)
-
-    if (W <= 0) then
-
-      ! matches zero hydrological convection callback
-      return
-
-    end if
-
-    center = sum(nodes%data(elements%data(el_id, :), 1:2), dim=1)/3
-
-    do k = 1, 3
-
-      if (.not. bank_edges(k, el_id)) then
-
-        cycle
-
-      end if
-
-      a = nodes%data(elements%data(el_id, ends(1, k)), 1:2)
-      b = nodes%data(elements%data(el_id, ends(2, k)), 1:2)
-      length = norm2(b - a)
-
-      if (length <= 0) then
-
-        error stop 'Degenerate ADEnc bank edge'
-
-      end if
-
-      normal = [b(2) - a(2), a(1) - b(1)]/length
-
-      if (dot_product(normal, center - (a + b)/2) > 0) then
-
-        normal = -normal
-
-      end if
-
-
-      do g = 1, 2
-
-        s = (1 + (2*g - 3)/sqrt(3.0_rkind))/2
-        point = (1 - s)*a + s*b
-        ! One-sided active-element trace at hydrological grid boundaries.
-        point = point + 1.e-8_rkind*(center - point)
-        call ncflux_get_xy_cell(point(1), point(2), ora_di_ini + int(time/86400.0_rkind)*24, Q, ok, message)
-        qn(g) = 0
-
-        if (ok .and. Q > 0) then
-
-          qn(g) = Q/W*dot_product(ncfluxdata%fluxvct(el_id, :), normal)
-
-        end if
-
-
-      end do
-
-      call bank_edge_terms(ends(:, k), length, qn, dt, matrix)
-      stiff_mat = stiff_mat + matrix
-
-    end do
-
-  end subroutine adenc_bank_element
 
   ! Conservative form: J.n=0 is natural on banks; exterior outflow has
   ! zero diffusive flux and retains q.n*C. Unspecified inflow is an error.
